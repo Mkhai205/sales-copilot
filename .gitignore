@@ -4,9 +4,18 @@
 dist
 tmp
 out-tsc
+.next
+out
+*.tsbuildinfo
 
 # dependencies
 node_modules
+.pnpm-store
+
+# Environment files
+.env
+.env.*
+!.env.example
 
 # IDEs and editors
 /.idea
@@ -38,17 +47,18 @@ testem.log
 .DS_Store
 Thumbs.db
 
+# Nx
 .nx/cache
 .nx/workspace-data
 .cursor/rules/nx-rules.mdc
 .github/instructions/nx.instructions.md
-
-.claude/worktrees
-.claude/settings.local.json
 .nx/polygraph
 .nx/self-healing
 .nx/migrate-runs
 
+# Custom tooling
+.claude/worktrees
+.claude/settings.local.json
 .agents/
 .vscode/
 .docs/

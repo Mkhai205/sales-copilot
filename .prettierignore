@@ -1,6 +1,31 @@
-# Add files here to ignore them from prettier formatting
+# Documentation and reference code
+.docs
+.docs/**
+docs
+docs/**
+
+# Agents & AI memory
+.agents
+.agents/**
+
+# Build outputs
 /dist
 /coverage
+/.next
+/out
+/tmp
+/out-tsc
+
+# Nx cache
 /.nx/cache
 /.nx/workspace-data
 .nx/self-healing
+
+# Dependencies
+node_modules
+pnpm-lock.yaml
+
+# Environment
+.env
+.env.*
+!.env.example

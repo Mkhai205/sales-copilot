@@ -1,0 +1,43 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "target": "es2022",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "composite": false,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./src/*"],
+      "@sales-copilot/shared": ["../../packages/shared/src/index.ts"],
+      "@sales-copilot/shared/*": ["../../packages/shared/src/*"],
+      "@sales-copilot/contracts": ["../../packages/contracts/src/index.ts"],
+      "@sales-copilot/contracts/*": ["../../packages/contracts/src/*"],
+      "@sales-copilot/ai": ["../../packages/ai/src/index.ts"],
+      "@sales-copilot/ai/*": ["../../packages/ai/src/*"]
+    }
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"],
+  "references": [
+    {
+      "path": "../../packages/shared"
+    },
+    {
+      "path": "../../packages/contracts"
+    }
+  ]
+}
