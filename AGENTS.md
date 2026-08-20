@@ -24,20 +24,54 @@
 
 # AGENTS.md
 
-## 1. Project
+## 1. Project & Scope Phasing
 
-Sales Copilot Platform is an omnichannel conversation and AI sales platform.
+Sales Copilot Platform is an omnichannel conversation platform designed to support sales and customer engagement.
 
-Primary product flow:
+### Project Roadmap & Phasing:
+
+```text
+                    Sales Copilot Platform
+                           │
+              ┌────────────┴────────────┐
+              │                         │
+       Conversation Core          Sales Intelligence
+       (PHASE 1 - ACTIVE)        (PHASE 2 - FUTURE)
+              │                         │
+       ┌──────┴──────┐          ┌───────┴────────┐
+       │             │          │                │
+   Channels      Messaging   Lead/Opportunity    AI
+   Contacts      Inbox       Scoring             Copilot
+   Conversation  Teams       Buying Signals      Actions
+   Assignment    Labels      Sales Evidence      ...
+   Webhooks      Automation
+```
+
+- **Phase 1 (CURRENT ACTIVE SCOPE)**: **Omnichannel Conversation Platform Core** inspired by Chatwoot using NestJS + Next.js. Focus strictly on multi-tenancy, channels, inboxes, contacts, channel identities, conversations, messages, attachments, conversation labels, canned responses, automation rules, outbound webhooks, team assignment, and realtime WebSocket updates.
+- **Phase 2 (FUTURE EXTENSION)**: **Sales Intelligence & AI Copilot**. Lead lifecycle, AI-driven Lead scoring, buying signals extraction, sales evidence, copilot decisions, and tool execution engine will be added on top of the proven conversation foundation. **Do not create models, DTOs, or services for Phase 2 during Phase 1.**
+
+### Comprehensive Phase 1 Technical Documentation & References:
+
+Detailed architecture, domain rules, state machines, and Chatwoot source references are documented in [`.docs/`](./.docs/README.md):
+
+- **Product & Scope**: [Product Vision](./.docs/product/vision.md) | [Scope](./.docs/product/scope.md) | [Requirements](./.docs/product/requirements.md)
+- **Domain & Rules**: [Domain Model](./.docs/domain/domain-model.md) | [Business Rules](./.docs/domain/business-rules.md)
+- **Architecture**: [System Overview](./.docs/architecture/system-architecture.md) | [Module Boundaries](./.docs/architecture/module-architecture.md) | [Data & Security](./.docs/architecture/data-architecture.md)
+- **API & Contracts**: [REST API](./.docs/api/api-contract.md) | [WebSocket Events](./.docs/api/websocket-contract.md)
+- **Engineering & Backlog**: [Master Backlog](./.docs/backlog/backlog.md) | [Coding Guidelines](./.docs/engineering/coding-guidelines.md)
+- **Chatwoot Reference Source**: [Chatwoot Reference Guide](./.docs/references/chatwoot/README.md) & [Chatwoot Source](./.docs/references/chatwoot/source)
+
+Primary product flow (Phase 1):
 
 Customer
 → Channel
-→ Conversation
-→ Contact
-→ Lead
-→ AI Intelligence
-→ Sales Copilot
-→ Human or Autonomous Action
+→ Inbound Ingestion Pipeline
+→ Inbox
+→ Contact & ChannelIdentity Resolution
+→ Conversation & Message
+→ Team / Agent Assignment
+→ Operations (Labels, Canned Responses, Automation Rules, Webhooks)
+→ Realtime Events to Web UI
 
 The product is conversation-first, not CRM-first.
 
@@ -101,28 +135,17 @@ Avoid:
 - Provider-specific logic leaking into domain code
 - Unnecessary abstractions
 - Premature microservices
+- Premature Phase 2 (Lead / AI) implementation in Phase 1
 
-## 4. Module Boundaries
+## 4. Module Boundaries (Phase 1 - Conversation Core)
 
-Core modules include:
+Phase 1 Core modules include:
 
-- Identity
-- Organization
-- Workspace
-- User
-- Team
-- Contact
-- Lead
-- Conversation
-- Message
-- Channel
-- Inbox
-- Automation
-- AI
-- Sales Copilot
-- Notification
-- Webhook
-- Audit
+- **Identity & Multi-Tenancy**: User, Workspace, WorkspaceMember, Team, TeamMember
+- **Omnichannel**: Channel, ChannelEvent, Inbox, InboxMember, ChannelIdentity, Contact
+- **Conversation**: Conversation, ConversationLabel, Message, Attachment
+- **Operations**: Label, CannedResponse, AutomationRule, WebhookSubscription, WebhookDelivery, AuditLog
+- **Realtime**: WebSocket Gateway & Event Dispatcher
 
 A module owns its domain logic and data access.
 
@@ -166,10 +189,7 @@ Domain
 → NestJS framework infrastructure
 
 Domain
-→ OpenAI SDK
-
-Domain
-→ Facebook/Zalo/Telegram SDK
+→ External SDKs directly
 
 ## 6. External Integrations
 
@@ -177,13 +197,11 @@ External providers must be isolated behind adapters.
 
 Examples:
 
-- OpenAI
-- Gemini
 - Facebook Messenger
 - Zalo
 - Telegram
 - Email providers
-- MinIO
+- MinIO S3
 
 Preferred:
 
@@ -194,101 +212,33 @@ Application
 
 Never expose provider SDK types throughout the domain.
 
-## 7. AI Architecture
+Channel Credentials Policy:
 
-AI must be treated as an application capability, not embedded directly into business entities.
+- `Channel.credentials` in the database stores encrypted credentials at rest (AES-256-GCM).
+- Access to credentials must always pass through `ChannelCredentialService` / adapter.
+- Plaintext access tokens, app secrets, and webhook secrets must NEVER be logged or stored unencrypted.
 
-Use:
+## 7. Autonomous Agent & Phase 2 Rules
 
-AI Application Service
-→ LLM Gateway
-→ Provider Adapter
+In Phase 1, autonomous AI actions and Lead scoring are frozen.
+In Phase 2, when AI capabilities are added:
 
-Supported providers:
+- AI must be treated as an application capability, not embedded directly into business entities.
+- AI actions must pass through Tool Registry → Guardrail Policy → Action Executor → Use Case.
+- AI will NEVER directly execute database modifications.
 
-- OpenAI
-- Google Gemini
-
-AI agent actions must use tools.
-
-AI Agent
-→ Tool Registry
-→ Policy/Guardrail
-→ Action Executor
-→ Application Use Case
-
-Never allow the AI agent to directly modify the database.
-
-## 8. Lead Rules
-
-Lead is an independent entity.
-
-Relationship:
-
-Contact 1 → N Lead
-
-Lead lifecycle:
-
-NEW
-→ ENGAGED
-→ QUALIFIED
-→ HOT
-→ CONVERTED
-
-Terminal states:
-
-LOST
-DISQUALIFIED
-
-Lead Score is AI-controlled.
-
-Sales must not directly modify the score.
-
-Human feedback/evidence may be submitted and used by AI for subsequent evaluation.
-
-Every important AI score update should preserve provenance/audit information.
-
-## 9. Autonomous Agent
-
-Supported autonomy levels:
-
-OFF
-ASSISTED
-AUTONOMOUS
-
-Autonomous actions may include:
-
-- Send message
-- Update lead
-- Add tag
-- Create note
-- Trigger workflow
-- Escalate to human
-
-Every action requires:
-
-- Tool definition
-- Authorization
-- Policy validation
-- Input validation
-- Execution
-- Result
-- Audit/event record
-
-Default to safe behavior when policy or confidence requirements are not satisfied.
-
-## 10. Event-Driven Architecture
+## 8. Event-Driven Architecture
 
 Use domain/application events for asynchronous workflows.
 
-Example:
+Example (Phase 1):
 
 MessageReceived
-→ AIAnalysisRequested
-→ AIAnalysisCompleted
-→ LeadScoreUpdated
-→ CopilotDecisionRequested
-→ ActionExecuted
+→ ConversationResolved
+→ AssignmentTriggered
+→ AutomationEvaluated
+→ WebhookDispatched
+→ RealtimeBroadcasted
 
 Events must be explicit, typed and versionable.
 
@@ -296,7 +246,7 @@ Do not introduce Kafka or other distributed infrastructure merely because the sy
 
 Redis/queue infrastructure is sufficient for the modular-monolith stage unless requirements demonstrate otherwise.
 
-## 11. Database
+## 9. Database
 
 PostgreSQL is the source of truth for transactional business data.
 
@@ -312,7 +262,7 @@ Rules:
 
 Database implementation must not leak into domain logic.
 
-## 12. API
+## 10. API
 
 API contracts must be explicit and typed.
 
@@ -333,7 +283,7 @@ Do not silently change existing API contracts.
 
 Breaking changes require explicit decision/documentation.
 
-## 13. Realtime
+## 11. Realtime
 
 WebSocket is used for realtime application state.
 
@@ -347,33 +297,32 @@ Events must be:
 
 Realtime infrastructure must not bypass domain/application authorization.
 
-## 14. Testing
+## 12. Testing
 
 Every new business capability must have appropriate tests.
 
 Prefer:
 
-- Unit tests for domain logic
+- Unit tests for domain logic & state machines
 - Application tests for use-cases
 - Integration tests for database/infrastructure
 - E2E tests for critical flows
 - Contract tests for external integrations
-- AI evaluation tests for AI behavior
 
 Do not add code that cannot reasonably be tested.
 
-Critical flow:
+Critical flow (Phase 1):
 
-Message
-→ Conversation
-→ AI Analysis
-→ Lead Intelligence
-→ Copilot
-→ Action
+Inbound Webhook
+→ Ingestion & Deduplication
+→ Contact & Identity Resolution
+→ Conversation & Message Threading
+→ Assignment & Routing
+→ Realtime Broadcast & Outbound Delivery
 
 must be covered progressively by integration/E2E tests.
 
-## 15. Coding Standards
+## 13. Coding Standards
 
 Use TypeScript strictly.
 
@@ -393,7 +342,7 @@ Do not duplicate business rules across controllers, services and frontend.
 
 Business rules belong in the appropriate domain/application layer.
 
-## 16. Frontend Rules
+## 14. Frontend Rules
 
 Next.js/React UI must not contain backend business rules.
 
@@ -407,14 +356,14 @@ Frontend responsibilities:
 
 Backend remains the authority for:
 
-- Authorization
-- Lead lifecycle
-- Lead scoring
-- Business rules
-- AI decisions
-- Autonomous actions
+- Authorization & Tenant isolation
+- Conversation lifecycle & status transitions
+- Contact identity resolution & merge
+- Channel credentials & delivery
+- Auto-assignment & routing
+- Automation rules & webhook deliveries
 
-## 17. Chatwoot Reference Rules
+## 15. Chatwoot Reference Rules
 
 Chatwoot is the primary reference for conversation-platform behavior.
 
@@ -448,12 +397,12 @@ Explicit ADR
 
 Chatwoot implementation
 
-## 18. Coding-Agent Workflow
+## 16. Coding-Agent Workflow
 
 For every task:
 
 1. Read AGENTS.md.
-2. Read relevant product documentation.
+2. Read relevant product documentation in `.docs/`.
 3. Inspect existing module boundaries.
 4. Identify affected domain/application/infrastructure layers.
 5. Inspect relevant Chatwoot behavior when applicable.
@@ -465,7 +414,7 @@ For every task:
 
 Do not start coding before understanding the affected module.
 
-## 19. Refactoring Permission
+## 17. Refactoring Permission
 
 The agent MAY:
 
@@ -490,10 +439,10 @@ The agent MUST NOT silently:
 - Change core domain semantics.
 - Change major API contracts.
 - Change AI autonomy policy.
-- Change Lead lifecycle.
+- Reintroduce Phase 2 (Lead/AI) models into Phase 1.
 - Add major infrastructure dependencies.
 
-## 20. Architectural Changes
+## 18. Architectural Changes
 
 Minor refactoring can be performed directly.
 
@@ -512,7 +461,7 @@ Examples:
 
 The agent may propose these changes but must not silently implement them as if they were already approved.
 
-## 21. Dependencies
+## 19. Dependencies
 
 Before adding a dependency:
 
@@ -525,7 +474,7 @@ Before adding a dependency:
 
 Do not add dependencies simply for convenience.
 
-## 22. Security
+## 20. Security
 
 Never:
 
@@ -540,7 +489,7 @@ All external webhooks must be validated according to provider requirements.
 
 All autonomous AI actions must pass authorization and policy checks.
 
-## 23. Definition of Done
+## 21. Definition of Done
 
 A task is not complete when the code merely compiles.
 
@@ -558,7 +507,7 @@ Done means:
 - Existing tests remain passing.
 - Documentation updated when required.
 
-## 24. Priority
+## 22. Priority
 
 When making implementation decisions, prioritize:
 
@@ -573,13 +522,13 @@ When making implementation decisions, prioritize:
 
 Do not sacrifice domain correctness for implementation speed.
 
-## 25. Source of Truth
+## 23. Source of Truth
 
 Priority of information:
 
 1. Explicit current project requirements.
 2. AGENTS.md.
-3. Product documentation.
+3. Product documentation in `.docs/`.
 4. Architecture decisions/ADRs.
 5. Existing source code.
 6. Chatwoot business behavior.

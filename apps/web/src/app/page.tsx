@@ -1,28 +1,38 @@
 import React from 'react';
-import { LeadStatus, ConversationStatus } from '@sales-copilot/shared';
+import { ConversationStatus, ChannelType } from '@sales-copilot/shared';
 import { Button } from '@/components/ui/button';
 import {
-  Bot,
   MessageSquare,
-  Users,
-  Sparkles,
-  Activity,
+  Radio,
   Layers,
   CheckCircle2,
   ExternalLink,
   ArrowRight,
+  ShieldCheck,
+  Sparkles,
+  Activity,
 } from 'lucide-react';
 
 export default function HomePage() {
   const stats = [
-    { label: 'Default Lead Status', value: LeadStatus.NEW, icon: Users, color: '#3b82f6' },
     {
       label: 'Default Chat Status',
       value: ConversationStatus.OPEN,
       icon: MessageSquare,
       color: '#10b981',
     },
-    { label: 'AI Copilot Engine', value: 'Ready', icon: Bot, color: '#8b5cf6' },
+    {
+      label: 'Live Channel',
+      value: ChannelType.WEB_CHAT,
+      icon: Radio,
+      color: '#3b82f6',
+    },
+    {
+      label: 'Multi-Tenant Auth',
+      value: 'Secured',
+      icon: ShieldCheck,
+      color: '#8b5cf6',
+    },
     { label: 'Architecture', value: 'Modular Monolith', icon: Layers, color: '#f59e0b' },
   ];
 
@@ -40,6 +50,11 @@ export default function HomePage() {
     {
       name: '@sales-copilot/ai',
       description: 'LLM Gateway interfaces, Tool Execution abstractions and Guardrail policies',
+      status: 'Active',
+    },
+    {
+      name: '@sales-copilot/database',
+      description: 'Prisma ORM, PostgreSQL connection pooling, migrations, and Transaction Manager',
       status: 'Active',
     },
     {

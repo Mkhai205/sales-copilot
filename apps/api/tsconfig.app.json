@@ -5,12 +5,16 @@
     "module": "commonjs",
     "types": ["node"],
     "emitDecoratorMetadata": true,
-    "experimentalDecorators": true
+    "experimentalDecorators": true,
+    "composite": false
   },
   "include": ["src/**/*", "../../packages/*/src/**/*"],
   "references": [
     {
       "path": "../../packages/shared"
+    },
+    {
+      "path": "../../packages/database"
     },
     {
       "path": "../../packages/contracts"

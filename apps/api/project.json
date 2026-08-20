@@ -19,7 +19,8 @@
       "executor": "@nx/js:node",
       "defaultConfiguration": "development",
       "options": {
-        "buildTarget": "api:build"
+        "buildTarget": "api:build",
+        "runtimeArgs": ["-r", "tsconfig-paths/register", "-r", "@swc-node/register"]
       },
       "configurations": {
         "development": {

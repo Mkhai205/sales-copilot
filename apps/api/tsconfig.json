@@ -11,6 +11,9 @@
       "path": "../../packages/shared"
     },
     {
+      "path": "../../packages/database"
+    },
+    {
       "path": "../../packages/contracts"
     },
     {

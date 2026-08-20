@@ -14,6 +14,9 @@
     },
     {
       "path": "./apps/api"
+    },
+    {
+      "path": "./packages/database"
     }
   ],
   "compilerOptions": {}

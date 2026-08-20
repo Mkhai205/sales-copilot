@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { UserRole } from '@sales-copilot/shared';
+import { PlatformRole, WorkspaceRole } from '@sales-copilot/shared';
 
 export const loginSchema = z.object({
   email: z.string().email(),
@@ -24,10 +24,10 @@ export interface UserDto {
   id: string;
   email: string;
   name: string;
-  role: UserRole;
+  platformRole: PlatformRole;
+  workspaceRole?: WorkspaceRole;
   avatarUrl?: string;
-  organizationId: string;
-  workspaceId: string;
+  workspaceId?: string;
   createdAt: string;
 }
 

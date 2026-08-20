@@ -23,7 +23,7 @@ export const updateConversationStatusSchema = z.object({
 export type UpdateConversationStatusDto = z.infer<typeof updateConversationStatusSchema>;
 
 export const sendMessageSchema = z.object({
-  content: z.string().min(1),
+  content: z.string().optional(),
   contentType: z.nativeEnum(MessageContentType).default(MessageContentType.TEXT),
   messageType: z.nativeEnum(MessageType).default(MessageType.OUTGOING),
   isPrivate: z.boolean().default(false),
@@ -47,7 +47,7 @@ export interface MessageResponseDto {
   senderId?: string;
   messageType: MessageType;
   contentType: MessageContentType;
-  content: string;
+  content?: string;
   isPrivate: boolean;
   externalId?: string;
   attachments?: {
@@ -73,7 +73,11 @@ export interface ConversationResponseDto {
   lastActivityAt: string;
   waitingSince?: string;
   snoozedUntil?: string;
-  cachedLabels: string[];
+  labels?: {
+    id: string;
+    title: string;
+    color: string;
+  }[];
   workspaceId: string;
   createdAt: string;
   updatedAt: string;

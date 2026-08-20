@@ -5,6 +5,8 @@
       "@sales-copilot/shared/*": ["./packages/shared/src/*"],
       "@sales-copilot/contracts": ["./packages/contracts/src/index.ts"],
       "@sales-copilot/contracts/*": ["./packages/contracts/src/*"],
+      "@sales-copilot/database": ["./packages/database/src/index.ts"],
+      "@sales-copilot/database/*": ["./packages/database/src/*"],
       "@sales-copilot/ai": ["./packages/ai/src/index.ts"],
       "@sales-copilot/ai/*": ["./packages/ai/src/*"]
     },

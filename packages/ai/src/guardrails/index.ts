@@ -1,4 +1,8 @@
-import { AutonomyLevel } from '@sales-copilot/shared';
+export enum AutonomyLevel {
+  OFF = 'OFF',
+  ASSISTED = 'ASSISTED',
+  AUTONOMOUS = 'AUTONOMOUS',
+}
 
 export interface GuardrailPolicy {
   autonomyLevel: AutonomyLevel;

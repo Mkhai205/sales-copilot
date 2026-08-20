@@ -20,16 +20,6 @@ export interface MessageReceivedPayload {
   channelType: string;
 }
 
-export interface LeadScoreUpdatedPayload {
-  leadId: string;
-  contactId: string;
-  previousScore?: number;
-  newScore: number;
-  confidence: number;
-  reason: string;
-  signals: string[];
-}
-
 export interface ConversationAssignedPayload {
   conversationId: string;
   previousAssigneeId?: string;

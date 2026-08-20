@@ -59,6 +59,5 @@ Thumbs.db
 # Custom tooling
 .claude/worktrees
 .claude/settings.local.json
-.agents/
 .vscode/
 .docs/

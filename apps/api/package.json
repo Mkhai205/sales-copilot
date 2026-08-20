@@ -9,6 +9,7 @@
     "@nestjs/swagger": "^11.4.7",
     "@sales-copilot/ai": "workspace:*",
     "@sales-copilot/contracts": "workspace:*",
+    "@sales-copilot/database": "workspace:*",
     "@sales-copilot/shared": "workspace:*",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",

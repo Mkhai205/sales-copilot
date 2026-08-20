@@ -14,7 +14,13 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "db:generate": "pnpm --filter @sales-copilot/database db:generate",
+    "db:migrate:dev": "pnpm --filter @sales-copilot/database db:migrate:dev",
+    "db:migrate:deploy": "pnpm --filter @sales-copilot/database db:migrate:deploy",
+    "db:seed": "pnpm --filter @sales-copilot/database db:seed",
+    "db:studio": "pnpm --filter @sales-copilot/database db:studio",
+    "db:push": "pnpm --filter @sales-copilot/database db:push"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -40,6 +46,7 @@
     "postcss": "^8.5.26",
     "prettier": "^3.8.1",
     "tailwindcss": "^4.3.3",
+    "tsconfig-paths": "^4.2.0",
     "tslib": "^2.3.0",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.67.0",

@@ -18,10 +18,11 @@ export type UpdateContactDto = z.infer<typeof updateContactSchema>;
 
 export interface ChannelIdentityDto {
   id: string;
-  channelType: ChannelType;
   channelId: string;
-  externalId: string;
-  profileData?: Record<string, unknown>;
+  channelType?: ChannelType;
+  externalContactId: string;
+  username?: string;
+  metadata?: Record<string, unknown>;
   createdAt: string;
 }
 
