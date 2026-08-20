@@ -40,7 +40,7 @@ This documentation establishes the architectural standard, domain boundaries, da
 ```
 
 ### Phase 1: Active Core
-- **Objective**: Build a robust, scalable multi-tenant Omnichannel Conversation Platform inspired by Chatwoot using **NestJS 11 + Next.js 16 + PostgreSQL 16 + Redis 7 + MinIO S3**.
+- **Objective**: Build a robust, scalable multi-tenant Omnichannel Conversation Platform inspired by Chatwoot using **NestJS 11 + Next.js 16 + PostgreSQL 16 (Prisma 7) + Redis 7 + MinIO S3**.
 - **Active Entities**: 21 normalized models covering Multi-tenancy, Omnichannel Inbox & Channels (1:1), Contacts & Channel Identities, Conversations & Messages, Attachments, Conversation Labels, Canned Responses, Automation Rules, Outbound Webhooks, Teams, and Audit Logs.
 
 ### Phase 2: Future Extension (Deferred)

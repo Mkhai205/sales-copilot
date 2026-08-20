@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  transpilePackages: ['@sales-copilot/contracts', '@sales-copilot/shared', '@sales-copilot/ai'],
+  transpilePackages: ['@sales-copilot/shared-contracts'],
   reactStrictMode: true,
 };
 

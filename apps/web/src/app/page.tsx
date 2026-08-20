@@ -1,5 +1,5 @@
 import React from 'react';
-import { ConversationStatus, ChannelType } from '@sales-copilot/shared';
+import { ConversationStatus, ChannelType } from '@sales-copilot/shared-contracts';
 import { Button } from '@/components/ui/button';
 import {
   MessageSquare,
@@ -38,13 +38,9 @@ export default function HomePage() {
 
   const packages = [
     {
-      name: '@sales-copilot/contracts',
-      description: 'Typed DTOs, Zod Validation Schemas, Domain Events and API contracts',
-      status: 'Active',
-    },
-    {
-      name: '@sales-copilot/shared',
-      description: 'Domain Enums, Custom Error Hierarchy, Core Utilities and Types',
+      name: '@sales-copilot/shared-contracts',
+      description:
+        'Domain-oriented Enums, Zod Validation Schemas, Typed DTOs, Errors, Transactions, and Events',
       status: 'Active',
     },
     {
@@ -53,13 +49,14 @@ export default function HomePage() {
       status: 'Active',
     },
     {
-      name: '@sales-copilot/database',
-      description: 'Prisma ORM, PostgreSQL connection pooling, migrations, and Transaction Manager',
+      name: '@sales-copilot/server',
+      description:
+        'NestJS Backend (HTTP API, WebSocket Engine, Queue Workers, Prisma Persistence & CLI)',
       status: 'Active',
     },
     {
-      name: '@sales-copilot/api',
-      description: 'NestJS REST API, WebSocket Engine, Background Workers & Swagger Docs',
+      name: '@sales-copilot/web',
+      description: 'Next.js 16 Web Application with Tailwind CSS v4, Base UI, and React 19',
       status: 'Active',
     },
   ];

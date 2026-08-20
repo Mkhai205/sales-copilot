@@ -32,12 +32,70 @@ The design philosophy adheres to:
 └──────────────────┘└───────────────┘└──────────────────┘
 ```
 
-- **Backend**: NestJS 11 (Express platform), TypeScript 5.8+, Prisma ORM 6.
+- **Backend**: NestJS 11 (Express platform), TypeScript 6+, Prisma ORM 7 (7.9.1) with `@prisma/adapter-pg` driver adapter.
 - **Frontend**: Next.js 16 with Turbopack, React 19, Tailwind CSS v4, Lucide icons.
-- **Transactional Database**: PostgreSQL 16 (Source of truth, indexed tenant isolation, ACID transactions).
+- **Transactional Database**: PostgreSQL 16 (Source of truth, indexed tenant isolation, ACID transactions with Ambient Transaction Manager).
 - **In-Memory & Cache Engine**: Redis 7 (WebSocket Pub/Sub adapter, distributed locks, presence tracking, BullMQ background queues).
 - **Object Storage**: MinIO S3 (Attachments, avatars, voice notes, media files).
-- **Monorepo Management**: Nx monorepo (`apps/api`, `apps/web`, `packages/database`, `packages/contracts`, `packages/shared`, `packages/ai`).
+- **Monorepo Management**: Nx monorepo:
+  - `apps/server`: Unified NestJS backend application (REST API, WebSocket Gateway, Queue Workers, CLI/Prisma).
+  - `apps/web`: Next.js 16 Web application.
+  - `packages/shared-contracts`: Isomorphic ESM domain-oriented types, Zod validation schemas, API DTOs, domain enums, error hierarchy, and transaction abstractions.
+
+---
+
+### Backend Unified Application Architecture (`apps/server`)
+
+```text
+apps/server/
+├── prisma/                                  # 🛠️ Database Schema & CLI Lifecycle
+│   ├── schema.prisma                        # PostgreSQL Data Model (Prisma 7)
+│   ├── migrations/                          # SQL Migration History
+│   └── seed.ts                              # Baseline Seed Script (Admin, Workspace, Team, Inbox, Canned, etc.)
+│
+├── prisma.config.ts                         # Prisma 7 Central Configuration
+│
+└── src/
+    ├── main.ts                              # NestJS Bootstrap & Swagger (/docs)
+    ├── app.module.ts                        # Root Application Module (Global ConfigModule & DatabaseModule)
+    │
+    ├── common/                              # Framework Primitives & Cross-Cutting Concerns
+    │   ├── decorators/                      # @CurrentUser(), @CurrentWorkspace()
+    │   ├── guards/                          # AuthGuard, WorkspaceGuard, RolesGuard
+    │   ├── filters/                         # GlobalExceptionFilter (RFC 7807 compliant error format)
+    │   ├── interceptors/                    # LoggingInterceptor, TransformInterceptor
+    │   ├── pipes/                           # ZodValidationPipe
+    │   └── utils/
+    │
+    ├── infrastructure/                      # Shared Persistence & External Adapters
+    │   ├── database/                        # PrismaService (Retry + Pool), pg.Pool, Ambient TransactionManager
+    │   │   └── generated/                   # Prisma 7 generated client (Local & Encapsulated)
+    │   ├── redis/                           # Redis Client & Distributed Caching
+    │   ├── queue/                           # BullMQ Queue Workers & Job Processors
+    │   └── storage/                         # MinIO S3 Object Storage Service
+    │
+    ├── modules/                             # Core Business Modules (Phase 1 Conversation Core)
+    │   ├── auth/                            # Login, Register, JWT, Refresh Token
+    │   ├── workspaces/                      # Multi-tenant Workspaces & Memberships
+    │   ├── users/                           # User profile & Platform Roles
+    │   ├── teams/                           # Team assignment & Team Members
+    │   ├── inboxes/                         # Inbox management & Inbox Members
+    │   ├── contacts/                        # Contacts & Channel Identities resolution
+    │   ├── conversations/                   # Conversation lifecycle, status & priorities
+    │   ├── messages/                        # Inbound/Outbound Messages & Attachments
+    │   ├── labels/                          # Conversation Labels & Tags
+    │   ├── canned-responses/                # Quick reply canned responses (/shortCode)
+    │   ├── automation-rules/                # Event-driven rule evaluation & auto-assign
+    │   ├── webhooks/                        # Outbound Webhook Subscriptions & Retries
+    │   └── realtime/                        # WebSocket Gateway & Realtime Event Dispatcher
+    │
+    └── integrations/                        # Omnichannel Ingestion Adapters
+        ├── web-chat/                        # Live Web Chat Widget Ingestion
+        ├── facebook/                        # Facebook Messenger Webhook & Send API
+        ├── zalo/                            # Zalo OA Webhook & Send API
+        ├── telegram/                        # Telegram Bot Webhook & Send API
+        └── email/                           # Inbound/Outbound Email Adapter
+```
 
 ---
 

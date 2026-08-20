@@ -7,6 +7,7 @@ out-tsc
 .next
 out
 *.tsbuildinfo
+apps/server/src/infrastructure/database/generated
 
 # dependencies
 node_modules

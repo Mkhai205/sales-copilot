@@ -76,16 +76,32 @@ Phase 1 is split into 5 cohesive bounded contexts:
 Presentation Layer (Controllers, Gateways)
        │
        ▼
-Application Layer (Use Cases, Public Services, Command Handlers)
+Application Service Layer (Business Orchestration & Use Cases)
        │
        ▼
-Domain Layer (Entities, Value Objects, Domain Events, Domain Exceptions)
-       ▲
+Persistence Repository Layer (Data Access & Queries via PrismaService)
        │
-Infrastructure Layer (Prisma Repositories, Redis, S3, External Channel Adapters)
+       ▼
+Infrastructure (PostgreSQL, Redis, MinIO S3, External Adapters)
 ```
 
-### Strict Rules:
-- **No Direct Database Access in Controllers**: Controllers must call Application Use Cases or Services.
-- **No Cross-Module Database Mutations**: A module must not directly write to another module's Prisma models; it must publish a Domain Event or call a Public Application Service.
-- **No Provider SDK in Domain**: External provider SDKs (Facebook Graph API, Zalo SDK, MinIO SDK) must remain strictly encapsulated inside Infrastructure Adapters.
+### Module Internal File Pattern:
+To keep development fast, clean, and maintainable without over-engineering (no 4-layer boilerplate per module), each feature module follows a flat, standardized NestJS structure:
+
+```text
+modules/conversations/
+├── dto/
+│   ├── create-conversation.dto.ts
+│   ├── update-conversation.dto.ts
+│   └── list-conversations.dto.ts
+├── conversations.controller.ts     # HTTP request handling & route definition
+├── conversations.service.ts        # Business logic, state transitions, event emission
+├── conversations.repository.ts     # Data access layer (injects PrismaService / getClient())
+└── conversations.module.ts         # NestJS Module declaration
+```
+
+### Strict Architectural Guardrails:
+1. **No Direct Database Access in Controllers**: Controllers must delegate to Services.
+2. **No Cross-Module Database Mutations**: A module must not directly write to another module's Prisma models; it must publish a Domain/BullMQ Event or call the respective Public Service.
+3. **No Provider SDKs in Core Business Logic**: External provider SDKs (Meta Graph API, Zalo SDK, Telegram Bot API) must reside exclusively inside `integrations/`.
+4. **Isomorphic Contracts**: All Request/Response validation DTOs and WebSocket Event shapes are sourced from `@sales-copilot/contracts` (pure Zod/TS) to ensure type consistency across Backend and Frontend.

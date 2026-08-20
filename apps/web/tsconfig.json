@@ -22,22 +22,15 @@
     ],
     "paths": {
       "@/*": ["./src/*"],
-      "@sales-copilot/shared": ["../../packages/shared/src/index.ts"],
-      "@sales-copilot/shared/*": ["../../packages/shared/src/*"],
-      "@sales-copilot/contracts": ["../../packages/contracts/src/index.ts"],
-      "@sales-copilot/contracts/*": ["../../packages/contracts/src/*"],
-      "@sales-copilot/ai": ["../../packages/ai/src/index.ts"],
-      "@sales-copilot/ai/*": ["../../packages/ai/src/*"]
+      "@sales-copilot/shared-contracts": ["../../packages/shared-contracts/src/index.ts"],
+      "@sales-copilot/shared-contracts/*": ["../../packages/shared-contracts/src/*"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
   "exclude": ["node_modules"],
   "references": [
     {
-      "path": "../../packages/shared"
-    },
-    {
-      "path": "../../packages/contracts"
+      "path": "../../packages/shared-contracts"
     }
   ]
 }

@@ -1,14 +1,8 @@
 {
   "compilerOptions": {
     "paths": {
-      "@sales-copilot/shared": ["./packages/shared/src/index.ts"],
-      "@sales-copilot/shared/*": ["./packages/shared/src/*"],
-      "@sales-copilot/contracts": ["./packages/contracts/src/index.ts"],
-      "@sales-copilot/contracts/*": ["./packages/contracts/src/*"],
-      "@sales-copilot/database": ["./packages/database/src/index.ts"],
-      "@sales-copilot/database/*": ["./packages/database/src/*"],
-      "@sales-copilot/ai": ["./packages/ai/src/index.ts"],
-      "@sales-copilot/ai/*": ["./packages/ai/src/*"]
+      "@sales-copilot/shared-contracts": ["./packages/shared-contracts/src/index.ts"],
+      "@sales-copilot/shared-contracts/*": ["./packages/shared-contracts/src/*"]
     },
     "composite": true,
     "declaration": true,
