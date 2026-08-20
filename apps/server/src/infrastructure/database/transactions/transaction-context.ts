@@ -1,6 +1,6 @@
 import { randomUUID } from 'crypto';
 import { Prisma } from '../generated/client';
-import { ITransactionContext, PostCommitHook, RollbackHook } from '@sales-copilot/shared-contracts';
+import { ITransactionContext, PostCommitHook, RollbackHook } from './transaction.interface';
 
 export class PrismaTransactionContext implements ITransactionContext {
   public readonly id: string;

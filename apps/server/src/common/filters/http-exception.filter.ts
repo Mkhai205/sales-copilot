@@ -7,54 +7,92 @@ import {
   Logger,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
-import { AppError } from '@sales-copilot/shared-contracts';
+import type { ApiErrorResponse, ErrorCode } from '@sales-copilot/shared-contracts';
 
 @Catch()
-export class GlobalExceptionFilter implements ExceptionFilter {
-  private readonly logger = new Logger(GlobalExceptionFilter.name);
+export class HttpExceptionFilter implements ExceptionFilter {
+  private readonly logger = new Logger(HttpExceptionFilter.name);
 
-  catch(exception: unknown, host: ArgumentsHost) {
+  catch(exception: unknown, host: ArgumentsHost): void {
+    if (host.getType() !== 'http') {
+      return;
+    }
+
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
+    const requestId = (request.headers['x-request-id'] as string) || undefined;
 
     let statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
-    let code = 'INTERNAL_SERVER_ERROR';
+    let code: ErrorCode = 'INTERNAL_SERVER_ERROR';
     let message = 'Internal server error';
-    let details: unknown = undefined;
+    let details: unknown = null;
 
-    if (exception instanceof AppError) {
-      statusCode = exception.statusCode;
-      code = exception.code;
-      message = exception.message;
-      details = exception.details;
-    } else if (exception instanceof HttpException) {
+    if (exception instanceof HttpException) {
       statusCode = exception.getStatus();
-      const res = exception.getResponse();
-      code = exception.name;
+      code = this.deriveErrorCode(exception);
 
+      const res = exception.getResponse();
       if (typeof res === 'string') {
         message = res;
       } else if (typeof res === 'object' && res !== null) {
         const resObj = res as Record<string, unknown>;
-        message = (resObj['message'] as string) || exception.message;
-        details = resObj['error'] || resObj['details'];
+
+        if (typeof resObj['code'] === 'string') {
+          code = resObj['code'];
+        }
+
+        if (typeof resObj['message'] === 'string') {
+          message = resObj['message'];
+        } else if (Array.isArray(resObj['message'])) {
+          message = resObj['message'].join('; ');
+        } else if (typeof resObj['error'] === 'string') {
+          message = resObj['error'];
+        }
+
+        details = resObj['errors'] || resObj['details'] || null;
       }
     } else if (exception instanceof Error) {
-      message = exception.message;
-      this.logger.error(`Unhandled Exception: ${exception.message}`, exception.stack);
-    } else {
-      this.logger.error('Unhandled Unknown Exception', exception);
+      message = exception.message || 'Internal server error';
     }
 
-    response.status(statusCode).json({
+    this.logException(request, statusCode, exception, message, requestId);
+
+    const errorResponse: ApiErrorResponse = {
       success: false,
-      statusCode,
-      code,
-      message,
-      details,
-      path: request.url,
-      timestamp: new Date().toISOString(),
-    });
+      error: {
+        code,
+        message,
+        details,
+      },
+    };
+
+    response.status(statusCode).json(errorResponse);
+  }
+
+  private deriveErrorCode(exception: HttpException): ErrorCode {
+    const name = exception.constructor.name;
+    return name
+      .replace(/Exception$/, '')
+      .replace(/([a-z0-9])([A-Z])/g, '$1_$2')
+      .toUpperCase();
+  }
+
+  private logException(
+    request: Request,
+    statusCode: number,
+    exception: unknown,
+    message: string,
+    requestId?: string,
+  ): void {
+    const prefix = requestId ? `[${requestId}] ` : '';
+    const logHeader = `${prefix}${request.method} ${request.url} -> ${statusCode}: ${message}`;
+
+    if (statusCode >= HttpStatus.INTERNAL_SERVER_ERROR) {
+      const stack = exception instanceof Error ? exception.stack : undefined;
+      this.logger.error(logHeader, stack);
+    } else {
+      this.logger.warn(logHeader);
+    }
   }
 }

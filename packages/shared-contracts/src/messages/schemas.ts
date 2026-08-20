@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { DeliveryStatus, FileType, MessageContentType, MessageType, SenderType } from './enums';
+import { DeliveryStatus, MessageContentType, MessageType, SenderType } from './enums';
 
 export const sendMessageSchema = z.object({
   content: z.string().optional(),

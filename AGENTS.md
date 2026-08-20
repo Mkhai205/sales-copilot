@@ -24,9 +24,9 @@
 
 # AGENTS.md
 
-## 1. Project & Scope Phasing
+## 1. Project Vision & Scope Phasing
 
-Sales Copilot Platform is an omnichannel conversation platform designed to support sales and customer engagement.
+Sales Copilot Platform is an omnichannel customer conversation and engagement platform inspired by Chatwoot, built as a modern modular monolith with **NestJS, Next.js, PostgreSQL (Prisma), Redis, MinIO, and WebSockets**.
 
 ### Project Roadmap & Phasing:
 
@@ -47,491 +47,237 @@ Sales Copilot Platform is an omnichannel conversation platform designed to suppo
    Webhooks      Automation
 ```
 
-- **Phase 1 (CURRENT ACTIVE SCOPE)**: **Omnichannel Conversation Platform Core** inspired by Chatwoot using NestJS + Next.js. Focus strictly on multi-tenancy, channels, inboxes, contacts, channel identities, conversations, messages, attachments, conversation labels, canned responses, automation rules, outbound webhooks, team assignment, and realtime WebSocket updates.
-- **Phase 2 (FUTURE EXTENSION)**: **Sales Intelligence & AI Copilot**. Lead lifecycle, AI-driven Lead scoring, buying signals extraction, sales evidence, copilot decisions, and tool execution engine will be added on top of the proven conversation foundation. **Do not create models, DTOs, or services for Phase 2 during Phase 1.**
+- **Phase 1 (CURRENT ACTIVE SCOPE)**: **Omnichannel Conversation Platform Core**. Focus strictly on:
+  - Multi-tenancy & Workspace isolation
+  - Channels (Facebook Messenger, Zalo, Telegram, Email, Web Chat)
+  - Inboxes & Inbox Members
+  - Contacts & Channel Identities (resolution & deduplication)
+  - Conversations & Messages (threading, attachments, private notes)
+  - Operations (Labels, Canned Responses, Automation Rules, Outbound Webhooks, Team/Agent Auto-assignment)
+  - Realtime WebSocket updates
+- **Phase 2 (FUTURE EXTENSION - FROZEN)**: **Sales Intelligence & AI Copilot**. Lead lifecycle, AI Lead scoring, buying signals extraction, sales evidence, copilot decision engine.
+  - ⛔ **CRITICAL RULE**: **Do NOT create models, DTOs, tables, or services for Phase 2 during Phase 1.**
 
-### Comprehensive Phase 1 Technical Documentation & References:
-
-Detailed architecture, domain rules, state machines, and Chatwoot source references are documented in [`.docs/`](./.docs/README.md):
+### Primary Documentation References in [`.docs/`](./.docs/README.md):
 
 - **Product & Scope**: [Product Vision](./.docs/product/vision.md) | [Scope](./.docs/product/scope.md) | [Requirements](./.docs/product/requirements.md)
 - **Domain & Rules**: [Domain Model](./.docs/domain/domain-model.md) | [Business Rules](./.docs/domain/business-rules.md)
 - **Architecture**: [System Overview](./.docs/architecture/system-architecture.md) | [Module Boundaries](./.docs/architecture/module-architecture.md) | [Data & Security](./.docs/architecture/data-architecture.md)
 - **API & Contracts**: [REST API](./.docs/api/api-contract.md) | [WebSocket Events](./.docs/api/websocket-contract.md)
 - **Engineering & Backlog**: [Master Backlog](./.docs/backlog/backlog.md) | [Coding Guidelines](./.docs/engineering/coding-guidelines.md)
-- **Chatwoot Reference Source**: [Chatwoot Reference Guide](./.docs/references/chatwoot/README.md) & [Chatwoot Source](./.docs/references/chatwoot/source)
+- **Chatwoot Reference**: [Chatwoot Guide](./.docs/references/chatwoot/README.md) & [Chatwoot Source](./.docs/references/chatwoot/source)
 
-Primary product flow (Phase 1):
+---
 
-Customer
-→ Channel
-→ Inbound Ingestion Pipeline
-→ Inbox
-→ Contact & ChannelIdentity Resolution
-→ Conversation & Message
-→ Team / Agent Assignment
-→ Operations (Labels, Canned Responses, Automation Rules, Webhooks)
-→ Realtime Events to Web UI
+## 2. Core Directive: Anti-Over-Engineering & Pragmatism
 
-The product is conversation-first, not CRM-first.
+> **The primary failure mode of AI coding agents is creating excessive boilerplate, speculative abstractions, and bloated layers of indirection.** You MUST adhere to these anti-overengineering principles at all times:
 
-Chatwoot is the primary business-logic reference for the conversation platform.
+### 2.1. YAGNI (You Aren't Gonna Need It) & No Speculative Generality
 
-Do not copy Chatwoot's Ruby/Rails architecture directly.
+- **Write code ONLY for the current, explicit requirement.** Never add parameters, helper methods, hooks, or configuration toggles for hypothetical future use cases.
+- Do not create "extensible framework code" when a simple, direct 15-line function solves the task cleanly.
 
-## 2. Technology
+### 2.2. KISS (Keep It Simple, Stupid) & Direct Implementations
 
-Backend:
+- Prefer direct, straightforward code over complex architectural patterns.
+- Prefer idiomatic **NestJS Services (`*.service.ts`)** and **Prisma Client queries** directly inside services over multi-layered Clean Architecture boilerplate.
 
-- NestJS
-- TypeScript
-- PostgreSQL
-- Redis
-- MinIO
-- WebSocket
-- Queue/Background Workers
+### 2.3. No Single-Implementation Interfaces (Anti-Interface Explosion)
 
-Frontend:
+- ❌ **DO NOT CREATE**: `IUserService`, `IWorkspaceRepository`, `IConversationService`, `IAuthService` when only ONE concrete implementation exists.
+- In NestJS and TypeScript, `@Injectable()` concrete classes are already first-class injectable dependencies and can be mocked directly in tests with `jest.spyOn()` or custom test providers.
+- Interfaces are reserved **ONLY** for polymorphic integration points with multiple implementations (e.g. `ChannelAdapter` implemented by `FacebookAdapter`, `ZaloAdapter`, `TelegramAdapter`).
 
-- Next.js
-- React
-- TypeScript
+### 2.4. No DTO & Mapper Pipeline Explosion
+
+- ❌ **DO NOT CHAIN**: `Entity` ➔ `DomainModel` ➔ `ApplicationDTO` ➔ `ControllerPresenter` ➔ `ViewModel` for standard CRUD or business operations.
+- ✅ **DO**: Use a single Zod schema for input validation/DTO and return Prisma models or simple typed response objects directly. Let NestJS `TransformInterceptor` handle the response envelope.
+
+### 2.5. Rule of Three for Abstractions
+
+- **Do NOT abstract on first or second use.** Duplicate code 2 times before creating a shared helper or abstraction. Only extract shared utilities or base classes when you have **at least 3 concrete, distinct implementations** with identical logic.
 
-Repository:
+### 2.6. Co-location over Folder Sprawl
 
-- Monorepo
+- Group related code closely in cohesive feature modules.
+- ❌ **AVOID**: Creating 10 deeply nested micro-folders for 1 feature (`domain/entities`, `domain/value-objects`, `domain/events`, `application/commands`, `application/queries`, `application/ports`, `infrastructure/persistence`, etc.).
+- ✅ **PREFER**: Cohesive NestJS module structure:
+  ```text
+  conversations/
+  ├── conversations.module.ts
+  ├── conversations.controller.ts
+  ├── conversations.service.ts
+  ├── conversations.dto.ts        # Zod schemas & types
+  ├── conversations.listener.ts   # Event listeners (if applicable)
+  └── conversations.service.spec.ts
+  ```
+
+---
+
+## 3. Technology Stack
 
-Architecture:
+- **Backend**: NestJS, TypeScript, Prisma ORM, PostgreSQL, Redis, MinIO (S3-compatible), WebSocket (`@nestjs/platform-socket.io`).
+- **Frontend**: Next.js (App Router), React, TypeScript, Tailwind CSS, Shadcn UI / Radix primitives.
+- **Monorepo Management**: Nx monorepo (`pnpm nx run-many`, `pnpm nx test`, `pnpm nx lint`).
+- **Architecture**: Pragmatic Modular Monolith. Event-driven internally via `EventEmitter2` and Redis Queues (BullMQ).
+- **Prohibited**: Do NOT introduce Microservices, Kafka, RabbitMQ, GraphQL, or heavy distributed workflow engines.
 
-- Modular monolith
-- Event-driven internally
-- Domain-oriented modules
+---
 
-Do not introduce microservices unless explicitly approved.
+## 4. Module Boundaries & Communication
+
+Phase 1 Core Modules:
 
-## 3. Architectural Principles
+1. **Identity & Tenancy**: User, Workspace, WorkspaceMember, Team, TeamMember.
+2. **Omnichannel**: Channel, ChannelEvent, Inbox, InboxMember, ChannelIdentity, Contact.
+3. **Conversation**: Conversation, ConversationLabel, Message, Attachment.
+4. **Operations**: Label, CannedResponse, AutomationRule, WebhookSubscription, WebhookDelivery, AuditLog.
+5. **Realtime**: WebSocket Gateway & Realtime Event Dispatcher.
 
-Prefer:
+### Inter-Module Rules:
 
-- Clear module boundaries
-- Explicit dependencies
-- Domain-driven design where useful
-- Application use-cases
-- Typed contracts
-- Dependency inversion
-- Small cohesive modules
-- Asynchronous processing for expensive/background operations
-- Explicit domain events
-- Testable business logic
+- A module encapsulates its business logic in its NestJS service (`*.service.ts`).
+- Modules communicate across boundaries using:
+  1. **Public NestJS Services** exported via `exports: [...]` in the module definition.
+  2. **Domain/Application Events** via `EventEmitter2` (`@OnEvent('conversation.created')`).
+  3. **Background Queue Jobs** via BullMQ for heavy/retryable tasks.
+- ❌ **DO NOT**: Directly query or mutate another module's internal Prisma models without going through that module's exported service.
 
-Avoid:
+---
 
-- Global service classes
-- God modules
-- Circular dependencies
-- Direct database access from controllers
-- Business logic inside controllers
-- Business logic inside React components
-- Provider-specific logic leaking into domain code
-- Unnecessary abstractions
-- Premature microservices
-- Premature Phase 2 (Lead / AI) implementation in Phase 1
+## 5. Multi-Tenancy & Data Security (Non-Negotiable)
 
-## 4. Module Boundaries (Phase 1 - Conversation Core)
+1. **Mandatory Tenant Scoping (`workspaceId`)**:
+   - Every single database query, update, delete, or lookup for workspace resources **MUST include `workspaceId` in the Prisma `where` clause**.
+   - Never rely on ID lookup alone (e.g. `prisma.conversation.findUnique({ where: { id } })` ❌) without verifying `workspaceId` (e.g. `prisma.conversation.findFirst({ where: { id, workspaceId } })` ✅).
+2. **Channel Credentials Encryption**:
+   - `Channel.credentials` in the database stores encrypted credentials at rest using **AES-256-GCM**.
+   - Read/write access to credentials must ALWAYS pass through `ChannelCredentialService`.
+   - Never log, print, or expose plaintext access tokens, webhook secrets, or API keys in logs or responses.
+3. **Webhook Inbound Validation**:
+   - All external inbound webhooks (Facebook, Zalo, Telegram, etc.) must verify HMAC signatures/tokens before processing payloads.
+4. **Backend Authorization**:
+   - Never trust client-side authorization. Validate workspace membership, roles (`ADMIN`, `AGENT`), and inbox access in backend Guards/Services.
 
-Phase 1 Core modules include:
+---
 
-- **Identity & Multi-Tenancy**: User, Workspace, WorkspaceMember, Team, TeamMember
-- **Omnichannel**: Channel, ChannelEvent, Inbox, InboxMember, ChannelIdentity, Contact
-- **Conversation**: Conversation, ConversationLabel, Message, Attachment
-- **Operations**: Label, CannedResponse, AutomationRule, WebhookSubscription, WebhookDelivery, AuditLog
-- **Realtime**: WebSocket Gateway & Event Dispatcher
+## 6. Error Handling & Response Standards
 
-A module owns its domain logic and data access.
+Follow the standard NestJS exception paradigm:
 
-Other modules must interact through:
-
-- Public application services
-- Commands/use-cases
-- Queries
-- Domain events
-- Explicit contracts
-
-Do not access another module's internal implementation.
-
-## 5. Dependency Direction
-
-Preferred direction:
-
-Presentation
-→ Application
-→ Domain
-
-Infrastructure implements interfaces required by application/domain.
-
-Example:
-
-Controller
-→ Use Case
-→ Domain
-
-Repository implementation:
-
-Domain/Application interface
-← Infrastructure implementation
-
-Do not:
-
-Controller
-→ Prisma/Database
-
-Domain
-→ NestJS framework infrastructure
-
-Domain
-→ External SDKs directly
-
-## 6. External Integrations
-
-External providers must be isolated behind adapters.
-
-Examples:
-
-- Facebook Messenger
-- Zalo
-- Telegram
-- Email providers
-- MinIO S3
-
-Preferred:
-
-Application
-→ Provider Interface
-→ Adapter
-→ External SDK/API
-
-Never expose provider SDK types throughout the domain.
-
-Channel Credentials Policy:
-
-- `Channel.credentials` in the database stores encrypted credentials at rest (AES-256-GCM).
-- Access to credentials must always pass through `ChannelCredentialService` / adapter.
-- Plaintext access tokens, app secrets, and webhook secrets must NEVER be logged or stored unencrypted.
-
-## 7. Autonomous Agent & Phase 2 Rules
-
-In Phase 1, autonomous AI actions and Lead scoring are frozen.
-In Phase 2, when AI capabilities are added:
-
-- AI must be treated as an application capability, not embedded directly into business entities.
-- AI actions must pass through Tool Registry → Guardrail Policy → Action Executor → Use Case.
-- AI will NEVER directly execute database modifications.
-
-## 8. Event-Driven Architecture
-
-Use domain/application events for asynchronous workflows.
-
-Example (Phase 1):
-
-MessageReceived
-→ ConversationResolved
-→ AssignmentTriggered
-→ AutomationEvaluated
-→ WebhookDispatched
-→ RealtimeBroadcasted
-
-Events must be explicit, typed and versionable.
-
-Do not introduce Kafka or other distributed infrastructure merely because the system is event-driven.
-
-Redis/queue infrastructure is sufficient for the modular-monolith stage unless requirements demonstrate otherwise.
-
-## 9. Database
-
-PostgreSQL is the source of truth for transactional business data.
-
-Rules:
-
-- Use migrations.
-- Never modify production schema manually.
-- Add indexes intentionally.
-- Preserve tenant/workspace isolation.
-- Use transactions for consistency boundaries.
-- Avoid N+1 queries.
-- Do not expose ORM models directly as API contracts.
-
-Database implementation must not leak into domain logic.
-
-## 10. API
-
-API contracts must be explicit and typed.
-
-Requirements:
-
-- Input validation
-- Authentication
-- Authorization
-- Tenant isolation
-- Workspace isolation
-- Consistent errors
-- Pagination
-- Filtering
-- Sorting
-- Idempotency where required
-
-Do not silently change existing API contracts.
-
-Breaking changes require explicit decision/documentation.
-
-## 11. Realtime
-
-WebSocket is used for realtime application state.
-
-Events must be:
-
-- Typed
-- Explicit
-- Namespaced where appropriate
-- Authorization-aware
-- Tenant/workspace scoped
-
-Realtime infrastructure must not bypass domain/application authorization.
-
-## 12. Testing
-
-Every new business capability must have appropriate tests.
-
-Prefer:
-
-- Unit tests for domain logic & state machines
-- Application tests for use-cases
-- Integration tests for database/infrastructure
-- E2E tests for critical flows
-- Contract tests for external integrations
-
-Do not add code that cannot reasonably be tested.
-
-Critical flow (Phase 1):
-
-Inbound Webhook
-→ Ingestion & Deduplication
-→ Contact & Identity Resolution
-→ Conversation & Message Threading
-→ Assignment & Routing
-→ Realtime Broadcast & Outbound Delivery
-
-must be covered progressively by integration/E2E tests.
-
-## 13. Coding Standards
-
-Use TypeScript strictly.
-
-Prefer explicit types at architectural boundaries.
-
-Use consistent naming.
-
-Names must describe domain concepts rather than implementation details.
-
-Avoid abbreviations unless they are established domain terminology.
-
-Keep functions and classes cohesive.
-
-Do not create abstractions only to satisfy theoretical purity.
-
-Do not duplicate business rules across controllers, services and frontend.
-
-Business rules belong in the appropriate domain/application layer.
-
-## 14. Frontend Rules
-
-Next.js/React UI must not contain backend business rules.
-
-Frontend responsibilities:
-
-- Presentation
-- User interaction
-- Client state
-- API interaction
-- Realtime rendering
-
-Backend remains the authority for:
-
-- Authorization & Tenant isolation
-- Conversation lifecycle & status transitions
-- Contact identity resolution & merge
-- Channel credentials & delivery
-- Auto-assignment & routing
-- Automation rules & webhook deliveries
-
-## 15. Chatwoot Reference Rules
-
-Chatwoot is the primary reference for conversation-platform behavior.
-
-When implementing conversation-related functionality:
-
-1. Inspect the relevant Chatwoot implementation.
-2. Understand the business behavior.
-3. Identify the domain rules.
-4. Translate those rules into the current architecture.
-5. Implement using NestJS/TypeScript conventions.
-
-Do not blindly translate Ruby classes into TypeScript classes.
-
-Do not copy Rails-specific abstractions.
-
-Do not introduce Chatwoot features outside the current product scope.
-
-When there is a conflict:
-
-Current Sales Copilot requirements
-
->
-
-Current architecture
-
->
-
-Explicit ADR
-
->
-
-Chatwoot implementation
-
-## 16. Coding-Agent Workflow
-
-For every task:
-
-1. Read AGENTS.md.
-2. Read relevant product documentation in `.docs/`.
-3. Inspect existing module boundaries.
-4. Identify affected domain/application/infrastructure layers.
-5. Inspect relevant Chatwoot behavior when applicable.
-6. Implement the smallest coherent change.
-7. Add/update tests.
-8. Run validation.
-9. Check architecture boundaries.
-10. Update documentation when behavior or architecture changes.
-
-Do not start coding before understanding the affected module.
-
-## 17. Refactoring Permission
-
-The agent MAY:
-
-- Refactor code.
-- Improve module boundaries.
-- Extract duplicated logic.
-- Improve performance.
-- Improve testability.
-- Replace poor local implementations.
-- Suggest architectural improvements.
-
-The agent MUST preserve documented architectural decisions.
-
-The agent MUST NOT silently:
-
-- Introduce microservices.
-- Replace PostgreSQL.
-- Replace Redis.
-- Replace MinIO.
-- Replace NestJS/Next.js.
-- Change tenancy architecture.
-- Change core domain semantics.
-- Change major API contracts.
-- Change AI autonomy policy.
-- Reintroduce Phase 2 (Lead/AI) models into Phase 1.
-- Add major infrastructure dependencies.
-
-## 18. Architectural Changes
-
-Minor refactoring can be performed directly.
-
-Significant architectural changes require an ADR or explicit approval.
-
-Examples:
-
-- New bounded context
-- Major database strategy change
-- New messaging infrastructure
-- New distributed system component
-- Microservice extraction
-- Major authorization model change
-- Major AI architecture change
-- Breaking API change
-
-The agent may propose these changes but must not silently implement them as if they were already approved.
-
-## 19. Dependencies
-
-Before adding a dependency:
-
-- Verify that the existing stack cannot reasonably solve the problem.
-- Prefer mature, focused dependencies.
-- Avoid duplicate libraries.
-- Consider bundle/runtime impact.
-- Consider maintenance and security.
-- Keep infrastructure dependencies minimal.
-
-Do not add dependencies simply for convenience.
-
-## 20. Security
-
-Never:
-
-- Commit secrets.
-- Log credentials.
-- Expose provider API keys.
-- Trust client-side authorization.
-- Bypass tenant isolation.
-- Let AI directly execute arbitrary code or database queries.
-
-All external webhooks must be validated according to provider requirements.
-
-All autonomous AI actions must pass authorization and policy checks.
-
-## 21. Definition of Done
-
-A task is not complete when the code merely compiles.
-
-Done means:
-
-- Requirements implemented.
-- Correct module boundary.
-- Tests added/updated.
-- API contracts updated if necessary.
-- Database migration created if necessary.
-- Error handling implemented.
-- Authorization implemented.
-- Observability considered.
-- No architectural violation.
-- Existing tests remain passing.
-- Documentation updated when required.
-
-## 22. Priority
-
-When making implementation decisions, prioritize:
-
-1. Correct business behavior.
-2. Security and tenant isolation.
-3. Architectural boundaries.
-4. Data consistency.
-5. Reliability.
-6. Testability.
-7. Performance.
-8. Developer convenience.
-
-Do not sacrifice domain correctness for implementation speed.
-
-## 23. Source of Truth
-
-Priority of information:
-
-1. Explicit current project requirements.
-2. AGENTS.md.
-3. Product documentation in `.docs/`.
-4. Architecture decisions/ADRs.
-5. Existing source code.
-6. Chatwoot business behavior.
-7. Agent assumptions.
-
-If information is ambiguous and the decision affects architecture or business behavior, stop and ask rather than inventing a requirement.
+1. **Use NestJS Built-in Exceptions**:
+   - Throw standard exceptions from `@nestjs/common`: `NotFoundException`, `BadRequestException`, `ForbiddenException`, `UnauthorizedException`, `ConflictException`, `UnprocessableEntityException`.
+   - ❌ Do NOT create abstract custom error hierarchies (`DomainError`, `ApplicationError`, `CustomBaseException`).
+   - For business error codes, pass a structured object:
+     ```typescript
+     throw new ConflictException({
+       code: 'EMAIL_ALREADY_EXISTS',
+       message: 'Email is already in use by another account',
+       details: { email },
+     });
+     ```
+2. **Global Exception Filter**:
+   - `HttpExceptionFilter` intercepts all exceptions and formats them into a standard response:
+     ```json
+     {
+       "success": false,
+       "error": {
+         "code": "EMAIL_ALREADY_EXISTS",
+         "message": "Email is already in use by another account",
+         "details": { "email": "test@example.com" }
+       }
+     }
+     ```
+3. **Response Envelope**:
+   - Controllers and services return raw data or paginated objects `{ items, meta }`.
+   - `TransformInterceptor` wraps successful responses in `{ success: true, data, meta }`.
+4. **Validation**:
+   - Validate incoming request payloads using Zod pipes (`@ZodBody()`, `@ZodQuery()`, `@ZodParam()`).
+
+---
+
+## 7. External Integrations & Adapters
+
+External third-party providers must be isolated behind adapters so vendor SDKs do not pollute core business logic:
+
+```text
+Omnichannel Channels:
+ChannelAdapter (interface)
+├── FacebookAdapter
+├── ZaloAdapter
+├── TelegramAdapter
+└── EmailAdapter
+
+File Storage:
+StorageService (or MinioAdapter)
+```
+
+- When implementing a channel integration, encapsulate vendor-specific payloads, webhook formats, and API SDKs inside its adapter.
+- Internal services only consume normalized data types (e.g. `InboundMessagePayload`, `SendMessageResult`).
+
+---
+
+## 8. Event-Driven Workflows & Realtime
+
+- **In-process events**: Use `EventEmitter2` for asynchronous, non-blocking side effects:
+  - `MessageReceived` ➔ trigger auto-assignment, evaluate automation rules, dispatch webhook, broadcast realtime WebSocket event.
+- **Background queues**: Use BullMQ (Redis) for retryable or high-latency tasks (e.g., outbound webhook delivery, sending emails, large media processing).
+- **WebSocket Gateway**:
+  - Broadcast typed events scoped to `workspaceId` and relevant user/inbox rooms.
+  - Always enforce authentication and tenant authorization on socket connections.
+
+---
+
+## 9. Frontend Guidelines (Next.js & React)
+
+- **Presentation & Interaction Only**: Next.js React components are responsible for UI, user interaction, client state, and realtime rendering.
+- **No Server Business Logic Duplication**: Frontend must not replicate complex server-side rules (e.g., contact merging logic, auto-assignment algorithms, channel credential validation). The backend API is the single source of truth.
+- **Pragmatic State Management**:
+  - Use React Query / TanStack Query for server state caching and synchronization.
+  - Use React local state (`useState`, `useReducer`) or lightweight context for UI state.
+  - Do NOT introduce heavyweight global state machines unless clearly required.
+- **Always handle key UI states**: Loading, empty state, error handling, unauthorized, optimistic updates where beneficial.
+
+---
+
+## 10. Chatwoot Reference Guidelines
+
+Chatwoot is our primary business behavior reference for conversation flows:
+
+1. Review Chatwoot's behavior for conversation lifecycle, contact resolution, inbox routing, and canned responses.
+2. Translate the **business intent and rules** into our modern TypeScript/NestJS architecture.
+3. ❌ **DO NOT copy Rails/Ruby-isms** (e.g., ActiveSupport concerns, ActiveRecord callbacks, global monkey-patching).
+4. In case of conflict:
+   `Current Project Requirements > Current Architecture > Explicit ADR > Chatwoot Implementation`
+
+---
+
+## 11. Testing Guidelines
+
+Write pragmatic, high-value tests:
+
+- **Unit & Service Tests**: Test core business rules, status transitions, contact identity deduplication, and assignment logic.
+- **Integration Tests**: Test critical end-to-end flows (e.g. Inbound Webhook Ingestion ➔ Identity Resolution ➔ Message Storage ➔ Realtime Event).
+- ❌ **AVOID BRITTLE TESTS**: Do not write 200 lines of mock setup for simple 3-line getters or CRUD delegation methods. Focus testing on business logic, edge cases, invariants, and authorization boundaries.
+
+---
+
+## 12. AI Coding Agent Workflow & Definition of Done
+
+When completing any task, follow this systematic workflow:
+
+1. **Understand & Inspect**: Review existing module code, database schemas, and relevant documentation in `.docs/`.
+2. **Implement Minimal & Coherent Changes**: Write the simplest, most readable solution that completely satisfies the requirements. Avoid over-engineering, unnecessary classes, and redundant layers.
+3. **Verify Tenant Isolation & Security**: Ensure every query is tenant-scoped (`workspaceId`) and credentials are encrypted.
+4. **Add/Update Tests**: Cover meaningful business logic with clean tests.
+5. **Run Validation via Nx**:
+   - Run linter: `pnpm nx run <project>:lint` or `pnpm nx affected -t lint`
+   - Run tests: `pnpm nx run <project>:test` or `pnpm nx affected -t test`
+   - Run build: `pnpm nx run <project>:build`
+6. **Definition of Done**:
+   - [x] Requirements implemented accurately.
+   - [x] Code is simple, readable, and free of unnecessary abstractions (YAGNI & KISS).
+   - [x] Multi-tenancy and security standards strictly respected.
+   - [x] Tests pass and build succeeds.
+   - [x] Documentation updated if API or architecture contracts changed.

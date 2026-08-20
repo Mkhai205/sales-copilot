@@ -1,7 +1,6 @@
 import { Global, Module } from '@nestjs/common';
-import { TRANSACTION_MANAGER } from '@sales-copilot/shared-contracts';
 import { PrismaService } from './prisma.service';
-import { PrismaTransactionManager } from './transactions/prisma-transaction-manager';
+import { PrismaTransactionManager, TRANSACTION_MANAGER } from './transactions';
 
 @Global()
 @Module({

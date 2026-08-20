@@ -5,7 +5,7 @@ import {
   ITransactionContext,
   ITransactionManager,
   TransactionOptions,
-} from '@sales-copilot/shared-contracts';
+} from './transaction.interface';
 import { PrismaTransactionContext } from './transaction-context';
 
 @Injectable()
