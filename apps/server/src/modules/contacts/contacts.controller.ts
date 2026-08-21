@@ -11,11 +11,14 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiHeader, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import {
+  ChannelIdentityDto,
   ContactDto,
   ContactListQueryDto,
   contactListQuerySchema,
   ContactSearchQueryDto,
   contactSearchQuerySchema,
+  CreateChannelIdentityDto,
+  createChannelIdentitySchema,
   CreateContactDto,
   createContactSchema,
   PaginationMeta,
@@ -29,6 +32,7 @@ import { CurrentWorkspace, Roles } from '../workspaces/decorators';
 import { RolesGuard, WorkspaceGuard } from '../workspaces/guards';
 import type { WorkspaceContext } from '../workspaces/types/workspace-context.type';
 import { ContactsService } from './contacts.service';
+import { ChannelIdentityService } from './channel-identity.service';
 
 @ApiTags('Contacts')
 @Controller('contacts')
@@ -40,7 +44,10 @@ import { ContactsService } from './contacts.service';
   description: 'Target Workspace UUID for tenant resolution',
 })
 export class ContactsController {
-  constructor(private readonly contactsService: ContactsService) {}
+  constructor(
+    private readonly contactsService: ContactsService,
+    private readonly channelIdentityService: ChannelIdentityService,
+  ) {}
 
   @Get()
   @HttpCode(HttpStatus.OK)
@@ -136,5 +143,58 @@ export class ContactsController {
     @Param('id') contactId: string,
   ): Promise<{ success: boolean }> {
     return this.contactsService.delete(context.workspaceId, contactId);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Nested Channel Identities Endpoints (Feature F-1.2.2)
+  // ---------------------------------------------------------------------------
+
+  @Get(':contactId/identities')
+  @HttpCode(HttpStatus.OK)
+  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.AGENT, WorkspaceRole.VIEWER)
+  @ApiOperation({ summary: 'List all channel identities linked to a specific contact' })
+  @ApiResponse({ status: 200, description: 'Channel identities retrieved successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiResponse({ status: 404, description: 'Contact not found' })
+  async listContactIdentities(
+    @CurrentWorkspace() context: WorkspaceContext,
+    @Param('contactId') contactId: string,
+  ): Promise<ChannelIdentityDto[]> {
+    return this.channelIdentityService.findByContactId(context.workspaceId, contactId);
+  }
+
+  @Post(':contactId/identities')
+  @HttpCode(HttpStatus.CREATED)
+  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.AGENT)
+  @ApiOperation({ summary: 'Link a new channel identity to a contact' })
+  @ApiResponse({ status: 201, description: 'Channel identity linked successfully' })
+  @ApiResponse({ status: 400, description: 'Validation failed' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden / Insufficient permissions' })
+  @ApiResponse({ status: 404, description: 'Contact or Channel not found' })
+  @ApiResponse({ status: 409, description: 'Channel identity already linked to another contact' })
+  async linkContactIdentity(
+    @CurrentWorkspace() context: WorkspaceContext,
+    @Param('contactId') contactId: string,
+    @ZodBody(createChannelIdentitySchema) dto: CreateChannelIdentityDto,
+  ): Promise<ChannelIdentityDto> {
+    return this.channelIdentityService.createForContact(context.workspaceId, contactId, dto);
+  }
+
+  @Delete(':contactId/identities/:id')
+  @HttpCode(HttpStatus.OK)
+  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.AGENT)
+  @ApiOperation({ summary: 'Unlink a channel identity from a contact' })
+  @ApiResponse({ status: 200, description: 'Channel identity unlinked successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden / Insufficient permissions' })
+  @ApiResponse({ status: 404, description: 'Contact or Channel identity not found' })
+  async unlinkContactIdentity(
+    @CurrentWorkspace() context: WorkspaceContext,
+    @Param('contactId') contactId: string,
+    @Param('id') identityId: string,
+  ): Promise<{ success: boolean }> {
+    return this.channelIdentityService.delete(context.workspaceId, contactId, identityId);
   }
 }

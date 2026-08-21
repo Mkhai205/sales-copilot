@@ -49,6 +49,22 @@ export const contactSearchQuerySchema = z.object({
 export type ContactSearchQueryDto = z.input<typeof contactSearchQuerySchema>;
 export type ContactSearchQueryOutput = z.output<typeof contactSearchQuerySchema>;
 
+export const createChannelIdentitySchema = z.object({
+  channelId: z.string().uuid('Invalid channel ID'),
+  externalContactId: z.string().trim().min(1, 'External contact ID is required'),
+  username: z.string().trim().optional().nullable(),
+  metadata: z.record(z.unknown()).optional(),
+});
+
+export type CreateChannelIdentityDto = z.input<typeof createChannelIdentitySchema>;
+
+export const lookupChannelIdentitySchema = z.object({
+  channelId: z.string().uuid('Invalid channel ID'),
+  externalContactId: z.string().trim().min(1, 'External contact ID is required'),
+});
+
+export type LookupChannelIdentityDto = z.input<typeof lookupChannelIdentitySchema>;
+
 export interface ChannelIdentityDto {
   id: string;
   contactId?: string;
@@ -114,4 +130,16 @@ export interface ContactDeletedEvent {
   workspaceId: string;
   contactId: string;
   contact: ContactDto;
+}
+
+export interface ChannelIdentityCreatedEvent {
+  workspaceId: string;
+  identity: ChannelIdentityDto;
+}
+
+export interface ChannelIdentityDeletedEvent {
+  workspaceId: string;
+  identityId: string;
+  contactId: string;
+  identity: ChannelIdentityDto;
 }
