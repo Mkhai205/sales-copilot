@@ -1,17 +1,12 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
+    "rootDir": "../..",
     "outDir": "../../dist/apps/server",
     "module": "commonjs",
     "types": ["node"],
     "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
-    "composite": false
+    "experimentalDecorators": true
   },
-  "include": ["src/**/*"],
-  "references": [
-    {
-      "path": "../../packages/shared-contracts"
-    }
-  ]
+  "include": ["src/**/*"]
 }

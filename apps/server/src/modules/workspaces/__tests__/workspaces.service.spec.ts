@@ -110,6 +110,7 @@ describe('WorkspacesService (Provisioning, Tenant Queries & Updates)', () => {
     mockPrismaService = {
       client: clientMock,
       getClient: () => clientMock,
+      runInTransaction: async (fn: (tx: any) => Promise<any>) => fn(clientMock),
       txManager: {
         runInTransaction: async (fn: (tx: any) => Promise<any>) => fn(clientMock),
       },

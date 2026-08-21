@@ -15,7 +15,6 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
 
     try {
       this.client = new Redis(redisUrl, {
-        lazyConnect: true,
         maxRetriesPerRequest: 3,
         retryStrategy: (times: number) => {
           const delay = Math.min(times * 1000, 5000);
@@ -106,6 +105,86 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
+  async incr(key: string): Promise<number> {
+    if (!this.client) return 0;
+    try {
+      return await this.client.incr(key);
+    } catch (err) {
+      this.logger.error(`Redis INCR error for key ${key}:`, err);
+      return 0;
+    }
+  }
+
+  async decr(key: string): Promise<number> {
+    if (!this.client) return 0;
+    try {
+      return await this.client.decr(key);
+    } catch (err) {
+      this.logger.error(`Redis DECR error for key ${key}:`, err);
+      return 0;
+    }
+  }
+
+  async hget(key: string, field: string): Promise<string | null> {
+    if (!this.client) return null;
+    try {
+      return await this.client.hget(key, field);
+    } catch (err) {
+      this.logger.error(`Redis HGET error for key ${key}, field ${field}:`, err);
+      return null;
+    }
+  }
+
+  async hset(key: string, field: string, value: string): Promise<number> {
+    if (!this.client) return 0;
+    try {
+      return await this.client.hset(key, field, value);
+    } catch (err) {
+      this.logger.error(`Redis HSET error for key ${key}, field ${field}:`, err);
+      return 0;
+    }
+  }
+
+  async hdel(key: string, ...fields: string[]): Promise<number> {
+    if (!this.client || fields.length === 0) return 0;
+    try {
+      return await this.client.hdel(key, ...fields);
+    } catch (err) {
+      this.logger.error(`Redis HDEL error for key ${key}:`, err);
+      return 0;
+    }
+  }
+
+  async hgetall(key: string): Promise<Record<string, string>> {
+    if (!this.client) return {};
+    try {
+      return await this.client.hgetall(key);
+    } catch (err) {
+      this.logger.error(`Redis HGETALL error for key ${key}:`, err);
+      return {};
+    }
+  }
+
+  async mget(keys: string[]): Promise<(string | null)[]> {
+    if (!this.client || keys.length === 0) return [];
+    try {
+      return await this.client.mget(...keys);
+    } catch (err) {
+      this.logger.error(`Redis MGET error:`, err);
+      return keys.map(() => null);
+    }
+  }
+
+  async ttl(key: string): Promise<number> {
+    if (!this.client) return -2;
+    try {
+      return await this.client.ttl(key);
+    } catch (err) {
+      this.logger.error(`Redis TTL error for key ${key}:`, err);
+      return -2;
+    }
+  }
+
   /**
    * Scans for keys matching a pattern using SCAN (non-blocking, production-safe).
    * NOTE: Avoid calling this in hot paths — use dedicated index structures (Sets) instead.
@@ -127,13 +206,33 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  async isHealthy(): Promise<boolean> {
-    if (!this.client || !this.isConnected) return false;
+  /**
+   * Healthcheck function to verify Redis connectivity and roundtrip latency.
+   */
+  async ping(): Promise<{ status: 'up' | 'down'; latencyMs: number; error?: string }> {
+    const start = Date.now();
     try {
-      const ping = await this.client.ping();
-      return ping === 'PONG';
-    } catch {
-      return false;
+      if (!this.client) {
+        throw new Error('Redis client is not initialized');
+      }
+      const response = await this.client.ping();
+      const latencyMs = Date.now() - start;
+      if (response !== 'PONG') {
+        throw new Error(`Unexpected ping response: ${response}`);
+      }
+      return { status: 'up', latencyMs };
+    } catch (err) {
+      const latencyMs = Date.now() - start;
+      return {
+        status: 'down',
+        latencyMs,
+        error: (err as Error)?.message || 'Redis unreachable',
+      };
     }
+  }
+
+  async isHealthy(): Promise<boolean> {
+    const health = await this.ping();
+    return health.status === 'up';
   }
 }

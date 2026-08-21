@@ -4,9 +4,7 @@
       "@sales-copilot/shared-contracts": ["./packages/shared-contracts/src/index.ts"],
       "@sales-copilot/shared-contracts/*": ["./packages/shared-contracts/src/*"]
     },
-    "composite": true,
     "declaration": true,
-    "declarationMap": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "esModuleInterop": true,

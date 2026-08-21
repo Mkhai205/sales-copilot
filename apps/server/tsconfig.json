@@ -1,14 +1,10 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    "rootDir": "../..",
     "module": "commonjs",
     "outDir": "../../dist/out-tsc",
     "types": ["node"]
   },
-  "include": ["src/**/*"],
-  "references": [
-    {
-      "path": "../../packages/shared-contracts"
-    }
-  ]
+  "include": ["src/**/*"]
 }

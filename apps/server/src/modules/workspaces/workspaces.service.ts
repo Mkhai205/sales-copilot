@@ -25,8 +25,8 @@ export class WorkspacesService {
   async createWorkspace(userId: string, dto: CreateWorkspaceDto): Promise<WorkspaceDto> {
     const baseSlug = dto.slug ? generateSlug(dto.slug) : generateSlug(dto.name);
 
-    const created = await this.prisma.txManager.runInTransaction(async () => {
-      const client = this.prisma.getClient();
+    const created = await this.prisma.runInTransaction(async () => {
+      const client = this.prisma.client;
 
       const workspace = await this.createWorkspaceWithUniqueSlug(client, {
         name: dto.name,

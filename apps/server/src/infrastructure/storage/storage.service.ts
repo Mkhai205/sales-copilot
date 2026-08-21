@@ -1,32 +1,25 @@
 import {
   CreateBucketCommand,
-  HeadBucketCommand,
-  PutBucketPolicyCommand,
-  PutObjectCommand,
   DeleteObjectCommand,
   GetObjectCommand,
+  HeadBucketCommand,
+  HeadObjectCommand,
+  PutBucketPolicyCommand,
+  PutObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { Injectable, Logger, OnModuleInit, UnsupportedMediaTypeException } from '@nestjs/common';
+import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import type { Readable } from 'stream';
 
 /** Prefixes allowed for public read access (without presigned URL) */
 const PUBLIC_BUCKET_PREFIXES = ['avatars', 'attachments', 'public'] as const;
 
-/** Map MIME type → file extension */
-const MIME_EXTENSION_MAP: Record<string, string> = {
-  'image/jpeg': 'jpg',
-  'image/png': 'png',
-  'image/webp': 'webp',
-  'image/gif': 'gif',
-  'image/svg+xml': 'svg',
-  'application/pdf': 'pdf',
-  'video/mp4': 'mp4',
-};
+export type StorageUploadBody = Buffer | Uint8Array | Readable | Blob | string;
 
 @Injectable()
-export class StorageService implements OnModuleInit {
+export class StorageService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(StorageService.name);
   private readonly s3Client: S3Client;
   private readonly endpoint: string;
@@ -38,8 +31,9 @@ export class StorageService implements OnModuleInit {
     this.endpoint = this.configService.getOrThrow<string>('STORAGE_ENDPOINT');
     this.publicEndpoint = this.configService.getOrThrow<string>('STORAGE_PUBLIC_ENDPOINT');
     this.bucketName = this.configService.getOrThrow<string>('STORAGE_BUCKETS');
-    this.presignedUrlExpiresInSeconds = this.configService.getOrThrow<number>(
+    this.presignedUrlExpiresInSeconds = this.configService.get<number>(
       'STORAGE_PRESIGNED_URL_EXPIRES_IN_SECONDS',
+      900,
     );
 
     this.s3Client = new S3Client({
@@ -57,17 +51,31 @@ export class StorageService implements OnModuleInit {
     );
   }
 
-  async onModuleInit() {
+  async onModuleInit(): Promise<void> {
     await this.ensureBucketExists();
     await this.setBucketPublicReadPolicy();
   }
 
-  private async ensureBucketExists() {
+  onModuleDestroy(): void {
+    try {
+      this.s3Client.destroy();
+      this.logger.log('🔌 S3 client destroyed gracefully');
+    } catch (err) {
+      this.logger.error('Error destroying S3 client:', err);
+    }
+  }
+
+  private async ensureBucketExists(): Promise<void> {
     try {
       await this.s3Client.send(new HeadBucketCommand({ Bucket: this.bucketName }));
       this.logger.log(`👌 Bucket "${this.bucketName}" already exists`);
-    } catch (error: any) {
-      if (error.name === 'NotFound' || error.$metadata?.httpStatusCode === 404) {
+    } catch (error: unknown) {
+      const err = error as {
+        name?: string;
+        $metadata?: { httpStatusCode?: number };
+        message?: string;
+      };
+      if (err.name === 'NotFound' || err.$metadata?.httpStatusCode === 404) {
         this.logger.warn(`🔃 Bucket "${this.bucketName}" not found, creating...`);
         try {
           await this.s3Client.send(new CreateBucketCommand({ Bucket: this.bucketName }));
@@ -79,14 +87,14 @@ export class StorageService implements OnModuleInit {
       } else {
         // Log warning but don't crash the app - bucket will be created on first upload
         this.logger.warn(
-          `Could not verify bucket existence (MinIO may not be running): ${error.message || error}`,
+          `Could not verify bucket existence (MinIO may not be running): ${err.message || error}`,
         );
         this.logger.warn('Bucket will be created automatically on first file upload');
       }
     }
   }
 
-  private async setBucketPublicReadPolicy() {
+  private async setBucketPublicReadPolicy(): Promise<void> {
     const bucketPolicy = {
       Version: '2012-10-17',
       Statement: [
@@ -117,12 +125,12 @@ export class StorageService implements OnModuleInit {
     }
   }
 
-  async upload(buffer: Buffer, mimetype: string, key: string) {
+  async upload(body: StorageUploadBody, mimetype: string, key: string): Promise<void> {
     await this.s3Client.send(
       new PutObjectCommand({
         Bucket: this.bucketName,
         Key: key,
-        Body: buffer,
+        Body: body as any,
         ContentType: mimetype,
         CacheControl: 'public, max-age=31536000',
       }),
@@ -147,11 +155,40 @@ export class StorageService implements OnModuleInit {
     }
   }
 
-  getPublicUrl(key: string) {
+  async exists(key: string): Promise<boolean> {
+    try {
+      await this.s3Client.send(
+        new HeadObjectCommand({
+          Bucket: this.bucketName,
+          Key: key,
+        }),
+      );
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async getObjectStream(key: string): Promise<Readable | null> {
+    try {
+      const response = await this.s3Client.send(
+        new GetObjectCommand({
+          Bucket: this.bucketName,
+          Key: key,
+        }),
+      );
+      return (response.Body as Readable) ?? null;
+    } catch (error) {
+      this.logger.error(`Failed to get object stream for key ${key}:`, error);
+      return null;
+    }
+  }
+
+  getPublicUrl(key: string): string {
     return `${this.publicEndpoint}/${this.bucketName}/${key}`;
   }
 
-  async getSignedUrl(key: string, expires = this.presignedUrlExpiresInSeconds) {
+  async getSignedUrl(key: string, expires = this.presignedUrlExpiresInSeconds): Promise<string> {
     const command = new GetObjectCommand({
       Bucket: this.bucketName,
       Key: key,
@@ -162,13 +199,22 @@ export class StorageService implements OnModuleInit {
     });
   }
 
-  private getExtension(mimetype: string): string {
-    const ext = MIME_EXTENSION_MAP[mimetype];
-    if (!ext) {
-      throw new UnsupportedMediaTypeException(
-        `Unsupported MIME type: "${mimetype}". Allowed types: ${Object.keys(MIME_EXTENSION_MAP).join(', ')}`,
-      );
+  /**
+   * Healthcheck function to verify S3/MinIO bucket connectivity.
+   */
+  async ping(): Promise<{ status: 'up' | 'down'; latencyMs: number; error?: string }> {
+    const start = Date.now();
+    try {
+      await this.s3Client.send(new HeadBucketCommand({ Bucket: this.bucketName }));
+      const latencyMs = Date.now() - start;
+      return { status: 'up', latencyMs };
+    } catch (err) {
+      const latencyMs = Date.now() - start;
+      return {
+        status: 'down',
+        latencyMs,
+        error: (err as Error)?.message || 'Storage unreachable',
+      };
     }
-    return ext;
   }
 }
