@@ -9,6 +9,7 @@ import { RedisModule } from './infrastructure/redis';
 import { StorageModule } from './infrastructure/storage/storage.module';
 import { AuthModule } from './modules/auth';
 import { WorkspacesModule } from './modules/workspaces';
+import { TeamsModule } from './modules/teams';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { validateEnv } from './config';
@@ -34,6 +35,7 @@ import { RequestIdMiddleware } from './common/middlewares';
     StorageModule,
     AuthModule,
     WorkspacesModule,
+    TeamsModule,
   ],
   controllers: [AppController],
   providers: [
