@@ -48,12 +48,12 @@ export class ContactMergeService {
     const runInTx = async (tx: any): Promise<ContactDto> => {
       // 1. Validate both contacts exist and belong to the workspace
       const [baseContact, mergeeContact] = await Promise.all([
-        tx.contact.findFirst({
-          where: { id: baseContactId, workspaceId },
+        tx.contact.findUnique({
+          where: { id: baseContactId },
           include: { identities: true },
         }),
-        tx.contact.findFirst({
-          where: { id: mergeeContactId, workspaceId },
+        tx.contact.findUnique({
+          where: { id: mergeeContactId },
           include: { identities: true },
         }),
       ]);
@@ -61,14 +61,14 @@ export class ContactMergeService {
       if (!baseContact) {
         throw new NotFoundException({
           code: 'CONTACT_NOT_FOUND',
-          message: `Base contact with id '${baseContactId}' not found in workspace`,
+          message: `Base contact with id '${baseContactId}' not found`,
         });
       }
 
       if (!mergeeContact) {
         throw new NotFoundException({
           code: 'CONTACT_NOT_FOUND',
-          message: `Mergee contact with id '${mergeeContactId}' not found in workspace`,
+          message: `Mergee contact with id '${mergeeContactId}' not found`,
         });
       }
 

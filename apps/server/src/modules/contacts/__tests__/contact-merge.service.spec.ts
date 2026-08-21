@@ -15,6 +15,7 @@ describe('ContactMergeService (Atomic Contact Merge Engine)', () => {
   let conversationsDb: Map<string, any>;
   let messagesDb: Map<string, any>;
   let auditLogsDb: Array<any>;
+  let clientMock: any;
 
   beforeEach(() => {
     contactsDb = new Map();
@@ -92,8 +93,18 @@ describe('ContactMergeService (Atomic Contact Merge Engine)', () => {
       content: 'Hello from mergee',
     });
 
-    const clientMock = {
+    clientMock = {
       contact: {
+        findUnique: async ({ where }: { where: any }) => {
+          for (const cnt of contactsDb.values()) {
+            if (where.id && cnt.id !== where.id) continue;
+            return {
+              ...cnt,
+              identities: Array.from(identitiesDb.values()).filter(i => i.contactId === cnt.id),
+            };
+          }
+          return null;
+        },
         findFirst: async ({ where }: { where: any }) => {
           for (const cnt of contactsDb.values()) {
             if (where.id && cnt.id !== where.id) continue;
@@ -247,7 +258,7 @@ describe('ContactMergeService (Atomic Contact Merge Engine)', () => {
     assert.strictEqual(emittedEvents.length, 0);
   });
 
-  it('should throw NotFoundException if base contact is not found in workspace', async () => {
+  it('should throw NotFoundException if base contact is not found', async () => {
     await assert.rejects(
       async () => {
         await service.merge('ws_alpha', 'cnt_unknown', 'cnt_mergee');
@@ -259,7 +270,7 @@ describe('ContactMergeService (Atomic Contact Merge Engine)', () => {
     );
   });
 
-  it('should throw NotFoundException if mergee contact is not found in workspace', async () => {
+  it('should throw NotFoundException if mergee contact is not found', async () => {
     await assert.rejects(
       async () => {
         await service.merge('ws_alpha', 'cnt_base', 'cnt_unknown');
@@ -269,5 +280,53 @@ describe('ContactMergeService (Atomic Contact Merge Engine)', () => {
         return true;
       },
     );
+  });
+
+  it('should throw BadRequestException (CROSS_WORKSPACE_MERGE_PROHIBITED) when merging contacts from different workspaces', async () => {
+    contactsDb.set('cnt_beta', {
+      id: 'cnt_beta',
+      workspaceId: 'ws_beta',
+      name: 'Beta Contact',
+      email: 'beta@test.com',
+      phoneNumber: null,
+      avatarUrl: null,
+      identifier: null,
+      customAttributes: {},
+      additionalAttributes: {},
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    await assert.rejects(
+      async () => {
+        await service.merge('ws_alpha', 'cnt_base', 'cnt_beta');
+      },
+      (err: any) => {
+        assert.strictEqual(err.response?.code, 'CROSS_WORKSPACE_MERGE_PROHIBITED');
+        return true;
+      },
+    );
+  });
+
+  it('should rollback and propagate error if any database operation fails in transaction', async () => {
+    // Override message.updateMany to fail
+    clientMock.message.updateMany = async () => {
+      throw new Error('Database disk error');
+    };
+
+    await assert.rejects(
+      async () => {
+        await service.merge('ws_alpha', 'cnt_base', 'cnt_mergee');
+      },
+      (err: any) => {
+        assert.strictEqual(err.message, 'Database disk error');
+        return true;
+      },
+    );
+
+    // Mergee contact should NOT have been deleted if transaction fails
+    assert.strictEqual(contactsDb.has('cnt_mergee'), true);
+    assert.strictEqual(auditLogsDb.length, 0);
+    assert.strictEqual(emittedEvents.length, 0);
   });
 });

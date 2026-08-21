@@ -30,6 +30,16 @@ describe('ContactIdentifyService (Priority Chain & Conflict Guards)', () => {
 
     const clientMock = {
       contact: {
+        findUnique: async ({ where }: { where: any }) => {
+          for (const cnt of contactsDb.values()) {
+            if (where.id && cnt.id !== where.id) continue;
+            return {
+              ...cnt,
+              identities: Array.from(identitiesDb.values()).filter(i => i.contactId === cnt.id),
+            };
+          }
+          return null;
+        },
         findFirst: async ({ where }: { where: any }) => {
           for (const cnt of contactsDb.values()) {
             if (where.id && cnt.id !== where.id) continue;

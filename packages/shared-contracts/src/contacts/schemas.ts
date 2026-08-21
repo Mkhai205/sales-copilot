@@ -100,16 +100,53 @@ export interface PaginatedContactsDto {
   meta: PaginationMeta;
 }
 
-export const mergeContactsSchema = z.object({
-  baseContactId: z.string().uuid(),
-  mergeeContactId: z.string().uuid(),
-});
+export const mergeContactsSchema = z
+  .object({
+    baseContactId: z.string().uuid('Invalid base contact ID format (UUID expected)'),
+    mergeeContactId: z.string().uuid('Invalid mergee contact ID format (UUID expected)'),
+  })
+  .refine(data => data.baseContactId !== data.mergeeContactId, {
+    message: 'Base contact and mergee contact must be different',
+    path: ['mergeeContactId'],
+  });
 export type MergeContactsDto = z.infer<typeof mergeContactsSchema>;
 
 export interface ContactMergedPayload {
   primaryContactId: string;
   mergedContactId: string;
   mergedByUserId: string;
+}
+
+export const identifyContactSchema = z.object({
+  identifier: z.string().trim().min(1).or(z.literal('')).optional().nullable(),
+  email: z.string().trim().email('Invalid email format').or(z.literal('')).optional().nullable(),
+  phoneNumber: z
+    .string()
+    .trim()
+    .regex(/^\+[1-9]\d{1,14}$/, 'Invalid phone number format (E.164 expected)')
+    .or(z.literal(''))
+    .optional()
+    .nullable(),
+  name: z.string().trim().min(1).optional().nullable(),
+  avatarUrl: z.string().trim().url('Invalid avatar URL').or(z.literal('')).optional().nullable(),
+  customAttributes: z.record(z.unknown()).optional(),
+  additionalAttributes: z.record(z.unknown()).optional(),
+});
+
+export type IdentifyContactDto = z.input<typeof identifyContactSchema>;
+
+export interface ResolvedContactResultDto {
+  contact: ContactDto;
+  channelIdentity: ChannelIdentityDto;
+  isNewContact: boolean;
+}
+
+export interface ContactMergedEvent {
+  workspaceId: string;
+  primaryContactId: string;
+  mergedContactId: string;
+  mergedByUserId?: string | null;
+  mergedAttributes?: Record<string, unknown>;
 }
 
 export interface ContactCreatedEvent {

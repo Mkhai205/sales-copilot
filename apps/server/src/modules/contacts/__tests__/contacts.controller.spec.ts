@@ -1,15 +1,23 @@
 import { describe, it, beforeEach } from 'node:test';
 import * as assert from 'node:assert';
-import { ChannelIdentityDto, ChannelType, WorkspaceRole } from '@sales-copilot/shared-contracts';
+import {
+  ChannelIdentityDto,
+  ChannelType,
+  PlatformRole,
+  WorkspaceRole,
+} from '@sales-copilot/shared-contracts';
 import { ContactsController } from '../contacts.controller';
 import { ContactsService } from '../contacts.service';
 import { ChannelIdentityService } from '../channel-identity.service';
+import { ContactMergeService } from '../contact-merge.service';
 import type { WorkspaceContext } from '../../workspaces/types/workspace-context.type';
+import type { JwtUserPayload } from '../../auth';
 
 describe('ContactsController (Presentation Layer Endpoints)', () => {
   let controller: ContactsController;
   let mockContactsService: Partial<ContactsService>;
   let mockChannelIdentityService: Partial<ChannelIdentityService>;
+  let mockContactMergeService: Partial<ContactMergeService>;
 
   const mockContext: WorkspaceContext = {
     workspaceId: 'ws_test_1',
@@ -25,6 +33,12 @@ describe('ContactsController (Presentation Layer Endpoints)', () => {
       createdAt: new Date(),
       updatedAt: new Date(),
     },
+  };
+
+  const mockUser: JwtUserPayload = {
+    userId: 'usr_admin_1',
+    email: 'admin@alphacorp.com',
+    role: PlatformRole.USER,
   };
 
   const sampleContact = {
@@ -102,9 +116,28 @@ describe('ContactsController (Presentation Layer Endpoints)', () => {
       }),
     };
 
+    mockContactMergeService = {
+      merge: async (
+        workspaceId: string,
+        baseContactId: string,
+        mergeeContactId: string,
+        options?: any,
+      ) => ({
+        ...sampleContact,
+        id: baseContactId,
+        workspaceId,
+        customAttributes: {
+          vip: true,
+          mergedFrom: mergeeContactId,
+          mergedBy: options?.performedByUserId,
+        },
+      }),
+    };
+
     controller = new ContactsController(
       mockContactsService as ContactsService,
       mockChannelIdentityService as ChannelIdentityService,
+      mockContactMergeService as ContactMergeService,
     );
   });
 
@@ -159,6 +192,20 @@ describe('ContactsController (Presentation Layer Endpoints)', () => {
     it('should delete contact', async () => {
       const result = await controller.deleteContact(mockContext, 'cnt_1');
       assert.deepStrictEqual(result, { success: true });
+    });
+  });
+
+  describe('Contact Merge Endpoint (Feature F-1.2.4)', () => {
+    it('should delegate merge action to ContactMergeService and pass performedByUserId', async () => {
+      const result = await controller.mergeContacts(mockContext, mockUser, {
+        baseContactId: 'cnt_base_1',
+        mergeeContactId: 'cnt_mergee_2',
+      });
+
+      assert.strictEqual(result.id, 'cnt_base_1');
+      assert.strictEqual(result.workspaceId, 'ws_test_1');
+      assert.strictEqual((result.customAttributes as any).mergedFrom, 'cnt_mergee_2');
+      assert.strictEqual((result.customAttributes as any).mergedBy, 'usr_admin_1');
     });
   });
 

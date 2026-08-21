@@ -21,18 +21,21 @@ import {
   createChannelIdentitySchema,
   CreateContactDto,
   createContactSchema,
+  MergeContactsDto,
+  mergeContactsSchema,
   PaginationMeta,
   UpdateContactDto,
   updateContactSchema,
   WorkspaceRole,
 } from '@sales-copilot/shared-contracts';
 import { ZodBody, ZodQuery } from '../../common/pipes';
-import { JwtAuthGuard } from '../auth';
+import { CurrentUser, JwtAuthGuard, type JwtUserPayload } from '../auth';
 import { CurrentWorkspace, Roles } from '../workspaces/decorators';
 import { RolesGuard, WorkspaceGuard } from '../workspaces/guards';
 import type { WorkspaceContext } from '../workspaces/types/workspace-context.type';
 import { ContactsService } from './contacts.service';
 import { ChannelIdentityService } from './channel-identity.service';
+import { ContactMergeService } from './contact-merge.service';
 
 @ApiTags('Contacts')
 @Controller('contacts')
@@ -47,6 +50,7 @@ export class ContactsController {
   constructor(
     private readonly contactsService: ContactsService,
     private readonly channelIdentityService: ChannelIdentityService,
+    private readonly contactMergeService: ContactMergeService,
   ) {}
 
   @Get()
@@ -79,6 +83,31 @@ export class ContactsController {
     @ZodQuery(contactSearchQuerySchema) query: ContactSearchQueryDto,
   ): Promise<{ items: ContactDto[]; meta: PaginationMeta }> {
     return this.contactsService.search(context.workspaceId, query);
+  }
+
+  @Post('merge')
+  @HttpCode(HttpStatus.OK)
+  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN)
+  @ApiOperation({ summary: 'Atomically merge two contacts within the workspace' })
+  @ApiResponse({ status: 200, description: 'Contacts merged successfully, returns base contact' })
+  @ApiResponse({
+    status: 400,
+    description: 'Validation failed or cross-workspace merge prohibited',
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden / Only ADMIN and OWNER can merge contacts' })
+  @ApiResponse({ status: 404, description: 'Contact not found' })
+  async mergeContacts(
+    @CurrentWorkspace() context: WorkspaceContext,
+    @CurrentUser() user: JwtUserPayload,
+    @ZodBody(mergeContactsSchema) dto: MergeContactsDto,
+  ): Promise<ContactDto> {
+    return this.contactMergeService.merge(
+      context.workspaceId,
+      dto.baseContactId,
+      dto.mergeeContactId,
+      { performedByUserId: user?.userId },
+    );
   }
 
   @Post()
