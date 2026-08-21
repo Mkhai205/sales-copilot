@@ -1,4 +1,5 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import type {
   ChannelIdentityDto,
   ContactDto,
@@ -8,6 +9,7 @@ import type {
 import { PrismaService } from '../../infrastructure/database';
 import { ChannelIdentityService } from './channel-identity.service';
 import { ContactIdentifyService } from './contact-identify.service';
+import { mapContactToDto, mapIdentityToDto } from './contacts.mapper';
 
 export interface ResolveFromChannelParams {
   workspaceId: string;
@@ -26,13 +28,15 @@ export class ContactResolutionService {
     private readonly prisma: PrismaService,
     private readonly channelIdentityService: ChannelIdentityService,
     private readonly contactIdentifyService: ContactIdentifyService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   /**
    * Resolves or provisions a Contact and ChannelIdentity for an inbound channel event.
    * 1. If ChannelIdentity already exists, returns the contact (and enriches if contactInfo provided).
    * 2. If ChannelIdentity does not exist, checks if contactInfo matches an existing Contact in the workspace;
-   *    if matched, links identity to existing contact; otherwise creates a new Contact and links identity.
+   *    if matched, links identity to existing contact; otherwise creates a new Contact and links identity
+   *    atomically within a single transaction.
    */
   async resolveFromChannel(params: ResolveFromChannelParams): Promise<ResolvedContactResultDto> {
     const client = this.prisma.getClient();
@@ -81,7 +85,7 @@ export class ContactResolutionService {
         }
 
         return {
-          contact: this.mapToDto(existingContact),
+          contact: mapContactToDto(existingContact),
           channelIdentity: existingIdentity,
           isNewContact: false,
         };
@@ -166,7 +170,7 @@ export class ContactResolutionService {
           info,
         );
       } else {
-        resolvedContact = this.mapToDto(matchedContact);
+        resolvedContact = mapContactToDto(matchedContact);
       }
 
       // Link ChannelIdentity
@@ -190,7 +194,8 @@ export class ContactResolutionService {
       };
     }
 
-    // 5. Create new Contact + ChannelIdentity
+    // 5. Atomically create new Contact + ChannelIdentity within a single transaction
+    //    to avoid orphaned contacts if identity creation fails.
     const newContactName = info?.name?.trim() || params.username?.trim() || 'Unknown Contact';
     const newEmail =
       info?.email && info.email.trim() !== '' ? info.email.trim().toLowerCase() : null;
@@ -201,80 +206,65 @@ export class ContactResolutionService {
     const newIdentifier =
       info?.identifier && info.identifier.trim() !== '' ? info.identifier.trim() : null;
 
-    const createdContact = await client.contact.create({
-      data: {
-        workspaceId: params.workspaceId,
-        name: newContactName,
-        email: newEmail,
-        phoneNumber: newPhone,
-        avatarUrl: newAvatarUrl,
-        identifier: newIdentifier,
-        customAttributes: (info?.customAttributes as any) ?? {},
-        additionalAttributes: (info?.additionalAttributes as any) ?? {},
-      },
-      include: {
-        identities: true,
-      },
+    let createdContactDto: ContactDto;
+    let channelIdentity: ChannelIdentityDto;
+
+    await this.prisma.runInTransaction(async ctx => {
+      const tx = ctx.txClient;
+
+      const createdContact = await tx.contact.create({
+        data: {
+          workspaceId: params.workspaceId,
+          name: newContactName,
+          email: newEmail,
+          phoneNumber: newPhone,
+          avatarUrl: newAvatarUrl,
+          identifier: newIdentifier,
+          customAttributes: (info?.customAttributes as any) ?? {},
+          additionalAttributes: (info?.additionalAttributes as any) ?? {},
+        },
+        include: {
+          identities: true,
+        },
+      });
+
+      createdContactDto = mapContactToDto(createdContact);
+
+      // Create ChannelIdentity within the same transaction to ensure atomicity
+      const createdIdentity = await tx.channelIdentity.create({
+        data: {
+          workspaceId: params.workspaceId,
+          contactId: createdContact.id,
+          channelId: params.channelId,
+          externalContactId,
+          username: (params.username || info?.name)?.trim() || null,
+          metadata: (params.metadata as any) ?? {},
+        },
+        include: { channel: true },
+      });
+
+      channelIdentity = mapIdentityToDto(createdIdentity);
     });
 
-    const channelIdentity = await this.channelIdentityService.findOrCreate({
+    // Post-transaction: emit events (outside tx so they only fire on commit)
+    this.eventEmitter.emit('contact.created', {
       workspaceId: params.workspaceId,
-      channelId: params.channelId,
-      externalContactId,
-      contactId: createdContact.id,
-      username: params.username || info?.name || null,
-      metadata: params.metadata,
+      contact: createdContactDto!,
     });
 
-    const contactDto = this.mapToDto(createdContact);
+    this.eventEmitter.emit('channel_identity.created', {
+      workspaceId: params.workspaceId,
+      identity: channelIdentity!,
+    });
 
     this.logger.log(
-      `Created new contact '${contactDto.id}' and linked identity '${externalContactId}' on channel '${params.channelId}' in workspace '${params.workspaceId}'`,
+      `Created new contact '${createdContactDto!.id}' and linked identity '${externalContactId}' on channel '${params.channelId}' in workspace '${params.workspaceId}'`,
     );
 
     return {
-      contact: contactDto,
-      channelIdentity,
+      contact: createdContactDto!,
+      channelIdentity: channelIdentity!,
       isNewContact: true,
-    };
-  }
-
-  private mapToDto(contact: any): ContactDto {
-    return {
-      id: contact.id,
-      workspaceId: contact.workspaceId,
-      name: contact.name,
-      email: contact.email ?? null,
-      phoneNumber: contact.phoneNumber ?? null,
-      avatarUrl: contact.avatarUrl ?? null,
-      identifier: contact.identifier ?? null,
-      customAttributes:
-        typeof contact.customAttributes === 'object' && contact.customAttributes !== null
-          ? (contact.customAttributes as Record<string, unknown>)
-          : {},
-      additionalAttributes:
-        typeof contact.additionalAttributes === 'object' && contact.additionalAttributes !== null
-          ? (contact.additionalAttributes as Record<string, unknown>)
-          : {},
-      createdAt: contact.createdAt,
-      updatedAt: contact.updatedAt,
-      identities: Array.isArray(contact.identities)
-        ? contact.identities.map((identity: any) => ({
-            id: identity.id,
-            contactId: identity.contactId,
-            workspaceId: identity.workspaceId,
-            channelId: identity.channelId,
-            channelType: identity.channel?.channelType,
-            externalContactId: identity.externalContactId,
-            username: identity.username ?? null,
-            metadata:
-              typeof identity.metadata === 'object' && identity.metadata !== null
-                ? (identity.metadata as Record<string, unknown>)
-                : {},
-            createdAt: identity.createdAt,
-            updatedAt: identity.updatedAt,
-          }))
-        : undefined,
     };
   }
 }

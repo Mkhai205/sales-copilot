@@ -225,6 +225,7 @@ describe('ContactResolutionService (Channel Ingestion Pipeline Orchestrator)', (
       mockPrismaService as PrismaService,
       identityService,
       identifyService,
+      mockEventEmitter as EventEmitter2,
     );
   });
 

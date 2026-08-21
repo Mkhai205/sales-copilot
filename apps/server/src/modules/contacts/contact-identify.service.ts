@@ -1,13 +1,17 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import type { ContactDto, IdentifyContactDto } from '@sales-copilot/shared-contracts';
+import { Prisma } from '../../infrastructure/database/generated/client';
 import { PrismaService } from '../../infrastructure/database';
 import { ContactMergeService } from './contact-merge.service';
+import { mapContactToDto } from './contacts.mapper';
 
 export interface IdentifyOptions {
+  /** When true, the original base contact name is preserved after merge (not overwritten by params.name). */
   retainOriginalContactName?: boolean;
   performedByUserId?: string | null;
-  tx?: any;
+  /** Pass an active Prisma.TransactionClient to join an existing transaction. */
+  tx?: Prisma.TransactionClient;
 }
 
 @Injectable()
@@ -33,9 +37,10 @@ export class ContactIdentifyService {
     params: IdentifyContactDto,
     options?: IdentifyOptions,
   ): Promise<ContactDto> {
-    const runInTx = async (tx: any): Promise<ContactDto> => {
+    const runInTx = async (tx: Prisma.TransactionClient): Promise<ContactDto> => {
       // 1. Fetch active contact
-      let activeContact = await tx.contact.findFirst({
+       
+      let activeContact: any = await tx.contact.findFirst({
         where: { id: currentContact.id, workspaceId },
         include: { identities: true },
       });
@@ -185,7 +190,7 @@ export class ContactIdentifyService {
         ? { ...existingAdditional, ...params.additionalAttributes }
         : existingAdditional;
 
-      const updateData: any = {
+      const updateData: Record<string, unknown> = {
         customAttributes: newCustom,
         additionalAttributes: newAdditional,
       };
@@ -212,7 +217,7 @@ export class ContactIdentifyService {
         include: { identities: true },
       });
 
-      const contactDto = this.mapToDto(updated);
+      const contactDto = mapContactToDto(updated);
 
       this.eventEmitter.emit('contact.updated', {
         workspaceId,
@@ -234,47 +239,6 @@ export class ContactIdentifyService {
       return runInTx(options.tx);
     }
 
-    return this.prisma.runInTransaction(async (ctx: any) => {
-      return runInTx(ctx.tx || ctx.txClient || this.prisma.getClient());
-    });
-  }
-
-  private mapToDto(contact: any): ContactDto {
-    return {
-      id: contact.id,
-      workspaceId: contact.workspaceId,
-      name: contact.name,
-      email: contact.email ?? null,
-      phoneNumber: contact.phoneNumber ?? null,
-      avatarUrl: contact.avatarUrl ?? null,
-      identifier: contact.identifier ?? null,
-      customAttributes:
-        typeof contact.customAttributes === 'object' && contact.customAttributes !== null
-          ? (contact.customAttributes as Record<string, unknown>)
-          : {},
-      additionalAttributes:
-        typeof contact.additionalAttributes === 'object' && contact.additionalAttributes !== null
-          ? (contact.additionalAttributes as Record<string, unknown>)
-          : {},
-      createdAt: contact.createdAt,
-      updatedAt: contact.updatedAt,
-      identities: Array.isArray(contact.identities)
-        ? contact.identities.map((identity: any) => ({
-            id: identity.id,
-            contactId: identity.contactId,
-            workspaceId: identity.workspaceId,
-            channelId: identity.channelId,
-            channelType: identity.channel?.channelType,
-            externalContactId: identity.externalContactId,
-            username: identity.username ?? null,
-            metadata:
-              typeof identity.metadata === 'object' && identity.metadata !== null
-                ? (identity.metadata as Record<string, unknown>)
-                : {},
-            createdAt: identity.createdAt,
-            updatedAt: identity.updatedAt,
-          }))
-        : undefined,
-    };
+    return this.prisma.runInTransaction(ctx => runInTx(ctx.txClient));
   }
 }

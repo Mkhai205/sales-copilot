@@ -9,6 +9,7 @@ import type {
   UpdateContactDto,
 } from '@sales-copilot/shared-contracts';
 import { PrismaService } from '../../infrastructure/database';
+import { mapContactToDto } from './contacts.mapper';
 
 @Injectable()
 export class ContactsService {
@@ -93,11 +94,19 @@ export class ContactsService {
     } catch (err: any) {
       if (err?.code === 'P2002') {
         const target = err?.meta?.target;
-        if (Array.isArray(target) && target.includes('identifier')) {
-          throw new ConflictException({
-            code: 'IDENTIFIER_ALREADY_EXISTS',
-            message: `Contact with identifier '${identifier}' already exists in this workspace`,
-          });
+        if (Array.isArray(target)) {
+          if (target.includes('identifier')) {
+            throw new ConflictException({
+              code: 'IDENTIFIER_ALREADY_EXISTS',
+              message: `Contact with identifier '${identifier}' already exists in this workspace`,
+            });
+          }
+          if (target.includes('email')) {
+            throw new ConflictException({
+              code: 'EMAIL_ALREADY_EXISTS',
+              message: `Contact with email '${email}' already exists in this workspace`,
+            });
+          }
         }
       }
       throw err;
@@ -372,41 +381,6 @@ export class ContactsService {
    * Maps a Prisma Contact record (with optional identities) to a clean ContactDto.
    */
   private mapToDto(contact: any): ContactDto {
-    return {
-      id: contact.id,
-      workspaceId: contact.workspaceId,
-      name: contact.name,
-      email: contact.email ?? null,
-      phoneNumber: contact.phoneNumber ?? null,
-      avatarUrl: contact.avatarUrl ?? null,
-      identifier: contact.identifier ?? null,
-      customAttributes:
-        typeof contact.customAttributes === 'object' && contact.customAttributes !== null
-          ? (contact.customAttributes as Record<string, unknown>)
-          : {},
-      additionalAttributes:
-        typeof contact.additionalAttributes === 'object' && contact.additionalAttributes !== null
-          ? (contact.additionalAttributes as Record<string, unknown>)
-          : {},
-      createdAt: contact.createdAt,
-      updatedAt: contact.updatedAt,
-      identities: Array.isArray(contact.identities)
-        ? contact.identities.map((identity: any) => ({
-            id: identity.id,
-            contactId: identity.contactId,
-            workspaceId: identity.workspaceId,
-            channelId: identity.channelId,
-            channelType: identity.channel?.channelType,
-            externalContactId: identity.externalContactId,
-            username: identity.username ?? null,
-            metadata:
-              typeof identity.metadata === 'object' && identity.metadata !== null
-                ? (identity.metadata as Record<string, unknown>)
-                : {},
-            createdAt: identity.createdAt,
-            updatedAt: identity.updatedAt,
-          }))
-        : undefined,
-    };
+    return mapContactToDto(contact);
   }
 }

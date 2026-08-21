@@ -282,7 +282,7 @@ describe('ContactMergeService (Atomic Contact Merge Engine)', () => {
     );
   });
 
-  it('should throw BadRequestException (CROSS_WORKSPACE_MERGE_PROHIBITED) when merging contacts from different workspaces', async () => {
+  it('should throw NotFoundException (CONTACT_NOT_FOUND) when attempting to merge contact from different workspace due to tenant isolation', async () => {
     contactsDb.set('cnt_beta', {
       id: 'cnt_beta',
       workspaceId: 'ws_beta',
@@ -302,7 +302,7 @@ describe('ContactMergeService (Atomic Contact Merge Engine)', () => {
         await service.merge('ws_alpha', 'cnt_base', 'cnt_beta');
       },
       (err: any) => {
-        assert.strictEqual(err.response?.code, 'CROSS_WORKSPACE_MERGE_PROHIBITED');
+        assert.strictEqual(err.response?.code, 'CONTACT_NOT_FOUND');
         return true;
       },
     );

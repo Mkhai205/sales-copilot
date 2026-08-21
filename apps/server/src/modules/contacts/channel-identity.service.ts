@@ -2,6 +2,7 @@ import { ConflictException, Injectable, Logger, NotFoundException } from '@nestj
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import type { ChannelIdentityDto, CreateChannelIdentityDto } from '@sales-copilot/shared-contracts';
 import { PrismaService } from '../../infrastructure/database';
+import { mapIdentityToDto } from './contacts.mapper';
 
 @Injectable()
 export class ChannelIdentityService {
@@ -353,20 +354,6 @@ export class ChannelIdentityService {
    * Maps a Prisma ChannelIdentity record to ChannelIdentityDto.
    */
   private mapToDto(identity: any): ChannelIdentityDto {
-    return {
-      id: identity.id,
-      contactId: identity.contactId,
-      workspaceId: identity.workspaceId,
-      channelId: identity.channelId,
-      channelType: identity.channel?.channelType,
-      externalContactId: identity.externalContactId,
-      username: identity.username ?? null,
-      metadata:
-        typeof identity.metadata === 'object' && identity.metadata !== null
-          ? (identity.metadata as Record<string, unknown>)
-          : {},
-      createdAt: identity.createdAt,
-      updatedAt: identity.updatedAt,
-    };
+    return mapIdentityToDto(identity);
   }
 }

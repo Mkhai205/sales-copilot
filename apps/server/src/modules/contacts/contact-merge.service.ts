@@ -1,11 +1,14 @@
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import type { ContactDto, ContactMergedEvent } from '@sales-copilot/shared-contracts';
+import { Prisma } from '../../infrastructure/database/generated/client';
 import { PrismaService } from '../../infrastructure/database';
+import { mapContactToDto } from './contacts.mapper';
 
 export interface MergeContactOptions {
   performedByUserId?: string | null;
-  tx?: any;
+  /** Pass an active Prisma.TransactionClient to join an existing transaction. */
+  tx?: Prisma.TransactionClient;
 }
 
 @Injectable()
@@ -30,8 +33,8 @@ export class ContactMergeService {
     options?: MergeContactOptions,
   ): Promise<ContactDto> {
     if (baseContactId === mergeeContactId) {
-      // Self-merge is a no-op
-      const client = options?.tx || this.prisma.getClient();
+      // Self-merge is a no-op — always scope with workspaceId
+      const client = options?.tx ?? this.prisma.getClient();
       const base = await client.contact.findFirst({
         where: { id: baseContactId, workspaceId },
         include: { identities: true },
@@ -42,18 +45,18 @@ export class ContactMergeService {
           message: `Contact with id '${baseContactId}' not found`,
         });
       }
-      return this.mapToDto(base);
+      return mapContactToDto(base);
     }
 
-    const runInTx = async (tx: any): Promise<ContactDto> => {
-      // 1. Validate both contacts exist and belong to the workspace
+    const runInTx = async (tx: Prisma.TransactionClient): Promise<ContactDto> => {
+      // 1. Validate both contacts exist and belong to the workspace (tenant-scoped findFirst)
       const [baseContact, mergeeContact] = await Promise.all([
-        tx.contact.findUnique({
-          where: { id: baseContactId },
+        tx.contact.findFirst({
+          where: { id: baseContactId, workspaceId },
           include: { identities: true },
         }),
-        tx.contact.findUnique({
-          where: { id: mergeeContactId },
+        tx.contact.findFirst({
+          where: { id: mergeeContactId, workspaceId },
           include: { identities: true },
         }),
       ]);
@@ -69,13 +72,6 @@ export class ContactMergeService {
         throw new NotFoundException({
           code: 'CONTACT_NOT_FOUND',
           message: `Mergee contact with id '${mergeeContactId}' not found`,
-        });
-      }
-
-      if (baseContact.workspaceId !== workspaceId || mergeeContact.workspaceId !== workspaceId) {
-        throw new BadRequestException({
-          code: 'CROSS_WORKSPACE_MERGE_PROHIBITED',
-          message: 'Cannot merge contacts from different workspaces',
         });
       }
 
@@ -149,8 +145,8 @@ export class ContactMergeService {
           phoneNumber: mergedPhoneNumber,
           avatarUrl: mergedAvatarUrl,
           identifier: mergedIdentifier,
-          customAttributes: mergedCustomAttributes,
-          additionalAttributes: mergedAdditionalAttributes,
+          customAttributes: mergedCustomAttributes as Prisma.InputJsonValue,
+          additionalAttributes: mergedAdditionalAttributes as Prisma.InputJsonValue,
         },
         include: {
           identities: true,
@@ -178,7 +174,7 @@ export class ContactMergeService {
         },
       });
 
-      const contactDto = this.mapToDto(updatedBase);
+      const contactDto = mapContactToDto(updatedBase);
 
       // 9. Emit event
       const eventPayload: ContactMergedEvent = {
@@ -207,47 +203,6 @@ export class ContactMergeService {
       return runInTx(options.tx);
     }
 
-    return this.prisma.runInTransaction(async (ctx: any) => {
-      return runInTx(ctx.tx || ctx.txClient || this.prisma.getClient());
-    });
-  }
-
-  private mapToDto(contact: any): ContactDto {
-    return {
-      id: contact.id,
-      workspaceId: contact.workspaceId,
-      name: contact.name,
-      email: contact.email ?? null,
-      phoneNumber: contact.phoneNumber ?? null,
-      avatarUrl: contact.avatarUrl ?? null,
-      identifier: contact.identifier ?? null,
-      customAttributes:
-        typeof contact.customAttributes === 'object' && contact.customAttributes !== null
-          ? (contact.customAttributes as Record<string, unknown>)
-          : {},
-      additionalAttributes:
-        typeof contact.additionalAttributes === 'object' && contact.additionalAttributes !== null
-          ? (contact.additionalAttributes as Record<string, unknown>)
-          : {},
-      createdAt: contact.createdAt,
-      updatedAt: contact.updatedAt,
-      identities: Array.isArray(contact.identities)
-        ? contact.identities.map((identity: any) => ({
-            id: identity.id,
-            contactId: identity.contactId,
-            workspaceId: identity.workspaceId,
-            channelId: identity.channelId,
-            channelType: identity.channel?.channelType,
-            externalContactId: identity.externalContactId,
-            username: identity.username ?? null,
-            metadata:
-              typeof identity.metadata === 'object' && identity.metadata !== null
-                ? (identity.metadata as Record<string, unknown>)
-                : {},
-            createdAt: identity.createdAt,
-            updatedAt: identity.updatedAt,
-          }))
-        : undefined,
-    };
+    return this.prisma.runInTransaction(ctx => runInTx(ctx.txClient));
   }
 }
