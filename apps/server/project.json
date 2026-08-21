@@ -36,6 +36,12 @@
       "options": {
         "command": "tsc -p apps/server/tsconfig.app.json --noEmit"
       }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node -r @swc-node/register --test apps/server/src/**/__tests__/*.spec.ts"
+      }
     }
   }
 }

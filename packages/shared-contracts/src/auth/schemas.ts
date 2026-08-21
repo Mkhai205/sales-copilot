@@ -14,6 +14,12 @@ export const refreshTokenSchema = z.object({
 
 export type RefreshTokenDto = z.infer<typeof refreshTokenSchema>;
 
+export const logoutSchema = z.object({
+  refreshToken: z.string().min(1).optional(),
+});
+
+export type LogoutDto = z.infer<typeof logoutSchema>;
+
 export interface AuthTokensDto {
   accessToken: string;
   refreshToken: string;
@@ -24,11 +30,13 @@ export interface UserDto {
   id: string;
   email: string;
   name: string;
-  platformRole: PlatformRole;
+  role: PlatformRole;
   workspaceRole?: WorkspaceRole;
-  avatarUrl?: string;
+  avatarUrl?: string | null;
   workspaceId?: string;
+  isActive: boolean;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface LoginResponseDto {
