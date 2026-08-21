@@ -10,6 +10,8 @@ import { StorageModule } from './infrastructure/storage/storage.module';
 import { AuthModule } from './modules/auth';
 import { WorkspacesModule } from './modules/workspaces';
 import { TeamsModule } from './modules/teams';
+import { ContactsModule } from './modules/contacts';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { validateEnv } from './config';
@@ -23,6 +25,7 @@ import { RequestIdMiddleware } from './common/middlewares';
       cache: true,
       validate: validateEnv,
     }),
+    EventEmitterModule.forRoot(),
     ScheduleModule.forRoot(),
     ThrottlerModule.forRoot([
       {
@@ -36,6 +39,7 @@ import { RequestIdMiddleware } from './common/middlewares';
     AuthModule,
     WorkspacesModule,
     TeamsModule,
+    ContactsModule,
   ],
   controllers: [AppController],
   providers: [
