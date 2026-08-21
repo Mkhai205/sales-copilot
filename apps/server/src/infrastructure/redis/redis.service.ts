@@ -1,4 +1,4 @@
-import { Injectable, Logger, OnModuleDestroy, OnModuleInit, Optional } from '@nestjs/common';
+import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
 
@@ -8,8 +8,10 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   private client: Redis | null = null;
   private isConnected = false;
 
-  constructor(@Optional() private readonly configService?: ConfigService) {
-    const redisUrl = this.configService?.get<string>('REDIS_URL') || 'redis://localhost:6379';
+  constructor(private readonly configService: ConfigService) {}
+
+  async onModuleInit(): Promise<void> {
+    const redisUrl = this.configService.getOrThrow<string>('REDIS_URL');
 
     try {
       this.client = new Redis(redisUrl, {
@@ -36,18 +38,6 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
       });
     } catch (error) {
       this.logger.error('Failed to initialize Redis client:', error);
-    }
-  }
-
-  async onModuleInit(): Promise<void> {
-    if (this.client) {
-      try {
-        await this.client.connect();
-      } catch (err) {
-        this.logger.warn(
-          `Redis lazy connect failed on startup: ${(err as Error)?.message}. Will retry automatically.`,
-        );
-      }
     }
   }
 
