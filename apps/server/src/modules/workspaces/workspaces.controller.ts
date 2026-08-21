@@ -1,13 +1,4 @@
-import {
-  Controller,
-  ForbiddenException,
-  Get,
-  HttpCode,
-  HttpStatus,
-  Patch,
-  Post,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, HttpCode, HttpStatus, Patch, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiHeader, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import {
   type CreateWorkspaceDto,
@@ -21,8 +12,8 @@ import {
 import { ZodBody } from '../../common/pipes';
 import { CurrentUser, JwtAuthGuard } from '../auth';
 import type { JwtUserPayload } from '../auth/types/jwt-payload.type';
-import { CurrentWorkspace } from './decorators';
-import { WorkspaceGuard } from './guards';
+import { CurrentWorkspace, Roles } from './decorators';
+import { RolesGuard, WorkspaceGuard } from './guards';
 import type { WorkspaceContext } from './types/workspace-context.type';
 import { WorkspacesService } from './workspaces.service';
 
@@ -78,7 +69,8 @@ export class WorkspacesController {
 
   @Patch('current')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(JwtAuthGuard, WorkspaceGuard)
+  @UseGuards(JwtAuthGuard, WorkspaceGuard, RolesGuard)
+  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN)
   @ApiBearerAuth()
   @ApiHeader({
     name: 'X-Workspace-Id',
@@ -97,13 +89,6 @@ export class WorkspacesController {
     @CurrentWorkspace() context: WorkspaceContext,
     @ZodBody(updateWorkspaceSchema) dto: UpdateWorkspaceDto,
   ): Promise<WorkspaceDto> {
-    if (context.role !== WorkspaceRole.OWNER && context.role !== WorkspaceRole.ADMIN) {
-      throw new ForbiddenException({
-        code: 'INSUFFICIENT_PERMISSIONS',
-        message: 'Only OWNER and ADMIN can update workspace settings',
-      });
-    }
-
     return this.workspacesService.updateWorkspace(context.workspaceId, dto);
   }
 }

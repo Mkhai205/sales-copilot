@@ -78,7 +78,7 @@ describe('WorkspacesController (Presentation Layer Endpoints)', () => {
     assert.strictEqual(result.name, 'Sample Workspace');
   });
 
-  it('should allow OWNER to update workspace settings', async () => {
+  it('should delegate updateCurrentWorkspace to service', async () => {
     const context: WorkspaceContext = {
       workspaceId: 'ws_sample_1',
       role: WorkspaceRole.OWNER,
@@ -91,59 +91,6 @@ describe('WorkspacesController (Presentation Layer Endpoints)', () => {
     });
 
     assert.strictEqual(result.name, 'Updated Name');
-  });
-
-  it('should allow ADMIN to update workspace settings', async () => {
-    const context: WorkspaceContext = {
-      workspaceId: 'ws_sample_1',
-      role: WorkspaceRole.ADMIN,
-      workspace: mockWorkspace,
-    };
-
-    const result = await controller.updateCurrentWorkspace(context, {
-      name: 'Admin Updated Name',
-    });
-
-    assert.strictEqual(result.name, 'Admin Updated Name');
-  });
-
-  it('should throw ForbiddenException when AGENT attempts to update workspace settings', async () => {
-    const context: WorkspaceContext = {
-      workspaceId: 'ws_sample_1',
-      role: WorkspaceRole.AGENT,
-      workspace: mockWorkspace,
-    };
-
-    await assert.rejects(
-      async () => {
-        await controller.updateCurrentWorkspace(context, {
-          name: 'Unauthorized Change',
-        });
-      },
-      (err: any) => {
-        assert.strictEqual(err.response?.code, 'INSUFFICIENT_PERMISSIONS');
-        return true;
-      },
-    );
-  });
-
-  it('should throw ForbiddenException when VIEWER attempts to update workspace settings', async () => {
-    const context: WorkspaceContext = {
-      workspaceId: 'ws_sample_1',
-      role: WorkspaceRole.VIEWER,
-      workspace: mockWorkspace,
-    };
-
-    await assert.rejects(
-      async () => {
-        await controller.updateCurrentWorkspace(context, {
-          name: 'Unauthorized Change',
-        });
-      },
-      (err: any) => {
-        assert.strictEqual(err.response?.code, 'INSUFFICIENT_PERMISSIONS');
-        return true;
-      },
-    );
+    assert.strictEqual(result.timezone, 'UTC');
   });
 });

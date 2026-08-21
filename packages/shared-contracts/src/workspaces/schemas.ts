@@ -50,11 +50,38 @@ export interface UserWorkspaceDto extends WorkspaceDto {
   role: WorkspaceRole;
 }
 
+export const assignableWorkspaceRoleSchema = z.enum([
+  WorkspaceRole.ADMIN,
+  WorkspaceRole.AGENT,
+  WorkspaceRole.VIEWER,
+]);
+export type AssignableWorkspaceRole = z.infer<typeof assignableWorkspaceRoleSchema>;
+
+export const addWorkspaceMemberSchema = z.object({
+  email: z.string().trim().email('Invalid email address'),
+  role: assignableWorkspaceRoleSchema.default(WorkspaceRole.AGENT),
+});
+export type AddWorkspaceMemberDto = z.infer<typeof addWorkspaceMemberSchema>;
+
+export const updateWorkspaceMemberRoleSchema = z.object({
+  role: assignableWorkspaceRoleSchema,
+});
+export type UpdateWorkspaceMemberRoleDto = z.infer<typeof updateWorkspaceMemberRoleSchema>;
+
+export interface WorkspaceMemberUserDto {
+  id: string;
+  email: string;
+  name: string;
+  avatarUrl?: string | null;
+  isActive?: boolean;
+}
+
 export interface WorkspaceMemberDto {
   id: string;
   workspaceId: string;
   userId: string;
   role: WorkspaceRole;
+  user?: WorkspaceMemberUserDto;
   createdAt: string | Date;
   updatedAt?: string | Date;
 }
