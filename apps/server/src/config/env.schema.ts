@@ -37,6 +37,12 @@ export const envSchema = z.object({
   STORAGE_SECRET_KEY: z.string().min(1, 'STORAGE_SECRET_KEY is required'),
   STORAGE_BUCKETS: z.string().default('sales-copilot'),
   STORAGE_PRESIGNED_URL_EXPIRES_IN_SECONDS: z.coerce.number().default(900),
+
+  // Channel Credentials Encryption (AES-256-GCM - 32-byte key in hex or string)
+  CHANNEL_ENCRYPTION_KEY: z
+    .string()
+    .min(32, 'CHANNEL_ENCRYPTION_KEY must be at least 32 characters')
+    .default('0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'),
 });
 
 export type EnvConfig = z.infer<typeof envSchema>;
