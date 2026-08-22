@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { ChannelType } from './enums';
+import { WorkspaceRole } from '../auth/enums';
 
 export const createInboxSchema = z.object({
   name: z.string().min(1, 'Inbox name is required').max(100),
@@ -26,6 +27,25 @@ export const updateInboxSchema = z.object({
   isConnected: z.boolean().optional(),
 });
 export type UpdateInboxDto = z.infer<typeof updateInboxSchema>;
+
+export const addInboxMemberSchema = z.object({
+  userId: z.string().min(1, 'userId is required'),
+});
+export type AddInboxMemberDto = z.infer<typeof addInboxMemberSchema>;
+
+export interface InboxMemberDto {
+  id: string;
+  inboxId: string;
+  userId: string;
+  user: {
+    id: string;
+    email: string;
+    name: string;
+    avatarUrl?: string | null;
+    role?: WorkspaceRole;
+  };
+  createdAt: string;
+}
 
 export interface ChannelSummaryDto {
   id: string;

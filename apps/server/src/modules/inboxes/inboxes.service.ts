@@ -1,4 +1,10 @@
-import { ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import {
   ChannelDetailDto,
   ChannelSummaryDto,
@@ -6,7 +12,9 @@ import {
   CreateInboxDto,
   InboxDetailDto,
   InboxDto,
+  InboxMemberDto,
   UpdateInboxDto,
+  WorkspaceRole,
 } from '@sales-copilot/shared-contracts';
 import { PrismaService } from '../../infrastructure/database';
 import { ChannelCredentialService } from './channel-credential.service';
@@ -380,5 +388,184 @@ export class InboxesService {
 
     this.logger.log(`Deleted inbox '${inboxId}' from workspace ${workspaceId}`);
     return { success: true, message: 'Inbox deleted successfully' };
+  }
+
+  /**
+   * Lists all members of a specific inbox along with user profile and workspace role.
+   */
+  async listMembers(workspaceId: string, inboxId: string): Promise<InboxMemberDto[]> {
+    const client = this.prisma.getClient();
+
+    const inbox = await client.inbox.findFirst({
+      where: { id: inboxId, workspaceId },
+    });
+
+    if (!inbox) {
+      throw new NotFoundException({
+        code: 'INBOX_NOT_FOUND',
+        message: `Inbox with ID '${inboxId}' not found in this workspace`,
+        details: { inboxId, workspaceId },
+      });
+    }
+
+    const members = await client.inboxMember.findMany({
+      where: { inboxId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            avatarUrl: true,
+            workspaceMembers: {
+              where: { workspaceId },
+              select: { role: true },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    return members.map(m => ({
+      id: m.id,
+      inboxId: m.inboxId,
+      userId: m.userId,
+      user: {
+        id: m.user.id,
+        email: m.user.email,
+        name: m.user.name,
+        avatarUrl: m.user.avatarUrl,
+        role: (m.user.workspaceMembers[0]?.role as WorkspaceRole) || WorkspaceRole.AGENT,
+      },
+      createdAt: m.createdAt.toISOString(),
+    }));
+  }
+
+  /**
+   * Adds a user to an inbox.
+   * Business Rule BR-1.3: User must already be an active WorkspaceMember in the same workspace.
+   */
+  async addMember(workspaceId: string, inboxId: string, userId: string): Promise<InboxMemberDto> {
+    const client = this.prisma.getClient();
+
+    // 1. Verify inbox belongs to workspace
+    const inbox = await client.inbox.findFirst({
+      where: { id: inboxId, workspaceId },
+    });
+
+    if (!inbox) {
+      throw new NotFoundException({
+        code: 'INBOX_NOT_FOUND',
+        message: `Inbox with ID '${inboxId}' not found in this workspace`,
+        details: { inboxId, workspaceId },
+      });
+    }
+
+    // 2. Invariant BR-1.3: Verify user is a member of this workspace
+    const workspaceMember = await client.workspaceMember.findFirst({
+      where: { workspaceId, userId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            avatarUrl: true,
+          },
+        },
+      },
+    });
+
+    if (!workspaceMember) {
+      throw new BadRequestException({
+        code: 'INVALID_INBOX_MEMBER',
+        message: `User '${userId}' is not a member of this workspace`,
+        details: { userId, workspaceId },
+      });
+    }
+
+    // 3. Check duplicate member
+    const existing = await client.inboxMember.findFirst({
+      where: { inboxId, userId },
+    });
+
+    if (existing) {
+      throw new ConflictException({
+        code: 'INBOX_MEMBER_ALREADY_EXISTS',
+        message: `User '${userId}' is already a member of this inbox`,
+        details: { userId, inboxId },
+      });
+    }
+
+    // 4. Create InboxMember
+    const newMember = await client.inboxMember.create({
+      data: {
+        inboxId,
+        userId,
+      },
+    });
+
+    this.logger.log(`Added user '${userId}' to inbox '${inboxId}' in workspace '${workspaceId}'`);
+
+    return {
+      id: newMember.id,
+      inboxId: newMember.inboxId,
+      userId: newMember.userId,
+      user: {
+        id: workspaceMember.user.id,
+        email: workspaceMember.user.email,
+        name: workspaceMember.user.name,
+        avatarUrl: workspaceMember.user.avatarUrl,
+        role: workspaceMember.role as WorkspaceRole,
+      },
+      createdAt: newMember.createdAt.toISOString(),
+    };
+  }
+
+  /**
+   * Removes a user from an inbox.
+   */
+  async removeMember(
+    workspaceId: string,
+    inboxId: string,
+    userId: string,
+  ): Promise<{ success: boolean; message: string }> {
+    const client = this.prisma.getClient();
+
+    // 1. Verify inbox belongs to workspace
+    const inbox = await client.inbox.findFirst({
+      where: { id: inboxId, workspaceId },
+    });
+
+    if (!inbox) {
+      throw new NotFoundException({
+        code: 'INBOX_NOT_FOUND',
+        message: `Inbox with ID '${inboxId}' not found in this workspace`,
+        details: { inboxId, workspaceId },
+      });
+    }
+
+    // 2. Verify membership in inbox
+    const existing = await client.inboxMember.findFirst({
+      where: { inboxId, userId },
+    });
+
+    if (!existing) {
+      throw new NotFoundException({
+        code: 'INBOX_MEMBER_NOT_FOUND',
+        message: `User '${userId}' is not a member of this inbox`,
+        details: { userId, inboxId },
+      });
+    }
+
+    await client.inboxMember.delete({
+      where: { id: existing.id },
+    });
+
+    this.logger.log(
+      `Removed user '${userId}' from inbox '${inboxId}' in workspace '${workspaceId}'`,
+    );
+    return { success: true, message: 'Member removed from inbox successfully' };
   }
 }
