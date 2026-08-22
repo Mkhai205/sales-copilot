@@ -12,6 +12,7 @@ import { WorkspacesModule } from './modules/workspaces';
 import { TeamsModule } from './modules/teams';
 import { ContactsModule } from './modules/contacts';
 import { InboxesModule } from './modules/inboxes';
+import { IntegrationsModule } from './integrations';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -42,6 +43,7 @@ import { RequestIdMiddleware } from './common/middlewares';
     TeamsModule,
     ContactsModule,
     InboxesModule,
+    IntegrationsModule,
   ],
   controllers: [AppController],
   providers: [

@@ -32,3 +32,57 @@ export interface ChannelDto {
   status: string;
   createdAt: string;
 }
+
+export interface InboundAttachmentDto {
+  fileUrl: string;
+  fileName?: string;
+  fileType?: string;
+  fileSize?: number;
+  contentType: string;
+}
+
+export interface InboundSenderInfoDto {
+  name?: string;
+  avatarUrl?: string;
+  username?: string;
+  phoneNumber?: string;
+  email?: string;
+}
+
+export interface InboundMessagePayloadDto {
+  externalContactId: string;
+  externalMessageId: string;
+  content?: string;
+  contentType: string;
+  attachments?: InboundAttachmentDto[];
+  senderInfo?: InboundSenderInfoDto;
+  timestamp: string;
+  rawPayload?: Record<string, unknown>;
+}
+
+export interface OutboundMessagePayloadDto {
+  recipientExternalId: string;
+  content?: string;
+  contentType?: string;
+  attachments?: {
+    fileUrl: string;
+    fileName?: string;
+    fileType?: string;
+    fileSize?: number;
+  }[];
+  externalConversationId?: string;
+  metadata?: Record<string, unknown>;
+}
+
+export interface SendMessageResultDto {
+  externalMessageId: string;
+  deliveryStatus: string;
+  rawResponse?: unknown;
+}
+
+export interface ChannelInfoDto {
+  providerAccountId?: string;
+  name: string;
+  avatarUrl?: string;
+  metadata?: Record<string, unknown>;
+}
