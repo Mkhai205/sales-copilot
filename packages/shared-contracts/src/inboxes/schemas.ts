@@ -2,36 +2,68 @@ import { z } from 'zod';
 import { ChannelType } from './enums';
 
 export const createInboxSchema = z.object({
-  name: z.string().min(1).max(100),
+  name: z.string().min(1, 'Inbox name is required').max(100),
   channelType: z.nativeEnum(ChannelType),
+  avatarUrl: z.string().url().optional().nullable(),
   greetingMessage: z.string().optional(),
-  enableAutoAssignment: z.boolean().default(true),
+  isAutoAssignmentEnabled: z.boolean().optional().default(false),
+  settings: z.record(z.unknown()).optional(),
   channelCredentials: z.record(z.unknown()).optional(),
+  channelSettings: z.record(z.unknown()).optional(),
+  providerAccountId: z.string().optional().nullable(),
 });
-export type CreateInboxDto = z.infer<typeof createInboxSchema>;
+export type CreateInboxDto = z.input<typeof createInboxSchema>;
 
-export const updateInboxSchema = createInboxSchema.partial();
+export const updateInboxSchema = z.object({
+  name: z.string().min(1).max(100).optional(),
+  avatarUrl: z.string().url().optional().nullable(),
+  greetingMessage: z.string().optional(),
+  isAutoAssignmentEnabled: z.boolean().optional(),
+  settings: z.record(z.unknown()).optional(),
+  channelCredentials: z.record(z.unknown()).optional(),
+  channelSettings: z.record(z.unknown()).optional(),
+  providerAccountId: z.string().optional().nullable(),
+  isConnected: z.boolean().optional(),
+});
 export type UpdateInboxDto = z.infer<typeof updateInboxSchema>;
+
+export interface ChannelSummaryDto {
+  id: string;
+  workspaceId: string;
+  inboxId: string;
+  channelType: ChannelType;
+  providerAccountId?: string | null;
+  settings: Record<string, unknown>;
+  isConnected: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ChannelDetailDto extends ChannelSummaryDto {
+  credentials?: Record<string, unknown>;
+}
 
 export interface InboxDto {
   id: string;
   workspaceId: string;
   name: string;
+  avatarUrl?: string | null;
   channelType: ChannelType;
-  channelId?: string;
   greetingMessage?: string;
-  enableAutoAssignment: boolean;
+  settings: Record<string, unknown>;
+  isAutoAssignmentEnabled: boolean;
+  memberCount: number;
+  channel?: ChannelSummaryDto | null;
   createdAt: string;
+  updatedAt: string;
 }
 
-export interface ChannelDto {
-  id: string;
-  workspaceId: string;
-  type: ChannelType;
-  name: string;
-  status: string;
-  createdAt: string;
+export interface InboxDetailDto extends Omit<InboxDto, 'channel'> {
+  channel?: ChannelDetailDto | null;
 }
+
+// Backward compatibility aliases
+export type ChannelDto = ChannelSummaryDto;
 
 export interface InboundAttachmentDto {
   fileUrl: string;
