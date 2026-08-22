@@ -5,6 +5,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 
 import { DatabaseModule } from './infrastructure/database/database.module';
+import { QueueModule } from './infrastructure/queue';
 import { RedisModule } from './infrastructure/redis';
 import { StorageModule } from './infrastructure/storage/storage.module';
 import { AuthModule } from './modules/auth';
@@ -12,6 +13,7 @@ import { WorkspacesModule } from './modules/workspaces';
 import { TeamsModule } from './modules/teams';
 import { ContactsModule } from './modules/contacts';
 import { InboxesModule } from './modules/inboxes';
+import { WebhooksModule } from './modules/webhooks';
 import { IntegrationsModule } from './integrations';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { AppController } from './app.controller';
@@ -36,6 +38,7 @@ import { RequestIdMiddleware } from './common/middlewares';
       },
     ]),
     DatabaseModule,
+    QueueModule,
     RedisModule,
     StorageModule,
     AuthModule,
@@ -43,6 +46,7 @@ import { RequestIdMiddleware } from './common/middlewares';
     TeamsModule,
     ContactsModule,
     InboxesModule,
+    WebhooksModule,
     IntegrationsModule,
   ],
   controllers: [AppController],
