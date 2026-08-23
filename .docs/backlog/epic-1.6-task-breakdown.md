@@ -178,12 +178,12 @@ export class OutboundMessageListener {
 ```
 
 **Acceptance Criteria**:
-- [ ] Outgoing messages trigger sendMessage() qua adapter tương ứng
-- [ ] Message.externalId được cập nhật sau khi gửi thành công
-- [ ] deliveryStatus được update (SENT on success, FAILED on error)
-- [ ] Incoming messages bị skip (chỉ xử lý OUTGOING)
-- [ ] Channel không có adapter registered → log warning, skip
-- [ ] Unit test cover success, failure, skip cases
+- [x] Outgoing messages trigger sendMessage() qua adapter tương ứng
+- [x] Message.externalId được cập nhật sau khi gửi thành công
+- [x] deliveryStatus được update (SENT on success, FAILED on error)
+- [x] Incoming messages bị skip (chỉ xử lý OUTGOING)
+- [x] Channel không có adapter registered → log warning, skip
+- [x] Unit test cover success, failure, skip cases
 
 **Dependencies**: `ChannelAdapterRegistry`, `ChannelCredentialService`, `MessagesService`
 
