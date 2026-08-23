@@ -448,17 +448,17 @@ export class TelegramModule implements OnModuleInit {
 - Return page name + avatar URL
 
 **Acceptance Criteria**:
-- [ ] `channelType` = `ChannelType.FACEBOOK_MESSENGER`
-- [ ] HMAC-SHA256 signature verification works correctly
-- [ ] Invalid signature → return false (401 thrown by WebhooksService)
-- [ ] Text message parsing → correct InboundMessagePayload
-- [ ] Media message parsing (image, video, audio, file) → correct attachments
-- [ ] Delivery receipt → eventKind 'delivery_status', status DELIVERED
-- [ ] Read receipt → eventKind 'delivery_status', status READ
-- [ ] Echo messages → skipped
-- [ ] sendMessage() text → Facebook Send API success
-- [ ] sendMessage() media → Facebook attachment API
-- [ ] getChannelInfo() → page name + avatar
+- [x] `channelType` = `ChannelType.FACEBOOK_MESSENGER`
+- [x] HMAC-SHA256 signature verification works correctly
+- [x] Invalid signature → return false (401 thrown by WebhooksService)
+- [x] Text message parsing → correct InboundMessagePayload
+- [x] Media message parsing (image, video, audio, file) → correct attachments
+- [x] Delivery receipt → eventKind 'delivery_status', status DELIVERED
+- [x] Read receipt → eventKind 'delivery_status', status READ
+- [x] Echo messages → skipped
+- [x] sendMessage() text → Facebook Send API success
+- [x] sendMessage() media → Facebook attachment API
+- [x] getChannelInfo() → page name + avatar
 
 **Estimated complexity**: 🔴 High (~280 LOC)
 
