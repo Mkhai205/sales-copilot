@@ -778,7 +778,10 @@ window.SalesCopilotWidget.on('message', callback) // listen for agent replies
 - `apps/server/src/integrations/web-chat/index.ts` [NEW]
 - Update [integrations.module.ts](file:///d:/workspace/Sales%20Copilot/apps/server/src/integrations/integrations.module.ts)
 
-**Chi tiết**: Register WebChatAdapter, WebChatGateway, WebChatController, WidgetTokenService.
+**Acceptance Criteria**:
+- [x] WebChatModule bundles WebChatAdapter, WebChatGateway, WebChatController, WidgetTokenService
+- [x] WebChatAdapter registered into ChannelAdapterRegistry on module init
+- [x] IntegrationsModule imports and exports WebChatModule
 
 **Estimated complexity**: 🟢 Low (~40 LOC)
 
@@ -790,11 +793,15 @@ window.SalesCopilotWidget.on('message', callback) // listen for agent replies
 - `apps/server/src/integrations/web-chat/__tests__/web-chat.adapter.spec.ts` [NEW]
 - `apps/server/src/integrations/web-chat/__tests__/web-chat.gateway.spec.ts` [NEW]
 - `apps/server/src/integrations/web-chat/__tests__/widget-token.service.spec.ts` [NEW]
+- `apps/server/src/integrations/web-chat/__tests__/web-chat.controller.spec.ts` [NEW]
+- `apps/server/src/integrations/web-chat/__tests__/web-chat.module.spec.ts` [NEW]
 
-**Test coverage**:
-1. WebChatAdapter: verifyWebhook, parseInboundPayload, sendMessage, getChannelInfo
-2. WebChatGateway: connection auth, send_message, identify, typing
-3. WidgetTokenService: generate, verify, expiry, HMAC
+**Acceptance Criteria**:
+- [x] WebChatAdapter tests: verifyWebhook, parseInboundPayload, sendMessage, getChannelInfo
+- [x] WebChatGateway tests: connection auth, send_message, identify, typing, outbound broadcast
+- [x] WidgetTokenService tests: generate, verify, expiry, HMAC validation
+- [x] WebChatController tests: config, contact session, conversations list, message history
+- [x] WebChatModule tests: registry onModuleInit wiring
 
 **Estimated complexity**: 🟡 Medium (~300 LOC)
 
