@@ -53,6 +53,30 @@ describe('ChannelIngestionProcessor (Task T-1.5.7: Inbound Ingestion Pipeline In
           return null;
         },
       },
+      message: {
+        findFirst: async ({
+          where,
+        }: {
+          where: { workspaceId?: string; externalId?: string; id?: string };
+        }) => {
+          const msg = Array.from(messagesDb.values()).find(
+            (m: any) =>
+              (!where.workspaceId || m.workspaceId === where.workspaceId) &&
+              (!where.externalId || m.externalId === where.externalId) &&
+              (!where.id || m.id === where.id),
+          );
+          return msg ? { ...msg } : null;
+        },
+        update: async ({ where, data }: { where: { id: string }; data: any }) => {
+          const msg = messagesDb.get(where.id);
+          if (msg) {
+            const updated = { ...msg, ...data };
+            messagesDb.set(where.id, updated);
+            return { ...updated };
+          }
+          return null;
+        },
+      },
     };
 
     mockPrismaService = {
@@ -191,8 +215,39 @@ describe('ChannelIngestionProcessor (Task T-1.5.7: Inbound Ingestion Pipeline In
       channelType: ChannelType.FACEBOOK_MESSENGER,
       verifyWebhook: () => true,
       parseInboundPayload: (rawBody: any) => {
+        if (rawBody?.deliveryStatusInfo) {
+          return [
+            {
+              eventKind: 'delivery_status',
+              externalContactId: rawBody.externalContactId || 'system',
+              externalMessageId: rawBody.deliveryStatusInfo.externalMessageId,
+              contentType: MessageContentType.TEXT,
+              timestamp: new Date(),
+              deliveryStatusInfo: rawBody.deliveryStatusInfo,
+            },
+          ];
+        }
+
         const messaging = rawBody?.entry?.[0]?.messaging?.[0];
         if (!messaging) return [];
+
+        if (messaging.delivery) {
+          return [
+            {
+              eventKind: 'delivery_status',
+              externalContactId: messaging.sender?.id || 'system',
+              externalMessageId: messaging.delivery.mids?.[0] || messaging.delivery.mid,
+              contentType: MessageContentType.TEXT,
+              timestamp: new Date(),
+              deliveryStatusInfo: {
+                externalMessageId: messaging.delivery.mids?.[0] || messaging.delivery.mid,
+                status: DeliveryStatus.DELIVERED,
+                timestamp: new Date(messaging.delivery.watermark || Date.now()),
+              },
+            },
+          ];
+        }
+
         return [
           {
             externalContactId: messaging.sender.id,
@@ -457,5 +512,239 @@ describe('ChannelIngestionProcessor (Task T-1.5.7: Inbound Ingestion Pipeline In
     assert.strictEqual(contactsDb.size, 0);
     assert.strictEqual(conversationsDb.size, 0);
     assert.strictEqual(messagesDb.size, 0);
+  });
+
+  describe('Delivery Status Updates (Feature Task S-2)', () => {
+    it('should update Message.deliveryStatus when receiving delivery status event', async () => {
+      // Seed existing outgoing message
+      const msgId = 'msg_outgoing_1';
+      messagesDb.set(msgId, {
+        id: msgId,
+        conversationId: 'conv_1',
+        workspaceId: 'ws_corp',
+        senderType: SenderType.USER,
+        senderId: 'usr_agent_1',
+        content: 'Your order has shipped',
+        contentType: MessageContentType.TEXT,
+        messageType: MessageType.OUTGOING,
+        externalId: 'mid.fb.out_123',
+        deliveryStatus: DeliveryStatus.SENT,
+        createdAt: new Date(),
+      });
+
+      const eventId = 'evt_delivery_1';
+      channelEventsDb.set(eventId, {
+        id: eventId,
+        channelId: 'ch_fb_1',
+        externalEventId: 'mid.fb.out_123',
+        eventType: 'message_deliveries',
+        processedAt: null,
+      });
+
+      const mockJob: any = {
+        id: 'job_deliv_1',
+        data: {
+          channelId: 'ch_fb_1',
+          channelEventId: eventId,
+          eventType: 'message_deliveries',
+          payload: {
+            eventKind: 'delivery_status',
+            deliveryStatusInfo: {
+              externalMessageId: 'mid.fb.out_123',
+              status: DeliveryStatus.DELIVERED,
+              timestamp: new Date(),
+            },
+          },
+        },
+      };
+
+      await processor.process(mockJob);
+
+      // Verify deliveryStatus updated to DELIVERED
+      const updatedMsg = messagesDb.get(msgId);
+      assert.strictEqual(updatedMsg.deliveryStatus, DeliveryStatus.DELIVERED);
+
+      // Verify channelEvent marked processed
+      const updatedEvt = channelEventsDb.get(eventId);
+      assert.ok(updatedEvt.processedAt instanceof Date);
+    });
+
+    it('should gracefully handle delivery status update when message externalId is not found', async () => {
+      const eventId = 'evt_delivery_unknown';
+      channelEventsDb.set(eventId, {
+        id: eventId,
+        channelId: 'ch_fb_1',
+        externalEventId: 'mid.unknown_999',
+        eventType: 'message_reads',
+        processedAt: null,
+      });
+
+      const mockJob: any = {
+        id: 'job_deliv_2',
+        data: {
+          channelId: 'ch_fb_1',
+          channelEventId: eventId,
+          eventType: 'message_reads',
+          payload: {
+            eventKind: 'delivery_status',
+            deliveryStatusInfo: {
+              externalMessageId: 'mid.unknown_999',
+              status: DeliveryStatus.READ,
+              timestamp: new Date(),
+            },
+          },
+        },
+      };
+
+      await processor.process(mockJob);
+
+      // No crash, and channelEvent marked processed
+      const updatedEvt = channelEventsDb.get(eventId);
+      assert.ok(updatedEvt.processedAt instanceof Date);
+    });
+  });
+
+  describe('Media Download to StorageService (Feature Task S-2)', () => {
+    it('should download external media attachments and upload to MinIO when StorageService is provided', async () => {
+      const uploadedFiles: Array<{ key: string; contentType: string; buffer: Buffer }> = [];
+      const mockStorageService: any = {
+        upload: async (buffer: Buffer, contentType: string, key: string) => {
+          uploadedFiles.push({ key, contentType, buffer });
+        },
+        getPublicUrl: (key: string) => `https://minio.salescopilot.test/${key}`,
+      };
+
+      const processorWithStorage = new ChannelIngestionProcessor(
+        mockPrismaService,
+        mockContactResolutionService,
+        mockConversationsService,
+        mockMessagesService,
+        adapterRegistry,
+        mockStorageService,
+      );
+
+      // Mock globalThis.fetch for this test
+      const originalFetch = globalThis.fetch;
+      const fakeImageBytes = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10]);
+      globalThis.fetch = async (url: any) => {
+        return {
+          ok: true,
+          status: 200,
+          statusText: 'OK',
+          arrayBuffer: async () => fakeImageBytes.buffer,
+          headers: new Headers({ 'content-type': 'image/jpeg' }),
+        } as any;
+      };
+
+      try {
+        await processorWithStorage.process({
+          id: 'job_media_download',
+          data: {
+            channelId: 'ch_fb_1',
+            channelEventId: 'evt_media_dl',
+            eventType: 'messages',
+            payload: {
+              entry: [
+                {
+                  messaging: [
+                    {
+                      sender: { id: 'psid_media_downloader' },
+                      message: {
+                        mid: 'mid.fb.media_dl_1',
+                        text: 'Photo from user',
+                        attachments: [
+                          {
+                            type: 'image',
+                            payload: { url: 'https://cdn.fb.test/attachments/photo_123.jpg' },
+                          },
+                        ],
+                      },
+                    },
+                  ],
+                },
+              ],
+            },
+          },
+        } as any);
+
+        assert.strictEqual(uploadedFiles.length, 1);
+        assert.ok(uploadedFiles[0].key.startsWith('attachments/ws_corp/inbound/'));
+        assert.ok(uploadedFiles[0].key.includes('fb_image.jpg'));
+        assert.strictEqual(uploadedFiles[0].contentType, 'image/jpeg');
+
+        const msg = Array.from(messagesDb.values())[0];
+        assert.strictEqual(msg.attachments.length, 1);
+        assert.ok(msg.attachments[0].storagePath.startsWith('attachments/ws_corp/inbound/'));
+        assert.ok(msg.attachments[0].fileUrl.startsWith('https://minio.salescopilot.test/'));
+      } finally {
+        globalThis.fetch = originalFetch;
+      }
+    });
+
+    it('should fall back to original external URL gracefully if media download fails', async () => {
+      const mockStorageService: any = {
+        upload: async () => {},
+        getPublicUrl: (key: string) => `https://minio.test/${key}`,
+      };
+
+      const processorWithStorage = new ChannelIngestionProcessor(
+        mockPrismaService,
+        mockContactResolutionService,
+        mockConversationsService,
+        mockMessagesService,
+        adapterRegistry,
+        mockStorageService,
+      );
+
+      // Mock fetch failure (e.g. 404 or network timeout)
+      const originalFetch = globalThis.fetch;
+      globalThis.fetch = async () => {
+        return {
+          ok: false,
+          status: 404,
+          statusText: 'Not Found',
+        } as any;
+      };
+
+      try {
+        await processorWithStorage.process({
+          id: 'job_media_fail',
+          data: {
+            channelId: 'ch_fb_1',
+            channelEventId: 'evt_media_fail',
+            eventType: 'messages',
+            payload: {
+              entry: [
+                {
+                  messaging: [
+                    {
+                      sender: { id: 'psid_user_fail' },
+                      message: {
+                        mid: 'mid.fb.fail_1',
+                        text: 'Broken link photo',
+                        attachments: [
+                          {
+                            type: 'image',
+                            payload: { url: 'https://cdn.fb.test/broken_link.jpg' },
+                          },
+                        ],
+                      },
+                    },
+                  ],
+                },
+              ],
+            },
+          },
+        } as any);
+
+        // Message should still be created with fallback external URL
+        const msg = Array.from(messagesDb.values())[0];
+        assert.strictEqual(msg.attachments.length, 1);
+        assert.strictEqual(msg.attachments[0].storagePath, 'https://cdn.fb.test/broken_link.jpg');
+        assert.strictEqual(msg.attachments[0].fileUrl, 'https://cdn.fb.test/broken_link.jpg');
+      } finally {
+        globalThis.fetch = originalFetch;
+      }
+    });
   });
 });

@@ -137,10 +137,10 @@ export interface InboundMessagePayload {
    - Replace `fileUrl` bằng MinIO path trước khi tạo Attachment record
 
 **Acceptance Criteria**:
-- [ ] Delivery status events update `Message.deliveryStatus` chính xác
-- [ ] Media files được download và upload lên MinIO
-- [ ] Nếu download fail, log warning nhưng vẫn tạo Message (graceful degradation)
-- [ ] Existing message flow không bị break
+- [x] Delivery status events update `Message.deliveryStatus` chính xác
+- [x] Media files được download và upload lên MinIO
+- [x] Nếu download fail, log warning nhưng vẫn tạo Message (graceful degradation)
+- [x] Existing message flow không bị break
 
 **Dependencies**: Task S-1
 

@@ -1,6 +1,8 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Injectable, Logger, Optional } from '@nestjs/common';
 import { Job } from 'bullmq';
+import { randomUUID } from 'node:crypto';
+import * as path from 'node:path';
 import {
   ChannelType,
   FileType,
@@ -9,6 +11,7 @@ import {
   SenderType,
 } from '@sales-copilot/shared-contracts';
 import { PrismaService } from '../database';
+import { StorageService } from '../storage/storage.service';
 import { ContactResolutionService } from '../../modules/contacts/contact-resolution.service';
 import { ConversationsService } from '../../modules/conversations/conversations.service';
 import { MessagesService } from '../../modules/messages/messages.service';
@@ -33,8 +36,52 @@ export class ChannelIngestionProcessor extends WorkerHost {
     private readonly conversationsService: ConversationsService,
     private readonly messagesService: MessagesService,
     @Optional() private readonly adapterRegistry?: ChannelAdapterRegistry,
+    @Optional() private readonly storageService?: StorageService,
   ) {
     super();
+  }
+
+  /**
+   * Downloads media file from external URL and stores it into MinIO via StorageService.
+   */
+  private async downloadAndStoreMedia(
+    workspaceId: string,
+    externalUrl: string,
+    fileName: string,
+    fallbackContentType: string,
+  ): Promise<{
+    storagePath: string;
+    fileUrl: string;
+    fileSize: number;
+    contentType: string;
+  } | null> {
+    if (!this.storageService) {
+      return null;
+    }
+
+    const response = await fetch(externalUrl);
+    if (!response.ok) {
+      throw new Error(`HTTP error ${response.status} ${response.statusText}`);
+    }
+
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    const contentType = response.headers.get('content-type') || fallbackContentType;
+    const sanitized =
+      path
+        .basename(fileName)
+        .replace(/[^a-zA-Z0-9._-]/g, '_')
+        .substring(0, 100) || 'attachment';
+    const storageKey = `attachments/${workspaceId}/inbound/${randomUUID()}-${sanitized}`;
+
+    await this.storageService.upload(buffer, contentType, storageKey);
+
+    return {
+      storagePath: storageKey,
+      fileUrl: this.storageService.getPublicUrl(storageKey),
+      fileSize: buffer.length,
+      contentType,
+    };
   }
 
   async process(job: Job<ChannelIngestionJobData, void, string>): Promise<void> {
@@ -78,16 +125,38 @@ export class ChannelIngestionProcessor extends WorkerHost {
       const p = payload as any;
       if (
         p &&
-        (p.externalContactId || p.senderId || p.from) &&
-        (p.externalMessageId || p.messageId || p.mid || p.id)
+        (p.externalContactId ||
+          p.senderId ||
+          p.from ||
+          p.deliveryStatusInfo ||
+          p.eventKind === 'delivery_status') &&
+        (p.externalMessageId ||
+          p.messageId ||
+          p.mid ||
+          p.id ||
+          p.deliveryStatusInfo?.externalMessageId)
       ) {
         inboundMessages = [
           {
-            externalContactId: String(p.externalContactId || p.senderId || p.from),
-            externalMessageId: String(p.externalMessageId || p.messageId || p.mid || p.id),
+            eventKind: p.eventKind || (p.deliveryStatusInfo ? 'delivery_status' : 'message'),
+            externalContactId: String(
+              p.externalContactId ||
+                p.senderId ||
+                p.from ||
+                p.deliveryStatusInfo?.externalMessageId ||
+                'system',
+            ),
+            externalMessageId: String(
+              p.externalMessageId ||
+                p.messageId ||
+                p.mid ||
+                p.id ||
+                p.deliveryStatusInfo?.externalMessageId,
+            ),
             content: p.content ?? p.text ?? null,
             contentType: p.contentType ?? MessageContentType.TEXT,
             attachments: p.attachments,
+            deliveryStatusInfo: p.deliveryStatusInfo,
             senderInfo:
               p.senderInfo ??
               (p.name || p.senderName
@@ -109,7 +178,41 @@ export class ChannelIngestionProcessor extends WorkerHost {
     // 3. Process each normalized message
     for (const msg of inboundMessages) {
       try {
-        // 3a. Resolve Contact & ChannelIdentity
+        // 3a. Handle delivery status updates (e.g. delivered / read receipts)
+        if (msg.eventKind === 'delivery_status' || msg.deliveryStatusInfo) {
+          const statusInfo = msg.deliveryStatusInfo;
+          const externalMsgId = statusInfo?.externalMessageId || msg.externalMessageId;
+          const newStatus = statusInfo?.status;
+
+          if (externalMsgId && newStatus) {
+            const existingMessage = await client.message.findFirst({
+              where: {
+                workspaceId,
+                externalId: externalMsgId,
+              },
+            });
+
+            if (existingMessage) {
+              await client.message.update({
+                where: { id: existingMessage.id },
+                data: {
+                  deliveryStatus: newStatus,
+                },
+              });
+
+              this.logger.log(
+                `Updated deliveryStatus to '${newStatus}' for message '${existingMessage.id}' (externalId: '${externalMsgId}', workspace: '${workspaceId}')`,
+              );
+            } else {
+              this.logger.warn(
+                `Message with externalId '${externalMsgId}' not found for delivery status update in workspace '${workspaceId}'`,
+              );
+            }
+          }
+          continue;
+        }
+
+        // 3b. Resolve Contact & ChannelIdentity
         const resolution = await this.contactResolutionService.resolveFromChannel({
           workspaceId,
           channelId,
@@ -129,7 +232,7 @@ export class ChannelIngestionProcessor extends WorkerHost {
         const contact = resolution.contact;
         const identity = resolution.channelIdentity;
 
-        // 3b. Find active conversation or create new one
+        // 3c. Find active conversation or create new one
         const conversation = await this.conversationsService.findOrCreateActiveConversation(
           workspaceId,
           {
@@ -139,17 +242,55 @@ export class ChannelIngestionProcessor extends WorkerHost {
           },
         );
 
-        // 3c. Prepare attachments
-        const attachments = msg.attachments?.map(att => ({
-          fileName: att.fileName || 'attachment',
-          fileType: (att.fileType as FileType) || FileType.FILE,
-          fileSize: att.fileSize || 1000,
-          storagePath: att.fileUrl,
-          contentType: att.contentType ? String(att.contentType) : 'application/octet-stream',
-          fileUrl: att.fileUrl,
-        }));
+        // 3d. Prepare attachments (with MinIO download if external URL provided)
+        const attachments = [];
+        if (msg.attachments && msg.attachments.length > 0) {
+          for (const att of msg.attachments) {
+            let storagePath = att.fileUrl;
+            let fileUrl = att.fileUrl;
+            let fileSize = att.fileSize || 1000;
+            let contentType = att.contentType
+              ? String(att.contentType)
+              : 'application/octet-stream';
+            const fileName = att.fileName || 'attachment';
 
-        // 3d. Create inbound message
+            if (
+              this.storageService &&
+              att.fileUrl &&
+              (att.fileUrl.startsWith('http://') || att.fileUrl.startsWith('https://'))
+            ) {
+              try {
+                const downloaded = await this.downloadAndStoreMedia(
+                  workspaceId,
+                  att.fileUrl,
+                  fileName,
+                  contentType,
+                );
+                if (downloaded) {
+                  storagePath = downloaded.storagePath;
+                  fileUrl = downloaded.fileUrl;
+                  fileSize = downloaded.fileSize;
+                  contentType = downloaded.contentType;
+                }
+              } catch (downloadErr) {
+                this.logger.warn(
+                  `Failed to download media file from '${att.fileUrl}' for channel '${channelId}': ${(downloadErr as Error).message}. Proceeding with external URL.`,
+                );
+              }
+            }
+
+            attachments.push({
+              fileName,
+              fileType: (att.fileType as FileType) || FileType.FILE,
+              fileSize,
+              storagePath,
+              contentType,
+              fileUrl,
+            });
+          }
+        }
+
+        // 3e. Create inbound message
         await this.messagesService.create(workspaceId, conversation.id, {
           senderType: SenderType.CONTACT,
           senderId: contact.id,
