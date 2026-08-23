@@ -3,6 +3,9 @@ import { ConfigService } from '@nestjs/config';
 import { BullModule } from '@nestjs/bullmq';
 import { ChannelIngestionProcessor } from './channel-ingestion.processor';
 import { DatabaseModule } from '../database';
+import { ContactsModule } from '../../modules/contacts';
+import { ConversationsModule } from '../../modules/conversations';
+import { MessagesModule } from '../../modules/messages';
 
 export const CHANNEL_INGESTION_QUEUE = 'channel-ingestion';
 
@@ -10,6 +13,9 @@ export const CHANNEL_INGESTION_QUEUE = 'channel-ingestion';
 @Module({
   imports: [
     DatabaseModule,
+    ContactsModule,
+    ConversationsModule,
+    MessagesModule,
     BullModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {

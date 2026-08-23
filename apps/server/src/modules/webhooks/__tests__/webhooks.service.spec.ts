@@ -154,7 +154,27 @@ describe('Inbound Webhook Ingestion Pipeline (Feature F-1.3.4 & BullMQ Stub)', (
     );
 
     webhooksController = new WebhooksController(webhooksService);
-    processor = new ChannelIngestionProcessor(mockPrismaService);
+
+    const mockContactResolutionService: any = {
+      resolveFromChannel: async () => ({
+        contact: { id: 'cnt_mock', name: 'Mock Contact' },
+        identity: { id: 'ident_mock' },
+      }),
+    };
+    const mockConversationsService: any = {
+      findOrCreateActiveConversation: async () => ({ id: 'conv_mock' }),
+    };
+    const mockMessagesService: any = {
+      create: async () => ({ id: 'msg_mock' }),
+    };
+
+    processor = new ChannelIngestionProcessor(
+      mockPrismaService,
+      mockContactResolutionService,
+      mockConversationsService,
+      mockMessagesService,
+      adapterRegistry,
+    );
   });
 
   describe('GET /channels/:channelId/webhook (Verification Handshake)', () => {
