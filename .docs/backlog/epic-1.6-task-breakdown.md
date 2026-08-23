@@ -665,11 +665,11 @@ export class WebChatGateway implements OnGatewayConnection, OnGatewayDisconnect 
 **Auth**: Widget token + Contact JWT (issued on first contact creation)
 
 **Acceptance Criteria**:
-- [ ] Config endpoint returns widget customization (color, greeting, position)
-- [ ] Contact endpoint creates anonymous contact and returns JWT
-- [ ] Conversations endpoint lists contact's active conversations
-- [ ] Messages endpoint returns conversation history with pagination
-- [ ] CORS headers allow cross-origin requests
+- [x] Config endpoint returns widget customization (color, greeting, position)
+- [x] Contact endpoint creates anonymous contact and returns JWT
+- [x] Conversations endpoint lists contact's active conversations
+- [x] Messages endpoint returns conversation history with pagination
+- [x] CORS headers allow cross-origin requests
 
 **Estimated complexity**: 🟡 Medium (~150 LOC)
 
@@ -693,10 +693,10 @@ export class WebChatGateway implements OnGatewayConnection, OnGatewayDisconnect 
 - HMAC validation cho `setUser()` (prevent identity spoofing)
 
 **Acceptance Criteria**:
-- [ ] Generate JWT cho anonymous visitors
-- [ ] Verify JWT trên incoming requests
-- [ ] HMAC identity verification cho setUser()
-- [ ] Token expiry configurable
+- [x] Generate JWT cho anonymous visitors
+- [x] Verify JWT trên incoming requests
+- [x] HMAC identity verification cho setUser()
+- [x] Token expiry configurable
 
 **Estimated complexity**: 🟡 Medium (~80 LOC)
 
