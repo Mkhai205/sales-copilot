@@ -474,27 +474,19 @@ export class TelegramModule implements OnModuleInit {
 - `apps/server/src/integrations/facebook/__tests__/facebook.adapter.spec.ts` [NEW]
 
 **Test cases**:
-1. `verifyWebhook()`:
-   - Valid HMAC-SHA256 → true
-   - Invalid signature → false
-   - Missing signature header → false
-   - Empty body → false
-2. `parseInboundPayload()`:
-   - Text message entry → InboundMessagePayload with eventKind 'message'
-   - Image attachment → correct InboundAttachment
-   - Multiple messaging entries in one webhook → multiple payloads
-   - Delivery receipt → eventKind 'delivery_status', DELIVERED
-   - Read receipt → eventKind 'delivery_status', READ
-   - Echo event → filtered out (empty result)
-   - Non-page object → empty array
-3. `sendMessage()`:
-   - Text reply → mock HTTP 200 with message_id
-   - Attachment reply → mock HTTP 200
-   - API error response → handle gracefully
-4. `getChannelInfo()`:
-   - Mock graph API → correct ChannelInfo
+- [x] `verifyWebhook()`: Valid HMAC-SHA256, invalid signature, missing signature header, empty/null body, challenge verification
+- [x] `parseInboundPayload()`: Text messages, image/video/audio/file/location attachments, multiple messaging entries, delivery receipts (mids & watermark), read receipts, echo events filter, non-page objects filter, standby events
+- [x] `sendMessage()`: Text replies, media attachments (image/video/audio/file), HUMAN_AGENT tag, missing parameters error, API error handling
+- [x] `getChannelInfo()`: Graph API /me metadata parsing, API error handling
+- [x] Helper utilities: User profile fetching, app subscription/unsubscription, sender actions (typing indicators)
+
+**Acceptance Criteria**:
+- [x] 100% test pass rate with full branch coverage for `FacebookAdapter`
+- [x] Mock HTTP responses verify Graph API request headers, auth tokens, endpoints, and JSON bodies
+- [x] Tests run quickly via Node native test runner and `@swc-node/register`
 
 **Estimated complexity**: 🟡 Medium (~300 LOC)
+
 
 ---
 

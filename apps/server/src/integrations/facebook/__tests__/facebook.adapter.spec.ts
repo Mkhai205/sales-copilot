@@ -1001,6 +1001,134 @@ describe('FacebookAdapter (Facebook Messenger Platform Integration)', () => {
         assert.strictEqual(interceptedBody.recipient.id, 'psid_recipient_1');
         assert.strictEqual(interceptedBody.sender_action, 'typing_on');
       });
+
+      it('should return false when sendSenderAction fails', async () => {
+        globalThis.fetch = (async () => ({
+          ok: false,
+          status: 400,
+          json: async () => ({ error: { message: 'Failed' } }),
+        })) as unknown as typeof globalThis.fetch;
+
+        const success = await adapter.sendSenderAction(
+          mockPageAccessToken,
+          'psid_recipient_1',
+          'typing_off',
+        );
+
+        assert.strictEqual(success, false);
+      });
+
+      it('should return false when sendSenderAction throws network error', async () => {
+        globalThis.fetch = (async () => {
+          throw new Error('Network error');
+        }) as unknown as typeof globalThis.fetch;
+
+        const success = await adapter.sendSenderAction(
+          mockPageAccessToken,
+          'psid_recipient_1',
+          'mark_seen',
+        );
+
+        assert.strictEqual(success, false);
+      });
+    });
+
+    describe('subscribeApps() and unsubscribeApps() error branches', () => {
+      it('should return error description when subscribeApps API returns error object', async () => {
+        globalThis.fetch = (async () => ({
+          ok: false,
+          status: 400,
+          statusText: 'Bad Request',
+          json: async () => ({
+            error: {
+              code: 100,
+              message: 'Invalid field specified',
+            },
+          }),
+        })) as unknown as typeof globalThis.fetch;
+
+        const res = await adapter.subscribeApps(mockPageAccessToken, ['invalid_field']);
+        assert.strictEqual(res.success, false);
+        assert.strictEqual(res.description, '[100] Invalid field specified');
+      });
+
+      it('should return error description when unsubscribeApps API returns error object', async () => {
+        globalThis.fetch = (async () => ({
+          ok: false,
+          status: 403,
+          statusText: 'Forbidden',
+          json: async () => ({
+            error: {
+              code: 200,
+              message: 'Permission denied',
+            },
+          }),
+        })) as unknown as typeof globalThis.fetch;
+
+        const res = await adapter.unsubscribeApps(mockPageAccessToken);
+        assert.strictEqual(res.success, false);
+        assert.strictEqual(res.description, '[200] Permission denied');
+      });
+    });
+
+    describe('Custom Graph API Version Support', () => {
+      it('should use custom graphApiVersion from channel settings for sendMessage', async () => {
+        let interceptedUrl = '';
+
+        globalThis.fetch = (async (url: string | URL | Request) => {
+          interceptedUrl = String(url);
+          return {
+            ok: true,
+            status: 200,
+            json: async () => ({
+              recipient_id: 'psid_1',
+              message_id: 'mid.custom_version_1',
+            }),
+          } as unknown as Response;
+        }) as typeof globalThis.fetch;
+
+        const contextWithCustomVersion: ChannelContext = {
+          ...mockChannelContext,
+          settings: {
+            graphApiVersion: 'v21.0',
+          },
+        };
+
+        const result = await adapter.sendMessage(contextWithCustomVersion, {
+          recipientExternalId: 'psid_1',
+          content: 'Hello v21.0',
+        });
+
+        assert.ok(interceptedUrl.includes('https://graph.facebook.com/v21.0/me/messages'));
+        assert.strictEqual(result.externalMessageId, 'mid.custom_version_1');
+      });
+
+      it('should use custom graphApiVersion from channel settings for getChannelInfo', async () => {
+        let interceptedUrl = '';
+
+        globalThis.fetch = (async (url: string | URL | Request) => {
+          interceptedUrl = String(url);
+          return {
+            ok: true,
+            status: 200,
+            json: async () => ({
+              id: mockPageId,
+              name: 'Store v21',
+            }),
+          } as unknown as Response;
+        }) as typeof globalThis.fetch;
+
+        const contextWithCustomVersion: ChannelContext = {
+          ...mockChannelContext,
+          settings: {
+            graphApiVersion: 'v21.0',
+          },
+        };
+
+        const info = await adapter.getChannelInfo(contextWithCustomVersion);
+        assert.ok(interceptedUrl.includes('https://graph.facebook.com/v21.0/me'));
+        assert.strictEqual(info.name, 'Store v21');
+      });
     });
   });
 });
