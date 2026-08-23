@@ -1,25 +1,29 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { OnEvent } from '@nestjs/event-emitter';
 import { ChannelType } from '@sales-copilot/shared-contracts';
 import { PrismaService } from '../../infrastructure/database';
 import { ChannelCredentialService } from '../../modules/inboxes/channel-credential.service';
-import { TelegramAdapter } from './telegram.adapter';
-import { ChannelLifecycleEventPayload } from '../channel-adapter.types';
+import { FacebookAdapter } from './facebook.adapter';
+import { ChannelContext, ChannelLifecycleEventPayload } from '../channel-adapter.types';
 
+/**
+ * Facebook Page Webhook Subscription Lifecycle Service.
+ *
+ * Manages automatic Facebook App webhook subscriptions when FACEBOOK_MESSENGER channels
+ * are created, updated, or deleted.
+ */
 @Injectable()
-export class TelegramLifecycleService {
-  private readonly logger = new Logger(TelegramLifecycleService.name);
+export class FacebookLifecycleService {
+  private readonly logger = new Logger(FacebookLifecycleService.name);
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly adapter: TelegramAdapter,
+    private readonly adapter: FacebookAdapter,
     private readonly credentialService: ChannelCredentialService,
-    private readonly configService: ConfigService,
   ) {}
 
   /**
-   * Decrypt stored channel credentials.
+   * Decrypts stored channel credentials.
    */
   private decryptCredentials(rawCredentials: unknown): Record<string, unknown> {
     if (!rawCredentials) return {};
@@ -46,34 +50,20 @@ export class TelegramLifecycleService {
   }
 
   /**
-   * Constructs the public webhook URL for a channel.
-   */
-  private getWebhookUrl(channelId: string): string {
-    const rawBaseUrl =
-      this.configService.get<string>('WEBHOOK_BASE_URL') ||
-      this.configService.get<string>('APP_URL') ||
-      this.configService.get<string>('BASE_URL') ||
-      'http://localhost:3000';
-
-    const baseUrl = rawBaseUrl.replace(/\/+$/, '');
-    return `${baseUrl}/channels/${channelId}/webhook`;
-  }
-
-  /**
    * Handles channel.created and channel.updated domain events.
    */
   @OnEvent('channel.created')
   @OnEvent('channel.updated')
   async handleChannelEvent(payload: ChannelLifecycleEventPayload): Promise<void> {
-    if (payload.channelType !== ChannelType.TELEGRAM) {
+    if (payload.channelType !== ChannelType.FACEBOOK_MESSENGER) {
       return;
     }
 
     this.logger.log(
-      `Processing Telegram channel setup for channel '${payload.channelId}' in workspace '${payload.workspaceId}'`,
+      `Processing Facebook Page subscription setup for channel '${payload.channelId}' in workspace '${payload.workspaceId}'`,
     );
 
-    await this.setupWebhook(payload.workspaceId, payload.channelId);
+    await this.setupPageSubscription(payload.workspaceId, payload.channelId);
   }
 
   /**
@@ -81,22 +71,22 @@ export class TelegramLifecycleService {
    */
   @OnEvent('channel.deleted')
   async handleChannelDeleted(payload: ChannelLifecycleEventPayload): Promise<void> {
-    if (payload.channelType !== ChannelType.TELEGRAM) {
+    if (payload.channelType !== ChannelType.FACEBOOK_MESSENGER) {
       return;
     }
 
     this.logger.log(
-      `Processing Telegram webhook cleanup for deleted channel '${payload.channelId}' in workspace '${payload.workspaceId}'`,
+      `Processing Facebook Page webhook unsubscribe for deleted channel '${payload.channelId}' in workspace '${payload.workspaceId}'`,
     );
 
-    await this.removeWebhook(payload.workspaceId, payload.channelId);
+    await this.removePageSubscription(payload.workspaceId, payload.channelId);
   }
 
   /**
-   * Validates bot token, queries bot info, deletes old webhook, registers new webhook,
+   * Validates Page Access Token, queries Page info, subscribes Facebook page to webhooks,
    * and updates channel metadata in the database.
    */
-  async setupWebhook(workspaceId: string, channelId: string): Promise<boolean> {
+  async setupPageSubscription(workspaceId: string, channelId: string): Promise<boolean> {
     const client = this.prisma.getClient();
 
     const channel = await client.channel.findFirst({
@@ -109,26 +99,32 @@ export class TelegramLifecycleService {
       return false;
     }
 
-    if (channel.channelType !== ChannelType.TELEGRAM) {
+    if (channel.channelType !== ChannelType.FACEBOOK_MESSENGER) {
       return false;
     }
 
     const decrypted = this.decryptCredentials(channel.credentials);
-    const botToken = String(
-      decrypted.botToken || decrypted.bot_token || decrypted.token || decrypted.accessToken || '',
+    const pageAccessToken = String(
+      decrypted.pageAccessToken ||
+        decrypted.page_access_token ||
+        decrypted.accessToken ||
+        decrypted.token ||
+        '',
     );
 
     const channelSettings = (channel.settings as Record<string, unknown>) || {};
 
-    if (!botToken) {
-      this.logger.warn(`No bot token found in credentials for Telegram channel '${channelId}'`);
+    if (!pageAccessToken) {
+      this.logger.warn(
+        `No Page Access Token found in credentials for Facebook channel '${channelId}'`,
+      );
       await client.channel.update({
         where: { id: channelId },
         data: {
           isConnected: false,
           settings: {
             ...channelSettings,
-            lastSyncError: 'MISSING_BOT_TOKEN',
+            lastSyncError: 'MISSING_PAGE_ACCESS_TOKEN',
             lastSyncAt: new Date().toISOString(),
           },
         },
@@ -137,71 +133,62 @@ export class TelegramLifecycleService {
     }
 
     try {
-      // 1. Validate bot token & get bot info via getChannelInfo
-      const channelContext = {
+      // 1. Validate Page Access Token & fetch Page Info via getChannelInfo
+      const channelContext: ChannelContext = {
         channelId,
         inboxId: channel.inboxId,
         workspaceId,
-        channelType: ChannelType.TELEGRAM,
+        channelType: ChannelType.FACEBOOK_MESSENGER,
         credentials: decrypted,
         settings: channelSettings,
         providerAccountId: channel.providerAccountId,
       };
 
-      const botInfo = await this.adapter.getChannelInfo(channelContext);
+      const pageInfo = await this.adapter.getChannelInfo(channelContext);
 
-      // 2. Compute public webhook URL and secret token
-      const webhookUrl = this.getWebhookUrl(channelId);
-      const secretToken =
-        decrypted.webhookSecret || decrypted.secret_token || decrypted.secretToken
-          ? String(decrypted.webhookSecret || decrypted.secret_token || decrypted.secretToken)
-          : undefined;
+      // 2. Subscribe page to Webhooks via /me/subscribed_apps
+      const subscribeResult = await this.adapter.subscribeApps(pageAccessToken);
 
-      // 3. Delete existing webhook and set new webhook
-      await this.adapter.deleteWebhook(botToken);
-      const setWebhookResult = await this.adapter.setWebhook(botToken, webhookUrl, secretToken);
+      const isConnected = Boolean(subscribeResult.success);
 
-      const isConnected = Boolean(setWebhookResult.ok);
-
-      // 4. Update channel with bot metadata and status
+      // 3. Update channel with Page metadata and subscription status
       const updatedSettings = {
         ...channelSettings,
-        botUsername: botInfo.metadata?.username,
-        botName: botInfo.name,
-        webhookUrl,
-        webhookSetAt: new Date().toISOString(),
+        pageId: pageInfo.providerAccountId || String(pageInfo.metadata?.pageId || ''),
+        pageName: pageInfo.name,
+        subscribedAt: isConnected ? new Date().toISOString() : undefined,
         lastSyncAt: new Date().toISOString(),
-        lastSyncError: setWebhookResult.ok
+        lastSyncError: subscribeResult.success
           ? null
-          : setWebhookResult.description || 'SET_WEBHOOK_FAILED',
+          : subscribeResult.description || 'SUBSCRIBE_APPS_FAILED',
       };
 
       await client.channel.update({
         where: { id: channelId },
         data: {
-          providerAccountId: botInfo.providerAccountId || String(botInfo.metadata?.id || ''),
+          providerAccountId: pageInfo.providerAccountId || channel.providerAccountId,
           isConnected,
           settings: updatedSettings as any,
         },
       });
 
-      // Optionally update Inbox avatar if empty and bot has avatar
-      if (botInfo.avatarUrl && channel.inbox && !channel.inbox.avatarUrl) {
+      // 4. Optionally update Inbox avatar if empty and Page has avatar
+      if (pageInfo.avatarUrl && channel.inbox && !channel.inbox.avatarUrl) {
         await client.inbox.update({
           where: { id: channel.inboxId },
-          data: { avatarUrl: botInfo.avatarUrl },
+          data: { avatarUrl: pageInfo.avatarUrl },
         });
       }
 
       this.logger.log(
-        `Telegram channel '${channelId}' successfully configured (Bot: @${botInfo.metadata?.username || botInfo.name}, isConnected: ${isConnected})`,
+        `Facebook channel '${channelId}' successfully configured (Page: '${pageInfo.name}', isConnected: ${isConnected})`,
       );
 
       return isConnected;
     } catch (err) {
-      const errorMessage = (err as Error).message || 'Telegram setup failed';
+      const errorMessage = (err as Error).message || 'Facebook Page setup failed';
       this.logger.error(
-        `Failed to configure Telegram channel '${channelId}': ${errorMessage}`,
+        `Failed to configure Facebook channel '${channelId}': ${errorMessage}`,
         (err as Error).stack,
       );
 
@@ -222,9 +209,9 @@ export class TelegramLifecycleService {
   }
 
   /**
-   * Deletes the Telegram webhook when channel is removed or disconnected.
+   * Unsubscribes the Facebook Page from webhooks when the channel is deleted or disconnected.
    */
-  async removeWebhook(workspaceId: string, channelId: string): Promise<boolean> {
+  async removePageSubscription(workspaceId: string, channelId: string): Promise<boolean> {
     const client = this.prisma.getClient();
 
     const channel = await client.channel.findFirst({
@@ -234,18 +221,22 @@ export class TelegramLifecycleService {
     if (!channel) return false;
 
     const decrypted = this.decryptCredentials(channel.credentials);
-    const botToken = String(
-      decrypted.botToken || decrypted.bot_token || decrypted.token || decrypted.accessToken || '',
+    const pageAccessToken = String(
+      decrypted.pageAccessToken ||
+        decrypted.page_access_token ||
+        decrypted.accessToken ||
+        decrypted.token ||
+        '',
     );
 
-    if (!botToken) return false;
+    if (!pageAccessToken) return false;
 
     try {
-      const result = await this.adapter.deleteWebhook(botToken);
-      return Boolean(result.ok);
+      const result = await this.adapter.unsubscribeApps(pageAccessToken);
+      return Boolean(result.success);
     } catch (err) {
       this.logger.warn(
-        `Failed to delete Telegram webhook for channel '${channelId}': ${(err as Error).message}`,
+        `Failed to unsubscribe Facebook Page for channel '${channelId}': ${(err as Error).message}`,
       );
       return false;
     }

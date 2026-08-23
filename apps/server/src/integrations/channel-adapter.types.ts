@@ -158,3 +158,13 @@ export interface ChannelInfo {
   avatarUrl?: string;
   metadata?: Record<string, unknown>;
 }
+
+/**
+ * Event payload emitted when a channel is created, updated, or deleted.
+ */
+export interface ChannelLifecycleEventPayload {
+  workspaceId: string;
+  channelId: string;
+  inboxId: string;
+  channelType: string;
+}

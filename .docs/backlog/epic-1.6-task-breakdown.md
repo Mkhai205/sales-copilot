@@ -503,9 +503,9 @@ export class TelegramModule implements OnModuleInit {
 3. Listen event `channel.deleted` → Call `DELETE /me/subscribed_apps`
 
 **Acceptance Criteria**:
-- [ ] Channel creation → auto subscribe page webhooks
-- [ ] Channel deletion → auto unsubscribe
-- [ ] API error → log warning, don't block channel creation
+- [x] Channel creation → auto subscribe page webhooks
+- [x] Channel deletion → auto unsubscribe
+- [x] API error → log warning, don't block channel creation
 
 **Estimated complexity**: 🟡 Medium (~60 LOC)
 
