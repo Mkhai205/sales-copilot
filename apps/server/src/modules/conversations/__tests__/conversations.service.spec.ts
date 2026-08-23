@@ -19,6 +19,7 @@ describe('ConversationsService (Core & State Machine)', () => {
   let inboxMembersDb: Map<string, any>;
   let channelIdentitiesDb: Map<string, any>;
   let teamsDb: Map<string, any>;
+  let labelsDb: Map<string, any>;
   let conversationsDb: Map<string, any>;
   let conversationLabelsDb: Map<string, any>;
 
@@ -28,6 +29,7 @@ describe('ConversationsService (Core & State Machine)', () => {
     inboxMembersDb = new Map();
     channelIdentitiesDb = new Map();
     teamsDb = new Map();
+    labelsDb = new Map();
     conversationsDb = new Map();
     conversationLabelsDb = new Map();
     emittedEvents = [];
@@ -84,6 +86,26 @@ describe('ConversationsService (Core & State Machine)', () => {
       updatedAt: new Date(),
     });
 
+    labelsDb.set('lbl_1', {
+      id: 'lbl_1',
+      workspaceId: 'ws_1',
+      title: 'VIP',
+      color: '#FF0000',
+      showOnSidebar: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    labelsDb.set('lbl_2', {
+      id: 'lbl_2',
+      workspaceId: 'ws_1',
+      title: 'Billing',
+      color: '#00FF00',
+      showOnSidebar: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
     const clientMock = {
       contact: {
         findFirst: async ({ where }: { where: any }) => {
@@ -133,6 +155,63 @@ describe('ConversationsService (Core & State Machine)', () => {
           return null;
         },
       },
+      label: {
+        findMany: async ({ where }: { where: any }) => {
+          return Array.from(labelsDb.values())
+            .filter((l: any) => {
+              if (where?.workspaceId && l.workspaceId !== where.workspaceId) return false;
+              if (where?.id?.in && !where.id.in.includes(l.id)) return false;
+              return true;
+            })
+            .map(l => ({ ...l }));
+        },
+        findFirst: async ({ where }: { where: any }) => {
+          for (const l of labelsDb.values()) {
+            if (where.id && l.id !== where.id) continue;
+            if (where.workspaceId && l.workspaceId !== where.workspaceId) continue;
+            return { ...l };
+          }
+          return null;
+        },
+      },
+      conversationLabel: {
+        findUnique: async ({ where }: { where: any }) => {
+          const key = `${where.conversationId_labelId.conversationId}_${where.conversationId_labelId.labelId}`;
+          const found = conversationLabelsDb.get(key);
+          return found ? { ...found } : null;
+        },
+        create: async ({ data }: { data: any }) => {
+          const key = `${data.conversationId}_${data.labelId}`;
+          const record = {
+            conversationId: data.conversationId,
+            labelId: data.labelId,
+            createdAt: new Date(),
+            label: labelsDb.get(data.labelId),
+          };
+          conversationLabelsDb.set(key, record);
+          return { ...record };
+        },
+        delete: async ({ where }: { where: any }) => {
+          const key = `${where.conversationId_labelId.conversationId}_${where.conversationId_labelId.labelId}`;
+          const existing = conversationLabelsDb.get(key);
+          if (existing) {
+            conversationLabelsDb.delete(key);
+          }
+          return existing;
+        },
+        findMany: async ({ where, orderBy }: { where: any; orderBy?: any }) => {
+          const list = Array.from(conversationLabelsDb.values())
+            .filter((cl: any) => cl.conversationId === where.conversationId)
+            .map((cl: any) => ({
+              ...cl,
+              label: labelsDb.get(cl.labelId),
+            }));
+          if (orderBy?.label?.title === 'asc') {
+            list.sort((a, b) => (a.label?.title || '').localeCompare(b.label?.title || ''));
+          }
+          return list;
+        },
+      },
       conversation: {
         findFirst: async ({ where }: { where: any }) => {
           for (const conv of conversationsDb.values()) {
@@ -141,7 +220,12 @@ describe('ConversationsService (Core & State Machine)', () => {
             if (where.contactId && conv.contactId !== where.contactId) continue;
             if (where.inboxId && conv.inboxId !== where.inboxId) continue;
             if (where.status?.in && !where.status.in.includes(conv.status)) continue;
-            return { ...conv };
+
+            const labels = Array.from(conversationLabelsDb.values())
+              .filter(cl => cl.conversationId === conv.id)
+              .map(cl => ({ label: labelsDb.get(cl.labelId) }));
+
+            return { ...conv, labels };
           }
           return null;
         },
@@ -189,7 +273,12 @@ describe('ConversationsService (Core & State Machine)', () => {
             });
           }
 
-          return results.slice(skip, skip + take).map(c => ({ ...c }));
+          return results.slice(skip, skip + take).map(c => {
+            const labels = Array.from(conversationLabelsDb.values())
+              .filter(cl => cl.conversationId === c.id)
+              .map(cl => ({ label: labelsDb.get(cl.labelId) }));
+            return { ...c, labels };
+          });
         },
         count: async ({ where }: { where?: any }) => {
           return Array.from(conversationsDb.values()).filter((conv: any) => {
@@ -240,7 +329,10 @@ describe('ConversationsService (Core & State Machine)', () => {
             updatedAt: new Date(),
           };
           conversationsDb.set(where.id, updated);
-          return { ...updated };
+          const labels = Array.from(conversationLabelsDb.values())
+            .filter(cl => cl.conversationId === where.id)
+            .map(cl => ({ label: labelsDb.get(cl.labelId) }));
+          return { ...updated, labels };
         },
       },
     };
@@ -614,6 +706,78 @@ describe('ConversationsService (Core & State Machine)', () => {
       await assert.rejects(async () => {
         await service.getById('ws_1', 'non_existent');
       }, NotFoundException);
+    });
+  });
+
+  describe('assignLabels & removeLabel & getLabels', () => {
+    let convId: string;
+
+    beforeEach(async () => {
+      const conv = await service.create('ws_1', { contactId: 'cnt_1', inboxId: 'ib_1' });
+      convId = conv.id;
+      emittedEvents = [];
+    });
+
+    it('should assign labels to conversation and emit conversation.labels_updated', async () => {
+      const labels = await service.assignLabels('ws_1', convId, ['lbl_1', 'lbl_2']);
+
+      assert.strictEqual(labels.length, 2);
+      assert.strictEqual(labels[0].title, 'Billing');
+      assert.strictEqual(labels[1].title, 'VIP');
+
+      const labelEvent = emittedEvents.find(e => e.event === 'conversation.labels_updated');
+      assert.ok(labelEvent);
+      assert.strictEqual(labelEvent.payload.labelIds.length, 2);
+    });
+
+    it('should be idempotent when assigning the same label again', async () => {
+      await service.assignLabels('ws_1', convId, ['lbl_1']);
+      const labels = await service.assignLabels('ws_1', convId, ['lbl_1']);
+
+      assert.strictEqual(labels.length, 1);
+      assert.strictEqual(labels[0].id, 'lbl_1');
+    });
+
+    it('should throw NotFoundException if label does not exist in workspace', async () => {
+      await assert.rejects(
+        async () => {
+          await service.assignLabels('ws_1', convId, ['lbl_unknown']);
+        },
+        (err: any) => {
+          assert.strictEqual(err instanceof NotFoundException, true);
+          assert.strictEqual(err.response.code, 'LABEL_NOT_FOUND');
+          return true;
+        },
+      );
+    });
+
+    it('should remove label from conversation and emit conversation.labels_updated', async () => {
+      await service.assignLabels('ws_1', convId, ['lbl_1', 'lbl_2']);
+      emittedEvents = [];
+
+      const result = await service.removeLabel('ws_1', convId, 'lbl_1');
+      assert.deepStrictEqual(result, { success: true });
+
+      const remaining = await service.getLabels('ws_1', convId);
+      assert.strictEqual(remaining.length, 1);
+      assert.strictEqual(remaining[0].id, 'lbl_2');
+
+      const labelEvent = emittedEvents.find(e => e.event === 'conversation.labels_updated');
+      assert.ok(labelEvent);
+      assert.strictEqual(labelEvent.payload.labelIds.length, 1);
+    });
+
+    it('should throw NotFoundException when removing unassigned label', async () => {
+      await assert.rejects(
+        async () => {
+          await service.removeLabel('ws_1', convId, 'lbl_1');
+        },
+        (err: any) => {
+          assert.strictEqual(err instanceof NotFoundException, true);
+          assert.strictEqual(err.response.code, 'CONVERSATION_LABEL_NOT_FOUND');
+          return true;
+        },
+      );
     });
   });
 });

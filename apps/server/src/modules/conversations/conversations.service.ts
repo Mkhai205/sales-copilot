@@ -9,10 +9,12 @@ import {
   UpdateConversationPriorityDto,
   UpdateConversationStatusDto,
   ConversationListQueryDto,
+  LabelDto,
   PaginationMeta,
 } from '@sales-copilot/shared-contracts';
 import { PrismaService } from '../../infrastructure/database';
 import { mapConversationToDto } from './conversations.mapper';
+import { mapLabelToDto } from '../labels/labels.mapper';
 
 /**
  * Standard Conversation includes for full DTO reconstruction.
@@ -639,5 +641,181 @@ export class ConversationsService {
         hasMore,
       },
     };
+  }
+
+  /**
+   * Assigns one or more labels to a conversation idempotently.
+   */
+  async assignLabels(
+    workspaceId: string,
+    conversationId: string,
+    labelIds: string[],
+    tx?: ReturnType<PrismaService['getClient']>,
+  ): Promise<LabelDto[]> {
+    const client = tx || this.prisma.getClient();
+
+    // 1. Validate conversation exists in workspace
+    const conversation = await client.conversation.findFirst({
+      where: { id: conversationId, workspaceId },
+    });
+
+    if (!conversation) {
+      throw new NotFoundException({
+        code: 'CONVERSATION_NOT_FOUND',
+        message: `Conversation with id '${conversationId}' not found in this workspace`,
+      });
+    }
+
+    if (labelIds.length === 0) {
+      return this.getLabels(workspaceId, conversationId, client);
+    }
+
+    // 2. Validate all labels exist in the same workspace
+    const foundLabels = await client.label.findMany({
+      where: {
+        id: { in: labelIds },
+        workspaceId,
+      },
+    });
+
+    if (foundLabels.length !== labelIds.length) {
+      throw new NotFoundException({
+        code: 'LABEL_NOT_FOUND',
+        message: 'One or more labels not found in this workspace',
+      });
+    }
+
+    // 3. Idempotent create junction records
+    for (const labelId of labelIds) {
+      const existing = await client.conversationLabel.findUnique({
+        where: {
+          conversationId_labelId: {
+            conversationId,
+            labelId,
+          },
+        },
+      });
+
+      if (!existing) {
+        await client.conversationLabel.create({
+          data: {
+            conversationId,
+            labelId,
+          },
+        });
+      }
+    }
+
+    const currentLabels = await this.getLabels(workspaceId, conversationId, client);
+    const fullConv = await this.getById(workspaceId, conversationId);
+
+    this.eventEmitter.emit('conversation.labels_updated', {
+      workspaceId,
+      conversationId,
+      labelIds: currentLabels.map(l => l.id),
+      labels: currentLabels,
+      conversation: fullConv,
+    });
+
+    this.logger.log(
+      `Assigned labels [${labelIds.join(', ')}] to conversation #${conversation.displayId} in workspace '${workspaceId}'`,
+    );
+
+    return currentLabels;
+  }
+
+  /**
+   * Removes a label from a conversation.
+   */
+  async removeLabel(
+    workspaceId: string,
+    conversationId: string,
+    labelId: string,
+    tx?: ReturnType<PrismaService['getClient']>,
+  ): Promise<{ success: true }> {
+    const client = tx || this.prisma.getClient();
+
+    const conversation = await client.conversation.findFirst({
+      where: { id: conversationId, workspaceId },
+    });
+
+    if (!conversation) {
+      throw new NotFoundException({
+        code: 'CONVERSATION_NOT_FOUND',
+        message: `Conversation with id '${conversationId}' not found in this workspace`,
+      });
+    }
+
+    const existingJunction = await client.conversationLabel.findUnique({
+      where: {
+        conversationId_labelId: {
+          conversationId,
+          labelId,
+        },
+      },
+    });
+
+    if (!existingJunction) {
+      throw new NotFoundException({
+        code: 'CONVERSATION_LABEL_NOT_FOUND',
+        message: `Label with id '${labelId}' is not assigned to this conversation`,
+      });
+    }
+
+    await client.conversationLabel.delete({
+      where: {
+        conversationId_labelId: {
+          conversationId,
+          labelId,
+        },
+      },
+    });
+
+    const currentLabels = await this.getLabels(workspaceId, conversationId, client);
+    const fullConv = await this.getById(workspaceId, conversationId);
+
+    this.eventEmitter.emit('conversation.labels_updated', {
+      workspaceId,
+      conversationId,
+      labelIds: currentLabels.map(l => l.id),
+      labels: currentLabels,
+      conversation: fullConv,
+    });
+
+    this.logger.log(
+      `Removed label '${labelId}' from conversation #${conversation.displayId} in workspace '${workspaceId}'`,
+    );
+
+    return { success: true };
+  }
+
+  /**
+   * Lists all labels assigned to a conversation.
+   */
+  async getLabels(
+    workspaceId: string,
+    conversationId: string,
+    tx?: ReturnType<PrismaService['getClient']>,
+  ): Promise<LabelDto[]> {
+    const client = tx || this.prisma.getClient();
+
+    const conversation = await client.conversation.findFirst({
+      where: { id: conversationId, workspaceId },
+    });
+
+    if (!conversation) {
+      throw new NotFoundException({
+        code: 'CONVERSATION_NOT_FOUND',
+        message: `Conversation with id '${conversationId}' not found in this workspace`,
+      });
+    }
+
+    const junctionList = await client.conversationLabel.findMany({
+      where: { conversationId },
+      include: { label: true },
+      orderBy: { label: { title: 'asc' } },
+    });
+
+    return junctionList.map(j => mapLabelToDto(j.label));
   }
 }
