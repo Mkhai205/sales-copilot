@@ -14,6 +14,7 @@ import { TeamsModule } from './modules/teams';
 import { ContactsModule } from './modules/contacts';
 import { InboxesModule } from './modules/inboxes';
 import { WebhooksModule } from './modules/webhooks';
+import { LabelsModule } from './modules/labels';
 import { IntegrationsModule } from './integrations';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { AppController } from './app.controller';
@@ -47,6 +48,7 @@ import { RequestIdMiddleware } from './common/middlewares';
     ContactsModule,
     InboxesModule,
     WebhooksModule,
+    LabelsModule,
     IntegrationsModule,
   ],
   controllers: [AppController],
