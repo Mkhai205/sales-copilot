@@ -349,4 +349,107 @@ describe('ContactResolutionService (Channel Ingestion Pipeline Orchestrator)', (
       },
     );
   });
+
+  it('should link channel identity to existing contact when contactInfo phoneNumber matches (phone matching path)', async () => {
+    // Seed pre-existing contact with phone
+    contactsDb.set('cnt_phone_match', {
+      id: 'cnt_phone_match',
+      workspaceId: 'ws_alpha',
+      name: 'Phone User',
+      email: null,
+      phoneNumber: '+84912345678',
+      identifier: null,
+      customAttributes: {},
+      additionalAttributes: {},
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    const result = await resolutionService.resolveFromChannel({
+      workspaceId: 'ws_alpha',
+      channelId: 'chn_fb_alpha',
+      externalContactId: 'fb_phone_match_user',
+      contactInfo: {
+        name: 'Phone Match User',
+        phoneNumber: '+84912345678',
+      },
+    });
+
+    assert.strictEqual(result.isNewContact, false);
+    assert.strictEqual(result.contact.id, 'cnt_phone_match');
+    assert.strictEqual(result.channelIdentity.externalContactId, 'fb_phone_match_user');
+    assert.strictEqual(result.channelIdentity.contactId, 'cnt_phone_match');
+  });
+
+  it('should create new contact when contactInfo has identifier conflict with existing contact (no incorrect link)', async () => {
+    // Seed contact A with identifier id_A and email match
+    contactsDb.set('cnt_conflict_A', {
+      id: 'cnt_conflict_A',
+      workspaceId: 'ws_alpha',
+      name: 'Contact A',
+      email: 'shared@conflict.com',
+      phoneNumber: null,
+      identifier: 'id_A',
+      customAttributes: {},
+      additionalAttributes: {},
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    // Resolve with identifier id_B but email matching contact A
+    const result = await resolutionService.resolveFromChannel({
+      workspaceId: 'ws_alpha',
+      channelId: 'chn_fb_alpha',
+      externalContactId: 'fb_conflict_user',
+      contactInfo: {
+        identifier: 'id_B',
+        email: 'shared@conflict.com',
+        name: 'New User B',
+      },
+    });
+
+    // Should create a new contact (not link to contact A due to identifier conflict)
+    assert.strictEqual(result.isNewContact, true);
+    assert.notStrictEqual(result.contact.id, 'cnt_conflict_A');
+    assert.strictEqual(result.contact.name, 'New User B');
+    assert.strictEqual(result.contact.identifier, 'id_B');
+  });
+
+  it('should pass metadata through to ChannelIdentity when creating new contact and identity', async () => {
+    const result = await resolutionService.resolveFromChannel({
+      workspaceId: 'ws_alpha',
+      channelId: 'chn_fb_alpha',
+      externalContactId: 'fb_meta_user',
+      username: 'Meta User',
+      metadata: { profileUrl: 'https://fb.com/meta', locale: 'vi_VN' },
+    });
+
+    assert.strictEqual(result.isNewContact, true);
+    assert.ok(result.channelIdentity.metadata);
+    assert.strictEqual(
+      (result.channelIdentity.metadata as Record<string, unknown>).profileUrl,
+      'https://fb.com/meta',
+    );
+    assert.strictEqual(
+      (result.channelIdentity.metadata as Record<string, unknown>).locale,
+      'vi_VN',
+    );
+  });
+
+  it('should fall back to contactInfo.name when username is not provided for new contact', async () => {
+    const result = await resolutionService.resolveFromChannel({
+      workspaceId: 'ws_alpha',
+      channelId: 'chn_fb_alpha',
+      externalContactId: 'fb_fallback_name_user',
+      // No username provided
+      contactInfo: {
+        name: 'Fallback Name User',
+        email: 'fallback@name.com',
+      },
+    });
+
+    assert.strictEqual(result.isNewContact, true);
+    assert.strictEqual(result.contact.name, 'Fallback Name User');
+    assert.strictEqual(result.contact.email, 'fallback@name.com');
+  });
 });

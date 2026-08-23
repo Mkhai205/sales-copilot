@@ -329,4 +329,88 @@ describe('ContactMergeService (Atomic Contact Merge Engine)', () => {
     assert.strictEqual(auditLogsDb.length, 0);
     assert.strictEqual(emittedEvents.length, 0);
   });
+
+  it('should successfully merge when mergee has no identities, conversations, or messages (empty mergee)', async () => {
+    // Seed a mergee contact with zero related records
+    contactsDb.set('cnt_empty_mergee', {
+      id: 'cnt_empty_mergee',
+      workspaceId: 'ws_alpha',
+      name: '',
+      email: null,
+      phoneNumber: '+84977777777',
+      avatarUrl: null,
+      identifier: null,
+      customAttributes: { source: 'import' },
+      additionalAttributes: {},
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    const result = await service.merge('ws_alpha', 'cnt_base', 'cnt_empty_mergee', {
+      performedByUserId: 'usr_admin_1',
+    });
+
+    // Base contact attributes are preserved; phone filled from mergee
+    assert.strictEqual(result.id, 'cnt_base');
+    assert.strictEqual(result.name, 'Base Contact');
+    assert.strictEqual(result.email, 'base@test.com');
+    assert.strictEqual(result.phoneNumber, '+84977777777');
+
+    // customAttributes deep merged
+    assert.deepStrictEqual(result.customAttributes, {
+      vip: true,
+      plan: 'enterprise',
+      source: 'import',
+    });
+
+    // Empty mergee deleted
+    assert.strictEqual(contactsDb.has('cnt_empty_mergee'), false);
+
+    // AuditLog recorded
+    assert.strictEqual(auditLogsDb.length, 1);
+    assert.strictEqual(auditLogsDb[0].action, 'CONTACT_MERGED');
+
+    // Event emitted
+    assert.strictEqual(emittedEvents.length, 1);
+    assert.strictEqual(emittedEvents[0].event, 'contact.merged');
+  });
+
+  it('should record AuditLog with userId = null when performedByUserId is not provided', async () => {
+    // Call merge without performedByUserId
+    const result = await service.merge('ws_alpha', 'cnt_base', 'cnt_mergee');
+
+    assert.strictEqual(result.id, 'cnt_base');
+
+    // AuditLog should have userId = null
+    assert.strictEqual(auditLogsDb.length, 1);
+    assert.strictEqual(auditLogsDb[0].userId, null);
+
+    // Event should also have mergedByUserId = null
+    assert.strictEqual(emittedEvents[0].payload.mergedByUserId, null);
+  });
+
+  it('should use provided tx client directly instead of creating a new transaction when options.tx is set', async () => {
+    let runInTransactionCalled = false;
+    const originalRunInTransaction = mockPrismaService.runInTransaction;
+    mockPrismaService.runInTransaction = async (fn: any) => {
+      runInTransactionCalled = true;
+      return originalRunInTransaction(fn);
+    };
+
+    // Use clientMock as the external tx
+    const result = await service.merge('ws_alpha', 'cnt_base', 'cnt_mergee', {
+      tx: clientMock,
+      performedByUserId: 'usr_ext_tx',
+    });
+
+    assert.strictEqual(result.id, 'cnt_base');
+    assert.strictEqual(contactsDb.has('cnt_mergee'), false);
+    assert.strictEqual(auditLogsDb.length, 1);
+
+    // runInTransaction should NOT have been called since we provided an external tx
+    assert.strictEqual(runInTransactionCalled, false);
+
+    // Restore
+    mockPrismaService.runInTransaction = originalRunInTransaction;
+  });
 });

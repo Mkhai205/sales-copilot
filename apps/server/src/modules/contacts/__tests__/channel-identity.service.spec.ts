@@ -540,4 +540,50 @@ describe('ChannelIdentityService (Multi-Channel Identity Mapping & Resolution)',
       assert.strictEqual(res.count, 0);
     });
   });
+
+  describe('findOrCreate (P2002 Race Condition Fallback)', () => {
+    it('should handle P2002 unique constraint violation by falling back to findUnique (concurrent create race)', async () => {
+      // Pre-seed the identity so that the fallback findUnique will find it
+      const raceIdentity = {
+        id: 'ident_race_winner',
+        contactId: 'cnt_alpha_1',
+        workspaceId: 'ws_alpha',
+        channelId: 'chn_fb_alpha',
+        externalContactId: 'fb_race_psid',
+        username: 'Race Winner',
+        metadata: {},
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      identitiesDb.set(raceIdentity.id, raceIdentity);
+
+      // Override create to always throw P2002 (simulating the losing side of a race)
+      const originalCreate = (mockPrismaService.getClient() as any).channelIdentity.create;
+      (mockPrismaService.getClient() as any).channelIdentity.create = async () => {
+        const err: any = new Error('Unique constraint failed on (channelId, externalContactId)');
+        err.code = 'P2002';
+        throw err;
+      };
+
+      // findOrCreate should NOT throw; instead it should fallback to findUnique
+      const result = await service.findOrCreate({
+        workspaceId: 'ws_alpha',
+        channelId: 'chn_fb_alpha',
+        externalContactId: 'fb_race_psid',
+        contactId: 'cnt_alpha_1',
+      });
+
+      assert.ok(result);
+      assert.strictEqual(result.id, 'ident_race_winner');
+      assert.strictEqual(result.externalContactId, 'fb_race_psid');
+      assert.strictEqual(result.contactId, 'cnt_alpha_1');
+
+      // No channel_identity.created event should have been emitted (since we used fallback)
+      const createdEvents = emittedEvents.filter(e => e.event === 'channel_identity.created');
+      assert.strictEqual(createdEvents.length, 0);
+
+      // Restore
+      (mockPrismaService.getClient() as any).channelIdentity.create = originalCreate;
+    });
+  });
 });

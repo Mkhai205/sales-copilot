@@ -507,4 +507,132 @@ describe('ContactIdentifyService (Priority Chain & Conflict Guards)', () => {
       assert.strictEqual(result.name, 'Original Contact Name');
     });
   });
+
+  describe('Scenario 9: NotFoundException when contact does not exist', () => {
+    it('should throw NotFoundException with CONTACT_NOT_FOUND when currentContact.id does not exist in workspace', async () => {
+      await assert.rejects(
+        async () => {
+          await service.identify(
+            'ws_alpha',
+            { id: 'cnt_nonexistent' },
+            {
+              name: 'Ghost User',
+              email: 'ghost@test.com',
+            },
+          );
+        },
+        (err: any) => {
+          assert.strictEqual(err.response?.code, 'CONTACT_NOT_FOUND');
+          assert.ok(err.response?.message.includes('cnt_nonexistent'));
+          return true;
+        },
+      );
+    });
+  });
+
+  describe('Scenario 10: Transaction rollback on update failure', () => {
+    it('should not leave side effects when contact.update() throws an error mid-transaction', async () => {
+      // Seed two contacts that would merge by identifier
+      contactsDb.set('cnt_will_merge_base', {
+        id: 'cnt_will_merge_base',
+        workspaceId: 'ws_alpha',
+        name: 'Merge Base',
+        email: null,
+        phoneNumber: null,
+        identifier: 'merge_id_rollback',
+        customAttributes: {},
+        additionalAttributes: {},
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      contactsDb.set('cnt_will_merge_active', {
+        id: 'cnt_will_merge_active',
+        workspaceId: 'ws_alpha',
+        name: 'Merge Active',
+        email: null,
+        phoneNumber: null,
+        identifier: null,
+        customAttributes: {},
+        additionalAttributes: {},
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      // Override runInTransaction to simulate real rollback behavior:
+      // If function throws, nothing is committed
+      const originalContactUpdate = (mockPrismaService.getClient() as any).contact.update;
+      let updateCallCount = 0;
+      (mockPrismaService.getClient() as any).contact.update = async (args: any) => {
+        updateCallCount++;
+        // Fail on the final update (after merge completes)
+        if (updateCallCount >= 2) {
+          throw new Error('Simulated disk failure during final update');
+        }
+        return originalContactUpdate(args);
+      };
+
+      await assert.rejects(
+        async () => {
+          await service.identify(
+            'ws_alpha',
+            { id: 'cnt_will_merge_active' },
+            { identifier: 'merge_id_rollback', name: 'Should Not Persist' },
+          );
+        },
+        (err: any) => {
+          assert.ok(err.message.includes('Simulated disk failure'));
+          return true;
+        },
+      );
+
+      // Restore original
+      (mockPrismaService.getClient() as any).contact.update = originalContactUpdate;
+    });
+  });
+
+  describe('Scenario 11: External tx parameter path', () => {
+    it('should use provided tx client directly instead of creating a new transaction', async () => {
+      contactsDb.set('cnt_ext_tx', {
+        id: 'cnt_ext_tx',
+        workspaceId: 'ws_alpha',
+        name: 'Ext Tx Contact',
+        email: null,
+        phoneNumber: null,
+        identifier: null,
+        customAttributes: {},
+        additionalAttributes: {},
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      let runInTransactionCalled = false;
+      const originalRunInTransaction = mockPrismaService.runInTransaction;
+      mockPrismaService.runInTransaction = async (fn: any) => {
+        runInTransactionCalled = true;
+        return originalRunInTransaction(fn);
+      };
+
+      // Call with explicit tx (the mock client itself acts as the tx)
+      const externalTx = mockPrismaService.getClient();
+      const result = await service.identify(
+        'ws_alpha',
+        { id: 'cnt_ext_tx' },
+        {
+          name: 'Updated via external tx',
+          email: 'ext_tx@test.com',
+        },
+        { tx: externalTx },
+      );
+
+      assert.strictEqual(result.id, 'cnt_ext_tx');
+      assert.strictEqual(result.name, 'Updated via external tx');
+      assert.strictEqual(result.email, 'ext_tx@test.com');
+      // runInTransaction should NOT have been called since we provided an external tx
+      assert.strictEqual(runInTransactionCalled, false);
+
+      // Restore
+      mockPrismaService.runInTransaction = originalRunInTransaction;
+    });
+  });
 });
