@@ -202,5 +202,51 @@ describe('ChannelAdapterRegistry (Channel Integration Abstraction)', () => {
       assert.strictEqual(info.providerAccountId, 'page_123');
       assert.strictEqual(info.name, `Test Channel for ${ChannelType.FACEBOOK_MESSENGER}`);
     });
+
+    it('should support parsing inbound delivery status payloads with DeliveryStatusInfo', async () => {
+      const deliveryReceiptAdapter: ChannelAdapter = {
+        channelType: ChannelType.FACEBOOK_MESSENGER,
+        verifyWebhook: () => true,
+        parseInboundPayload: (rawBody: unknown): InboundMessagePayload[] => {
+          const body = rawBody as any;
+          if (body?.delivery) {
+            return [
+              {
+                eventKind: 'delivery_status',
+                externalContactId: body.senderId,
+                externalMessageId: body.delivery.mid,
+                contentType: MessageContentType.TEXT,
+                timestamp: new Date(),
+                deliveryStatusInfo: {
+                  externalMessageId: body.delivery.mid,
+                  status: DeliveryStatus.DELIVERED,
+                  timestamp: new Date(body.delivery.watermark || Date.now()),
+                },
+              },
+            ];
+          }
+          return [];
+        },
+        sendMessage: async () => ({
+          externalMessageId: 'out_1',
+          deliveryStatus: DeliveryStatus.SENT,
+        }),
+        getChannelInfo: async () => ({ name: 'FB' }),
+      };
+
+      registry.register(deliveryReceiptAdapter);
+
+      const parsed = await registry.get(ChannelType.FACEBOOK_MESSENGER).parseInboundPayload({
+        senderId: 'psid_123',
+        delivery: { mid: 'mid_delivered_1', watermark: 1700000000000 },
+      });
+
+      assert.strictEqual(parsed.length, 1);
+      assert.strictEqual(parsed[0].eventKind, 'delivery_status');
+      assert.strictEqual(parsed[0].externalContactId, 'psid_123');
+      assert.ok(parsed[0].deliveryStatusInfo);
+      assert.strictEqual(parsed[0].deliveryStatusInfo.externalMessageId, 'mid_delivered_1');
+      assert.strictEqual(parsed[0].deliveryStatusInfo.status, DeliveryStatus.DELIVERED);
+    });
   });
 });

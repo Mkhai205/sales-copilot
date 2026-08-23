@@ -27,7 +27,7 @@ Toàn bộ các Epic của **Phase 1: Conversation Platform Core** được qu�
 | **Epic 1.2** | **Contact Management** | Contact CRUD, search, custom attributes, email normalization, domain events | [📄 `epic-1.2-contact-management.md`](./epic-1.2-contact-management.md) | ✅ **Done** |
 | **Epic 1.3** | **Channel Platform Foundation** | `ChannelAdapter` abstraction, AES-256 credentials encryption, Inbox & Channel 1:1, InboxMember, Inbound Webhook Pipeline, `ChannelEvent` idempotency, BullMQ queues | [📄 `epic-1.3-channel-platform.md`](./epic-1.3-channel-platform.md) | ✅ **Done** |
 | **Epic 1.4** | **Contact Identity Resolution & Merge** | `ChannelIdentity` 3NF, Contact Identification priority chain, `ContactResolutionService`, Atomic Contact Merge Engine | [📄 `epic-1.4-contact-identity.md`](./epic-1.4-contact-identity.md) | ✅ **Done** |
-| **Epic 1.5** | **Conversation & Messaging Core** | Label management, Conversation state machine (`OPEN`→`PENDING`→`RESOLVED`→`SNOOZED`), Conversation labels, Message threading, MinIO Attachments | [📄 `epic-1.5-conversation-messaging.md`](./epic-1.5-conversation-messaging.md) | 🟡 **Ready** |
+| **Epic 1.5** | **Conversation & Messaging Core** | Label management, Conversation state machine (`OPEN`→`PENDING`→`RESOLVED`→`SNOOZED`), Conversation labels, Message threading, MinIO Attachments | [📄 `epic-1.5-conversation-messaging.md`](./epic-1.5-conversation-messaging.md) | ✅ **Done** |
 | **Epic 1.6** | **Channel Integrations** | Web Chat Widget, Facebook Messenger, Telegram Bot | [📄 `epic-1.6-channel-integrations.md`](./epic-1.6-channel-integrations.md) | 🟡 **Ready** |
 | **Epic 1.7** | **Realtime Engine & Presence** | Domain Event Bus, NestJS WebSocket Gateway (Socket.io), Redis Pub/Sub adapter, Online Presence tracking, Realtime Event Dispatcher | [📄 `epic-1.7-realtime-engine.md`](./epic-1.7-realtime-engine.md) | 🟡 **Ready** |
 | **Epic 1.8** | **Assignment, Labels & Canned Responses** | Round-Robin auto-assignment, Manual assignment, Canned Responses shortcode search, Audit Logging | [📄 `epic-1.8-assignment-operations.md`](./epic-1.8-assignment-operations.md) | 🟡 **Ready** |
@@ -51,13 +51,13 @@ Quy trình triển khai tuân thủ nghiêm ngặt đồ thị phụ thuộc (DA
 [Epic 1.2: Contact Management] ✅
              │
              ▼
-[Epic 1.3: Channel Platform Foundation]
+[Epic 1.3: Channel Platform Foundation] ✅
              │
              ▼
-[Epic 1.4: Contact Identity Resolution & Merge]
+[Epic 1.4: Contact Identity Resolution & Merge] ✅
              │
              ▼
-[Epic 1.5: Conversation & Messaging Core]
+[Epic 1.5: Conversation & Messaging Core] ✅
              │
              ├────────────────────────────────────────┐
              ▼                                        ▼

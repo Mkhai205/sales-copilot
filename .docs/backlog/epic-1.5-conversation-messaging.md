@@ -5,7 +5,7 @@
 Hiện thực trái tim của hệ thống hội thoại: Label management, State Machine quản lý vòng đời cuộc trò chuyện (`OPEN`, `PENDING`, `RESOLVED`, `SNOOZED`), gán nhãn hội thoại, chuỗi tin nhắn đa hình (`CONTACT`, `USER`, `SYSTEM`), ghi chú nội bộ riêng tư (Private Note), theo dõi trạng thái chuyển phát, lưu trữ tệp đính kèm đa phương tiện trên MinIO S3, và tích hợp đầu cuối với Inbound Ingestion Pipeline.
 
 - **ID**: `EPIC-1.5`
-- **Status**: 🟡 Ready for Implementation
+- **Status**: ✅ Done
 - **Dependencies**: `EPIC-1.3` (Channel Platform), `EPIC-1.4` (Contact Identity Resolution)
 - **References**:
   - `.docs/references/chatwoot/source/app/models/conversation.rb`
@@ -105,10 +105,10 @@ Cung cấp khả năng tạo và quản lý nhãn (`Label`) trong Workspace đ�
 - Domain Events: `label.created`, `label.updated`, `label.deleted`
 
 #### Acceptance Criteria
-- [ ] Label title duy nhất trong cùng Workspace (`@@unique([workspaceId, title])`), throw `409 Conflict` nếu trùng
-- [ ] Color hex code hợp lệ (`/^#[0-9A-Fa-f]{6}$/`)
-- [ ] Delete label tự động dọn sạch các liên kết trong `ConversationLabel` (DB Cascade)
-- [ ] Tenant isolation: mọi query bắt buộc có `workspaceId`
+- [x] Label title duy nhất trong cùng Workspace (`@@unique([workspaceId, title])`), throw `409 Conflict` nếu trùng
+- [x] Color hex code hợp lệ (`/^#[0-9A-Fa-f]{6}$/`)
+- [x] Delete label tự động dọn sạch các liên kết trong `ConversationLabel` (DB Cascade)
+- [x] Tenant isolation: mọi query bắt buộc có `workspaceId`
 
 ---
 
@@ -131,11 +131,11 @@ Quản lý phiên hội thoại với state machine chặt chẽ, hỗ trợ ph�
 - Domain Events: `conversation.created`, `conversation.status_updated`, `conversation.assigned`, `conversation.priority_updated`, `conversation.reopened`
 
 #### Acceptance Criteria
-- [ ] Chuyển đổi trạng thái trái phép bị từ chối với `400 Bad Request` (`code: 'INVALID_STATUS_TRANSITION'`)
-- [ ] Chuyển sang `SNOOZED` mà không có `snoozedUntil` hợp lệ trong tương lai -> `400 Bad Request`
-- [ ] Gán Agent không thuộc `InboxMember` của Inbox -> `400 Bad Request` (`code: 'ASSIGNEE_NOT_IN_INBOX'`)
-- [ ] Auto-reopen hoạt động chính xác khi có inbound message từ khách hàng
-- [ ] API endpoints:
+- [x] Chuyển đổi trạng thái trái phép bị từ chối với `400 Bad Request` (`code: 'INVALID_STATUS_TRANSITION'`)
+- [x] Chuyển sang `SNOOZED` mà không có `snoozedUntil` hợp lệ trong tương lai -> `400 Bad Request`
+- [x] Gán Agent không thuộc `InboxMember` của Inbox -> `400 Bad Request` (`code: 'ASSIGNEE_NOT_IN_INBOX'`)
+- [x] Auto-reopen hoạt động chính xác khi có inbound message từ khách hàng
+- [x] API endpoints:
   - `GET    /api/v1/conversations`
   - `POST   /api/v1/conversations`
   - `GET    /api/v1/conversations/:id`
@@ -161,10 +161,10 @@ Hỗ trợ gán và gỡ nhãn cho hội thoại thông qua junction table `Conv
   - `DELETE /api/v1/conversations/:id/labels/:labelId`
 
 #### Acceptance Criteria
-- [ ] Gán label trùng -> Idempotent, không báo lỗi, không sinh bản ghi duplicate
-- [ ] Gán label thuộc Workspace khác -> `404 Not Found` (tenant isolation)
-- [ ] Gỡ label không tồn tại trên conversation -> `404 Not Found`
-- [ ] Domain Event: `conversation.labels_updated`
+- [x] Gán label trùng -> Idempotent, không báo lỗi, không sinh bản ghi duplicate
+- [x] Gán label thuộc Workspace khác -> `404 Not Found` (tenant isolation)
+- [x] Gỡ label không tồn tại trên conversation -> `404 Not Found`
+- [x] Domain Event: `conversation.labels_updated`
 
 ---
 
@@ -194,11 +194,11 @@ Hiện thực chuỗi tin nhắn trong conversation: hỗ trợ đa hình sender
   - `PATCH  /api/v1/messages/:id/delivery-status`
 
 #### Acceptance Criteria
-- [ ] Vi phạm BR-5.1 (`senderType` và `senderId` không khớp) -> `400 Bad Request`
-- [ ] Vi phạm BR-5.2 (`content` rỗng và không có attachments) -> `400 Bad Request`
-- [ ] Private notes không bao giờ gửi ra kênh tích hợp bên ngoài và không làm reset trạng thái conversation
-- [ ] Idempotency: Inbound message với cùng `externalId` trong 1 conversation không bị tạo trùng lặp
-- [ ] Domain Event: `message.created`, `message.delivery_status_updated`
+- [x] Vi phạm BR-5.1 (`senderType` và `senderId` không khớp) -> `400 Bad Request`
+- [x] Vi phạm BR-5.2 (`content` rỗng và không có attachments) -> `400 Bad Request`
+- [x] Private notes không bao giờ gửi ra kênh tích hợp bên ngoài và không làm reset trạng thái conversation
+- [x] Idempotency: Inbound message với cùng `externalId` trong 1 conversation không bị tạo trùng lặp
+- [x] Domain Event: `message.created`, `message.delivery_status_updated`
 
 ---
 
@@ -217,10 +217,10 @@ Hỗ trợ upload và quản lý file đính kèm đa phương tiện (hình ả
 - Cascade delete dọn dẹp cả DB và MinIO object khi xóa attachment/message
 
 #### Acceptance Criteria
-- [ ] File quá dung lượng hoặc sai MIME type bị từ chối rõ ràng (`400 Bad Request`)
-- [ ] Lưu trữ đầy đủ metadata: `fileName`, `fileType`, `fileSize`, `storagePath`, `contentType`
-- [ ] Presigned URL có thời hạn hết hạn an toàn (mặc định 15 phút)
-- [ ] Xóa Message tự động xóa các records `Attachment` và delete file trên S3
+- [x] File quá dung lượng hoặc sai MIME type bị từ chối rõ ràng (`400 Bad Request`)
+- [x] Lưu trữ đầy đủ metadata: `fileName`, `fileType`, `fileSize`, `storagePath`, `contentType`
+- [x] Presigned URL có thời hạn hết hạn an toàn (mặc định 15 phút)
+- [x] Xóa Message tự động xóa các records `Attachment` và delete file trên S3
 
 ---
 
@@ -556,11 +556,11 @@ Kết nối hoàn chỉnh luồng Webhook Inbound từ Epic 1.3/1.4 sang Epic 1.
 
 ## 5. Definition of Done for Epic 1.5
 
-- [ ] Toàn bộ 7 tasks (T-1.5.1 đến T-1.5.7) được implement và unit tests pass 100%.
-- [ ] Không có circular dependencies giữa `labels`, `conversations`, `messages`, `contacts`, `inboxes`.
-- [ ] Mọi database query đều có `workspaceId` tenant scope bắt buộc.
-- [ ] Strict adherence to Business Rules BR-4.1, BR-4.3, BR-5.1, BR-5.2.
-- [ ] Linter và Build chạy thành công không có lỗi:
+- [x] Toàn bộ 7 tasks (T-1.5.1 đến T-1.5.7) được implement và unit tests pass 100%.
+- [x] Không có circular dependencies giữa `labels`, `conversations`, `messages`, `contacts`, `inboxes`.
+- [x] Mọi database query đều có `workspaceId` tenant scope bắt buộc.
+- [x] Strict adherence to Business Rules BR-4.1, BR-4.3, BR-5.1, BR-5.2.
+- [x] Linter và Build chạy thành công không có lỗi:
   - `pnpm nx run-many -t lint`
   - `pnpm nx run-many -t test`
   - `pnpm nx run-many -t build`

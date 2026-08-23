@@ -1,6 +1,23 @@
 import { ChannelType, DeliveryStatus, MessageContentType } from '@sales-copilot/shared-contracts';
 
 /**
+ * Event kind parsed by a channel adapter:
+ * - 'message': Normal inbound message (text, media, interactive)
+ * - 'delivery_status': Delivery/read receipt or failure notification
+ */
+export type InboundEventKind = 'message' | 'delivery_status';
+
+/**
+ * Normalized delivery status update from an external channel (e.g. Facebook delivery/read receipts).
+ */
+export interface DeliveryStatusInfo {
+  externalMessageId: string;
+  status: DeliveryStatus;
+  timestamp: Date;
+  errorMessage?: string;
+}
+
+/**
  * Normalized attachment structure received from an external channel.
  */
 export interface InboundAttachment {
@@ -26,6 +43,11 @@ export interface InboundSenderInfo {
  * Standardized inbound message payload parsed by a channel adapter.
  */
 export interface InboundMessagePayload {
+  /**
+   * Event kind distinction: 'message' (default) or 'delivery_status'.
+   */
+  eventKind?: InboundEventKind;
+
   /**
    * Channel-specific identifier of the sender (e.g. Facebook PSID, Zalo user ID, Telegram chat/user ID).
    */
@@ -65,6 +87,11 @@ export interface InboundMessagePayload {
    * Original raw event payload for auditing or channel-specific extensions.
    */
   rawPayload?: Record<string, unknown>;
+
+  /**
+   * Delivery status information when eventKind === 'delivery_status'.
+   */
+  deliveryStatusInfo?: DeliveryStatusInfo;
 }
 
 /**
