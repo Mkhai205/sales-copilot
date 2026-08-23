@@ -341,10 +341,10 @@ verifyWebhook(request: WebhookVerificationRequest, credentials?: Record<string, 
 7. Update channel metadata (bot_name, etc.)
 
 **Acceptance Criteria**:
-- [ ] Channel creation triggers setWebhook automatically
-- [ ] Invalid bot_token → error returned, channel creation may proceed with warning
-- [ ] Webhook URL correctly points to our server
-- [ ] Bot info (username) stored in channel metadata
+- [x] Channel creation triggers setWebhook automatically
+- [x] Invalid bot_token → error returned, channel creation may proceed with warning
+- [x] Webhook URL correctly points to our server
+- [x] Bot info (username) stored in channel metadata
 
 **Estimated complexity**: 🟡 Medium (~80 LOC)
 
