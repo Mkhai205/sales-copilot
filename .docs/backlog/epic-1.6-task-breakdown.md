@@ -633,14 +633,14 @@ export class WebChatGateway implements OnGatewayConnection, OnGatewayDisconnect 
 ```
 
 **Acceptance Criteria**:
-- [ ] Widget connects via Socket.IO namespace `/widget`
-- [ ] Authentication via widget_token
-- [ ] Anonymous visitor → auto-create Contact + ChannelIdentity
-- [ ] `widget:send_message` → creates Message in conversation
-- [ ] `widget:identify` → trigger contact identification/merge
-- [ ] Agent reply → push to widget via WebSocket
-- [ ] Connection/disconnection handled gracefully
-- [ ] Cross-origin support (CORS)
+- [x] Widget connects via Socket.IO namespace `/widget`
+- [x] Authentication via widget_token
+- [x] Anonymous visitor → auto-create Contact + ChannelIdentity
+- [x] `widget:send_message` → creates Message in conversation
+- [x] `widget:identify` → trigger contact identification/merge
+- [x] Agent reply → push to widget via WebSocket
+- [x] Connection/disconnection handled gracefully
+- [x] Cross-origin support (CORS)
 
 **Estimated complexity**: 🔴 High (~250 LOC)
 

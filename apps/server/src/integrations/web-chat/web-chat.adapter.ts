@@ -201,8 +201,7 @@ export class WebChatAdapter implements ChannelAdapter {
     }
 
     // Handle array of payloads or single payload
-    // eslint-disable-next-line no-useless-assignment
-    let rawItems: WebChatRawInboundPayload[] = [];
+    let rawItems: WebChatRawInboundPayload[];
 
     if (Array.isArray(rawBody)) {
       rawItems = rawBody as WebChatRawInboundPayload[];
