@@ -1,0 +1,10 @@
+{
+  "name": "@sales-copilot/widget-sdk",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "dependencies": {
+    "socket.io-client": "^4.8.3"
+  }
+}

@@ -2,7 +2,9 @@
   "compilerOptions": {
     "paths": {
       "@sales-copilot/shared-contracts": ["./packages/shared-contracts/src/index.ts"],
-      "@sales-copilot/shared-contracts/*": ["./packages/shared-contracts/src/*"]
+      "@sales-copilot/shared-contracts/*": ["./packages/shared-contracts/src/*"],
+      "@sales-copilot/widget-sdk": ["./packages/widget-sdk/src/index.ts"],
+      "@sales-copilot/widget-sdk/*": ["./packages/widget-sdk/src/*"]
     },
     "declaration": true,
     "emitDecoratorMetadata": true,

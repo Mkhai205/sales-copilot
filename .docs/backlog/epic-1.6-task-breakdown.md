@@ -755,14 +755,14 @@ window.SalesCopilotWidget.on('message', callback) // listen for agent replies
 > Widget UI rendering (chat bubble, message list, input box) cần HTML/CSS inject vào host page. Dùng Shadow DOM để tránh CSS conflicts.
 
 **Acceptance Criteria**:
-- [ ] Embed code works cross-origin trên bất kỳ website
-- [ ] Widget hiển thị chat bubble + expandable chat window
-- [ ] Greeting message hiển thị khi mở lần đầu
-- [ ] Messages gửi/nhận realtime qua WebSocket
-- [ ] `setUser()` trigger contact identification
-- [ ] Widget UI không conflict với host page CSS (Shadow DOM)
-- [ ] Build output: single `sdk.js` file (~50-100KB gzipped)
-- [ ] Widget customizable: color, position (left/right), greeting text
+- [x] Embed code works cross-origin trên bất kỳ website
+- [x] Widget hiển thị chat bubble + expandable chat window
+- [x] Greeting message hiển thị khi mở lần đầu
+- [x] Messages gửi/nhận realtime qua WebSocket
+- [x] `setUser()` trigger contact identification
+- [x] Widget UI không conflict với host page CSS (Shadow DOM)
+- [x] Build output: single `sdk.js` file (~50-100KB gzipped)
+- [x] Widget customizable: color, position (left/right), greeting text
 
 **Estimated complexity**: 🔴 High (~500+ LOC)
 
