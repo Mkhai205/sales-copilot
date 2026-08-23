@@ -69,6 +69,20 @@ describe('WidgetTokenService (Visitor JWT Token Issuance & Verification)', () =>
       assert.strictEqual(decoded.contactId, mockPayload.contactId);
     });
 
+    it('should support configurable expiration via WIDGET_TOKEN_EXPIRY_SECONDS', () => {
+      const customConfig: any = {
+        get: (key: string, defaultValue?: any) => {
+          if (key === 'WIDGET_TOKEN_EXPIRY_SECONDS') return 3600;
+          return defaultValue;
+        },
+      };
+
+      const customService = new WidgetTokenService(customConfig as ConfigService);
+      const token = customService.generateToken(mockPayload);
+      const decoded = customService.verifyToken(token);
+      assert.strictEqual(decoded.contactId, mockPayload.contactId);
+    });
+
     it('should throw UnauthorizedException when token is missing or empty', () => {
       assert.throws(() => service.verifyToken(''), {
         name: 'UnauthorizedException',
@@ -128,6 +142,43 @@ describe('WidgetTokenService (Visitor JWT Token Issuance & Verification)', () =>
     it('should return undefined when no token is present', () => {
       const extracted = service.extractToken({}, {});
       assert.strictEqual(extracted, undefined);
+    });
+  });
+
+  describe('HMAC identity verification (setUser)', () => {
+    const identifier = 'user_identifier_123';
+    const secret = 'super_secret_hmac_key_456';
+
+    it('should generate valid HMAC-SHA256 signature', () => {
+      const signature = service.generateHmacSignature(identifier, secret);
+      assert.strictEqual(signature.length, 64);
+      assert.match(signature, /^[0-9a-f]+$/);
+    });
+
+    it('should return true for matching signature', () => {
+      const signature = service.generateHmacSignature(identifier, secret);
+      assert.strictEqual(service.verifyHmacSignature(identifier, signature, secret), true);
+    });
+
+    it('should strip sha256= prefix during verification', () => {
+      const signature = service.generateHmacSignature(identifier, secret);
+      assert.strictEqual(
+        service.verifyHmacSignature(identifier, `sha256=${signature}`, secret),
+        true,
+      );
+    });
+
+    it('should return false for mismatched signature or secret', () => {
+      const signature = service.generateHmacSignature(identifier, secret);
+      assert.strictEqual(service.verifyHmacSignature(identifier, 'invalid_sig', secret), false);
+      assert.strictEqual(service.verifyHmacSignature(identifier, signature, 'wrong_secret'), false);
+      assert.strictEqual(service.verifyHmacSignature('different_user', signature, secret), false);
+    });
+
+    it('should return false when arguments are missing or empty', () => {
+      assert.strictEqual(service.verifyHmacSignature('', 'sig', secret), false);
+      assert.strictEqual(service.verifyHmacSignature(identifier, '', secret), false);
+      assert.strictEqual(service.verifyHmacSignature(identifier, 'sig', ''), false);
     });
   });
 });

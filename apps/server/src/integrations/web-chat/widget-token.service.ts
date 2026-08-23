@@ -1,6 +1,7 @@
 import { Injectable, Logger, Optional, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import * as crypto from 'crypto';
 import * as jwt from 'jsonwebtoken';
 
 /**
@@ -36,8 +37,13 @@ export class WidgetTokenService {
       this.configService?.get<string>('JWT_ACCESS_TOKEN_SECRET') ||
       'widget_default_secret_key_change_in_production_12345';
 
-    const expiryDays = this.configService?.get<number>('WIDGET_TOKEN_EXPIRY_DAYS', 180) ?? 180;
-    this.defaultExpiresInSeconds = expiryDays * 24 * 60 * 60; // 180 days = 15,552,000s
+    const expirySeconds = this.configService?.get<number>('WIDGET_TOKEN_EXPIRY_SECONDS');
+    if (typeof expirySeconds === 'number' && expirySeconds > 0) {
+      this.defaultExpiresInSeconds = expirySeconds;
+    } else {
+      const expiryDays = this.configService?.get<number>('WIDGET_TOKEN_EXPIRY_DAYS', 180) ?? 180;
+      this.defaultExpiresInSeconds = expiryDays * 24 * 60 * 60; // 180 days = 15,552,000s
+    }
   }
 
   /**
@@ -128,5 +134,36 @@ export class WidgetTokenService {
     }
 
     return undefined;
+  }
+
+  /**
+   * Computes an HMAC-SHA256 signature for user verification (identifying logged-in users).
+   */
+  generateHmacSignature(identifier: string, hmacSecret: string): string {
+    return crypto.createHmac('sha256', hmacSecret).update(identifier).digest('hex');
+  }
+
+  /**
+   * Timing-safe verification of user HMAC-SHA256 signature.
+   */
+  verifyHmacSignature(identifier: string, signature: string, hmacSecret: string): boolean {
+    if (!identifier || !signature || !hmacSecret) {
+      return false;
+    }
+
+    try {
+      const cleanSignature = signature.replace(/^sha256=/i, '').trim();
+      const expectedSignature = this.generateHmacSignature(identifier, hmacSecret);
+      const providedBuffer = Buffer.from(cleanSignature.toLowerCase(), 'utf8');
+      const expectedBuffer = Buffer.from(expectedSignature.toLowerCase(), 'utf8');
+
+      if (providedBuffer.length !== expectedBuffer.length) {
+        return false;
+      }
+
+      return crypto.timingSafeEqual(providedBuffer, expectedBuffer);
+    } catch {
+      return false;
+    }
   }
 }
