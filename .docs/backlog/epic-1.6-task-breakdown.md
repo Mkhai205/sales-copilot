@@ -521,9 +521,15 @@ export class TelegramModule implements OnModuleInit {
 - `apps/server/src/integrations/facebook/index.ts` [NEW]
 - Update [integrations.module.ts](file:///d:/workspace/Sales%20Copilot/apps/server/src/integrations/integrations.module.ts)
 
-**Tương tự Task T-4** cho Telegram.
+**Acceptance Criteria**:
+- [x] `FacebookModule` encapsulates `FacebookAdapter` and `FacebookLifecycleService`
+- [x] `FacebookAdapter` is automatically registered into `ChannelAdapterRegistry` on module initialization (`onModuleInit`)
+- [x] `IntegrationsModule` imports and exports `FacebookModule`
+- [x] Barrel export `facebook/index.ts` exports `FacebookAdapter`, `FacebookLifecycleService`, and `FacebookModule`
+- [x] Full unit test coverage for `FacebookModule` lifecycle and registry integration
 
 **Estimated complexity**: 🟢 Low (~30 LOC)
+
 
 ---
 
