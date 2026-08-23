@@ -274,16 +274,16 @@ verifyWebhook(request: WebhookVerificationRequest, credentials?: Record<string, 
 - Gọi `GET /bot{token}/getMe` → bot username, name
 
 **Acceptance Criteria**:
-- [ ] `channelType` = `ChannelType.TELEGRAM`
-- [ ] `verifyWebhook()` validates secret token header hoặc pass-through URL auth
-- [ ] `parseInboundPayload()` normalize text message → InboundMessagePayload
-- [ ] `parseInboundPayload()` normalize media messages (photo, video, document, audio, voice)
-- [ ] `parseInboundPayload()` handle callback_query
-- [ ] `parseInboundPayload()` ignore non-private messages (group chats)
-- [ ] `sendMessage()` gọi Telegram API thành công cho text
-- [ ] `sendMessage()` gọi Telegram API thành công cho media
-- [ ] `getChannelInfo()` trả về bot info
-- [ ] Adapter registered thành công trong `ChannelAdapterRegistry`
+- [x] `channelType` = `ChannelType.TELEGRAM`
+- [x] `verifyWebhook()` validates secret token header hoặc pass-through URL auth
+- [x] `parseInboundPayload()` normalize text message → InboundMessagePayload
+- [x] `parseInboundPayload()` normalize media messages (photo, video, document, audio, voice)
+- [x] `parseInboundPayload()` handle callback_query
+- [x] `parseInboundPayload()` ignore non-private messages (group chats)
+- [x] `sendMessage()` gọi Telegram API thành công cho text
+- [x] `sendMessage()` gọi Telegram API thành công cho media
+- [x] `getChannelInfo()` trả về bot info
+- [x] Adapter registered thành công trong `ChannelAdapterRegistry`
 
 **Estimated complexity**: 🟡 Medium (~200 LOC)
 
