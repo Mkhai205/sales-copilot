@@ -203,10 +203,11 @@ export class OutboundMessageListener {
 - [integrations.module.ts](file:///d:/workspace/Sales%20Copilot/apps/server/src/integrations/integrations.module.ts)
 - [index.ts](file:///d:/workspace/Sales%20Copilot/apps/server/src/integrations/index.ts)
 
-**Chi tiết**:
-- Thêm `OutboundMessageListener` vào providers
-- Import các dependencies cần thiết (PrismaService, ChannelCredentialService, MessagesService)
-- Export index.ts barrel
+**Acceptance Criteria**:
+- [x] OutboundMessageListener được register trong providers của IntegrationsModule
+- [x] OutboundMessageListener và ChannelAdapterRegistry được export đầy đủ
+- [x] Barrel export index.ts export tất cả types, interfaces, registry, listener và module
+- [x] Toàn bộ build, test và typecheck vượt qua 100%
 
 **Estimated complexity**: 🟢 Low (~15 LOC)
 
