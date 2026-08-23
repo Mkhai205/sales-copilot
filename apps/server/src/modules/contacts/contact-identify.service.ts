@@ -39,7 +39,7 @@ export class ContactIdentifyService {
   ): Promise<ContactDto> {
     const runInTx = async (tx: Prisma.TransactionClient): Promise<ContactDto> => {
       // 1. Fetch active contact
-       
+
       let activeContact: any = await tx.contact.findFirst({
         where: { id: currentContact.id, workspaceId },
         include: { identities: true },

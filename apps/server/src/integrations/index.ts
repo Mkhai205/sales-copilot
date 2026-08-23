@@ -4,4 +4,5 @@ export * from './channel-adapter.registry';
 export * from './outbound-message.listener';
 export * from './telegram';
 export * from './facebook';
+export * from './web-chat';
 export * from './integrations.module';

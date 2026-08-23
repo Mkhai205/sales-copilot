@@ -573,11 +573,11 @@ export class TelegramModule implements OnModuleInit {
 - Data từ channel settings/credentials (stored in DB)
 
 **Acceptance Criteria**:
-- [ ] `channelType` = `ChannelType.WEB_CHAT`
-- [ ] Widget token verification hoạt động
-- [ ] parseInboundPayload() normalize widget message format
-- [ ] sendMessage() push qua WebSocket thay vì HTTP API
-- [ ] getChannelInfo() return widget config
+- [x] `channelType` = `ChannelType.WEB_CHAT`
+- [x] Widget token verification hoạt động
+- [x] parseInboundPayload() normalize widget message format
+- [x] sendMessage() push qua WebSocket thay vì HTTP API
+- [x] getChannelInfo() return widget config
 
 **Estimated complexity**: 🟡 Medium (~150 LOC)
 
