@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { ConversationStatus, ConversationPriority, Priority } from './enums';
 import type { LabelDto } from '../labels';
 import type { ContactDto } from '../contacts';
+import type { MessageResponseDto } from '../messages';
 
 // ==========================================
 // 1. Request Validation Schemas
@@ -113,6 +114,7 @@ export interface ConversationResponseDto {
     id: string;
     name: string;
   } | null;
+  lastMessage?: MessageResponseDto | null;
   createdAt: string;
   updatedAt: string;
 }
