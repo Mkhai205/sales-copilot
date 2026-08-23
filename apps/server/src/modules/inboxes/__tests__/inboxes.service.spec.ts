@@ -434,4 +434,172 @@ describe('InboxesService (Inbox & Channel 1:1 CRUD & Security)', () => {
       assert.strictEqual(inboxesDb.has(createdInAlpha.id), true);
     });
   });
+
+  describe('Domain Event Emissions (channel.created, channel.updated, channel.deleted)', () => {
+    it('should emit channel.created event when creating an inbox with channel', async () => {
+      const emittedEvents: Array<{ event: string; payload: any }> = [];
+      const mockEventEmitter = {
+        emit: (event: string, payload: any) => {
+          emittedEvents.push({ event, payload });
+        },
+      };
+
+      const mockPrismaService: any = {
+        getClient: () => ({
+          inbox: {
+            findFirst: async () => null,
+          },
+          channel: {
+            findFirst: async () => null,
+          },
+        }),
+        runInTransaction: async (cb: (ctx: any) => Promise<any>) => {
+          return cb({
+            tx: {
+              inbox: {
+                create: async ({ data }: any) => ({
+                  id: 'ib_event_1',
+                  ...data,
+                  createdAt: new Date(),
+                  updatedAt: new Date(),
+                }),
+              },
+              channel: {
+                create: async ({ data }: any) => ({
+                  id: 'chan_event_1',
+                  ...data,
+                  createdAt: new Date(),
+                  updatedAt: new Date(),
+                }),
+              },
+            },
+          });
+        },
+      };
+
+      const serviceWithEvents = new InboxesService(
+        mockPrismaService,
+        credentialService,
+        mockEventEmitter as any,
+      );
+
+      await serviceWithEvents.createInbox(wsAlpha, {
+        name: 'Event Test Inbox',
+        channelType: ChannelType.TELEGRAM,
+      });
+
+      assert.strictEqual(emittedEvents.length, 1);
+      assert.strictEqual(emittedEvents[0].event, 'channel.created');
+      assert.strictEqual(emittedEvents[0].payload.workspaceId, wsAlpha);
+      assert.strictEqual(emittedEvents[0].payload.inboxId, 'ib_event_1');
+      assert.strictEqual(emittedEvents[0].payload.channelId, 'chan_event_1');
+      assert.strictEqual(emittedEvents[0].payload.channelType, ChannelType.TELEGRAM);
+    });
+
+    it('should emit channel.updated event when updating an inbox', async () => {
+      const emittedEvents: Array<{ event: string; payload: any }> = [];
+      const mockEventEmitter = {
+        emit: (event: string, payload: any) => {
+          emittedEvents.push({ event, payload });
+        },
+      };
+
+      const existingInbox = {
+        id: 'ib_upd_1',
+        workspaceId: wsAlpha,
+        name: 'Existing',
+        channel: {
+          id: 'chan_upd_1',
+          workspaceId: wsAlpha,
+          inboxId: 'ib_upd_1',
+          channelType: ChannelType.TELEGRAM,
+          settings: {},
+          isConnected: true,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+
+        _count: { members: 0 },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const mockPrismaService: any = {
+        getClient: () => ({
+          inbox: {
+            findFirst: async () => existingInbox,
+          },
+          channel: {
+            findFirst: async () => null,
+          },
+        }),
+        runInTransaction: async (cb: (ctx: any) => Promise<any>) => {
+          return cb({
+            tx: {
+              inbox: {
+                update: async () => existingInbox,
+              },
+              channel: {
+                update: async () => existingInbox.channel,
+              },
+            },
+          });
+        },
+      };
+
+      const serviceWithEvents = new InboxesService(
+        mockPrismaService,
+        credentialService,
+        mockEventEmitter as any,
+      );
+
+      await serviceWithEvents.updateInbox(wsAlpha, 'ib_upd_1', {
+        name: 'Updated Name',
+      });
+
+      assert.strictEqual(emittedEvents.length, 1);
+      assert.strictEqual(emittedEvents[0].event, 'channel.updated');
+      assert.strictEqual(emittedEvents[0].payload.channelId, 'chan_upd_1');
+    });
+
+    it('should emit channel.deleted event when deleting an inbox', async () => {
+      const emittedEvents: Array<{ event: string; payload: any }> = [];
+      const mockEventEmitter = {
+        emit: (event: string, payload: any) => {
+          emittedEvents.push({ event, payload });
+        },
+      };
+
+      const existingInbox = {
+        id: 'ib_del_1',
+        workspaceId: wsAlpha,
+        name: 'To Delete',
+        channel: {
+          id: 'chan_del_1',
+          channelType: ChannelType.TELEGRAM,
+        },
+      };
+
+      const mockPrismaService: any = {
+        getClient: () => ({
+          inbox: {
+            findFirst: async () => existingInbox,
+            delete: async () => existingInbox,
+          },
+        }),
+      };
+
+      const serviceWithEvents = new InboxesService(
+        mockPrismaService,
+        credentialService,
+        mockEventEmitter as any,
+      );
+
+      await serviceWithEvents.deleteInbox(wsAlpha, 'ib_del_1');
+
+      assert.strictEqual(emittedEvents.length, 1);
+      assert.strictEqual(emittedEvents[0].event, 'channel.deleted');
+      assert.strictEqual(emittedEvents[0].payload.channelId, 'chan_del_1');
+    });
+  });
 });

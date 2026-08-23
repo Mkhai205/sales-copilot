@@ -4,7 +4,9 @@ import {
   Injectable,
   Logger,
   NotFoundException,
+  Optional,
 } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import {
   ChannelDetailDto,
   ChannelSummaryDto,
@@ -26,6 +28,7 @@ export class InboxesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly credentialService: ChannelCredentialService,
+    @Optional() private readonly eventEmitter?: EventEmitter2,
   ) {}
 
   /**
@@ -126,7 +129,7 @@ export class InboxesService {
       ...(dto.greetingMessage !== undefined ? { greetingMessage: dto.greetingMessage } : {}),
     };
 
-    return this.prisma.runInTransaction(async txCtx => {
+    const result = await this.prisma.runInTransaction(async txCtx => {
       const tx = txCtx.tx;
 
       const inbox = await tx.inbox.create({
@@ -171,6 +174,17 @@ export class InboxesService {
         updatedAt: inbox.updatedAt.toISOString(),
       };
     });
+
+    if (this.eventEmitter && result.channel) {
+      this.eventEmitter.emit('channel.created', {
+        workspaceId,
+        inboxId: result.id,
+        channelId: result.channel.id,
+        channelType: result.channelType,
+      });
+    }
+
+    return result;
   }
 
   /**
@@ -315,7 +329,7 @@ export class InboxesService {
       ...(dto.greetingMessage !== undefined ? { greetingMessage: dto.greetingMessage } : {}),
     };
 
-    return this.prisma.runInTransaction(async txCtx => {
+    const result = await this.prisma.runInTransaction(async txCtx => {
       const tx = txCtx.tx;
 
       await tx.inbox.update({
@@ -359,6 +373,17 @@ export class InboxesService {
 
       return this.getInboxById(workspaceId, inboxId);
     });
+
+    if (this.eventEmitter && result.channel) {
+      this.eventEmitter.emit('channel.updated', {
+        workspaceId,
+        inboxId: result.id,
+        channelId: result.channel.id,
+        channelType: result.channelType,
+      });
+    }
+
+    return result;
   }
 
   /**
@@ -372,6 +397,7 @@ export class InboxesService {
 
     const existing = await client.inbox.findFirst({
       where: { id: inboxId, workspaceId },
+      include: { channel: true },
     });
 
     if (!existing) {
@@ -387,6 +413,16 @@ export class InboxesService {
     });
 
     this.logger.log(`Deleted inbox '${inboxId}' from workspace ${workspaceId}`);
+
+    if (this.eventEmitter && existing.channel) {
+      this.eventEmitter.emit('channel.deleted', {
+        workspaceId,
+        inboxId,
+        channelId: existing.channel.id,
+        channelType: existing.channel.channelType,
+      });
+    }
+
     return { success: true, message: 'Inbox deleted successfully' };
   }
 
