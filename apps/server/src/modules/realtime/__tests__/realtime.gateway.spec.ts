@@ -146,10 +146,49 @@ describe('RealtimeGateway (Agent Realtime WebSocket Namespace /realtime)', () =>
     gateway = new RealtimeGateway(mockTokenService, mockPrisma);
   });
 
-  describe('Gateway Initialization', () => {
-    it('should initialize successfully on /realtime namespace', () => {
-      assert.doesNotThrow(() => {
-        gateway.afterInit({} as any);
+  describe('Gateway Initialization & Redis Adapter (Task 4)', () => {
+    it('should initialize successfully on /realtime namespace in single-server mode when no REDIS_URL is configured', async () => {
+      let adapterCalled = false;
+      const mockServer: any = {
+        adapter: (_adapter: any) => {
+          adapterCalled = true;
+        },
+      };
+
+      await gateway.afterInit(mockServer);
+
+      assert.strictEqual(adapterCalled, false);
+    });
+
+    it('should handle Redis adapter connection errors gracefully without throwing', async () => {
+      let adapterCalled = false;
+      const mockServer: any = {
+        adapter: (_adapter: any) => {
+          adapterCalled = true;
+        },
+      };
+
+      const mockConfig: any = {
+        get: (key: string) => {
+          if (key === 'REDIS_URL') return 'redis://invalid-host-that-does-not-exist:6379';
+          return null;
+        },
+      };
+
+      const gatewayWithConfig = new RealtimeGateway(mockTokenService, mockPrisma, mockConfig);
+
+      await assert.doesNotReject(async () => {
+        await gatewayWithConfig.afterInit(mockServer);
+      });
+      assert.strictEqual(adapterCalled, false);
+
+      // Cleanup
+      await gatewayWithConfig.onModuleDestroy();
+    });
+
+    it('should handle onModuleDestroy gracefully', async () => {
+      await assert.doesNotReject(async () => {
+        await gateway.onModuleDestroy();
       });
     });
   });

@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleDestroy, Optional } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import {
   OnGatewayConnection,
   OnGatewayDisconnect,
@@ -8,6 +9,8 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
+import { createAdapter } from '@socket.io/redis-adapter';
+import { createClient, RedisClientType } from 'redis';
 import {
   WsClientEvent,
   joinWorkspaceSchema,
@@ -29,7 +32,8 @@ import {
  * Namespace: `/realtime`
  *
  * Handles JWT authentication handshake, tenant/workspace room provisioning,
- * conversation room routing, and connection lifecycle management.
+ * conversation room routing, multi-server Redis Pub/Sub adapter clustering,
+ * and connection lifecycle management.
  */
 @Injectable()
 @WebSocketGateway({
@@ -39,19 +43,80 @@ import {
     credentials: true,
   },
 })
-export class RealtimeGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
+export class RealtimeGateway
+  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect, OnModuleDestroy
+{
   @WebSocketServer()
   server!: Server;
 
   private readonly logger = new Logger(RealtimeGateway.name);
+  private pubClient?: RedisClientType;
+  private subClient?: RedisClientType;
 
   constructor(
     private readonly tokenService: TokenService,
     private readonly prisma: PrismaService,
+    @Optional() private readonly configService?: ConfigService,
   ) {}
 
-  afterInit(_server: Server) {
+  async afterInit(server: Server): Promise<void> {
     this.logger.log('RealtimeGateway initialized on namespace /realtime');
+    await this.setupRedisAdapter(server);
+  }
+
+  async onModuleDestroy(): Promise<void> {
+    if (this.pubClient?.isOpen) {
+      try {
+        await this.pubClient.quit();
+      } catch (err) {
+        this.logger.warn(`Error disconnecting Redis adapter pubClient: ${(err as Error).message}`);
+      }
+    }
+    if (this.subClient?.isOpen) {
+      try {
+        await this.subClient.quit();
+      } catch (err) {
+        this.logger.warn(`Error disconnecting Redis adapter subClient: ${(err as Error).message}`);
+      }
+    }
+  }
+
+  /**
+   * Configures Socket.io Redis Pub/Sub Adapter for horizontal multi-instance clustering.
+   * Gracefully degrades to single-server in-memory mode if Redis is unavailable.
+   */
+  private async setupRedisAdapter(server: Server): Promise<void> {
+    const redisUrl = this.configService?.get<string>('REDIS_URL');
+    if (!redisUrl) {
+      this.logger.log(
+        'REDIS_URL not configured. RealtimeGateway operating in single-server in-memory mode',
+      );
+      return;
+    }
+
+    try {
+      this.pubClient = createClient({ url: redisUrl }) as RedisClientType;
+      this.subClient = this.pubClient.duplicate() as RedisClientType;
+
+      this.pubClient.on('error', (err: Error) => {
+        this.logger.warn(`Redis adapter pubClient error: ${err.message}`);
+      });
+
+      this.subClient.on('error', (err: Error) => {
+        this.logger.warn(`Redis adapter subClient error: ${err.message}`);
+      });
+
+      await Promise.all([this.pubClient.connect(), this.subClient.connect()]);
+
+      server.adapter(createAdapter(this.pubClient, this.subClient));
+      this.logger.log(
+        '✅ Socket.io Redis Pub/Sub Adapter initialized successfully for horizontal scaling',
+      );
+    } catch (err) {
+      this.logger.warn(
+        `Failed to initialize Redis adapter (${(err as Error).message}). Falling back to single-server in-memory adapter`,
+      );
+    }
   }
 
   /**
