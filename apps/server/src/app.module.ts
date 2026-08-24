@@ -18,6 +18,7 @@ import { LabelsModule } from './modules/labels';
 import { ConversationsModule } from './modules/conversations';
 import { MessagesModule } from './modules/messages';
 import { IntegrationsModule } from './integrations';
+import { RealtimeModule } from './modules/realtime';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -54,6 +55,7 @@ import { RequestIdMiddleware } from './common/middlewares';
     ConversationsModule,
     MessagesModule,
     IntegrationsModule,
+    RealtimeModule,
   ],
   controllers: [AppController],
   providers: [
