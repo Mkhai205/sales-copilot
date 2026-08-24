@@ -4,9 +4,11 @@ import { AuthModule } from '../auth';
 import { RealtimeGateway } from './realtime.gateway';
 import { RealtimeEventDispatcher } from './realtime-event.dispatcher';
 import { PresenceService } from './presence.service';
+import { PresenceController } from './presence.controller';
 
 @Module({
   imports: [AuthModule, DatabaseModule],
+  controllers: [PresenceController],
   providers: [RealtimeGateway, RealtimeEventDispatcher, PresenceService],
   exports: [RealtimeGateway, RealtimeEventDispatcher, PresenceService],
 })

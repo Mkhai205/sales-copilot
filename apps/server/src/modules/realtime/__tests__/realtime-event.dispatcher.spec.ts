@@ -9,6 +9,7 @@ import {
   Priority,
   SenderType,
   WsServerEvent,
+  PresenceStatus,
 } from '@sales-copilot/shared-contracts';
 import { RealtimeEventDispatcher } from '../realtime-event.dispatcher';
 
@@ -562,6 +563,29 @@ describe('RealtimeEventDispatcher — Message & Conversation Events (Task 5)', (
     });
   });
 
+  describe('Presence Event Dispatches (Task 9)', () => {
+    it('should broadcast presence.updated to workspace room', () => {
+      const payload = {
+        workspaceId,
+        userId: 'usr_001',
+        status: PresenceStatus.ONLINE,
+        lastSeenAt: new Date().toISOString(),
+      };
+
+      dispatcher.handlePresenceUpdated(payload);
+
+      const wsBroadcast = emittedBroadcasts.find(
+        e => e.room === `workspace_${workspaceId}` && e.event === WsServerEvent.PRESENCE_UPDATED,
+      );
+      assert.ok(wsBroadcast);
+      assert.deepStrictEqual((wsBroadcast.payload as any).data, {
+        userId: 'usr_001',
+        status: PresenceStatus.ONLINE,
+        lastSeenAt: payload.lastSeenAt,
+      });
+    });
+  });
+
   describe('Error Isolation & Resilience', () => {
     it('should not throw or crash when gateway server throws during emission', () => {
       mockGateway.server.to = () => {
@@ -579,6 +603,12 @@ describe('RealtimeEventDispatcher — Message & Conversation Events (Task 5)', (
           workspaceId,
           contact: {} as any,
         });
+        dispatcher.handlePresenceUpdated({
+          workspaceId,
+          userId: 'usr_001',
+          status: PresenceStatus.ONLINE,
+          lastSeenAt: new Date().toISOString(),
+        });
       });
     });
 
@@ -587,6 +617,7 @@ describe('RealtimeEventDispatcher — Message & Conversation Events (Task 5)', (
         dispatcher.handleMessageCreated(null as any);
         dispatcher.handleConversationCreated({} as any);
         dispatcher.handleContactCreated({} as any);
+        dispatcher.handlePresenceUpdated(null as any);
       });
       assert.strictEqual(emittedBroadcasts.length, 0);
     });

@@ -25,6 +25,7 @@ import {
   ChannelCreatedEvent,
   ChannelUpdatedEvent,
   ChannelDeletedEvent,
+  PresenceUpdatedEvent,
   TypingEventPayload,
 } from '@sales-copilot/shared-contracts';
 import { RealtimeGateway } from './realtime.gateway';
@@ -394,7 +395,23 @@ export class RealtimeEventDispatcher {
   }
 
   // ==========================================================================
-  // 8. Helper Method with Robust Error Isolation
+  // 8. Presence Domain Event Handlers (Task 9)
+  // ==========================================================================
+
+  @OnEvent(DomainEvent.PRESENCE_UPDATED)
+  @OnEvent('presence.updated')
+  handlePresenceUpdated(payload: PresenceUpdatedEvent): void {
+    if (!payload?.workspaceId) return;
+    const data = {
+      userId: payload.userId,
+      status: payload.status,
+      lastSeenAt: payload.lastSeenAt,
+    };
+    this.broadcastSafe(`workspace_${payload.workspaceId}`, WsServerEvent.PRESENCE_UPDATED, data);
+  }
+
+  // ==========================================================================
+  // 9. Helper Method with Robust Error Isolation
   // ==========================================================================
 
   /**
