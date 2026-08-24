@@ -3,15 +3,24 @@ import {
   OnGatewayConnection,
   OnGatewayDisconnect,
   OnGatewayInit,
+  SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
+import {
+  WsClientEvent,
+  joinWorkspaceSchema,
+  leaveWorkspaceSchema,
+  joinConversationSchema,
+  leaveConversationSchema,
+} from '@sales-copilot/shared-contracts';
 import { PrismaService } from '../../infrastructure/database';
 import { TokenService } from '../auth/token.service';
 import {
   RealtimeConnectedPayload,
   RealtimeErrorPayload,
+  RealtimeRoomOperationResult,
   RealtimeSocketData,
 } from './realtime.types';
 
@@ -19,8 +28,8 @@ import {
  * Dedicated WebSocket Gateway for Agent Dashboard Realtime events.
  * Namespace: `/realtime`
  *
- * Handles JWT authentication handshake, tenant/user room provisioning,
- * and connection lifecycle management.
+ * Handles JWT authentication handshake, tenant/workspace room provisioning,
+ * conversation room routing, and connection lifecycle management.
  */
 @Injectable()
 @WebSocketGateway({
@@ -96,6 +105,7 @@ export class RealtimeGateway implements OnGatewayInit, OnGatewayConnection, OnGa
         role: payload.role,
         availableWorkspaceIds,
         joinedWorkspaceIds: [],
+        joinedConversations: {},
         connectedAt: new Date(),
       };
       client.data = socketData;
@@ -142,6 +152,255 @@ export class RealtimeGateway implements OnGatewayInit, OnGatewayConnection, OnGa
     } else {
       this.logger.log(`Unauthenticated realtime client disconnected (socket: ${client.id})`);
     }
+  }
+
+  /**
+   * Handles joining a workspace room (workspace_{workspaceId}).
+   * Verifies that the authenticated user is an active member of the workspace.
+   */
+  @SubscribeMessage(WsClientEvent.JOIN_WORKSPACE)
+  @SubscribeMessage('join_workspace')
+  async handleJoinWorkspace(
+    client: Socket,
+    payload: unknown,
+  ): Promise<RealtimeRoomOperationResult> {
+    const socketData = client.data as RealtimeSocketData | undefined;
+    if (!socketData?.userId) {
+      const error: RealtimeErrorPayload = {
+        code: 'UNAUTHORIZED',
+        message: 'Socket session is not authenticated',
+      };
+      client.emit('error', error);
+      return { success: false, error };
+    }
+
+    const parseResult = joinWorkspaceSchema.safeParse(payload);
+    if (!parseResult.success) {
+      const error: RealtimeErrorPayload = {
+        code: 'BAD_REQUEST',
+        message: parseResult.error.errors[0]?.message || 'Invalid join_workspace payload',
+      };
+      client.emit('error', error);
+      return { success: false, error };
+    }
+
+    const { workspaceId } = parseResult.data;
+
+    // Check membership from DB or cached availableWorkspaceIds
+    const isMember =
+      socketData.availableWorkspaceIds.includes(workspaceId) ||
+      Boolean(
+        await this.prisma.getClient().workspaceMember.findFirst({
+          where: { userId: socketData.userId, workspaceId },
+        }),
+      );
+
+    if (!isMember) {
+      this.logger.warn(
+        `User ${socketData.userId} attempted to join unauthorized workspace ${workspaceId}`,
+      );
+      const error: RealtimeErrorPayload = {
+        code: 'FORBIDDEN',
+        message: 'You are not a member of this workspace',
+      };
+      client.emit('error', error);
+      return { success: false, error };
+    }
+
+    const roomName = `workspace_${workspaceId}`;
+    client.join(roomName);
+
+    if (!socketData.joinedWorkspaceIds.includes(workspaceId)) {
+      socketData.joinedWorkspaceIds.push(workspaceId);
+    }
+    if (!socketData.availableWorkspaceIds.includes(workspaceId)) {
+      socketData.availableWorkspaceIds.push(workspaceId);
+    }
+
+    this.logger.log(`Socket ${client.id} (user: ${socketData.userId}) joined room ${roomName}`);
+
+    return {
+      success: true,
+      room: roomName,
+      workspaceId,
+    };
+  }
+
+  /**
+   * Handles leaving a workspace room (workspace_{workspaceId}) and any active
+   * conversation rooms that belong to that workspace.
+   */
+  @SubscribeMessage(WsClientEvent.LEAVE_WORKSPACE)
+  @SubscribeMessage('leave_workspace')
+  handleLeaveWorkspace(client: Socket, payload: unknown): RealtimeRoomOperationResult {
+    const socketData = client.data as RealtimeSocketData | undefined;
+    if (!socketData?.userId) {
+      return {
+        success: false,
+        error: { code: 'UNAUTHORIZED', message: 'Socket session is not authenticated' },
+      };
+    }
+
+    const parseResult = leaveWorkspaceSchema.safeParse(payload);
+    if (!parseResult.success) {
+      return {
+        success: false,
+        error: { code: 'BAD_REQUEST', message: 'Invalid leave_workspace payload' },
+      };
+    }
+
+    const { workspaceId } = parseResult.data;
+    const roomName = `workspace_${workspaceId}`;
+    client.leave(roomName);
+
+    socketData.joinedWorkspaceIds = socketData.joinedWorkspaceIds.filter(id => id !== workspaceId);
+
+    // Leave any open conversations that belong to this workspace
+    if (socketData.joinedConversations) {
+      for (const [convId, wsId] of Object.entries(socketData.joinedConversations)) {
+        if (wsId === workspaceId) {
+          client.leave(`conversation_${convId}`);
+          delete socketData.joinedConversations[convId];
+        }
+      }
+    }
+
+    this.logger.log(`Socket ${client.id} (user: ${socketData.userId}) left room ${roomName}`);
+
+    return {
+      success: true,
+      room: roomName,
+      workspaceId,
+    };
+  }
+
+  /**
+   * Handles joining a conversation room (conversation_{conversationId}).
+   * Verifies that the conversation exists and belongs to a workspace the user has membership in.
+   */
+  @SubscribeMessage(WsClientEvent.JOIN_CONVERSATION)
+  @SubscribeMessage('join_conversation')
+  async handleJoinConversation(
+    client: Socket,
+    payload: unknown,
+  ): Promise<RealtimeRoomOperationResult> {
+    const socketData = client.data as RealtimeSocketData | undefined;
+    if (!socketData?.userId) {
+      const error: RealtimeErrorPayload = {
+        code: 'UNAUTHORIZED',
+        message: 'Socket session is not authenticated',
+      };
+      client.emit('error', error);
+      return { success: false, error };
+    }
+
+    const parseResult = joinConversationSchema.safeParse(payload);
+    if (!parseResult.success) {
+      const error: RealtimeErrorPayload = {
+        code: 'BAD_REQUEST',
+        message: parseResult.error.errors[0]?.message || 'Invalid join_conversation payload',
+      };
+      client.emit('error', error);
+      return { success: false, error };
+    }
+
+    const { conversationId } = parseResult.data;
+
+    // Look up conversation
+    const conversation = await this.prisma.getClient().conversation.findFirst({
+      where: { id: conversationId },
+      select: { id: true, workspaceId: true },
+    });
+
+    if (!conversation) {
+      const error: RealtimeErrorPayload = {
+        code: 'CONVERSATION_NOT_FOUND',
+        message: `Conversation with id '${conversationId}' not found`,
+      };
+      client.emit('error', error);
+      return { success: false, error };
+    }
+
+    // Verify user is a member of the workspace that owns this conversation
+    const isMember =
+      socketData.availableWorkspaceIds.includes(conversation.workspaceId) ||
+      Boolean(
+        await this.prisma.getClient().workspaceMember.findFirst({
+          where: { userId: socketData.userId, workspaceId: conversation.workspaceId },
+        }),
+      );
+
+    if (!isMember) {
+      this.logger.warn(
+        `User ${socketData.userId} attempted to join conversation ${conversationId} without workspace access`,
+      );
+      const error: RealtimeErrorPayload = {
+        code: 'FORBIDDEN',
+        message: 'You do not have access to this conversation',
+      };
+      client.emit('error', error);
+      return { success: false, error };
+    }
+
+    const roomName = `conversation_${conversationId}`;
+    client.join(roomName);
+
+    if (!socketData.joinedConversations) {
+      socketData.joinedConversations = {};
+    }
+    socketData.joinedConversations[conversationId] = conversation.workspaceId;
+
+    this.logger.log(
+      `Socket ${client.id} (user: ${socketData.userId}) joined conversation room ${roomName}`,
+    );
+
+    return {
+      success: true,
+      room: roomName,
+      conversationId,
+      workspaceId: conversation.workspaceId,
+    };
+  }
+
+  /**
+   * Handles leaving a conversation room (conversation_{conversationId}).
+   */
+  @SubscribeMessage(WsClientEvent.LEAVE_CONVERSATION)
+  @SubscribeMessage('leave_conversation')
+  handleLeaveConversation(client: Socket, payload: unknown): RealtimeRoomOperationResult {
+    const socketData = client.data as RealtimeSocketData | undefined;
+    if (!socketData?.userId) {
+      return {
+        success: false,
+        error: { code: 'UNAUTHORIZED', message: 'Socket session is not authenticated' },
+      };
+    }
+
+    const parseResult = leaveConversationSchema.safeParse(payload);
+    if (!parseResult.success) {
+      return {
+        success: false,
+        error: { code: 'BAD_REQUEST', message: 'Invalid leave_conversation payload' },
+      };
+    }
+
+    const { conversationId } = parseResult.data;
+    const roomName = `conversation_${conversationId}`;
+    client.leave(roomName);
+
+    if (socketData.joinedConversations) {
+      delete socketData.joinedConversations[conversationId];
+    }
+
+    this.logger.log(
+      `Socket ${client.id} (user: ${socketData.userId}) left conversation room ${roomName}`,
+    );
+
+    return {
+      success: true,
+      room: roomName,
+      conversationId,
+    };
   }
 
   // --- Helper Methods ---

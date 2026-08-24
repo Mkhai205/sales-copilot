@@ -9,6 +9,7 @@ export interface RealtimeSocketData {
   role: PlatformRole;
   availableWorkspaceIds: string[];
   joinedWorkspaceIds: string[];
+  joinedConversations: Record<string, string>;
   connectedAt: Date;
 }
 
@@ -29,4 +30,15 @@ export interface RealtimeConnectedPayload {
 export interface RealtimeErrorPayload {
   code: string;
   message: string;
+}
+
+/**
+ * Result returned from room join/leave operations.
+ */
+export interface RealtimeRoomOperationResult {
+  success: boolean;
+  room?: string;
+  workspaceId?: string;
+  conversationId?: string;
+  error?: RealtimeErrorPayload;
 }
