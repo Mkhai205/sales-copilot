@@ -1,7 +1,7 @@
 import { describe, it, beforeEach } from 'node:test';
 import * as assert from 'node:assert';
 import { UnauthorizedException } from '@nestjs/common';
-import { PlatformRole } from '@sales-copilot/shared-contracts';
+import { PlatformRole, WsServerEvent } from '@sales-copilot/shared-contracts';
 import { RealtimeGateway } from '../realtime.gateway';
 import {
   RealtimeConnectedPayload,
@@ -13,6 +13,8 @@ describe('RealtimeGateway (Agent Realtime WebSocket Namespace /realtime)', () =>
   let gateway: RealtimeGateway;
   let mockTokenService: any;
   let mockPrisma: any;
+  let mockEventEmitter: any;
+  let emittedEvents: Array<{ event: string; payload: unknown }>;
 
   const validUserId = 'usr_agent_001';
   const validEmail = 'agent@salescopilot.io';
@@ -48,6 +50,7 @@ describe('RealtimeGateway (Agent Realtime WebSocket Namespace /realtime)', () =>
     const emittedToClient: Array<{ event: string; payload: unknown }> = [];
     const joinedRooms: string[] = [];
     const leftRooms: string[] = [];
+    const broadcastToRooms: Record<string, Array<{ event: string; payload: unknown }>> = {};
     let disconnected = false;
 
     const socket: any = {
@@ -62,6 +65,14 @@ describe('RealtimeGateway (Agent Realtime WebSocket Namespace /realtime)', () =>
       emit: (event: string, payload: unknown) => {
         emittedToClient.push({ event, payload });
       },
+      to: (room: string) => ({
+        emit: (event: string, payload: unknown) => {
+          if (!broadcastToRooms[room]) {
+            broadcastToRooms[room] = [];
+          }
+          broadcastToRooms[room].push({ event, payload });
+        },
+      }),
       join: (room: string) => {
         joinedRooms.push(room);
       },
@@ -78,6 +89,7 @@ describe('RealtimeGateway (Agent Realtime WebSocket Namespace /realtime)', () =>
       _getEmitted: () => emittedToClient,
       _getJoinedRooms: () => joinedRooms,
       _getLeftRooms: () => leftRooms,
+      _getBroadcastToRooms: () => broadcastToRooms,
       _isDisconnected: () => disconnected,
     };
 
@@ -102,6 +114,13 @@ describe('RealtimeGateway (Agent Realtime WebSocket Namespace /realtime)', () =>
   };
 
   beforeEach(() => {
+    emittedEvents = [];
+    mockEventEmitter = {
+      emit: (event: string, payload: unknown) => {
+        emittedEvents.push({ event, payload });
+      },
+    };
+
     mockTokenService = {
       verifyAccessToken: async (token: string) => {
         if (token === validToken) {
@@ -143,29 +162,58 @@ describe('RealtimeGateway (Agent Realtime WebSocket Namespace /realtime)', () =>
       }),
     };
 
-    gateway = new RealtimeGateway(mockTokenService, mockPrisma);
+    gateway = new RealtimeGateway(mockTokenService, mockPrisma, undefined, mockEventEmitter);
   });
 
-  describe('Gateway Initialization & Redis Adapter (Task 4)', () => {
-    it('should initialize successfully on /realtime namespace in single-server mode when no REDIS_URL is configured', async () => {
-      let adapterCalled = false;
+  describe('Gateway Initialization & Middleware (Task 7)', () => {
+    it('should initialize successfully on /realtime namespace, attach middleware and engine error listener', async () => {
+      let middlewareRegistered = false;
+      let engineListenerRegistered = false;
+      let engineErrorHandler: ((err: any) => void) | undefined;
+      let middlewareHandler: ((socket: any, next: () => void) => void) | undefined;
+
       const mockServer: any = {
-        adapter: (_adapter: any) => {
-          adapterCalled = true;
+        adapter: () => {},
+        use: (fn: any) => {
+          middlewareRegistered = true;
+          middlewareHandler = fn;
+        },
+        engine: {
+          on: (event: string, handler: any) => {
+            if (event === 'connection_error') {
+              engineListenerRegistered = true;
+              engineErrorHandler = handler;
+            }
+          },
         },
       };
 
       await gateway.afterInit(mockServer);
 
-      assert.strictEqual(adapterCalled, false);
+      assert.strictEqual(middlewareRegistered, true);
+      assert.strictEqual(engineListenerRegistered, true);
+
+      // Verify middleware invokes next()
+      let nextCalled = false;
+      middlewareHandler?.({ id: 'sock_123' }, () => {
+        nextCalled = true;
+      });
+      assert.strictEqual(nextCalled, true);
+
+      // Verify engine error handler logs without throwing
+      assert.doesNotThrow(() => {
+        engineErrorHandler?.(new Error('Test engine socket reset'));
+      });
     });
 
-    it('should handle Redis adapter connection errors gracefully without throwing', async () => {
+    it('should handle Redis adapter connection errors gracefully without throwing and stop retry loops', async () => {
       let adapterCalled = false;
       const mockServer: any = {
         adapter: (_adapter: any) => {
           adapterCalled = true;
         },
+        use: () => {},
+        engine: { on: () => {} },
       };
 
       const mockConfig: any = {
@@ -175,7 +223,12 @@ describe('RealtimeGateway (Agent Realtime WebSocket Namespace /realtime)', () =>
         },
       };
 
-      const gatewayWithConfig = new RealtimeGateway(mockTokenService, mockPrisma, mockConfig);
+      const gatewayWithConfig = new RealtimeGateway(
+        mockTokenService,
+        mockPrisma,
+        mockConfig,
+        mockEventEmitter,
+      );
 
       await assert.doesNotReject(async () => {
         await gatewayWithConfig.afterInit(mockServer);
@@ -228,7 +281,7 @@ describe('RealtimeGateway (Agent Realtime WebSocket Namespace /realtime)', () =>
       assert.match(err.message, /invalid or expired/i);
     });
 
-    it('should successfully authenticate via handshake.auth.token and populate session context', async () => {
+    it('should successfully authenticate via handshake.auth.token, populate session context, and emit agent.connected event', async () => {
       const socket = createMockSocket({
         auth: { token: validToken },
       });
@@ -266,6 +319,14 @@ describe('RealtimeGateway (Agent Realtime WebSocket Namespace /realtime)', () =>
         validWorkspaceId2,
       ]);
       assert.strictEqual(typeof connectedPayload.connectedAt, 'string');
+
+      // Verify agent.connected internal event emitted
+      assert.strictEqual(emittedEvents.length, 1);
+      assert.strictEqual(emittedEvents[0].event, 'agent.connected');
+      const eventPayload = emittedEvents[0].payload as any;
+      assert.strictEqual(eventPayload.userId, validUserId);
+      assert.strictEqual(eventPayload.email, validEmail);
+      assert.strictEqual(eventPayload.socketId, socket.id);
     });
 
     it('should successfully authenticate via handshake.headers.authorization Bearer token', async () => {
@@ -318,6 +379,47 @@ describe('RealtimeGateway (Agent Realtime WebSocket Namespace /realtime)', () =>
       assert.strictEqual(emitted[0].event, 'error');
       const err = emitted[0].payload as RealtimeErrorPayload;
       assert.strictEqual(err.code, 'INTERNAL_ERROR');
+    });
+  });
+
+  describe('Connection Lifecycle Disconnect & Presence Hook (Task 7)', () => {
+    it('should handle disconnect cleanly for authenticated socket, calculate duration, and emit agent.disconnected event', () => {
+      const socket = createMockSocket({
+        auth: { token: validToken },
+      });
+      const connectedAt = new Date(Date.now() - 5000); // Connected 5 seconds ago
+      socket.data = {
+        userId: validUserId,
+        email: validEmail,
+        role: validRole,
+        availableWorkspaceIds: [validWorkspaceId1],
+        joinedWorkspaceIds: [validWorkspaceId1],
+        joinedConversations: {},
+        connectedAt,
+      };
+
+      assert.doesNotThrow(() => {
+        gateway.handleDisconnect(socket);
+      });
+
+      // Verify agent.disconnected event emitted
+      assert.strictEqual(emittedEvents.length, 1);
+      assert.strictEqual(emittedEvents[0].event, 'agent.disconnected');
+      const eventPayload = emittedEvents[0].payload as any;
+      assert.strictEqual(eventPayload.userId, validUserId);
+      assert.strictEqual(eventPayload.email, validEmail);
+      assert.strictEqual(eventPayload.socketId, socket.id);
+      assert.deepStrictEqual(eventPayload.joinedWorkspaceIds, [validWorkspaceId1]);
+      assert.ok(eventPayload.durationMs >= 4000);
+      assert.ok(eventPayload.disconnectedAt instanceof Date);
+    });
+
+    it('should handle disconnect cleanly for unauthenticated socket without emitting agent.disconnected', () => {
+      const socket = createMockSocket({});
+      assert.doesNotThrow(() => {
+        gateway.handleDisconnect(socket);
+      });
+      assert.strictEqual(emittedEvents.length, 0);
     });
   });
 
@@ -519,31 +621,156 @@ describe('RealtimeGateway (Agent Realtime WebSocket Namespace /realtime)', () =>
     });
   });
 
-  describe('Connection Lifecycle Disconnect', () => {
-    it('should handle disconnect cleanly for authenticated socket', () => {
-      const socket = createMockSocket({
-        auth: { token: validToken },
-      });
-      socket.data = {
-        userId: validUserId,
-        email: validEmail,
-        role: validRole,
-        availableWorkspaceIds: ['ws_001'],
-        joinedWorkspaceIds: ['ws_001'],
-        joinedConversations: {},
-        connectedAt: new Date(),
-      };
+  describe('Typing Indicators (Task 7)', () => {
+    it('should reject start_typing if socket is unauthenticated', async () => {
+      const socket = createMockSocket({});
+      const res = await gateway.handleStartTyping(socket, { conversationId: validConversationId1 });
 
-      assert.doesNotThrow(() => {
-        gateway.handleDisconnect(socket);
-      });
+      assert.strictEqual(res.success, false);
+      assert.strictEqual(res.error?.code, 'UNAUTHORIZED');
     });
 
-    it('should handle disconnect cleanly for unauthenticated socket', () => {
-      const socket = createMockSocket({});
-      assert.doesNotThrow(() => {
-        gateway.handleDisconnect(socket);
+    it('should reject start_typing with invalid UUID payload', async () => {
+      const socket = createAuthenticatedSocket();
+      const res = await gateway.handleStartTyping(socket, { conversationId: 'invalid-conv-id' });
+
+      assert.strictEqual(res.success, false);
+      assert.strictEqual(res.error?.code, 'BAD_REQUEST');
+    });
+
+    it('should reject start_typing if conversation does not exist', async () => {
+      const socket = createAuthenticatedSocket();
+      const nonExistentId = '77777777-7777-7777-7777-777777777777';
+      const res = await gateway.handleStartTyping(socket, { conversationId: nonExistentId });
+
+      assert.strictEqual(res.success, false);
+      assert.strictEqual(res.error?.code, 'CONVERSATION_NOT_FOUND');
+    });
+
+    it('should reject start_typing if user does not belong to conversation workspace', async () => {
+      const socket = createAuthenticatedSocket({
+        availableWorkspaceIds: [validWorkspaceId1],
       });
+      const res = await gateway.handleStartTyping(socket, {
+        conversationId: unauthorizedConversationId,
+      });
+
+      assert.strictEqual(res.success, false);
+      assert.strictEqual(res.error?.code, 'FORBIDDEN');
+    });
+
+    it('should successfully handle start_typing and broadcast typing.start to conversation room and emit agent.typing_start event', async () => {
+      const socket = createAuthenticatedSocket();
+
+      const res = await gateway.handleStartTyping(socket, {
+        conversationId: validConversationId1,
+      });
+
+      assert.strictEqual(res.success, true);
+      assert.strictEqual(res.room, `conversation_${validConversationId1}`);
+      assert.strictEqual(res.conversationId, validConversationId1);
+      assert.strictEqual(res.workspaceId, validWorkspaceId1);
+
+      // Verify broadcast to conversation room
+      const broadcastMap = socket._getBroadcastToRooms();
+      const convBroadcasts = broadcastMap[`conversation_${validConversationId1}`];
+      assert.ok(convBroadcasts);
+      assert.strictEqual(convBroadcasts.length, 1);
+      assert.strictEqual(convBroadcasts[0].event, 'event');
+      const wsPayload = convBroadcasts[0].payload as any;
+      assert.strictEqual(wsPayload.event, WsServerEvent.TYPING_START);
+      assert.strictEqual(wsPayload.workspaceId, validWorkspaceId1);
+      assert.strictEqual(wsPayload.data.conversationId, validConversationId1);
+      assert.strictEqual(wsPayload.data.userId, validUserId);
+      assert.strictEqual(wsPayload.data.isTyping, true);
+
+      // Verify internal event emitted
+      assert.strictEqual(emittedEvents.length, 1);
+      assert.strictEqual(emittedEvents[0].event, 'agent.typing_start');
+      const internalPayload = emittedEvents[0].payload as any;
+      assert.strictEqual(internalPayload.conversationId, validConversationId1);
+      assert.strictEqual(internalPayload.userId, validUserId);
+      assert.strictEqual(internalPayload.isTyping, true);
+    });
+
+    it('should successfully handle stop_typing and broadcast typing.stop to conversation room and emit agent.typing_stop event', async () => {
+      const socket = createAuthenticatedSocket();
+
+      const res = await gateway.handleStopTyping(socket, {
+        conversationId: validConversationId1,
+      });
+
+      assert.strictEqual(res.success, true);
+      assert.strictEqual(res.room, `conversation_${validConversationId1}`);
+
+      // Verify broadcast to conversation room
+      const broadcastMap = socket._getBroadcastToRooms();
+      const convBroadcasts = broadcastMap[`conversation_${validConversationId1}`];
+      assert.ok(convBroadcasts);
+      assert.strictEqual(convBroadcasts.length, 1);
+      const wsPayload = convBroadcasts[0].payload as any;
+      assert.strictEqual(wsPayload.event, WsServerEvent.TYPING_STOP);
+      assert.strictEqual(wsPayload.data.isTyping, false);
+
+      // Verify internal event emitted
+      assert.strictEqual(emittedEvents.length, 1);
+      assert.strictEqual(emittedEvents[0].event, 'agent.typing_stop');
+      const internalPayload = emittedEvents[0].payload as any;
+      assert.strictEqual(internalPayload.isTyping, false);
+    });
+  });
+
+  describe('Defensive Error Handling & Exception Catching (Task 7)', () => {
+    it('should catch unexpected database errors during join_workspace and return INTERNAL_ERROR', async () => {
+      mockPrisma.getClient = () => ({
+        workspaceMember: {
+          findFirst: async () => {
+            throw new Error('Database connection lost');
+          },
+        },
+      });
+
+      const socket = createAuthenticatedSocket({ availableWorkspaceIds: [] });
+      const res = await gateway.handleJoinWorkspace(socket, { workspaceId: validWorkspaceId1 });
+
+      assert.strictEqual(res.success, false);
+      assert.strictEqual(res.error?.code, 'INTERNAL_ERROR');
+    });
+
+    it('should catch unexpected database errors during join_conversation and return INTERNAL_ERROR', async () => {
+      mockPrisma.getClient = () => ({
+        conversation: {
+          findFirst: async () => {
+            throw new Error('Database connection lost');
+          },
+        },
+      });
+
+      const socket = createAuthenticatedSocket();
+      const res = await gateway.handleJoinConversation(socket, {
+        conversationId: validConversationId1,
+      });
+
+      assert.strictEqual(res.success, false);
+      assert.strictEqual(res.error?.code, 'INTERNAL_ERROR');
+    });
+
+    it('should catch unexpected database errors during handleStartTyping and return INTERNAL_ERROR', async () => {
+      mockPrisma.getClient = () => ({
+        conversation: {
+          findFirst: async () => {
+            throw new Error('Database connection lost');
+          },
+        },
+      });
+
+      const socket = createAuthenticatedSocket();
+      const res = await gateway.handleStartTyping(socket, {
+        conversationId: validConversationId1,
+      });
+
+      assert.strictEqual(res.success, false);
+      assert.strictEqual(res.error?.code, 'INTERNAL_ERROR');
     });
   });
 });
