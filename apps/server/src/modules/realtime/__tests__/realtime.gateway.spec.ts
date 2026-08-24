@@ -14,7 +14,9 @@ describe('RealtimeGateway (Agent Realtime WebSocket Namespace /realtime)', () =>
   let mockTokenService: any;
   let mockPrisma: any;
   let mockEventEmitter: any;
+  let mockPresenceService: any;
   let emittedEvents: Array<{ event: string; payload: unknown }>;
+  let heartbeatCalls: Array<{ workspaceId: string; userId: string }>;
 
   const validUserId = 'usr_agent_001';
   const validEmail = 'agent@salescopilot.io';
@@ -115,9 +117,20 @@ describe('RealtimeGateway (Agent Realtime WebSocket Namespace /realtime)', () =>
 
   beforeEach(() => {
     emittedEvents = [];
+    heartbeatCalls = [];
+
     mockEventEmitter = {
       emit: (event: string, payload: unknown) => {
         emittedEvents.push({ event, payload });
+      },
+    };
+
+    mockPresenceService = {
+      setOnline: async () => {},
+      setOffline: async () => {},
+      setAway: async () => {},
+      heartbeat: async (workspaceId: string, userId: string) => {
+        heartbeatCalls.push({ workspaceId, userId });
       },
     };
 
@@ -162,7 +175,13 @@ describe('RealtimeGateway (Agent Realtime WebSocket Namespace /realtime)', () =>
       }),
     };
 
-    gateway = new RealtimeGateway(mockTokenService, mockPrisma, undefined, mockEventEmitter);
+    gateway = new RealtimeGateway(
+      mockTokenService,
+      mockPrisma,
+      undefined,
+      mockEventEmitter,
+      mockPresenceService,
+    );
   });
 
   describe('Gateway Initialization & Middleware (Task 7)', () => {
@@ -228,6 +247,7 @@ describe('RealtimeGateway (Agent Realtime WebSocket Namespace /realtime)', () =>
         mockPrisma,
         mockConfig,
         mockEventEmitter,
+        mockPresenceService,
       );
 
       await assert.doesNotReject(async () => {
@@ -387,7 +407,7 @@ describe('RealtimeGateway (Agent Realtime WebSocket Namespace /realtime)', () =>
       const socket = createMockSocket({
         auth: { token: validToken },
       });
-      const connectedAt = new Date(Date.now() - 5000); // Connected 5 seconds ago
+      const connectedAt = new Date(Date.now() - 5000);
       socket.data = {
         userId: validUserId,
         email: validEmail,
@@ -717,6 +737,44 @@ describe('RealtimeGateway (Agent Realtime WebSocket Namespace /realtime)', () =>
       assert.strictEqual(emittedEvents[0].event, 'agent.typing_stop');
       const internalPayload = emittedEvents[0].payload as any;
       assert.strictEqual(internalPayload.isTyping, false);
+    });
+  });
+
+  describe('Heartbeat Subscription (Task 8)', () => {
+    it('should return success false if socket is unauthenticated on heartbeat', async () => {
+      const socket = createMockSocket({});
+      const res = await gateway.handleHeartbeat(socket);
+
+      assert.strictEqual(res.success, false);
+      assert.strictEqual(heartbeatCalls.length, 0);
+    });
+
+    it('should call presenceService.heartbeat for all active workspaces on heartbeat', async () => {
+      const socket = createAuthenticatedSocket({
+        joinedWorkspaceIds: [validWorkspaceId1],
+      });
+
+      const res = await gateway.handleHeartbeat(socket);
+
+      assert.strictEqual(res.success, true);
+      assert.strictEqual(typeof res.timestamp, 'string');
+      assert.strictEqual(heartbeatCalls.length, 1);
+      assert.strictEqual(heartbeatCalls[0].workspaceId, validWorkspaceId1);
+      assert.strictEqual(heartbeatCalls[0].userId, validUserId);
+    });
+
+    it('should fallback to available workspaces when joinedWorkspaceIds is empty on heartbeat', async () => {
+      const socket = createAuthenticatedSocket({
+        joinedWorkspaceIds: [],
+        availableWorkspaceIds: [validWorkspaceId1, validWorkspaceId2],
+      });
+
+      const res = await gateway.handleHeartbeat(socket);
+
+      assert.strictEqual(res.success, true);
+      assert.strictEqual(heartbeatCalls.length, 2);
+      assert.strictEqual(heartbeatCalls[0].workspaceId, validWorkspaceId1);
+      assert.strictEqual(heartbeatCalls[1].workspaceId, validWorkspaceId2);
     });
   });
 

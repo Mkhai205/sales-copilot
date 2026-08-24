@@ -23,6 +23,7 @@ import {
 } from '@sales-copilot/shared-contracts';
 import { PrismaService } from '../../infrastructure/database';
 import { TokenService } from '../auth/token.service';
+import { PresenceService } from './presence.service';
 import {
   RealtimeConnectedPayload,
   RealtimeErrorPayload,
@@ -36,7 +37,7 @@ import {
  *
  * Handles JWT authentication handshake, tenant/workspace room provisioning,
  * conversation room routing, typing indicators, connection lifecycle management,
- * and multi-server Redis Pub/Sub adapter clustering.
+ * agent presence heartbeats, and multi-server Redis Pub/Sub adapter clustering.
  */
 @Injectable()
 @WebSocketGateway({
@@ -61,6 +62,7 @@ export class RealtimeGateway
     private readonly prisma: PrismaService,
     @Optional() private readonly configService?: ConfigService,
     @Optional() private readonly eventEmitter?: EventEmitter2,
+    @Optional() private readonly presenceService?: PresenceService,
   ) {}
 
   async afterInit(server: Server): Promise<void> {
@@ -284,7 +286,10 @@ export class RealtimeGateway
           email: data.email,
           role: data.role,
           socketId: client.id,
-          joinedWorkspaceIds: data.joinedWorkspaceIds,
+          joinedWorkspaceIds:
+            data.joinedWorkspaceIds.length > 0
+              ? data.joinedWorkspaceIds
+              : data.availableWorkspaceIds,
           durationMs,
           disconnectedAt: new Date(),
         });
@@ -358,6 +363,11 @@ export class RealtimeGateway
         socketData.availableWorkspaceIds.push(workspaceId);
       }
 
+      // Mark agent ONLINE in presence service
+      if (this.presenceService) {
+        await this.presenceService.setOnline(workspaceId, socketData.userId);
+      }
+
       this.logger.log(`Socket ${client.id} (user: ${socketData.userId}) joined room ${roomName}`);
 
       return {
@@ -419,6 +429,11 @@ export class RealtimeGateway
             delete socketData.joinedConversations[convId];
           }
         }
+      }
+
+      // If presenceService is available, mark agent OFFLINE in that workspace
+      if (this.presenceService) {
+        this.presenceService.setOffline(workspaceId, socketData.userId).catch(() => {});
       }
 
       this.logger.log(`Socket ${client.id} (user: ${socketData.userId}) left room ${roomName}`);
@@ -734,6 +749,37 @@ export class RealtimeGateway
       client.emit('error', error);
       return { success: false, error };
     }
+  }
+
+  /**
+   * Handles client heartbeat ping to refresh presence TTL across active/available workspaces.
+   */
+  @SubscribeMessage(WsClientEvent.HEARTBEAT)
+  @SubscribeMessage('heartbeat')
+  async handleHeartbeat(
+    client: Socket,
+    _payload?: unknown,
+  ): Promise<{ success: boolean; timestamp: string }> {
+    const socketData = client.data as RealtimeSocketData | undefined;
+    if (!socketData?.userId) {
+      return { success: false, timestamp: new Date().toISOString() };
+    }
+
+    if (this.presenceService) {
+      const activeWorkspaces =
+        socketData.joinedWorkspaceIds.length > 0
+          ? socketData.joinedWorkspaceIds
+          : socketData.availableWorkspaceIds;
+
+      for (const workspaceId of activeWorkspaces) {
+        await this.presenceService.heartbeat(workspaceId, socketData.userId);
+      }
+    }
+
+    return {
+      success: true,
+      timestamp: new Date().toISOString(),
+    };
   }
 
   // --- Helper Methods ---
