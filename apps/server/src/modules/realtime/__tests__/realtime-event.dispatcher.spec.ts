@@ -323,6 +323,245 @@ describe('RealtimeEventDispatcher — Message & Conversation Events (Task 5)', (
     });
   });
 
+  describe('Contact Event Dispatches (Task 6)', () => {
+    const contactId = 'cont_1111_2222';
+    const mockContact: any = {
+      id: contactId,
+      workspaceId,
+      name: 'John Doe',
+      email: 'john@example.com',
+      phoneNumber: '+84987654321',
+      avatarUrl: null,
+      identifier: 'id_123',
+      customAttributes: {},
+      additionalAttributes: {},
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    it('should broadcast contact.created to workspace room', () => {
+      dispatcher.handleContactCreated({
+        workspaceId,
+        contact: mockContact,
+      });
+
+      const wsBroadcast = emittedBroadcasts.find(
+        e => e.room === `workspace_${workspaceId}` && e.event === WsServerEvent.CONTACT_CREATED,
+      );
+      assert.ok(wsBroadcast);
+      assert.deepStrictEqual((wsBroadcast.payload as any).data, mockContact);
+    });
+
+    it('should broadcast contact.updated to workspace room', () => {
+      dispatcher.handleContactUpdated({
+        workspaceId,
+        contact: mockContact,
+        previousAttributes: {},
+      });
+
+      const wsBroadcast = emittedBroadcasts.find(
+        e => e.room === `workspace_${workspaceId}` && e.event === WsServerEvent.CONTACT_UPDATED,
+      );
+      assert.ok(wsBroadcast);
+      assert.deepStrictEqual((wsBroadcast.payload as any).data, mockContact);
+    });
+
+    it('should broadcast contact.deleted to workspace room', () => {
+      dispatcher.handleContactDeleted({
+        workspaceId,
+        contactId,
+        contact: mockContact,
+      });
+
+      const wsBroadcast = emittedBroadcasts.find(
+        e => e.room === `workspace_${workspaceId}` && e.event === WsServerEvent.CONTACT_DELETED,
+      );
+      assert.ok(wsBroadcast);
+      assert.deepStrictEqual((wsBroadcast.payload as any).data, {
+        contactId,
+        contact: mockContact,
+      });
+    });
+
+    it('should broadcast contact.merged to workspace room', () => {
+      dispatcher.handleContactMerged({
+        workspaceId,
+        primaryContactId: 'cont_primary',
+        mergedContactId: 'cont_merged',
+        mergedByUserId: 'usr_admin',
+        mergedAttributes: {},
+      });
+
+      const wsBroadcast = emittedBroadcasts.find(
+        e => e.room === `workspace_${workspaceId}` && e.event === WsServerEvent.CONTACT_MERGED,
+      );
+      assert.ok(wsBroadcast);
+      assert.deepStrictEqual((wsBroadcast.payload as any).data, {
+        primaryContactId: 'cont_primary',
+        mergedContactId: 'cont_merged',
+        mergedByUserId: 'usr_admin',
+        mergedAttributes: {},
+      });
+    });
+  });
+
+  describe('Channel Identity Event Dispatches (Task 6)', () => {
+    const identityId = 'ci_001';
+    const contactId = 'cont_001';
+    const mockIdentity: any = {
+      id: identityId,
+      channelId: 'chan_001',
+      contactId,
+      externalContactId: 'ext_001',
+      createdAt: new Date().toISOString(),
+    };
+
+    it('should broadcast channel_identity.created to workspace room', () => {
+      dispatcher.handleChannelIdentityCreated({
+        workspaceId,
+        identity: mockIdentity,
+      });
+
+      const wsBroadcast = emittedBroadcasts.find(
+        e =>
+          e.room === `workspace_${workspaceId}` &&
+          e.event === WsServerEvent.CHANNEL_IDENTITY_CREATED,
+      );
+      assert.ok(wsBroadcast);
+      assert.deepStrictEqual((wsBroadcast.payload as any).data, mockIdentity);
+    });
+
+    it('should broadcast channel_identity.deleted to workspace room', () => {
+      dispatcher.handleChannelIdentityDeleted({
+        workspaceId,
+        identityId,
+        contactId,
+        identity: mockIdentity,
+      });
+
+      const wsBroadcast = emittedBroadcasts.find(
+        e =>
+          e.room === `workspace_${workspaceId}` &&
+          e.event === WsServerEvent.CHANNEL_IDENTITY_DELETED,
+      );
+      assert.ok(wsBroadcast);
+      assert.deepStrictEqual((wsBroadcast.payload as any).data, {
+        identityId,
+        contactId,
+        identity: mockIdentity,
+      });
+    });
+  });
+
+  describe('Label & Channel Event Dispatches (Task 6)', () => {
+    it('should broadcast label events to workspace room', () => {
+      const mockLabel: any = {
+        id: 'lbl_001',
+        workspaceId,
+        title: 'VIP',
+        color: '#FF0000',
+        showOnSidebar: true,
+        createdAt: new Date().toISOString(),
+      };
+
+      dispatcher.handleLabelCreated({ workspaceId, label: mockLabel });
+      dispatcher.handleLabelUpdated({ workspaceId, label: mockLabel });
+      dispatcher.handleLabelDeleted({ workspaceId, labelId: 'lbl_001', label: mockLabel });
+
+      assert.ok(
+        emittedBroadcasts.some(
+          e => e.room === `workspace_${workspaceId}` && e.event === WsServerEvent.LABEL_CREATED,
+        ),
+      );
+      assert.ok(
+        emittedBroadcasts.some(
+          e => e.room === `workspace_${workspaceId}` && e.event === WsServerEvent.LABEL_UPDATED,
+        ),
+      );
+      assert.ok(
+        emittedBroadcasts.some(
+          e => e.room === `workspace_${workspaceId}` && e.event === WsServerEvent.LABEL_DELETED,
+        ),
+      );
+    });
+
+    it('should broadcast channel events to workspace room', () => {
+      dispatcher.handleChannelCreated({
+        workspaceId,
+        inboxId: 'inbox_1',
+        channelId: 'chan_1',
+        channelType: 'WEB_CHAT' as any,
+      });
+      dispatcher.handleChannelUpdated({
+        workspaceId,
+        inboxId: 'inbox_1',
+        channelId: 'chan_1',
+        channelType: 'WEB_CHAT' as any,
+      });
+      dispatcher.handleChannelDeleted({
+        workspaceId,
+        inboxId: 'inbox_1',
+        channelId: 'chan_1',
+        channelType: 'WEB_CHAT' as any,
+      });
+
+      assert.ok(
+        emittedBroadcasts.some(
+          e => e.room === `workspace_${workspaceId}` && e.event === WsServerEvent.CHANNEL_CREATED,
+        ),
+      );
+      assert.ok(
+        emittedBroadcasts.some(
+          e => e.room === `workspace_${workspaceId}` && e.event === WsServerEvent.CHANNEL_UPDATED,
+        ),
+      );
+      assert.ok(
+        emittedBroadcasts.some(
+          e => e.room === `workspace_${workspaceId}` && e.event === WsServerEvent.CHANNEL_DELETED,
+        ),
+      );
+    });
+  });
+
+  describe('Typing Indicator Event Dispatches (Task 6)', () => {
+    it('should broadcast typing.start and typing.stop to conversation and workspace rooms', () => {
+      dispatcher.handleTypingStart({
+        workspaceId,
+        conversationId,
+        userId: 'usr_001',
+        isTyping: true,
+      });
+      dispatcher.handleTypingStop({
+        workspaceId,
+        conversationId,
+        userId: 'usr_001',
+        isTyping: false,
+      });
+
+      assert.ok(
+        emittedBroadcasts.some(
+          e =>
+            e.room === `conversation_${conversationId}` && e.event === WsServerEvent.TYPING_START,
+        ),
+      );
+      assert.ok(
+        emittedBroadcasts.some(
+          e => e.room === `conversation_${conversationId}` && e.event === WsServerEvent.TYPING_STOP,
+        ),
+      );
+      assert.ok(
+        emittedBroadcasts.some(
+          e => e.room === `workspace_${workspaceId}` && e.event === WsServerEvent.TYPING_START,
+        ),
+      );
+      assert.ok(
+        emittedBroadcasts.some(
+          e => e.room === `workspace_${workspaceId}` && e.event === WsServerEvent.TYPING_STOP,
+        ),
+      );
+    });
+  });
+
   describe('Error Isolation & Resilience', () => {
     it('should not throw or crash when gateway server throws during emission', () => {
       mockGateway.server.to = () => {
@@ -336,6 +575,10 @@ describe('RealtimeEventDispatcher — Message & Conversation Events (Task 5)', (
           message: mockMessage,
           isPrivate: false,
         });
+        dispatcher.handleContactCreated({
+          workspaceId,
+          contact: {} as any,
+        });
       });
     });
 
@@ -343,6 +586,7 @@ describe('RealtimeEventDispatcher — Message & Conversation Events (Task 5)', (
       assert.doesNotThrow(() => {
         dispatcher.handleMessageCreated(null as any);
         dispatcher.handleConversationCreated({} as any);
+        dispatcher.handleContactCreated({} as any);
       });
       assert.strictEqual(emittedBroadcasts.length, 0);
     });

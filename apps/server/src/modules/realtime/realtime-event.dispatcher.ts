@@ -13,6 +13,19 @@ import {
   ConversationPriorityUpdatedEvent,
   ConversationReopenedEvent,
   ConversationLabelsUpdatedEvent,
+  ContactCreatedEvent,
+  ContactUpdatedEvent,
+  ContactDeletedEvent,
+  ContactMergedEvent,
+  ChannelIdentityCreatedEvent,
+  ChannelIdentityDeletedEvent,
+  LabelCreatedEvent,
+  LabelUpdatedEvent,
+  LabelDeletedEvent,
+  ChannelCreatedEvent,
+  ChannelUpdatedEvent,
+  ChannelDeletedEvent,
+  TypingEventPayload,
 } from '@sales-copilot/shared-contracts';
 import { RealtimeGateway } from './realtime.gateway';
 
@@ -223,7 +236,165 @@ export class RealtimeEventDispatcher {
   }
 
   // ==========================================================================
-  // 3. Helper Method with Robust Error Isolation
+  // 3. Contact Domain Event Handlers (Task 6)
+  // ==========================================================================
+
+  @OnEvent(DomainEvent.CONTACT_CREATED)
+  @OnEvent('contact.created')
+  handleContactCreated(payload: ContactCreatedEvent): void {
+    if (!payload?.workspaceId) return;
+    const data = payload.contact || payload;
+    this.broadcastSafe(`workspace_${payload.workspaceId}`, WsServerEvent.CONTACT_CREATED, data);
+  }
+
+  @OnEvent(DomainEvent.CONTACT_UPDATED)
+  @OnEvent('contact.updated')
+  handleContactUpdated(payload: ContactUpdatedEvent): void {
+    if (!payload?.workspaceId) return;
+    const data = payload.contact || payload;
+    this.broadcastSafe(`workspace_${payload.workspaceId}`, WsServerEvent.CONTACT_UPDATED, data);
+  }
+
+  @OnEvent(DomainEvent.CONTACT_DELETED)
+  @OnEvent('contact.deleted')
+  handleContactDeleted(payload: ContactDeletedEvent): void {
+    if (!payload?.workspaceId) return;
+    const data = {
+      contactId: payload.contactId,
+      contact: payload.contact,
+    };
+    this.broadcastSafe(`workspace_${payload.workspaceId}`, WsServerEvent.CONTACT_DELETED, data);
+  }
+
+  @OnEvent(DomainEvent.CONTACT_MERGED)
+  @OnEvent('contact.merged')
+  handleContactMerged(payload: ContactMergedEvent): void {
+    if (!payload?.workspaceId) return;
+    const data = {
+      primaryContactId: payload.primaryContactId,
+      mergedContactId: payload.mergedContactId,
+      mergedByUserId: payload.mergedByUserId,
+      mergedAttributes: payload.mergedAttributes,
+    };
+    this.broadcastSafe(`workspace_${payload.workspaceId}`, WsServerEvent.CONTACT_MERGED, data);
+  }
+
+  // ==========================================================================
+  // 4. Channel Identity Domain Event Handlers (Task 6)
+  // ==========================================================================
+
+  @OnEvent(DomainEvent.CHANNEL_IDENTITY_CREATED)
+  @OnEvent('channel_identity.created')
+  handleChannelIdentityCreated(payload: ChannelIdentityCreatedEvent): void {
+    if (!payload?.workspaceId) return;
+    const data = payload.identity || payload;
+    this.broadcastSafe(
+      `workspace_${payload.workspaceId}`,
+      WsServerEvent.CHANNEL_IDENTITY_CREATED,
+      data,
+    );
+  }
+
+  @OnEvent(DomainEvent.CHANNEL_IDENTITY_DELETED)
+  @OnEvent('channel_identity.deleted')
+  handleChannelIdentityDeleted(payload: ChannelIdentityDeletedEvent): void {
+    if (!payload?.workspaceId) return;
+    const data = {
+      identityId: payload.identityId,
+      contactId: payload.contactId,
+      identity: payload.identity,
+    };
+    this.broadcastSafe(
+      `workspace_${payload.workspaceId}`,
+      WsServerEvent.CHANNEL_IDENTITY_DELETED,
+      data,
+    );
+  }
+
+  // ==========================================================================
+  // 5. Label Domain Event Handlers (Task 6)
+  // ==========================================================================
+
+  @OnEvent(DomainEvent.LABEL_CREATED)
+  @OnEvent('label.created')
+  handleLabelCreated(payload: LabelCreatedEvent): void {
+    if (!payload?.workspaceId) return;
+    const data = payload.label || payload;
+    this.broadcastSafe(`workspace_${payload.workspaceId}`, WsServerEvent.LABEL_CREATED, data);
+  }
+
+  @OnEvent(DomainEvent.LABEL_UPDATED)
+  @OnEvent('label.updated')
+  handleLabelUpdated(payload: LabelUpdatedEvent): void {
+    if (!payload?.workspaceId) return;
+    const data = payload.label || payload;
+    this.broadcastSafe(`workspace_${payload.workspaceId}`, WsServerEvent.LABEL_UPDATED, data);
+  }
+
+  @OnEvent(DomainEvent.LABEL_DELETED)
+  @OnEvent('label.deleted')
+  handleLabelDeleted(payload: LabelDeletedEvent): void {
+    if (!payload?.workspaceId) return;
+    const data = {
+      labelId: payload.labelId,
+      label: payload.label,
+    };
+    this.broadcastSafe(`workspace_${payload.workspaceId}`, WsServerEvent.LABEL_DELETED, data);
+  }
+
+  // ==========================================================================
+  // 6. Channel Domain Event Handlers (Task 6)
+  // ==========================================================================
+
+  @OnEvent(DomainEvent.CHANNEL_CREATED)
+  @OnEvent('channel.created')
+  handleChannelCreated(payload: ChannelCreatedEvent): void {
+    if (!payload?.workspaceId) return;
+    this.broadcastSafe(`workspace_${payload.workspaceId}`, WsServerEvent.CHANNEL_CREATED, payload);
+  }
+
+  @OnEvent(DomainEvent.CHANNEL_UPDATED)
+  @OnEvent('channel.updated')
+  handleChannelUpdated(payload: ChannelUpdatedEvent): void {
+    if (!payload?.workspaceId) return;
+    this.broadcastSafe(`workspace_${payload.workspaceId}`, WsServerEvent.CHANNEL_UPDATED, payload);
+  }
+
+  @OnEvent(DomainEvent.CHANNEL_DELETED)
+  @OnEvent('channel.deleted')
+  handleChannelDeleted(payload: ChannelDeletedEvent): void {
+    if (!payload?.workspaceId) return;
+    this.broadcastSafe(`workspace_${payload.workspaceId}`, WsServerEvent.CHANNEL_DELETED, payload);
+  }
+
+  // ==========================================================================
+  // 7. Typing Indicator Domain Event Handlers (Task 6)
+  // ==========================================================================
+
+  @OnEvent(DomainEvent.TYPING_START)
+  @OnEvent('typing.start')
+  handleTypingStart(payload: TypingEventPayload): void {
+    if (!payload?.conversationId) return;
+    const event = WsServerEvent.TYPING_START;
+    this.broadcastSafe(`conversation_${payload.conversationId}`, event, payload);
+    if (payload.workspaceId) {
+      this.broadcastSafe(`workspace_${payload.workspaceId}`, event, payload);
+    }
+  }
+
+  @OnEvent(DomainEvent.TYPING_STOP)
+  @OnEvent('typing.stop')
+  handleTypingStop(payload: TypingEventPayload): void {
+    if (!payload?.conversationId) return;
+    const event = WsServerEvent.TYPING_STOP;
+    this.broadcastSafe(`conversation_${payload.conversationId}`, event, payload);
+    if (payload.workspaceId) {
+      this.broadcastSafe(`workspace_${payload.workspaceId}`, event, payload);
+    }
+  }
+
+  // ==========================================================================
+  // 8. Helper Method with Robust Error Isolation
   // ==========================================================================
 
   /**
