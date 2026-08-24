@@ -9,7 +9,7 @@ import {
   RealtimeSocketData,
 } from '../realtime.types';
 
-describe('RealtimeGateway (Agent Realtime WebSocket Namespace /realtime)', () => {
+describe('RealtimeGateway (Agent Realtime WebSocket Namespace /realtime — Task 11)', () => {
   let gateway: RealtimeGateway;
   let mockTokenService: any;
   let mockPrisma: any;
@@ -17,6 +17,8 @@ describe('RealtimeGateway (Agent Realtime WebSocket Namespace /realtime)', () =>
   let mockPresenceService: any;
   let emittedEvents: Array<{ event: string; payload: unknown }>;
   let heartbeatCalls: Array<{ workspaceId: string; userId: string }>;
+  let presenceOnlineCalls: Array<{ workspaceId: string; userId: string }>;
+  let presenceOfflineCalls: Array<{ workspaceId: string; userId: string }>;
 
   const validUserId = 'usr_agent_001';
   const validEmail = 'agent@salescopilot.io';
@@ -25,10 +27,12 @@ describe('RealtimeGateway (Agent Realtime WebSocket Namespace /realtime)', () =>
 
   const validWorkspaceId1 = '11111111-1111-1111-1111-111111111111';
   const validWorkspaceId2 = '22222222-2222-2222-2222-222222222222';
+  const dynamicWorkspaceId = '33333333-3333-3333-3333-333333333333';
   const unauthorizedWorkspaceId = '99999999-9999-9999-9999-999999999999';
 
-  const validConversationId1 = '33333333-3333-3333-3333-333333333333';
-  const validConversationId2 = '44444444-4444-4444-4444-444444444444';
+  const validConversationId1 = '44444444-4444-4444-4444-444444444444';
+  const validConversationId2 = '55555555-5555-5555-5555-555555555555';
+  const dynamicConversationId = '66666666-6666-6666-6666-666666666666';
   const unauthorizedConversationId = '88888888-8888-8888-8888-888888888888';
 
   const mockJwtPayload = {
@@ -42,6 +46,7 @@ describe('RealtimeGateway (Agent Realtime WebSocket Namespace /realtime)', () =>
   const mockConversations: Record<string, { id: string; workspaceId: string }> = {
     [validConversationId1]: { id: validConversationId1, workspaceId: validWorkspaceId1 },
     [validConversationId2]: { id: validConversationId2, workspaceId: validWorkspaceId2 },
+    [dynamicConversationId]: { id: dynamicConversationId, workspaceId: dynamicWorkspaceId },
     [unauthorizedConversationId]: {
       id: unauthorizedConversationId,
       workspaceId: unauthorizedWorkspaceId,
@@ -118,6 +123,8 @@ describe('RealtimeGateway (Agent Realtime WebSocket Namespace /realtime)', () =>
   beforeEach(() => {
     emittedEvents = [];
     heartbeatCalls = [];
+    presenceOnlineCalls = [];
+    presenceOfflineCalls = [];
 
     mockEventEmitter = {
       emit: (event: string, payload: unknown) => {
@@ -126,8 +133,12 @@ describe('RealtimeGateway (Agent Realtime WebSocket Namespace /realtime)', () =>
     };
 
     mockPresenceService = {
-      setOnline: async () => {},
-      setOffline: async () => {},
+      setOnline: async (workspaceId: string, userId: string) => {
+        presenceOnlineCalls.push({ workspaceId, userId });
+      },
+      setOffline: async (workspaceId: string, userId: string) => {
+        presenceOfflineCalls.push({ workspaceId, userId });
+      },
       setAway: async () => {},
       heartbeat: async (workspaceId: string, userId: string) => {
         heartbeatCalls.push({ workspaceId, userId });
@@ -136,7 +147,7 @@ describe('RealtimeGateway (Agent Realtime WebSocket Namespace /realtime)', () =>
 
     mockTokenService = {
       verifyAccessToken: async (token: string) => {
-        if (token === validToken) {
+        if (token === validToken || token === `${validToken}_with_spaces`) {
           return mockJwtPayload;
         }
         throw new UnauthorizedException({
@@ -159,7 +170,8 @@ describe('RealtimeGateway (Agent Realtime WebSocket Namespace /realtime)', () =>
             if (
               args.where?.userId === validUserId &&
               (args.where?.workspaceId === validWorkspaceId1 ||
-                args.where?.workspaceId === validWorkspaceId2)
+                args.where?.workspaceId === validWorkspaceId2 ||
+                args.where?.workspaceId === dynamicWorkspaceId)
             ) {
               return { userId: validUserId, workspaceId: args.where.workspaceId };
             }
@@ -184,7 +196,7 @@ describe('RealtimeGateway (Agent Realtime WebSocket Namespace /realtime)', () =>
     );
   });
 
-  describe('Gateway Initialization & Middleware (Task 7)', () => {
+  describe('1. Gateway Initialization & Middleware (Task 7 & 11)', () => {
     it('should initialize successfully on /realtime namespace, attach middleware and engine error listener', async () => {
       let middlewareRegistered = false;
       let engineListenerRegistered = false;
@@ -266,7 +278,7 @@ describe('RealtimeGateway (Agent Realtime WebSocket Namespace /realtime)', () =>
     });
   });
 
-  describe('Connection Authentication Handshake', () => {
+  describe('2. Connection Authentication Handshake (Task 11)', () => {
     it('should reject connection when no token is provided in auth, headers, or query', async () => {
       const socket = createMockSocket({
         auth: {},
@@ -365,9 +377,9 @@ describe('RealtimeGateway (Agent Realtime WebSocket Namespace /realtime)', () =>
       assert.strictEqual(emitted[0].event, 'connected');
     });
 
-    it('should successfully authenticate via handshake.query.token', async () => {
+    it('should successfully authenticate via handshake.query.token and trim whitespace', async () => {
       const socket = createMockSocket({
-        query: { token: validToken },
+        query: { token: `  ${validToken}_with_spaces  ` },
       });
 
       await gateway.handleConnection(socket);
@@ -376,6 +388,18 @@ describe('RealtimeGateway (Agent Realtime WebSocket Namespace /realtime)', () =>
       const socketData = socket.data as RealtimeSocketData;
       assert.strictEqual(socketData.userId, validUserId);
       assert.ok(socket._getJoinedRooms().includes(`user_${validUserId}`));
+    });
+
+    it('should handle array-based authorization header properly', async () => {
+      const socket = createMockSocket({
+        headers: { authorization: [`Bearer ${validToken}`, 'other'] },
+      });
+
+      await gateway.handleConnection(socket);
+
+      assert.strictEqual(socket._isDisconnected(), false);
+      const socketData = socket.data as RealtimeSocketData;
+      assert.strictEqual(socketData.userId, validUserId);
     });
 
     it('should handle unexpected internal errors gracefully and reject connection', async () => {
@@ -402,7 +426,7 @@ describe('RealtimeGateway (Agent Realtime WebSocket Namespace /realtime)', () =>
     });
   });
 
-  describe('Connection Lifecycle Disconnect & Presence Hook (Task 7)', () => {
+  describe('3. Connection Lifecycle Disconnect & Presence (Task 11)', () => {
     it('should handle disconnect cleanly for authenticated socket, calculate duration, and emit agent.disconnected event', () => {
       const socket = createMockSocket({
         auth: { token: validToken },
@@ -434,6 +458,30 @@ describe('RealtimeGateway (Agent Realtime WebSocket Namespace /realtime)', () =>
       assert.ok(eventPayload.disconnectedAt instanceof Date);
     });
 
+    it('should fallback to availableWorkspaceIds when joinedWorkspaceIds is empty upon disconnect', () => {
+      const socket = createMockSocket({
+        auth: { token: validToken },
+      });
+      socket.data = {
+        userId: validUserId,
+        email: validEmail,
+        role: validRole,
+        availableWorkspaceIds: [validWorkspaceId1, validWorkspaceId2],
+        joinedWorkspaceIds: [],
+        joinedConversations: {},
+        connectedAt: new Date(),
+      };
+
+      gateway.handleDisconnect(socket);
+
+      assert.strictEqual(emittedEvents.length, 1);
+      const eventPayload = emittedEvents[0].payload as any;
+      assert.deepStrictEqual(eventPayload.joinedWorkspaceIds, [
+        validWorkspaceId1,
+        validWorkspaceId2,
+      ]);
+    });
+
     it('should handle disconnect cleanly for unauthenticated socket without emitting agent.disconnected', () => {
       const socket = createMockSocket({});
       assert.doesNotThrow(() => {
@@ -443,7 +491,7 @@ describe('RealtimeGateway (Agent Realtime WebSocket Namespace /realtime)', () =>
     });
   });
 
-  describe('Room Management — Workspace Join/Leave (Task 3)', () => {
+  describe('4. Room Management — Workspace Join/Leave (Task 11)', () => {
     it('should reject join_workspace if socket is unauthenticated', async () => {
       const socket = createMockSocket({});
       const res = await gateway.handleJoinWorkspace(socket, { workspaceId: validWorkspaceId1 });
@@ -482,7 +530,7 @@ describe('RealtimeGateway (Agent Realtime WebSocket Namespace /realtime)', () =>
       assert.strictEqual((emitted[0].payload as RealtimeErrorPayload).code, 'FORBIDDEN');
     });
 
-    it('should successfully join workspace room for authorized workspace member', async () => {
+    it('should successfully join workspace room for authorized workspace member and set presence online', async () => {
       const socket = createAuthenticatedSocket();
 
       const res = await gateway.handleJoinWorkspace(socket, { workspaceId: validWorkspaceId1 });
@@ -492,6 +540,24 @@ describe('RealtimeGateway (Agent Realtime WebSocket Namespace /realtime)', () =>
       assert.strictEqual(res.workspaceId, validWorkspaceId1);
       assert.ok(socket._getJoinedRooms().includes(`workspace_${validWorkspaceId1}`));
       assert.ok(socket.data.joinedWorkspaceIds.includes(validWorkspaceId1));
+
+      // Verify presence service setOnline called
+      assert.strictEqual(presenceOnlineCalls.length, 1);
+      assert.strictEqual(presenceOnlineCalls[0].workspaceId, validWorkspaceId1);
+      assert.strictEqual(presenceOnlineCalls[0].userId, validUserId);
+    });
+
+    it('should dynamically query database and join room when workspace is not in initial cached availableWorkspaceIds', async () => {
+      const socket = createAuthenticatedSocket({
+        availableWorkspaceIds: [validWorkspaceId1], // dynamicWorkspaceId is not in cache
+      });
+
+      const res = await gateway.handleJoinWorkspace(socket, { workspaceId: dynamicWorkspaceId });
+
+      assert.strictEqual(res.success, true);
+      assert.strictEqual(res.room, `workspace_${dynamicWorkspaceId}`);
+      assert.ok(socket._getJoinedRooms().includes(`workspace_${dynamicWorkspaceId}`));
+      assert.ok(socket.data.availableWorkspaceIds.includes(dynamicWorkspaceId));
     });
 
     it('should reject leave_workspace if socket is unauthenticated', () => {
@@ -510,7 +576,7 @@ describe('RealtimeGateway (Agent Realtime WebSocket Namespace /realtime)', () =>
       assert.strictEqual(res.error?.code, 'BAD_REQUEST');
     });
 
-    it('should leave workspace room and cascade leave all conversation rooms belonging to that workspace', () => {
+    it('should leave workspace room, set presence offline, and cascade leave all conversation rooms belonging to that workspace', () => {
       const socket = createAuthenticatedSocket({
         joinedWorkspaceIds: [validWorkspaceId1, validWorkspaceId2],
         joinedConversations: {
@@ -545,10 +611,14 @@ describe('RealtimeGateway (Agent Realtime WebSocket Namespace /realtime)', () =>
       );
       assert.strictEqual(socket.data.joinedConversations[validConversationId1], undefined);
       assert.strictEqual(socket.data.joinedConversations[validConversationId2], validWorkspaceId2);
+
+      // Verify setOffline called
+      assert.strictEqual(presenceOfflineCalls.length, 1);
+      assert.strictEqual(presenceOfflineCalls[0].workspaceId, validWorkspaceId1);
     });
   });
 
-  describe('Room Management — Conversation Join/Leave (Task 3)', () => {
+  describe('5. Room Management — Conversation Join/Leave (Task 11)', () => {
     it('should reject join_conversation if socket is unauthenticated', async () => {
       const socket = createMockSocket({});
       const res = await gateway.handleJoinConversation(socket, {
@@ -608,6 +678,20 @@ describe('RealtimeGateway (Agent Realtime WebSocket Namespace /realtime)', () =>
       assert.strictEqual(socket.data.joinedConversations[validConversationId1], validWorkspaceId1);
     });
 
+    it('should dynamically verify DB membership when joining conversation in a workspace not in initial cache', async () => {
+      const socket = createAuthenticatedSocket({
+        availableWorkspaceIds: [validWorkspaceId1], // dynamicWorkspaceId not in initial cache
+      });
+
+      const res = await gateway.handleJoinConversation(socket, {
+        conversationId: dynamicConversationId,
+      });
+
+      assert.strictEqual(res.success, true);
+      assert.strictEqual(res.room, `conversation_${dynamicConversationId}`);
+      assert.strictEqual(res.workspaceId, dynamicWorkspaceId);
+    });
+
     it('should reject leave_conversation if socket is unauthenticated', () => {
       const socket = createMockSocket({});
       const res = gateway.handleLeaveConversation(socket, { conversationId: validConversationId1 });
@@ -641,7 +725,7 @@ describe('RealtimeGateway (Agent Realtime WebSocket Namespace /realtime)', () =>
     });
   });
 
-  describe('Typing Indicators (Task 7)', () => {
+  describe('6. Typing Indicators (Task 11)', () => {
     it('should reject start_typing if socket is unauthenticated', async () => {
       const socket = createMockSocket({});
       const res = await gateway.handleStartTyping(socket, { conversationId: validConversationId1 });
@@ -740,7 +824,7 @@ describe('RealtimeGateway (Agent Realtime WebSocket Namespace /realtime)', () =>
     });
   });
 
-  describe('Heartbeat Subscription (Task 8)', () => {
+  describe('7. Heartbeat & Presence Renewal (Task 11)', () => {
     it('should return success false if socket is unauthenticated on heartbeat', async () => {
       const socket = createMockSocket({});
       const res = await gateway.handleHeartbeat(socket);
@@ -776,9 +860,29 @@ describe('RealtimeGateway (Agent Realtime WebSocket Namespace /realtime)', () =>
       assert.strictEqual(heartbeatCalls[0].workspaceId, validWorkspaceId1);
       assert.strictEqual(heartbeatCalls[1].workspaceId, validWorkspaceId2);
     });
+
+    it('should handle presenceService heartbeat errors gracefully without throwing', async () => {
+      mockPresenceService.heartbeat = async () => {
+        throw new Error('Redis connection drop');
+      };
+
+      const socket = createAuthenticatedSocket({
+        joinedWorkspaceIds: [validWorkspaceId1],
+      });
+
+      await assert.rejects(
+        async () => {
+          await gateway.handleHeartbeat(socket);
+        },
+        (err: Error) => {
+          assert.strictEqual(err.message, 'Redis connection drop');
+          return true;
+        },
+      );
+    });
   });
 
-  describe('Defensive Error Handling & Exception Catching (Task 7)', () => {
+  describe('8. Defensive Error Handling & Exception Catching (Task 11)', () => {
     it('should catch unexpected database errors during join_workspace and return INTERNAL_ERROR', async () => {
       mockPrisma.getClient = () => ({
         workspaceMember: {

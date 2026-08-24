@@ -8,7 +8,7 @@ import {
 } from '@sales-copilot/shared-contracts';
 import { PresenceService } from '../presence.service';
 
-describe('PresenceService (Agent Realtime Presence & Redis Store — Task 8)', () => {
+describe('PresenceService (Agent Realtime Presence & Redis Store — Task 13)', () => {
   let presenceService: PresenceService;
   let mockRedis: any;
   let mockEventEmitter: any;
@@ -100,7 +100,7 @@ describe('PresenceService (Agent Realtime Presence & Redis Store — Task 8)', (
     presenceService = new PresenceService(mockRedis, mockEventEmitter);
   });
 
-  describe('setOnline', () => {
+  describe('1. Online/Offline Lifecycle & Transitions', () => {
     it('should store ONLINE presence entry in Redis Hash and set 90s TTL user key', async () => {
       const entry = await presenceService.setOnline(workspaceId1, userId1);
 
@@ -130,9 +130,7 @@ describe('PresenceService (Agent Realtime Presence & Redis Store — Task 8)', (
       assert.strictEqual(eventPayload.userId, userId1);
       assert.strictEqual(eventPayload.status, PresenceStatus.ONLINE);
     });
-  });
 
-  describe('setOffline', () => {
     it('should update presence entry to OFFLINE and remove TTL user key', async () => {
       await presenceService.setOnline(workspaceId1, userId1);
       emittedDomainEvents = [];
@@ -157,9 +155,7 @@ describe('PresenceService (Agent Realtime Presence & Redis Store — Task 8)', (
       const eventPayload = emittedDomainEvents[0].payload as PresenceUpdatedEvent;
       assert.strictEqual(eventPayload.status, PresenceStatus.OFFLINE);
     });
-  });
 
-  describe('setAway', () => {
     it('should set status to AWAY and set TTL key to AWAY', async () => {
       await presenceService.setOnline(workspaceId1, userId1);
       emittedDomainEvents = [];
@@ -186,11 +182,10 @@ describe('PresenceService (Agent Realtime Presence & Redis Store — Task 8)', (
     });
   });
 
-  describe('heartbeat', () => {
+  describe('2. Heartbeat Renewal', () => {
     it('should refresh user TTL key to 90s and update lastSeenAt in hash', async () => {
-      const initialEntry = await presenceService.setOnline(workspaceId1, userId1);
+      await presenceService.setOnline(workspaceId1, userId1);
 
-      // Advance time slightly
       const heartbeatEntry = await presenceService.heartbeat(workspaceId1, userId1);
 
       assert.strictEqual(heartbeatEntry.userId, userId1);
@@ -212,8 +207,22 @@ describe('PresenceService (Agent Realtime Presence & Redis Store — Task 8)', (
     });
   });
 
-  describe('getUserPresence', () => {
-    it('should return null when user has no presence record', async () => {
+  describe('3. Presence Queries & Tenant Isolation', () => {
+    it('should enforce tenant isolation (presence in workspace 1 does not appear in workspace 2)', async () => {
+      await presenceService.setOnline(workspaceId1, userId1);
+
+      const ws1Presence = await presenceService.getWorkspacePresence(workspaceId1);
+      const ws2Presence = await presenceService.getWorkspacePresence(workspaceId2);
+
+      assert.strictEqual(ws1Presence.length, 1);
+      assert.strictEqual(ws1Presence[0].userId, userId1);
+      assert.strictEqual(ws2Presence.length, 0);
+
+      const userInWs2 = await presenceService.getUserPresence(workspaceId2, userId1);
+      assert.strictEqual(userInWs2, null);
+    });
+
+    it('should return null when user has no presence record in target workspace', async () => {
       const result = await presenceService.getUserPresence(workspaceId1, 'non_existent_user');
       assert.strictEqual(result, null);
     });
@@ -236,13 +245,6 @@ describe('PresenceService (Agent Realtime Presence & Redis Store — Task 8)', (
       assert.ok(result);
       assert.strictEqual(result.status, PresenceStatus.OFFLINE);
     });
-  });
-
-  describe('getWorkspacePresence', () => {
-    it('should return empty list when workspace has no presence data', async () => {
-      const result = await presenceService.getWorkspacePresence(workspaceId1);
-      assert.deepStrictEqual(result, []);
-    });
 
     it('should return only online and away users by default, excluding offline users', async () => {
       await presenceService.setOnline(workspaceId1, userId1);
@@ -260,23 +262,25 @@ describe('PresenceService (Agent Realtime Presence & Redis Store — Task 8)', (
       assert.strictEqual(includeOffline.length, 3);
     });
 
-    it('should treat members with expired TTL keys as OFFLINE and exclude them from active list', async () => {
-      await presenceService.setOnline(workspaceId1, userId1);
-      await presenceService.setOnline(workspaceId1, userId2);
+    it('should gracefully handle malformed JSON entries in redis hash without throwing', async () => {
+      await mockRedis.hset(
+        `presence:workspace:${workspaceId1}`,
+        'corrupted_user',
+        '{ invalid-json',
+      );
 
-      // Expire userId2's key
-      await mockRedis.del(`presence:user:${userId2}:${workspaceId1}`);
+      const list = await presenceService.getWorkspacePresence(workspaceId1);
+      assert.deepStrictEqual(list, []);
 
-      const active = await presenceService.getWorkspacePresence(workspaceId1, false);
-      assert.strictEqual(active.length, 1);
-      assert.strictEqual(active[0].userId, userId1);
+      const single = await presenceService.getUserPresence(workspaceId1, 'corrupted_user');
+      assert.strictEqual(single, null);
     });
   });
 
-  describe('Scheduled Stale Presence Cleanup (@Cron)', () => {
-    it('should mark agents with expired TTL as OFFLINE during cleanup', async () => {
+  describe('4. Scheduled Stale Presence Cleanup (@Cron)', () => {
+    it('should mark agents with expired TTL as OFFLINE across all workspaces during cleanup', async () => {
       await presenceService.setOnline(workspaceId1, userId1);
-      await presenceService.setOnline(workspaceId1, userId2);
+      await presenceService.setOnline(workspaceId2, userId2);
       emittedDomainEvents = [];
 
       // Expire user 1's TTL
@@ -289,7 +293,7 @@ describe('PresenceService (Agent Realtime Presence & Redis Store — Task 8)', (
       assert.strictEqual(user1Presence?.status, PresenceStatus.OFFLINE);
 
       // Verify user 2 remains ONLINE
-      const user2Presence = await presenceService.getUserPresence(workspaceId1, userId2);
+      const user2Presence = await presenceService.getUserPresence(workspaceId2, userId2);
       assert.strictEqual(user2Presence?.status, PresenceStatus.ONLINE);
 
       // Verify domain event emitted for user 1
@@ -339,7 +343,7 @@ describe('PresenceService (Agent Realtime Presence & Redis Store — Task 8)', (
     });
   });
 
-  describe('Agent Connection & Disconnection Event Listeners', () => {
+  describe('5. Agent Connection & Disconnection Event Listeners', () => {
     it('should automatically set agent ONLINE in all available workspaces upon agent.connected event', async () => {
       await presenceService.handleAgentConnected({
         userId: userId1,
@@ -370,7 +374,7 @@ describe('PresenceService (Agent Realtime Presence & Redis Store — Task 8)', (
     });
   });
 
-  describe('Defensive Error Handling', () => {
+  describe('6. Defensive Error Handling', () => {
     it('should not throw if Redis operations encounter errors', async () => {
       mockRedis.hset = async () => {
         throw new Error('Redis connection failure');

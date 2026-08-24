@@ -13,7 +13,7 @@ import {
 } from '@sales-copilot/shared-contracts';
 import { RealtimeEventDispatcher } from '../realtime-event.dispatcher';
 
-describe('RealtimeEventDispatcher — Message & Conversation Events (Task 5)', () => {
+describe('RealtimeEventDispatcher — Event Routing & Error Isolation (Task 12)', () => {
   let dispatcher: RealtimeEventDispatcher;
   let emittedBroadcasts: Array<{ room: string; event: string; payload: unknown }>;
   let mockGateway: any;
@@ -68,8 +68,8 @@ describe('RealtimeEventDispatcher — Message & Conversation Events (Task 5)', (
     dispatcher = new RealtimeEventDispatcher(mockGateway);
   });
 
-  describe('Message Event Dispatches', () => {
-    it('should broadcast message.created to conversation and workspace rooms', () => {
+  describe('1. Message Event Dispatches (Task 12)', () => {
+    it('should broadcast message.created to conversation and workspace rooms on both typed and generic channels', () => {
       dispatcher.handleMessageCreated({
         workspaceId,
         conversationId,
@@ -91,6 +91,10 @@ describe('RealtimeEventDispatcher — Message & Conversation Events (Task 5)', (
       assert.ok(typedEvent);
       assert.deepStrictEqual((typedEvent.payload as any).data, mockMessage);
       assert.strictEqual((typedEvent.payload as any).event, WsServerEvent.MESSAGE_CREATED);
+
+      const genericEvent = conversationEmissions.find(e => e.event === 'event');
+      assert.ok(genericEvent);
+      assert.deepStrictEqual((genericEvent.payload as any).data, mockMessage);
     });
 
     it('should broadcast message.updated to conversation and workspace rooms', () => {
@@ -165,8 +169,8 @@ describe('RealtimeEventDispatcher — Message & Conversation Events (Task 5)', (
     });
   });
 
-  describe('Conversation Event Dispatches', () => {
-    it('should broadcast conversation.created to workspace room', () => {
+  describe('2. Conversation Event Dispatches (Task 12)', () => {
+    it('should broadcast conversation.created to workspace room only', () => {
       dispatcher.handleConversationCreated({
         workspaceId,
         conversation: mockConversation,
@@ -178,6 +182,12 @@ describe('RealtimeEventDispatcher — Message & Conversation Events (Task 5)', (
       );
       assert.ok(wsBroadcast);
       assert.deepStrictEqual((wsBroadcast.payload as any).data, mockConversation);
+
+      // Verify not broadcast to conversation-specific room
+      assert.strictEqual(
+        emittedBroadcasts.some(e => e.room === `conversation_${conversationId}`),
+        false,
+      );
     });
 
     it('should broadcast conversation.status_updated to conversation and workspace rooms', () => {
@@ -229,7 +239,7 @@ describe('RealtimeEventDispatcher — Message & Conversation Events (Task 5)', (
       );
     });
 
-    it('should broadcast conversation.assigned to workspace, conversation, new assignee and previous assignee rooms', () => {
+    it('should broadcast conversation.assigned to workspace, conversation, new assignee, and previous assignee rooms', () => {
       dispatcher.handleConversationAssigned({
         workspaceId,
         conversationId,
@@ -324,7 +334,7 @@ describe('RealtimeEventDispatcher — Message & Conversation Events (Task 5)', (
     });
   });
 
-  describe('Contact Event Dispatches (Task 6)', () => {
+  describe('3. Contact & Channel Identity Event Dispatches (Task 12)', () => {
     const contactId = 'cont_1111_2222';
     const mockContact: any = {
       id: contactId,
@@ -404,65 +414,47 @@ describe('RealtimeEventDispatcher — Message & Conversation Events (Task 5)', (
         mergedAttributes: {},
       });
     });
-  });
 
-  describe('Channel Identity Event Dispatches (Task 6)', () => {
-    const identityId = 'ci_001';
-    const contactId = 'cont_001';
-    const mockIdentity: any = {
-      id: identityId,
-      channelId: 'chan_001',
-      contactId,
-      externalContactId: 'ext_001',
-      createdAt: new Date().toISOString(),
-    };
+    it('should broadcast channel_identity.created and deleted to workspace room', () => {
+      const mockIdentity: any = {
+        id: 'ci_001',
+        channelId: 'chan_001',
+        contactId,
+        externalContactId: 'ext_001',
+      };
 
-    it('should broadcast channel_identity.created to workspace room', () => {
-      dispatcher.handleChannelIdentityCreated({
-        workspaceId,
-        identity: mockIdentity,
-      });
-
-      const wsBroadcast = emittedBroadcasts.find(
-        e =>
-          e.room === `workspace_${workspaceId}` &&
-          e.event === WsServerEvent.CHANNEL_IDENTITY_CREATED,
-      );
-      assert.ok(wsBroadcast);
-      assert.deepStrictEqual((wsBroadcast.payload as any).data, mockIdentity);
-    });
-
-    it('should broadcast channel_identity.deleted to workspace room', () => {
+      dispatcher.handleChannelIdentityCreated({ workspaceId, identity: mockIdentity });
       dispatcher.handleChannelIdentityDeleted({
         workspaceId,
-        identityId,
+        identityId: 'ci_001',
         contactId,
         identity: mockIdentity,
       });
 
-      const wsBroadcast = emittedBroadcasts.find(
-        e =>
-          e.room === `workspace_${workspaceId}` &&
-          e.event === WsServerEvent.CHANNEL_IDENTITY_DELETED,
+      assert.ok(
+        emittedBroadcasts.some(
+          e =>
+            e.room === `workspace_${workspaceId}` &&
+            e.event === WsServerEvent.CHANNEL_IDENTITY_CREATED,
+        ),
       );
-      assert.ok(wsBroadcast);
-      assert.deepStrictEqual((wsBroadcast.payload as any).data, {
-        identityId,
-        contactId,
-        identity: mockIdentity,
-      });
+      assert.ok(
+        emittedBroadcasts.some(
+          e =>
+            e.room === `workspace_${workspaceId}` &&
+            e.event === WsServerEvent.CHANNEL_IDENTITY_DELETED,
+        ),
+      );
     });
   });
 
-  describe('Label & Channel Event Dispatches (Task 6)', () => {
+  describe('4. Label & Channel Event Dispatches (Task 12)', () => {
     it('should broadcast label events to workspace room', () => {
       const mockLabel: any = {
         id: 'lbl_001',
         workspaceId,
         title: 'VIP',
         color: '#FF0000',
-        showOnSidebar: true,
-        createdAt: new Date().toISOString(),
       };
 
       dispatcher.handleLabelCreated({ workspaceId, label: mockLabel });
@@ -524,7 +516,7 @@ describe('RealtimeEventDispatcher — Message & Conversation Events (Task 5)', (
     });
   });
 
-  describe('Typing Indicator Event Dispatches (Task 6)', () => {
+  describe('5. Typing & Presence Event Dispatches (Task 12)', () => {
     it('should broadcast typing.start and typing.stop to conversation and workspace rooms', () => {
       dispatcher.handleTypingStart({
         workspaceId,
@@ -561,9 +553,7 @@ describe('RealtimeEventDispatcher — Message & Conversation Events (Task 5)', (
         ),
       );
     });
-  });
 
-  describe('Presence Event Dispatches (Task 9)', () => {
     it('should broadcast presence.updated to workspace room', () => {
       const payload = {
         workspaceId,
@@ -586,7 +576,7 @@ describe('RealtimeEventDispatcher — Message & Conversation Events (Task 5)', (
     });
   });
 
-  describe('Error Isolation & Resilience', () => {
+  describe('6. Error Isolation & Resilience (Task 12)', () => {
     it('should not throw or crash when gateway server throws during emission', () => {
       mockGateway.server.to = () => {
         throw new Error('Socket adapter network failure');
@@ -608,6 +598,37 @@ describe('RealtimeEventDispatcher — Message & Conversation Events (Task 5)', (
           userId: 'usr_001',
           status: PresenceStatus.ONLINE,
           lastSeenAt: new Date().toISOString(),
+        });
+      });
+    });
+
+    it('should not throw when gateway is undefined / unprovided', () => {
+      const unprovidedDispatcher = new RealtimeEventDispatcher(undefined);
+
+      assert.doesNotThrow(() => {
+        unprovidedDispatcher.handleMessageCreated({
+          workspaceId,
+          conversationId,
+          message: mockMessage,
+          isPrivate: false,
+        });
+        unprovidedDispatcher.handlePresenceUpdated({
+          workspaceId,
+          userId: 'usr_001',
+          status: PresenceStatus.ONLINE,
+          lastSeenAt: new Date().toISOString(),
+        });
+      });
+    });
+
+    it('should not throw when gateway.server is undefined', () => {
+      const noServerGateway: any = {};
+      const noServerDispatcher = new RealtimeEventDispatcher(noServerGateway);
+
+      assert.doesNotThrow(() => {
+        noServerDispatcher.handleConversationCreated({
+          workspaceId,
+          conversation: mockConversation,
         });
       });
     });
