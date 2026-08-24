@@ -12,5 +12,4 @@ export enum Priority {
   LOW = 'LOW',
 }
 
-export type ConversationPriority = Priority;
-export const ConversationPriority = Priority;
+export { Priority as ConversationPriority };
