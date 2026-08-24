@@ -5,7 +5,7 @@
 Hiện thực các `ChannelAdapter` cụ thể kết nối vào hệ thống dựa trên `ChannelAdapter` interface đã định nghĩa tại Epic 1.3 và đẩy dữ liệu vào Conversation Core tại Epic 1.5: **Web Chat Widget, Facebook Messenger, Telegram Bot**. Mỗi adapter chịu trách nhiệm xác thực webhook, chuẩn hóa payload, và gửi tin nhắn outbound qua kênh tương ứng.
 
 - **ID**: `EPIC-1.6`
-- **Status**: 🟡 Ready
+- **Status**: ✅ Done
 - **Dependencies**: `EPIC-1.5` (Conversation & Messaging Core)
 - **References**:
   - `.docs/references/chatwoot/source/app/models/channel/`
@@ -53,13 +53,13 @@ Hiện thực `WebChatAdapter` — kênh chat trực tiếp trên website, cung 
 
 #### Acceptance Criteria
 
-- [ ] Widget embed code hoạt động trên bất kỳ website nào (cross-origin)
-- [ ] Visitor mới tự động tạo Contact + ChannelIdentity
-- [ ] `setUser({ identifier, email, name })` trigger contact identification/merge
-- [ ] Message gửi từ widget → tạo Conversation + Message trong hệ thống
-- [ ] Agent reply → push realtime tới widget client
-- [ ] Widget hiển thị greeting message khi mở lần đầu
-- [ ] Adapter đăng ký thành công trong `ChannelAdapterRegistry`
+- [x] Widget embed code hoạt động trên bất kỳ website nào (cross-origin)
+- [x] Visitor mới tự động tạo Contact + ChannelIdentity
+- [x] `setUser({ identifier, email, name })` trigger contact identification/merge
+- [x] Message gửi từ widget → tạo Conversation + Message trong hệ thống
+- [x] Agent reply → push realtime tới widget client
+- [x] Widget hiển thị greeting message khi mở lần đầu
+- [x] Adapter đăng ký thành công trong `ChannelAdapterRegistry`
 
 #### Dependencies
 
@@ -89,15 +89,15 @@ Hiện thực `FacebookAdapter` — kết nối với Facebook Messenger Platfor
 
 #### Acceptance Criteria
 
-- [ ] Facebook webhook verification challenge (`GET` request) respond đúng `hub.challenge`
-- [ ] Inbound message webhook (`POST`) verify HMAC-SHA256 signature
-- [ ] Text message từ user → tạo Message trong Conversation tương ứng
-- [ ] Media message (image/video/audio/file) → download và lưu trên MinIO, tạo Attachment
-- [ ] Agent reply → gọi Facebook Send API thành công
-- [ ] PSID mapping → đúng Contact qua ChannelIdentity
-- [ ] Delivery/Read receipts → cập nhật `deliveryStatus`
-- [ ] Invalid signature → reject webhook (`401`)
-- [ ] Adapter đăng ký thành công trong `ChannelAdapterRegistry`
+- [x] Facebook webhook verification challenge (`GET` request) respond đúng `hub.challenge`
+- [x] Inbound message webhook (`POST`) verify HMAC-SHA256 signature
+- [x] Text message từ user → tạo Message trong Conversation tương ứng
+- [x] Media message (image/video/audio/file) → download và lưu trên MinIO, tạo Attachment
+- [x] Agent reply → gọi Facebook Send API thành công
+- [x] PSID mapping → đúng Contact qua ChannelIdentity
+- [x] Delivery/Read receipts → cập nhật `deliveryStatus`
+- [x] Invalid signature → reject webhook (`401`)
+- [x] Adapter đăng ký thành công trong `ChannelAdapterRegistry`
 
 #### Dependencies
 
@@ -127,14 +127,14 @@ Hiện thực `TelegramAdapter` — kết nối với Telegram Bot API để nh�
 
 #### Acceptance Criteria
 
-- [ ] Telegram webhook nhận Update object và xử lý đúng
-- [ ] Webhook secret token verification hoạt động
-- [ ] Text message → tạo Message trong Conversation
-- [ ] Media messages (photo/video/document/audio/voice) → download file qua Telegram `getFile` API, lưu MinIO, tạo Attachment
-- [ ] Agent reply → gọi Telegram Bot API gửi tin nhắn thành công
-- [ ] Chat ID mapping → đúng Contact qua ChannelIdentity
-- [ ] `setWebhook` được gọi tự động khi tạo Channel mới
-- [ ] Adapter đăng ký thành công trong `ChannelAdapterRegistry`
+- [x] Telegram webhook nhận Update object và xử lý đúng
+- [x] Webhook secret token verification hoạt động
+- [x] Text message → tạo Message trong Conversation
+- [x] Media messages (photo/video/document/audio/voice) → download file qua Telegram `getFile` API, lưu MinIO, tạo Attachment
+- [x] Agent reply → gọi Telegram Bot API gửi tin nhắn thành công
+- [x] Chat ID mapping → đúng Contact qua ChannelIdentity
+- [x] `setWebhook` được gọi tự động khi tạo Channel mới
+- [x] Adapter đăng ký thành công trong `ChannelAdapterRegistry`
 
 #### Dependencies
 
