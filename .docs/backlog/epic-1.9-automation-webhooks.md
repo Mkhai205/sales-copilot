@@ -133,16 +133,16 @@ Cung cấp khả năng đăng ký nhận webhook outbound cho hệ thống bên 
 
 #### Acceptance Criteria
 
-- [ ] Subscription tạo thành công với URL hợp lệ (HTTPS required)
-- [ ] Events array chỉ chấp nhận known event types
-- [ ] Secret tự động sinh nếu không provided
-- [ ] REST API endpoints:
+- [x] Subscription tạo thành công với URL hợp lệ (HTTPS required)
+- [x] Events array chỉ chấp nhận known event types
+- [x] Secret tự động sinh nếu không provided
+- [x] REST API endpoints:
   - `GET    /api/v1/webhook-subscriptions` — List
   - `POST   /api/v1/webhook-subscriptions` — Create
   - `PATCH  /api/v1/webhook-subscriptions/:id` — Update
   - `DELETE /api/v1/webhook-subscriptions/:id` — Delete
-- [ ] Guards: `JwtAuthGuard` + `WorkspaceGuard`; CUD yêu cầu `ADMIN` hoặc `OWNER`
-- [ ] Tenant isolation: mọi query include `workspaceId`
+- [x] Guards: `JwtAuthGuard` + `WorkspaceGuard`; CUD yêu cầu `ADMIN` hoặc `OWNER`
+- [x] Tenant isolation: mọi query include `workspaceId`
 
 #### Dependencies
 

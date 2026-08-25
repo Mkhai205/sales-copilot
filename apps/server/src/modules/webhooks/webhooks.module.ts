@@ -5,6 +5,8 @@ import { InboxesModule } from '../inboxes';
 import { CHANNEL_INGESTION_QUEUE } from '../../infrastructure/queue';
 import { WebhooksController } from './webhooks.controller';
 import { WebhooksService } from './webhooks.service';
+import { WebhookSubscriptionsController } from './webhook-subscriptions.controller';
+import { WebhookSubscriptionsService } from './webhook-subscriptions.service';
 
 @Module({
   imports: [
@@ -14,8 +16,8 @@ import { WebhooksService } from './webhooks.service';
       name: CHANNEL_INGESTION_QUEUE,
     }),
   ],
-  controllers: [WebhooksController],
-  providers: [WebhooksService],
-  exports: [WebhooksService],
+  controllers: [WebhooksController, WebhookSubscriptionsController],
+  providers: [WebhooksService, WebhookSubscriptionsService],
+  exports: [WebhooksService, WebhookSubscriptionsService],
 })
 export class WebhooksModule {}
