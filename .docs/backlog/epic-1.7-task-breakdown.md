@@ -272,11 +272,11 @@ Module registration — import AuthModule (TokenService), DatabaseModule.
 
 #### Acceptance Criteria
 
-- [ ] Gateway listens on `/realtime` namespace
-- [ ] Valid JWT → connection accepted, `socket.data` populated
-- [ ] Invalid/expired JWT → `error` event emitted, client disconnected
-- [ ] Auto-join `user_{userId}` room on connect
-- [ ] Disconnect cleanup: log, leave rooms
+- [x] Gateway listens on `/realtime` namespace
+- [x] Valid JWT → connection accepted, `socket.data` populated
+- [x] Invalid/expired JWT → `error` event emitted, client disconnected
+- [x] Auto-join `user_{userId}` room on connect
+- [x] Disconnect cleanup: log, leave rooms
 
 #### Dependencies
 
@@ -342,11 +342,11 @@ handleLeaveConversation(client: Socket, payload: { conversationId: string }) {
 
 #### Acceptance Criteria
 
-- [ ] `join_workspace` chỉ thành công nếu user là member
-- [ ] `join_conversation` chỉ thành công nếu conversation thuộc workspace đã join
-- [ ] `leave_workspace` tự động leave tất cả conversation rooms thuộc workspace đó
-- [ ] Error responses cho invalid requests
-- [ ] Room names đúng format: `workspace_{id}`, `conversation_{id}`, `user_{id}`
+- [x] `join_workspace` chỉ thành công nếu user là member
+- [x] `join_conversation` chỉ thành công nếu conversation thuộc workspace đã join
+- [x] `leave_workspace` tự động leave tất cả conversation rooms thuộc workspace đó
+- [x] Error responses cho invalid requests
+- [x] Room names đúng format: `workspace_{id}`, `conversation_{id}`, `user_{id}`
 
 #### Dependencies
 
@@ -397,10 +397,10 @@ pnpm add @socket.io/redis-adapter redis
 
 #### Acceptance Criteria
 
-- [ ] Redis adapter connected successfully khi REDIS_URL available
-- [ ] Graceful fallback nếu Redis connection fails (single-server mode)
-- [ ] Messages broadcast từ server A được nhận bởi clients on server B
-- [ ] Log message khi adapter connected/disconnected
+- [x] Redis adapter connected successfully khi REDIS_URL available
+- [x] Graceful fallback nếu Redis connection fails (single-server mode)
+- [x] Messages broadcast từ server A được nhận bởi clients on server B
+- [x] Log message khi adapter connected/disconnected
 
 #### Dependencies
 
@@ -512,11 +512,11 @@ export class RealtimeEventDispatcher {
 
 #### Acceptance Criteria
 
-- [ ] Mỗi domain event type có `@OnEvent()` method riêng
-- [ ] Events broadcast đúng rooms theo routing map
-- [ ] Assignment events notify cả old và new assignee
-- [ ] WebSocket payload format: `{ event: WsServerEvent, data: {...} }`
-- [ ] Failed broadcasts KHÔNG crash event processing pipeline (try/catch isolation)
+- [x] Mỗi domain event type có `@OnEvent()` method riêng
+- [x] Events broadcast đúng rooms theo routing map
+- [x] Assignment events notify cả old và new assignee
+- [x] WebSocket payload format: `{ event: WsServerEvent, data: {...} }`
+- [x] Failed broadcasts KHÔNG crash event processing pipeline (try/catch isolation)
 
 #### Dependencies
 
@@ -587,9 +587,9 @@ handleChannelIdentityDeleted(payload: ChannelIdentityDeletedEvent) { /* workspac
 
 #### Acceptance Criteria
 
-- [ ] Tất cả contact events broadcast tới workspace room
-- [ ] Tất cả channel_identity events broadcast tới workspace room
-- [ ] Payload format match `websocket-contract.md` (sections 3.4-3.9)
+- [x] Tất cả contact events broadcast tới workspace room
+- [x] Tất cả channel_identity events broadcast tới workspace room
+- [x] Payload format match `websocket-contract.md` (sections 3.4-3.9)
 
 #### Dependencies
 
@@ -643,9 +643,9 @@ afterInit(server: Server) {
 
 #### Acceptance Criteria
 
-- [ ] Disconnect cleanup: log user info, trigger presence update
-- [ ] Connection errors logged with context
-- [ ] No unhandled promise rejections from socket operations
+- [x] Disconnect cleanup: log user info, trigger presence update
+- [x] Connection errors logged with context
+- [x] No unhandled promise rejections from socket operations
 
 #### Dependencies
 
@@ -779,13 +779,13 @@ async handleHeartbeat(client: Socket) {
 
 #### Acceptance Criteria
 
-- [ ] Agent connect → `setOnline()` → status ONLINE
-- [ ] Agent disconnect → `setOffline()` → status OFFLINE
-- [ ] Client gửi heartbeat mỗi 30s → server renew TTL
-- [ ] Miss 2 heartbeats (90s) → scheduled cleanup marks OFFLINE
-- [ ] Idle > 5 minutes → status AWAY
-- [ ] Presence data scoped by workspace (tenant isolation)
-- [ ] Redis TTL auto-cleanup stale entries
+- [x] Agent connect → `setOnline()` → status ONLINE
+- [x] Agent disconnect → `setOffline()` → status OFFLINE
+- [x] Client gửi heartbeat mỗi 30s → server renew TTL
+- [x] Miss 2 heartbeats (90s) → scheduled cleanup marks OFFLINE
+- [x] Idle > 5 minutes → status AWAY
+- [x] Presence data scoped by workspace (tenant isolation)
+- [x] Redis TTL auto-cleanup stale entries
 
 #### Dependencies
 
@@ -843,10 +843,10 @@ export class PresenceController {
 
 #### Acceptance Criteria
 
-- [ ] `presence.updated` event broadcast tới `workspace_{id}` room khi status thay đổi
-- [ ] `GET /api/v1/workspaces/:workspaceId/presence` trả về danh sách agents online/away
-- [ ] REST endpoint protected by JwtAuthGuard + WorkspaceGuard
-- [ ] Response format: `{ success: true, data: [{ userId, status, lastSeenAt }] }`
+- [x] `presence.updated` event broadcast tới `workspace_{id}` room khi status thay đổi
+- [x] `GET /api/v1/workspaces/:workspaceId/presence` trả về danh sách agents online/away
+- [x] REST endpoint protected by JwtAuthGuard + WorkspaceGuard
+- [x] Response format: `{ success: true, data: [{ userId, status, lastSeenAt }] }`
 
 #### Dependencies
 
@@ -902,10 +902,10 @@ Barrel exports.
 
 #### Acceptance Criteria
 
-- [ ] App compiles và starts successfully với RealtimeModule
-- [ ] Socket.io server starts on `/realtime` namespace
-- [ ] Presence REST endpoint accessible
-- [ ] No circular dependency errors
+- [x] App compiles và starts successfully với RealtimeModule
+- [x] Socket.io server starts on `/realtime` namespace
+- [x] Presence REST endpoint accessible
+- [x] No circular dependency errors
 
 #### Dependencies
 
@@ -952,10 +952,10 @@ Tham khảo [web-chat.gateway.spec.ts](file:///d:/workspace/Sales%20Copilot/apps
 
 #### Acceptance Criteria
 
-- [ ] Tất cả test cases pass
-- [ ] Mock TokenService, PrismaService, PresenceService
-- [ ] Coverage cho happy path + error paths
-- [ ] Không test implementation details (method calls), test behavior
+- [x] Tất cả test cases pass
+- [x] Mock TokenService, PrismaService, PresenceService
+- [x] Coverage cho happy path + error paths
+- [x] Không test implementation details (method calls), test behavior
 
 #### Dependencies
 
@@ -1000,10 +1000,10 @@ Unit tests cho `RealtimeEventDispatcher`: verify correct room routing, payload t
 
 #### Acceptance Criteria
 
-- [ ] Tất cả event types covered
-- [ ] Verify room routing correctness (đúng rooms)
-- [ ] Verify payload format matches WebSocket contract
-- [ ] Error isolation: failed broadcast does NOT crash
+- [x] Tất cả event types covered
+- [x] Verify room routing correctness (đúng rooms)
+- [x] Verify payload format matches WebSocket contract
+- [x] Error isolation: failed broadcast does NOT crash
 
 #### Dependencies
 
@@ -1047,10 +1047,10 @@ Unit tests cho `PresenceService`: online/offline/away lifecycle, heartbeat, clea
 
 #### Acceptance Criteria
 
-- [ ] All lifecycle states covered
-- [ ] Redis operations mocked correctly
-- [ ] Cron cleanup logic verified
-- [ ] Tenant isolation verified
+- [x] All lifecycle states covered
+- [x] Redis operations mocked correctly
+- [x] Cron cleanup logic verified
+- [x] Tenant isolation verified
 
 #### Dependencies
 
@@ -1093,10 +1093,10 @@ Integration test: Domain event emitted → EventEmitter2 → RealtimeEventDispat
 
 #### Acceptance Criteria
 
-- [ ] Full event pipeline verified: service emit → dispatcher listen → gateway broadcast
-- [ ] Payload transformation correct
-- [ ] Room routing correct
-- [ ] Error isolation works end-to-end
+- [x] Full event pipeline verified: service emit → dispatcher listen → gateway broadcast
+- [x] Payload transformation correct
+- [x] Room routing correct
+- [x] Error isolation works end-to-end
 
 #### Dependencies
 

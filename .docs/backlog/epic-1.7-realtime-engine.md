@@ -5,7 +5,7 @@
 Hiện thực hệ thống phát tán sự kiện thời gian thực: typed domain event bus qua `EventEmitter2`, NestJS WebSocket Gateway (Socket.io) với Redis Pub/Sub Adapter cho multi-server clustering, phân vùng room theo `workspace_{id}` và `conversation_{id}`, bộ theo dõi trạng thái Online/Offline của Agent (Redis Presence Tracking), và Realtime Event Dispatcher kết nối domain events với WebSocket broadcasts.
 
 - **ID**: `EPIC-1.7`
-- **Status**: 🟡 Ready
+- **Status**: ✅ Done
 - **Dependencies**: `EPIC-1.5` (Conversation & Messaging Core), `EPIC-1.1` (Identity & Auth)
 - **References**:
   - `.docs/references/chatwoot/source/app/dispatchers/`
@@ -49,10 +49,10 @@ Hiện thực hệ thống phát tán sự kiện thời gian thực: typed doma
 
 #### Acceptance Criteria
 
-- [ ] Tất cả domain events có typed payload interfaces
-- [ ] Events phát tán asynchronously (non-blocking)
-- [ ] Event types export từ shared contracts package cho frontend consumption
-- [ ] Wildcard support cho debug/logging listeners (`*.created`, etc.)
+- [x] Tất cả domain events có typed payload interfaces
+- [x] Events phát tán asynchronously (non-blocking)
+- [x] Event types export từ shared contracts package cho frontend consumption
+- [x] Wildcard support cho debug/logging listeners (`*.created`, etc.)
 
 #### Dependencies
 
@@ -82,12 +82,12 @@ Xây dựng NestJS Socket.io Gateway tại `/realtime` với JWT authentication 
 
 #### Acceptance Criteria
 
-- [ ] WebSocket connection yêu cầu valid JWT token
-- [ ] Invalid/expired token → connection rejected
-- [ ] User tự động join đúng workspace rooms based on membership
-- [ ] Join conversation room chỉ cho phép nếu user là member của workspace chứa conversation
-- [ ] Disconnect cleanup: remove từ tất cả rooms, update presence
-- [ ] NFR-1: Latency phát tán event < 200ms
+- [x] WebSocket connection yêu cầu valid JWT token
+- [x] Invalid/expired token → connection rejected
+- [x] User tự động join đúng workspace rooms based on membership
+- [x] Join conversation room chỉ cho phép nếu user là member của workspace chứa conversation
+- [x] Disconnect cleanup: remove từ tất cả rooms, update presence
+- [x] NFR-1: Latency phát tán event < 200ms
 
 #### Dependencies
 
@@ -109,9 +109,9 @@ Cấu hình Socket.io Redis Adapter để hỗ trợ broadcasting across multipl
 
 #### Acceptance Criteria
 
-- [ ] Messages broadcast từ server A được nhận bởi clients connected tới server B
-- [ ] Redis connection failure graceful degradation (fallback to single-server)
-- [ ] No sticky sessions required
+- [x] Messages broadcast từ server A được nhận bởi clients connected tới server B
+- [x] Redis connection failure graceful degradation (fallback to single-server)
+- [x] No sticky sessions required
 
 #### Dependencies
 
@@ -136,12 +136,12 @@ Theo dõi trạng thái Online/Offline/Away của Agent trong Workspace bằng R
 
 #### Acceptance Criteria
 
-- [ ] Agent connect → status `ONLINE`, broadcast to workspace room
-- [ ] Agent disconnect → status `OFFLINE` after heartbeat timeout
-- [ ] Idle > 5 minutes → status `AWAY`
-- [ ] Presence query trả về danh sách agents online trong workspace
-- [ ] Presence data scoped by workspace (tenant isolation)
-- [ ] Redis TTL tự động cleanup stale presence entries
+- [x] Agent connect → status `ONLINE`, broadcast to workspace room
+- [x] Agent disconnect → status `OFFLINE` after heartbeat timeout
+- [x] Idle > 5 minutes → status `AWAY`
+- [x] Presence query trả về danh sách agents online trong workspace
+- [x] Presence data scoped by workspace (tenant isolation)
+- [x] Redis TTL tự động cleanup stale presence entries
 
 #### Dependencies
 
@@ -169,11 +169,11 @@ Kết nối domain events (từ `EventEmitter2`) với WebSocket broadcasting �
 
 #### Acceptance Criteria
 
-- [ ] Mỗi domain event type có dedicated listener
-- [ ] Events broadcast đúng rooms (conversation-specific vs workspace-wide)
-- [ ] Assignment events notify cả old và new assignee qua `user_{id}` room
-- [ ] WebSocket payload format match contract trong `websocket-contract.md`
-- [ ] Failed broadcasts không crash event processing pipeline (error isolation)
+- [x] Mỗi domain event type có dedicated listener
+- [x] Events broadcast đúng rooms (conversation-specific vs workspace-wide)
+- [x] Assignment events notify cả old và new assignee qua `user_{id}` room
+- [x] WebSocket payload format match contract trong `websocket-contract.md`
+- [x] Failed broadcasts không crash event processing pipeline (error isolation)
 
 #### Dependencies
 

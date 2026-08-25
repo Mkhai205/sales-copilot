@@ -8,9 +8,7 @@ import {
   DomainEvent,
   MessageContentType,
   MessageType,
-  PresenceEntry,
   PresenceStatus,
-  Priority,
   SenderType,
   WsServerEvent,
 } from '@sales-copilot/shared-contracts';
