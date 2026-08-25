@@ -9,6 +9,7 @@ export * from './conversations';
 export * from './messages';
 export * from './labels';
 export * from './canned-responses';
+export * from './audit-logs';
 export * from './automation-rules';
 export * from './webhooks';
 export * from './realtime';

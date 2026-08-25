@@ -5,7 +5,7 @@
 Hiện thực các nghiệp vụ vận hành cốt lõi: thuật toán phân công tự động luân phiên (Round-Robin Auto-Assignment dựa trên Online Presence và Open Conversations), phân công thủ công Agent/Team, mẫu câu trả lời nhanh (Canned Responses), và hệ thống nhật ký kiểm toán xuyên suốt (Cross-cutting Audit Logging).
 
 - **ID**: `EPIC-1.8`
-- **Status**: 🟡 Ready
+- **Status**: ✅ Done
 - **Dependencies**: `EPIC-1.5` (Conversation Core), `EPIC-1.7` (Realtime & Presence)
 - **References**:
   - `.docs/references/chatwoot/source/app/services/auto_assignment/`
@@ -140,13 +140,13 @@ Xây dựng cross-cutting `AuditLogService` ghi nhận các thao tác quản tr�
 
 #### Acceptance Criteria
 
-- [ ] Audit log ghi nhận đầy đủ: action, actorId, resourceType, resourceId, metadata, timestamp
-- [ ] Audit logs là immutable — không có API update/delete
-- [ ] List endpoint hỗ trợ filter by action type, actor, date range
-- [ ] REST API endpoints:
+- [x] Audit log ghi nhận đầy đủ: action, actorId, resourceType, resourceId, metadata, timestamp
+- [x] Audit logs là immutable — không có API update/delete
+- [x] List endpoint hỗ trợ filter by action type, actor, date range
+- [x] REST API endpoints:
   - `GET /api/v1/audit-logs` — List audit logs (filter, phân trang)
-- [ ] Guards: `JwtAuthGuard` + `WorkspaceGuard`; chỉ `ADMIN` và `OWNER` xem được
-- [ ] Tenant isolation: mọi query include `workspaceId`
+- [x] Guards: `JwtAuthGuard` + `WorkspaceGuard`; chỉ `ADMIN` và `OWNER` xem được
+- [x] Tenant isolation: mọi query include `workspaceId`
 
 #### Dependencies
 
