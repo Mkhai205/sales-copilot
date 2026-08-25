@@ -8,10 +8,12 @@ describe('RedisService (Cache & Data Store Operations)', () => {
   let mockConfigService: Partial<ConfigService>;
   let memoryStore: Map<string, string>;
   let hashStore: Map<string, Map<string, string>>;
+  let listStore: Map<string, string[]>;
 
   beforeEach(() => {
     memoryStore = new Map();
     hashStore = new Map();
+    listStore = new Map();
 
     mockConfigService = {
       getOrThrow: <T = string>(key: string): T => {
@@ -22,10 +24,12 @@ describe('RedisService (Cache & Data Store Operations)', () => {
 
     redisService = new RedisService(mockConfigService as ConfigService);
 
-    // Mock client internal methods for unit testing without a live Redis server
     const mockClient = {
       get: async (key: string) => memoryStore.get(key) ?? null,
-      set: async (key: string, value: string, ..._args: any[]) => {
+      set: async (key: string, value: string, ...args: any[]) => {
+        if (args.includes('NX') && memoryStore.has(key)) {
+          return null;
+        }
         memoryStore.set(key, value);
         return 'OK';
       },
@@ -80,6 +84,37 @@ describe('RedisService (Cache & Data Store Operations)', () => {
       },
       ttl: async (key: string) => {
         return memoryStore.has(key) ? 3600 : -2;
+      },
+      lrange: async (key: string, start: number, stop: number) => {
+        const list = listStore.get(key) || [];
+        const end = stop === -1 ? list.length : stop + 1;
+        return list.slice(start, end);
+      },
+      rpush: async (key: string, ...values: string[]) => {
+        const list = listStore.get(key) || [];
+        list.push(...values);
+        listStore.set(key, list);
+        return list.length;
+      },
+      lpush: async (key: string, ...values: string[]) => {
+        const list = listStore.get(key) || [];
+        list.unshift(...values);
+        listStore.set(key, list);
+        return list.length;
+      },
+      lrem: async (key: string, count: number, value: string) => {
+        const list = listStore.get(key) || [];
+        const filtered = list.filter(v => v !== value);
+        const removed = list.length - filtered.length;
+        listStore.set(key, filtered);
+        return removed;
+      },
+      eval: async (_script: string, _numKeys: number, key: string, token: string) => {
+        if (memoryStore.get(key) === token) {
+          memoryStore.delete(key);
+          return 1;
+        }
+        return 0;
       },
       ping: async () => 'PONG',
       quit: async () => 'OK',
@@ -152,5 +187,44 @@ describe('RedisService (Cache & Data Store Operations)', () => {
     assert.strictEqual(health.status, 'down');
     assert.strictEqual(health.error, 'Connection refused');
     assert.strictEqual(await redisService.isHealthy(), false);
+  });
+
+  it('should support list operations (rpush, lrange, lpush, lrem)', async () => {
+    await redisService.rpush('queue:1', 'agent_1', 'agent_2');
+    let items = await redisService.lrange('queue:1');
+    assert.deepStrictEqual(items, ['agent_1', 'agent_2']);
+
+    await redisService.lpush('queue:1', 'agent_0');
+    items = await redisService.lrange('queue:1');
+    assert.deepStrictEqual(items, ['agent_0', 'agent_1', 'agent_2']);
+
+    const removed = await redisService.lrem('queue:1', 0, 'agent_1');
+    assert.strictEqual(removed, 1);
+    items = await redisService.lrange('queue:1');
+    assert.deepStrictEqual(items, ['agent_0', 'agent_2']);
+  });
+
+  it('should support acquiring and releasing distributed locks', async () => {
+    const lockKey = 'lock:auto_assign:inbox_123';
+
+    // 1. First acquire succeeds
+    const token1 = await redisService.acquireLock(lockKey, 3000);
+    assert.ok(token1 !== null);
+
+    // 2. Second acquire fails while lock held
+    const token2 = await redisService.acquireLock(lockKey, 3000);
+    assert.strictEqual(token2, null);
+
+    // 3. Release with wrong token fails
+    const releasedWrong = await redisService.releaseLock(lockKey, 'wrong_token');
+    assert.strictEqual(releasedWrong, false);
+
+    // 4. Release with correct token succeeds
+    const releasedCorrect = await redisService.releaseLock(lockKey, token1);
+    assert.strictEqual(releasedCorrect, true);
+
+    // 5. Can acquire again after release
+    const token3 = await redisService.acquireLock(lockKey, 3000);
+    assert.ok(token3 !== null);
   });
 });

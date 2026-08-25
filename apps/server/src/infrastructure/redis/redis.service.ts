@@ -1,6 +1,7 @@
 import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class RedisService implements OnModuleInit, OnModuleDestroy {
@@ -234,5 +235,82 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   async isHealthy(): Promise<boolean> {
     const health = await this.ping();
     return health.status === 'up';
+  }
+
+  async lrange(key: string, start = 0, stop = -1): Promise<string[]> {
+    if (!this.client) return [];
+    try {
+      return await this.client.lrange(key, start, stop);
+    } catch (err) {
+      this.logger.error(`Redis LRANGE error for key ${key}:`, err);
+      return [];
+    }
+  }
+
+  async rpush(key: string, ...values: string[]): Promise<number> {
+    if (!this.client || values.length === 0) return 0;
+    try {
+      return await this.client.rpush(key, ...values);
+    } catch (err) {
+      this.logger.error(`Redis RPUSH error for key ${key}:`, err);
+      return 0;
+    }
+  }
+
+  async lpush(key: string, ...values: string[]): Promise<number> {
+    if (!this.client || values.length === 0) return 0;
+    try {
+      return await this.client.lpush(key, ...values);
+    } catch (err) {
+      this.logger.error(`Redis LPUSH error for key ${key}:`, err);
+      return 0;
+    }
+  }
+
+  async lrem(key: string, count: number, value: string): Promise<number> {
+    if (!this.client) return 0;
+    try {
+      return await this.client.lrem(key, count, value);
+    } catch (err) {
+      this.logger.error(`Redis LREM error for key ${key}:`, err);
+      return 0;
+    }
+  }
+
+  /**
+   * Acquires a distributed lock using Redis SET NX PX.
+   * Returns unique token on success, or null if lock is already held.
+   */
+  async acquireLock(key: string, ttlMs = 3000): Promise<string | null> {
+    if (!this.client) return null;
+    const token = crypto.randomUUID();
+    try {
+      const result = await this.client.set(key, token, 'PX', ttlMs, 'NX');
+      return result === 'OK' ? token : null;
+    } catch (err) {
+      this.logger.error(`Redis acquireLock error for key ${key}:`, err);
+      return null;
+    }
+  }
+
+  /**
+   * Releases a distributed lock using Lua script to guarantee only the holder can release.
+   */
+  async releaseLock(key: string, token: string): Promise<boolean> {
+    if (!this.client) return false;
+    const luaScript = `
+      if redis.call("get", KEYS[1]) == ARGV[1] then
+        return redis.call("del", KEYS[1])
+      else
+        return 0
+      end
+    `;
+    try {
+      const result = await this.client.eval(luaScript, 1, key, token);
+      return result === 1;
+    } catch (err) {
+      this.logger.error(`Redis releaseLock error for key ${key}:`, err);
+      return false;
+    }
   }
 }
