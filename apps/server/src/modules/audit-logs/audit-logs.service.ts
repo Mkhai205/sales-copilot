@@ -276,4 +276,65 @@ export class AuditLogService {
       this.logger.error('Failed to record audit log for canned_response.deleted', err);
     }
   }
+
+  @OnEvent('automation_rule.created', { async: true })
+  async handleAutomationRuleCreated(payload: any): Promise<void> {
+    try {
+      if (!payload?.workspaceId) return;
+      await this.log({
+        workspaceId: payload.workspaceId,
+        userId: payload.userId ?? null,
+        action: 'AUTOMATION_RULE_CREATED',
+        resourceType: 'AUTOMATION_RULE',
+        resourceId: payload.rule?.id,
+        payload: {
+          name: payload.rule?.name,
+          eventTrigger: payload.rule?.eventTrigger,
+          isActive: payload.rule?.isActive,
+        },
+      });
+    } catch (err) {
+      this.logger.error('Failed to record audit log for automation_rule.created', err);
+    }
+  }
+
+  @OnEvent('automation_rule.updated', { async: true })
+  async handleAutomationRuleUpdated(payload: any): Promise<void> {
+    try {
+      if (!payload?.workspaceId) return;
+      await this.log({
+        workspaceId: payload.workspaceId,
+        userId: payload.userId ?? null,
+        action: 'AUTOMATION_RULE_UPDATED',
+        resourceType: 'AUTOMATION_RULE',
+        resourceId: payload.rule?.id,
+        payload: {
+          name: payload.rule?.name,
+          eventTrigger: payload.rule?.eventTrigger,
+          isActive: payload.rule?.isActive,
+        },
+      });
+    } catch (err) {
+      this.logger.error('Failed to record audit log for automation_rule.updated', err);
+    }
+  }
+
+  @OnEvent('automation_rule.deleted', { async: true })
+  async handleAutomationRuleDeleted(payload: any): Promise<void> {
+    try {
+      if (!payload?.workspaceId) return;
+      await this.log({
+        workspaceId: payload.workspaceId,
+        userId: payload.userId ?? null,
+        action: 'AUTOMATION_RULE_DELETED',
+        resourceType: 'AUTOMATION_RULE',
+        resourceId: payload.ruleId,
+        payload: {
+          name: payload.name,
+        },
+      });
+    } catch (err) {
+      this.logger.error('Failed to record audit log for automation_rule.deleted', err);
+    }
+  }
 }

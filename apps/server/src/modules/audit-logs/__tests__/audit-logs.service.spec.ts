@@ -307,5 +307,42 @@ describe('AuditLogService (Feature F-1.8.4: Audit Logging)', () => {
       assert.strictEqual(auditLogsDb[0].action, 'CANNED_RESPONSE_CREATED');
       assert.strictEqual(auditLogsDb[1].action, 'CANNED_RESPONSE_DELETED');
     });
+
+    it('should record audit log on automation_rule created, updated, and deleted events', async () => {
+      await service.handleAutomationRuleCreated({
+        workspaceId: 'ws_1',
+        userId: 'usr_admin_1',
+        rule: {
+          id: 'rule_1',
+          name: 'VIP Auto Assign',
+          eventTrigger: 'MESSAGE_CREATED',
+          isActive: true,
+        },
+      });
+
+      await service.handleAutomationRuleUpdated({
+        workspaceId: 'ws_1',
+        userId: 'usr_admin_1',
+        rule: {
+          id: 'rule_1',
+          name: 'VIP Auto Assign Updated',
+          eventTrigger: 'MESSAGE_CREATED',
+          isActive: false,
+        },
+      });
+
+      await service.handleAutomationRuleDeleted({
+        workspaceId: 'ws_1',
+        userId: 'usr_admin_1',
+        ruleId: 'rule_1',
+        name: 'VIP Auto Assign Updated',
+      });
+
+      assert.strictEqual(auditLogsDb.length, 3);
+      assert.strictEqual(auditLogsDb[0].action, 'AUTOMATION_RULE_CREATED');
+      assert.strictEqual(auditLogsDb[0].resourceType, 'AUTOMATION_RULE');
+      assert.strictEqual(auditLogsDb[1].action, 'AUTOMATION_RULE_UPDATED');
+      assert.strictEqual(auditLogsDb[2].action, 'AUTOMATION_RULE_DELETED');
+    });
   });
 });

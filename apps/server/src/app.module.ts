@@ -16,6 +16,7 @@ import { InboxesModule } from './modules/inboxes';
 import { WebhooksModule } from './modules/webhooks';
 import { LabelsModule } from './modules/labels';
 import { CannedResponsesModule } from './modules/canned-responses';
+import { AutomationRulesModule } from './modules/automation-rules';
 import { AuditLogsModule } from './modules/audit-logs';
 import { ConversationsModule } from './modules/conversations';
 import { MessagesModule } from './modules/messages';
@@ -55,6 +56,7 @@ import { RequestIdMiddleware } from './common/middlewares';
     WebhooksModule,
     LabelsModule,
     CannedResponsesModule,
+    AutomationRulesModule,
     AuditLogsModule,
     ConversationsModule,
     MessagesModule,

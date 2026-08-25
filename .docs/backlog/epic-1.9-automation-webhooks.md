@@ -52,17 +52,17 @@ Cung cấp CRUD cho Automation Rules trong Workspace. Mỗi rule gồm 3 phần:
 
 #### Acceptance Criteria
 
-- [ ] Rule tạo thành công với cấu trúc trigger-conditions-actions hợp lệ
-- [ ] Invalid conditions/actions schema bị reject (`422 Validation Failed`)
-- [ ] Rule `isActive = false` không được evaluate
-- [ ] REST API endpoints:
+- [x] Rule tạo thành công với cấu trúc trigger-conditions-actions hợp lệ
+- [x] Invalid conditions/actions schema bị reject (`422 Validation Failed` / `400 Bad Request`)
+- [x] Rule `isActive = false` không được evaluate (hỗ trợ filter `isActive` và lưu trạng thái)
+- [x] REST API endpoints:
   - `GET    /api/v1/automation-rules` — List rules
   - `POST   /api/v1/automation-rules` — Create rule
   - `GET    /api/v1/automation-rules/:id` — Detail
   - `PATCH  /api/v1/automation-rules/:id` — Update rule
   - `DELETE /api/v1/automation-rules/:id` — Delete rule
-- [ ] Guards: `JwtAuthGuard` + `WorkspaceGuard`; CUD yêu cầu `ADMIN` hoặc `OWNER`
-- [ ] Tenant isolation: mọi query include `workspaceId`
+- [x] Guards: `JwtAuthGuard` + `WorkspaceGuard`; CUD yêu cầu `ADMIN` hoặc `OWNER`
+- [x] Tenant isolation: mọi query include `workspaceId`
 
 #### Dependencies
 
@@ -99,13 +99,13 @@ Xây dựng engine đánh giá automation rules khi có domain event trigger, ki
 
 #### Acceptance Criteria
 
-- [ ] Rule với trigger `MESSAGE_CREATED` evaluate khi có message mới
-- [ ] Conditions đánh giá đúng: match → execute actions; no match → skip
-- [ ] Multiple rules cho cùng trigger → tất cả được evaluate
-- [ ] Failed action → log error, tiếp tục evaluate rules tiếp theo
-- [ ] Rule `isActive = false` → skip
-- [ ] Actions thực thi side effects đúng (assign, label, webhook, status)
-- [ ] Audit log ghi nhận rule triggered + actions executed
+- [x] Rule với trigger `MESSAGE_CREATED` evaluate khi có message mới
+- [x] Conditions đánh giá đúng: match → execute actions; no match → skip
+- [x] Multiple rules cho cùng trigger → tất cả được evaluate
+- [x] Failed action → log error, tiếp tục evaluate rules tiếp theo
+- [x] Rule `isActive = false` → skip
+- [x] Actions thực thi side effects đúng (assign, label, webhook, status)
+- [x] Audit log ghi nhận rule triggered + actions executed
 
 #### Dependencies
 
