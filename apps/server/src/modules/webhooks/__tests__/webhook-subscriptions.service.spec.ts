@@ -10,6 +10,9 @@ describe('WebhookSubscriptionsService (Feature F-1.9.3)', () => {
   let mockEventEmitter: any;
   let emittedEvents: Array<{ event: string; payload: any }>;
   let subsDb: Map<string, any>;
+  let deliveriesDb: Map<string, any>;
+  let mockQueue: any;
+  let enqueuedJobs: any[];
 
   const workspaceA = 'ws_tenant_alpha';
   const workspaceB = 'ws_tenant_beta';
@@ -17,7 +20,16 @@ describe('WebhookSubscriptionsService (Feature F-1.9.3)', () => {
 
   beforeEach(() => {
     subsDb = new Map();
+    deliveriesDb = new Map();
     emittedEvents = [];
+    enqueuedJobs = [];
+
+    mockQueue = {
+      add: async (name: string, data: any, opts: any) => {
+        enqueuedJobs.push({ name, data, opts });
+        return { id: `job_${enqueuedJobs.length}` };
+      },
+    };
 
     mockEventEmitter = {
       emit: (event: string, payload: any) => {
@@ -97,13 +109,60 @@ describe('WebhookSubscriptionsService (Feature F-1.9.3)', () => {
           return { ...existing };
         },
       },
+
+      webhookDelivery: {
+        count: async ({ where }: { where: any }) => {
+          return Array.from(deliveriesDb.values()).filter((item: any) => {
+            if (where.subscriptionId && item.subscriptionId !== where.subscriptionId) return false;
+            if (where.status && item.status !== where.status) return false;
+            if (where.eventType && item.eventType !== where.eventType) return false;
+            return true;
+          }).length;
+        },
+        findMany: async ({ where, skip, take }: { where: any; skip?: number; take?: number }) => {
+          let results = Array.from(deliveriesDb.values()).filter((item: any) => {
+            if (where.subscriptionId && item.subscriptionId !== where.subscriptionId) return false;
+            if (where.status && item.status !== where.status) return false;
+            if (where.eventType && item.eventType !== where.eventType) return false;
+            return true;
+          });
+          results.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+          if (skip !== undefined && take !== undefined) {
+            results = results.slice(skip, skip + take);
+          }
+          return results.map(d => ({ ...d }));
+        },
+        findFirst: async ({ where }: { where: any }) => {
+          for (const item of deliveriesDb.values()) {
+            if (where.id && item.id !== where.id) continue;
+            if (where.subscriptionId && item.subscriptionId !== where.subscriptionId) continue;
+            return { ...item };
+          }
+          return null;
+        },
+        update: async ({ where, data }: { where: any; data: any }) => {
+          const existing = deliveriesDb.get(where.id);
+          if (!existing) throw new Error('Delivery not found');
+          const updated = {
+            ...existing,
+            ...data,
+            updatedAt: new Date(),
+          };
+          deliveriesDb.set(where.id, updated);
+          return { ...updated };
+        },
+      },
     };
 
     mockPrismaService = {
       getClient: () => clientMock,
     };
 
-    service = new WebhookSubscriptionsService(mockPrismaService, mockEventEmitter as any);
+    service = new WebhookSubscriptionsService(
+      mockPrismaService,
+      mockEventEmitter as any,
+      mockQueue as any,
+    );
   });
 
   describe('create()', () => {
@@ -400,6 +459,181 @@ describe('WebhookSubscriptionsService (Feature F-1.9.3)', () => {
           return true;
         },
       );
+    });
+  });
+
+  describe('listDeliveries()', () => {
+    it('should return paginated delivery list for a valid subscription', async () => {
+      const sub = await service.create(workspaceA, {
+        url: 'https://endpoint.com/webhook',
+        subscriptions: [WebhookEventType.MESSAGE_CREATED],
+      });
+
+      deliveriesDb.set('del_1', {
+        id: 'del_1',
+        subscriptionId: sub.id,
+        eventId: 'ev_1',
+        eventType: 'message.created',
+        payload: { event: 'message.created' },
+        status: 'DELIVERED',
+        attemptCount: 1,
+        responseStatus: 200,
+        responseBody: 'OK',
+        createdAt: new Date(Date.now() - 1000),
+        updatedAt: new Date(),
+      });
+
+      deliveriesDb.set('del_2', {
+        id: 'del_2',
+        subscriptionId: sub.id,
+        eventId: 'ev_2',
+        eventType: 'message.created',
+        payload: { event: 'message.created' },
+        status: 'FAILED',
+        attemptCount: 3,
+        responseStatus: 500,
+        responseBody: 'Server error',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      const res = await service.listDeliveries(workspaceA, sub.id, { page: 1, limit: 10 });
+      assert.strictEqual(res.items.length, 2);
+      assert.strictEqual(res.meta.total, 2);
+      assert.strictEqual(res.items[0].id, 'del_2'); // ordered desc
+      assert.strictEqual(res.items[0].status, 'FAILED');
+    });
+
+    it('should filter deliveries by status and eventType', async () => {
+      const sub = await service.create(workspaceA, {
+        url: 'https://endpoint.com/webhook',
+        subscriptions: [WebhookEventType.MESSAGE_CREATED, WebhookEventType.CONVERSATION_CREATED],
+      });
+
+      deliveriesDb.set('del_1', {
+        id: 'del_1',
+        subscriptionId: sub.id,
+        eventType: 'message.created',
+        status: 'DELIVERED',
+        attemptCount: 1,
+        createdAt: new Date(),
+      });
+
+      deliveriesDb.set('del_2', {
+        id: 'del_2',
+        subscriptionId: sub.id,
+        eventType: 'conversation.created',
+        status: 'FAILED',
+        attemptCount: 3,
+        createdAt: new Date(),
+      });
+
+      const filtered = await service.listDeliveries(workspaceA, sub.id, {
+        status: 'DELIVERED' as any,
+      });
+      assert.strictEqual(filtered.items.length, 1);
+      assert.strictEqual(filtered.items[0].id, 'del_1');
+    });
+
+    it('should throw NotFoundException if subscription belongs to another workspace', async () => {
+      const sub = await service.create(workspaceA, {
+        url: 'https://endpoint.com/webhook',
+        subscriptions: [WebhookEventType.MESSAGE_CREATED],
+      });
+
+      await assert.rejects(
+        async () => {
+          await service.listDeliveries(workspaceB, sub.id);
+        },
+        (err: any) => {
+          assert.ok(err instanceof NotFoundException);
+          return true;
+        },
+      );
+    });
+  });
+
+  describe('getDeliveryById()', () => {
+    it('should return full delivery details log', async () => {
+      const sub = await service.create(workspaceA, {
+        url: 'https://endpoint.com/webhook',
+        subscriptions: [WebhookEventType.MESSAGE_CREATED],
+      });
+
+      deliveriesDb.set('del_detail', {
+        id: 'del_detail',
+        subscriptionId: sub.id,
+        eventId: 'ev_detail',
+        eventType: 'message.created',
+        payload: { event: 'message.created', text: 'hi' },
+        status: 'DELIVERED',
+        attemptCount: 1,
+        responseStatus: 200,
+        responseBody: '{"ok":true}',
+        lastAttemptAt: new Date(),
+        nextRetryAt: null,
+        deliveredAt: new Date(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      const detail = await service.getDeliveryById(workspaceA, sub.id, 'del_detail');
+      assert.strictEqual(detail.id, 'del_detail');
+      assert.strictEqual(detail.subscriptionId, sub.id);
+      assert.strictEqual(detail.eventType, 'message.created');
+      assert.strictEqual(detail.responseStatus, 200);
+      assert.strictEqual(detail.responseBody, '{"ok":true}');
+    });
+
+    it('should throw NotFoundException for non-existent delivery', async () => {
+      const sub = await service.create(workspaceA, {
+        url: 'https://endpoint.com/webhook',
+        subscriptions: [WebhookEventType.MESSAGE_CREATED],
+      });
+
+      await assert.rejects(
+        async () => {
+          await service.getDeliveryById(workspaceA, sub.id, 'del_unknown');
+        },
+        (err: any) => {
+          assert.ok(err instanceof NotFoundException);
+          return true;
+        },
+      );
+    });
+  });
+
+  describe('retryDelivery()', () => {
+    it('should reset status to PENDING and re-enqueue delivery job', async () => {
+      const sub = await service.create(workspaceA, {
+        url: 'https://endpoint.com/webhook',
+        subscriptions: [WebhookEventType.MESSAGE_CREATED],
+        secretKey: 'key-123',
+      });
+
+      deliveriesDb.set('del_retry_target', {
+        id: 'del_retry_target',
+        subscriptionId: sub.id,
+        eventId: 'ev_retry',
+        eventType: 'message.created',
+        payload: { event: 'message.created', data: { text: 'retry payload' } },
+        status: 'FAILED',
+        attemptCount: 3,
+        responseStatus: 500,
+        responseBody: 'Server down',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      const retried = await service.retryDelivery(workspaceA, sub.id, 'del_retry_target');
+      assert.strictEqual(retried.status, 'PENDING');
+      assert.strictEqual(retried.nextRetryAt, null);
+
+      assert.strictEqual(enqueuedJobs.length, 1);
+      assert.strictEqual(enqueuedJobs[0].name, 'deliver-webhook');
+      assert.strictEqual(enqueuedJobs[0].data.deliveryId, 'del_retry_target');
+      assert.strictEqual(enqueuedJobs[0].data.url, 'https://endpoint.com/webhook');
+      assert.strictEqual(enqueuedJobs[0].data.secretKey, 'key-123');
     });
   });
 });

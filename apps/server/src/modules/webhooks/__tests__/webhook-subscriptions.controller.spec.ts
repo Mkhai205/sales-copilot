@@ -80,6 +80,50 @@ describe('WebhookSubscriptionsController (Presentation Layer Endpoints)', () => 
       delete: async (_workspaceId: string, _id: string, _actorUserId?: string) => ({
         success: true,
       }),
+      listDeliveries: async (workspaceId: string, subscriptionId: string, _query: any) => ({
+        items: [
+          {
+            id: 'del_1',
+            subscriptionId,
+            event: 'message.created',
+            status: 'DELIVERED',
+            attempts: 1,
+            responseStatusCode: 200,
+            createdAt: '2026-08-25T00:00:00Z',
+          },
+        ],
+        meta: { page: 1, limit: 20, total: 1, totalPages: 1 },
+      }),
+      getDeliveryById: async (
+        _workspaceId: string,
+        subscriptionId: string,
+        deliveryId: string,
+      ) => ({
+        id: deliveryId,
+        subscriptionId,
+        eventId: 'ev_1',
+        eventType: 'message.created',
+        payload: { event: 'message.created' },
+        status: 'DELIVERED',
+        attemptCount: 1,
+        responseStatus: 200,
+        responseBody: '{"ok":true}',
+        createdAt: '2026-08-25T00:00:00Z',
+        updatedAt: '2026-08-25T00:00:00Z',
+      }),
+      retryDelivery: async (_workspaceId: string, subscriptionId: string, deliveryId: string) => ({
+        id: deliveryId,
+        subscriptionId,
+        eventId: 'ev_1',
+        eventType: 'message.created',
+        payload: { event: 'message.created' },
+        status: 'PENDING',
+        attemptCount: 1,
+        responseStatus: null,
+        responseBody: null,
+        createdAt: '2026-08-25T00:00:00Z',
+        updatedAt: '2026-08-25T00:00:00Z',
+      }),
     };
 
     controller = new WebhookSubscriptionsController(mockService as any);
@@ -124,5 +168,25 @@ describe('WebhookSubscriptionsController (Presentation Layer Endpoints)', () => 
   it('should delete a webhook subscription', async () => {
     const result = await controller.delete(context, user, 'sub_1');
     assert.deepStrictEqual(result, { success: true });
+  });
+
+  it('should list deliveries for a subscription', async () => {
+    const result = await controller.listDeliveries(context, 'sub_1', { page: 1, limit: 20 });
+    assert.strictEqual(result.items.length, 1);
+    assert.strictEqual(result.items[0].id, 'del_1');
+    assert.strictEqual(result.items[0].status, 'DELIVERED');
+  });
+
+  it('should get delivery detail by ID', async () => {
+    const result = await controller.getDeliveryById(context, 'sub_1', 'del_1');
+    assert.strictEqual(result.id, 'del_1');
+    assert.strictEqual(result.subscriptionId, 'sub_1');
+    assert.strictEqual(result.responseStatus, 200);
+  });
+
+  it('should retry a failed delivery', async () => {
+    const result = await controller.retryDelivery(context, 'sub_1', 'del_1');
+    assert.strictEqual(result.id, 'del_1');
+    assert.strictEqual(result.status, 'PENDING');
   });
 });

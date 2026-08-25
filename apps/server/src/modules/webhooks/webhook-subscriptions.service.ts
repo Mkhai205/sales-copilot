@@ -1,14 +1,31 @@
-import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  NotFoundException,
+  Optional,
+} from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
 import type {
   CreateWebhookSubscriptionDto,
   UpdateWebhookSubscriptionDto,
   WebhookSubscriptionDto,
   WebhookSubscriptionListQueryDto,
+  WebhookDeliveryDto,
+  WebhookDeliveryDetailDto,
+  WebhookDeliveryListQueryDto,
 } from '@sales-copilot/shared-contracts';
+import { WebhookDeliveryStatus } from '@sales-copilot/shared-contracts';
 import { PrismaService } from '../../infrastructure/database';
+import { WEBHOOK_DELIVERY_QUEUE, type WebhookDeliveryJobData } from '../../infrastructure/queue';
 import { generateWebhookSecret } from './webhook-signer';
-import { mapWebhookSubscriptionToDto } from './webhook-subscriptions.mapper';
+import {
+  mapWebhookSubscriptionToDto,
+  mapWebhookDeliveryToDto,
+  mapWebhookDeliveryToDetailDto,
+} from './webhook-subscriptions.mapper';
 
 @Injectable()
 export class WebhookSubscriptionsService {
@@ -17,6 +34,9 @@ export class WebhookSubscriptionsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly eventEmitter: EventEmitter2,
+    @Optional()
+    @InjectQueue(WEBHOOK_DELIVERY_QUEUE)
+    private readonly deliveryQueue?: Queue<WebhookDeliveryJobData>,
   ) {}
 
   /**
@@ -230,5 +250,151 @@ export class WebhookSubscriptionsService {
     this.logger.log(`Deleted webhook subscription (${id}) from workspace '${workspaceId}'`);
 
     return { success: true };
+  }
+
+  /**
+   * Lists delivery history for a webhook subscription in a workspace.
+   */
+  async listDeliveries(
+    workspaceId: string,
+    subscriptionId: string,
+    query?: WebhookDeliveryListQueryDto,
+  ): Promise<{
+    items: WebhookDeliveryDto[];
+    meta: { page: number; limit: number; total: number; totalPages: number };
+  }> {
+    // 1. Verify subscription belongs to workspace
+    await this.getById(workspaceId, subscriptionId);
+
+    const client = this.prisma.getClient();
+    const page = query?.page ? Number(query.page) : 1;
+    const limit = query?.limit ? Number(query.limit) : 20;
+    const skip = (page - 1) * limit;
+
+    const where: Record<string, unknown> = {
+      subscriptionId,
+    };
+
+    if (query?.status) {
+      where.status = query.status;
+    }
+
+    if (query?.eventType) {
+      where.eventType = query.eventType;
+    }
+
+    const [total, records] = await Promise.all([
+      client.webhookDelivery.count({ where }),
+      client.webhookDelivery.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+    ]);
+
+    return {
+      items: records.map(mapWebhookDeliveryToDto),
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit) || 1,
+      },
+    };
+  }
+
+  /**
+   * Gets a specific webhook delivery details log.
+   */
+  async getDeliveryById(
+    workspaceId: string,
+    subscriptionId: string,
+    deliveryId: string,
+  ): Promise<WebhookDeliveryDetailDto> {
+    // Verify subscription belongs to workspace
+    await this.getById(workspaceId, subscriptionId);
+
+    const client = this.prisma.getClient();
+    const delivery = await client.webhookDelivery.findFirst({
+      where: {
+        id: deliveryId,
+        subscriptionId,
+      },
+    });
+
+    if (!delivery) {
+      throw new NotFoundException({
+        code: 'WEBHOOK_DELIVERY_NOT_FOUND',
+        message: `Webhook delivery '${deliveryId}' not found for subscription '${subscriptionId}'`,
+      });
+    }
+
+    return mapWebhookDeliveryToDetailDto(delivery);
+  }
+
+  /**
+   * Manually retries a webhook delivery by resetting its status and enqueuing a BullMQ delivery job.
+   */
+  async retryDelivery(
+    workspaceId: string,
+    subscriptionId: string,
+    deliveryId: string,
+  ): Promise<WebhookDeliveryDetailDto> {
+    const subscription = await this.getById(workspaceId, subscriptionId);
+    const client = this.prisma.getClient();
+
+    const delivery = await client.webhookDelivery.findFirst({
+      where: {
+        id: deliveryId,
+        subscriptionId,
+      },
+    });
+
+    if (!delivery) {
+      throw new NotFoundException({
+        code: 'WEBHOOK_DELIVERY_NOT_FOUND',
+        message: `Webhook delivery '${deliveryId}' not found for subscription '${subscriptionId}'`,
+      });
+    }
+
+    // Reset status to PENDING and update nextRetryAt
+    const updated = await client.webhookDelivery.update({
+      where: { id: deliveryId },
+      data: {
+        status: WebhookDeliveryStatus.PENDING,
+        nextRetryAt: null,
+      },
+    });
+
+    if (this.deliveryQueue) {
+      await this.deliveryQueue.add(
+        'deliver-webhook',
+        {
+          deliveryId: updated.id,
+          subscriptionId: subscription.id,
+          workspaceId,
+          url: subscription.url,
+          secretKey: subscription.secretKey,
+          eventType: updated.eventType,
+          payload: updated.payload as any,
+        },
+        {
+          attempts: 3,
+          backoff: {
+            type: 'exponential',
+            delay: 30_000,
+          },
+          removeOnComplete: true,
+          removeOnFail: false,
+        },
+      );
+
+      this.logger.log(
+        `Manually re-enqueued webhook delivery '${deliveryId}' for subscription '${subscriptionId}'`,
+      );
+    }
+
+    return mapWebhookDeliveryToDetailDto(updated);
   }
 }

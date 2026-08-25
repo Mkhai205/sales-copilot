@@ -7,7 +7,10 @@ import { ContactsModule } from '../../modules/contacts';
 import { ConversationsModule } from '../../modules/conversations';
 import { MessagesModule } from '../../modules/messages';
 
+import { WebhookDeliveryProcessor, WEBHOOK_DELIVERY_QUEUE } from './webhook-delivery.processor';
+
 export const CHANNEL_INGESTION_QUEUE = 'channel-ingestion';
+export { WEBHOOK_DELIVERY_QUEUE };
 
 @Global()
 @Module({
@@ -42,11 +45,16 @@ export const CHANNEL_INGESTION_QUEUE = 'channel-ingestion';
         }
       },
     }),
-    BullModule.registerQueue({
-      name: CHANNEL_INGESTION_QUEUE,
-    }),
+    BullModule.registerQueue(
+      {
+        name: CHANNEL_INGESTION_QUEUE,
+      },
+      {
+        name: WEBHOOK_DELIVERY_QUEUE,
+      },
+    ),
   ],
-  providers: [ChannelIngestionProcessor],
-  exports: [BullModule, ChannelIngestionProcessor],
+  providers: [ChannelIngestionProcessor, WebhookDeliveryProcessor],
+  exports: [BullModule, ChannelIngestionProcessor, WebhookDeliveryProcessor],
 })
 export class QueueModule {}

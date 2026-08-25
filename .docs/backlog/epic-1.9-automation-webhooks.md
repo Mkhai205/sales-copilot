@@ -5,7 +5,7 @@
 Hiện thực động cơ luật tự động hóa (Automation Rules Engine) với DSL trigger-condition-action, và hệ thống phát tán Outbound Webhooks kèm cơ chế retry Exponential Backoff qua BullMQ.
 
 - **ID**: `EPIC-1.9`
-- **Status**: 🟡 Ready
+- **Status**: 🟢 Done
 - **Dependencies**: `EPIC-1.8` (Assignment & Operations)
 - **References**:
   - `.docs/references/chatwoot/source/app/models/automation_rule.rb`
@@ -177,14 +177,15 @@ Xây dựng engine gửi webhook outbound qua BullMQ với cơ chế retry Expon
 
 #### Acceptance Criteria
 
-- [ ] Domain event → BullMQ job created cho mỗi active subscription matching event
-- [ ] HTTP POST gửi đúng payload format
-- [ ] HMAC-SHA256 signature đúng (verifiable by subscriber)
-- [ ] Success (2xx response) → `WebhookDelivery` status `SUCCESS`
-- [ ] Failure (non-2xx hoặc timeout) → retry với exponential backoff
-- [ ] After max attempts → `WebhookDelivery` status `FAILED`, no more retries
-- [ ] `WebhookDelivery` ghi nhận đầy đủ: request, response, attempts, timestamps
-- [ ] Failed webhook delivery không block event processing pipeline
+- [x] Domain event → BullMQ job created cho mỗi active subscription matching event
+- [x] HTTP POST gửi đúng payload format
+- [x] HMAC-SHA256 signature đúng (verifiable by subscriber)
+- [x] Success (2xx response) → `WebhookDelivery` status `SUCCESS` / `DELIVERED`
+- [x] Failure (non-2xx hoặc timeout) → retry với exponential backoff
+- [x] After max attempts → `WebhookDelivery` status `FAILED`, no more retries
+- [x] `WebhookDelivery` ghi nhận đầy đủ: request, response, attempts, timestamps
+- [x] Failed webhook delivery không block event processing pipeline
+
 
 #### Dependencies
 

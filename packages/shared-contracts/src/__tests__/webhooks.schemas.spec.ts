@@ -4,6 +4,7 @@ import {
   createWebhookSubscriptionSchema,
   updateWebhookSubscriptionSchema,
   webhookSubscriptionListQuerySchema,
+  webhookDeliveryListQuerySchema,
   WebhookEventType,
   WebhookDeliveryStatus,
 } from '../index';
@@ -158,6 +159,29 @@ describe('Shared Contracts — Webhook Subscriptions Schemas (F-1.9.3)', () => {
 
       assert.strictEqual(query.search, 'https://example.com');
       assert.strictEqual(query.event, WebhookEventType.MESSAGE_CREATED);
+    });
+  });
+
+  describe('webhookDeliveryListQuerySchema', () => {
+    it('should parse valid query options with defaults', () => {
+      const parsed = webhookDeliveryListQuerySchema.parse({
+        status: WebhookDeliveryStatus.DELIVERED,
+        eventType: 'message.created',
+        page: '2',
+        limit: '50',
+      });
+
+      assert.strictEqual(parsed.status, WebhookDeliveryStatus.DELIVERED);
+      assert.strictEqual(parsed.eventType, 'message.created');
+      assert.strictEqual(parsed.page, 2);
+      assert.strictEqual(parsed.limit, 50);
+    });
+
+    it('should use default page 1 and limit 20 when omitted', () => {
+      const parsed = webhookDeliveryListQuerySchema.parse({});
+      assert.strictEqual(parsed.page, 1);
+      assert.strictEqual(parsed.limit, 20);
+      assert.strictEqual(parsed.status, undefined);
     });
   });
 

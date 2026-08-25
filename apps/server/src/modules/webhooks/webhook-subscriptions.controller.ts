@@ -18,6 +18,10 @@ import {
   WebhookSubscriptionDto,
   WebhookSubscriptionListQueryDto,
   webhookSubscriptionListQuerySchema,
+  WebhookDeliveryDto,
+  WebhookDeliveryDetailDto,
+  WebhookDeliveryListQueryDto,
+  webhookDeliveryListQuerySchema,
   WorkspaceRole,
 } from '@sales-copilot/shared-contracts';
 import { ZodBody, ZodQuery } from '../../common/pipes';
@@ -119,5 +123,56 @@ export class WebhookSubscriptionsController {
     @Param('id') id: string,
   ): Promise<{ success: true }> {
     return this.webhookSubscriptionsService.delete(context.workspaceId, id, user.userId);
+  }
+
+  @Get(':id/deliveries')
+  @HttpCode(HttpStatus.OK)
+  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.AGENT, WorkspaceRole.VIEWER)
+  @ApiOperation({ summary: 'List delivery history for a webhook subscription' })
+  @ApiResponse({ status: 200, description: 'Webhook deliveries retrieved successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiResponse({ status: 404, description: 'Webhook subscription not found' })
+  async listDeliveries(
+    @CurrentWorkspace() context: WorkspaceContext,
+    @Param('id') id: string,
+    @ZodQuery(webhookDeliveryListQuerySchema) query?: WebhookDeliveryListQueryDto,
+  ): Promise<{
+    items: WebhookDeliveryDto[];
+    meta: { page: number; limit: number; total: number; totalPages: number };
+  }> {
+    return this.webhookSubscriptionsService.listDeliveries(context.workspaceId, id, query);
+  }
+
+  @Get(':id/deliveries/:deliveryId')
+  @HttpCode(HttpStatus.OK)
+  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.AGENT, WorkspaceRole.VIEWER)
+  @ApiOperation({ summary: 'Get details for a specific webhook delivery attempt' })
+  @ApiResponse({ status: 200, description: 'Webhook delivery detail retrieved successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiResponse({ status: 404, description: 'Webhook delivery not found' })
+  async getDeliveryById(
+    @CurrentWorkspace() context: WorkspaceContext,
+    @Param('id') id: string,
+    @Param('deliveryId') deliveryId: string,
+  ): Promise<WebhookDeliveryDetailDto> {
+    return this.webhookSubscriptionsService.getDeliveryById(context.workspaceId, id, deliveryId);
+  }
+
+  @Post(':id/deliveries/:deliveryId/retry')
+  @HttpCode(HttpStatus.OK)
+  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN)
+  @ApiOperation({ summary: 'Manually retry a failed webhook delivery' })
+  @ApiResponse({ status: 200, description: 'Webhook delivery re-enqueued successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiResponse({ status: 404, description: 'Webhook delivery not found' })
+  async retryDelivery(
+    @CurrentWorkspace() context: WorkspaceContext,
+    @Param('id') id: string,
+    @Param('deliveryId') deliveryId: string,
+  ): Promise<WebhookDeliveryDetailDto> {
+    return this.webhookSubscriptionsService.retryDelivery(context.workspaceId, id, deliveryId);
   }
 }

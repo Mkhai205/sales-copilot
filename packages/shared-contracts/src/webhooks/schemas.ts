@@ -117,9 +117,40 @@ export interface WebhookSubscriptionDto {
 export interface WebhookDeliveryDto {
   id: string;
   subscriptionId: string;
+  eventId?: string;
   event: string;
+  eventType?: string;
   status: WebhookDeliveryStatus;
   attempts: number;
+  attemptCount?: number;
   responseStatusCode?: number;
+  responseStatus?: number | null;
   createdAt: string;
 }
+
+export interface WebhookDeliveryDetailDto {
+  id: string;
+  subscriptionId: string;
+  eventId: string;
+  eventType: string;
+  payload: Record<string, unknown> | unknown;
+  status: WebhookDeliveryStatus;
+  attemptCount: number;
+  responseStatus?: number | null;
+  responseBody?: string | null;
+  lastAttemptAt?: string | null;
+  nextRetryAt?: string | null;
+  deliveredAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export const webhookDeliveryListQuerySchema = z.object({
+  status: z.nativeEnum(WebhookDeliveryStatus).optional(),
+  eventType: z.string().trim().optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+});
+
+export type WebhookDeliveryListQueryDto = z.input<typeof webhookDeliveryListQuerySchema>;
+export type WebhookDeliveryListQueryOutput = z.output<typeof webhookDeliveryListQuerySchema>;
