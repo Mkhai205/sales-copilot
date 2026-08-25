@@ -48,13 +48,13 @@ Hiện thực thuật toán tự động phân công hội thoại mới cho Age
 
 #### Acceptance Criteria
 
-- [ ] Conversation mới trong Inbox có `isAutoAssignmentEnabled = true` → tự động gán Agent
-- [ ] Chỉ chọn Agent đang `ONLINE` trong `InboxMember` list
-- [ ] Agent có ít `OPEN` conversations nhất được chọn (BR-4.2)
-- [ ] Conversation đã có assignee → skip auto-assignment
-- [ ] Không có agent online → conversation giữ `assigneeId = null` (unassigned)
-- [ ] `isAutoAssignmentEnabled = false` → skip auto-assignment
-- [ ] Emit event `conversation.assigned` sau khi gán thành công
+- [x] Conversation mới trong Inbox có `isAutoAssignmentEnabled = true` → tự động gán Agent
+- [x] Chỉ chọn Agent đang `ONLINE` trong `InboxMember` list
+- [x] Agent có ít `OPEN` conversations nhất được chọn (BR-4.2)
+- [x] Conversation đã có assignee → skip auto-assignment
+- [x] Không có agent online → conversation giữ `assigneeId = null` (unassigned)
+- [x] `isAutoAssignmentEnabled = false` → skip auto-assignment
+- [x] Emit event `conversation.assigned` sau khi gán thành công
 
 #### Dependencies
 
@@ -79,11 +79,11 @@ Cung cấp API cho Agent/Admin gán hoặc đổi assignee (Agent) và/hoặc Te
 
 #### Acceptance Criteria
 
-- [ ] Gán Agent thành công → `assigneeId` updated, event emitted
-- [ ] Gán Team thành công → `teamId` updated, event emitted
-- [ ] Agent phải là `WorkspaceMember` của cùng Workspace
-- [ ] Unassign thành công (set null)
-- [ ] WebSocket broadcast assignment change tới old assignee + new assignee
+- [x] Gán Agent thành công → `assigneeId` updated, event emitted
+- [x] Gán Team thành công → `teamId` updated, event emitted
+- [x] Agent phải là `WorkspaceMember` của cùng Workspace
+- [x] Unassign thành công (set null)
+- [x] WebSocket broadcast assignment change tới old assignee + new assignee
 
 #### Dependencies
 
@@ -107,16 +107,16 @@ Quản lý mẫu câu trả lời nhanh (Canned Responses) trong Workspace, hỗ
 
 #### Acceptance Criteria
 
-- [ ] Canned Response tạo thành công với `workspaceId` scope
-- [ ] Shortcode duy nhất trong cùng Workspace (`@@unique([workspaceId, shortCode])`)
-- [ ] Search by shortcode prefix trả về kết quả matching (e.g., `/bao` → `/baogia`, `/baohiem`)
-- [ ] REST API endpoints:
+- [x] Canned Response tạo thành công với `workspaceId` scope
+- [x] Shortcode duy nhất trong cùng Workspace (`@@unique([workspaceId, shortCode])`)
+- [x] Search by shortcode prefix trả về kết quả matching (e.g., `/bao` → `/baogia`, `/baohiem`)
+- [x] REST API endpoints:
   - `GET    /api/v1/canned-responses` — List (with optional search query)
   - `POST   /api/v1/canned-responses` — Create
   - `PATCH  /api/v1/canned-responses/:id` — Update
   - `DELETE /api/v1/canned-responses/:id` — Delete
-- [ ] Guards: `JwtAuthGuard` + `WorkspaceGuard`; CUD yêu cầu `ADMIN`, `OWNER` hoặc `AGENT`
-- [ ] Tenant isolation: mọi query include `workspaceId`
+- [x] Guards: `JwtAuthGuard` + `WorkspaceGuard`; CUD yêu cầu `ADMIN`, `OWNER` hoặc `AGENT`
+- [x] Tenant isolation: mọi query include `workspaceId`
 
 #### Dependencies
 

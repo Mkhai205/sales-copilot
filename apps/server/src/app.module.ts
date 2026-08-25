@@ -15,6 +15,7 @@ import { ContactsModule } from './modules/contacts';
 import { InboxesModule } from './modules/inboxes';
 import { WebhooksModule } from './modules/webhooks';
 import { LabelsModule } from './modules/labels';
+import { CannedResponsesModule } from './modules/canned-responses';
 import { ConversationsModule } from './modules/conversations';
 import { MessagesModule } from './modules/messages';
 import { IntegrationsModule } from './integrations';
@@ -52,6 +53,7 @@ import { RequestIdMiddleware } from './common/middlewares';
     InboxesModule,
     WebhooksModule,
     LabelsModule,
+    CannedResponsesModule,
     ConversationsModule,
     MessagesModule,
     IntegrationsModule,
