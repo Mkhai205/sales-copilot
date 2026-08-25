@@ -60,11 +60,18 @@ describe('ConversationsService (Core & State Machine)', () => {
       updatedAt: new Date(),
     });
 
-    // Seed agent as member of ib_1
+    // Seed agents as members of ib_1
     inboxMembersDb.set('ib_1_usr_agent_1', {
       id: 'im_1',
       inboxId: 'ib_1',
       userId: 'usr_agent_1',
+      createdAt: new Date(),
+    });
+
+    inboxMembersDb.set('ib_1_usr_agent_2', {
+      id: 'im_2',
+      inboxId: 'ib_1',
+      userId: 'usr_agent_2',
       createdAt: new Date(),
     });
 
@@ -564,7 +571,7 @@ describe('ConversationsService (Core & State Machine)', () => {
     });
   });
 
-  describe('assign', () => {
+  describe('assign (Manual Assignment F-1.8.2)', () => {
     let convId: string;
 
     beforeEach(async () => {
@@ -589,8 +596,26 @@ describe('ConversationsService (Core & State Machine)', () => {
 
       const assignEvent = emittedEvents.find(e => e.event === 'conversation.assigned');
       assert.ok(assignEvent);
+      assert.strictEqual(assignEvent.payload.workspaceId, 'ws_1');
+      assert.strictEqual(assignEvent.payload.conversationId, convId);
+      assert.strictEqual(assignEvent.payload.previousAssigneeId, null);
       assert.strictEqual(assignEvent.payload.newAssigneeId, 'usr_agent_1');
+      assert.strictEqual(assignEvent.payload.teamId, 'tm_1');
       assert.strictEqual(assignEvent.payload.assignedByUserId, 'usr_admin');
+      assert.strictEqual(assignEvent.payload.conversation.id, convId);
+    });
+
+    it('should throw NotFoundException if conversation does not exist in workspace', async () => {
+      await assert.rejects(
+        async () => {
+          await service.assign('ws_wrong', convId, { assigneeId: 'usr_agent_1' });
+        },
+        (err: any) => {
+          assert.strictEqual(err instanceof NotFoundException, true);
+          assert.strictEqual(err.response.code, 'CONVERSATION_NOT_FOUND');
+          return true;
+        },
+      );
     });
 
     it('should throw BadRequestException if assignee is not in inbox members', async () => {
@@ -606,11 +631,88 @@ describe('ConversationsService (Core & State Machine)', () => {
       );
     });
 
-    it('should allow unassigning by passing null', async () => {
+    it('should throw NotFoundException if team does not exist in workspace', async () => {
+      await assert.rejects(
+        async () => {
+          await service.assign('ws_1', convId, { teamId: 'tm_nonexistent' });
+        },
+        (err: any) => {
+          assert.strictEqual(err instanceof NotFoundException, true);
+          assert.strictEqual(err.response.code, 'TEAM_NOT_FOUND');
+          return true;
+        },
+      );
+    });
+
+    it('should reassign conversation from agent 1 to agent 2 and emit previousAssigneeId and newAssigneeId', async () => {
+      await service.assign('ws_1', convId, { assigneeId: 'usr_agent_1' }, 'usr_admin');
+      emittedEvents = [];
+
+      const reassigned = await service.assign(
+        'ws_1',
+        convId,
+        { assigneeId: 'usr_agent_2' },
+        'usr_supervisor',
+      );
+
+      assert.strictEqual(reassigned.assigneeId, 'usr_agent_2');
+
+      const assignEvent = emittedEvents.find(e => e.event === 'conversation.assigned');
+      assert.ok(assignEvent);
+      assert.strictEqual(assignEvent.payload.previousAssigneeId, 'usr_agent_1');
+      assert.strictEqual(assignEvent.payload.newAssigneeId, 'usr_agent_2');
+      assert.strictEqual(assignEvent.payload.assignedByUserId, 'usr_supervisor');
+    });
+
+    it('should allow assigning only team without altering existing assignee', async () => {
       await service.assign('ws_1', convId, { assigneeId: 'usr_agent_1' });
+      emittedEvents = [];
+
+      const updated = await service.assign('ws_1', convId, { teamId: 'tm_1' });
+
+      assert.strictEqual(updated.assigneeId, 'usr_agent_1');
+      assert.strictEqual(updated.teamId, 'tm_1');
+    });
+
+    it('should allow unassigning agent by passing null', async () => {
+      await service.assign('ws_1', convId, { assigneeId: 'usr_agent_1', teamId: 'tm_1' });
+      emittedEvents = [];
+
       const unassigned = await service.assign('ws_1', convId, { assigneeId: null });
 
       assert.strictEqual(unassigned.assigneeId, null);
+      assert.strictEqual(unassigned.teamId, 'tm_1');
+
+      const assignEvent = emittedEvents.find(e => e.event === 'conversation.assigned');
+      assert.ok(assignEvent);
+      assert.strictEqual(assignEvent.payload.previousAssigneeId, 'usr_agent_1');
+      assert.strictEqual(assignEvent.payload.newAssigneeId, null);
+    });
+
+    it('should allow unassigning team by passing null', async () => {
+      await service.assign('ws_1', convId, { assigneeId: 'usr_agent_1', teamId: 'tm_1' });
+      emittedEvents = [];
+
+      const unassigned = await service.assign('ws_1', convId, { teamId: null });
+
+      assert.strictEqual(unassigned.assigneeId, 'usr_agent_1');
+      assert.strictEqual(unassigned.teamId, null);
+    });
+
+    it('should allow unassigning both assignee and team simultaneously', async () => {
+      await service.assign('ws_1', convId, { assigneeId: 'usr_agent_1', teamId: 'tm_1' });
+      emittedEvents = [];
+
+      const unassigned = await service.assign('ws_1', convId, { assigneeId: null, teamId: null });
+
+      assert.strictEqual(unassigned.assigneeId, null);
+      assert.strictEqual(unassigned.teamId, null);
+
+      const assignEvent = emittedEvents.find(e => e.event === 'conversation.assigned');
+      assert.ok(assignEvent);
+      assert.strictEqual(assignEvent.payload.previousAssigneeId, 'usr_agent_1');
+      assert.strictEqual(assignEvent.payload.newAssigneeId, null);
+      assert.strictEqual(assignEvent.payload.teamId, null);
     });
   });
 

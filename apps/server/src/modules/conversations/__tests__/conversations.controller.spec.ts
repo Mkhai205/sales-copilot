@@ -187,6 +187,24 @@ describe('ConversationsController (Presentation Layer Endpoints)', () => {
     assert.strictEqual(assigned.assigneeId, '33333333-3333-3333-3333-333333333333');
   });
 
+  it('should assign conversation with both assignee and team', async () => {
+    const assigned = await controller.assign(context, mockUser, 'conv_1', {
+      assigneeId: '33333333-3333-3333-3333-333333333333',
+      teamId: '55555555-5555-5555-5555-555555555555',
+    });
+    assert.strictEqual(assigned.assigneeId, '33333333-3333-3333-3333-333333333333');
+    assert.strictEqual(assigned.teamId, '55555555-5555-5555-5555-555555555555');
+  });
+
+  it('should unassign conversation assignee and team', async () => {
+    const unassigned = await controller.assign(context, mockUser, 'conv_1', {
+      assigneeId: null,
+      teamId: null,
+    });
+    assert.strictEqual(unassigned.assigneeId, null);
+    assert.strictEqual(unassigned.teamId, null);
+  });
+
   it('should update conversation priority', async () => {
     const updated = await controller.updatePriority(context, 'conv_1', {
       priority: Priority.URGENT,
