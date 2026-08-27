@@ -87,6 +87,12 @@ describe('AuthService (Login, Refresh & Session Use Cases)', () => {
             }
             return null;
           },
+          update: async ({ where, data }: { where: { id: string }; data: any }) => {
+            if (where.id === mockActiveUser.id) {
+              return { ...mockActiveUser, ...data, updatedAt: new Date() };
+            }
+            return null;
+          },
         },
       },
     };
@@ -240,5 +246,40 @@ describe('AuthService (Login, Refresh & Session Use Cases)', () => {
     const result = await authService.logout(mockActiveUser.id, undefined);
     assert.deepStrictEqual(result, { loggedOut: true });
     assert.strictEqual(revokeAllCalled, true);
+  });
+
+  describe('updateProfile', () => {
+    it('should update user profile successfully', async () => {
+      const updated = await authService.updateProfile(mockActiveUser.id, {
+        name: 'New Agent Name',
+        avatarUrl: 'https://example.com/avatar.jpg',
+      });
+      assert.strictEqual(updated.name, 'New Agent Name');
+      assert.strictEqual(updated.avatarUrl, 'https://example.com/avatar.jpg');
+    });
+
+    it('should throw NotFoundException when user does not exist', async () => {
+      await assert.rejects(
+        async () => {
+          await authService.updateProfile('unknown_user_id', { name: 'Name' });
+        },
+        (err: any) => {
+          assert.strictEqual(err.response?.code, 'USER_NOT_FOUND');
+          return true;
+        },
+      );
+    });
+
+    it('should throw ForbiddenException when user is inactive', async () => {
+      await assert.rejects(
+        async () => {
+          await authService.updateProfile(mockInactiveUser.id, { name: 'Name' });
+        },
+        (err: any) => {
+          assert.strictEqual(err.response?.code, 'ACCOUNT_DEACTIVATED');
+          return true;
+        },
+      );
+    });
   });
 });

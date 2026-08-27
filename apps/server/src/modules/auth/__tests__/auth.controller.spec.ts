@@ -87,4 +87,25 @@ describe('AuthController (Presentation Layer Endpoints)', () => {
     const result = await controller.me(userPayload);
     assert.deepStrictEqual(result, mockUserDto);
   });
+
+  it('should handle updateProfile request and return updated user profile', async () => {
+    const userPayload = {
+      userId: 'usr_100',
+      email: 'agent@salescopilot.io',
+      role: PlatformRole.USER,
+    };
+
+    mockAuthService.updateProfile = async (_userId, dto) => ({
+      ...mockUserDto,
+      ...dto,
+    });
+
+    const result = await controller.updateProfile(userPayload, {
+      name: 'Updated Name',
+      avatarUrl: 'https://example.com/avatar.jpg',
+    });
+
+    assert.strictEqual(result.name, 'Updated Name');
+    assert.strictEqual(result.avatarUrl, 'https://example.com/avatar.jpg');
+  });
 });

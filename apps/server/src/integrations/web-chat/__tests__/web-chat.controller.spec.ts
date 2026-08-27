@@ -5,6 +5,7 @@ import {
   MessageContentType,
   MessageType,
   SenderType,
+  widgetContactRequestSchema,
 } from '@sales-copilot/shared-contracts';
 import { WebChatController } from '../web-chat.controller';
 import { WebChatAdapter } from '../web-chat.adapter';
@@ -226,6 +227,14 @@ describe('WebChatController (Widget REST API Endpoints)', () => {
           return true;
         },
       );
+    });
+
+    it('should fail schema validation when email is formatted invalidly', () => {
+      const parsed = widgetContactRequestSchema.safeParse({
+        websiteToken: 'wt_sample_token_123',
+        email: 'not-an-email',
+      });
+      assert.strictEqual(parsed.success, false);
     });
 
     it('should throw NotFoundException when channel is not found', async () => {

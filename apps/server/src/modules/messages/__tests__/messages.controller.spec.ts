@@ -160,6 +160,21 @@ describe('MessagesController (Presentation Layer Endpoints)', () => {
     assert.strictEqual(res.deliveryStatus, DeliveryStatus.READ);
   });
 
+  it('should throw ZodError on invalid message creation payload', async () => {
+    await assert.rejects(
+      async () => {
+        await controller.create(context, mockUser, 'conv_1', {
+          content: 'Hello',
+          senderType: 'INVALID_SENDER_TYPE',
+        });
+      },
+      (err: any) => {
+        assert.ok(err.name === 'ZodError');
+        return true;
+      },
+    );
+  });
+
   it('should delete message', async () => {
     const res = await controller.delete(context, 'msg_1');
     assert.deepStrictEqual(res, { success: true });

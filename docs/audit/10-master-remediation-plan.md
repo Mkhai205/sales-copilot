@@ -151,10 +151,11 @@ flowchart TD
 | **T10.4.5** | `FINDING-P8-03` | **MEDIUM** | `apps/server/src/app.controller.ts` | **Standardize Health Check HTTP 503**: In `AppController.getHealth`, if `health.status !== 'ok'`, return `res.status(HttpStatus.SERVICE_UNAVAILABLE)` so Kubernetes liveness/readiness probes accurately detect outages. |
 
 ### Verification Checklist for Batch 4:
-- [ ] Submitting invalid JSON to `POST /conversations/:id/messages` returns `400 Bad Request` with `VALIDATION_FAILED` (NOT 500).
-- [ ] Web Chat Widget endpoints validate payloads with Zod pipe.
-- [ ] Database error in production returns generic message without leaking SQL.
-- [ ] `GET /health` returns `503` when database or Redis is stopped.
+- [x] Submitting invalid JSON to `POST /conversations/:id/messages` returns `400 Bad Request` with `VALIDATION_FAILED` (NOT 500).
+- [x] Web Chat Widget endpoints validate payloads with Zod pipe.
+- [x] Database error in production returns generic message without leaking SQL.
+- [x] `GET /health` returns `503` when database or Redis is stopped.
+- [x] `PATCH /api/v1/auth/me` updates user profile with `updateUserProfileSchema`.
 
 ---
 

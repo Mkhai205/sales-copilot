@@ -10,6 +10,7 @@ import type {
   LoginDto,
   LoginResponseDto,
   RefreshTokenDto,
+  UpdateUserProfileDto,
   UserDto,
 } from '@sales-copilot/shared-contracts';
 import { PrismaService } from '../../infrastructure/database';
@@ -147,6 +148,50 @@ export class AuthService {
       isActive: user.isActive,
       createdAt: user.createdAt.toISOString(),
       updatedAt: user.updatedAt.toISOString(),
+    };
+  }
+
+  /**
+   * Updates profile details (name, avatarUrl) for the authenticated user.
+   */
+  async updateProfile(userId: string, dto: UpdateUserProfileDto): Promise<UserDto> {
+    const user = await this.prisma.client.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException({
+        code: 'USER_NOT_FOUND',
+        message: 'User profile not found',
+      });
+    }
+
+    if (!user.isActive) {
+      throw new ForbiddenException({
+        code: 'ACCOUNT_DEACTIVATED',
+        message: 'Account is deactivated',
+      });
+    }
+
+    const updated = await this.prisma.client.user.update({
+      where: { id: userId },
+      data: {
+        ...(dto.name !== undefined ? { name: dto.name } : {}),
+        ...(dto.avatarUrl !== undefined ? { avatarUrl: dto.avatarUrl } : {}),
+      },
+    });
+
+    this.logger.log(`Updated user profile for '${userId}'`);
+
+    return {
+      id: updated.id,
+      email: updated.email,
+      name: updated.name,
+      role: updated.role,
+      avatarUrl: updated.avatarUrl,
+      isActive: updated.isActive,
+      createdAt: updated.createdAt.toISOString(),
+      updatedAt: updated.updatedAt.toISOString(),
     };
   }
 }

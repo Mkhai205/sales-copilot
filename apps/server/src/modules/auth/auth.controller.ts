@@ -1,4 +1,4 @@
-import { Controller, Get, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
+import { Controller, Get, HttpCode, HttpStatus, Patch, Post, UseGuards } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import {
@@ -10,6 +10,8 @@ import {
   logoutSchema,
   type RefreshTokenDto,
   refreshTokenSchema,
+  type UpdateUserProfileDto,
+  updateUserProfileSchema,
   type UserDto,
 } from '@sales-copilot/shared-contracts';
 import { ZodBody } from '../../common/pipes';
@@ -68,5 +70,20 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async me(@CurrentUser() user: JwtUserPayload): Promise<UserDto> {
     return this.authService.getProfile(user.userId);
+  }
+
+  @Patch('me')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Update current authenticated user profile' })
+  @ApiResponse({ status: 200, description: 'User profile updated successfully' })
+  @ApiResponse({ status: 400, description: 'Validation failed' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async updateProfile(
+    @CurrentUser() user: JwtUserPayload,
+    @ZodBody(updateUserProfileSchema) dto: UpdateUserProfileDto,
+  ): Promise<UserDto> {
+    return this.authService.updateProfile(user.userId, dto);
   }
 }

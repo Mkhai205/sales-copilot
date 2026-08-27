@@ -7,6 +7,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
+import { ZodError } from 'zod';
 import type { ApiErrorResponse, ErrorCode } from '@sales-copilot/shared-contracts';
 
 @Catch()
@@ -28,7 +29,16 @@ export class HttpExceptionFilter implements ExceptionFilter {
     let message = 'Internal server error';
     let details: unknown = null;
 
-    if (exception instanceof HttpException) {
+    if (exception instanceof ZodError) {
+      statusCode = HttpStatus.BAD_REQUEST;
+      code = 'VALIDATION_FAILED';
+      message = 'Request validation failed';
+      details = exception.issues.map(issue => ({
+        field: issue.path.join('.') || 'payload',
+        message: issue.message,
+        code: issue.code,
+      }));
+    } else if (exception instanceof HttpException) {
       statusCode = exception.getStatus();
       code = this.deriveErrorCode(exception);
 
@@ -53,7 +63,13 @@ export class HttpExceptionFilter implements ExceptionFilter {
         details = resObj['errors'] || resObj['details'] || null;
       }
     } else if (exception instanceof Error) {
-      message = exception.message || 'Internal server error';
+      statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
+      code = 'INTERNAL_SERVER_ERROR';
+      const isProduction = process.env.NODE_ENV === 'production';
+      message = isProduction
+        ? 'An unexpected internal error occurred'
+        : exception.message || 'Internal server error';
+      details = null;
     }
 
     this.logException(request, statusCode, exception, message, requestId);

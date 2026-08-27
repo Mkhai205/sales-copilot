@@ -20,7 +20,11 @@ import {
   MessageListQueryDto,
   MessageResponseDto,
   PaginationMeta,
+  widgetContactRequestSchema,
+  type WidgetContactRequestDto,
+  type WidgetContactResponseDto,
 } from '@sales-copilot/shared-contracts';
+import { ZodBody } from '../../common/pipes';
 import { PrismaService } from '../../infrastructure/database';
 import { ChannelCredentialService } from '../../modules/inboxes/channel-credential.service';
 import { ContactResolutionService } from '../../modules/contacts/contact-resolution.service';
@@ -28,34 +32,6 @@ import { MessagesService } from '../../modules/messages/messages.service';
 import { WebChatAdapter } from './web-chat.adapter';
 import { ChannelContext } from '../channel-adapter.types';
 import { WidgetTokenPayload, WidgetTokenService } from './widget-token.service';
-
-/**
- * Request DTO for creating or fetching a visitor contact session.
- */
-export interface WidgetContactRequestDto {
-  websiteToken?: string;
-  widgetToken?: string;
-  website_token?: string;
-  widget_token?: string;
-  contactToken?: string;
-  contact_token?: string;
-  identifier?: string;
-  name?: string;
-  email?: string;
-  phoneNumber?: string;
-  avatarUrl?: string;
-  customAttributes?: Record<string, unknown>;
-}
-
-/**
- * Response returned after initializing a visitor session.
- */
-export interface WidgetContactResponseDto {
-  token: string;
-  contactToken: string;
-  contact: Record<string, unknown>;
-  isNewContact: boolean;
-}
 
 /**
  * Controller exposing public REST API endpoints for embeddable Web Chat widgets.
@@ -130,7 +106,7 @@ export class WebChatController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Create or resolve an anonymous visitor contact and issue JWT token' })
   async getOrCreateContact(
-    @Body() dto: WidgetContactRequestDto,
+    @ZodBody(widgetContactRequestSchema) dto: WidgetContactRequestDto,
   ): Promise<WidgetContactResponseDto> {
     const token = dto.websiteToken || dto.widgetToken || dto.website_token || dto.widget_token;
 
