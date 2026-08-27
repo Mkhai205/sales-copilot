@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { AuthModule } from '../auth';
 import { ContactsController } from './contacts.controller';
 import { ContactsService } from './contacts.service';
 import { ChannelIdentityService } from './channel-identity.service';
@@ -8,7 +9,7 @@ import { ContactResolutionService } from './contact-resolution.service';
 import { WorkspacesModule } from '../workspaces';
 
 @Module({
-  imports: [WorkspacesModule],
+  imports: [AuthModule, WorkspacesModule],
   controllers: [ContactsController],
   providers: [
     ContactsService,

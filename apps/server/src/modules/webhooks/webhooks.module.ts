@@ -1,7 +1,9 @@
 import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
 import { DatabaseModule } from '../../infrastructure/database';
+import { AuthModule } from '../auth';
 import { InboxesModule } from '../inboxes';
+import { WorkspacesModule } from '../workspaces';
 import {
   CHANNEL_INGESTION_QUEUE,
   WEBHOOK_DELIVERY_QUEUE,
@@ -16,7 +18,9 @@ import { WebhookDispatcherListener } from './webhook-dispatcher.listener';
 @Module({
   imports: [
     DatabaseModule,
+    AuthModule,
     InboxesModule,
+    WorkspacesModule,
     BullModule.registerQueue(
       {
         name: CHANNEL_INGESTION_QUEUE,
