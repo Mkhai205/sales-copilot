@@ -182,6 +182,7 @@ model TeamMember {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([teamId, userId])
+  @@index([userId])
   @@map("team_members")
 }
 
@@ -260,6 +261,7 @@ model InboxMember {
   user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([inboxId, userId])
+  @@index([userId])
   @@map("inbox_members")
 }
 
@@ -323,7 +325,7 @@ model Conversation {
 
   workspace       Workspace           @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   inbox           Inbox               @relation(fields: [inboxId], references: [id], onDelete: Cascade)
-  contact         Contact             @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  contact         Contact             @relation(fields: [contactId], references: [id], onDelete: Restrict)
   channelIdentity ChannelIdentity?    @relation(fields: [channelIdentityId], references: [id], onDelete: SetNull)
   assignee        User?               @relation("UserAssignedConversations", fields: [assigneeId], references: [id], onDelete: SetNull)
   team            Team?               @relation(fields: [teamId], references: [id], onDelete: SetNull)
@@ -333,6 +335,7 @@ model Conversation {
   @@unique([workspaceId, displayId])
   @@index([workspaceId, status])
   @@index([workspaceId, assigneeId])
+  @@index([workspaceId, teamId])
   @@index([workspaceId, contactId])
   @@index([workspaceId, inboxId])
   @@index([workspaceId, lastActivityAt])
@@ -375,6 +378,7 @@ model Message {
   @@unique([conversationId, externalId])
   @@index([conversationId, createdAt])
   @@index([workspaceId, externalId])
+  @@index([workspaceId, senderType, senderId])
   @@map("messages")
 }
 

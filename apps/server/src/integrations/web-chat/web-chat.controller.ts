@@ -298,11 +298,11 @@ export class WebChatController {
   private async resolveChannelByToken(token: string) {
     const client = this.prisma.getClient();
 
-    // 1. Direct match by providerAccountId
+    // 1. Direct indexed match by providerAccountId or inboxId
     const directMatch = await client.channel.findFirst({
       where: {
         channelType: ChannelType.WEB_CHAT,
-        providerAccountId: token,
+        OR: [{ providerAccountId: token }, { inboxId: token }],
       },
       include: {
         inbox: true,
@@ -311,14 +311,16 @@ export class WebChatController {
 
     if (directMatch) return directMatch;
 
-    // 2. Query all WEB_CHAT channels and decrypt credentials
+    // 2. Fallback for legacy channels where token was only embedded in credentials
     const webChatChannels = await client.channel.findMany({
       where: {
         channelType: ChannelType.WEB_CHAT,
+        providerAccountId: null,
       },
       include: {
         inbox: true,
       },
+      take: 50,
     });
 
     for (const chan of webChatChannels) {

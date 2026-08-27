@@ -213,15 +213,38 @@ export class WebhooksService {
       };
     }
 
-    // 6. Persist ChannelEvent
-    const channelEvent = await client.channelEvent.create({
-      data: {
-        channelId,
-        externalEventId,
-        eventType: typeof eventType === 'string' ? eventType : 'inbound_webhook',
-        payload: (rawBody as any) ?? {},
-      },
-    });
+    // 6. Persist ChannelEvent (with concurrent duplicate race protection)
+    let channelEvent;
+    try {
+      channelEvent = await client.channelEvent.create({
+        data: {
+          channelId,
+          externalEventId,
+          eventType: typeof eventType === 'string' ? eventType : 'inbound_webhook',
+          payload: (rawBody as any) ?? {},
+        },
+      });
+    } catch (err: any) {
+      if (err?.code === 'P2002') {
+        const concurrentEvent = await client.channelEvent.findUnique({
+          where: {
+            channelId_externalEventId: {
+              channelId,
+              externalEventId,
+            },
+          },
+        });
+        this.logger.log(
+          `Concurrent duplicate event '${externalEventId}' caught for channel '${channelId}'. Skipping dispatch.`,
+        );
+        return {
+          success: true,
+          eventId: concurrentEvent?.id ?? 'duplicate',
+          duplicated: true,
+        };
+      }
+      throw err;
+    }
 
     // 7. Enqueue BullMQ background job
     await this.ingestionQueue.add(

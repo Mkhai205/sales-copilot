@@ -290,6 +290,43 @@ describe('Inbound Webhook Ingestion Pipeline (Feature F-1.3.4 & BullMQ Stub)', (
       assert.strictEqual(dispatchedJobs.length, 1);
     });
 
+    it('should catch P2002 unique constraint collision during concurrent create and return duplicated: true', async () => {
+      const payload = {
+        event_id: 'evt_race_condition',
+        text: 'Concurrent race',
+      };
+
+      // Seed an existing event in DB
+      const existing = {
+        id: 'evt_first_arrival',
+        channelId: mockChannelId,
+        externalEventId: 'evt_race_condition',
+        eventType: 'inbound_webhook',
+        payload,
+      };
+      channelEventsDb.set(existing.id, existing);
+
+      // Force create to throw P2002 (simulating race condition after findUnique returned null)
+      const originalCreate = (webhooksService as any).prisma.getClient().channelEvent.create;
+      (webhooksService as any).prisma.getClient().channelEvent.create = async () => {
+        const err: any = new Error('Unique constraint failed on (channelId, externalEventId)');
+        err.code = 'P2002';
+        throw err;
+      };
+
+      try {
+        const result = await webhooksService.handleInboundWebhook(mockChannelId, payload, {
+          'x-hub-signature-256': 'valid-signature',
+        });
+
+        assert.strictEqual(result.success, true);
+        assert.strictEqual(result.duplicated, true);
+        assert.strictEqual(result.eventId, 'evt_first_arrival');
+      } finally {
+        (webhooksService as any).prisma.getClient().channelEvent.create = originalCreate;
+      }
+    });
+
     it('should fallback to deterministic SHA-256 hash when externalEventId is omitted', async () => {
       const payload = { text: 'Anonymous event without ID' };
 

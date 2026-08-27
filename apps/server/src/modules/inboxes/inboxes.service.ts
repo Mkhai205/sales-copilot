@@ -6,6 +6,7 @@ import {
   NotFoundException,
   Optional,
 } from '@nestjs/common';
+import * as crypto from 'crypto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import {
   ChannelDetailDto,
@@ -153,12 +154,21 @@ export class InboxesService {
         },
       });
 
+      let resolvedProviderAccountId = dto.providerAccountId ?? null;
+      if (dto.channelType === ChannelType.WEB_CHAT && !resolvedProviderAccountId) {
+        resolvedProviderAccountId =
+          (dto.channelCredentials?.widgetToken as string) ||
+          (dto.channelCredentials?.website_token as string) ||
+          (dto.channelCredentials?.token as string) ||
+          crypto.randomUUID();
+      }
+
       const channel = await tx.channel.create({
         data: {
           workspaceId,
           inboxId: inbox.id,
           channelType: dto.channelType as any,
-          providerAccountId: dto.providerAccountId ?? null,
+          providerAccountId: resolvedProviderAccountId,
           credentials: encryptedCredentials as any,
           settings: (dto.channelSettings as any) ?? {},
           isConnected: Object.keys(dto.channelCredentials ?? {}).length > 0,

@@ -198,6 +198,22 @@ describe('ConversationsService (Core & State Machine)', () => {
           conversationLabelsDb.set(key, record);
           return { ...record };
         },
+        createMany: async ({ data, skipDuplicates }: { data: any[]; skipDuplicates?: boolean }) => {
+          let count = 0;
+          for (const item of data) {
+            const key = `${item.conversationId}_${item.labelId}`;
+            if (conversationLabelsDb.has(key) && skipDuplicates) continue;
+            const record = {
+              conversationId: item.conversationId,
+              labelId: item.labelId,
+              createdAt: new Date(),
+              label: labelsDb.get(item.labelId),
+            };
+            conversationLabelsDb.set(key, record);
+            count++;
+          }
+          return { count };
+        },
         delete: async ({ where }: { where: any }) => {
           const key = `${where.conversationId_labelId.conversationId}_${where.conversationId_labelId.labelId}`;
           const existing = conversationLabelsDb.get(key);

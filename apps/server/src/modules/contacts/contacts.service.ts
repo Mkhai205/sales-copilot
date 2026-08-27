@@ -1,4 +1,10 @@
-import { ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import type {
   ContactDto,
@@ -355,6 +361,19 @@ export class ContactsService {
       throw new NotFoundException({
         code: 'CONTACT_NOT_FOUND',
         message: `Contact with id '${contactId}' not found`,
+      });
+    }
+
+    // Security & Integrity Invariant: Prevent deleting contact with existing conversations
+    const conversationCount = await client.conversation.count({
+      where: { contactId, workspaceId },
+    });
+
+    if (conversationCount > 0) {
+      throw new BadRequestException({
+        code: 'CONTACT_HAS_CONVERSATIONS',
+        message: `Cannot delete contact '${contactId}' because it has ${conversationCount} linked conversation(s)`,
+        details: { contactId, conversationCount },
       });
     }
 

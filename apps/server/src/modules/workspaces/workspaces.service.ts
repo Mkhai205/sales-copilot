@@ -33,33 +33,56 @@ export class WorkspacesService {
    * and retrying with a timestamp-based suffix — avoids pre-check race conditions.
    */
   async createWorkspace(userId: string, dto: CreateWorkspaceDto): Promise<WorkspaceDto> {
-    const baseSlug = dto.slug ? generateSlug(dto.slug) : generateSlug(dto.name);
+    const rawBaseSlug = dto.slug ? generateSlug(dto.slug) : generateSlug(dto.name);
+    let baseSlug = rawBaseSlug;
 
-    const created = await this.prisma.runInTransaction(async () => {
-      const client = this.prisma.client;
+    const maxRetries = 3;
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const candidateSlug = await this.resolveAvailableSlug(baseSlug);
 
-      const workspace = await this.createWorkspaceWithUniqueSlug(client, {
-        name: dto.name,
-        baseSlug,
-        timezone: dto.timezone ?? 'Asia/Ho_Chi_Minh',
-        defaultLanguage: dto.defaultLanguage ?? 'vi',
-      });
+        const created = await this.prisma.runInTransaction(async () => {
+          const client = this.prisma.client;
 
-      await client.workspaceMember.create({
-        data: {
-          workspaceId: workspace.id,
-          userId,
-          role: WorkspaceRole.OWNER,
-        },
-      });
+          const workspace = await client.workspace.create({
+            data: {
+              name: dto.name,
+              slug: candidateSlug,
+              timezone: dto.timezone ?? 'Asia/Ho_Chi_Minh',
+              defaultLanguage: dto.defaultLanguage ?? 'vi',
+              billingPlan: BillingPlanType.FREE,
+            },
+          });
 
-      return workspace;
+          await client.workspaceMember.create({
+            data: {
+              workspaceId: workspace.id,
+              userId,
+              role: WorkspaceRole.OWNER,
+            },
+          });
+
+          return workspace;
+        });
+
+        this.logger.log(
+          `Created workspace '${created.name}' (${created.id}) for user '${userId}' with slug '${created.slug}'`,
+        );
+
+        return this.mapToDto(created);
+      } catch (err: any) {
+        if (err?.code === 'P2002' && attempt < maxRetries) {
+          baseSlug = `${rawBaseSlug}-${Math.random().toString(36).slice(2, 6)}`;
+          continue;
+        }
+        throw err;
+      }
+    }
+
+    throw new ConflictException({
+      code: 'WORKSPACE_SLUG_COLLISION',
+      message: 'Could not allocate a unique slug for workspace',
     });
-
-    this.logger.log(
-      `Created workspace '${created.name}' (${created.id}) for user '${userId}' with slug '${created.slug}'`,
-    );
-    return this.mapToDto(created);
   }
 
   /**
@@ -401,38 +424,23 @@ export class WorkspacesService {
   // ---------------------------------------------------------------------------
 
   /**
-   * Creates a workspace with a unique slug, retrying on P2002 unique constraint
-   * violations instead of using a pre-check loop (which is vulnerable to race conditions).
+   * Resolves an available, unique slug candidate by querying the database outside
+   * of transaction blocks to prevent PostgreSQL transaction aborts (25P02).
    */
-  private async createWorkspaceWithUniqueSlug(
-    client: ReturnType<PrismaService['getClient']>,
-    data: { name: string; baseSlug: string; timezone: string; defaultLanguage: string },
-  ): Promise<Workspace> {
-    const { name, baseSlug, timezone, defaultLanguage } = data;
+  private async resolveAvailableSlug(baseSlug: string): Promise<string> {
+    const client = this.prisma.getClient();
+    const existing = await client.workspace.findUnique({ where: { slug: baseSlug } });
+    if (!existing) return baseSlug;
 
-    const attemptCreate = (slug: string) =>
-      client.workspace.create({
-        data: { name, slug, timezone, defaultLanguage, billingPlan: BillingPlanType.FREE },
-      });
-
-    // First attempt with the clean slug
-    try {
-      return await attemptCreate(baseSlug);
-    } catch (err: any) {
-      if (err?.code !== 'P2002') throw err;
-    }
-
-    // Collision: retry up to 19 times with incrementing numeric suffix
+    // Collision: check up to 20 incrementing numeric suffixes
     for (let i = 2; i <= 20; i++) {
-      try {
-        return await attemptCreate(`${baseSlug}-${i}`);
-      } catch (err: any) {
-        if (err?.code !== 'P2002') throw err;
-      }
+      const candidate = `${baseSlug}-${i}`;
+      const found = await client.workspace.findUnique({ where: { slug: candidate } });
+      if (!found) return candidate;
     }
 
     // Final fallback: timestamp-based suffix guarantees uniqueness
-    return attemptCreate(`${baseSlug}-${Date.now().toString(36)}`);
+    return `${baseSlug}-${Date.now().toString(36)}`;
   }
 
   /**

@@ -685,26 +685,14 @@ export class ConversationsService {
       });
     }
 
-    // 3. Idempotent create junction records
-    for (const labelId of labelIds) {
-      const existing = await client.conversationLabel.findUnique({
-        where: {
-          conversationId_labelId: {
-            conversationId,
-            labelId,
-          },
-        },
-      });
-
-      if (!existing) {
-        await client.conversationLabel.create({
-          data: {
-            conversationId,
-            labelId,
-          },
-        });
-      }
-    }
+    // 3. Batch insert junction records (eliminates N+1 queries)
+    await client.conversationLabel.createMany({
+      data: labelIds.map(labelId => ({
+        conversationId,
+        labelId,
+      })),
+      skipDuplicates: true,
+    });
 
     const currentLabels = await this.getLabels(workspaceId, conversationId, client);
     const fullConv = await this.getById(workspaceId, conversationId);

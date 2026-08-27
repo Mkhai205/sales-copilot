@@ -12,10 +12,12 @@ describe('ContactsService (Contact CRUD & Dynamic Custom Attributes)', () => {
 
   let contactsDb: Map<string, any>;
   let identitiesDb: Map<string, any>;
+  let conversationsDb: Map<string, any>;
 
   beforeEach(() => {
     contactsDb = new Map();
     identitiesDb = new Map();
+    conversationsDb = new Map();
     emittedEvents = [];
 
     mockEventEmitter = {
@@ -220,6 +222,17 @@ describe('ContactsService (Contact CRUD & Dynamic Custom Attributes)', () => {
             }
           }
           return existing;
+        },
+      },
+      conversation: {
+        count: async ({ where }: any) => {
+          let count = 0;
+          for (const conv of conversationsDb.values()) {
+            if (where.contactId && conv.contactId !== where.contactId) continue;
+            if (where.workspaceId && conv.workspaceId !== where.workspaceId) continue;
+            count++;
+          }
+          return count;
         },
       },
     };
@@ -635,6 +648,28 @@ describe('ContactsService (Contact CRUD & Dynamic Custom Attributes)', () => {
         },
         (err: any) => {
           assert.strictEqual(err.response?.code, 'CONTACT_NOT_FOUND');
+          return true;
+        },
+      );
+    });
+
+    it('should throw BadRequestException (CONTACT_HAS_CONVERSATIONS) when deleting contact with active conversations', async () => {
+      const contact = await service.create('ws_alpha', {
+        name: 'Contact with Tickets',
+      });
+
+      conversationsDb.set('conv_1', {
+        id: 'conv_1',
+        workspaceId: 'ws_alpha',
+        contactId: contact.id,
+      });
+
+      await assert.rejects(
+        async () => {
+          await service.delete('ws_alpha', contact.id);
+        },
+        (err: any) => {
+          assert.strictEqual(err.response?.code, 'CONTACT_HAS_CONVERSATIONS');
           return true;
         },
       );
