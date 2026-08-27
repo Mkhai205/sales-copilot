@@ -89,6 +89,8 @@ describe('ContactIdentifyService (Priority Chain & Conflict Guards)', () => {
       },
 
       conversation: {
+        findMany: async () => [],
+        update: async () => ({}),
         updateMany: async () => ({ count: 0 }),
       },
 

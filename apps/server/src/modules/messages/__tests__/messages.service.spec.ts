@@ -463,6 +463,24 @@ describe('MessagesService (Task T-1.5.6: Message Threading & Polymorphic Senders
       );
     });
 
+    it('should reject CONTACT message when isPrivate is true (contacts cannot author private notes)', async () => {
+      await assert.rejects(
+        async () => {
+          await service.create('ws_1', 'conv_1', {
+            senderType: SenderType.CONTACT,
+            senderId: 'cnt_1',
+            content: 'Private note from customer',
+            isPrivate: true,
+          });
+        },
+        (err: any) => {
+          assert.strictEqual(err instanceof BadRequestException, true);
+          assert.strictEqual(err.response.code, 'INVALID_PRIVATE_NOTE');
+          return true;
+        },
+      );
+    });
+
     it('should create message for SYSTEM sender with null senderId', async () => {
       const result = await service.create('ws_1', 'conv_1', {
         senderType: SenderType.SYSTEM,

@@ -189,6 +189,7 @@ export class ConversationsService {
     id: string,
     dto: UpdateConversationStatusDto,
     tx?: ReturnType<PrismaService['getClient']>,
+    performedBy?: { type: string; id?: string },
   ): Promise<ConversationResponseDto> {
     const client = tx || this.prisma.getClient();
 
@@ -245,6 +246,7 @@ export class ConversationsService {
       data: {
         status: targetStatus,
         snoozedUntil: snoozedUntilDate,
+        ...(targetStatus === ConversationStatus.RESOLVED ? { unreadMessagesCount: 0 } : {}),
       },
       include: CONVERSATION_STANDARD_INCLUDE,
     });
@@ -257,6 +259,7 @@ export class ConversationsService {
       previousStatus: currentStatus,
       currentStatus: targetStatus,
       conversation: conversationDto,
+      performedBy,
     });
 
     // Auto-reopen event if transitioned from RESOLVED or SNOOZED to OPEN
@@ -290,6 +293,7 @@ export class ConversationsService {
     dto: AssignConversationDto,
     assignedByUserId?: string | null,
     tx?: ReturnType<PrismaService['getClient']>,
+    performedBy?: { type: string; id?: string },
   ): Promise<ConversationResponseDto> {
     const client = tx || this.prisma.getClient();
 
@@ -360,6 +364,7 @@ export class ConversationsService {
       teamId: updated.teamId,
       assignedByUserId: assignedByUserId ?? null,
       conversation: conversationDto,
+      performedBy,
     });
 
     this.logger.log(
@@ -377,6 +382,7 @@ export class ConversationsService {
     id: string,
     dto: UpdateConversationPriorityDto,
     tx?: ReturnType<PrismaService['getClient']>,
+    performedBy?: { type: string; id?: string },
   ): Promise<ConversationResponseDto> {
     const client = tx || this.prisma.getClient();
 
@@ -413,6 +419,7 @@ export class ConversationsService {
       previousPriority,
       currentPriority,
       conversation: conversationDto,
+      performedBy,
     });
 
     this.logger.log(
@@ -651,6 +658,7 @@ export class ConversationsService {
     conversationId: string,
     labelIds: string[],
     tx?: ReturnType<PrismaService['getClient']>,
+    performedBy?: { type: string; id?: string },
   ): Promise<LabelDto[]> {
     const client = tx || this.prisma.getClient();
 
@@ -703,6 +711,7 @@ export class ConversationsService {
       labelIds: currentLabels.map(l => l.id),
       labels: currentLabels,
       conversation: fullConv,
+      performedBy,
     });
 
     this.logger.log(

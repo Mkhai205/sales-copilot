@@ -68,6 +68,12 @@ export class MessagesService {
     let resolvedSenderId: string | null = null;
 
     if (senderType === SenderType.CONTACT) {
+      if (dto.isPrivate) {
+        throw new BadRequestException({
+          code: 'INVALID_PRIVATE_NOTE',
+          message: 'Contacts cannot author private notes',
+        });
+      }
       if (dto.senderId && dto.senderId !== conversation.contactId) {
         throw new BadRequestException({
           code: 'INVALID_SENDER',

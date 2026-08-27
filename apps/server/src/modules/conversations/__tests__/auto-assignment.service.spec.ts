@@ -615,6 +615,31 @@ describe('AutoAssignmentService (Round-Robin & Least-Loaded Assignment)', () => 
       await autoAssignmentService.assignConversation('ws_1', 'conv_test');
       assert.strictEqual(redisLocks.has('lock:auto_assign:inbox:ib_1'), false);
     });
+
+    it('should retry and succeed when lock becomes available on subsequent attempt', async () => {
+      inboxMembersDb.set('ib_1_usr_1', { id: 'im_1', inboxId: 'ib_1', userId: 'usr_1' });
+      presenceDb.set('ws_1', [{ userId: 'usr_1', status: PresenceStatus.ONLINE }]);
+
+      conversationsDb.set('conv_retry_success', {
+        id: 'conv_retry_success',
+        displayId: 602,
+        workspaceId: 'ws_1',
+        inboxId: 'ib_1',
+        contactId: 'cnt_1',
+        assigneeId: null,
+        status: ConversationStatus.OPEN,
+      });
+
+      // Simulate lock held initially, then released after 30ms
+      redisLocks.set('lock:auto_assign:inbox:ib_1', 'busy_token');
+      setTimeout(() => {
+        redisLocks.delete('lock:auto_assign:inbox:ib_1');
+      }, 30);
+
+      const result = await autoAssignmentService.assignConversation('ws_1', 'conv_retry_success');
+      assert.ok(result);
+      assert.strictEqual(result.assigneeId, 'usr_1');
+    });
   });
 
   describe('AutoAssignmentListener (Event-Driven Triggers)', () => {

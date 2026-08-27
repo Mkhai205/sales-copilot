@@ -1,6 +1,10 @@
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import type { ContactDto, ContactMergedEvent } from '@sales-copilot/shared-contracts';
+import {
+  ContactDto,
+  ContactMergedEvent,
+  ConversationStatus,
+} from '@sales-copilot/shared-contracts';
 import { Prisma } from '../../infrastructure/database/generated/client';
 import { PrismaService } from '../../infrastructure/database';
 import { mapContactToDto } from './contacts.mapper';
@@ -81,7 +85,50 @@ export class ContactMergeService {
         data: { contactId: baseContactId },
       });
 
-      // 3. Transfer Conversations from mergee to base
+      // 3. Resolve duplicate active conversations per inbox (Single Active Ticket Invariant)
+      const activeBaseConversations = await tx.conversation.findMany({
+        where: {
+          contactId: baseContactId,
+          workspaceId,
+          status: { in: [ConversationStatus.OPEN, ConversationStatus.PENDING] },
+        },
+      });
+
+      const activeMergeeConversations = await tx.conversation.findMany({
+        where: {
+          contactId: mergeeContactId,
+          workspaceId,
+          status: { in: [ConversationStatus.OPEN, ConversationStatus.PENDING] },
+        },
+      });
+
+      for (const mergeeConv of activeMergeeConversations) {
+        const baseConv = activeBaseConversations.find(c => c.inboxId === mergeeConv.inboxId);
+        if (baseConv) {
+          // Collision: resolve the older conversation to preserve single-active-ticket invariant
+          const [older, newer] =
+            new Date(mergeeConv.createdAt).getTime() < new Date(baseConv.createdAt).getTime()
+              ? [mergeeConv, baseConv]
+              : [baseConv, mergeeConv];
+
+          await tx.conversation.update({
+            where: { id: older.id },
+            data: {
+              status: ConversationStatus.RESOLVED,
+              unreadMessagesCount: 0,
+              customAttributes: {
+                ...(typeof older.customAttributes === 'object' && older.customAttributes !== null
+                  ? (older.customAttributes as Record<string, unknown>)
+                  : {}),
+                resolvedReason: 'contact_merge_collision',
+                mergedIntoConversationId: newer.id,
+              },
+            },
+          });
+        }
+      }
+
+      // Transfer Conversations from mergee to base
       await tx.conversation.updateMany({
         where: { contactId: mergeeContactId, workspaceId },
         data: { contactId: baseContactId },

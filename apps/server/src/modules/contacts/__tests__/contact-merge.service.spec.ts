@@ -149,6 +149,21 @@ describe('ContactMergeService (Atomic Contact Merge Engine)', () => {
       },
 
       conversation: {
+        findMany: async ({ where }: { where: any }) => {
+          return Array.from(conversationsDb.values()).filter((c: any) => {
+            if (where.contactId && c.contactId !== where.contactId) return false;
+            if (where.workspaceId && c.workspaceId !== where.workspaceId) return false;
+            if (where.status?.in && !where.status.in.includes(c.status)) return false;
+            return true;
+          });
+        },
+        update: async ({ where, data }: { where: any; data: any }) => {
+          const conv = conversationsDb.get(where.id);
+          if (!conv) return null;
+          const updated = { ...conv, ...data };
+          conversationsDb.set(where.id, updated);
+          return updated;
+        },
         updateMany: async ({ where, data }: { where: any; data: any }) => {
           let count = 0;
           for (const [id, conv] of conversationsDb.entries()) {
@@ -412,5 +427,32 @@ describe('ContactMergeService (Atomic Contact Merge Engine)', () => {
 
     // Restore
     mockPrismaService.runInTransaction = originalRunInTransaction;
+  });
+
+  it('should resolve older conversation when both contacts have an active conversation in the same inbox', async () => {
+    // Seed an active conversation for base contact in inbox ib_1
+    conversationsDb.set('conv_base_1', {
+      id: 'conv_base_1',
+      workspaceId: 'ws_alpha',
+      contactId: 'cnt_base',
+      inboxId: 'ib_1',
+      status: 'OPEN',
+      createdAt: new Date('2026-01-10T00:00:00Z'),
+    });
+
+    // conv_mergee_1 already exists in ib_1 with createdAt = newer than conv_base_1
+    conversationsDb.get('conv_mergee_1').createdAt = new Date('2026-01-20T00:00:00Z');
+
+    await service.merge('ws_alpha', 'cnt_base', 'cnt_mergee');
+
+    // conv_base_1 (older) should be resolved due to collision
+    const older = conversationsDb.get('conv_base_1');
+    assert.strictEqual(older.status, 'RESOLVED');
+    assert.strictEqual(older.customAttributes.resolvedReason, 'contact_merge_collision');
+
+    // conv_mergee_1 (newer) should remain OPEN and be transferred to cnt_base
+    const newer = conversationsDb.get('conv_mergee_1');
+    assert.strictEqual(newer.status, 'OPEN');
+    assert.strictEqual(newer.contactId, 'cnt_base');
   });
 });

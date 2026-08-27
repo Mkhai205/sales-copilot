@@ -15,6 +15,7 @@ describe('InboxMember Management (Feature F-1.3.2 pt.2 & BR-1.3)', () => {
   let inboxMembersDb: Map<string, any>;
   let usersDb: Map<string, any>;
   let workspaceMembersDb: Map<string, any>;
+  let conversationsDb: Map<string, any>;
 
   const wsAlpha = 'ws_alpha_1';
   const wsBeta = 'ws_beta_2';
@@ -44,6 +45,7 @@ describe('InboxMember Management (Feature F-1.3.2 pt.2 & BR-1.3)', () => {
     inboxMembersDb = new Map();
     usersDb = new Map();
     workspaceMembersDb = new Map();
+    conversationsDb = new Map();
 
     usersDb.set(userAgent1.id, userAgent1);
     usersDb.set(userAgent2.id, userAgent2);
@@ -170,9 +172,24 @@ describe('InboxMember Management (Feature F-1.3.2 pt.2 & BR-1.3)', () => {
           return existing;
         },
       },
+      conversation: {
+        updateMany: async ({ where, data }: { where: any; data: any }) => {
+          let count = 0;
+          for (const [id, conv] of conversationsDb.entries()) {
+            if (where.workspaceId && conv.workspaceId !== where.workspaceId) continue;
+            if (where.inboxId && conv.inboxId !== where.inboxId) continue;
+            if (where.assigneeId && conv.assigneeId !== where.assigneeId) continue;
+            if (where.status?.in && !where.status.in.includes(conv.status)) continue;
+            conversationsDb.set(id, { ...conv, ...data });
+            count++;
+          }
+          return { count };
+        },
+      },
     };
 
     const mockPrismaService: any = {
+      client: clientMock,
       getClient: () => clientMock,
       runInTransaction: async (cb: (ctx: any) => Promise<any>) => cb({ tx: clientMock }),
     };
@@ -315,6 +332,29 @@ describe('InboxMember Management (Feature F-1.3.2 pt.2 & BR-1.3)', () => {
           return true;
         },
       );
+    });
+
+    it('should unassign active tickets assigned to removed member in that inbox', async () => {
+      const inbox = await service.createInbox(wsAlpha, {
+        name: 'Support',
+        channelType: ChannelType.WEB_CHAT,
+      });
+
+      await service.addMember(wsAlpha, inbox.id, userAgent1.id);
+
+      conversationsDb.set('conv_active_1', {
+        id: 'conv_active_1',
+        workspaceId: wsAlpha,
+        inboxId: inbox.id,
+        assigneeId: userAgent1.id,
+        status: 'OPEN',
+      });
+
+      const result = await service.removeMember(wsAlpha, inbox.id, userAgent1.id);
+      assert.strictEqual(result.success, true);
+
+      const conv = conversationsDb.get('conv_active_1');
+      assert.strictEqual(conv.assigneeId, null);
     });
   });
 

@@ -518,12 +518,33 @@ describe('ConversationsService (Core & State Machine)', () => {
       );
     });
 
-    it('should transition OPEN -> RESOLVED', async () => {
+    it('should transition OPEN -> RESOLVED and reset unreadMessagesCount to 0', async () => {
+      // Simulate unread messages
+      conversationsDb.get(convId).unreadMessagesCount = 5;
+
       const updated = await service.updateStatus('ws_1', convId, {
         status: ConversationStatus.RESOLVED,
       });
 
       assert.strictEqual(updated.status, ConversationStatus.RESOLVED);
+      assert.strictEqual(updated.unreadMessagesCount, 0);
+    });
+
+    it('should forward performedBy metadata in status_updated event', async () => {
+      await service.updateStatus(
+        'ws_1',
+        convId,
+        { status: ConversationStatus.PENDING },
+        undefined,
+        { type: 'AUTOMATION_RULE', id: 'rule_999' },
+      );
+
+      const statusEvent = emittedEvents.find(e => e.event === 'conversation.status_updated');
+      assert.ok(statusEvent);
+      assert.deepStrictEqual(statusEvent.payload.performedBy, {
+        type: 'AUTOMATION_RULE',
+        id: 'rule_999',
+      });
     });
 
     it('should transition RESOLVED -> OPEN and emit conversation.reopened', async () => {

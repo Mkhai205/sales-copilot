@@ -80,13 +80,24 @@ export class AutoAssignmentService {
       return null;
     }
 
-    // 2. Acquire Redis distributed lock per inbox
+    // 2. Acquire Redis distributed lock per inbox with retry to prevent starvation
     const lockKey = `${this.LOCK_PREFIX}:${conversation.inboxId}`;
-    const lockToken = await this.redis.acquireLock(lockKey, this.LOCK_TTL_MS);
+    let lockToken: string | null = null;
+    const maxLockRetries = 3;
+    const retryDelays = [50, 100, 150];
+
+    for (let attempt = 0; attempt <= maxLockRetries; attempt++) {
+      lockToken = await this.redis.acquireLock(lockKey, this.LOCK_TTL_MS);
+      if (lockToken) break;
+
+      if (attempt < maxLockRetries) {
+        await new Promise(resolve => setTimeout(resolve, retryDelays[attempt]));
+      }
+    }
 
     if (!lockToken) {
       this.logger.warn(
-        `Could not acquire auto-assignment lock for inbox '${conversation.inboxId}' (in-flight assignment in progress)`,
+        `Could not acquire auto-assignment lock for inbox '${conversation.inboxId}' after ${maxLockRetries + 1} attempts (in-flight assignment in progress)`,
       );
       return null;
     }

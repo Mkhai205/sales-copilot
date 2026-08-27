@@ -127,11 +127,12 @@ flowchart TD
 | **T10.3.6** | `FINDING-P3-06` | **LOW** | `apps/server/src/modules/conversations/conversations.service.ts` | **Reset Unread on Resolve**: In `updateStatus`, when `targetStatus === ConversationStatus.RESOLVED`, include `unreadMessagesCount: 0` in update payload. |
 
 ### Verification Checklist for Batch 3:
-- [ ] Automation rule that updates status executes once without re-triggering itself.
-- [ ] Concurrent auto-assignment requests for same inbox successfully assign both conversations.
-- [ ] Removing an agent from an inbox resets `assigneeId = null` on active tickets.
-- [ ] Merging contacts leaves exactly 1 `OPEN` conversation per inbox.
-- [ ] Contact sending `isPrivate: true` receives `400 Bad Request`.
+- [x] Automation rule that updates status executes once without re-triggering itself.
+- [x] Concurrent auto-assignment requests for same inbox successfully assign both conversations.
+- [x] Removing an agent from an inbox resets `assigneeId = null` on active tickets.
+- [x] Merging contacts leaves exactly 1 `OPEN` conversation per inbox.
+- [x] Contact sending `isPrivate: true` receives `400 Bad Request`.
+- [x] Resolving conversation resets `unreadMessagesCount = 0`.
 
 ---
 

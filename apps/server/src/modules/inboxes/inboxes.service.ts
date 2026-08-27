@@ -12,6 +12,7 @@ import {
   ChannelDetailDto,
   ChannelSummaryDto,
   ChannelType,
+  ConversationStatus,
   CreateInboxDto,
   InboxDetailDto,
   InboxDto,
@@ -616,8 +617,25 @@ export class InboxesService {
       });
     }
 
-    await client.inboxMember.delete({
-      where: { id: existing.id },
+    await this.prisma.runInTransaction(async () => {
+      const tx = this.prisma.client;
+
+      await tx.inboxMember.delete({
+        where: { id: existing.id },
+      });
+
+      // Domain Invariant: Unassign active conversations in this inbox assigned to removed user
+      await tx.conversation.updateMany({
+        where: {
+          workspaceId,
+          inboxId,
+          assigneeId: userId,
+          status: { in: [ConversationStatus.OPEN, ConversationStatus.PENDING] },
+        },
+        data: {
+          assigneeId: null,
+        },
+      });
     });
 
     this.logger.log(

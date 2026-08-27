@@ -110,6 +110,7 @@ export class AutomationExecutorService {
     rule: AutomationRuleDto,
   ): Promise<ActionResult> {
     const conversationId = context.conversation.id;
+    const performedBy = { type: 'AUTOMATION_RULE', id: rule.id };
 
     switch (action.type) {
       case AutomationActionType.ASSIGN_AGENT: {
@@ -119,13 +120,22 @@ export class AutomationExecutorService {
           conversationId,
           { assigneeId: agentId },
           null,
+          undefined,
+          performedBy,
         );
         return { type: action.type, success: true, details: { agentId } };
       }
 
       case AutomationActionType.ASSIGN_TEAM: {
         const teamId = action.params.teamId;
-        await this.conversationsService.assign(workspaceId, conversationId, { teamId }, null);
+        await this.conversationsService.assign(
+          workspaceId,
+          conversationId,
+          { teamId },
+          null,
+          undefined,
+          performedBy,
+        );
         return { type: action.type, success: true, details: { teamId } };
       }
 
@@ -153,7 +163,13 @@ export class AutomationExecutorService {
           }
         }
 
-        await this.conversationsService.assignLabels(workspaceId, conversationId, [targetLabel.id]);
+        await this.conversationsService.assignLabels(
+          workspaceId,
+          conversationId,
+          [targetLabel.id],
+          undefined,
+          performedBy,
+        );
         return {
           type: action.type,
           success: true,
@@ -189,13 +205,25 @@ export class AutomationExecutorService {
 
       case AutomationActionType.CHANGE_STATUS: {
         const status = action.params.status;
-        await this.conversationsService.updateStatus(workspaceId, conversationId, { status });
+        await this.conversationsService.updateStatus(
+          workspaceId,
+          conversationId,
+          { status },
+          undefined,
+          performedBy,
+        );
         return { type: action.type, success: true, details: { status } };
       }
 
       case AutomationActionType.CHANGE_PRIORITY: {
         const priority = action.params.priority;
-        await this.conversationsService.updatePriority(workspaceId, conversationId, { priority });
+        await this.conversationsService.updatePriority(
+          workspaceId,
+          conversationId,
+          { priority },
+          undefined,
+          performedBy,
+        );
         return { type: action.type, success: true, details: { priority } };
       }
 
