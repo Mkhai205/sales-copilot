@@ -168,10 +168,10 @@ describe('InboxesService (Inbox & Channel 1:1 CRUD & Security)', () => {
       assert.strictEqual(result.isAutoAssignmentEnabled, true);
       assert.strictEqual(result.memberCount, 0);
 
-      // Verify channel info and decrypted credentials in response
+      // Verify channel info and masked credentials in response
       assert.ok(result.channel);
       assert.strictEqual(result.channel.providerAccountId, 'bot_support_xyz');
-      assert.deepStrictEqual(result.channel.credentials, plainCredentials);
+      assert.deepStrictEqual(result.channel.credentials, { isConfigured: true, hasSecret: true });
 
       // Verify raw database state: credentials MUST be encrypted
       const storedChannel = Array.from(channelsDb.values()).find(c => c.inboxId === result.id);
@@ -272,7 +272,7 @@ describe('InboxesService (Inbox & Channel 1:1 CRUD & Security)', () => {
   });
 
   describe('Get Inbox Detail', () => {
-    it('should return detailed inbox info with decrypted credentials', async () => {
+    it('should return detailed inbox info with masked credentials', async () => {
       const credentials = { apiKey: 'key_live_9999', apiSecret: 'sec_live_8888' };
       const created = await service.createInbox(wsAlpha, {
         name: 'Support Line',
@@ -284,7 +284,7 @@ describe('InboxesService (Inbox & Channel 1:1 CRUD & Security)', () => {
       assert.strictEqual(detail.id, created.id);
       assert.strictEqual(detail.name, 'Support Line');
       assert.ok(detail.channel);
-      assert.deepStrictEqual(detail.channel.credentials, credentials);
+      assert.deepStrictEqual(detail.channel.credentials, { isConfigured: true, hasSecret: true });
     });
 
     it('should throw NotFoundException (INBOX_NOT_FOUND) when inbox does not exist', async () => {
@@ -335,7 +335,7 @@ describe('InboxesService (Inbox & Channel 1:1 CRUD & Security)', () => {
       assert.strictEqual(updated.name, 'New Inbox Name');
       assert.strictEqual(updated.greetingMessage, 'New greeting message!');
       assert.strictEqual(updated.isAutoAssignmentEnabled, true);
-      assert.deepStrictEqual(updated.channel?.credentials, updatedCreds);
+      assert.deepStrictEqual(updated.channel?.credentials, { isConfigured: true, hasSecret: true });
 
       // Verify database credentials updated with encryption
       const storedChannel = Array.from(channelsDb.values()).find(c => c.inboxId === created.id);

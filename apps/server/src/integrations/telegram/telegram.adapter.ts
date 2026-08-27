@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import * as crypto from 'crypto';
 import { ChannelType, DeliveryStatus, MessageContentType } from '@sales-copilot/shared-contracts';
 import { ChannelAdapter } from '../channel-adapter.interface';
 import {
@@ -195,28 +196,37 @@ export class TelegramAdapter implements ChannelAdapter {
     const configuredSecret =
       credentials?.webhookSecret || credentials?.secret_token || credentials?.secretToken;
 
+    // Security Invariant: Channels must configure a webhook secret to prevent unauthenticated injection
+    if (
+      !configuredSecret ||
+      typeof configuredSecret !== 'string' ||
+      configuredSecret.trim().length === 0
+    ) {
+      this.logger.warn(
+        'Telegram webhook verification failed: No webhook secret token configured on channel',
+      );
+      return false;
+    }
+
     const secretHeader =
       request.headers['x-telegram-bot-api-secret-token'] ||
       request.headers['X-Telegram-Bot-Api-Secret-Token'];
 
     const secretTokenValue = Array.isArray(secretHeader) ? secretHeader[0] : secretHeader;
 
-    // If both configured secret and header are present, verify equality
-    if (configuredSecret && typeof configuredSecret === 'string') {
-      if (!secretTokenValue) {
-        // Missing required secret header
-        return false;
-      }
-      return secretTokenValue === configuredSecret;
-    }
-
-    // If secret header was passed without configured credentials secret, reject mismatch
-    if (secretTokenValue && !configuredSecret) {
+    if (!secretTokenValue || typeof secretTokenValue !== 'string') {
       return false;
     }
 
-    // Fallback: URL secret path routing (channelId in URL verified by WebhooksService)
-    return true;
+    // Security Invariant: Constant-time comparison to prevent timing attacks
+    const expectedBuffer = Buffer.from(configuredSecret, 'utf8');
+    const receivedBuffer = Buffer.from(secretTokenValue, 'utf8');
+
+    if (expectedBuffer.length !== receivedBuffer.length) {
+      return false;
+    }
+
+    return crypto.timingSafeEqual(expectedBuffer, receivedBuffer);
   }
 
   /**

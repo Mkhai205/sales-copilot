@@ -8,9 +8,13 @@ export class ChannelCredentialService {
   private readonly encryptionKey: Buffer;
 
   constructor(private readonly configService: ConfigService) {
-    const rawKey =
-      this.configService.get<string>('CHANNEL_ENCRYPTION_KEY') ||
-      '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
+    const rawKey = this.configService.get<string>('CHANNEL_ENCRYPTION_KEY');
+    if (!rawKey || rawKey.trim() === '') {
+      throw new InternalServerErrorException({
+        code: 'CHANNEL_ENCRYPTION_KEY_MISSING',
+        message: 'CHANNEL_ENCRYPTION_KEY is required and must be at least 32 bytes',
+      });
+    }
 
     this.encryptionKey = this.resolveKey(rawKey);
   }

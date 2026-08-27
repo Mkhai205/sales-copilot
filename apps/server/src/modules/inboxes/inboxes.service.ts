@@ -78,16 +78,27 @@ export class InboxesService {
   }
 
   /**
-   * Formats a channel database entity into a detailed DTO (including decrypted credentials).
+   * Formats a channel database entity into a detailed DTO with masked credentials.
+   * Security Invariant: Plaintext access tokens and secrets must NEVER be returned in API responses.
    */
   private mapChannelDetail(channel: any): ChannelDetailDto | null {
     if (!channel) return null;
     const summary = this.mapChannelSummary(channel);
     if (!summary) return null;
 
+    const hasSecret = Boolean(
+      channel.credentials &&
+      ((typeof channel.credentials === 'object' &&
+        (channel.credentials.encrypted || Object.keys(channel.credentials).length > 0)) ||
+        (typeof channel.credentials === 'string' && channel.credentials.length > 0)),
+    );
+
     return {
       ...summary,
-      credentials: this.decryptCredentials(channel.credentials),
+      credentials: {
+        isConfigured: channel.isConnected,
+        hasSecret,
+      },
     };
   }
 

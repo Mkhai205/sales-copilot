@@ -107,12 +107,12 @@ describe('TelegramAdapter (Telegram Bot API Integration)', () => {
       assert.strictEqual(adapter.verifyWebhook(request, credentials), false);
     });
 
-    it('should return true for URL-based auth fallback when no secret header and no configured secret', () => {
+    it('should return false when no secret is configured on channel (must reject unauthenticated webhook)', () => {
       const request: WebhookVerificationRequest = {
         headers: {},
       };
-      assert.strictEqual(adapter.verifyWebhook(request, {}), true);
-      assert.strictEqual(adapter.verifyWebhook(request, undefined), true);
+      assert.strictEqual(adapter.verifyWebhook(request, {}), false);
+      assert.strictEqual(adapter.verifyWebhook(request, undefined), false);
     });
   });
 

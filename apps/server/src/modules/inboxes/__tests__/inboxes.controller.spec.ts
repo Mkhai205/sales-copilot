@@ -77,7 +77,7 @@ describe('InboxesController (Presentation Layer Endpoints)', () => {
           channelType: ChannelType.TELEGRAM,
           settings: {},
           isConnected: true,
-          credentials: { botToken: '123:abc' },
+          credentials: { isConfigured: true, hasSecret: true },
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         },
@@ -139,7 +139,7 @@ describe('InboxesController (Presentation Layer Endpoints)', () => {
     const result = await controller.getInbox(mockContext, 'ib_1');
     assert.strictEqual(result.id, 'ib_1');
     assert.ok(result.channel);
-    assert.deepStrictEqual(result.channel.credentials, { botToken: '123:abc' });
+    assert.deepStrictEqual(result.channel.credentials, { isConfigured: true, hasSecret: true });
   });
 
   it('should handle update inbox request', async () => {

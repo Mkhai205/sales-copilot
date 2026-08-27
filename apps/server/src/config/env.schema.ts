@@ -41,8 +41,7 @@ export const envSchema = z.object({
   // Channel Credentials Encryption (AES-256-GCM - 32-byte key in hex or string)
   CHANNEL_ENCRYPTION_KEY: z
     .string()
-    .min(32, 'CHANNEL_ENCRYPTION_KEY must be at least 32 characters')
-    .default('0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'),
+    .min(32, 'CHANNEL_ENCRYPTION_KEY must be at least 32 characters'),
 });
 
 export type EnvConfig = z.infer<typeof envSchema>;

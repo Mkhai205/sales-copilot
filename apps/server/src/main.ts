@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
+import helmet from 'helmet';
 
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters';
@@ -13,9 +14,11 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
   const configService = app.get(ConfigService);
 
-  const corsOrigins = configService.get<string | string[]>('CORS_ORIGIN');
+  app.use(helmet());
+
+  const corsOrigins = configService.get<string[]>('CORS_ORIGIN');
   app.enableCors({
-    origin: corsOrigins || '*',
+    origin: corsOrigins && corsOrigins.length > 0 ? corsOrigins : true,
     credentials: true,
   });
 

@@ -272,19 +272,19 @@ describe('ChannelCredentialService (AES-256-GCM Credential Encryption & Security
       assert.deepStrictEqual(decrypted, payload);
     });
 
-    it('should fallback to default key when ConfigService returns empty/undefined', () => {
+    it('should throw InternalServerErrorException when ConfigService returns empty/undefined', () => {
       const emptyConfigService = {
         get: () => undefined,
       };
-      const defaultService = new ChannelCredentialService(
-        emptyConfigService as unknown as ConfigService,
+
+      assert.throws(
+        () => new ChannelCredentialService(emptyConfigService as unknown as ConfigService),
+        (err: any) => {
+          assert.ok(err instanceof InternalServerErrorException);
+          assert.strictEqual((err.getResponse() as any).code, 'CHANNEL_ENCRYPTION_KEY_MISSING');
+          return true;
+        },
       );
-
-      const payload = { channel: 'default_key_test' };
-      const encrypted = defaultService.encrypt(payload);
-      const decrypted = defaultService.decrypt(encrypted);
-
-      assert.deepStrictEqual(decrypted, payload);
     });
   });
 

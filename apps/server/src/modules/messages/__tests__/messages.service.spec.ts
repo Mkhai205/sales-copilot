@@ -439,6 +439,30 @@ describe('MessagesService (Task T-1.5.6: Message Threading & Polymorphic Senders
       );
     });
 
+    it('should reject USER message when actorUserId does not match senderId (impersonation attempt)', async () => {
+      await assert.rejects(
+        async () => {
+          await service.create(
+            'ws_1',
+            'conv_1',
+            {
+              senderType: SenderType.USER,
+              senderId: 'usr_agent_1',
+              content: 'Impersonating another agent',
+            },
+            undefined,
+            undefined,
+            'usr_agent_2',
+          );
+        },
+        (err: any) => {
+          assert.strictEqual(err instanceof ForbiddenException, true);
+          assert.strictEqual(err.response.code, 'SENDER_IMPERSONATION_DENIED');
+          return true;
+        },
+      );
+    });
+
     it('should create message for SYSTEM sender with null senderId', async () => {
       const result = await service.create('ws_1', 'conv_1', {
         senderType: SenderType.SYSTEM,

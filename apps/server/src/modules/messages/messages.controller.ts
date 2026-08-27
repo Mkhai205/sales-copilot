@@ -30,6 +30,7 @@ import {
   PaginationMeta,
   UpdateDeliveryStatusDto,
   updateDeliveryStatusSchema,
+  SenderType,
   WorkspaceRole,
 } from '@sales-copilot/shared-contracts';
 import { ZodQuery } from '../../common/pipes';
@@ -112,14 +113,23 @@ export class MessagesController {
       }
     }
 
-    // Default senderId to the authenticated user ID if not provided
-    if (!payload.senderId && user?.userId) {
-      payload.senderId = user.userId;
+    // In authenticated endpoints, force senderId to authenticated user ID for USER sender type to prevent impersonation
+    if (user?.userId) {
+      if (payload.senderType === SenderType.USER || !payload.senderType) {
+        payload.senderId = user.userId;
+      }
     }
 
     const validatedDto: CreateMessageDto = createMessageSchema.parse(payload);
 
-    return this.messagesService.create(context.workspaceId, conversationId, validatedDto, files);
+    return this.messagesService.create(
+      context.workspaceId,
+      conversationId,
+      validatedDto,
+      files,
+      undefined,
+      user?.userId,
+    );
   }
 
   @Get('messages/:id')

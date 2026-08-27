@@ -29,7 +29,7 @@ describe('FacebookLifecycleService (Page Webhook Subscription Management)', () =
 
     const mockConfig = {
       get: (key: string) => {
-        if (key === 'ENCRYPTION_KEY') {
+        if (key === 'CHANNEL_ENCRYPTION_KEY' || key === 'ENCRYPTION_KEY') {
           return '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
         }
         return undefined;

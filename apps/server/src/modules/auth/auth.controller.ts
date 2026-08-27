@@ -1,4 +1,5 @@
 import { Controller, Get, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import {
   type AuthTokensDto,
@@ -23,11 +24,13 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('login')
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Log in with email and password' })
   @ApiResponse({ status: 200, description: 'User authenticated successfully' })
   @ApiResponse({ status: 401, description: 'Invalid email or password' })
   @ApiResponse({ status: 403, description: 'Account deactivated' })
+  @ApiResponse({ status: 429, description: 'Too many login attempts. Please try again later.' })
   async login(@ZodBody(loginSchema) dto: LoginDto): Promise<LoginResponseDto> {
     return this.authService.login(dto);
   }

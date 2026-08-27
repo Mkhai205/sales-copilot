@@ -44,6 +44,7 @@ export class MessagesService {
     dto: CreateMessageDto,
     files?: UploadedFile[],
     tx?: any,
+    actorUserId?: string,
   ): Promise<MessageResponseDto> {
     const client = tx ?? this.prisma.getClient();
 
@@ -70,7 +71,7 @@ export class MessagesService {
       if (dto.senderId && dto.senderId !== conversation.contactId) {
         throw new BadRequestException({
           code: 'INVALID_SENDER',
-          message: 'Sender ID must match conversation contact ID for CONTACT sender type',
+          message: `Sender ID '${dto.senderId}' does not match the conversation contact '${conversation.contactId}'`,
         });
       }
       resolvedSenderId = conversation.contactId;
@@ -79,6 +80,13 @@ export class MessagesService {
         throw new BadRequestException({
           code: 'INVALID_SENDER',
           message: 'Sender ID is required for USER sender type',
+        });
+      }
+
+      if (actorUserId && dto.senderId !== actorUserId) {
+        throw new ForbiddenException({
+          code: 'SENDER_IMPERSONATION_DENIED',
+          message: 'You cannot author messages or notes under another user identity',
         });
       }
 

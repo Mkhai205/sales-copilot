@@ -69,7 +69,7 @@ export class InboxesController {
   @Get(':id')
   @HttpCode(HttpStatus.OK)
   @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.AGENT, WorkspaceRole.VIEWER)
-  @ApiOperation({ summary: 'Get detailed inbox information including decrypted credentials' })
+  @ApiOperation({ summary: 'Get detailed inbox information with masked credentials' })
   @ApiResponse({ status: 200, description: 'Inbox details retrieved successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
