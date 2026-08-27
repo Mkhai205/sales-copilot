@@ -261,7 +261,24 @@ describe('Inbound Webhook Ingestion Pipeline (Feature F-1.3.4 & BullMQ Stub)', (
       assert.strictEqual(dispatchedJobs[0].name, 'process-channel-event');
       assert.strictEqual(dispatchedJobs[0].data.channelId, mockChannelId);
       assert.strictEqual(dispatchedJobs[0].data.channelEventId, result.eventId);
+      assert.strictEqual(dispatchedJobs[0].opts.jobId, `${mockChannelId}:${result.eventId}`);
       assert.strictEqual(dispatchedJobs[0].opts.attempts, 3);
+    });
+
+    it('should forward x-request-id as requestId in job data (FINDING-P8-02)', async () => {
+      const payload = {
+        event_id: 'evt_trace_101',
+        text: 'Trace test',
+      };
+
+      await webhooksService.handleInboundWebhook(mockChannelId, payload, {
+        'x-hub-signature-256': 'valid-signature',
+        'x-request-id': 'req-trace-uuid-12345',
+      });
+
+      const job = dispatchedJobs.find(j => (j.data.payload as any)?.event_id === 'evt_trace_101');
+      assert.ok(job);
+      assert.strictEqual(job.data.requestId, 'req-trace-uuid-12345');
     });
 
     it('should deduplicate repeated webhook delivery and skip BullMQ queue dispatch', async () => {

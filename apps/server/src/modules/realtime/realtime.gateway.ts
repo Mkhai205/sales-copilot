@@ -670,27 +670,34 @@ export class RealtimeGateway
 
       const { conversationId } = parseResult.data;
 
-      // Verify conversation exists and fetch workspace
-      const conversation = await this.prisma.getClient().conversation.findFirst({
-        where: { id: conversationId },
-        select: { id: true, workspaceId: true },
-      });
+      // 1. Fast path: check in-memory joinedConversations (FINDING-P7-02: 0 DB queries on keystroke)
+      let workspaceId = socketData.joinedConversations?.[conversationId];
 
-      if (!conversation) {
-        const error: RealtimeErrorPayload = {
-          code: 'CONVERSATION_NOT_FOUND',
-          message: `Conversation with id '${conversationId}' not found`,
-        };
-        client.emit('error', error);
-        return { success: false, error };
+      if (!workspaceId) {
+        // Fallback for edge cases: query conversation from DB
+        const conversation = await this.prisma.getClient().conversation.findFirst({
+          where: { id: conversationId },
+          select: { id: true, workspaceId: true },
+        });
+
+        if (!conversation) {
+          const error: RealtimeErrorPayload = {
+            code: 'CONVERSATION_NOT_FOUND',
+            message: `Conversation with id '${conversationId}' not found`,
+          };
+          client.emit('error', error);
+          return { success: false, error };
+        }
+
+        workspaceId = conversation.workspaceId;
       }
 
-      // Verify user has membership in the conversation workspace
+      // Verify user has membership in the conversation workspace (fast path via availableWorkspaceIds)
       const isMember =
-        socketData.availableWorkspaceIds.includes(conversation.workspaceId) ||
+        socketData.availableWorkspaceIds.includes(workspaceId) ||
         Boolean(
           await this.prisma.getClient().workspaceMember.findFirst({
-            where: { userId: socketData.userId, workspaceId: conversation.workspaceId },
+            where: { userId: socketData.userId, workspaceId },
           }),
         );
 
@@ -711,7 +718,7 @@ export class RealtimeGateway
       // Broadcast to other agents viewing the conversation (excluding sender)
       client.to(targetRoom).emit('event', {
         event: isTyping ? WsServerEvent.TYPING_START : WsServerEvent.TYPING_STOP,
-        workspaceId: conversation.workspaceId,
+        workspaceId,
         timestamp: new Date().toISOString(),
         data: {
           conversationId,
@@ -723,7 +730,7 @@ export class RealtimeGateway
 
       if (this.eventEmitter) {
         this.eventEmitter.emit(isTyping ? 'agent.typing_start' : 'agent.typing_stop', {
-          workspaceId: conversation.workspaceId,
+          workspaceId,
           conversationId,
           userId: socketData.userId,
           email: socketData.email,
@@ -735,7 +742,7 @@ export class RealtimeGateway
         success: true,
         room: targetRoom,
         conversationId,
-        workspaceId: conversation.workspaceId,
+        workspaceId,
       };
     } catch (err) {
       this.logger.error(

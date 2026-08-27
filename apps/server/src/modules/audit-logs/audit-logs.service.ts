@@ -337,4 +337,127 @@ export class AuditLogService {
       this.logger.error('Failed to record audit log for automation_rule.deleted', err);
     }
   }
+
+  @OnEvent('workspace_member.added', { async: true })
+  async handleWorkspaceMemberAdded(payload: any): Promise<void> {
+    try {
+      if (!payload?.workspaceId) return;
+      await this.log({
+        workspaceId: payload.workspaceId,
+        userId: payload.performedByUserId ?? null,
+        action: 'WORKSPACE_MEMBER_ADDED',
+        resourceType: 'WORKSPACE_MEMBER',
+        resourceId: payload.memberId,
+        payload: {
+          userId: payload.userId,
+          email: payload.email,
+          role: payload.role,
+        },
+      });
+    } catch (err) {
+      this.logger.error('Failed to record audit log for workspace_member.added', err);
+    }
+  }
+
+  @OnEvent('workspace_member.role_updated', { async: true })
+  async handleWorkspaceMemberRoleUpdated(payload: any): Promise<void> {
+    try {
+      if (!payload?.workspaceId) return;
+      await this.log({
+        workspaceId: payload.workspaceId,
+        userId: payload.performedByUserId ?? null,
+        action: 'WORKSPACE_MEMBER_ROLE_UPDATED',
+        resourceType: 'WORKSPACE_MEMBER',
+        resourceId: payload.memberId,
+        payload: {
+          userId: payload.userId,
+          oldRole: payload.oldRole,
+          newRole: payload.newRole,
+        },
+      });
+    } catch (err) {
+      this.logger.error('Failed to record audit log for workspace_member.role_updated', err);
+    }
+  }
+
+  @OnEvent('workspace_member.removed', { async: true })
+  async handleWorkspaceMemberRemoved(payload: any): Promise<void> {
+    try {
+      if (!payload?.workspaceId) return;
+      await this.log({
+        workspaceId: payload.workspaceId,
+        userId: payload.performedByUserId ?? null,
+        action: 'WORKSPACE_MEMBER_REMOVED',
+        resourceType: 'WORKSPACE_MEMBER',
+        resourceId: payload.memberId,
+        payload: {
+          userId: payload.userId,
+          role: payload.role,
+        },
+      });
+    } catch (err) {
+      this.logger.error('Failed to record audit log for workspace_member.removed', err);
+    }
+  }
+
+  @OnEvent('webhook_subscription.created', { async: true })
+  async handleWebhookSubscriptionCreated(payload: any): Promise<void> {
+    try {
+      if (!payload?.workspaceId) return;
+      await this.log({
+        workspaceId: payload.workspaceId,
+        userId: payload.userId ?? null,
+        action: 'WEBHOOK_SUBSCRIPTION_CREATED',
+        resourceType: 'WEBHOOK_SUBSCRIPTION',
+        resourceId: payload.subscription?.id,
+        payload: {
+          url: payload.subscription?.url,
+          subscriptions: payload.subscription?.subscriptions,
+          isActive: payload.subscription?.isActive,
+        },
+      });
+    } catch (err) {
+      this.logger.error('Failed to record audit log for webhook_subscription.created', err);
+    }
+  }
+
+  @OnEvent('webhook_subscription.updated', { async: true })
+  async handleWebhookSubscriptionUpdated(payload: any): Promise<void> {
+    try {
+      if (!payload?.workspaceId) return;
+      await this.log({
+        workspaceId: payload.workspaceId,
+        userId: payload.userId ?? null,
+        action: 'WEBHOOK_SUBSCRIPTION_UPDATED',
+        resourceType: 'WEBHOOK_SUBSCRIPTION',
+        resourceId: payload.subscription?.id,
+        payload: {
+          url: payload.subscription?.url,
+          subscriptions: payload.subscription?.subscriptions,
+          isActive: payload.subscription?.isActive,
+        },
+      });
+    } catch (err) {
+      this.logger.error('Failed to record audit log for webhook_subscription.updated', err);
+    }
+  }
+
+  @OnEvent('webhook_subscription.deleted', { async: true })
+  async handleWebhookSubscriptionDeleted(payload: any): Promise<void> {
+    try {
+      if (!payload?.workspaceId) return;
+      await this.log({
+        workspaceId: payload.workspaceId,
+        userId: payload.userId ?? null,
+        action: 'WEBHOOK_SUBSCRIPTION_DELETED',
+        resourceType: 'WEBHOOK_SUBSCRIPTION',
+        resourceId: payload.subscriptionId,
+        payload: {
+          url: payload.url,
+        },
+      });
+    } catch (err) {
+      this.logger.error('Failed to record audit log for webhook_subscription.deleted', err);
+    }
+  }
 }

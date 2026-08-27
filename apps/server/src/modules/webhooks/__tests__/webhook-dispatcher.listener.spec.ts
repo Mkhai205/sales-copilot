@@ -135,6 +135,7 @@ describe('WebhookDispatcherListener (Feature F-1.9.4)', () => {
     assert.strictEqual(job.data.subscriptionId, 'sub_1');
     assert.strictEqual(job.data.url, 'https://example.com/webhook1');
     assert.strictEqual(job.data.secretKey, 'secret-key-1');
+    assert.strictEqual(job.opts.jobId, delivery.id);
     assert.strictEqual(job.opts.attempts, 3);
     assert.deepStrictEqual(job.opts.backoff, { type: 'exponential', delay: 30000 });
   });

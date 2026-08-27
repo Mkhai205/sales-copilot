@@ -246,7 +246,8 @@ export class WebhooksService {
       throw err;
     }
 
-    // 7. Enqueue BullMQ background job
+    // 7. Enqueue BullMQ background job with deterministic jobId & trace ID forwarding (T10.5.4 & T10.5.6)
+    const requestId = headers['x-request-id'] || headers['x-correlation-id'];
     await this.ingestionQueue.add(
       'process-channel-event',
       {
@@ -254,8 +255,10 @@ export class WebhooksService {
         channelEventId: channelEvent.id,
         eventType: channelEvent.eventType,
         payload: rawBody,
+        ...(requestId ? { requestId: String(requestId) } : {}),
       },
       {
+        jobId: `${channelId}:${channelEvent.id}`,
         attempts: 3,
         backoff: {
           type: 'exponential',

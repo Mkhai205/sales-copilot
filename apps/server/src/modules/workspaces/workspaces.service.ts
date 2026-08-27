@@ -5,7 +5,9 @@ import {
   Injectable,
   Logger,
   NotFoundException,
+  Optional,
 } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import type { Workspace, WorkspaceMember } from '../../infrastructure/database';
 import {
   AddWorkspaceMemberDto,
@@ -25,7 +27,10 @@ import { generateSlug } from './utils/slug.util';
 export class WorkspacesService {
   private readonly logger = new Logger(WorkspacesService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    @Optional() private readonly eventEmitter?: EventEmitter2,
+  ) {}
 
   /**
    * Provisions a new Workspace and assigns the creating user as OWNER atomically.
@@ -278,6 +283,17 @@ export class WorkspacesService {
       `User '${actorUserId}' (${actorRole}) added user '${user.id}' (${dto.email}) with role '${dto.role}' to workspace '${workspaceId}'`,
     );
 
+    if (this.eventEmitter) {
+      this.eventEmitter.emit('workspace_member.added', {
+        workspaceId,
+        memberId: created.id,
+        userId: user.id,
+        email: user.email,
+        role: dto.role,
+        performedByUserId: actorUserId,
+      });
+    }
+
     return this.mapMemberToDto(created);
   }
 
@@ -359,6 +375,17 @@ export class WorkspacesService {
       `User '${actorUserId}' updated member '${memberId}' role from '${member.role}' to '${dto.role}' in workspace '${workspaceId}'`,
     );
 
+    if (this.eventEmitter) {
+      this.eventEmitter.emit('workspace_member.role_updated', {
+        workspaceId,
+        memberId,
+        userId: member.userId,
+        oldRole: member.role,
+        newRole: dto.role,
+        performedByUserId: actorUserId,
+      });
+    }
+
     return this.mapMemberToDto(updated);
   }
 
@@ -415,6 +442,16 @@ export class WorkspacesService {
     this.logger.log(
       `User '${actorUserId}' removed member '${memberId}' (${member.role}) from workspace '${workspaceId}'`,
     );
+
+    if (this.eventEmitter) {
+      this.eventEmitter.emit('workspace_member.removed', {
+        workspaceId,
+        memberId,
+        userId: member.userId,
+        role: member.role,
+        performedByUserId: actorUserId,
+      });
+    }
 
     return { success: true };
   }

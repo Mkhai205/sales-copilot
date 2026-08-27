@@ -105,6 +105,7 @@ export class WebhookDispatcherListener {
               payload: formattedPayload,
             },
             {
+              jobId: delivery.id,
               attempts: 3,
               backoff: {
                 type: 'exponential',

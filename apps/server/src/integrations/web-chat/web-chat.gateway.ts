@@ -1,4 +1,5 @@
-import { Injectable, Logger, Optional } from '@nestjs/common';
+import { Injectable, Logger, OnModuleDestroy, Optional } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import {
   OnGatewayConnection,
   OnGatewayDisconnect,
@@ -9,6 +10,8 @@ import {
 } from '@nestjs/websockets';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { Server, Socket } from 'socket.io';
+import { createAdapter } from '@socket.io/redis-adapter';
+import { createClient, RedisClientType } from 'redis';
 import * as crypto from 'crypto';
 import {
   ChannelType,
@@ -39,6 +42,7 @@ export interface WidgetSocketData {
   widgetToken: string;
   hmacSecret?: string;
   hmacMandatory?: boolean;
+  lastTypingAt?: number;
 }
 
 /**
@@ -92,11 +96,15 @@ export interface WidgetTypingPayload {
     credentials: true,
   },
 })
-export class WebChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
+export class WebChatGateway
+  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect, OnModuleDestroy
+{
   @WebSocketServer()
   server!: Server;
 
   private readonly logger = new Logger(WebChatGateway.name);
+  private pubClient?: RedisClientType;
+  private subClient?: RedisClientType;
 
   constructor(
     private readonly prisma: PrismaService,
@@ -107,10 +115,93 @@ export class WebChatGateway implements OnGatewayInit, OnGatewayConnection, OnGat
     private readonly messagesService: MessagesService,
     private readonly webChatAdapter: WebChatAdapter,
     @Optional() private readonly eventEmitter?: EventEmitter2,
+    @Optional() private readonly configService?: ConfigService,
   ) {}
 
-  afterInit(_server: Server) {
+  async afterInit(server: Server): Promise<void> {
     this.logger.log('WebChatGateway initialized on namespace /widget');
+    await this.setupRedisAdapter(server);
+  }
+
+  async onModuleDestroy(): Promise<void> {
+    if (this.pubClient?.isOpen) {
+      try {
+        await this.pubClient.quit();
+      } catch (err) {
+        this.logger.warn(`Error disconnecting Redis adapter pubClient: ${(err as Error).message}`);
+      }
+    }
+    if (this.subClient?.isOpen) {
+      try {
+        await this.subClient.quit();
+      } catch (err) {
+        this.logger.warn(`Error disconnecting Redis adapter subClient: ${(err as Error).message}`);
+      }
+    }
+  }
+
+  /**
+   * Configures Socket.io Redis Pub/Sub Adapter for horizontal multi-instance clustering.
+   * Gracefully degrades to single-server in-memory mode if Redis is unavailable.
+   */
+  private async setupRedisAdapter(server: Server): Promise<void> {
+    const redisUrl = this.configService?.get<string>('REDIS_URL');
+    if (!redisUrl) {
+      this.logger.log(
+        'REDIS_URL not configured. WebChatGateway operating in single-server in-memory mode',
+      );
+      return;
+    }
+
+    try {
+      this.pubClient = createClient({
+        url: redisUrl,
+        socket: {
+          reconnectStrategy: (retries: number) => {
+            if (retries > 2) {
+              return false;
+            }
+            return Math.min(retries * 50, 200);
+          },
+        },
+      }) as RedisClientType;
+      this.subClient = this.pubClient.duplicate() as RedisClientType;
+
+      this.pubClient.on('error', (err: Error) => {
+        this.logger.warn(`Redis adapter pubClient error: ${err.message}`);
+      });
+
+      this.subClient.on('error', (err: Error) => {
+        this.logger.warn(`Redis adapter subClient error: ${err.message}`);
+      });
+
+      await Promise.all([this.pubClient.connect(), this.subClient.connect()]);
+
+      server.adapter(createAdapter(this.pubClient, this.subClient));
+      this.logger.log(
+        '✅ Socket.io Redis Pub/Sub Adapter initialized successfully for WebChatGateway',
+      );
+    } catch (err) {
+      this.logger.warn(
+        `Failed to initialize Redis adapter (${(err as Error).message}). Falling back to single-server in-memory adapter`,
+      );
+      if (this.pubClient) {
+        try {
+          await this.pubClient.disconnect();
+        } catch {
+          // Ignore cleanup errors
+        }
+        this.pubClient = undefined;
+      }
+      if (this.subClient) {
+        try {
+          await this.subClient.disconnect();
+        } catch {
+          // Ignore cleanup errors
+        }
+        this.subClient = undefined;
+      }
+    }
   }
 
   /**
@@ -391,6 +482,7 @@ export class WebChatGateway implements OnGatewayInit, OnGatewayConnection, OnGat
 
   /**
    * Handles visitor typing indicators.
+   * Throttles rapid typing status updates with a 1000ms cooldown (FINDING-P7-03).
    */
   @SubscribeMessage('widget:typing')
   async handleTyping(client: Socket, payload: WidgetTypingPayload) {
@@ -399,13 +491,24 @@ export class WebChatGateway implements OnGatewayInit, OnGatewayConnection, OnGat
       return { success: false };
     }
 
+    const now = Date.now();
+    const isTyping = Boolean(payload?.isTyping);
+
+    // Throttle rapid visitor typing bursts when sent within 1000ms cooldown
+    if (isTyping) {
+      if (data.lastTypingAt && now - data.lastTypingAt < 1000) {
+        return { success: true, throttled: true };
+      }
+      data.lastTypingAt = now;
+    }
+
     if (this.eventEmitter) {
       this.eventEmitter.emit('widget.visitor_typing', {
         workspaceId: data.workspaceId,
         channelId: data.channelId,
         contactId: data.contactId,
         externalContactId: data.externalContactId,
-        isTyping: Boolean(payload?.isTyping),
+        isTyping,
       });
     }
 

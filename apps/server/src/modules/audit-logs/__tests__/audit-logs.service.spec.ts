@@ -344,5 +344,84 @@ describe('AuditLogService (Feature F-1.8.4: Audit Logging)', () => {
       assert.strictEqual(auditLogsDb[1].action, 'AUTOMATION_RULE_UPDATED');
       assert.strictEqual(auditLogsDb[2].action, 'AUTOMATION_RULE_DELETED');
     });
+
+    it('should record audit log on workspace_member added, role_updated, and removed events (FINDING-P8-01)', async () => {
+      await service.handleWorkspaceMemberAdded({
+        workspaceId: 'ws_1',
+        performedByUserId: 'usr_admin_1',
+        memberId: 'wm_1',
+        userId: 'usr_agent_2',
+        email: 'agent2@acme.com',
+        role: 'AGENT',
+      });
+
+      await service.handleWorkspaceMemberRoleUpdated({
+        workspaceId: 'ws_1',
+        performedByUserId: 'usr_admin_1',
+        memberId: 'wm_1',
+        userId: 'usr_agent_2',
+        oldRole: 'AGENT',
+        newRole: 'ADMIN',
+      });
+
+      await service.handleWorkspaceMemberRemoved({
+        workspaceId: 'ws_1',
+        performedByUserId: 'usr_admin_1',
+        memberId: 'wm_1',
+        userId: 'usr_agent_2',
+        role: 'ADMIN',
+      });
+
+      assert.strictEqual(auditLogsDb.length, 3);
+      assert.strictEqual(auditLogsDb[0].action, 'WORKSPACE_MEMBER_ADDED');
+      assert.strictEqual(auditLogsDb[0].resourceType, 'WORKSPACE_MEMBER');
+      assert.strictEqual(auditLogsDb[0].resourceId, 'wm_1');
+      assert.strictEqual(auditLogsDb[0].payload.role, 'AGENT');
+
+      assert.strictEqual(auditLogsDb[1].action, 'WORKSPACE_MEMBER_ROLE_UPDATED');
+      assert.strictEqual(auditLogsDb[1].payload.newRole, 'ADMIN');
+
+      assert.strictEqual(auditLogsDb[2].action, 'WORKSPACE_MEMBER_REMOVED');
+    });
+
+    it('should record audit log on webhook_subscription created, updated, and deleted events (FINDING-P8-01)', async () => {
+      await service.handleWebhookSubscriptionCreated({
+        workspaceId: 'ws_1',
+        userId: 'usr_admin_1',
+        subscription: {
+          id: 'sub_1',
+          url: 'https://example.com/webhook',
+          subscriptions: ['message.created'],
+          isActive: true,
+        },
+      });
+
+      await service.handleWebhookSubscriptionUpdated({
+        workspaceId: 'ws_1',
+        userId: 'usr_admin_1',
+        subscription: {
+          id: 'sub_1',
+          url: 'https://example.com/webhook-v2',
+          subscriptions: ['message.created', 'conversation.created'],
+          isActive: true,
+        },
+      });
+
+      await service.handleWebhookSubscriptionDeleted({
+        workspaceId: 'ws_1',
+        userId: 'usr_admin_1',
+        subscriptionId: 'sub_1',
+        url: 'https://example.com/webhook-v2',
+      });
+
+      assert.strictEqual(auditLogsDb.length, 3);
+      assert.strictEqual(auditLogsDb[0].action, 'WEBHOOK_SUBSCRIPTION_CREATED');
+      assert.strictEqual(auditLogsDb[0].resourceType, 'WEBHOOK_SUBSCRIPTION');
+      assert.strictEqual(auditLogsDb[0].resourceId, 'sub_1');
+
+      assert.strictEqual(auditLogsDb[1].action, 'WEBHOOK_SUBSCRIPTION_UPDATED');
+      assert.strictEqual(auditLogsDb[2].action, 'WEBHOOK_SUBSCRIPTION_DELETED');
+      assert.strictEqual(auditLogsDb[2].resourceId, 'sub_1');
+    });
   });
 });

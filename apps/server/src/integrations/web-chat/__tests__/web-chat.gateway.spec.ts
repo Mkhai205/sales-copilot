@@ -577,6 +577,44 @@ describe('WebChatGateway (Widget WebSocket Namespace /widget)', () => {
       const response = await gateway.handleTyping(socket, { isTyping: true });
       assert.strictEqual(response.success, false);
     });
+
+    it('should throttle rapid visitor typing bursts when sent within 1000ms cooldown (FINDING-P7-03)', async () => {
+      const socket = createMockSocket();
+      socket.data = {
+        workspaceId: mockChannel.workspaceId,
+        channelId: mockChannel.id,
+        contactId: mockContact.id,
+        externalContactId: 'ext_vis_001',
+      };
+
+      const firstResponse = await gateway.handleTyping(socket, { isTyping: true });
+      assert.strictEqual(firstResponse.success, true);
+      assert.strictEqual((firstResponse as any).throttled, undefined);
+      assert.strictEqual(emittedInternalEvents.length, 1);
+
+      // Rapid consecutive typing event within 1000ms
+      const secondResponse = await gateway.handleTyping(socket, { isTyping: true });
+      assert.strictEqual(secondResponse.success, true);
+      assert.strictEqual((secondResponse as any).throttled, true);
+      // EventEmitter should NOT have emitted second event
+      assert.strictEqual(emittedInternalEvents.length, 1);
+    });
+
+    it('should allow typing event after 1000ms cooldown expires', async () => {
+      const socket = createMockSocket();
+      socket.data = {
+        workspaceId: mockChannel.workspaceId,
+        channelId: mockChannel.id,
+        contactId: mockContact.id,
+        externalContactId: 'ext_vis_001',
+        lastTypingAt: Date.now() - 1500, // 1.5s ago
+      };
+
+      const response = await gateway.handleTyping(socket, { isTyping: true });
+      assert.strictEqual(response.success, true);
+      assert.strictEqual((response as any).throttled, undefined);
+      assert.strictEqual(emittedInternalEvents.length, 1);
+    });
   });
 
   describe('handleOutboundMessage() (@OnEvent widget.outbound_message)', () => {

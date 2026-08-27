@@ -23,6 +23,7 @@ export interface ChannelIngestionJobData {
   channelEventId: string;
   eventType: string;
   payload: unknown;
+  requestId?: string;
 }
 
 @Processor('channel-ingestion')
@@ -85,9 +86,10 @@ export class ChannelIngestionProcessor extends WorkerHost {
   }
 
   async process(job: Job<ChannelIngestionJobData, void, string>): Promise<void> {
-    const { channelId, channelEventId, eventType, payload } = job.data;
+    const { channelId, channelEventId, eventType, payload, requestId } = job.data;
+    const tracePrefix = requestId ? `[${requestId}] ` : '';
     this.logger.log(
-      `Received ingestion job ${job.id} for channel '${channelId}' (event: '${eventType}', eventId: '${channelEventId}')`,
+      `${tracePrefix}Received ingestion job ${job.id} for channel '${channelId}' (event: '${eventType}', eventId: '${channelEventId}')`,
     );
 
     const client = this.prisma.getClient();

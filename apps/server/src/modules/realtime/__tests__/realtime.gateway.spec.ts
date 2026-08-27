@@ -935,4 +935,86 @@ describe('RealtimeGateway (Agent Realtime WebSocket Namespace /realtime — Task
       assert.strictEqual(res.error?.code, 'INTERNAL_ERROR');
     });
   });
+
+  describe('Typing Status Handlers (FINDING-P7-02: Zero DB Queries on Keystrokes)', () => {
+    it('should broadcast typing_start using in-memory joinedConversations without any database queries', async () => {
+      let dbQueryCount = 0;
+      mockPrisma.getClient = () => ({
+        conversation: {
+          findFirst: async () => {
+            dbQueryCount++;
+            return null;
+          },
+        },
+        workspaceMember: {
+          findFirst: async () => {
+            dbQueryCount++;
+            return null;
+          },
+        },
+      });
+
+      const socket = createAuthenticatedSocket();
+      (socket.data as RealtimeSocketData).joinedConversations = {
+        [validConversationId1]: validWorkspaceId1,
+      };
+
+      const res = await gateway.handleStartTyping(socket, {
+        conversationId: validConversationId1,
+      });
+
+      assert.strictEqual(res.success, true);
+      assert.strictEqual(dbQueryCount, 0, 'Must execute 0 database queries on keystroke');
+      assert.strictEqual(emittedEvents.length, 1);
+      assert.strictEqual(emittedEvents[0].event, 'agent.typing_start');
+    });
+
+    it('should broadcast typing_stop using in-memory joinedConversations without database queries', async () => {
+      let dbQueryCount = 0;
+      mockPrisma.getClient = () => ({
+        conversation: {
+          findFirst: async () => {
+            dbQueryCount++;
+            return null;
+          },
+        },
+        workspaceMember: {
+          findFirst: async () => {
+            dbQueryCount++;
+            return null;
+          },
+        },
+      });
+
+      const socket = createAuthenticatedSocket();
+      (socket.data as RealtimeSocketData).joinedConversations = {
+        [validConversationId1]: validWorkspaceId1,
+      };
+
+      const res = await gateway.handleStopTyping(socket, {
+        conversationId: validConversationId1,
+      });
+
+      assert.strictEqual(res.success, true);
+      assert.strictEqual(dbQueryCount, 0, 'Must execute 0 database queries on keystroke');
+      assert.strictEqual(emittedEvents.length, 1);
+      assert.strictEqual(emittedEvents[0].event, 'agent.typing_stop');
+    });
+
+    it('should fallback to DB query if conversation was not pre-joined and reject if not found', async () => {
+      mockPrisma.getClient = () => ({
+        conversation: {
+          findFirst: async () => null,
+        },
+      });
+
+      const socket = createAuthenticatedSocket();
+      const res = await gateway.handleStartTyping(socket, {
+        conversationId: '77777777-7777-7777-7777-777777777777',
+      });
+
+      assert.strictEqual(res.success, false);
+      assert.strictEqual(res.error?.code, 'CONVERSATION_NOT_FOUND');
+    });
+  });
 });

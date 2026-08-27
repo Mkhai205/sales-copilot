@@ -175,10 +175,10 @@ flowchart TD
 | **T10.5.6** | `FINDING-P8-02` | **MEDIUM** | `apps/server/src/modules/webhooks/webhooks.controller.ts`<br>`apps/server/src/infrastructure/queue/channel-ingestion.processor.ts` | **Forward Trace ID to BullMQ**: Include `requestId: req.headers['x-request-id']` in `ChannelIngestionJobData` and prefix worker log output with `[${requestId}]`. |
 
 ### Verification Checklist for Batch 5:
-- [ ] Outbound message from Agent on Instance A reaches visitor connected on Instance B via Redis adapter.
-- [ ] 100 rapid typing events emit 0 database queries to PostgreSQL.
-- [ ] Adding/removing a workspace member generates an audit log record in `audit_logs`.
-- [ ] Background queue worker logs contain the originating HTTP `requestId`.
+- [x] Outbound message from Agent on Instance A reaches visitor connected on Instance B via Redis adapter.
+- [x] 100 rapid typing events emit 0 database queries to PostgreSQL.
+- [x] Adding/removing a workspace member generates an audit log record in `audit_logs`.
+- [x] Background queue worker logs contain the originating HTTP `requestId`.
 
 ---
 

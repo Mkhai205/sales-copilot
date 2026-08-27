@@ -10,6 +10,8 @@ describe('WorkspacesService (Provisioning, Tenant Queries & Member RBAC)', () =>
   let workspacesDb: Map<string, any>;
   let membersDb: Map<string, any>;
   let usersDb: Map<string, any>;
+  let emittedEvents: Array<{ event: string; payload: any }>;
+  let mockEventEmitter: any;
 
   beforeEach(() => {
     workspacesDb = new Map();
@@ -222,7 +224,14 @@ describe('WorkspacesService (Provisioning, Tenant Queries & Member RBAC)', () =>
       },
     };
 
-    service = new WorkspacesService(mockPrismaService as PrismaService);
+    emittedEvents = [];
+    mockEventEmitter = {
+      emit: (event: string, payload: any) => {
+        emittedEvents.push({ event, payload });
+      },
+    };
+
+    service = new WorkspacesService(mockPrismaService as PrismaService, mockEventEmitter);
   });
 
   describe('Workspace Provisioning & Basic Operations', () => {
@@ -570,6 +579,37 @@ describe('WorkspacesService (Provisioning, Tenant Queries & Member RBAC)', () =>
           return true;
         },
       );
+    });
+
+    it('should emit domain events on member added, role updated, and removed (FINDING-P8-01)', async () => {
+      const member = await service.addMemberByEmail(
+        'ws_test_1',
+        'usr_owner_1',
+        WorkspaceRole.OWNER,
+        {
+          email: 'agent@alphacorp.com',
+          role: WorkspaceRole.AGENT,
+        },
+      );
+
+      await service.updateMemberRole('ws_test_1', member.id, 'usr_owner_1', WorkspaceRole.OWNER, {
+        role: WorkspaceRole.ADMIN,
+      });
+
+      await service.removeMember('ws_test_1', member.id, 'usr_owner_1', WorkspaceRole.OWNER);
+
+      const addedEvent = emittedEvents.find(e => e.event === 'workspace_member.added');
+      assert.ok(addedEvent);
+      assert.strictEqual(addedEvent.payload.workspaceId, 'ws_test_1');
+      assert.strictEqual(addedEvent.payload.role, WorkspaceRole.AGENT);
+
+      const updatedEvent = emittedEvents.find(e => e.event === 'workspace_member.role_updated');
+      assert.ok(updatedEvent);
+      assert.strictEqual(updatedEvent.payload.newRole, WorkspaceRole.ADMIN);
+
+      const removedEvent = emittedEvents.find(e => e.event === 'workspace_member.removed');
+      assert.ok(removedEvent);
+      assert.strictEqual(removedEvent.payload.memberId, member.id);
     });
   });
 });
