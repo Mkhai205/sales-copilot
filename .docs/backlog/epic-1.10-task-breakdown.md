@@ -150,9 +150,9 @@ pnpm add @tanstack/react-query @tanstack/react-query-devtools socket.io-client
 
 #### Acceptance Criteria
 
-- [ ] `pnpm install` succeeds
-- [ ] `pnpm nx build web` succeeds
-- [ ] TypeScript không báo lỗi package imports
+- [x] `pnpm install` succeeds
+- [x] `pnpm nx build web` succeeds
+- [x] TypeScript không báo lỗi package imports
 
 #### Dependencies
 
@@ -177,8 +177,8 @@ Kiểm tra và verify toàn bộ 38 UI components sinh bởi Shadcn (Base UI var
 
 #### Acceptance Criteria
 
-- [ ] Tất cả components import không lỗi
-- [ ] Build succeeds
+- [x] Tất cả components import không lỗi
+- [x] Build succeeds
 
 #### Dependencies
 
