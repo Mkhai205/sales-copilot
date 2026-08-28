@@ -229,15 +229,50 @@ StorageService (or MinioAdapter)
 
 ---
 
-## 9. Frontend Guidelines (Next.js & React)
+## 9. Frontend Guidelines (Next.js, React & Shadcn UI)
 
-- **Presentation & Interaction Only**: Next.js React components are responsible for UI, user interaction, client state, and realtime rendering.
-- **No Server Business Logic Duplication**: Frontend must not replicate complex server-side rules (e.g., contact merging logic, auto-assignment algorithms, channel credential validation). The backend API is the single source of truth.
-- **Pragmatic State Management**:
-  - Use React Query / TanStack Query for server state caching and synchronization.
-  - Use React local state (`useState`, `useReducer`) or lightweight context for UI state.
-  - Do NOT introduce heavyweight global state machines unless clearly required.
-- **Always handle key UI states**: Loading, empty state, error handling, unauthorized, optimistic updates where beneficial.
+### 9.1. Mandatory Reuse of Pre-Generated Shadcn UI Components
+
+- ⛔ **CRITICAL RULE: DO NOT REINVENT UI PRIMITIVES.** 38+ components have already been initialized in `apps/web/src/components/ui/` (based on `@base-ui/react` and Tailwind CSS v4).
+- **ALWAYS** import existing primitives directly from `@/components/ui/<component-name>`:
+  - Layout & Containers: `dialog`, `alert-dialog`, `sheet`, `sidebar`, `resizable`, `scroll-area`, `separator`, `table`, `tabs`, `pagination`
+  - Form & Inputs: `input`, `textarea`, `select`, `switch`, `toggle`, `toggle-group`, `radio-group`, `input-otp`, `calendar`
+  - Feedback & Status: `toast` (`@base-ui/react/toast`), `alert`, `badge`, `skeleton`, `spinner`, `progress`, `tooltip`
+  - Navigation & Action: `button`, `dropdown-menu`, `menubar`, `navigation-menu`, `breadcrumb`
+  - Data & Messaging: `avatar`, `bubble`, `message`, `message-scroller`
+- ❌ **DO NOT**: Write custom modal overlays, custom select dropdowns, custom tooltip logic, or ad-hoc button CSS from scratch.
+
+### 9.2. Server State & Data Fetching
+
+- **TanStack Query Only**: Use `@tanstack/react-query` exclusively for server state caching, mutations, pagination (`useInfiniteQuery`), and optimistic updates.
+- **Thin Fetch API Client**: Use native `fetch` encapsulated in `src/lib/api/client.ts` with end-to-end TypeScript types imported directly from `@sales-copilot/shared-contracts`.
+- ❌ **DO NOT**: Install Axios, SWR, or create custom HTTP client abstractions.
+- **Single Source of Truth**: When receiving WebSocket events (`useRealtimeSync`), update TanStack Query cache directly via `queryClient.setQueryData()` instead of keeping redundant separate React/Zustand states.
+
+### 9.3. Authentication & Route Protection
+
+- **Cookie-Based Auth**: Manage JWT access and refresh tokens strictly via `httpOnly` secure cookies using Next.js Server Actions and Next.js Middleware (`src/middleware.ts`).
+- ❌ **DO NOT**: Store JWT access tokens in `localStorage` or plaintext memory globals.
+- **Route Groups**: Keep routes clean: `(auth)/login` for public auth and `(dashboard)/[workspaceSlug]/...` for authenticated workspace-scoped pages.
+
+### 9.4. Design System, Theming & Styling
+
+- **CSS Variables & Semantic Tokens**: Always use semantic Tailwind classes matching `globals.css` (`bg-background`, `text-foreground`, `bg-card`, `bg-muted`, `border-border`, `text-primary`, `text-muted-foreground`).
+- ❌ **DO NOT**: Hardcode arbitrary hex colors (e.g. `bg-[#1a202c]`) or arbitrary px margins where design tokens exist.
+- **Dark Mode Default**: Support Dark Theme by default via `next-themes` (`ThemeProvider` in `app-providers.tsx`).
+- **Toast Notifications**: Use `ToastProvider` & `ToastViewport` from `@/components/ui/toast` (`@base-ui/react/toast`). Do NOT install `sonner` or additional toast libraries.
+
+### 9.5. Realtime & Live Interaction (Chatwoot Patterns)
+
+- **Optimistic UI with Deduplication**: Immediate UI rendering on send (`status: 'sending'`), reconciled via server response / WebSocket `message.created` with UUID deduplication.
+- **Clipboard Image Paste**: Chat composer must support pasting images directly from clipboard (`onPaste` event ➔ `items[i].getAsFile()`).
+- **Audio Chimes**: Use native HTML5 Audio (`new Audio('/sounds/ding.mp3')`) for non-intrusive sound alerts on incoming contact messages.
+
+### 9.6. Performance & Vercel React Best Practices
+
+- **Eliminate Waterfalls**: Use `Promise.all()` for independent fetches (`async-parallel`).
+- **Re-render Optimization**: Use functional setState (`setList(prev => ...)`), `useDeferredValue` for fast search filtering, and derive UI state during render rather than syncing in `useEffect`.
+- **Tree-Shaking**: Import specific types from `@sales-copilot/shared-contracts`, avoiding unanalyzable wildcard imports (`import * from ...`).
 
 ---
 
