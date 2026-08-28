@@ -271,10 +271,10 @@ Extend theme với custom status/priority colors nếu cần.
 
 #### Acceptance Criteria
 
-- [ ] Dark mode visually polished và premium
-- [ ] Light mode consistent và readable
-- [ ] Status/priority colors defined và accessible (WCAG AA contrast)
-- [ ] Dashboard layout tokens work
+- [x] Dark mode visually polished và premium
+- [x] Light mode consistent và readable
+- [x] Status/priority colors defined và accessible (WCAG AA contrast)
+- [x] Dashboard layout tokens work
 
 #### Dependencies
 
@@ -396,10 +396,10 @@ export const workspacesApi = {
 
 #### Acceptance Criteria
 
-- [ ] TypeScript compiles với end-to-end type safety
-- [ ] Error handling covers: network errors, 401, 403, 404, 422, 500
-- [ ] Không dùng Axios — pure `fetch`
-- [ ] `ApiClientError` class typed đúng
+- [x] TypeScript compiles với end-to-end type safety
+- [x] Error handling covers: network errors, 401, 403, 404, 422, 500
+- [x] Không dùng Axios — pure `fetch`
+- [x] `ApiClientError` class typed đúng
 
 #### Dependencies
 
