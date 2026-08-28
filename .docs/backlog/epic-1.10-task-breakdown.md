@@ -706,11 +706,11 @@ export async function logoutAction() {
 
 #### Acceptance Criteria
 
-- [ ] Unauthenticated users redirected tới login
-- [ ] Expired tokens transparently refreshed
-- [ ] Refresh failed → redirect tới login
-- [ ] Logout clears cookies và redirects
-- [ ] Public paths (login) accessible without auth
+- [x] Unauthenticated users redirected tới login
+- [x] Expired tokens transparently refreshed
+- [x] Refresh failed → redirect tới login
+- [x] Logout clears cookies và redirects
+- [x] Public paths (login) accessible without auth
 
 #### Dependencies
 
