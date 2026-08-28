@@ -62,7 +62,7 @@ async function bootstrap() {
 
   app.enableShutdownHooks();
 
-  const port = configService.get<number>('PORT', 3000);
+  const port = configService.get<number>('PORT', 8000);
   await app.listen(port);
   logger.log(`🚀 Sales Copilot API running on http://localhost:${port}/${globalPrefix}`);
   if (nodeEnv !== 'production') {
