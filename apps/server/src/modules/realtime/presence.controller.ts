@@ -18,7 +18,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { PresenceEntry } from '@sales-copilot/shared-contracts';
-import { PrismaService } from '../../infrastructure/database';
+import { WorkspacesService } from '../workspaces/workspaces.service';
 import { CurrentUser, JwtAuthGuard } from '../auth';
 import type { JwtUserPayload } from '../auth/types/jwt-payload.type';
 import { PresenceService } from './presence.service';
@@ -34,7 +34,7 @@ import { PresenceService } from './presence.service';
 export class PresenceController {
   constructor(
     private readonly presenceService: PresenceService,
-    private readonly prisma: PrismaService,
+    private readonly workspacesService: WorkspacesService,
   ) {}
 
   /**
@@ -95,12 +95,9 @@ export class PresenceController {
   }
 
   private async verifyWorkspaceMembership(workspaceId: string, userId: string): Promise<void> {
-    const member = await this.prisma.getClient().workspaceMember.findFirst({
-      where: { workspaceId, userId },
-      select: { workspaceId: true },
-    });
+    const isMember = await this.workspacesService.isMember(workspaceId, userId);
 
-    if (!member) {
+    if (!isMember) {
       throw new ForbiddenException({
         code: 'WORKSPACE_ACCESS_DENIED',
         message: 'You do not have access to this workspace',

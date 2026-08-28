@@ -194,6 +194,30 @@ export class WorkspacesService {
   // ---------------------------------------------------------------------------
 
   /**
+   * Checks whether a user is an active member of a workspace.
+   */
+  async isMember(workspaceId: string, userId: string): Promise<boolean> {
+    const member = await this.prisma.getClient().workspaceMember.findFirst({
+      where: { workspaceId, userId },
+      select: { id: true },
+    });
+    return Boolean(member);
+  }
+
+  /**
+   * Verifies that a user is an active member of a workspace, throwing ForbiddenException if not.
+   */
+  async verifyMembership(workspaceId: string, userId: string): Promise<void> {
+    const isMember = await this.isMember(workspaceId, userId);
+    if (!isMember) {
+      throw new ForbiddenException({
+        code: 'FORBIDDEN',
+        message: 'You do not have access to this workspace',
+      });
+    }
+  }
+
+  /**
    * Retrieves all members of a workspace, including user profile details.
    */
   async findMembersByWorkspaceId(workspaceId: string): Promise<WorkspaceMemberDto[]> {

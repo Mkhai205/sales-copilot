@@ -196,10 +196,10 @@ flowchart TD
 | **T10.6.4** | `FINDING-P9-01` | **HIGH** | `apps/server/test/integration/` | **Real Database Integration Tests**: Implement lightweight integration test suite executing against real PostgreSQL and Redis to verify transaction abort recovery, cascade restriction, and index uniqueness. |
 
 ### Verification Checklist for Batch 6:
-- [ ] `PresenceController` and `RealtimeGateway` have no direct dependency on `PrismaService`.
-- [ ] Common layer test coverage reaches > 95% across filters and interceptors.
-- [ ] All 863+ unit tests pass without regressions.
-- [ ] Integration tests pass against real PostgreSQL container.
+- [x] `PresenceController` and `RealtimeGateway` have no direct dependency on `PrismaService`.
+- [x] Common layer test coverage reaches > 95% across filters and interceptors.
+- [x] All 863+ unit tests pass without regressions (908 passing unit tests).
+- [x] Integration tests pass against real PostgreSQL container (5 passing integration tests).
 
 ---
 

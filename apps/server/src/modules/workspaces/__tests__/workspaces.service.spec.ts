@@ -143,12 +143,17 @@ describe('WorkspacesService (Provisioning, Tenant Queries & Member RBAC)', () =>
           }
           return null;
         },
-        findFirst: async ({ where }: { where: { id?: string; workspaceId?: string } }) => {
+        findFirst: async ({
+          where,
+        }: {
+          where: { id?: string; workspaceId?: string; userId?: string };
+        }) => {
           for (const member of membersDb.values()) {
             if (
               member.id &&
               (!where.id || member.id === where.id) &&
-              (!where.workspaceId || member.workspaceId === where.workspaceId)
+              (!where.workspaceId || member.workspaceId === where.workspaceId) &&
+              (!where.userId || member.userId === where.userId)
             ) {
               return member;
             }
@@ -610,6 +615,30 @@ describe('WorkspacesService (Provisioning, Tenant Queries & Member RBAC)', () =>
       const removedEvent = emittedEvents.find(e => e.event === 'workspace_member.removed');
       assert.ok(removedEvent);
       assert.strictEqual(removedEvent.payload.memberId, member.id);
+    });
+
+    it('should return true for isMember when user is an active workspace member (T10.6.1)', async () => {
+      const isMember = await service.isMember('ws_test_1', 'usr_owner_1');
+      assert.strictEqual(isMember, true);
+
+      const nonMember = await service.isMember('ws_test_1', 'usr_stranger');
+      assert.strictEqual(nonMember, false);
+    });
+
+    it('should verify membership and throw ForbiddenException when user is not a member (T10.6.1)', async () => {
+      await assert.doesNotReject(async () => {
+        await service.verifyMembership('ws_test_1', 'usr_owner_1');
+      });
+
+      await assert.rejects(
+        async () => {
+          await service.verifyMembership('ws_test_1', 'usr_stranger');
+        },
+        (err: any) => {
+          assert.strictEqual(err.response?.code, 'FORBIDDEN');
+          return true;
+        },
+      );
     });
   });
 });

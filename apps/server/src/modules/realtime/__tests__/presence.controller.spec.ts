@@ -8,7 +8,6 @@ import type { JwtUserPayload } from '../../auth/types/jwt-payload.type';
 describe('PresenceController (REST API Endpoints — Task 9)', () => {
   let controller: PresenceController;
   let mockPresenceService: any;
-  let mockPrisma: any;
 
   const validWorkspaceId = '11111111-1111-1111-1111-111111111111';
   const unauthorizedWorkspaceId = '99999999-9999-9999-9999-999999999999';
@@ -60,23 +59,13 @@ describe('PresenceController (REST API Endpoints — Task 9)', () => {
       },
     };
 
-    mockPrisma = {
-      getClient: () => ({
-        workspaceMember: {
-          findFirst: async (args: any) => {
-            if (
-              args.where?.workspaceId === validWorkspaceId &&
-              args.where?.userId === validUserId
-            ) {
-              return { workspaceId: validWorkspaceId, userId: validUserId };
-            }
-            return null;
-          },
-        },
-      }),
+    const mockWorkspacesService = {
+      isMember: async (workspaceId: string, userId: string) => {
+        return workspaceId === validWorkspaceId && userId === validUserId;
+      },
     };
 
-    controller = new PresenceController(mockPresenceService, mockPrisma);
+    controller = new PresenceController(mockPresenceService, mockWorkspacesService as any);
   });
 
   describe('GET /workspaces/:workspaceId/presence', () => {

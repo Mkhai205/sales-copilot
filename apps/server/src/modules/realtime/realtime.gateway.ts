@@ -22,6 +22,7 @@ import {
   typingIndicatorSchema,
 } from '@sales-copilot/shared-contracts';
 import { PrismaService } from '../../infrastructure/database';
+import { WorkspacesService } from '../workspaces/workspaces.service';
 import { TokenService } from '../auth/token.service';
 import { PresenceService } from './presence.service';
 import {
@@ -63,6 +64,7 @@ export class RealtimeGateway
     @Optional() private readonly configService?: ConfigService,
     @Optional() private readonly eventEmitter?: EventEmitter2,
     @Optional() private readonly presenceService?: PresenceService,
+    @Optional() private readonly workspacesService?: WorkspacesService,
   ) {}
 
   async afterInit(server: Server): Promise<void> {
@@ -208,11 +210,17 @@ export class RealtimeGateway
       }
 
       // 3. Query active workspace memberships for the authenticated user
-      const memberships = await this.prisma.getClient().workspaceMember.findMany({
-        where: { userId: payload.sub },
-        select: { workspaceId: true },
-      });
-      const availableWorkspaceIds = memberships.map(m => m.workspaceId);
+      let availableWorkspaceIds: string[] = [];
+      if (this.workspacesService) {
+        const userWorkspaces = await this.workspacesService.findWorkspacesByUserId(payload.sub);
+        availableWorkspaceIds = userWorkspaces.map(w => w.id);
+      } else {
+        const memberships = await this.prisma.getClient().workspaceMember.findMany({
+          where: { userId: payload.sub },
+          select: { workspaceId: true },
+        });
+        availableWorkspaceIds = memberships.map(m => m.workspaceId);
+      }
 
       // 4. Attach authenticated user session context to client socket
       const socketData: RealtimeSocketData = {
@@ -335,11 +343,13 @@ export class RealtimeGateway
       // Check membership from DB or cached availableWorkspaceIds
       const isMember =
         socketData.availableWorkspaceIds.includes(workspaceId) ||
-        Boolean(
-          await this.prisma.getClient().workspaceMember.findFirst({
-            where: { userId: socketData.userId, workspaceId },
-          }),
-        );
+        (this.workspacesService
+          ? await this.workspacesService.isMember(workspaceId, socketData.userId)
+          : Boolean(
+              await this.prisma.getClient().workspaceMember.findFirst({
+                where: { userId: socketData.userId, workspaceId },
+              }),
+            ));
 
       if (!isMember) {
         this.logger.warn(
@@ -509,11 +519,13 @@ export class RealtimeGateway
       // Verify user is a member of the workspace that owns this conversation
       const isMember =
         socketData.availableWorkspaceIds.includes(conversation.workspaceId) ||
-        Boolean(
-          await this.prisma.getClient().workspaceMember.findFirst({
-            where: { userId: socketData.userId, workspaceId: conversation.workspaceId },
-          }),
-        );
+        (this.workspacesService
+          ? await this.workspacesService.isMember(conversation.workspaceId, socketData.userId)
+          : Boolean(
+              await this.prisma.getClient().workspaceMember.findFirst({
+                where: { userId: socketData.userId, workspaceId: conversation.workspaceId },
+              }),
+            ));
 
       if (!isMember) {
         this.logger.warn(
@@ -695,11 +707,13 @@ export class RealtimeGateway
       // Verify user has membership in the conversation workspace (fast path via availableWorkspaceIds)
       const isMember =
         socketData.availableWorkspaceIds.includes(workspaceId) ||
-        Boolean(
-          await this.prisma.getClient().workspaceMember.findFirst({
-            where: { userId: socketData.userId, workspaceId },
-          }),
-        );
+        (this.workspacesService
+          ? await this.workspacesService.isMember(workspaceId, socketData.userId)
+          : Boolean(
+              await this.prisma.getClient().workspaceMember.findFirst({
+                where: { userId: socketData.userId, workspaceId },
+              }),
+            ));
 
       if (!isMember) {
         this.logger.warn(

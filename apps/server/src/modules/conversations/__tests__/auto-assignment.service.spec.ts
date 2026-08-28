@@ -29,6 +29,7 @@ describe('AutoAssignmentService (Round-Robin & Least-Loaded Assignment)', () => 
   let presenceDb: Map<string, Array<{ userId: string; status: PresenceStatus }>>;
   let redisLists: Map<string, string[]>;
   let redisLocks: Map<string, string>;
+  let acquireLockAttempts: number;
 
   beforeEach(() => {
     conversationsDb = new Map();
@@ -39,6 +40,7 @@ describe('AutoAssignmentService (Round-Robin & Least-Loaded Assignment)', () => 
     redisLists = new Map();
     redisLocks = new Map();
     emittedEvents = [];
+    acquireLockAttempts = 0;
 
     mockEventEmitter = {
       emit: (event: string, payload: any) => {
@@ -48,6 +50,7 @@ describe('AutoAssignmentService (Round-Robin & Least-Loaded Assignment)', () => 
 
     mockRedisService = {
       acquireLock: async (key: string, _ttlMs: number) => {
+        acquireLockAttempts++;
         if (redisLocks.has(key)) return null;
         const token = `token_${Date.now()}_${Math.random()}`;
         redisLocks.set(key, token);
@@ -580,7 +583,7 @@ describe('AutoAssignmentService (Round-Robin & Least-Loaded Assignment)', () => 
   });
 
   describe('Concurrency and Distributed Lock Handling', () => {
-    it('should return null when Redis lock cannot be acquired (parallel in-flight assignment)', async () => {
+    it('should retry across all backoff attempts (4 total attempts) and return null when Redis lock remains permanently contended (FINDING-P9-03)', async () => {
       // Pre-acquire lock for inbox ib_1
       redisLocks.set('lock:auto_assign:inbox:ib_1', 'existing_lock_token');
 
@@ -594,8 +597,10 @@ describe('AutoAssignmentService (Round-Robin & Least-Loaded Assignment)', () => 
         status: ConversationStatus.OPEN,
       });
 
+      acquireLockAttempts = 0;
       const result = await autoAssignmentService.assignConversation('ws_1', 'conv_locked');
       assert.strictEqual(result, null);
+      assert.strictEqual(acquireLockAttempts, 4);
     });
 
     it('should always release lock after successful assignment', async () => {
