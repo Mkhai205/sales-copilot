@@ -10,8 +10,6 @@ import {
 } from '@nestjs/websockets';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { Server, Socket } from 'socket.io';
-import { createAdapter } from '@socket.io/redis-adapter';
-import { createClient, RedisClientType } from 'redis';
 import * as crypto from 'crypto';
 import {
   ChannelType,
@@ -103,8 +101,6 @@ export class WebChatGateway
   server!: Server;
 
   private readonly logger = new Logger(WebChatGateway.name);
-  private pubClient?: RedisClientType;
-  private subClient?: RedisClientType;
 
   constructor(
     private readonly prisma: PrismaService,
@@ -118,90 +114,12 @@ export class WebChatGateway
     @Optional() private readonly configService?: ConfigService,
   ) {}
 
-  async afterInit(server: Server): Promise<void> {
-    this.logger.log('WebChatGateway initialized on namespace /widget');
-    await this.setupRedisAdapter(server);
-  }
-
   async onModuleDestroy(): Promise<void> {
-    if (this.pubClient?.isOpen) {
-      try {
-        await this.pubClient.quit();
-      } catch (err) {
-        this.logger.warn(`Error disconnecting Redis adapter pubClient: ${(err as Error).message}`);
-      }
-    }
-    if (this.subClient?.isOpen) {
-      try {
-        await this.subClient.quit();
-      } catch (err) {
-        this.logger.warn(`Error disconnecting Redis adapter subClient: ${(err as Error).message}`);
-      }
-    }
+    // Gateway lifecycle teardown hook
   }
 
-  /**
-   * Configures Socket.io Redis Pub/Sub Adapter for horizontal multi-instance clustering.
-   * Gracefully degrades to single-server in-memory mode if Redis is unavailable.
-   */
-  private async setupRedisAdapter(server: Server): Promise<void> {
-    const redisUrl = this.configService?.get<string>('REDIS_URL');
-    if (!redisUrl) {
-      this.logger.log(
-        'REDIS_URL not configured. WebChatGateway operating in single-server in-memory mode',
-      );
-      return;
-    }
-
-    try {
-      this.pubClient = createClient({
-        url: redisUrl,
-        socket: {
-          reconnectStrategy: (retries: number) => {
-            if (retries > 2) {
-              return false;
-            }
-            return Math.min(retries * 50, 200);
-          },
-        },
-      }) as RedisClientType;
-      this.subClient = this.pubClient.duplicate() as RedisClientType;
-
-      this.pubClient.on('error', (err: Error) => {
-        this.logger.warn(`Redis adapter pubClient error: ${err.message}`);
-      });
-
-      this.subClient.on('error', (err: Error) => {
-        this.logger.warn(`Redis adapter subClient error: ${err.message}`);
-      });
-
-      await Promise.all([this.pubClient.connect(), this.subClient.connect()]);
-
-      server.adapter(createAdapter(this.pubClient, this.subClient));
-      this.logger.log(
-        '✅ Socket.io Redis Pub/Sub Adapter initialized successfully for WebChatGateway',
-      );
-    } catch (err) {
-      this.logger.warn(
-        `Failed to initialize Redis adapter (${(err as Error).message}). Falling back to single-server in-memory adapter`,
-      );
-      if (this.pubClient) {
-        try {
-          await this.pubClient.disconnect();
-        } catch {
-          // Ignore cleanup errors
-        }
-        this.pubClient = undefined;
-      }
-      if (this.subClient) {
-        try {
-          await this.subClient.disconnect();
-        } catch {
-          // Ignore cleanup errors
-        }
-        this.subClient = undefined;
-      }
-    }
+  async afterInit(_server: Server): Promise<void> {
+    this.logger.log('WebChatGateway initialized on namespace /widget');
   }
 
   /**

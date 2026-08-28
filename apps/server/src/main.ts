@@ -8,11 +8,17 @@ import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters';
 import { LoggingInterceptor, TransformInterceptor } from './common/interceptors';
+import { RedisIoAdapter } from './infrastructure/redis';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
   const configService = app.get(ConfigService);
+
+  const redisIoAdapter = new RedisIoAdapter(app);
+  const redisUrl = configService.get<string>('REDIS_URL');
+  await redisIoAdapter.connectToRedis(redisUrl);
+  app.useWebSocketAdapter(redisIoAdapter);
 
   app.use(helmet());
 
