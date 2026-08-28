@@ -32,7 +32,7 @@ function ThemeHotkey() {
         return;
       }
 
-      if (!event.shiftKey || event.key.toLowerCase() !== 'q') {
+      if (!event.shiftKey || event.key.toLowerCase() !== 'd') {
         return;
       }
 
