@@ -493,10 +493,10 @@ Wrap `<body>` children với `<AppProviders>`.
 
 #### Acceptance Criteria
 
-- [ ] TanStack Query Devtools visible trong development
-- [ ] 401 responses globally redirect tới login
-- [ ] Theme provider defaults tới dark mode
-- [ ] Toast notifications work
+- [x] TanStack Query Devtools visible trong development
+- [x] 401 responses globally redirect tới login
+- [x] Theme provider defaults tới dark mode
+- [x] Toast notifications work
 
 #### Dependencies
 
@@ -593,11 +593,11 @@ export async function loginAction(formData: { email: string; password: string })
 
 #### Acceptance Criteria
 
-- [ ] Login form validates input trước khi submit
-- [ ] Successful login stores tokens trong httpOnly cookies
-- [ ] Redirects tới `/{workspaceSlug}/conversations` sau login
-- [ ] Error messages rõ ràng và specific
-- [ ] Loading state hiển thị khi submitting
+- [x] Login form validates input trước khi submit
+- [x] Successful login stores tokens trong httpOnly cookies
+- [x] Redirects tới `/{workspaceSlug}/conversations` sau login
+- [x] Error messages rõ ràng và specific
+- [x] Loading state hiển thị khi submitting
 
 #### Dependencies
 
