@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { ConversationEmptyState } from './conversation-empty-state';
-import { ConversationListPlaceholder } from './conversation-list-placeholder';
+import { ConversationList } from './conversation-list';
 import { MessageThreadPlaceholder } from './message-thread-placeholder';
 import { DetailPanelPlaceholder } from './detail-panel-placeholder';
 
@@ -28,12 +28,9 @@ export function ConversationLayout({ workspaceSlug, conversationId }: Conversati
           defaultSize="25%"
           minSize="20%"
           maxSize="35%"
-          className="min-w-[280px]"
+          className=""
         >
-          <ConversationListPlaceholder
-            workspaceSlug={workspaceSlug}
-            activeConversationId={conversationId}
-          />
+          <ConversationList workspaceSlug={workspaceSlug} activeConversationId={conversationId} />
         </ResizablePanel>
 
         <ResizableHandle withHandle className="hover:bg-primary/50 transition-colors" />
@@ -43,7 +40,7 @@ export function ConversationLayout({ workspaceSlug, conversationId }: Conversati
           id="message-thread-panel"
           defaultSize={isDetailOpen && conversationId ? '50%' : '75%'}
           minSize="30%"
-          className="min-w-[360px]"
+          className=""
         >
           {conversationId ? (
             <MessageThreadPlaceholder
@@ -65,7 +62,7 @@ export function ConversationLayout({ workspaceSlug, conversationId }: Conversati
               defaultSize="25%"
               minSize="20%"
               maxSize="35%"
-              className="min-w-[260px]"
+              className=""
             >
               <DetailPanelPlaceholder onClose={() => setIsDetailOpen(false)} />
             </ResizablePanel>

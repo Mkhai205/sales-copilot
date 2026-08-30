@@ -1114,12 +1114,12 @@ Filter tabs UI component dùng `Tabs` + `ToggleGroup`.
 
 #### Acceptance Criteria
 
-- [ ] Conversation cards show tất cả required info (dùng `Avatar`, `Badge`)
-- [ ] Active conversation visually highlighted
-- [ ] Infinite scroll loads more items
-- [ ] `Skeleton` loading state while fetching (inline, không file riêng)
-- [ ] Empty states render đúng
-- [ ] Filter tabs dùng Shadcn `Tabs` + `ToggleGroup`
+- [x] Conversation cards show tất cả required info (dùng `Avatar`, `Badge`)
+- [x] Active conversation visually highlighted
+- [x] Infinite scroll loads more items
+- [x] `Skeleton` loading state while fetching (inline, không file riêng)
+- [x] Empty states render đúng
+- [x] Filter tabs dùng Shadcn `Tabs` + `ToggleGroup`
 
 #### Dependencies
 

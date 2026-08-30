@@ -13,7 +13,7 @@ export default async function WorkspaceLayout({ children, params }: WorkspaceLay
   return (
     <SidebarProvider defaultOpen={true}>
       <AppSidebar workspaceSlug={workspaceSlug} />
-      <SidebarInset>
+      <SidebarInset className="min-w-0 overflow-hidden">
         <div className="flex h-screen w-full flex-1 flex-col overflow-hidden bg-background">
           {children}
         </div>
