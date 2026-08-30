@@ -1173,10 +1173,10 @@ export function useConversation(conversationId: string | null) {
 
 #### Acceptance Criteria
 
-- [ ] Messages load cho selected conversation
-- [ ] Older messages load on scroll up
-- [ ] Disabled khi no conversationId
-- [ ] Date grouping logic correct
+- [x] Messages load cho selected conversation
+- [x] Older messages load on scroll up
+- [x] Disabled khi no conversationId
+- [x] Date grouping logic correct
 
 #### Dependencies
 
