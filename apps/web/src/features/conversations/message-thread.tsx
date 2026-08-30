@@ -179,32 +179,49 @@ function MessageItem({
   // 2. Private Note (Internal only)
   if (isPrivate) {
     const authorName = message.sender?.name || 'Agent';
+    const authorInitials = authorName
+      .split(' ')
+      .map(n => n[0])
+      .slice(0, 2)
+      .join('')
+      .toUpperCase();
+
     return (
-      <MessageScrollerItem messageId={message.id} className="w-full">
-        <Message align="start" className="w-full">
-          <MessageContent className="w-full max-w-[85%]">
-            <Bubble
-              variant="tinted"
-              className="w-full rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 dark:bg-amber-500/15"
-            >
-              <BubbleContent className="p-0 text-foreground">
-                <div className="flex items-center gap-1.5 text-[11px] font-semibold text-amber-600 dark:text-amber-400 mb-1">
-                  <Lock className="size-3" />
-                  Private Note • {authorName}
-                </div>
-                {message.content && (
-                  <p className="text-xs text-foreground/90 whitespace-pre-wrap leading-relaxed">
-                    {message.content}
-                  </p>
+      <MessageScrollerItem messageId={message.id} className="w-full my-1">
+        <div className="mx-auto flex w-full max-w-2xl flex-col gap-1.5 rounded-xl border border-amber-500/30 bg-amber-500/[0.08] p-3.5 shadow-xs transition-all dark:border-amber-500/25 dark:bg-amber-500/[0.12]">
+          {/* Note Header */}
+          <div className="flex items-center justify-between gap-2 border-b border-amber-500/20 pb-2">
+            <div className="flex items-center gap-2">
+              <Avatar className="size-5 border border-amber-500/30">
+                {message.sender?.avatarUrl && (
+                  <AvatarImage src={message.sender.avatarUrl} alt={authorName} />
                 )}
-                {renderMessageAttachments(message.attachments)}
-              </BubbleContent>
-            </Bubble>
-            <MessageFooter className="text-[10px] text-muted-foreground/70">
+                <AvatarFallback className="text-[9px] bg-amber-500/20 text-amber-700 dark:text-amber-300 font-semibold">
+                  {authorInitials}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-semibold text-foreground">{authorName}</span>
+                <span className="inline-flex items-center gap-1 rounded-sm bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 dark:text-amber-300">
+                  <Lock className="size-2.5" />
+                  Private Note
+                </span>
+              </div>
+            </div>
+            <span className="text-[10px] text-muted-foreground">
               {formatMessageTime(message.createdAt)}
-            </MessageFooter>
-          </MessageContent>
-        </Message>
+            </span>
+          </div>
+
+          {/* Note Content */}
+          {message.content && (
+            <p className="text-xs text-foreground/90 whitespace-pre-wrap leading-relaxed pt-0.5">
+              {message.content}
+            </p>
+          )}
+
+          {renderMessageAttachments(message.attachments)}
+        </div>
       </MessageScrollerItem>
     );
   }

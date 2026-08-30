@@ -1457,10 +1457,10 @@ Add private note toggle vào composer.
 
 #### Acceptance Criteria
 
-- [ ] Toggle switches giữa Reply và Note
-- [ ] Note mode có distinct visual treatment (amber tint)
-- [ ] Keyboard shortcut works
-- [ ] API sends correct message type
+- [x] Toggle switches giữa Reply và Note
+- [x] Note mode có distinct visual treatment (amber tint)
+- [x] Keyboard shortcut works
+- [x] API sends correct message type
 
 #### Dependencies
 

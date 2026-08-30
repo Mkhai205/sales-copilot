@@ -1,4 +1,4 @@
-export { ChatComposer, type ChatComposerProps } from './chat-composer';
+export { ChatComposer, type ChatComposerProps, type ComposerMode } from './chat-composer';
 export {
   useSendMessage,
   type UseSendMessageOptions,
