@@ -20,17 +20,34 @@ function MessageScrollerProvider(
 
 function MessageScroller({
   className,
+  autoScroll = false,
+  defaultScrollPosition = 'end',
+  scrollEdgeThreshold,
+  scrollPreviousItemPeek,
+  scrollMargin,
+  children,
   ...props
-}: React.ComponentProps<typeof MessageScrollerPrimitive.Root>) {
+}: React.ComponentProps<typeof MessageScrollerPrimitive.Root> &
+  React.ComponentProps<typeof MessageScrollerPrimitive.Provider>) {
   return (
-    <MessageScrollerPrimitive.Root
-      data-slot="message-scroller"
-      className={cn(
-        'group/message-scroller relative flex size-full min-h-0 flex-col overflow-hidden',
-        className,
-      )}
-      {...props}
-    />
+    <MessageScrollerPrimitive.Provider
+      autoScroll={autoScroll}
+      defaultScrollPosition={defaultScrollPosition}
+      scrollEdgeThreshold={scrollEdgeThreshold}
+      scrollPreviousItemPeek={scrollPreviousItemPeek}
+      scrollMargin={scrollMargin}
+    >
+      <MessageScrollerPrimitive.Root
+        data-slot="message-scroller"
+        className={cn(
+          'group/message-scroller relative flex size-full min-h-0 flex-col overflow-hidden',
+          className,
+        )}
+        {...props}
+      >
+        {children}
+      </MessageScrollerPrimitive.Root>
+    </MessageScrollerPrimitive.Provider>
   );
 }
 

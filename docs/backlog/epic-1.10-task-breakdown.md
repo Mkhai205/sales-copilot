@@ -537,13 +537,14 @@ Login page wrapper — renders `LoginForm` component.
 ##### [NEW] `src/features/auth/login-form.tsx`
 
 Client component với:
-- Email + password input fields
+- **Shadcn form components**: `FieldGroup` + `Field` + `FieldLabel` cho form layout, `Input` cho email/password, `Button` + `Spinner` + `data-icon` cho submit loading state
 - Client-side validation reuse `loginSchema` từ `@sales-copilot/shared-contracts`
+- Validation errors: dùng `data-invalid` on `Field` + `aria-invalid` on `Input` + `FieldDescription` cho error message
 - Submit → call Server Action → `POST /auth/login`
 - On success → set cookies (httpOnly, secure, sameSite) → redirect tới `/{workspaceSlug}/conversations`
 - Error states: invalid credentials, account disabled, rate limited
-- Loading state on submit button
-- Visual: centered card với app logo/name, clean dark form
+- Loading state: `<Button disabled><Spinner data-icon="inline-start" />Signing in...</Button>`
+- Visual: `Card` + `CardHeader` + `CardTitle` + `CardContent` với app logo/name, clean dark form
 
 ##### [NEW] `src/features/auth/actions.ts`
 
@@ -947,30 +948,33 @@ Page wrapper renders `ConversationLayout`.
 
 ##### [NEW] `src/features/conversations/conversation-layout.tsx`
 
+> [!IMPORTANT]
+> Dùng Shadcn `Resizable` wrapper (`@/components/ui/resizable`) thay vì import trực tiếp từ `react-resizable-panels`. Shadcn wrapper đã styled sẵn resize handles.
+
 ```typescript
-import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 
 export function ConversationLayout() {
   const [detailOpen, setDetailOpen] = useState(true);
 
   return (
-    <PanelGroup direction="horizontal" autoSaveId="conversation-panels">
-      <Panel defaultSize={25} minSize={20} maxSize={35}>
+    <ResizablePanelGroup direction="horizontal" autoSaveId="conversation-panels">
+      <ResizablePanel defaultSize={25} minSize={20} maxSize={35}>
         <ConversationList />
-      </Panel>
-      <PanelResizeHandle className="w-px bg-border hover:bg-accent transition-colors" />
-      <Panel minSize={30}>
+      </ResizablePanel>
+      <ResizableHandle />
+      <ResizablePanel minSize={30}>
         <MessageThread />
-      </Panel>
+      </ResizablePanel>
       {detailOpen && (
         <>
-          <PanelResizeHandle className="w-px bg-border hover:bg-accent transition-colors" />
-          <Panel defaultSize={25} minSize={20} maxSize={35}>
+          <ResizableHandle />
+          <ResizablePanel defaultSize={25} minSize={20} maxSize={35}>
             <DetailPanel onClose={() => setDetailOpen(false)} />
-          </Panel>
+          </ResizablePanel>
         </>
       )}
-    </PanelGroup>
+    </ResizablePanelGroup>
   );
 }
 ```
@@ -981,11 +985,11 @@ export function ConversationLayout() {
 
 #### Acceptance Criteria
 
-- [ ] 3 panels render correctly
-- [ ] Resize handles work smoothly
-- [ ] Detail panel collapses/expands
-- [ ] Panel sizes persist across page reloads
-- [ ] Empty state khi no conversation selected
+- [x] 3 panels render correctly
+- [x] Resize handles work smoothly
+- [x] Detail panel collapses/expands
+- [x] Panel sizes persist across page reloads
+- [x] Empty state khi no conversation selected
 
 #### Dependencies
 
@@ -1059,50 +1063,63 @@ Create conversation list UI với filter tabs, search, conversation cards, và i
 
 #### Scope
 
+> [!IMPORTANT]
+> **Shadcn Component Audit**: Task này PHẢI dùng các Shadcn primitives:
+> - `Tabs` + `TabsList` + `TabsTrigger` cho status filter tabs
+> - `ToggleGroup` + `ToggleGroupItem` cho Mine | Unassigned | All filter
+> - `InputGroup` + `InputGroupInput` + `InputGroupAddon` cho search input với icon
+> - `ScrollArea` cho scrollable list container
+> - `Avatar` + `AvatarFallback` cho contact avatars
+> - `Badge` cho unread count và priority indicators
+> - `Skeleton` cho loading states (inline, KHÔNG tạo file riêng)
+> - `Separator` giữa các sections
+
 ##### [NEW] `src/features/conversations/conversation-list.tsx`
 
-- Tab bar cho status filters (Open | Pending | Resolved | Snoozed)
-- Secondary filter row: Mine | Unassigned | All
-- Search input với search icon
-- Scrollable list với `IntersectionObserver` cho infinite scroll
-- Loading skeleton state
+- `Tabs` + `TabsList` + `TabsTrigger` cho status filters (Open | Pending | Resolved | Snoozed)
+- `ToggleGroup` cho secondary filters: Mine | Unassigned | All
+- `InputGroup` + `InputGroupInput` + `InputGroupAddon` cho search input với search icon (`data-icon`)
+- `ScrollArea` với `IntersectionObserver` cho infinite scroll
+- Loading state: dùng `Skeleton` component inline (không tạo file riêng)
 - Empty states: "No conversations", "No results for search"
 
 ##### [NEW] `src/features/conversations/conversation-card.tsx`
 
 Mỗi card hiển thị:
-- Contact avatar (initials fallback)
-- Contact name + last message preview (truncated 2 lines)
+- `Avatar` + `AvatarFallback` cho contact (initials fallback)
+- Contact name + last message preview (`truncate` shorthand)
 - Timestamp (relative: "2m ago", "1h ago", "Yesterday")
-- Unread badge (count number)
-- Priority indicator (colored dot bên trái)
+- `Badge` cho unread count
+- `Badge` variant cho priority indicator
 - Inbox icon nhỏ
-- Labels as small colored dots
+- Labels as small `Badge` colored chips
 - Active state (highlighted khi selected)
 
 ##### [NEW] `src/features/conversations/conversation-list-filters.tsx`
 
-Filter tabs UI component.
+Filter tabs UI component dùng `Tabs` + `ToggleGroup`.
 
-##### [NEW] `src/features/conversations/conversation-list-skeleton.tsx`
+~~##### [NEW] `src/features/conversations/conversation-list-skeleton.tsx`~~
 
-Skeleton loading state cho cards.
+~~Skeleton loading state cho cards.~~ → **Đã gộp vào `conversation-list.tsx`** dùng `Skeleton` component inline.
 
 #### Frontend Design Notes
 
 > [!TIP]
 > - Cards: subtle left border color cho priority, không heavy background
-> - Unread: bold contact name + count badge (không chỉ dot)
+> - Unread: bold contact name + `Badge` count (không chỉ dot)
 > - Hover: very subtle background shift
 > - Selected: left accent border + slightly elevated background
+> - Spacing: dùng `gap-*`, KHÔNG `space-y-*`
 
 #### Acceptance Criteria
 
-- [ ] Conversation cards show tất cả required info
+- [ ] Conversation cards show tất cả required info (dùng `Avatar`, `Badge`)
 - [ ] Active conversation visually highlighted
 - [ ] Infinite scroll loads more items
-- [ ] Skeleton loading state while fetching
+- [ ] `Skeleton` loading state while fetching (inline, không file riêng)
 - [ ] Empty states render đúng
+- [ ] Filter tabs dùng Shadcn `Tabs` + `ToggleGroup`
 
 #### Dependencies
 
@@ -1167,68 +1184,95 @@ export function useConversation(conversationId: string | null) {
 
 ---
 
-### Task 15: Message Thread — UI Components
+### Task 15: Message Thread — UI Components (Shadcn Chat Primitives)
 
 **Feature**: F-1.10.2 (3-Column Conversation View)
 **Complexity**: 🔴 High
-**Estimated scope**: 5 files, ~400–500 lines
+**Estimated scope**: 2 files, ~300–400 lines
 
 #### Objective
 
-Create message thread UI với bubbles, attachments, date separators, và auto-scroll.
+Create message thread UI bằng cách **compose từ Shadcn Chat primitives** có sẵn: `MessageScroller`, `Message`, `Bubble`, `Attachment`, `Marker`. KHÔNG tự build bubble divs, scroll containers, hay date separators.
+
+> [!CAUTION]
+> **Shadcn Audit — PHẢI dùng components có sẵn:**
+> - `MessageScrollerProvider` + `MessageScroller` + `MessageScrollerViewport` + `MessageScrollerContent` + `MessageScrollerItem` + `MessageScrollerButton` → thay cho custom scroll container + scroll-to-bottom button
+> - `Message` + `MessageAvatar` + `MessageContent` + `MessageHeader` + `MessageFooter` + `MessageGroup` → thay cho custom message row layout
+> - `Bubble` + `BubbleContent` → thay cho custom `message-bubble.tsx` với hand-styled divs
+> - `Attachment` + `AttachmentMedia` + `AttachmentContent` + `AttachmentTitle` + `AttachmentDescription` + `AttachmentActions` + `AttachmentGroup` → thay cho custom `attachment-preview.tsx`
+> - `Marker` (variant `separator`) + `MarkerContent` → thay cho custom `date-separator.tsx`
+> - `Avatar` + `AvatarFallback` → cho sender avatars
+> - `Badge` → cho status, delivery indicators
 
 #### Scope
 
 ##### [NEW] `src/features/conversations/message-thread.tsx`
 
-- Thread header: contact name, conversation status badge, quick actions
-- Scrollable message area
-- Auto-scroll to bottom on new messages
-- "Scroll to bottom" floating button khi scrolled up
+Container component compose Shadcn Chat primitives:
 
-##### [NEW] `src/features/conversations/message-bubble.tsx`
+```typescript
+import { MessageScrollerProvider, MessageScroller, MessageScrollerViewport,
+  MessageScrollerContent, MessageScrollerItem, MessageScrollerButton } from '@/components/ui/message-scroller';
+import { Message, MessageAvatar, MessageContent, MessageHeader, MessageFooter } from '@/components/ui/message';
+import { Bubble, BubbleContent } from '@/components/ui/bubble';
+import { Marker, MarkerContent } from '@/components/ui/marker';
+import { Attachment, AttachmentMedia, AttachmentContent, AttachmentTitle,
+  AttachmentDescription, AttachmentActions, AttachmentAction, AttachmentGroup } from '@/components/ui/attachment';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+```
 
-Message bubble types:
-- **Inbound** (contact): left-aligned, muted background (`bg-muted`)
-- **Outbound** (agent): right-aligned, accent-colored background (`bg-primary`)
-- **System/activity**: centered, muted text, no bubble
-- **Private notes**: left-aligned, amber tinted background với "Note" label + lock icon
-- Content: text with whitespace preserved
-- Timestamp below bubble (small, muted)
-- Sender info: avatar + name cho inbound, "You" cho outbound
-- Delivery status icon: sent ✓, delivered ✓✓, read ✓✓ (blue)
+Structure:
+- Thread header: contact name, `Badge` cho conversation status, quick action buttons
+- `MessageScrollerProvider` (autoScroll) wrapping:
+  - `MessageScroller` > `MessageScrollerViewport` > `MessageScrollerContent`
+  - Each message as `MessageScrollerItem` containing composed `Message` + `Bubble`
+  - Date separators: `Marker variant="separator"` + `MarkerContent`
+  - `MessageScrollerButton` cho "scroll to bottom" (built-in, auto-shows khi scrolled up)
 
-##### [NEW] `src/features/conversations/attachment-preview.tsx`
+Message rendering by type (inside `MessageScrollerItem`):
+- **Inbound** (contact): `<Message align="start">` + `<Bubble variant="muted">` + `<BubbleContent>`
+- **Outbound** (agent): `<Message align="end">` + `<Bubble variant="default" align="end">` + `<BubbleContent>`
+- **System/activity**: `<Marker>` + `<MarkerContent>` (centered, muted text)
+- **Private notes**: `<Message align="start">` + `<Bubble variant="tinted">` + lock icon + "Note" label
+- Sender info: `<MessageAvatar>` + `<Avatar>` + `<AvatarFallback>` cho inbound
+- Timestamps: `<MessageFooter>` dưới mỗi bubble
+- Delivery status: `Badge` variant cho sent ✓, delivered ✓✓, read ✓✓
 
-- Image attachments: inline preview, lightbox on click
-- File attachments: file icon + name + size + download link
+Attachments (inside `BubbleContent` hoặc sau `Bubble`):
+- Image: `<Attachment>` + `<AttachmentMedia variant="image">` + `<img>`
+- File: `<Attachment>` + `<AttachmentMedia variant="icon">` + `<AttachmentContent>` + `<AttachmentTitle>` + `<AttachmentDescription>` + `<AttachmentActions>`
+- Multiple: wrap in `<AttachmentGroup>`
 
-##### [NEW] `src/features/conversations/date-separator.tsx`
+##### [NEW] `src/features/conversations/message-thread-header.tsx`
 
-- Horizontal line with date label centered: "Today", "Yesterday", "Aug 25, 2026"
+Thread header (tách cho clean component):
+- Contact name
+- Conversation status `Badge`
+- Quick actions: toggle detail panel, resolve conversation
 
-##### [NEW] `src/features/conversations/scroll-to-bottom.tsx`
-
-- Floating button at bottom-right of thread
-- Shows khi user scrolled up > 200px
-- Click scrolls to bottom smoothly
+~~##### [NEW] `src/features/conversations/message-bubble.tsx`~~ → **REMOVED: Dùng Shadcn `Bubble` + `BubbleContent`**
+~~##### [NEW] `src/features/conversations/attachment-preview.tsx`~~ → **REMOVED: Dùng Shadcn `Attachment` + `AttachmentGroup`**
+~~##### [NEW] `src/features/conversations/date-separator.tsx`~~ → **REMOVED: Dùng Shadcn `Marker variant="separator"`**
+~~##### [NEW] `src/features/conversations/scroll-to-bottom.tsx`~~ → **REMOVED: Dùng Shadcn `MessageScrollerButton` (built-in)**
 
 #### Frontend Design Notes
 
 > [!TIP]
-> - Message bubbles: **subtle rounding** (8–12px), không rounded-full
-> - Outbound bubble: accent color with white text
-> - Inbound bubble: card-like on muted background
-> - Private notes: distinct amber/yellow tint với small lock icon
-> - System messages: minimal, centered, small text
+> - Dùng `Bubble` variants: `default` (outbound), `muted` (inbound), `tinted` (private notes)
+> - `MessageScrollerButton` tự hiện khi scroll up — không cần custom logic
+> - `Marker variant="separator"` cho date separators — không cần custom divider component
+> - `AttachmentGroup` cho multiple attachments — auto layout
+> - Spacing: dùng `gap-*`, KHÔNG `space-y-*`
 
 #### Acceptance Criteria
 
-- [ ] Messages render correctly by type (inbound, outbound, system, note)
-- [ ] Attachments display inline (images) hoặc download cards (files)
-- [ ] Auto-scroll works on new messages
-- [ ] Date separators between different days
-- [ ] "Scroll to bottom" appears khi scrolled up
+- [ ] Messages render correctly by type dùng `Message` + `Bubble` (inbound, outbound, system, note)
+- [ ] Attachments display dùng `Attachment` + `AttachmentGroup` (images inline, files as cards)
+- [ ] Auto-scroll works via `MessageScrollerProvider autoScroll`
+- [ ] Date separators dùng `Marker variant="separator"`
+- [ ] "Scroll to bottom" via `MessageScrollerButton` (no custom implementation)
+- [ ] ❌ KHÔNG có custom bubble divs, scroll containers, hay date separators
 
 #### Dependencies
 
@@ -1252,6 +1296,17 @@ Create detail panel (right column) với contact info, conversation actions, lab
 ##### [NEW] `src/features/conversations/detail-panel.tsx`
 
 Container component with sections:
+
+> [!IMPORTANT]
+> **Shadcn Component Audit**: Task này PHẢI dùng:
+> - `Select` + `SelectGroup` + `SelectItem` cho status, priority, assignee, team dropdowns
+> - `Badge` cho status display, priority indicators
+> - `Popover` + `Command` cho label search picker
+> - `Badge` cho removable label chips
+> - `Avatar` + `AvatarFallback` cho contact avatar
+> - `Card` + `CardHeader` + `CardContent` cho section containers
+> - `Separator` cho section dividers
+> - `AlertDialog` cho destructive confirmations
 
 ##### [NEW] `src/features/conversations/contact-info.tsx`
 
@@ -1493,10 +1548,13 @@ Create file attachment upload với image preview, progress indicator, và hỗ 
 ##### [NEW] `src/features/composer/attachment-preview-bar.tsx`
 
 Bar hiển thị trên composer khi có attachments:
-- Image files: thumbnail preview
-- Other files: file icon + name + size
-- Remove button per attachment
-- Upload progress bar per file
+
+> [!IMPORTANT]
+> **Shadcn Audit**: Dùng `Attachment` + `AttachmentGroup` từ `@/components/ui/attachment` cho preview bar.
+> - Image files: `AttachmentMedia variant="image"` + thumbnail
+> - Other files: `AttachmentMedia variant="icon"` + `AttachmentTitle` + `AttachmentDescription`
+> - Upload progress: `Attachment state="uploading"` (built-in shimmer animation)
+> - Remove button: `AttachmentActions` + `AttachmentAction`
 
 ##### [MODIFY] `src/features/composer/hooks/use-send-message.ts`
 
@@ -1993,6 +2051,21 @@ Create settings layout với sidebar navigation và RBAC-based visibility.
 ##### [NEW] `src/app/(dashboard)/[workspaceSlug]/settings/layout.tsx`
 
 Settings page layout:
+
+> [!IMPORTANT]
+> **Shadcn Component Audit**: Settings pages PHẢI dùng:
+> - `Sidebar*` primitives từ `@/components/ui/sidebar` cho settings navigation (KHÔNG tự build sidebar)
+> - `Table` + `TableHeader` + `TableBody` + `TableRow` + `TableCell` cho list views
+> - `Dialog` + `DialogTitle` + `DialogHeader` cho create/edit forms
+> - `AlertDialog` cho destructive confirmations (delete)
+> - `FieldGroup` + `Field` + `FieldLabel` cho ALL form layouts
+> - `Select` + `SelectGroup` + `SelectItem` cho dropdowns
+> - `Combobox` cho searchable selects
+> - `Switch` cho active/inactive toggles
+> - `Badge` cho status badges
+> - `Card` + `CardHeader` + `CardContent` cho section containers
+> - `toast.success()` / `toast.error()` từ `sonner` cho notifications
+
 - Left sidebar navigation (different from dashboard sidebar)
 - Sections: General, Inboxes, Teams, Members, Labels, Canned Responses, Automation Rules, Webhooks
 - Route-based active state
@@ -2045,7 +2118,7 @@ Form fields:
 - Timezone (select)
 - Default language (select)
 - Save button → `PATCH /workspaces/current`
-- Success toast notification via `sonner`
+- Success toast notification via `sonner`: `toast.success('Workspace settings updated')`
 
 #### Acceptance Criteria
 

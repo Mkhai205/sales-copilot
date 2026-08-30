@@ -260,7 +260,7 @@ StorageService (or MinioAdapter)
 - **CSS Variables & Semantic Tokens**: Always use semantic Tailwind classes matching `globals.css` (`bg-background`, `text-foreground`, `bg-card`, `bg-muted`, `border-border`, `text-primary`, `text-muted-foreground`).
 - ❌ **DO NOT**: Hardcode arbitrary hex colors (e.g. `bg-[#1a202c]`) or arbitrary px margins where design tokens exist.
 - **Dark Mode Default**: Support Dark Theme by default via `next-themes` (`ThemeProvider` in `app-providers.tsx`).
-- **Toast Notifications**: Use `ToastProvider` & `ToastViewport` from `@/components/ui/toast` (`@base-ui/react/toast`). Do NOT install `sonner` or additional toast libraries.
+- **Toast Notifications**: Use `Sonner` via `@/components/ui/sonner` (already configured in `app-providers.tsx` as `<Toaster />`). Use `toast.success()`, `toast.error()`, `toast()` from `sonner` package.
 
 ### 9.5. Realtime & Live Interaction (Chatwoot Patterns)
 
@@ -273,6 +273,44 @@ StorageService (or MinioAdapter)
 - **Eliminate Waterfalls**: Use `Promise.all()` for independent fetches (`async-parallel`).
 - **Re-render Optimization**: Use functional setState (`setList(prev => ...)`), `useDeferredValue` for fast search filtering, and derive UI state during render rather than syncing in `useEffect`.
 - **Tree-Shaking**: Import specific types from `@sales-copilot/shared-contracts`, avoiding unanalyzable wildcard imports (`import * from ...`).
+
+### 9.7. Pre-Implementation Shadcn Component Audit (Mandatory)
+
+- ⛔ **CRITICAL RULE**: Before writing ANY new UI component, you MUST:
+  1. **Read the Shadcn skill** (`.agents/skills/shadcn/SKILL.md` + `rules/`) to understand component APIs, composition patterns, and critical rules
+  2. **Check `src/components/ui/`** — list all 50 existing components and verify if ANY existing primitive covers your need
+  3. **Run `pnpm dlx shadcn@latest search`** to check both installed and registry components
+  4. **Run `pnpm dlx shadcn@latest docs <component>`** to get correct API usage before composing
+  5. **Only create a new component** if NO Shadcn primitive or composition can cover the need
+
+- **Shadcn Component Selection Reference**:
+
+  | Need                              | Use                                                                                           |
+  | --------------------------------- | --------------------------------------------------------------------------------------------- |
+  | Chat message threads              | `MessageScroller` + `MessageScrollerItem` + `MessageScrollerButton`                           |
+  | Message bubbles                   | `Message` + `Bubble` + `BubbleContent`                                                        |
+  | Date separators / system messages | `Marker` (variant `separator`)                                                                |
+  | File/Image attachments            | `Attachment` + `AttachmentGroup`                                                              |
+  | Form layouts                      | `FieldGroup` + `Field` + `FieldLabel` + `FieldDescription`                                    |
+  | Search inputs with icons          | `InputGroup` + `InputGroupInput` + `InputGroupAddon`                                          |
+  | Option sets (2–7 choices)         | `ToggleGroup` + `ToggleGroupItem`                                                             |
+  | Loading states                    | `Skeleton` (not custom animate-pulse divs)                                                    |
+  | Status indicators                 | `Badge` (not custom styled spans)                                                             |
+  | Destructive confirmations         | `AlertDialog` (not custom modals)                                                             |
+  | Side panels / detail views        | `Sheet`                                                                                       |
+  | Resizable layouts                 | `ResizablePanelGroup` + `ResizablePanel` + `ResizableHandle` from `@/components/ui/resizable` |
+  | Empty states                      | `Empty` + `EmptyHeader` + `EmptyTitle`                                                        |
+  | Dividers                          | `Separator` (not `<hr>` or `border-t` divs)                                                   |
+
+- **Shadcn Critical Rules** (always apply):
+  - Forms: `FieldGroup` + `Field`, never raw `div` with `space-y-*`
+  - Spacing: `gap-*`, never `space-x-*` or `space-y-*`
+  - Equal dimensions: `size-*`, never `w-* h-*`
+  - Icons in buttons: `data-icon`, no sizing classes on icons
+  - Items inside Groups: `SelectItem` → `SelectGroup`, `CommandItem` → `CommandGroup`, etc.
+  - Dialog/Sheet/Drawer always need `Title` (use `sr-only` if visually hidden)
+  - Button loading: compose `Spinner` + `data-icon` + `disabled`, no `isPending` prop
+  - Validation: `data-invalid` on `Field` + `aria-invalid` on control
 
 ---
 
