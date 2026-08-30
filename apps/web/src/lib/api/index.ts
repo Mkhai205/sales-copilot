@@ -6,3 +6,4 @@ export * from './conversations';
 export * from './messages';
 export * from './contacts';
 export * from './labels';
+export * from './teams';

@@ -1348,12 +1348,12 @@ export function useUpdateConversationStatus(conversationId: string) {
 
 #### Acceptance Criteria
 
-- [ ] Contact info displays correctly
-- [ ] Status change → API call → UI updates
-- [ ] Assignment change → API call → UI updates
-- [ ] Labels add/remove works
-- [ ] Previous conversations listed (nếu API supports)
-- [ ] Channel identities displayed
+- [x] Contact info displays correctly
+- [x] Status change → API call → UI updates
+- [x] Assignment change → API call → UI updates
+- [x] Labels add/remove works
+- [x] Previous conversations listed (nếu API supports)
+- [x] Channel identities displayed
 
 #### Dependencies
 

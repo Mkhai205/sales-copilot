@@ -5,7 +5,7 @@ import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/componen
 import { ConversationEmptyState } from './conversation-empty-state';
 import { ConversationList } from './conversation-list';
 import { MessageThread } from './message-thread';
-import { DetailPanelPlaceholder } from './detail-panel-placeholder';
+import { DetailPanel } from './detail-panel';
 
 interface ConversationLayoutProps {
   workspaceSlug: string;
@@ -65,7 +65,11 @@ export function ConversationLayout({ workspaceSlug, conversationId }: Conversati
               maxSize="35%"
               className=""
             >
-              <DetailPanelPlaceholder onClose={() => setIsDetailOpen(false)} />
+              <DetailPanel
+                conversationId={conversationId}
+                workspaceSlug={workspaceSlug}
+                onClose={() => setIsDetailOpen(false)}
+              />
             </ResizablePanel>
           </>
         )}

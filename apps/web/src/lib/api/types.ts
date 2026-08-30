@@ -15,6 +15,13 @@ export type {
   AddWorkspaceMemberDto,
   UpdateWorkspaceMemberRoleDto,
 
+  // Teams
+  TeamDto,
+  TeamMemberDto,
+  CreateTeamDto,
+  UpdateTeamDto,
+  AddTeamMembersDto,
+
   // Conversations
   ConversationResponseDto,
   CreateConversationDto,
