@@ -1,4 +1,4 @@
-import { fetchApi } from './client';
+import { fetchApi, workspaceHeaders } from './client';
 import type {
   AddWorkspaceMemberDto,
   CreateWorkspaceDto,
@@ -8,10 +8,6 @@ import type {
   WorkspaceDto,
   WorkspaceMemberDto,
 } from '@sales-copilot/shared-contracts';
-
-function workspaceHeaders(workspaceId?: string): HeadersInit {
-  return workspaceId ? { 'X-Workspace-Id': workspaceId } : {};
-}
 
 export const workspacesApi = {
   list: () => fetchApi<UserWorkspaceDto[]>('/workspaces'),

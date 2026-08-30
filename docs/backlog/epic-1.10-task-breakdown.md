@@ -920,8 +920,8 @@ export const conversationsApi = {
 
 #### Acceptance Criteria
 
-- [ ] Tất cả API functions typed với shared-contracts DTOs
-- [ ] Build succeeds
+- [x] Tất cả API functions typed với shared-contracts DTOs
+- [x] Build succeeds
 
 #### Dependencies
 
