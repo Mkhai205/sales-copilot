@@ -5,5 +5,7 @@ export * from './conversation-list-filters';
 export * from './conversation-list';
 export * from './conversation-empty-state';
 export * from './conversation-list-placeholder';
+export * from './message-thread';
+export * from './message-thread-header';
 export * from './message-thread-placeholder';
 export * from './detail-panel-placeholder';

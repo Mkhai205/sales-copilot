@@ -4,7 +4,7 @@ import * as React from 'react';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { ConversationEmptyState } from './conversation-empty-state';
 import { ConversationList } from './conversation-list';
-import { MessageThreadPlaceholder } from './message-thread-placeholder';
+import { MessageThread } from './message-thread';
 import { DetailPanelPlaceholder } from './detail-panel-placeholder';
 
 interface ConversationLayoutProps {
@@ -43,8 +43,9 @@ export function ConversationLayout({ workspaceSlug, conversationId }: Conversati
           className=""
         >
           {conversationId ? (
-            <MessageThreadPlaceholder
+            <MessageThread
               conversationId={conversationId}
+              workspaceSlug={workspaceSlug}
               isDetailOpen={isDetailOpen}
               onToggleDetail={() => setIsDetailOpen(prev => !prev)}
             />

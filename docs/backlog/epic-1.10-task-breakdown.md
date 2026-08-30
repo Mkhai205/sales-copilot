@@ -1267,12 +1267,12 @@ Thread header (tách cho clean component):
 
 #### Acceptance Criteria
 
-- [ ] Messages render correctly by type dùng `Message` + `Bubble` (inbound, outbound, system, note)
-- [ ] Attachments display dùng `Attachment` + `AttachmentGroup` (images inline, files as cards)
-- [ ] Auto-scroll works via `MessageScrollerProvider autoScroll`
-- [ ] Date separators dùng `Marker variant="separator"`
-- [ ] "Scroll to bottom" via `MessageScrollerButton` (no custom implementation)
-- [ ] ❌ KHÔNG có custom bubble divs, scroll containers, hay date separators
+- [x] Messages render correctly by type dùng `Message` + `Bubble` (inbound, outbound, system, note)
+- [x] Attachments display dùng `Attachment` + `AttachmentGroup` (images inline, files as cards)
+- [x] Auto-scroll works via `MessageScrollerProvider autoScroll`
+- [x] Date separators dùng `Marker variant="separator"`
+- [x] "Scroll to bottom" via `MessageScrollerButton` (no custom implementation)
+- [x] ❌ KHÔNG có custom bubble divs, scroll containers, hay date separators
 
 #### Dependencies
 
