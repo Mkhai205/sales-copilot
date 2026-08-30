@@ -2,13 +2,13 @@ import { z } from 'zod';
 
 export const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
-  PORT: z.coerce.number().default(3000),
+  PORT: z.coerce.number().default(8000),
   CORS_ORIGIN: z
     .union([z.string(), z.array(z.string())])
     .transform(val => {
       if (Array.isArray(val)) return val;
       return val
-        .split(',')
+        .split(/[,\s]+/)
         .map(origin => origin.trim())
         .filter(origin => origin.length > 0);
     })

@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
-import './globals.css';
 import { Inter } from 'next/font/google';
+import './globals.css';
 import { cn } from '@/lib/utils';
-import { AppProviders } from '@/provider/app-providers';
+import { AppProviders } from '@/providers/app-providers';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
@@ -11,9 +11,17 @@ export const metadata: Metadata = {
   description: 'Omnichannel Conversation & AI Sales Platform',
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   return (
-    <html lang="en" suppressHydrationWarning className={cn('font-sans', inter.variable)}>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={cn('h-full', 'antialiased', 'font-sans', inter.variable)}
+    >
       <body>
         <AppProviders>{children}</AppProviders>
       </body>

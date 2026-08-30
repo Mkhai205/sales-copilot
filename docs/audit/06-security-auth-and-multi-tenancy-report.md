@@ -366,7 +366,7 @@ app.enableCors({
 ```
 
 #### 6. Verification Method
-Inspect HTTP response headers with `curl -I http://localhost:3000/api/v1/workspaces` and verify that `X-Frame-Options`, `X-Content-Type-Options`, and `Strict-Transport-Security` are present.
+Inspect HTTP response headers with `curl -I http://localhost:8000/api/v1/workspaces` and verify that `X-Frame-Options`, `X-Content-Type-Options`, and `Strict-Transport-Security` are present.
 
 ---
 

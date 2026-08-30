@@ -53,7 +53,7 @@ export class TelegramLifecycleService {
       this.configService.get<string>('WEBHOOK_BASE_URL') ||
       this.configService.get<string>('APP_URL') ||
       this.configService.get<string>('BASE_URL') ||
-      'http://localhost:3000';
+      'http://localhost:8000';
 
     const baseUrl = rawBaseUrl.replace(/\/+$/, '');
     return `${baseUrl}/channels/${channelId}/webhook`;

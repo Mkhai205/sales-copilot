@@ -1,54 +1,70 @@
 # See https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
 
-# compiled output
+# Compiled output & Bundles
 dist
 tmp
 out-tsc
 .next
 out
+build
 *.tsbuildinfo
+next-env.d.ts
+**/next-env.d.ts
 apps/server/src/infrastructure/database/generated
 
-# dependencies
+# Dependencies
 node_modules
 .pnpm-store
+.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
 
 # Environment files
 .env
 .env.*
 !.env.example
+!.env.template
 
 # IDEs and editors
-/.idea
+.idea
 .project
 .classpath
-.c9/
+.c9
 *.launch
-.settings/
+.settings
 *.sublime-workspace
+.vscode/
 
-# IDE - VSCode
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
-
-# misc
-/.sass-cache
-/connect.lock
-/coverage
-/libpeerconnection.log
-npm-debug.log
-yarn-error.log
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 testem.log
-/typings
+
+# Testing & Coverage
+coverage
+/coverage
+test-results
+playwright-report
+.nyc_output
+
+# Vercel & Deployment
+.vercel
+.open-next
 
 # System Files
 .DS_Store
 Thumbs.db
+*.pem
+*.swp
+*.swo
 
-# Nx
+# Nx & Monorepo Caches
 .nx/cache
 .nx/workspace-data
 .cursor/rules/nx-rules.mdc
@@ -56,9 +72,9 @@ Thumbs.db
 .nx/polygraph
 .nx/self-healing
 .nx/migrate-runs
+.turbo
+.eslintcache
 
 # Custom tooling
 .claude/worktrees
 .claude/settings.local.json
-.vscode/
-# .docs/

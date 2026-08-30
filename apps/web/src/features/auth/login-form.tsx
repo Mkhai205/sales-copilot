@@ -1,253 +1,207 @@
 'use client';
 
 import * as React from 'react';
-import { useState, useTransition } from 'react';
-import {
-  Mail,
-  Lock,
-  Eye,
-  EyeOff,
-  Sparkles,
-  ArrowRight,
-  Loader2,
-  AlertCircle,
-  ShieldCheck,
-} from 'lucide-react';
-import { loginSchema } from '@sales-copilot/shared-contracts';
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Spinner } from '@/components/ui/spinner';
+import { loginSchema, type LoginDto } from '@sales-copilot/shared-contracts';
 import { loginAction } from './actions';
+import { AlertCircleIcon } from 'lucide-react';
 
-export function LoginForm() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [validationErrors, setValidationErrors] = useState<{
-    email?: string;
-    password?: string;
-  }>({});
-  const [serverError, setServerError] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
+export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) {
+  const [email, setEmail] = React.useState('');
+  const [password, setPassword] = React.useState('');
+  const [fieldErrors, setFieldErrors] = React.useState<{ email?: string; password?: string }>({});
+  const [apiError, setApiError] = React.useState<string | null>(null);
+  const [isPending, setIsPending] = React.useState(false);
 
-  const handleQuickFill = (demoEmail: string, demoPass: string) => {
-    setEmail(demoEmail);
-    setPassword(demoPass);
-    setValidationErrors({});
-    setServerError(null);
-  };
-
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setServerError(null);
+    setApiError(null);
+    setFieldErrors({});
 
-    // Validate client-side
-    const parsed = loginSchema.safeParse({ email, password });
-    if (!parsed.success) {
-      const fieldErrors: { email?: string; password?: string } = {};
-      for (const issue of parsed.error.issues) {
-        if (issue.path[0] === 'email') {
-          fieldErrors.email = 'Please enter a valid email address';
-        } else if (issue.path[0] === 'password') {
-          fieldErrors.password = 'Password must be at least 6 characters';
+    const formData: LoginDto = { email, password };
+
+    // Client-side schema validation
+    const parseResult = loginSchema.safeParse(formData);
+    if (!parseResult.success) {
+      const formatted: { email?: string; password?: string } = {};
+      for (const issue of parseResult.error.issues) {
+        const fieldName = issue.path[0] as 'email' | 'password';
+        if (fieldName && !formatted[fieldName]) {
+          formatted[fieldName] = issue.message;
         }
       }
-      setValidationErrors(fieldErrors);
+      setFieldErrors(formatted);
       return;
     }
 
-    setValidationErrors({});
+    setIsPending(true);
 
-    startTransition(async () => {
-      const result = await loginAction({ email, password });
+    try {
+      const result = await loginAction(formData);
       if (result && !result.success && result.error) {
-        setServerError(result.error.message);
+        setApiError(result.error.message || 'Login failed. Please check your credentials.');
+        setIsPending(false);
       }
-    });
+    } catch (err: any) {
+      // Next.js redirect may throw NEXT_REDIRECT in internal client router handling, which shouldn't be treated as error
+      if (err?.digest?.startsWith('NEXT_REDIRECT') || err?.message === 'NEXT_REDIRECT') {
+        return;
+      }
+      setApiError(err?.message || 'An unexpected error occurred. Please try again.');
+      setIsPending(false);
+    }
   };
 
   return (
-    <div className="w-full max-w-md">
-      {/* Background card with glass effect */}
-      <div className="relative rounded-2xl border border-border/80 bg-card/80 p-8 shadow-2xl backdrop-blur-xl transition-all duration-300">
-        {/* Glow Accent Top */}
-        <div className="pointer-events-none absolute -top-12 left-1/2 -z-10 h-32 w-64 -translate-x-1/2 rounded-full bg-primary/20 blur-3xl" />
-
-        {/* Brand Header */}
-        <div className="mb-8 flex flex-col items-center text-center">
-          <div className="mb-3 flex items-center gap-2">
-            <div className="flex size-10 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-md shadow-primary/25">
-              <Sparkles className="size-5" />
-            </div>
-          </div>
-
-          <div className="flex items-center gap-1.5 mb-2">
-            <Badge
-              variant="outline"
-              className="gap-1.5 border-primary/30 bg-primary/5 py-0.5 text-xs text-primary font-medium"
-            >
-              <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              Omnichannel Engine Active
-            </Badge>
-          </div>
-
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">Sales Copilot</h1>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Sign in to access unified inbox, contacts, and AI sales intelligence
-          </p>
-        </div>
-
-        {/* Server Error Callout */}
-        {serverError && (
-          <Alert variant="destructive" className="mb-6 animate-in fade-in-50">
-            <AlertCircle className="size-4" />
-            <AlertTitle>Authentication Failed</AlertTitle>
-            <AlertDescription>{serverError}</AlertDescription>
-          </Alert>
-        )}
-
-        {/* Login Form */}
-        <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-          {/* Email Field */}
-          <div className="space-y-1.5">
-            <label
-              htmlFor="login-email"
-              className="flex items-center justify-between text-xs font-medium text-foreground/90"
-            >
-              <span>Work Email</span>
-            </label>
-            <div className="relative">
-              <Mail className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                id="login-email"
-                type="email"
-                placeholder="name@company.com"
-                value={email}
-                onChange={e => {
-                  setEmail(e.target.value);
-                  if (validationErrors.email) {
-                    setValidationErrors(prev => ({ ...prev, email: undefined }));
-                  }
-                }}
-                disabled={isPending}
-                autoFocus
-                autoComplete="email"
-                className="h-10 pl-9.5 pr-3 text-sm focus-visible:ring-primary/40"
-                aria-invalid={!!validationErrors.email}
-              />
-            </div>
-            {validationErrors.email && (
-              <p className="text-xs font-medium text-destructive animate-in fade-in-50">
-                {validationErrors.email}
-              </p>
-            )}
-          </div>
-
-          {/* Password Field */}
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between text-xs font-medium text-foreground/90">
-              <label htmlFor="login-password">Password</label>
-            </div>
-            <div className="relative">
-              <Lock className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                id="login-password"
-                type={showPassword ? 'text' : 'password'}
-                placeholder="Enter your password"
-                value={password}
-                onChange={e => {
-                  setPassword(e.target.value);
-                  if (validationErrors.password) {
-                    setValidationErrors(prev => ({
-                      ...prev,
-                      password: undefined,
-                    }));
-                  }
-                }}
-                disabled={isPending}
-                autoComplete="current-password"
-                className="h-10 pl-9.5 pr-10 text-sm focus-visible:ring-primary/40"
-                aria-invalid={!!validationErrors.password}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(prev => !prev)}
-                disabled={isPending}
-                className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                aria-label={showPassword ? 'Hide password' : 'Show password'}
-              >
-                {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-              </button>
-            </div>
-            {validationErrors.password && (
-              <p className="text-xs font-medium text-destructive animate-in fade-in-50">
-                {validationErrors.password}
-              </p>
-            )}
-          </div>
-
-          {/* Submit Button */}
-          <Button
-            type="submit"
-            size="lg"
-            disabled={isPending}
-            className="w-full mt-2 h-10 text-sm font-semibold tracking-wide shadow-md shadow-primary/20 transition-all hover:shadow-lg hover:shadow-primary/30"
-          >
-            {isPending ? (
-              <span className="flex items-center gap-2">
-                <Loader2 className="size-4 animate-spin" />
-                Verifying credentials...
-              </span>
-            ) : (
-              <span className="flex items-center justify-center gap-1.5">
-                Sign in to Dashboard
-                <ArrowRight className="size-4" />
-              </span>
-            )}
-          </Button>
-        </form>
-
-        {/* Development Quick Fill Helpers */}
-        {process.env.NODE_ENV !== 'production' && (
-          <div className="mt-6 pt-5 border-t border-border/60">
-            <div className="flex items-center justify-between mb-2.5">
-              <span className="text-[11px] font-medium text-muted-foreground flex items-center gap-1">
-                <ShieldCheck className="size-3.5 text-primary" />
-                Dev Quick Fill:
-              </span>
-            </div>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => handleQuickFill('admin@salescopilot.io', 'Admin123456!')}
-                className="flex-1 rounded-md border border-border/80 bg-muted/40 px-2.5 py-1.5 text-left text-[11px] font-medium text-foreground/80 hover:bg-accent/40 hover:text-foreground transition-colors"
-              >
-                <div className="font-semibold text-primary">Admin</div>
-                <div className="text-[10px] text-muted-foreground truncate">
-                  admin@salescopilot.io
+    <div className={cn('flex flex-col gap-6 w-full', className)} {...props}>
+      <Card className="overflow-hidden p-0 shadow-lg border-border/80 bg-card">
+        <CardContent className="grid p-0 md:grid-cols-2">
+          {/* Left: Form */}
+          <form onSubmit={handleSubmit} className="p-6 sm:p-8 md:p-10 flex flex-col justify-center">
+            <FieldGroup>
+              <div className="flex flex-col items-center gap-1.5 mb-2">
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-sm shadow-sm">
+                    SC
+                  </div>
+                  <span className="font-semibold text-base tracking-tight">Sales Copilot</span>
                 </div>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleQuickFill('agent@salescopilot.io', 'Agent123456!')}
-                className="flex-1 rounded-md border border-border/80 bg-muted/40 px-2.5 py-1.5 text-left text-[11px] font-medium text-foreground/80 hover:bg-accent/40 hover:text-foreground transition-colors"
-              >
-                <div className="font-semibold text-accent-foreground">Agent</div>
-                <div className="text-[10px] text-muted-foreground truncate">
-                  agent@salescopilot.io
+                <h1 className="text-2xl font-bold tracking-tight">Welcome back</h1>
+                <p className="text-xs text-muted-foreground text-center">
+                  Sign in to your account to access conversations
+                </p>
+              </div>
+
+              {apiError && (
+                <Alert variant="destructive" className="py-2.5 px-3">
+                  <AlertCircleIcon className="size-4" />
+                  <AlertDescription className="text-xs">{apiError}</AlertDescription>
+                </Alert>
+              )}
+
+              <Field data-invalid={!!fieldErrors.email}>
+                <FieldLabel htmlFor="email" className="text-xs font-medium">
+                  Email address
+                </FieldLabel>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  placeholder="name@company.com"
+                  className="h-9"
+                  autoComplete="email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  disabled={isPending}
+                  required
+                />
+                {fieldErrors.email && <FieldError>{fieldErrors.email}</FieldError>}
+              </Field>
+
+              <Field data-invalid={!!fieldErrors.password}>
+                <div className="flex items-center justify-between w-full">
+                  <FieldLabel htmlFor="password" className="text-xs font-medium">
+                    Password
+                  </FieldLabel>
+                  <a
+                    href="#"
+                    className="text-xs text-muted-foreground hover:text-primary transition-colors underline-offset-2 hover:underline"
+                  >
+                    Forgot password?
+                  </a>
                 </div>
-              </button>
+                <Input
+                  id="password"
+                  name="password"
+                  type="password"
+                  placeholder="••••••••"
+                  className="h-9"
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  disabled={isPending}
+                  required
+                />
+                {fieldErrors.password && <FieldError>{fieldErrors.password}</FieldError>}
+              </Field>
+
+              <Field className="mt-1">
+                <Button
+                  type="submit"
+                  size="lg"
+                  className="w-full h-9 font-medium shadow-sm cursor-pointer"
+                  disabled={isPending}
+                >
+                  {isPending ? (
+                    <>
+                      <Spinner className="mr-2" />
+                      Signing in...
+                    </>
+                  ) : (
+                    'Sign In'
+                  )}
+                </Button>
+              </Field>
+
+              <FieldDescription className="text-center mt-2 text-xs">
+                Don&apos;t have an account?{' '}
+                <a href="#" className="font-medium text-primary hover:underline">
+                  Sign up
+                </a>
+              </FieldDescription>
+            </FieldGroup>
+          </form>
+
+          {/* Right: Feature Showcase Panel */}
+          <div className="relative hidden md:flex flex-col justify-between p-8 bg-gradient-to-br from-primary/15 via-primary/5 to-muted border-l border-border/60">
+            <div className="space-y-4">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-primary/15 text-primary border border-primary/20">
+                Omnichannel Platform
+              </div>
+              <h2 className="text-xl font-bold tracking-tight text-foreground">
+                Unified Customer Conversations & AI Sales Copilot
+              </h2>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Connect Facebook, Zalo, Telegram, Email, and Web Chat in a single real-time inbox.
+                Accelerate team workflows with smart routing and automated replies.
+              </p>
+            </div>
+
+            <div className="space-y-3 pt-6 border-t border-border/40">
+              <div className="flex items-center gap-2.5 text-xs text-muted-foreground">
+                <div className="h-2 w-2 rounded-full bg-emerald-500" />
+                <span>Real-time WebSocket event streaming</span>
+              </div>
+              <div className="flex items-center gap-2.5 text-xs text-muted-foreground">
+                <div className="h-2 w-2 rounded-full bg-blue-500" />
+                <span>Multi-tenant workspace isolation</span>
+              </div>
+              <div className="flex items-center gap-2.5 text-xs text-muted-foreground">
+                <div className="h-2 w-2 rounded-full bg-purple-500" />
+                <span>Smart agent auto-assignment & canned replies</span>
+              </div>
             </div>
           </div>
-        )}
-      </div>
+        </CardContent>
+      </Card>
 
-      {/* Footer Security Note */}
-      <p className="mt-6 text-center text-xs text-muted-foreground flex items-center justify-center gap-1.5">
-        <ShieldCheck className="size-3.5 text-emerald-500" />
-        Multi-tenant isolation & end-to-end encrypted sessions
-      </p>
+      <FieldDescription className="px-6 text-center text-xs text-muted-foreground">
+        By clicking continue, you agree to our{' '}
+        <a href="#" className="underline hover:text-primary">
+          Terms of Service
+        </a>{' '}
+        and{' '}
+        <a href="#" className="underline hover:text-primary">
+          Privacy Policy
+        </a>
+        .
+      </FieldDescription>
     </div>
   );
 }

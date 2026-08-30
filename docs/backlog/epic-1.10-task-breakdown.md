@@ -299,7 +299,7 @@ Create typed API client sử dụng native `fetch` và types từ `@sales-copilo
 Typed API client wrapper:
 
 ```typescript
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
 
 interface ApiResponse<T> {
   success: boolean;

@@ -16,8 +16,6 @@ export default tseslint.config(
       '**/.nx/**',
       'coverage/**',
       '**/coverage/**',
-      '.docs/**',
-      '**/.docs/**',
       'docs/**',
       '**/docs/**',
       '.agents/**',

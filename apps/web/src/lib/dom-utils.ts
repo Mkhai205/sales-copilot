@@ -1,8 +1,3 @@
-/**
- * Shared DOM utility functions.
- * Centralized from whiteboard-ui-utils, whiteboard-page, theme-provider.
- */
-
 export function isEditableEventTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) {
     return false;
