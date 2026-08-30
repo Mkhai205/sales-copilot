@@ -8,7 +8,7 @@ Thiết lập bộ kiểm thử tích hợp Vertical Slice End-to-End kiểm ch�
 - **Status**: 🟡 Ready
 - **Dependencies**: Hoàn thành toàn bộ `EPIC-1.0` đến `EPIC-1.10`
 - **References**:
-  - `.docs/references/chatwoot/source/tests/playwright/`
+  - `docs/references/chatwoot/source/tests/playwright/`
 
 ---
 

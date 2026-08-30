@@ -58,14 +58,14 @@ Sales Copilot Platform is an omnichannel customer conversation and engagement pl
 - **Phase 2 (FUTURE EXTENSION - FROZEN)**: **Sales Intelligence & AI Copilot**. Lead lifecycle, AI Lead scoring, buying signals extraction, sales evidence, copilot decision engine.
   - ⛔ **CRITICAL RULE**: **Do NOT create models, DTOs, tables, or services for Phase 2 during Phase 1.**
 
-### Primary Documentation References in [`.docs/`](./.docs/README.md):
+### Primary Documentation References in [`docs/`](./docs/README.md):
 
-- **Product & Scope**: [Product Vision](./.docs/product/vision.md) | [Scope](./.docs/product/scope.md) | [Requirements](./.docs/product/requirements.md)
-- **Domain & Rules**: [Domain Model](./.docs/domain/domain-model.md) | [Business Rules](./.docs/domain/business-rules.md)
-- **Architecture**: [System Overview](./.docs/architecture/system-architecture.md) | [Module Boundaries](./.docs/architecture/module-architecture.md) | [Data & Security](./.docs/architecture/data-architecture.md)
-- **API & Contracts**: [REST API](./.docs/api/api-contract.md) | [WebSocket Events](./.docs/api/websocket-contract.md)
-- **Engineering & Backlog**: [Master Backlog](./.docs/backlog/backlog.md) | [Coding Guidelines](./.docs/engineering/coding-guidelines.md)
-- **Chatwoot Reference**: [Chatwoot Guide](./.docs/references/chatwoot/README.md) & [Chatwoot Source](./.docs/references/chatwoot/source)
+- **Product & Scope**: [Product Vision](./docs/product/vision.md) | [Scope](./docs/product/scope.md) | [Requirements](./docs/product/requirements.md)
+- **Domain & Rules**: [Domain Model](./docs/domain/domain-model.md) | [Business Rules](./docs/domain/business-rules.md)
+- **Architecture**: [System Overview](./docs/architecture/system-architecture.md) | [Module Boundaries](./docs/architecture/module-architecture.md) | [Data & Security](./docs/architecture/data-architecture.md)
+- **API & Contracts**: [REST API](./docs/api/api-contract.md) | [WebSocket Events](./docs/api/websocket-contract.md)
+- **Engineering & Backlog**: [Master Backlog](./docs/backlog/backlog.md) | [Coding Guidelines](./docs/engineering/coding-guidelines.md)
+- **Chatwoot Reference**: [Chatwoot Guide](./docs/references/chatwoot/README.md) & [Chatwoot Source](./docs/references/chatwoot/source)
 
 ---
 
@@ -302,7 +302,7 @@ Write pragmatic, high-value tests:
 
 When completing any task, follow this systematic workflow:
 
-1. **Understand & Inspect**: Review existing module code, database schemas, and relevant documentation in `.docs/`.
+1. **Understand & Inspect**: Review existing module code, database schemas, and relevant documentation in `docs/`.
 2. **Implement Minimal & Coherent Changes**: Write the simplest, most readable solution that completely satisfies the requirements. Avoid over-engineering, unnecessary classes, and redundant layers.
 3. **Verify Tenant Isolation & Security**: Ensure every query is tenant-scoped (`workspaceId`) and credentials are encrypted.
 4. **Add/Update Tests**: Cover meaningful business logic with clean tests.

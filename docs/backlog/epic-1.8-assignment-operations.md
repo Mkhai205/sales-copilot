@@ -8,8 +8,8 @@ Hiện thực các nghiệp vụ vận hành cốt lõi: thuật toán phân cô
 - **Status**: ✅ Done
 - **Dependencies**: `EPIC-1.5` (Conversation Core), `EPIC-1.7` (Realtime & Presence)
 - **References**:
-  - `.docs/references/chatwoot/source/app/services/auto_assignment/`
-  - `.docs/references/chatwoot/source/app/models/canned_response.rb`
+  - `docs/references/chatwoot/source/app/services/auto_assignment/`
+  - `docs/references/chatwoot/source/app/models/canned_response.rb`
 
 ---
 

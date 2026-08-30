@@ -8,11 +8,11 @@ Hiện thực hệ thống định danh đa kênh chuẩn hóa 3NF (`ChannelIden
 - **Status**: ✅ Done
 - **Dependencies**: `EPIC-1.3` (Channel Platform Foundation)
 - **References**:
-  - `.docs/references/chatwoot/source/app/models/contact_inbox.rb`
-  - `.docs/references/chatwoot/source/app/actions/contact_identify_action.rb`
-  - `.docs/references/chatwoot/source/app/actions/contact_merge_action.rb`
-  - `.docs/references/chatwoot/source/app/builders/contact_inbox_builder.rb`
-  - `.docs/references/chatwoot/source/app/controllers/api/v1/accounts/actions/contact_merges_controller.rb`
+  - `docs/references/chatwoot/source/app/models/contact_inbox.rb`
+  - `docs/references/chatwoot/source/app/actions/contact_identify_action.rb`
+  - `docs/references/chatwoot/source/app/actions/contact_merge_action.rb`
+  - `docs/references/chatwoot/source/app/builders/contact_inbox_builder.rb`
+  - `docs/references/chatwoot/source/app/controllers/api/v1/accounts/actions/contact_merges_controller.rb`
 
 ### Design Decisions
 

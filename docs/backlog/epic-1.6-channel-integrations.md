@@ -8,8 +8,8 @@ Hiện thực các `ChannelAdapter` cụ thể kết nối vào hệ thống d�
 - **Status**: ✅ Done
 - **Dependencies**: `EPIC-1.5` (Conversation & Messaging Core)
 - **References**:
-  - `.docs/references/chatwoot/source/app/models/channel/`
-  - `.docs/references/chatwoot/source/app/services/`
+  - `docs/references/chatwoot/source/app/models/channel/`
+  - `docs/references/chatwoot/source/app/services/`
 
 ### Design Decisions
 

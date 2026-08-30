@@ -25,5 +25,5 @@
     "target": "es2022",
     "types": ["node"]
   },
-  "exclude": ["node_modules", ".docs", "docs", ".agents", "dist", ".next"]
+  "exclude": ["node_modules", "docs", ".agents", "dist", ".next"]
 }

@@ -8,9 +8,9 @@ Hiện thực động cơ luật tự động hóa (Automation Rules Engine) v�
 - **Status**: 🟢 Done
 - **Dependencies**: `EPIC-1.8` (Assignment & Operations)
 - **References**:
-  - `.docs/references/chatwoot/source/app/models/automation_rule.rb`
-  - `.docs/references/chatwoot/source/app/models/webhook.rb`
-  - `.docs/references/chatwoot/source/app/listeners/automation_rule_listener.rb`
+  - `docs/references/chatwoot/source/app/models/automation_rule.rb`
+  - `docs/references/chatwoot/source/app/models/webhook.rb`
+  - `docs/references/chatwoot/source/app/listeners/automation_rule_listener.rb`
 
 ---
 

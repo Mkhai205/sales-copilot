@@ -96,7 +96,7 @@ Chuẩn hóa tất cả domain event names và payload interfaces trong `shared-
 
 #### Chatwoot Reference
 
-Chatwoot dùng `Events::Types` module ([action_cable_listener.rb:L2](file:///d:/workspace/Sales%20Copilot/.docs/references/chatwoot/source/app/listeners/action_cable_listener.rb#L2)) với constants `MESSAGE_CREATED`, `CONVERSATION_CREATED`, v.v. Mỗi listener method nhận `event` object chứa `event.data[:message]`, `event.data[:conversation]`.
+Chatwoot dùng `Events::Types` module ([action_cable_listener.rb:L2](file:///d:/workspace/Sales%20Copilot/docs/references/chatwoot/source/app/listeners/action_cable_listener.rb#L2)) với constants `MESSAGE_CREATED`, `CONVERSATION_CREATED`, v.v. Mỗi listener method nhận `event` object chứa `event.data[:message]`, `event.data[:conversation]`.
 
 #### Scope
 
@@ -133,7 +133,7 @@ export enum WsServerEvent {
 
 ##### [NEW] [event-payloads.ts](file:///d:/workspace/Sales%20Copilot/packages/shared-contracts/src/realtime/event-payloads.ts)
 
-Tạo typed payload interfaces cho **mỗi domain event** (dựa trên [websocket-contract.md](file:///d:/workspace/Sales%20Copilot/.docs/api/websocket-contract.md)):
+Tạo typed payload interfaces cho **mỗi domain event** (dựa trên [websocket-contract.md](file:///d:/workspace/Sales%20Copilot/docs/api/websocket-contract.md)):
 
 ```typescript
 // Domain event enum (internal, used by @OnEvent())
@@ -296,7 +296,7 @@ Implement `@SubscribeMessage` handlers cho `join_workspace`, `leave_workspace`, 
 
 #### Chatwoot Reference
 
-Chatwoot `ActionCableListener` dùng `user_tokens(account, conversation.inbox.members)` ([action_cable_listener.rb:L202-L205](file:///d:/workspace/Sales%20Copilot/.docs/references/chatwoot/source/app/listeners/action_cable_listener.rb#L202-L205)) — collect tokens của agents thuộc inbox + account admins. Pattern của chúng ta: thay vì collect tokens rồi broadcast, dùng rooms để server push trực tiếp.
+Chatwoot `ActionCableListener` dùng `user_tokens(account, conversation.inbox.members)` ([action_cable_listener.rb:L202-L205](file:///d:/workspace/Sales%20Copilot/docs/references/chatwoot/source/app/listeners/action_cable_listener.rb#L202-L205)) — collect tokens của agents thuộc inbox + account admins. Pattern của chúng ta: thay vì collect tokens rồi broadcast, dùng rooms để server push trực tiếp.
 
 #### Scope
 
@@ -366,7 +366,7 @@ Cấu hình `@socket.io/redis-adapter` để Socket.io broadcasts hoạt động
 
 #### Chatwoot Reference
 
-Chatwoot dùng `ActionCableBroadcastJob` → ActiveJob → Redis Pub/Sub ([action_cable_listener.rb:L230](file:///d:/workspace/Sales%20Copilot/.docs/references/chatwoot/source/app/listeners/action_cable_listener.rb#L230)). Socket.io Redis Adapter là giải pháp tương đương nhưng transparent — không cần explicit job.
+Chatwoot dùng `ActionCableBroadcastJob` → ActiveJob → Redis Pub/Sub ([action_cable_listener.rb:L230](file:///d:/workspace/Sales%20Copilot/docs/references/chatwoot/source/app/listeners/action_cable_listener.rb#L230)). Socket.io Redis Adapter là giải pháp tương đương nhưng transparent — không cần explicit job.
 
 #### Scope
 
@@ -421,7 +421,7 @@ Tạo `RealtimeEventDispatcher` service — listen domain events từ `EventEmit
 
 #### Chatwoot Reference
 
-Chatwoot `ActionCableListener` xử lý mỗi event type trong method riêng ([action_cable_listener.rb:L41-L183](file:///d:/workspace/Sales%20Copilot/.docs/references/chatwoot/source/app/listeners/action_cable_listener.rb#L41-L183)):
+Chatwoot `ActionCableListener` xử lý mỗi event type trong method riêng ([action_cable_listener.rb:L41-L183](file:///d:/workspace/Sales%20Copilot/docs/references/chatwoot/source/app/listeners/action_cable_listener.rb#L41-L183)):
 
 ```ruby
 # Chatwoot pattern per event:
@@ -537,7 +537,7 @@ Bổ sung event handlers cho contact/channel_identity events vào `RealtimeEvent
 
 #### Chatwoot Reference
 
-Chatwoot broadcast contact events tới `account_token(account)` ([action_cable_listener.rb:L155-L176](file:///d:/workspace/Sales%20Copilot/.docs/references/chatwoot/source/app/listeners/action_cable_listener.rb#L155-L176)) — tương đương broadcast tới `workspace_{id}` room. Contact delete cần handle đặc biệt vì entity đã bị xóa.
+Chatwoot broadcast contact events tới `account_token(account)` ([action_cable_listener.rb:L155-L176](file:///d:/workspace/Sales%20Copilot/docs/references/chatwoot/source/app/listeners/action_cable_listener.rb#L155-L176)) — tương đương broadcast tới `workspace_{id}` room. Contact delete cần handle đặc biệt vì entity đã bị xóa.
 
 #### Scope
 

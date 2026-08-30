@@ -8,9 +8,9 @@ Hiện thực hệ thống phát tán sự kiện thời gian thực: typed doma
 - **Status**: ✅ Done
 - **Dependencies**: `EPIC-1.5` (Conversation & Messaging Core), `EPIC-1.1` (Identity & Auth)
 - **References**:
-  - `.docs/references/chatwoot/source/app/dispatchers/`
-  - `.docs/references/chatwoot/source/app/listeners/`
-  - `.docs/api/websocket-contract.md`
+  - `docs/references/chatwoot/source/app/dispatchers/`
+  - `docs/references/chatwoot/source/app/listeners/`
+  - `docs/api/websocket-contract.md`
 
 ---
 
@@ -165,7 +165,7 @@ Kết nối domain events (từ `EventEmitter2`) với WebSocket broadcasting �
   - `conversation.assigned` → broadcast to `user_{assigneeId}` + `workspace_{id}`
   - `contact.created/updated/deleted` → broadcast to `workspace_{id}`
   - `presence.updated` → broadcast to `workspace_{id}`
-- Event payload transformation: domain event → WebSocket payload (theo `.docs/api/websocket-contract.md`)
+- Event payload transformation: domain event → WebSocket payload (theo `docs/api/websocket-contract.md`)
 
 #### Acceptance Criteria
 

@@ -38,7 +38,7 @@
 The primary objective of this audit is to conduct an exhaustive, evidence-based technical evaluation of the **Sales Copilot Platform Backend Server** (`apps/server`) and its shared contract interface (`packages/shared-contracts`). 
 
 This audit determines:
-1. Whether the backend implementation accurately fulfills the functional, operational, and architectural requirements established in `.docs/`, `docs/`, and `AGENTS.md`.
+1. Whether the backend implementation accurately fulfills the functional, operational, and architectural requirements established in `docs/` and `AGENTS.md`.
 2. Whether multi-tenant isolation, authorization controls, cryptographic secrets handling, and webhook security are bulletproof against data leakage and privilege escalation.
 3. Whether domain entities, state machines, and business rules are enforced strictly in domain/service boundaries rather than casually delegated to controllers or frontend assumptions.
 4. Whether persistence guarantees, transactional boundaries, concurrency controls (distributed locks, idempotency keys), and schema integrity protect against race conditions and data corruption.
@@ -48,7 +48,7 @@ This audit determines:
 
 ## 2. Current Backend Scope & Phasing Context
 
-The Sales Copilot platform architecture is bifurcated into two distinct phases defined in `AGENTS.md` and `.docs/product/scope.md`:
+The Sales Copilot platform architecture is bifurcated into two distinct phases defined in `AGENTS.md` and `docs/product/scope.md`:
 
 ```text
                         Sales Copilot Platform
@@ -200,10 +200,10 @@ The audit must strictly observe these guiding tenets:
 ## 6. Phase 1 — Requirement Traceability Audit Strategy
 
 ### 6.1. Objective
-Map every functional requirement from `.docs/product/`, `.docs/domain/business-rules.md`, and `.docs/backlog/backlog.md` to concrete backend implementations (Controllers, Services, DB Models, and Test Suites). Identify unimplemented requirements, orphaned code, and verify Phase 1 vs Phase 2 scope compliance.
+Map every functional requirement from `docs/product/`, `docs/domain/business-rules.md`, and `docs/backlog/backlog.md` to concrete backend implementations (Controllers, Services, DB Models, and Test Suites). Identify unimplemented requirements, orphaned code, and verify Phase 1 vs Phase 2 scope compliance.
 
 ### 6.2. Scope & Target Files
-- Documentation: `.docs/product/scope.md`, `.docs/backlog/backlog.md`, `.docs/domain/business-rules.md`, `docs/01-07`.
+- Documentation: `docs/product/scope.md`, `docs/backlog/backlog.md`, `docs/domain/business-rules.md`, `docs/01-07`.
 - Source Code: All controller, service, listener, and processor files in `apps/server/src/modules/` and `apps/server/src/integrations/`.
 - Test Suites: All spec files in `apps/server/src/**/__tests__/*.spec.ts`.
 
@@ -517,7 +517,7 @@ Every finding documented in audit execution reports must strictly adhere to the 
 - **Severity**: CRITICAL | HIGH | MEDIUM | LOW | INFO
 - **Category**: Security | Multi-Tenancy | Domain Correctness | Architecture | Database | Contract | Test Gap | Performance
 - **Location**: `apps/server/src/path/to/file.ts:lineStart-lineEnd`
-- **Requirement Reference**: `.docs/...` or `AGENTS.md Section ...`
+- **Requirement Reference**: `docs/...` or `AGENTS.md Section ...`
 
 #### 1. Evidence
 ```typescript

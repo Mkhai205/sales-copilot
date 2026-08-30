@@ -8,10 +8,10 @@ Xây dựng lớp nền tảng kết nối kênh: trừu tượng hóa `ChannelA
 - **Status**: ✅ Done
 - **Dependencies**: `EPIC-1.2` (Contact Management)
 - **References**:
-  - `.docs/references/chatwoot/source/app/models/inbox.rb`
-  - `.docs/references/chatwoot/source/app/models/channel/`
-  - `.docs/references/chatwoot/source/app/controllers/webhooks/`
-  - `.docs/references/chatwoot/source/app/builders/contact_inbox_builder.rb`
+  - `docs/references/chatwoot/source/app/models/inbox.rb`
+  - `docs/references/chatwoot/source/app/models/channel/`
+  - `docs/references/chatwoot/source/app/controllers/webhooks/`
+  - `docs/references/chatwoot/source/app/builders/contact_inbox_builder.rb`
 
 ---
 

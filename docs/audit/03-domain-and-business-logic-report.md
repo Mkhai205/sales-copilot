@@ -3,14 +3,14 @@
 > **Document Status**: COMPLETED AUDIT REPORT  
 > **Auditor**: Senior Backend Architect & Independent Code Reviewer  
 > **Audit Phase**: Phase 3 — Domain Model & Business Logic Invariants  
-> **Target Scope**: Domain Rules (`.docs/domain/business-rules.md`), State Machines (`ConversationsService`), Auto-Assignment (`AutoAssignmentService`), Contact Resolution & Merge (`ContactResolutionService`, `ContactMergeService`), Message Invariants (`MessagesService`), Automation Engine (`AutomationExecutorService`)  
+> **Target Scope**: Domain Rules (`docs/domain/business-rules.md`), State Machines (`ConversationsService`), Auto-Assignment (`AutoAssignmentService`), Contact Resolution & Merge (`ContactResolutionService`, `ContactMergeService`), Message Invariants (`MessagesService`), Automation Engine (`AutomationExecutorService`)  
 > **Execution Date**: August 27, 2026
 
 ---
 
 ## 1. Executive Summary & Domain Health Verdict
 
-A thorough and rigorous audit was performed against all domain models, business rules, lifecycle state machines, and aggregate invariants defined in `.docs/domain/business-rules.md` and `.docs/domain/domain-model.md`.
+A thorough and rigorous audit was performed against all domain models, business rules, lifecycle state machines, and aggregate invariants defined in `docs/domain/business-rules.md` and `docs/domain/domain-model.md`.
 
 ```text
                        DOMAIN INVARIANTS AUDIT MATRIX

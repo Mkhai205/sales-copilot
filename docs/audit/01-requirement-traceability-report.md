@@ -3,21 +3,21 @@
 > **Document Status**: COMPLETED AUDIT REPORT  
 > **Auditor**: Senior Backend Architect & Independent Code Reviewer  
 > **Audit Phase**: Phase 1 — Requirement Traceability  
-> **Scope**: Requirements (`.docs/product/`, `.docs/domain/`, `.docs/backlog/`) ↔ Implementation (`apps/server/src/`, `packages/shared-contracts/`) ↔ Database (`prisma/schema.prisma`) ↔ Tests (`apps/server/src/**/__tests__/*.spec.ts`)  
+> **Scope**: Requirements (`docs/product/`, `docs/domain/`, `docs/backlog/`) ↔ Implementation (`apps/server/src/`, `packages/shared-contracts/`) ↔ Database (`prisma/schema.prisma`) ↔ Tests (`apps/server/src/**/__tests__/*.spec.ts`)  
 > **Execution Date**: August 27, 2026
 
 ---
 
 ## 1. Executive Summary & Traceability Verdict
 
-A comprehensive traceability analysis was performed across all 11 Phase 1 Epics (`EPIC-1.0` through `EPIC-1.9` in `.docs/backlog/`), product requirements (`.docs/product/requirements.md`), domain rules (`.docs/domain/business-rules.md`), and the active backend implementation (`apps/server` and `@sales-copilot/shared-contracts`).
+A comprehensive traceability analysis was performed across all 11 Phase 1 Epics (`EPIC-1.0` through `EPIC-1.9` in `docs/backlog/`), product requirements (`docs/product/requirements.md`), domain rules (`docs/domain/business-rules.md`), and the active backend implementation (`apps/server` and `@sales-copilot/shared-contracts`).
 
 ### Overall Traceability Summary:
 - **Phase 1 Core Capabilities**: **91% Implemented & Tested**. The core Omnichannel Conversation Platform (Multi-tenancy, Workspaces, Teams, Contacts, Channel Identities, Inboxes, Conversations, Messages, Realtime WebSocket, Automation Rules, Canned Responses, Audit Logs, Webhooks) is fully implemented and supported by **863 passing automated tests**.
-- **Scope Phasing Compliance (Lead & AI Copilot)**: **STRICTLY PRESERVED**. In accordance with `AGENTS.md` Section 1 and `.docs/product/scope.md` Section 3, **no `Lead`, `Opportunity`, `AIScore`, or LLM provider services exist in the active codebase**. These capabilities were intentionally deferred to **Phase 2 (Sales Intelligence & AI Copilot)**.
+- **Scope Phasing Compliance (Lead & AI Copilot)**: **STRICTLY PRESERVED**. In accordance with `AGENTS.md` Section 1 and `docs/product/scope.md` Section 3, **no `Lead`, `Opportunity`, `AIScore`, or LLM provider services exist in the active codebase**. These capabilities were intentionally deferred to **Phase 2 (Sales Intelligence & AI Copilot)**.
 - **Traceability Gaps Identified**:
   1. **Missing User Profile Update Endpoint**: `updateUserProfileSchema` exists in `@sales-copilot/shared-contracts/users`, but `apps/server/src/modules/users` is empty and no update endpoint exists.
-  2. **Deferred Channels (Zalo & Email)**: Present in `ChannelType` enum and placeholder directories exist, but implementation is officially deferred post-Phase 1 per `.docs/backlog/backlog.md`.
+  2. **Deferred Channels (Zalo & Email)**: Present in `ChannelType` enum and placeholder directories exist, but implementation is officially deferred post-Phase 1 per `docs/backlog/backlog.md`.
   3. **Outbound Messaging Queue Gap**: Outbound channel messages rely on in-process `EventEmitter2` rather than persistent BullMQ queues, lacking retry/backoff on transient failure.
   4. **Concurrent Webhook Idempotency Race Condition**: `WebhooksService.handleInboundWebhook` has a check-then-act race condition on duplicate webhooks.
 
@@ -49,7 +49,7 @@ A primary requirement of this audit is verifying the architectural boundary betw
 | :--- | :---: | :--- | :--- |
 | **"Lead is an independent domain entity"** | ❄️ **Deferred (Phase 2)** | `prisma/schema.prisma` contains 21 models; no `Lead` or `Opportunity` table exists. | **Complies with Phase 1 Scope Guardrail**. `AGENTS.md` explicitly forbids creating Phase 2 models during Phase 1. |
 | **"Lead lifecycle enforced by business rules"** | ❄️ **Deferred (Phase 2)** | No Lead lifecycle exists. Conversation lifecycle is enforced via `ALLOWED_STATUS_TRANSITIONS`. | Expected behavior for Phase 1. Ready for Phase 2 integration via `Epic 2.1`. |
-| **"Sales cannot modify AI score"** | ❄️ **Deferred (Phase 2)** | No `AIScore` entity or field exists in database or contracts. | Deferred to `Epic 2.5` (`.docs/backlog/backlog.md`). |
+| **"Sales cannot modify AI score"** | ❄️ **Deferred (Phase 2)** | No `AIScore` entity or field exists in database or contracts. | Deferred to `Epic 2.5` (`docs/backlog/backlog.md`). |
 | **"AI data provenance / context tracking"** | ❄️ **Deferred (Phase 2)** | No AI generation pipelines exist in Phase 1. | Deferred to `Epic 2.3` & `2.4`. |
 | **"Tenant boundary enforced at correct layer"** | ✅ **Verified** | `WorkspaceGuard` enforces `X-Workspace-Id` at controller entry; Prisma queries use `where: { workspaceId }`. | Fully implemented and tested. |
 | **"Channel implementation does not leak into core"** | ✅ **Verified** | Vendor SDKs/types isolated in `src/integrations/*`; core only consumes `InboundMessagePayload`. | Strict adherence to `ChannelAdapter` interface. |
@@ -59,7 +59,7 @@ A primary requirement of this audit is verifying the architectural boundary betw
 
 ## 3. End-to-End Requirement Traceability Matrix
 
-This matrix maps every functional requirement (FR) from `.docs/product/requirements.md` and Epics from `.docs/backlog/` to its physical implementation, persistence, and test specifications.
+This matrix maps every functional requirement (FR) from `docs/product/requirements.md` and Epics from `docs/backlog/` to its physical implementation, persistence, and test specifications.
 
 | Req ID / Epic | Functional Requirement | Controller & Route | Application Service | Prisma Model | Automated Test Spec | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- | :---: |
@@ -103,12 +103,12 @@ This matrix maps every functional requirement (FR) from `.docs/product/requireme
 - **Traceability Finding**: `FINDING-P1-01` (Severity: **MEDIUM**).
 
 ### 4.2. Empty Channel Adapter Modules: Zalo & Email
-- **Requirement Reference**: `FR-2.1` in `.docs/product/requirements.md` and `ChannelType` enum (`FACEBOOK_MESSENGER`, `ZALO`, `TELEGRAM`, `EMAIL`, `WEB_CHAT`).
+- **Requirement Reference**: `FR-2.1` in `docs/product/requirements.md` and `ChannelType` enum (`FACEBOOK_MESSENGER`, `ZALO`, `TELEGRAM`, `EMAIL`, `WEB_CHAT`).
 - **Code State**:
   - `apps/server/src/integrations/zalo` is an empty directory.
   - `apps/server/src/integrations/email` is an empty directory.
   - `IntegrationsModule` only imports `FacebookModule`, `TelegramModule`, and `WebChatModule`.
-- **Backlog Re-alignment**: `.docs/backlog/backlog.md` lines 100–103 explicitly marks Zalo and Email as **"Deferred Channels (Post-Phase 1)"**.
+- **Backlog Re-alignment**: `docs/backlog/backlog.md` lines 100–103 explicitly marks Zalo and Email as **"Deferred Channels (Post-Phase 1)"**.
 - **Traceability Finding**: `FINDING-P1-02` (Severity: **LOW** / Documentation Re-alignment).
 
 ---
@@ -157,7 +157,7 @@ This matrix maps every functional requirement (FR) from `.docs/product/requireme
 ## 7. Assumptions & Technical Debt Log
 
 1. **Assumption: Zalo & Email Out of Scope for Phase 1**:
-   - Stated as supported channel types in `schema.prisma` and `.docs/product/requirements.md`, but deferred to post-Phase 1 in `.docs/backlog/backlog.md`. Frontend team must be notified that only Facebook Messenger, Telegram, and Web Chat are available in Phase 1.
+   - Stated as supported channel types in `schema.prisma` and `docs/product/requirements.md`, but deferred to post-Phase 1 in `docs/backlog/backlog.md`. Frontend team must be notified that only Facebook Messenger, Telegram, and Web Chat are available in Phase 1.
 2. **Assumption: In-Memory Outbound Message Dispatch**:
    - `OutboundMessageListener` assumes third-party channel APIs (Facebook Graph, Telegram Bot API) are reliably available. Messages are dispatched directly in an event listener without durable background queue retries.
 3. **Assumption: Redis Available for Auto-Assignment**:
@@ -218,7 +218,7 @@ Send a `PATCH` request with `{ "name": "New Name" }` and verify `200 OK` with up
 - **Severity**: **LOW**
 - **Category**: Scope & Requirement Alignment
 - **Location**: `apps/server/prisma/schema.prisma:29-35`, `apps/server/src/integrations/zalo/`, `apps/server/src/integrations/email/`
-- **Requirement Reference**: `.docs/product/requirements.md` FR-2.1 vs `.docs/backlog/backlog.md` Section 4
+- **Requirement Reference**: `docs/product/requirements.md` FR-2.1 vs `docs/backlog/backlog.md` Section 4
 
 #### 1. Evidence
 In `apps/server/prisma/schema.prisma`:
@@ -231,7 +231,7 @@ enum ChannelType {
   WEB_CHAT
 }
 ```
-In `.docs/backlog/backlog.md:100-103`:
+In `docs/backlog/backlog.md:100-103`:
 ```text
 ### Deferred Channels (Post-Phase 1)
 - Zalo OA Channel — ZaloAdapter implementation

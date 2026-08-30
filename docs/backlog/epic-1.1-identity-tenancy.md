@@ -7,11 +7,11 @@ Hiện thực hóa hệ thống xác thực danh tính người dùng độc l�
 - **Status**: ✅ Done
 - **Dependencies**: `EPIC-1.0` (Foundation & Database Baseline)
 - **References**:
-  - `.docs/references/chatwoot/source/app/models/account.rb`
-  - `.docs/references/chatwoot/source/app/models/user.rb`
-  - `.docs/references/chatwoot/source/app/models/team.rb`
-  - `.docs/references/chatwoot/source/app/controllers/api/v1/accounts_controller.rb`
-  - `.docs/references/chatwoot/source/app/controllers/api/v1/accounts/account_users_controller.rb`
+  - `docs/references/chatwoot/source/app/models/account.rb`
+  - `docs/references/chatwoot/source/app/models/user.rb`
+  - `docs/references/chatwoot/source/app/models/team.rb`
+  - `docs/references/chatwoot/source/app/controllers/api/v1/accounts_controller.rb`
+  - `docs/references/chatwoot/source/app/controllers/api/v1/accounts/account_users_controller.rb`
 
 ---
 

@@ -147,7 +147,7 @@ export interface InboundMessagePayload {
 **Estimated complexity**: 🟡 Medium (~80 LOC)
 
 **Chatwoot Reference**: 
-- [telegram/incoming_message_service.rb](file:///d:/workspace/Sales%20Copilot/.docs/references/chatwoot/source/app/services/telegram/incoming_message_service.rb) — `attach_files`, `attach_location` methods (lines 56-66, 144-166)
+- [telegram/incoming_message_service.rb](file:///d:/workspace/Sales%20Copilot/docs/references/chatwoot/source/app/services/telegram/incoming_message_service.rb) — `attach_files`, `attach_location` methods (lines 56-66, 144-166)
 
 ---
 
@@ -190,8 +190,8 @@ export class OutboundMessageListener {
 **Estimated complexity**: 🟡 Medium (~100 LOC + ~80 LOC test)
 
 **Chatwoot Reference**:
-- [facebook/send_on_facebook_service.rb](file:///d:/workspace/Sales%20Copilot/.docs/references/chatwoot/source/app/services/facebook/send_on_facebook_service.rb) — error handling pattern (lines 16-19, 114-119)
-- [channel/telegram.rb](file:///d:/workspace/Sales%20Copilot/.docs/references/chatwoot/source/app/models/channel/telegram.rb) — `send_message_on_telegram` method (lines 38-42)
+- [facebook/send_on_facebook_service.rb](file:///d:/workspace/Sales%20Copilot/docs/references/chatwoot/source/app/services/facebook/send_on_facebook_service.rb) — error handling pattern (lines 16-19, 114-119)
+- [channel/telegram.rb](file:///d:/workspace/Sales%20Copilot/docs/references/chatwoot/source/app/models/channel/telegram.rb) — `send_message_on_telegram` method (lines 38-42)
 
 ---
 
@@ -288,9 +288,9 @@ verifyWebhook(request: WebhookVerificationRequest, credentials?: Record<string, 
 **Estimated complexity**: 🟡 Medium (~200 LOC)
 
 **Chatwoot Reference**:
-- [channel/telegram.rb](file:///d:/workspace/Sales%20Copilot/.docs/references/chatwoot/source/app/models/channel/telegram.rb) — send_message, message_request, get_telegram_file_path (lines 38-42, 55-59, 104-114, 157-169)
-- [telegram/incoming_message_service.rb](file:///d:/workspace/Sales%20Copilot/.docs/references/chatwoot/source/app/services/telegram/incoming_message_service.rb) — perform, set_contact, set_conversation, file parsing (lines 9-36, 124-166, 194-221)
-- [telegram/param_helpers.rb](file:///d:/workspace/Sales%20Copilot/.docs/references/chatwoot/source/app/services/telegram/param_helpers.rb) — param extraction helpers (lines 1-104)
+- [channel/telegram.rb](file:///d:/workspace/Sales%20Copilot/docs/references/chatwoot/source/app/models/channel/telegram.rb) — send_message, message_request, get_telegram_file_path (lines 38-42, 55-59, 104-114, 157-169)
+- [telegram/incoming_message_service.rb](file:///d:/workspace/Sales%20Copilot/docs/references/chatwoot/source/app/services/telegram/incoming_message_service.rb) — perform, set_contact, set_conversation, file parsing (lines 9-36, 124-166, 194-221)
+- [telegram/param_helpers.rb](file:///d:/workspace/Sales%20Copilot/docs/references/chatwoot/source/app/services/telegram/param_helpers.rb) — param extraction helpers (lines 1-104)
 
 ---
 
@@ -349,7 +349,7 @@ verifyWebhook(request: WebhookVerificationRequest, credentials?: Record<string, 
 **Estimated complexity**: 🟡 Medium (~80 LOC)
 
 **Chatwoot Reference**:
-- [channel/telegram.rb](file:///d:/workspace/Sales%20Copilot/.docs/references/chatwoot/source/app/models/channel/telegram.rb) — `ensure_valid_bot_token` (lines 85-93), `setup_telegram_webhook` (lines 95-102)
+- [channel/telegram.rb](file:///d:/workspace/Sales%20Copilot/docs/references/chatwoot/source/app/models/channel/telegram.rb) — `ensure_valid_bot_token` (lines 85-93), `setup_telegram_webhook` (lines 95-102)
 
 ---
 
@@ -463,8 +463,8 @@ export class TelegramModule implements OnModuleInit {
 **Estimated complexity**: 🔴 High (~280 LOC)
 
 **Chatwoot Reference**:
-- [channel/facebook_page.rb](file:///d:/workspace/Sales%20Copilot/.docs/references/chatwoot/source/app/models/channel/facebook_page.rb) — subscribe/unsubscribe, create_contact_inbox (lines 41-67)
-- [facebook/send_on_facebook_service.rb](file:///d:/workspace/Sales%20Copilot/.docs/references/chatwoot/source/app/services/facebook/send_on_facebook_service.rb) — perform_reply, fb_text_message_params, fb_attachment_message_params, merge_human_agent_tag (lines 8-112)
+- [channel/facebook_page.rb](file:///d:/workspace/Sales%20Copilot/docs/references/chatwoot/source/app/models/channel/facebook_page.rb) — subscribe/unsubscribe, create_contact_inbox (lines 41-67)
+- [facebook/send_on_facebook_service.rb](file:///d:/workspace/Sales%20Copilot/docs/references/chatwoot/source/app/services/facebook/send_on_facebook_service.rb) — perform_reply, fb_text_message_params, fb_attachment_message_params, merge_human_agent_tag (lines 8-112)
 
 ---
 
@@ -510,7 +510,7 @@ export class TelegramModule implements OnModuleInit {
 **Estimated complexity**: 🟡 Medium (~60 LOC)
 
 **Chatwoot Reference**:
-- [channel/facebook_page.rb](file:///d:/workspace/Sales%20Copilot/.docs/references/chatwoot/source/app/models/channel/facebook_page.rb) — `subscribe` (lines 49-60), `unsubscribe` (lines 62-67)
+- [channel/facebook_page.rb](file:///d:/workspace/Sales%20Copilot/docs/references/chatwoot/source/app/models/channel/facebook_page.rb) — `subscribe` (lines 49-60), `unsubscribe` (lines 62-67)
 
 ---
 
@@ -582,7 +582,7 @@ export class TelegramModule implements OnModuleInit {
 **Estimated complexity**: 🟡 Medium (~150 LOC)
 
 **Chatwoot Reference**:
-- [channel/web_widget.rb](file:///d:/workspace/Sales%20Copilot/.docs/references/chatwoot/source/app/models/channel/web_widget.rb) — web_widget_script, validate_pre_chat_options, create_contact_inbox (lines 34-109)
+- [channel/web_widget.rb](file:///d:/workspace/Sales%20Copilot/docs/references/chatwoot/source/app/models/channel/web_widget.rb) — web_widget_script, validate_pre_chat_options, create_contact_inbox (lines 34-109)
 
 ---
 
@@ -674,8 +674,8 @@ export class WebChatGateway implements OnGatewayConnection, OnGatewayDisconnect 
 **Estimated complexity**: 🟡 Medium (~150 LOC)
 
 **Chatwoot Reference**:
-- [widgets_controller.rb](file:///d:/workspace/Sales%20Copilot/.docs/references/chatwoot/source/app/controllers/widgets_controller.rb) — set_web_widget, token generation, CORS handling
-- [widget/token_service.rb](file:///d:/workspace/Sales%20Copilot/.docs/references/chatwoot/source/app/services/widget/token_service.rb) — JWT token generation for widget contacts
+- [widgets_controller.rb](file:///d:/workspace/Sales%20Copilot/docs/references/chatwoot/source/app/controllers/widgets_controller.rb) — set_web_widget, token generation, CORS handling
+- [widget/token_service.rb](file:///d:/workspace/Sales%20Copilot/docs/references/chatwoot/source/app/services/widget/token_service.rb) — JWT token generation for widget contacts
 
 ---
 
@@ -701,7 +701,7 @@ export class WebChatGateway implements OnGatewayConnection, OnGatewayDisconnect 
 **Estimated complexity**: 🟡 Medium (~80 LOC)
 
 **Chatwoot Reference**:
-- [widget/token_service.rb](file:///d:/workspace/Sales%20Copilot/.docs/references/chatwoot/source/app/services/widget/token_service.rb) — JWT encode, expiry logic (lines 1-27)
+- [widget/token_service.rb](file:///d:/workspace/Sales%20Copilot/docs/references/chatwoot/source/app/services/widget/token_service.rb) — JWT encode, expiry logic (lines 1-27)
 
 ---
 
@@ -767,7 +767,7 @@ window.SalesCopilotWidget.on('message', callback) // listen for agent replies
 **Estimated complexity**: 🔴 High (~500+ LOC)
 
 **Chatwoot Reference**:
-- [channel/web_widget.rb](file:///d:/workspace/Sales%20Copilot/.docs/references/chatwoot/source/app/models/channel/web_widget.rb) — `web_widget_script` embed code (lines 64-82), widget customization fields (lines 34-40)
+- [channel/web_widget.rb](file:///d:/workspace/Sales%20Copilot/docs/references/chatwoot/source/app/models/channel/web_widget.rb) — `web_widget_script` embed code (lines 64-82), widget customization fields (lines 34-40)
 
 ---
 

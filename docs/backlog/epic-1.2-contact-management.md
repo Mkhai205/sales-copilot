@@ -8,8 +8,8 @@ Hiện thực module quản lý thông tin khách hàng (`Contact`) trong Worksp
 - **Status**: ✅ Done
 - **Dependencies**: `EPIC-1.1` (Identity & Multi-Tenancy)
 - **References**:
-  - `.docs/references/chatwoot/source/app/models/contact.rb`
-  - `.docs/references/chatwoot/source/app/controllers/api/v1/accounts/contacts_controller.rb`
+  - `docs/references/chatwoot/source/app/models/contact.rb`
+  - `docs/references/chatwoot/source/app/controllers/api/v1/accounts/contacts_controller.rb`
 
 ### Design Decisions
 

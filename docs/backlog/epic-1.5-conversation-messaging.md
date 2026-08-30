@@ -8,12 +8,12 @@ Hiện thực trái tim của hệ thống hội thoại: Label management, Stat
 - **Status**: ✅ Done
 - **Dependencies**: `EPIC-1.3` (Channel Platform), `EPIC-1.4` (Contact Identity Resolution)
 - **References**:
-  - `.docs/references/chatwoot/source/app/models/conversation.rb`
-  - `.docs/references/chatwoot/source/app/models/message.rb`
-  - `.docs/references/chatwoot/source/app/models/attachment.rb`
-  - `.docs/references/chatwoot/source/app/models/label.rb`
-  - `.docs/references/chatwoot/source/app/controllers/api/v1/accounts/conversations/`
-  - `.docs/references/chatwoot/source/app/controllers/api/v1/accounts/labels_controller.rb`
+  - `docs/references/chatwoot/source/app/models/conversation.rb`
+  - `docs/references/chatwoot/source/app/models/message.rb`
+  - `docs/references/chatwoot/source/app/models/attachment.rb`
+  - `docs/references/chatwoot/source/app/models/label.rb`
+  - `docs/references/chatwoot/source/app/controllers/api/v1/accounts/conversations/`
+  - `docs/references/chatwoot/source/app/controllers/api/v1/accounts/labels_controller.rb`
 
 ---
 

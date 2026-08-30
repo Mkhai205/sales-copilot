@@ -8,7 +8,7 @@ Xây dựng giao diện ứng dụng web Next.js 16 (App Router) cho Agent Dashb
 - **Status**: 🟡 Ready
 - **Dependencies**: `EPIC-1.1` (Auth Contracts), `EPIC-1.5` (Conversation API), `EPIC-1.7` (Realtime Gateway), `EPIC-1.8` (Operations), `EPIC-1.9` (Automation)
 - **References**:
-  - `.docs/references/chatwoot/source/app/javascript/dashboard/`
+  - `docs/references/chatwoot/source/app/javascript/dashboard/`
 
 ---
 

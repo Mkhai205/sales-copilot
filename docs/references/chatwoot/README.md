@@ -5,7 +5,7 @@
 [Chatwoot](https://github.com/chatwoot/chatwoot) là nguồn tham chiếu chuẩn về **Quy tắc nghiệp vụ (Business Logic)** và **Hành vi sản phẩm (Product Behavior)** cho nền tảng hội thoại đa kênh của Sales Copilot Platform.
 
 Mã nguồn Chatwoot đầy đủ đã được lưu trữ cục bộ tại:
-📂 [`.docs/references/chatwoot/source/`](file:///d:/workspace/Sales%20Copilot/.docs/references/chatwoot/source/)
+📂 [`docs/references/chatwoot/source/`](./source/)
 
 ---
 
@@ -15,13 +15,13 @@ Khi triển khai các use case cho Phase 1, bạn có thể tra cứu mã nguồ
 
 | Nghiệp vụ Phase 1 | Chatwoot Reference Path | Trọng tâm cần tham khảo |
 | :--- | :--- | :--- |
-| **Contact Identity & Merge** | `.docs/references/chatwoot/source/app/actions/contact_identify_action.rb`<br>`.docs/references/chatwoot/source/app/actions/contact_merge_action.rb` | Thuật toán đối soát Contact theo thứ tự `identifier > email > phone_number` và quy trình gộp Contact trong transaction. |
-| **Conversation State Machine** | `.docs/references/chatwoot/source/app/models/conversation.rb` | Các trạng thái `OPEN`, `RESOLVED`, `PENDING`, `SNOOZED`, sự kiện tự động reopen khi khách hàng nhắn tin lại. |
-| **Round-Robin Auto-Assignment** | `.docs/references/chatwoot/source/app/services/auto_assignment/` | Thuật toán luân phiên gán hội thoại cho các Agent đang online trong Inbox. |
-| **Inboxes & Channel Bindings** | `.docs/references/chatwoot/source/app/models/inbox.rb`<br>`.docs/references/chatwoot/source/app/models/channel/` | Cách tổ chức 1:1 giữa Inbox và Channel, tách biệt logic của từng kênh (Facebook, Web Widget, Email). |
-| **Webhook Ingestion** | `.docs/references/chatwoot/source/app/controllers/webhooks/` | Cách xác thực chữ ký webhook, chuẩn hóa payload tin nhắn và xử lý bất đồng bộ. |
-| **Outbound Webhooks** | `.docs/references/chatwoot/source/app/models/webhook.rb`<br>`.docs/references/chatwoot/source/app/listeners/webhook_listener.rb` | Cơ chế dispatch webhook sự kiện cho bên thứ 3 và retry khi thất bại. |
-| **Canned Responses & Labels** | `.docs/references/chatwoot/source/app/models/canned_response.rb`<br>`.docs/references/chatwoot/source/app/models/label.rb` | Quản lý câu trả lời mẫu theo shortcode và nhãn hội thoại. |
+| **Contact Identity & Merge** | `docs/references/chatwoot/source/app/actions/contact_identify_action.rb`<br>`docs/references/chatwoot/source/app/actions/contact_merge_action.rb` | Thuật toán đối soát Contact theo thứ tự `identifier > email > phone_number` và quy trình gộp Contact trong transaction. |
+| **Conversation State Machine** | `docs/references/chatwoot/source/app/models/conversation.rb` | Các trạng thái `OPEN`, `RESOLVED`, `PENDING`, `SNOOZED`, sự kiện tự động reopen khi khách hàng nhắn tin lại. |
+| **Round-Robin Auto-Assignment** | `docs/references/chatwoot/source/app/services/auto_assignment/` | Thuật toán luân phiên gán hội thoại cho các Agent đang online trong Inbox. |
+| **Inboxes & Channel Bindings** | `docs/references/chatwoot/source/app/models/inbox.rb`<br>`docs/references/chatwoot/source/app/models/channel/` | Cách tổ chức 1:1 giữa Inbox và Channel, tách biệt logic của từng kênh (Facebook, Web Widget, Email). |
+| **Webhook Ingestion** | `docs/references/chatwoot/source/app/controllers/webhooks/` | Cách xác thực chữ ký webhook, chuẩn hóa payload tin nhắn và xử lý bất đồng bộ. |
+| **Outbound Webhooks** | `docs/references/chatwoot/source/app/models/webhook.rb`<br>`docs/references/chatwoot/source/app/listeners/webhook_listener.rb` | Cơ chế dispatch webhook sự kiện cho bên thứ 3 và retry khi thất bại. |
+| **Canned Responses & Labels** | `docs/references/chatwoot/source/app/models/canned_response.rb`<br>`docs/references/chatwoot/source/app/models/label.rb` | Quản lý câu trả lời mẫu theo shortcode và nhãn hội thoại. |
 
 ---
 
