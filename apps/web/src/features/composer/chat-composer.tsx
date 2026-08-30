@@ -1,13 +1,15 @@
 'use client';
 
 import * as React from 'react';
-import { Paperclip, Smile, Send, Lock, MessageSquare } from 'lucide-react';
+import { Paperclip, Smile, Send, Lock, MessageSquare, MessageSquareQuote } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Kbd } from '@/components/ui/kbd';
 import { cn } from '@/lib/utils';
+import type { CannedResponseDto } from '@/lib/api/types';
 import { useSendMessage } from './hooks/use-send-message';
+import { CannedResponsePicker, type CannedResponsePickerHandle } from './canned-response-picker';
 
 export type ComposerMode = 'reply' | 'note';
 
@@ -22,6 +24,34 @@ export interface ChatComposerProps {
   onSent?: () => void;
 }
 
+function findSlashCommand(
+  text: string,
+  cursorPos: number,
+): { slashIndex: number; query: string } | null {
+  const textBeforeCursor = text.slice(0, cursorPos);
+  const slashIndex = textBeforeCursor.lastIndexOf('/');
+
+  if (slashIndex === -1) return null;
+
+  // Ensure '/' is at the beginning of the text OR preceded by whitespace/newline
+  if (slashIndex > 0) {
+    const charBeforeSlash = textBeforeCursor[slashIndex - 1];
+    if (!/\s/.test(charBeforeSlash)) {
+      return null;
+    }
+  }
+
+  // The text after '/' up to cursor
+  const query = textBeforeCursor.slice(slashIndex + 1);
+
+  // If query contains space or newline, it's no longer an active slash command
+  if (/\s/.test(query)) {
+    return null;
+  }
+
+  return { slashIndex, query };
+}
+
 export function ChatComposer({
   conversationId,
   workspaceSlug,
@@ -34,7 +64,11 @@ export function ChatComposer({
 }: ChatComposerProps) {
   const [content, setContent] = React.useState('');
   const [mode, setMode] = React.useState<ComposerMode>(defaultMode);
+  const [isPickerOpen, setIsPickerOpen] = React.useState(false);
+  const [pickerSearch, setPickerSearch] = React.useState('');
+
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
+  const pickerRef = React.useRef<CannedResponsePickerHandle>(null);
 
   const isNote = mode === 'note';
 
@@ -64,6 +98,8 @@ export function ChatComposer({
     const trimmed = content.trim();
     if (!trimmed || isPending || disabled) return;
 
+    setIsPickerOpen(false);
+
     sendMessage(
       {
         content: trimmed,
@@ -82,9 +118,89 @@ export function ChatComposer({
     );
   }, [content, isNote, isPending, disabled, sendMessage, onSent]);
 
+  const handleSelectCannedResponse = (response: CannedResponseDto) => {
+    const textarea = textareaRef.current;
+    const currentContent = content;
+    const cursorPos = textarea?.selectionStart ?? currentContent.length;
+
+    const slashMatch = findSlashCommand(currentContent, cursorPos);
+
+    let newContent: string;
+    let newCursorPos: number;
+
+    if (slashMatch) {
+      // Replace from slashIndex to cursorPos with response.content
+      const prefix = currentContent.slice(0, slashMatch.slashIndex);
+      const suffix = currentContent.slice(cursorPos);
+      newContent = `${prefix}${response.content}${suffix}`;
+      newCursorPos = prefix.length + response.content.length;
+    } else {
+      // Insert at cursor
+      const prefix = currentContent.slice(0, cursorPos);
+      const suffix = currentContent.slice(cursorPos);
+      newContent = `${prefix}${response.content}${suffix}`;
+      newCursorPos = cursorPos + response.content.length;
+    }
+
+    setContent(newContent);
+    setIsPickerOpen(false);
+    setPickerSearch('');
+
+    // Refocus and place cursor at the end of inserted content
+    setTimeout(() => {
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+        textareaRef.current.setSelectionRange(newCursorPos, newCursorPos);
+      }
+    }, 0);
+  };
+
+  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newText = e.target.value;
+    setContent(newText);
+
+    // Check for slash command trigger
+    const cursorPos = e.target.selectionStart;
+    const slashMatch = findSlashCommand(newText, cursorPos);
+
+    if (slashMatch !== null) {
+      setIsPickerOpen(true);
+      setPickerSearch(slashMatch.query);
+    } else if (isPickerOpen) {
+      setIsPickerOpen(false);
+      setPickerSearch('');
+    }
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     // Ignore composition events (e.g. IME Vietnamese / Japanese / Chinese)
     if (e.nativeEvent.isComposing) return;
+
+    // If canned response picker is open, handle its navigation
+    if (isPickerOpen) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        pickerRef.current?.navigateDown();
+        return;
+      }
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        pickerRef.current?.navigateUp();
+        return;
+      }
+      if (e.key === 'Enter' || e.key === 'Tab') {
+        if (pickerRef.current && pickerRef.current.filteredCount > 0) {
+          e.preventDefault();
+          const selected = pickerRef.current.selectCurrent();
+          if (selected) return;
+        }
+      }
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setIsPickerOpen(false);
+        return;
+      }
+    }
 
     // Toggle note mode shortcut: Alt+N or Cmd/Ctrl + Shift + P
     if (
@@ -112,11 +228,22 @@ export function ChatComposer({
   return (
     <div
       className={cn(
-        'shrink-0 border-t border-border/80 p-3 bg-card/30 transition-colors',
+        'relative shrink-0 border-t border-border/80 p-3 bg-card/30 transition-colors',
         disabled && 'opacity-60 pointer-events-none',
         className,
       )}
     >
+      {/* Floating Canned Response Picker */}
+      <CannedResponsePicker
+        ref={pickerRef}
+        isOpen={isPickerOpen}
+        searchQuery={pickerSearch}
+        onSelect={handleSelectCannedResponse}
+        onClose={() => setIsPickerOpen(false)}
+        workspaceId={workspaceId}
+        workspaceSlug={workspaceSlug}
+      />
+
       <div
         className={cn(
           'rounded-lg border transition-all shadow-xs overflow-hidden',
@@ -138,7 +265,7 @@ export function ChatComposer({
               onClick={() => setMode('reply')}
               disabled={disabled || isPending}
               className={cn(
-                'flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium transition-all',
+                'flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium transition-all cursor-pointer',
                 !isNote
                   ? 'bg-background text-foreground shadow-xs'
                   : 'text-muted-foreground hover:text-foreground hover:bg-background/40',
@@ -153,7 +280,7 @@ export function ChatComposer({
               onClick={() => setMode('note')}
               disabled={disabled || isPending}
               className={cn(
-                'flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium transition-all',
+                'flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium transition-all cursor-pointer',
                 isNote
                   ? 'bg-amber-500/25 text-amber-700 dark:text-amber-300 font-semibold shadow-xs'
                   : 'text-muted-foreground hover:text-foreground hover:bg-background/40',
@@ -181,7 +308,7 @@ export function ChatComposer({
         <textarea
           ref={textareaRef}
           value={content}
-          onChange={e => setContent(e.target.value)}
+          onChange={handleContentChange}
           onKeyDown={handleKeyDown}
           placeholder={dynamicPlaceholder}
           disabled={disabled || isPending}
@@ -219,6 +346,33 @@ export function ChatComposer({
               </TooltipContent>
             </Tooltip>
 
+            {/* Canned Responses Trigger Button */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  type="button"
+                  variant={isPickerOpen ? 'secondary' : 'ghost'}
+                  size="icon-xs"
+                  disabled={disabled || isPending}
+                  onClick={() => {
+                    setIsPickerOpen(prev => !prev);
+                    setPickerSearch('');
+                    textareaRef.current?.focus();
+                  }}
+                  className={cn(
+                    'text-muted-foreground hover:text-foreground',
+                    isPickerOpen && 'bg-primary/10 text-primary',
+                  )}
+                  aria-label="Canned responses"
+                >
+                  <MessageSquareQuote className="size-3.5" data-icon="inline-start" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="top">
+                <span className="text-xs">Canned responses (Type &apos;/&apos;)</span>
+              </TooltipContent>
+            </Tooltip>
+
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -233,7 +387,7 @@ export function ChatComposer({
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="top">
-                <span className="text-xs">Emoji & Canned responses</span>
+                <span className="text-xs">Insert emoji (Coming soon)</span>
               </TooltipContent>
             </Tooltip>
           </div>

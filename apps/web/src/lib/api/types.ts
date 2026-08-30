@@ -59,6 +59,12 @@ export type {
   UpdateLabelDto,
   LabelListQueryDto,
 
+  // Canned Responses
+  CannedResponseDto,
+  CreateCannedResponseDto,
+  UpdateCannedResponseDto,
+  CannedResponseListQueryDto,
+
   // Common
   PaginationMeta,
   ApiSuccessResponse,

@@ -1515,10 +1515,10 @@ export function useCannedResponses(search?: string) {
 
 #### Acceptance Criteria
 
-- [ ] Gõ `/` triggers picker
-- [ ] Filtering works as user types
-- [ ] Select response inserts content vào textarea
-- [ ] Escape dismisses picker
+- [x] Gõ `/` triggers picker
+- [x] Filtering works as user types
+- [x] Select response inserts content vào textarea
+- [x] Escape dismisses picker
 
 #### Dependencies
 
