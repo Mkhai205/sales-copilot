@@ -92,7 +92,7 @@ export function ConversationList({ workspaceSlug, activeConversationId }: Conver
   );
 
   return (
-    <div className="flex h-full w-full flex-col overflow-hidden bg-card/40">
+    <div className="flex h-full w-full min-h-0 flex-1 flex-col overflow-hidden bg-card/40">
       {/* 1. Panel Header */}
       <div className="flex h-14 shrink-0 items-center justify-between border-b border-border/80 px-4">
         <div className="flex items-center gap-2">
@@ -122,7 +122,7 @@ export function ConversationList({ workspaceSlug, activeConversationId }: Conver
       <ConversationListFilters />
 
       {/* 3. Conversations Scroll Area */}
-      <div className="min-w-0 flex-1 overflow-y-auto">
+      <div className="min-w-0 min-h-0 flex-1 overflow-y-auto">
         {isLoading ? (
           <ConversationListSkeleton />
         ) : isError ? (

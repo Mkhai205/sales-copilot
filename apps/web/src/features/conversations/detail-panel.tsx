@@ -56,7 +56,7 @@ export function DetailPanel({
   });
 
   return (
-    <div className="flex h-full w-full flex-col overflow-hidden bg-card/40 border-l border-border/70">
+    <div className="flex h-full w-full min-h-0 flex-1 flex-col overflow-hidden bg-card/40 border-l border-border/70">
       {/* Detail Header */}
       <div className="flex h-14 shrink-0 items-center justify-between border-b border-border/80 px-4 bg-background/95 backdrop-blur-xs">
         <h3 className="text-xs font-semibold tracking-tight text-foreground">Details</h3>
@@ -72,7 +72,7 @@ export function DetailPanel({
       </div>
 
       {/* Detail Body */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-5">
+      <div className="min-h-0 flex-1 overflow-y-auto p-4 space-y-5">
         {isLoading || !conversation ? (
           <DetailPanelLoading />
         ) : (

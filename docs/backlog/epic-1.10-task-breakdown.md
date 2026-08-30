@@ -1423,11 +1423,11 @@ export function useSendMessage(conversationId: string) {
 
 #### Acceptance Criteria
 
-- [ ] Message sends on Enter
-- [ ] Textarea auto-resizes
-- [ ] Optimistic update shows message immediately
-- [ ] Send button disabled when empty
-- [ ] Failed sends show error state
+- [x] Message sends on Enter
+- [x] Textarea auto-resizes
+- [x] Optimistic update shows message immediately
+- [x] Send button disabled when empty
+- [x] Failed sends show error state
 
 #### Dependencies
 

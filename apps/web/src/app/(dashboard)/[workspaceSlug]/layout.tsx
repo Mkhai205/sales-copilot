@@ -11,10 +11,10 @@ export default async function WorkspaceLayout({ children, params }: WorkspaceLay
   const { workspaceSlug } = await params;
 
   return (
-    <SidebarProvider defaultOpen={true}>
+    <SidebarProvider defaultOpen={true} className="h-svh max-h-svh min-h-0 w-full overflow-hidden">
       <AppSidebar workspaceSlug={workspaceSlug} />
-      <SidebarInset className="min-w-0 overflow-hidden">
-        <div className="flex h-screen w-full flex-1 flex-col overflow-hidden bg-background">
+      <SidebarInset className="min-w-0 min-h-0 h-full flex-1 overflow-hidden">
+        <div className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden bg-background">
           {children}
         </div>
       </SidebarInset>

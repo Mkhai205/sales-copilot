@@ -20,9 +20,9 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={cn('h-full', 'antialiased', 'font-sans', 'font-sans', inter.variable)}
+      className={cn('h-full', 'antialiased', 'font-sans', inter.variable)}
     >
-      <body>
+      <body className="h-full overflow-hidden bg-background text-foreground antialiased">
         <AppProviders>{children}</AppProviders>
       </body>
     </html>

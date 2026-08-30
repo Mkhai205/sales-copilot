@@ -16,11 +16,11 @@ export function ConversationLayout({ workspaceSlug, conversationId }: Conversati
   const [isDetailOpen, setIsDetailOpen] = React.useState(true);
 
   return (
-    <div className="flex h-full w-full flex-1 overflow-hidden">
+    <div className="flex h-full w-full min-h-0 flex-1 overflow-hidden">
       <ResizablePanelGroup
         orientation="horizontal"
         id="sales-copilot-conversation-panels"
-        className="h-full w-full"
+        className="h-full w-full min-h-0"
       >
         {/* Left Column: Conversation List */}
         <ResizablePanel
@@ -28,7 +28,7 @@ export function ConversationLayout({ workspaceSlug, conversationId }: Conversati
           defaultSize="25%"
           minSize="20%"
           maxSize="35%"
-          className=""
+          className="min-h-0 overflow-hidden"
         >
           <ConversationList workspaceSlug={workspaceSlug} activeConversationId={conversationId} />
         </ResizablePanel>
@@ -40,7 +40,7 @@ export function ConversationLayout({ workspaceSlug, conversationId }: Conversati
           id="message-thread-panel"
           defaultSize={isDetailOpen && conversationId ? '50%' : '75%'}
           minSize="30%"
-          className=""
+          className="min-h-0 overflow-hidden"
         >
           {conversationId ? (
             <MessageThread
@@ -63,7 +63,7 @@ export function ConversationLayout({ workspaceSlug, conversationId }: Conversati
               defaultSize="25%"
               minSize="20%"
               maxSize="35%"
-              className=""
+              className="min-h-0 overflow-hidden"
             >
               <DetailPanel
                 conversationId={conversationId}

@@ -8,14 +8,10 @@ import {
   Clock,
   AlertCircle,
   Lock,
-  Paperclip,
-  Smile,
-  Send,
   Download,
   FileText,
   MessageSquare,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -55,6 +51,7 @@ import {
 import { useConversation } from './hooks/use-conversation';
 import { useMessages } from './hooks/use-messages';
 import { MessageThreadHeader } from './message-thread-header';
+import { ChatComposer } from '@/features/composer';
 
 interface MessageThreadProps {
   conversationId: string;
@@ -215,7 +212,7 @@ function MessageItem({
   // 3. Outbound Message (Agent)
   if (isAgent) {
     return (
-      <MessageScrollerItem messageId={message.id} scrollAnchor>
+      <MessageScrollerItem messageId={message.id}>
         <Message align="end">
           <MessageContent>
             <MessageHeader className="justify-end">
@@ -336,7 +333,7 @@ export function MessageThread({
   const contact = conversation?.contact;
 
   return (
-    <div className="flex h-full w-full flex-col overflow-hidden bg-background">
+    <div className="flex h-full w-full min-h-0 flex-1 flex-col overflow-hidden bg-background">
       {/* Thread Header */}
       <MessageThreadHeader
         conversation={conversation}
@@ -393,40 +390,12 @@ export function MessageThread({
         )}
       </div>
 
-      {/* Message Composer Shell (To be fully wired in Task 17) */}
-      <div className="border-t border-border/80 p-3 bg-card/30">
-        <div className="rounded-lg border border-border bg-background focus-within:border-ring focus-within:ring-1 focus-within:ring-ring transition-all">
-          <textarea
-            placeholder="Type a message or type '/' for canned responses..."
-            rows={2}
-            className="w-full resize-none bg-transparent p-3 text-xs text-foreground placeholder:text-muted-foreground/70 focus:outline-none"
-          />
-          <div className="flex items-center justify-between border-t border-border/40 px-3 py-2">
-            <div className="flex items-center gap-1">
-              <Button
-                variant="ghost"
-                size="icon-xs"
-                className="text-muted-foreground hover:text-foreground"
-              >
-                <Paperclip className="size-3.5" />
-                <span className="sr-only">Attach file</span>
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon-xs"
-                className="text-muted-foreground hover:text-foreground"
-              >
-                <Smile className="size-3.5" />
-                <span className="sr-only">Emoji</span>
-              </Button>
-            </div>
-            <Button size="sm" className="h-6 text-xs gap-1.5">
-              <span>Send</span>
-              <Send className="size-3" />
-            </Button>
-          </div>
-        </div>
-      </div>
+      {/* Live Message Composer */}
+      <ChatComposer
+        conversationId={conversationId}
+        workspaceSlug={workspaceSlug}
+        workspaceId={workspaceId}
+      />
     </div>
   );
 }
