@@ -10,7 +10,41 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Spinner } from '@/components/ui/spinner';
 import { loginSchema, type LoginDto } from '@sales-copilot/shared-contracts';
 import { loginAction } from './actions';
-import { AlertCircleIcon } from 'lucide-react';
+import {
+  AlertCircleIcon,
+  ShieldCheckIcon,
+  UserCheckIcon,
+  HeadphonesIcon,
+  SparklesIcon,
+} from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+
+const TEST_ACCOUNTS = [
+  {
+    role: 'Super Admin',
+    name: 'Super Administrator',
+    email: 'superadmin@salescopilot.io',
+    password: 'SalesCopilot@2026!',
+    icon: ShieldCheckIcon,
+    badgeClass: 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30',
+  },
+  {
+    role: 'Admin',
+    name: 'Workspace Admin',
+    email: 'admin@salescopilot.io',
+    password: 'SalesCopilot@2026!',
+    icon: UserCheckIcon,
+    badgeClass: 'bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-500/30',
+  },
+  {
+    role: 'Agent',
+    name: 'Sarah Agent',
+    email: 'agent@salescopilot.io',
+    password: 'SalesCopilot@2026!',
+    icon: HeadphonesIcon,
+    badgeClass: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30',
+  },
+];
 
 export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) {
   const [email, setEmail] = React.useState('');
@@ -18,6 +52,13 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
   const [fieldErrors, setFieldErrors] = React.useState<{ email?: string; password?: string }>({});
   const [apiError, setApiError] = React.useState<string | null>(null);
   const [isPending, setIsPending] = React.useState(false);
+
+  const handleSelectTestAccount = (account: (typeof TEST_ACCOUNTS)[number]) => {
+    setEmail(account.email);
+    setPassword(account.password);
+    setFieldErrors({});
+    setApiError(null);
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -63,7 +104,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
       <Card className="overflow-hidden p-0 shadow-lg border-border/80 bg-card">
         <CardContent className="grid p-0 md:grid-cols-2">
           {/* Left: Form */}
-          <form onSubmit={handleSubmit} className="p-6 sm:p-8 md:p-10 flex flex-col justify-center">
+          <form onSubmit={handleSubmit} className="p-6 sm:p-8 flex flex-col justify-center">
             <FieldGroup>
               <div className="flex flex-col items-center gap-1.5 mb-2">
                 <div className="flex items-center gap-2 mb-1">
@@ -149,7 +190,57 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
                 </Button>
               </Field>
 
-              <FieldDescription className="text-center mt-2 text-xs">
+              {/* Quick Test Accounts Section */}
+              <div className="mt-3 pt-3 border-t border-border/60">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-1 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    <SparklesIcon className="size-3 text-primary" />
+                    <span>Test Accounts</span>
+                  </div>
+                  <span className="text-[10px] text-muted-foreground font-mono">1-Click Fill</span>
+                </div>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {TEST_ACCOUNTS.map(acc => {
+                    const Icon = acc.icon;
+                    const isSelected = email === acc.email;
+                    return (
+                      <button
+                        key={acc.email}
+                        type="button"
+                        onClick={() => handleSelectTestAccount(acc)}
+                        disabled={isPending}
+                        className={cn(
+                          'flex flex-col items-start gap-1 p-2 rounded-md border text-left transition-all cursor-pointer',
+                          'hover:border-primary/50 hover:bg-muted/50 focus:outline-none focus:ring-1 focus:ring-ring',
+                          isSelected
+                            ? 'border-primary bg-primary/5 shadow-xs'
+                            : 'border-border/60 bg-card/60',
+                        )}
+                      >
+                        <div className="flex items-center justify-between w-full">
+                          <span
+                            className={cn(
+                              'inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-semibold border',
+                              acc.badgeClass,
+                            )}
+                          >
+                            <Icon className="size-2.5" />
+                            {acc.role}
+                          </span>
+                        </div>
+                        <span
+                          className="text-[10px] text-muted-foreground font-mono truncate w-full"
+                          title={acc.email}
+                        >
+                          {acc.email.split('@')[0]}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <FieldDescription className="text-center mt-1 text-xs">
                 Don&apos;t have an account?{' '}
                 <a href="#" className="font-medium text-primary hover:underline">
                   Sign up

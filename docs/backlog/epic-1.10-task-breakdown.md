@@ -812,12 +812,12 @@ export function useCurrentUser() {
 
 #### Acceptance Criteria
 
-- [ ] Sidebar navigates between sections
-- [ ] Active route highlighted trong sidebar
-- [ ] User menu shows name, email, avatar
-- [ ] Theme toggle persists preference
-- [ ] Layout visually polished và premium
-- [ ] Responsive (minimum 1280px)
+- [x] Sidebar navigates between sections
+- [x] Active route highlighted trong sidebar
+- [x] User menu shows name, email, avatar
+- [x] Theme toggle persists preference
+- [x] Layout visually polished và premium
+- [x] Responsive (minimum 1280px)
 
 #### Dependencies
 
@@ -865,9 +865,9 @@ Integrate workspace switcher vào top of sidebar.
 
 #### Acceptance Criteria
 
-- [ ] Lists tất cả workspaces user belongs to
-- [ ] Switch workspace changes URL và reload data context
-- [ ] Current workspace visually indicated
+- [x] Lists tất cả workspaces user belongs to
+- [x] Switch workspace changes URL và reload data context
+- [x] Current workspace visually indicated
 
 #### Dependencies
 

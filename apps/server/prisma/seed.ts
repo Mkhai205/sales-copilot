@@ -9,7 +9,7 @@ const prisma = getPrismaClient();
 async function seed() {
   console.log('🌱 Starting database seed script (Omnichannel Conversation Core Baseline)...');
 
-  // 1. Seed SuperAdmin User (Platform SuperAdmin)
+  // 1. Seed Users (SuperAdmin, Admin, Agent)
   const defaultAdminEmail = process.env.DEFAULT_ADMIN_EMAIL || 'superadmin@salescopilot.io';
   const defaultAdminPassword = process.env.DEFAULT_ADMIN_PASSWORD || 'SalesCopilot@2026!';
   const passwordHash = await argon2.hash(defaultAdminPassword);
@@ -31,8 +31,42 @@ async function seed() {
     },
   });
 
+  const adminUser = await prisma.user.upsert({
+    where: { email: 'admin@salescopilot.io' },
+    update: {
+      name: 'Workspace Admin',
+      role: 'USER',
+      isActive: true,
+    },
+    create: {
+      email: 'admin@salescopilot.io',
+      passwordHash,
+      name: 'Workspace Admin',
+      role: 'USER',
+      isActive: true,
+      avatarUrl: 'https://api.dicebear.com/7.x/bottts/svg?seed=admin',
+    },
+  });
+
+  const agentUser = await prisma.user.upsert({
+    where: { email: 'agent@salescopilot.io' },
+    update: {
+      name: 'Sarah Agent',
+      role: 'USER',
+      isActive: true,
+    },
+    create: {
+      email: 'agent@salescopilot.io',
+      passwordHash,
+      name: 'Sarah Agent',
+      role: 'USER',
+      isActive: true,
+      avatarUrl: 'https://api.dicebear.com/7.x/bottts/svg?seed=sarahagent',
+    },
+  });
+
   console.log(
-    `👤 SuperAdmin initialized: ${superAdmin.email} (${superAdmin.id}) [PlatformRole: SUPER_ADMIN]`,
+    `👤 Users initialized: SuperAdmin (${superAdmin.email}), Admin (${adminUser.email}), Agent (${agentUser.email})`,
   );
 
   // 2. Seed Default Workspace (Tenant / Account)
@@ -63,7 +97,7 @@ async function seed() {
 
   console.log(`💼 Workspace initialized: ${workspace.name} (${workspace.id})`);
 
-  // 3. Seed Workspace Membership (WorkspaceRole: OWNER)
+  // 3. Seed Workspace Memberships (OWNER, ADMIN, AGENT)
   await prisma.workspaceMember.upsert({
     where: {
       workspaceId_userId: {
@@ -79,7 +113,37 @@ async function seed() {
     },
   });
 
-  // 4. Seed Default Team
+  await prisma.workspaceMember.upsert({
+    where: {
+      workspaceId_userId: {
+        workspaceId: workspace.id,
+        userId: adminUser.id,
+      },
+    },
+    update: { role: 'ADMIN' },
+    create: {
+      workspaceId: workspace.id,
+      userId: adminUser.id,
+      role: 'ADMIN',
+    },
+  });
+
+  await prisma.workspaceMember.upsert({
+    where: {
+      workspaceId_userId: {
+        workspaceId: workspace.id,
+        userId: agentUser.id,
+      },
+    },
+    update: { role: 'AGENT' },
+    create: {
+      workspaceId: workspace.id,
+      userId: agentUser.id,
+      role: 'AGENT',
+    },
+  });
+
+  // 4. Seed Default Team & Team Members
   const team = await prisma.team.upsert({
     where: {
       workspaceId_name: {
@@ -97,21 +161,23 @@ async function seed() {
     },
   });
 
-  await prisma.teamMember.upsert({
-    where: {
-      teamId_userId: {
-        teamId: team.id,
-        userId: superAdmin.id,
+  for (const user of [superAdmin, adminUser, agentUser]) {
+    await prisma.teamMember.upsert({
+      where: {
+        teamId_userId: {
+          teamId: team.id,
+          userId: user.id,
+        },
       },
-    },
-    update: {},
-    create: {
-      teamId: team.id,
-      userId: superAdmin.id,
-    },
-  });
+      update: {},
+      create: {
+        teamId: team.id,
+        userId: user.id,
+      },
+    });
+  }
 
-  console.log(`👥 Team initialized: ${team.name} (${team.id})`);
+  console.log(`👥 Team initialized: ${team.name} (${team.id}) with 3 members`);
 
   // 5. Seed Default Web Chat Inbox & Channel Connection (1:1 per Chatwoot model)
   let inbox = await prisma.inbox.findFirst({
@@ -134,19 +200,21 @@ async function seed() {
     });
   }
 
-  await prisma.inboxMember.upsert({
-    where: {
-      inboxId_userId: {
-        inboxId: inbox.id,
-        userId: superAdmin.id,
+  for (const user of [superAdmin, adminUser, agentUser]) {
+    await prisma.inboxMember.upsert({
+      where: {
+        inboxId_userId: {
+          inboxId: inbox.id,
+          userId: user.id,
+        },
       },
-    },
-    update: {},
-    create: {
-      inboxId: inbox.id,
-      userId: superAdmin.id,
-    },
-  });
+      update: {},
+      create: {
+        inboxId: inbox.id,
+        userId: user.id,
+      },
+    });
+  }
 
   let webChatChannel = await prisma.channel.findFirst({
     where: { inboxId: inbox.id },
