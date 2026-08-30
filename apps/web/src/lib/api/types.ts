@@ -23,6 +23,7 @@ export type {
   UpdateConversationPriorityDto,
   AssignLabelsDto,
   ConversationListQueryDto,
+  ConversationSortBy,
 
   // Messages & Attachments
   MessageResponseDto,

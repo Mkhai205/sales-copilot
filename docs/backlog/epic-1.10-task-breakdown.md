@@ -1040,10 +1040,10 @@ Filter state management (URL search params hoặc React state):
 
 #### Acceptance Criteria
 
-- [ ] Conversations load với infinite scroll
-- [ ] Filters update và refetch
-- [ ] Debounced search works (300ms)
-- [ ] Query key changes khi filters change
+- [x] Conversations load với infinite scroll
+- [x] Filters update và refetch
+- [x] Debounced search works (300ms)
+- [x] Query key changes khi filters change
 
 #### Dependencies
 
