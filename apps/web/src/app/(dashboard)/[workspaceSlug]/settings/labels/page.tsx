@@ -2,32 +2,41 @@
 
 import * as React from 'react';
 import { useParams } from 'next/navigation';
-import { Tag } from 'lucide-react';
-import { SettingsGuard } from '@/features/settings';
+import { Skeleton } from '@/components/ui/skeleton';
+import { SettingsGuard, LabelsList, useSettingsRbac } from '@/features/settings';
 
 export default function LabelsSettingsPage() {
   const params = useParams();
   const workspaceSlug = (params?.workspaceSlug as string) || '';
 
+  const { currentWorkspace, currentRole, isLoading } = useSettingsRbac(workspaceSlug);
+
   return (
     <SettingsGuard workspaceSlug={workspaceSlug} segment="labels">
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-6 max-w-5xl">
+        {/* Page Header */}
         <div>
           <h1 className="text-xl font-semibold tracking-tight text-foreground">Labels</h1>
-          <p className="text-sm text-muted-foreground">
-            Categorize conversations with custom color tags and organizational labels.
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Categorize and organize conversations with custom colored tags and sidebar quick
+            filters.
           </p>
         </div>
 
-        <div className="flex min-h-[300px] flex-col items-center justify-center rounded-xl border border-dashed border-border p-8 text-center bg-card/40">
-          <div className="flex size-12 items-center justify-center rounded-full bg-muted text-muted-foreground mb-3">
-            <Tag className="size-6" />
+        {isLoading || !currentWorkspace ? (
+          <div className="flex flex-col gap-4">
+            <div className="flex justify-between gap-4">
+              <Skeleton className="h-8 w-64 rounded-md" />
+              <Skeleton className="h-8 w-32 rounded-md" />
+            </div>
+            <Skeleton className="h-64 w-full rounded-xl" />
           </div>
-          <h3 className="text-base font-medium text-foreground">Labels Management</h3>
-          <p className="mt-1 text-xs text-muted-foreground max-w-sm">
-            Labels list and color picker modal (Task 31).
-          </p>
-        </div>
+        ) : (
+          <LabelsList
+            workspaceId={currentWorkspace.id}
+            currentUserRole={currentRole ?? undefined}
+          />
+        )}
       </div>
     </SettingsGuard>
   );

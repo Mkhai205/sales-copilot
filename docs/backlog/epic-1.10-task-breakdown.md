@@ -2246,9 +2246,9 @@ Create/edit dialog:
 
 #### Acceptance Criteria
 
-- [ ] Labels CRUD works
-- [ ] Color picker shows predefined palette + custom hex input
-- [ ] Destructive delete confirmed
+- [x] Labels CRUD works
+- [x] Color picker shows predefined palette + custom hex input
+- [x] Destructive delete confirmed
 
 #### Dependencies
 
