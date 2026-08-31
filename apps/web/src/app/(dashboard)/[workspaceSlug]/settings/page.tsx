@@ -1,16 +1,32 @@
-import { Settings } from 'lucide-react';
+'use client';
 
-export default function SettingsPage() {
+import * as React from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useSettingsRbac } from '@/features/settings';
+
+export default function SettingsIndexPage() {
+  const params = useParams();
+  const router = useRouter();
+  const workspaceSlug = (params?.workspaceSlug as string) || '';
+  const { defaultRoute, isLoading } = useSettingsRbac(workspaceSlug);
+
+  React.useEffect(() => {
+    if (!isLoading && defaultRoute && workspaceSlug) {
+      router.replace(defaultRoute);
+    }
+  }, [isLoading, defaultRoute, router, workspaceSlug]);
+
   return (
-    <div className="flex h-full flex-1 flex-col items-center justify-center p-8 text-center">
-      <div className="flex size-14 items-center justify-center rounded-full bg-muted text-muted-foreground mb-4">
-        <Settings className="size-6" />
+    <div className="flex flex-col gap-6 p-2 max-w-4xl">
+      <div className="flex flex-col gap-2">
+        <Skeleton className="h-8 w-48" />
+        <Skeleton className="h-4 w-96" />
       </div>
-      <h2 className="text-xl font-semibold tracking-tight">Workspace Settings</h2>
-      <p className="mt-1 text-sm text-muted-foreground max-w-sm">
-        Configure workspace name, inboxes, team members, labels, canned responses, automation rules,
-        and webhooks.
-      </p>
+      <div className="grid gap-4 md:grid-cols-2">
+        <Skeleton className="h-32 rounded-xl" />
+        <Skeleton className="h-32 rounded-xl" />
+      </div>
     </div>
   );
 }

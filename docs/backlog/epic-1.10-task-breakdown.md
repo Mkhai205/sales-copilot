@@ -2084,11 +2084,11 @@ Settings sidebar navigation component:
 
 #### Acceptance Criteria
 
-- [ ] Settings sidebar navigates between sections
-- [ ] Active section highlighted
-- [ ] RBAC ẩn unauthorized sections
-- [ ] Back button works
-- [ ] ADMIN/OWNER full access, AGENT limited, VIEWER redirect
+- [x] Settings sidebar navigates between sections
+- [x] Active section highlighted
+- [x] RBAC ẩn unauthorized sections
+- [x] Back button works
+- [x] ADMIN/OWNER full access, AGENT limited, VIEWER redirect
 
 #### Dependencies
 

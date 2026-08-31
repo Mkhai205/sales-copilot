@@ -48,9 +48,8 @@ export function NavMain({ workspaceSlug }: NavMainProps) {
   const settingsSubItems = [
     {
       title: 'General',
-      url: `/${workspaceSlug}/settings`,
+      url: `/${workspaceSlug}/settings/general`,
       icon: Settings,
-      exact: true,
     },
     {
       title: 'Inboxes',
@@ -126,9 +125,8 @@ export function NavMain({ workspaceSlug }: NavMainProps) {
             <CollapsibleContent>
               <SidebarMenuSub>
                 {settingsSubItems.map(subItem => {
-                  const isSubActive = subItem.exact
-                    ? pathname === subItem.url
-                    : pathname.startsWith(subItem.url);
+                  const isSubActive =
+                    pathname === subItem.url || pathname.startsWith(`${subItem.url}/`);
 
                   return (
                     <SidebarMenuSubItem key={subItem.title}>
