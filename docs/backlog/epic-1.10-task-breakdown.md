@@ -2122,10 +2122,10 @@ Form fields:
 
 #### Acceptance Criteria
 
-- [ ] Form loads với current workspace data
-- [ ] Save updates workspace
-- [ ] Validation errors shown inline
-- [ ] Success toast on save
+- [x] Form loads với current workspace data
+- [x] Save updates workspace
+- [x] Validation errors shown inline
+- [x] Success toast on save
 
 #### Dependencies
 
