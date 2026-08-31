@@ -2,4 +2,8 @@ export * from './socket-types';
 export * from './socket-client';
 export * from './socket-provider';
 export * from './use-socket';
+export * from './use-conversation-room';
 export * from './workspace-socket-sync';
+export * from './cache-helpers';
+export * from './use-realtime-sync';
+export * from './realtime-sync';

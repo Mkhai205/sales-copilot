@@ -52,6 +52,7 @@ import { useConversation } from './hooks/use-conversation';
 import { useMessages } from './hooks/use-messages';
 import { MessageThreadHeader } from './message-thread-header';
 import { ChatComposer } from '@/features/composer';
+import { useConversationRoom } from '@/lib/socket';
 
 interface MessageThreadProps {
   conversationId: string;
@@ -331,6 +332,8 @@ export function MessageThread({
   isDetailOpen = true,
   onToggleDetail = () => {},
 }: MessageThreadProps) {
+  useConversationRoom(conversationId);
+
   const { data: conversation, isLoading: isConversationLoading } = useConversation(conversationId, {
     workspaceSlug,
     workspaceId,

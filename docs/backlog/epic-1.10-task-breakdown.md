@@ -1797,11 +1797,11 @@ export function useConversationRoom(conversationId: string | null) {
 
 #### Acceptance Criteria
 
-- [ ] New messages appear in real-time without polling
-- [ ] Conversation list updates in real-time
-- [ ] Status/assignment changes reflected immediately
-- [ ] Proper cleanup khi switching conversations
-- [ ] No duplicate messages
+- [x] New messages appear in real-time without polling
+- [x] Conversation list updates in real-time
+- [x] Status/assignment changes reflected immediately
+- [x] Proper cleanup khi switching conversations
+- [x] No duplicate messages
 
 #### Dependencies
 
