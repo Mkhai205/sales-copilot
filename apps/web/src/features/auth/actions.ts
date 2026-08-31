@@ -42,7 +42,7 @@ export async function loginAction(
       };
     }
 
-    const { tokens, user } = responseBody.data as LoginResponseDto;
+    const { tokens } = responseBody.data as LoginResponseDto;
 
     const cookieStore = await cookies();
 
@@ -96,6 +96,121 @@ export async function loginAction(
 
   // Redirect to dashboard conversations
   redirect(`/${targetSlug}/conversations`);
+}
+
+export async function getSocketTokenAction(): Promise<string | null> {
+  try {
+    const cookieStore = await cookies();
+    const accessToken = cookieStore.get('access_token')?.value;
+
+    if (accessToken) {
+      return accessToken;
+    }
+
+    // Attempt transparent refresh if access_token cookie is missing
+    const refreshToken = cookieStore.get('refresh_token')?.value;
+    if (!refreshToken) {
+      return null;
+    }
+
+    const res = await fetch(`${API_BASE}/auth/refresh`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ refreshToken }),
+      cache: 'no-store',
+    });
+
+    if (!res.ok) {
+      return null;
+    }
+
+    const responseBody = await res.json();
+    if (!responseBody.success || !responseBody.data) {
+      return null;
+    }
+
+    const tokens = responseBody.data as {
+      accessToken: string;
+      refreshToken: string;
+      expiresIn: number;
+    };
+
+    cookieStore.set('access_token', tokens.accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: tokens.expiresIn,
+      path: '/',
+    });
+
+    cookieStore.set('refresh_token', tokens.refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 30 * 24 * 60 * 60,
+      path: '/',
+    });
+
+    return tokens.accessToken;
+  } catch {
+    return null;
+  }
+}
+
+export async function refreshSessionAction(): Promise<string | null> {
+  try {
+    const cookieStore = await cookies();
+    const refreshToken = cookieStore.get('refresh_token')?.value;
+    if (!refreshToken) {
+      return null;
+    }
+
+    const res = await fetch(`${API_BASE}/auth/refresh`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ refreshToken }),
+      cache: 'no-store',
+    });
+
+    if (!res.ok) {
+      return null;
+    }
+
+    const responseBody = await res.json();
+    if (!responseBody.success || !responseBody.data) {
+      return null;
+    }
+
+    const tokens = responseBody.data as {
+      accessToken: string;
+      refreshToken: string;
+      expiresIn: number;
+    };
+
+    cookieStore.set('access_token', tokens.accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: tokens.expiresIn,
+      path: '/',
+    });
+
+    cookieStore.set('refresh_token', tokens.refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 30 * 24 * 60 * 60,
+      path: '/',
+    });
+
+    return tokens.accessToken;
+  } catch {
+    return null;
+  }
 }
 
 export async function logoutAction(): Promise<void> {

@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/sidebar/app-sidebar';
+import { WorkspaceSocketSync } from '@/lib/socket';
 
 interface WorkspaceLayoutProps {
   children: React.ReactNode;
@@ -12,6 +13,7 @@ export default async function WorkspaceLayout({ children, params }: WorkspaceLay
 
   return (
     <SidebarProvider defaultOpen={true} className="h-svh max-h-svh min-h-0 w-full overflow-hidden">
+      <WorkspaceSocketSync workspaceSlug={workspaceSlug} />
       <AppSidebar workspaceSlug={workspaceSlug} />
       <SidebarInset className="min-w-0 min-h-0 h-full flex-1 overflow-hidden">
         <div className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden bg-background">

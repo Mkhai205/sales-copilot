@@ -1690,11 +1690,11 @@ export function useSocketEvent<T>(event: string, handler: (data: T) => void) {
 
 #### Acceptance Criteria
 
-- [ ] Socket connects với JWT auth
-- [ ] Joins workspace room on connect
-- [ ] Reconnects after network interruption
-- [ ] Connection state exposed to UI
-- [ ] Event listeners properly cleaned up on unmount
+- [x] Socket connects với JWT auth
+- [x] Joins workspace room on connect
+- [x] Reconnects after network interruption
+- [x] Connection state exposed to UI
+- [x] Event listeners properly cleaned up on unmount
 
 #### Dependencies
 
