@@ -2160,11 +2160,11 @@ Dialog: email input + role selector → `POST /workspaces/members`
 
 #### Acceptance Criteria
 
-- [ ] Members listed in table
-- [ ] Invite dialog sends email/adds user
-- [ ] Role change works with confirmation
-- [ ] Remove with destructive confirmation
-- [ ] Non-ADMIN cannot access
+- [x] Members listed in table
+- [x] Invite dialog sends email/adds user
+- [x] Role change works with confirmation
+- [x] Remove with destructive confirmation
+- [x] Non-ADMIN cannot access
 
 #### Dependencies
 
