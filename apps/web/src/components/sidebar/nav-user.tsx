@@ -6,6 +6,7 @@ import { useTheme } from 'next-themes';
 import { useCurrentUser, logoutAction } from '@/features/auth';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { PresenceIndicator } from '@/components/ui/presence-indicator';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -67,12 +68,20 @@ export function NavUser() {
               size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
-              <Avatar className="h-8 w-8 rounded-lg border border-sidebar-border">
-                <AvatarImage src={user?.avatarUrl || ''} alt={displayName} />
-                <AvatarFallback className="rounded-lg bg-sidebar-primary text-sidebar-primary-foreground font-semibold text-xs">
-                  {displayInitials}
-                </AvatarFallback>
-              </Avatar>
+              <div className="relative shrink-0">
+                <Avatar className="h-8 w-8 rounded-lg border border-sidebar-border">
+                  <AvatarImage src={user?.avatarUrl || ''} alt={displayName} />
+                  <AvatarFallback className="rounded-lg bg-sidebar-primary text-sidebar-primary-foreground font-semibold text-xs">
+                    {displayInitials}
+                  </AvatarFallback>
+                </Avatar>
+                <PresenceIndicator
+                  userId={user?.id}
+                  placement="bottom-right"
+                  size="xs"
+                  showTooltip
+                />
+              </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold">{displayName}</span>
                 <span className="truncate text-xs text-muted-foreground">{displayEmail}</span>
@@ -88,12 +97,15 @@ export function NavUser() {
           >
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-2 py-1.5 text-left text-sm">
-                <Avatar className="h-8 w-8 rounded-lg border">
-                  <AvatarImage src={user?.avatarUrl || ''} alt={displayName} />
-                  <AvatarFallback className="rounded-lg font-semibold text-xs">
-                    {displayInitials}
-                  </AvatarFallback>
-                </Avatar>
+                <div className="relative shrink-0">
+                  <Avatar className="h-8 w-8 rounded-lg border">
+                    <AvatarImage src={user?.avatarUrl || ''} alt={displayName} />
+                    <AvatarFallback className="rounded-lg font-semibold text-xs">
+                      {displayInitials}
+                    </AvatarFallback>
+                  </Avatar>
+                  <PresenceIndicator userId={user?.id} placement="bottom-right" size="xs" />
+                </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">{displayName}</span>
                   <span className="truncate text-xs text-muted-foreground">{displayEmail}</span>

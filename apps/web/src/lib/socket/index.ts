@@ -7,3 +7,4 @@ export * from './workspace-socket-sync';
 export * from './cache-helpers';
 export * from './use-realtime-sync';
 export * from './realtime-sync';
+export * from './use-presence';

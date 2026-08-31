@@ -65,6 +65,10 @@ export type {
   UpdateCannedResponseDto,
   CannedResponseListQueryDto,
 
+  // Presence
+  PresenceEntry,
+  PresenceUpdatedEvent,
+
   // Common
   PaginationMeta,
   ApiSuccessResponse,
@@ -82,4 +86,5 @@ export {
   DeliveryStatus,
   FileType,
   ChannelType,
+  PresenceStatus,
 } from '@sales-copilot/shared-contracts';

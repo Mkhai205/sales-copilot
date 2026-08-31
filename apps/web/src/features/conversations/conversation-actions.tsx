@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { PresenceIndicator } from '@/components/ui/presence-indicator';
 import { ConversationStatus, Priority, type ConversationResponseDto } from '@/lib/api/types';
 import {
   useAssignConversation,
@@ -159,7 +160,17 @@ export function ConversationActions({ conversation, workspaceSlug }: Conversatio
                 </SelectItem>
                 {members.map(member => (
                   <SelectItem key={member.id} value={member.userId}>
-                    {member.user?.name || member.user?.email || member.userId.slice(0, 8)}
+                    <span className="flex items-center gap-2">
+                      <PresenceIndicator
+                        userId={member.userId}
+                        workspaceSlug={workspaceSlug}
+                        size="xs"
+                        placement="inline"
+                      />
+                      <span className="truncate">
+                        {member.user?.name || member.user?.email || member.userId.slice(0, 8)}
+                      </span>
+                    </span>
                   </SelectItem>
                 ))}
               </SelectGroup>

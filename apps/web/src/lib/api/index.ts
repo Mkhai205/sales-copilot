@@ -8,3 +8,4 @@ export * from './contacts';
 export * from './labels';
 export * from './teams';
 export * from './canned-responses';
+export * from './presence';

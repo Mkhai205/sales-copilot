@@ -1972,9 +1972,9 @@ Small green dot component, rendered trên agent avatars.
 
 #### Acceptance Criteria
 
-- [ ] Green dot on online agent avatars
-- [ ] Indicator updates in real-time
-- [ ] Own presence maintained via heartbeat
+- [x] Green dot on online agent avatars
+- [x] Indicator updates in real-time
+- [x] Own presence maintained via heartbeat
 
 #### Dependencies
 
