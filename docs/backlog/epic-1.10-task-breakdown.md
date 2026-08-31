@@ -2495,10 +2495,10 @@ export const webhooksApi = {
 
 #### Acceptance Criteria
 
-- [ ] Webhook CRUD với event type picker
-- [ ] Delivery logs show history với status badges
-- [ ] Expandable rows cho payload details
-- [ ] Destructive delete confirmed
+- [x] Webhook CRUD với event type picker
+- [x] Delivery logs show history với status badges
+- [x] Expandable rows cho payload details
+- [x] Destructive delete confirmed
 
 #### Dependencies
 

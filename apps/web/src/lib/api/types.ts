@@ -73,6 +73,15 @@ export type {
   AutomationCondition,
   AutomationAction,
 
+  // Webhooks
+  WebhookSubscriptionDto,
+  CreateWebhookSubscriptionDto,
+  UpdateWebhookSubscriptionDto,
+  WebhookSubscriptionListQueryDto,
+  WebhookDeliveryDto,
+  WebhookDeliveryDetailDto,
+  WebhookDeliveryListQueryDto,
+
   // Presence
   PresenceEntry,
   PresenceUpdatedEvent,
@@ -99,4 +108,6 @@ export {
   AutomationAttribute,
   AutomationOperator,
   AutomationActionType,
+  WebhookDeliveryStatus,
+  WebhookEventType,
 } from '@sales-copilot/shared-contracts';
