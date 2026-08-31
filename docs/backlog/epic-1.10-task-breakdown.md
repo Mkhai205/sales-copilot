@@ -2283,9 +2283,9 @@ Create/edit dialog:
 
 #### Acceptance Criteria
 
-- [ ] CRUD cho canned responses works
-- [ ] Search by shortcode
-- [ ] Destructive delete confirmed
+- [x] CRUD cho canned responses works
+- [x] Search by shortcode
+- [x] Destructive delete confirmed
 
 #### Dependencies
 
