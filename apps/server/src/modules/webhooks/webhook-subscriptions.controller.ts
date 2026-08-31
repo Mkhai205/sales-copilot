@@ -25,7 +25,7 @@ import {
   WorkspaceRole,
 } from '@sales-copilot/shared-contracts';
 import { ZodBody, ZodQuery } from '../../common/pipes';
-import { CurrentUser, JwtAuthGuard, type JwtUserPayload } from '../auth';
+import { CurrentUser, type JwtUserPayload } from '../auth';
 import { CurrentWorkspace, Roles } from '../workspaces/decorators';
 import { RolesGuard, WorkspaceGuard } from '../workspaces/guards';
 import type { WorkspaceContext } from '../workspaces/types/workspace-context.type';
@@ -33,7 +33,7 @@ import { WebhookSubscriptionsService } from './webhook-subscriptions.service';
 
 @ApiTags('Webhook Subscriptions')
 @Controller('webhook-subscriptions')
-@UseGuards(JwtAuthGuard, WorkspaceGuard, RolesGuard)
+@UseGuards(WorkspaceGuard, RolesGuard)
 @ApiBearerAuth()
 @ApiHeader({
   name: 'X-Workspace-Id',

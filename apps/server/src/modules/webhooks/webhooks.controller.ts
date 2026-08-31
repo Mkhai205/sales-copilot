@@ -12,9 +12,11 @@ import {
 } from '@nestjs/common';
 import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
+import { Public } from '../auth';
 import { WebhooksService } from './webhooks.service';
 
 @ApiTags('Webhooks')
+@Public()
 @Controller('channels')
 export class WebhooksController {
   constructor(private readonly webhooksService: WebhooksService) {}

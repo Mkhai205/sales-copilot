@@ -34,7 +34,6 @@ import {
   WorkspaceRole,
 } from '@sales-copilot/shared-contracts';
 import { ZodQuery } from '../../common/pipes';
-import { JwtAuthGuard } from '../auth';
 import { CurrentUser } from '../auth/decorators';
 import type { JwtUserPayload } from '../auth/types/jwt-payload.type';
 import { CurrentWorkspace, Roles } from '../workspaces/decorators';
@@ -45,7 +44,7 @@ import { MessagesService } from './messages.service';
 
 @ApiTags('Messages')
 @Controller()
-@UseGuards(JwtAuthGuard, WorkspaceGuard, RolesGuard)
+@UseGuards(WorkspaceGuard, RolesGuard)
 @ApiBearerAuth()
 @ApiHeader({
   name: 'X-Workspace-Id',

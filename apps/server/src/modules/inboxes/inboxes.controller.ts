@@ -20,7 +20,6 @@ import {
   WorkspaceRole,
 } from '@sales-copilot/shared-contracts';
 import { ZodBody } from '../../common/pipes';
-import { JwtAuthGuard } from '../auth';
 import { CurrentWorkspace, Roles } from '../workspaces/decorators';
 import { RolesGuard, WorkspaceGuard } from '../workspaces/guards';
 import type { WorkspaceContext } from '../workspaces/types/workspace-context.type';
@@ -28,7 +27,7 @@ import { InboxesService } from './inboxes.service';
 
 @ApiTags('Inboxes')
 @Controller('inboxes')
-@UseGuards(JwtAuthGuard, WorkspaceGuard, RolesGuard)
+@UseGuards(WorkspaceGuard, RolesGuard)
 @ApiBearerAuth()
 @ApiHeader({
   name: 'X-Workspace-Id',

@@ -32,12 +32,14 @@ import { MessagesService } from '../../modules/messages/messages.service';
 import { WebChatAdapter } from './web-chat.adapter';
 import { ChannelContext } from '../channel-adapter.types';
 import { WidgetTokenPayload, WidgetTokenService } from './widget-token.service';
+import { Public } from '../../modules/auth';
 
 /**
  * Controller exposing public REST API endpoints for embeddable Web Chat widgets.
  * Route prefix: `/api/v1/widget`
  */
 @ApiTags('Web Chat Widget')
+@Public()
 @Controller('widget')
 export class WebChatController {
   constructor(

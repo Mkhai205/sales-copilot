@@ -8,7 +8,7 @@ import { DatabaseModule } from './infrastructure/database/database.module';
 import { QueueModule } from './infrastructure/queue';
 import { RedisModule } from './infrastructure/redis';
 import { StorageModule } from './infrastructure/storage/storage.module';
-import { AuthModule } from './modules/auth';
+import { AuthModule, JwtAuthGuard } from './modules/auth';
 import { WorkspacesModule } from './modules/workspaces';
 import { TeamsModule } from './modules/teams';
 import { ContactsModule } from './modules/contacts';
@@ -69,6 +69,10 @@ import { RequestIdMiddleware } from './common/middlewares';
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
     },
   ],
 })

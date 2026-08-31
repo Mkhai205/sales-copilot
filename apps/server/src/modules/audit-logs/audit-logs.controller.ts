@@ -8,7 +8,6 @@ import {
   WorkspaceRole,
 } from '@sales-copilot/shared-contracts';
 import { ZodQuery } from '../../common/pipes';
-import { JwtAuthGuard } from '../auth';
 import { CurrentWorkspace, Roles } from '../workspaces/decorators';
 import { RolesGuard, WorkspaceGuard } from '../workspaces/guards';
 import type { WorkspaceContext } from '../workspaces/types/workspace-context.type';
@@ -16,7 +15,7 @@ import { AuditLogService } from './audit-logs.service';
 
 @ApiTags('Audit Logs')
 @Controller('audit-logs')
-@UseGuards(JwtAuthGuard, WorkspaceGuard, RolesGuard)
+@UseGuards(WorkspaceGuard, RolesGuard)
 @ApiBearerAuth()
 @ApiHeader({
   name: 'X-Workspace-Id',

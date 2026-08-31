@@ -7,7 +7,6 @@ import {
   NotFoundException,
   Param,
   Query,
-  UseGuards,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -19,7 +18,7 @@ import {
 } from '@nestjs/swagger';
 import { PresenceEntry } from '@sales-copilot/shared-contracts';
 import { WorkspacesService } from '../workspaces/workspaces.service';
-import { CurrentUser, JwtAuthGuard } from '../auth';
+import { CurrentUser } from '../auth';
 import type { JwtUserPayload } from '../auth/types/jwt-payload.type';
 import { PresenceService } from './presence.service';
 
@@ -29,7 +28,6 @@ import { PresenceService } from './presence.service';
  */
 @ApiTags('Presence')
 @Controller('workspaces/:workspaceId/presence')
-@UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 export class PresenceController {
   constructor(

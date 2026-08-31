@@ -10,7 +10,7 @@ import {
   WorkspaceRole,
 } from '@sales-copilot/shared-contracts';
 import { ZodBody } from '../../common/pipes';
-import { CurrentUser, JwtAuthGuard } from '../auth';
+import { CurrentUser } from '../auth';
 import type { JwtUserPayload } from '../auth/types/jwt-payload.type';
 import { CurrentWorkspace, Roles } from './decorators';
 import { RolesGuard, WorkspaceGuard } from './guards';
@@ -24,7 +24,6 @@ export class WorkspacesController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'List all workspaces the authenticated user belongs to' })
   @ApiResponse({ status: 200, description: 'List of workspaces retrieved successfully' })
@@ -35,7 +34,6 @@ export class WorkspacesController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Provision a new workspace and become OWNER' })
   @ApiResponse({ status: 201, description: 'Workspace provisioned successfully' })
@@ -50,7 +48,7 @@ export class WorkspacesController {
 
   @Get('current')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(JwtAuthGuard, WorkspaceGuard)
+  @UseGuards(WorkspaceGuard)
   @ApiBearerAuth()
   @ApiHeader({
     name: 'X-Workspace-Id',
@@ -69,7 +67,7 @@ export class WorkspacesController {
 
   @Patch('current')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(JwtAuthGuard, WorkspaceGuard, RolesGuard)
+  @UseGuards(WorkspaceGuard, RolesGuard)
   @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN)
   @ApiBearerAuth()
   @ApiHeader({

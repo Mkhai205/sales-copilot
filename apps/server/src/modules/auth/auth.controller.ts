@@ -1,4 +1,4 @@
-import { Controller, Get, HttpCode, HttpStatus, Patch, Post, UseGuards } from '@nestjs/common';
+import { Controller, Get, HttpCode, HttpStatus, Patch, Post } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import {
@@ -16,8 +16,7 @@ import {
 } from '@sales-copilot/shared-contracts';
 import { ZodBody } from '../../common/pipes';
 import { AuthService } from './auth.service';
-import { CurrentUser } from './decorators';
-import { JwtAuthGuard } from './guards';
+import { CurrentUser, Public } from './decorators';
 import { JwtUserPayload } from './types/jwt-payload.type';
 
 @ApiTags('Authentication')
@@ -25,6 +24,7 @@ import { JwtUserPayload } from './types/jwt-payload.type';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @Public()
   @Post('login')
   @Throttle({ default: { limit: 5, ttl: 60000 } })
   @HttpCode(HttpStatus.OK)
@@ -37,6 +37,7 @@ export class AuthController {
     return this.authService.login(dto);
   }
 
+  @Public()
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Rotate refresh token and issue new token pair' })
@@ -49,7 +50,6 @@ export class AuthController {
 
   @Post('logout')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Revoke active refresh token / session' })
   @ApiResponse({ status: 200, description: 'Logged out successfully' })
@@ -63,7 +63,6 @@ export class AuthController {
 
   @Get('me')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get current authenticated user profile' })
   @ApiResponse({ status: 200, description: 'User profile retrieved successfully' })
@@ -74,7 +73,6 @@ export class AuthController {
 
   @Patch('me')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update current authenticated user profile' })
   @ApiResponse({ status: 200, description: 'User profile updated successfully' })

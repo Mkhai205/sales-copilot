@@ -29,7 +29,6 @@ import {
   WorkspaceRole,
 } from '@sales-copilot/shared-contracts';
 import { ZodBody, ZodQuery } from '../../common/pipes';
-import { JwtAuthGuard } from '../auth';
 import { CurrentUser } from '../auth/decorators';
 import type { JwtUserPayload } from '../auth/types/jwt-payload.type';
 import { CurrentWorkspace, Roles } from '../workspaces/decorators';
@@ -39,7 +38,7 @@ import { ConversationsService } from './conversations.service';
 
 @ApiTags('Conversations')
 @Controller('conversations')
-@UseGuards(JwtAuthGuard, WorkspaceGuard, RolesGuard)
+@UseGuards(WorkspaceGuard, RolesGuard)
 @ApiBearerAuth()
 @ApiHeader({
   name: 'X-Workspace-Id',

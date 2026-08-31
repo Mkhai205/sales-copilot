@@ -8,7 +8,7 @@ export const ROLES_KEY = 'roles';
  * Used in conjunction with RolesGuard and WorkspaceGuard.
  *
  * @example
- * @UseGuards(JwtAuthGuard, WorkspaceGuard, RolesGuard)
+ * @UseGuards(WorkspaceGuard, RolesGuard)
  * @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN)
  * @Post('members')
  */

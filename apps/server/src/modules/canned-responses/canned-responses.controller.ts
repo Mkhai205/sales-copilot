@@ -21,7 +21,6 @@ import {
   WorkspaceRole,
 } from '@sales-copilot/shared-contracts';
 import { ZodBody, ZodQuery } from '../../common/pipes';
-import { JwtAuthGuard } from '../auth';
 import { CurrentWorkspace, Roles } from '../workspaces/decorators';
 import { RolesGuard, WorkspaceGuard } from '../workspaces/guards';
 import type { WorkspaceContext } from '../workspaces/types/workspace-context.type';
@@ -29,7 +28,7 @@ import { CannedResponsesService } from './canned-responses.service';
 
 @ApiTags('Canned Responses')
 @Controller('canned-responses')
-@UseGuards(JwtAuthGuard, WorkspaceGuard, RolesGuard)
+@UseGuards(WorkspaceGuard, RolesGuard)
 @ApiBearerAuth()
 @ApiHeader({
   name: 'X-Workspace-Id',
