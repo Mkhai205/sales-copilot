@@ -2362,12 +2362,12 @@ export const inboxesApi = {
 
 #### Acceptance Criteria
 
-- [ ] Inbox list hiển thị đúng
-- [ ] Wizard guides through creation steps
-- [ ] Channel-specific credential forms render đúng per type
-- [ ] Credentials masked cho existing inboxes (`••••••••`)
-- [ ] Inbox members manageable
-- [ ] Delete with destructive confirmation
+- [x] Inbox list hiển thị đúng
+- [x] Wizard guides through creation steps
+- [x] Channel-specific credential forms render đúng per type
+- [x] Credentials masked cho existing inboxes (`••••••••`)
+- [x] Inbox members manageable
+- [x] Delete with destructive confirmation
 
 #### Dependencies
 
