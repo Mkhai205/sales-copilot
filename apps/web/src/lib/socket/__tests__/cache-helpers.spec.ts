@@ -15,6 +15,8 @@ import {
 import {
   appendMessageToInfiniteData,
   bubbleConversationToTop,
+  markMessageFailedInInfiniteData,
+  reconcileOrAppendMessage,
   removeMessageFromInfiniteData,
   updateConversationInList,
   updateMessageInInfiniteData,
@@ -202,6 +204,118 @@ describe('Realtime Cache Helpers (Task 22)', () => {
 
       assert.strictEqual(found, false);
       assert.strictEqual(updatedData, initialConvData);
+    });
+  });
+
+  describe('reconcileOrAppendMessage (Task 23)', () => {
+    const tempMessage: MessageResponseDto = {
+      id: 'temp-123',
+      workspaceId: 'ws-1',
+      conversationId: 'conv-1',
+      senderId: 'usr-1',
+      senderType: SenderType.USER,
+      messageType: MessageType.OUTGOING,
+      contentType: MessageContentType.TEXT,
+      content: 'Optimistic Message',
+      isPrivate: false,
+      deliveryStatus: DeliveryStatus.PENDING,
+      metadata: { clientTempId: 'temp-123' },
+      createdAt: '2026-08-31T10:00:00.000Z',
+    };
+
+    const cacheWithTempMessage: InfiniteData<ApiResponse<MessageResponseDto[]>> = {
+      pages: [
+        {
+          success: true,
+          data: [dummyMessage1, tempMessage],
+          meta: { page: 1, limit: 20, total: 2, totalPages: 1, hasMore: false },
+        },
+      ],
+      pageParams: [1],
+    };
+
+    it('should reconcile optimistic message by clientTempId in-place', () => {
+      const serverMessage: MessageResponseDto = {
+        id: 'msg-server-999',
+        workspaceId: 'ws-1',
+        conversationId: 'conv-1',
+        senderId: 'usr-1',
+        senderType: SenderType.USER,
+        messageType: MessageType.OUTGOING,
+        contentType: MessageContentType.TEXT,
+        content: 'Optimistic Message',
+        isPrivate: false,
+        deliveryStatus: DeliveryStatus.SENT,
+        metadata: { clientTempId: 'temp-123' },
+        createdAt: '2026-08-31T10:00:01.000Z',
+      };
+
+      const result = reconcileOrAppendMessage(cacheWithTempMessage, serverMessage);
+      assert.ok(result);
+      assert.strictEqual(result.pages[0].data?.length, 2);
+      // Index 1 was tempMessage, should now be serverMessage
+      assert.strictEqual(result.pages[0].data[1].id, 'msg-server-999');
+      assert.strictEqual(result.pages[0].data[1].deliveryStatus, DeliveryStatus.SENT);
+    });
+
+    it('should update existing server message if ID already exists (idempotent)', () => {
+      const updatedServerMessage: MessageResponseDto = {
+        ...dummyMessage1,
+        content: 'Hello World (Server Updated)',
+        deliveryStatus: DeliveryStatus.DELIVERED,
+      };
+
+      const result = reconcileOrAppendMessage(initialMessageData, updatedServerMessage);
+      assert.ok(result);
+      assert.strictEqual(result.pages[0].data?.length, 1);
+      assert.strictEqual(result.pages[0].data[0].content, 'Hello World (Server Updated)');
+      assert.strictEqual(result.pages[0].data[0].deliveryStatus, DeliveryStatus.DELIVERED);
+    });
+
+    it('should append as new message if no optimistic tempId or ID match', () => {
+      const newInboundMessage: MessageResponseDto = {
+        id: 'msg-inbound-555',
+        workspaceId: 'ws-1',
+        conversationId: 'conv-1',
+        senderId: 'contact-2',
+        senderType: SenderType.CONTACT,
+        messageType: MessageType.INCOMING,
+        contentType: MessageContentType.TEXT,
+        content: 'New message from another customer',
+        isPrivate: false,
+        deliveryStatus: DeliveryStatus.DELIVERED,
+        createdAt: '2026-08-31T10:20:00.000Z',
+      };
+
+      const result = reconcileOrAppendMessage(initialMessageData, newInboundMessage);
+      assert.ok(result);
+      assert.strictEqual(result.pages[0].data?.length, 2);
+      assert.strictEqual(result.pages[0].data[1].id, 'msg-inbound-555');
+    });
+  });
+
+  describe('markMessageFailedInInfiniteData (Task 23)', () => {
+    it('should update optimistic message deliveryStatus to FAILED', () => {
+      const cacheWithTemp: InfiniteData<ApiResponse<MessageResponseDto[]>> = {
+        pages: [
+          {
+            success: true,
+            data: [
+              {
+                ...dummyMessage1,
+                id: 'temp-failed-1',
+                deliveryStatus: DeliveryStatus.PENDING,
+              },
+            ],
+            meta: { page: 1, limit: 20, total: 1, totalPages: 1, hasMore: false },
+          },
+        ],
+        pageParams: [1],
+      };
+
+      const result = markMessageFailedInInfiniteData(cacheWithTemp, 'temp-failed-1');
+      assert.ok(result);
+      assert.strictEqual(result.pages[0].data?.[0].deliveryStatus, DeliveryStatus.FAILED);
     });
   });
 });

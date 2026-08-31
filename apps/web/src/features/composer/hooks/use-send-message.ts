@@ -16,6 +16,11 @@ import {
 } from '@/lib/api/types';
 import { useCurrentUser } from '@/features/auth/use-current-user';
 import { useWorkspaces } from '@/features/workspaces/use-workspaces';
+import {
+  bubbleConversationToTop,
+  markMessageFailedInInfiniteData,
+  reconcileOrAppendMessage,
+} from '@/lib/socket';
 
 export interface UseSendMessageOptions {
   conversationId: string;
@@ -30,6 +35,7 @@ export interface SendMessageInput {
   contentType?: MessageContentType;
   isPrivate?: boolean;
   metadata?: Record<string, unknown>;
+  clientTempId?: string;
 }
 
 export function useSendMessage(options: UseSendMessageOptions) {
@@ -53,6 +59,13 @@ export function useSendMessage(options: UseSendMessageOptions) {
         throw new Error('Conversation ID is required to send a message');
       }
 
+      const clientTempId =
+        input.clientTempId || `temp-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+      const enrichedMetadata = {
+        ...(input.metadata || {}),
+        clientTempId,
+      };
+
       let payload: CreateMessageDto | FormData;
 
       if (input.attachments && input.attachments.length > 0) {
@@ -69,9 +82,7 @@ export function useSendMessage(options: UseSendMessageOptions) {
         if (input.contentType) {
           formData.append('contentType', input.contentType);
         }
-        if (input.metadata) {
-          formData.append('metadata', JSON.stringify(input.metadata));
-        }
+        formData.append('metadata', JSON.stringify(enrichedMetadata));
         input.attachments.forEach(file => {
           formData.append('attachments', file);
         });
@@ -84,12 +95,15 @@ export function useSendMessage(options: UseSendMessageOptions) {
           isPrivate: input.isPrivate ?? false,
           senderType: SenderType.USER,
           senderId: currentUser?.id,
-          metadata: input.metadata,
+          metadata: enrichedMetadata,
         };
       }
 
       const res = await messagesApi.create(resolvedWorkspaceId, conversationId, payload);
-      return res.data;
+      return {
+        createdMessage: res.data,
+        clientTempId,
+      };
     },
 
     onMutate: async (input: SendMessageInput) => {
@@ -99,17 +113,18 @@ export function useSendMessage(options: UseSendMessageOptions) {
         queryKey: ['messages', resolvedWorkspaceId, conversationId],
       };
 
-      // 1. Cancel any outgoing refetches so they don't overwrite our optimistic update
+      // 1. Cancel any outgoing refetches
       await queryClient.cancelQueries(messageQueryFilter);
 
-      // 2. Snapshot the previous queries matching the conversation
+      // 2. Snapshot previous data
       const previousData =
         queryClient.getQueriesData<InfiniteData<ApiResponse<MessageResponseDto[]>>>(
           messageQueryFilter,
         );
 
-      // 3. Construct optimistic attachments & message
-      const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+      // 3. Construct optimistic message
+      const tempId =
+        input.clientTempId || `temp-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 
       const optimisticAttachments: AttachmentDto[] = (input.attachments || []).map((file, idx) => {
         const isImage = file.type.startsWith('image/');
@@ -151,6 +166,10 @@ export function useSendMessage(options: UseSendMessageOptions) {
         isPrivate: Boolean(input.isPrivate),
         deliveryStatus: DeliveryStatus.PENDING,
         createdAt: new Date().toISOString(),
+        metadata: {
+          ...(input.metadata || {}),
+          clientTempId: tempId,
+        },
         sender: currentUser
           ? {
               id: currentUser.id,
@@ -162,7 +181,7 @@ export function useSendMessage(options: UseSendMessageOptions) {
         attachments: optimisticAttachments,
       };
 
-      // 4. Optimistically append message to the last page of all matching query caches
+      // 4. Optimistically append message to cache
       queryClient.setQueriesData<InfiniteData<ApiResponse<MessageResponseDto[]>>>(
         messageQueryFilter,
         oldData => {
@@ -179,13 +198,11 @@ export function useSendMessage(options: UseSendMessageOptions) {
             };
           }
 
-          const lastPageIndex = oldData.pages.length - 1;
-          const lastPage = oldData.pages[lastPageIndex];
-
+          const firstPage = oldData.pages[0];
           const updatedPages = [...oldData.pages];
-          updatedPages[lastPageIndex] = {
-            ...lastPage,
-            data: [...(lastPage.data || []), optimisticMessage],
+          updatedPages[0] = {
+            ...firstPage,
+            data: [...(firstPage.data || []), optimisticMessage],
           };
 
           return {
@@ -195,15 +212,31 @@ export function useSendMessage(options: UseSendMessageOptions) {
         },
       );
 
+      // 5. Update conversation list with optimistic lastMessage
+      queryClient.setQueriesData<InfiniteData<ApiResponse<any[]>>>(
+        { queryKey: ['conversations'] },
+        old => {
+          if (!old) return old;
+          const { updatedData } = bubbleConversationToTop(old, conversationId, {
+            lastMessage: optimisticMessage,
+            lastActivityAt: optimisticMessage.createdAt,
+          });
+          return updatedData;
+        },
+      );
+
       return { previousData, tempId };
     },
 
     onError: (error, _variables, context) => {
-      // Rollback to snapshot on error
-      if (context?.previousData) {
-        for (const [queryKey, data] of context.previousData) {
-          queryClient.setQueryData(queryKey, data);
-        }
+      if (!resolvedWorkspaceId || !conversationId) return;
+
+      // Mark the optimistic message as FAILED rather than silently removing it
+      if (context?.tempId) {
+        queryClient.setQueriesData<InfiniteData<ApiResponse<MessageResponseDto[]>>>(
+          { queryKey: ['messages', resolvedWorkspaceId, conversationId] },
+          old => markMessageFailedInInfiniteData(old, context.tempId),
+        );
       }
 
       toast.error('Failed to send message', {
@@ -212,44 +245,42 @@ export function useSendMessage(options: UseSendMessageOptions) {
       });
     },
 
-    onSuccess: (createdMessage, _variables, context) => {
-      if (!resolvedWorkspaceId || !conversationId) return;
+    onSuccess: result => {
+      if (!resolvedWorkspaceId || !conversationId || !result) return;
+
+      const { createdMessage, clientTempId } = result;
+
+      // Ensure server message has clientTempId for guaranteed reconciliation
+      const enrichedCreatedMessage: MessageResponseDto = {
+        ...createdMessage,
+        metadata: {
+          ...((createdMessage.metadata as Record<string, unknown>) || {}),
+          clientTempId,
+        },
+      };
 
       const messageQueryFilter = {
         queryKey: ['messages', resolvedWorkspaceId, conversationId],
       };
 
-      // Replace optimistic message with actual created message from server
-      if (context?.tempId) {
-        queryClient.setQueriesData<InfiniteData<ApiResponse<MessageResponseDto[]>>>(
-          messageQueryFilter,
-          oldData => {
-            if (!oldData) return oldData;
-            return {
-              ...oldData,
-              pages: oldData.pages.map(page => ({
-                ...page,
-                data: (page.data || []).map((msg: MessageResponseDto) =>
-                  msg.id === context.tempId ? createdMessage : msg,
-                ),
-              })),
-            };
-          },
-        );
-      }
+      // Reconcile optimistic message with actual created message from server
+      queryClient.setQueriesData<InfiniteData<ApiResponse<MessageResponseDto[]>>>(
+        messageQueryFilter,
+        oldData => reconcileOrAppendMessage(oldData, enrichedCreatedMessage),
+      );
 
-      // Invalidate conversations list and single conversation to update lastMessage and timestamps
-      queryClient.invalidateQueries({ queryKey: ['conversations'] });
-      queryClient.invalidateQueries({ queryKey: ['conversation', conversationId] });
-    },
-
-    onSettled: () => {
-      if (!resolvedWorkspaceId || !conversationId) return;
-
-      // Invalidate to guarantee eventual consistency with the server
-      queryClient.invalidateQueries({
-        queryKey: ['messages', resolvedWorkspaceId, conversationId],
-      });
+      // Update conversation in list
+      queryClient.setQueriesData<InfiniteData<ApiResponse<any[]>>>(
+        { queryKey: ['conversations'] },
+        old => {
+          if (!old) return old;
+          const { updatedData } = bubbleConversationToTop(old, conversationId, {
+            lastMessage: enrichedCreatedMessage,
+            lastActivityAt: enrichedCreatedMessage.createdAt,
+          });
+          return updatedData;
+        },
+      );
     },
   });
 }

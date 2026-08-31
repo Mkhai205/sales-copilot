@@ -1,6 +1,10 @@
 import type { InfiniteData } from '@tanstack/react-query';
 import type { ApiResponse } from '../api/client';
-import type { ConversationResponseDto, MessageResponseDto } from '../api/types';
+import {
+  DeliveryStatus,
+  type ConversationResponseDto,
+  type MessageResponseDto,
+} from '../api/types';
 
 /**
  * Appends a new message to the paginated message query cache.
@@ -20,10 +24,6 @@ export function appendMessageToInfiniteData(
     return oldData;
   }
 
-  // Determine which page to append to.
-  // In reverse chronological message lists, latest messages are in the first page (or last page depending on order).
-  // Assuming list returns chronological ascending or first page has recent messages:
-  // Append to the first page (or create first page if empty).
   const newPages = oldData.pages.map((page, index) => {
     if (index === 0) {
       return {
@@ -44,6 +44,81 @@ export function appendMessageToInfiniteData(
     ...oldData,
     pages: newPages,
   };
+}
+
+/**
+ * Reconciles an incoming server message with existing optimistic messages in query cache,
+ * or appends it as a new message if no match exists.
+ *
+ * Checks in order:
+ * 1. Exact server ID match (already present / updated from server) -> update in place.
+ * 2. Client temporary ID match (matches incomingMessage.metadata?.clientTempId or msg.id === incomingMessage.metadata?.clientTempId) -> replace in place.
+ * 3. Heuristic match for pending temp messages (starts with 'temp-') -> replace in place.
+ * 4. Otherwise -> append as new message.
+ */
+export function reconcileOrAppendMessage(
+  oldData: InfiniteData<ApiResponse<MessageResponseDto[]>> | undefined,
+  incomingMessage: MessageResponseDto,
+): InfiniteData<ApiResponse<MessageResponseDto[]>> | undefined {
+  if (!oldData || !oldData.pages || oldData.pages.length === 0) {
+    return oldData;
+  }
+
+  const clientTempId = (incomingMessage.metadata as { clientTempId?: string } | undefined)
+    ?.clientTempId;
+
+  let reconciled = false;
+
+  const newPages = oldData.pages.map(page => {
+    if (!page.data || page.data.length === 0) return page;
+
+    let pageModified = false;
+    const newData = page.data.map(msg => {
+      // 1. Exact server ID match
+      if (msg.id === incomingMessage.id) {
+        reconciled = true;
+        pageModified = true;
+        return { ...msg, ...incomingMessage };
+      }
+
+      // 2. Client tempId match via metadata or msg.id
+      if (
+        clientTempId &&
+        (msg.id === clientTempId ||
+          (msg.metadata as { clientTempId?: string } | undefined)?.clientTempId === clientTempId)
+      ) {
+        reconciled = true;
+        pageModified = true;
+        return incomingMessage;
+      }
+
+      // 3. Heuristic match for pending temp message from same sender & content
+      if (
+        msg.id.startsWith('temp-') &&
+        msg.senderId === incomingMessage.senderId &&
+        msg.content === incomingMessage.content &&
+        msg.deliveryStatus === DeliveryStatus.PENDING
+      ) {
+        reconciled = true;
+        pageModified = true;
+        return incomingMessage;
+      }
+
+      return msg;
+    });
+
+    return pageModified ? { ...page, data: newData } : page;
+  });
+
+  if (reconciled) {
+    return {
+      ...oldData,
+      pages: newPages,
+    };
+  }
+
+  // 4. No match found -> append to thread
+  return appendMessageToInfiniteData(oldData, incomingMessage);
 }
 
 /**
@@ -78,6 +153,23 @@ export function updateMessageInInfiniteData(
   });
 
   return found ? { ...oldData, pages: newPages } : oldData;
+}
+
+/**
+ * Marks an optimistic message as FAILED by its temporary ID.
+ */
+export function markMessageFailedInInfiniteData(
+  oldData: InfiniteData<ApiResponse<MessageResponseDto[]>> | undefined,
+  tempId: string,
+): InfiniteData<ApiResponse<MessageResponseDto[]>> | undefined {
+  if (!oldData || !oldData.pages) {
+    return oldData;
+  }
+
+  return updateMessageInInfiniteData(oldData, {
+    id: tempId,
+    deliveryStatus: DeliveryStatus.FAILED,
+  });
 }
 
 /**

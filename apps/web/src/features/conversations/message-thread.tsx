@@ -241,9 +241,11 @@ function MessageItem({
                 <BubbleContent className="whitespace-pre-wrap">{message.content}</BubbleContent>
               </Bubble>
             )}
-            {renderMessageAttachments(message.attachments)}
-            <MessageFooter className="gap-1 text-[10px] text-muted-foreground">
+            <MessageFooter className="gap-1.5 text-[10px] text-muted-foreground items-center justify-end">
               {renderDeliveryStatusIcon(message.deliveryStatus)}
+              {message.deliveryStatus === DeliveryStatus.FAILED && (
+                <span className="text-destructive font-medium">Failed to send</span>
+              )}
             </MessageFooter>
           </MessageContent>
         </Message>

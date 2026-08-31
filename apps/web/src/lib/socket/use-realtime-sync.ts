@@ -5,8 +5,8 @@ import { WsServerEvent } from '@sales-copilot/shared-contracts';
 import type { ApiResponse } from '@/lib/api/client';
 import type { ContactDto, ConversationResponseDto, MessageResponseDto } from '@/lib/api/types';
 import {
-  appendMessageToInfiniteData,
   bubbleConversationToTop,
+  reconcileOrAppendMessage,
   removeMessageFromInfiniteData,
   updateConversationInList,
   updateMessageInInfiniteData,
@@ -35,13 +35,13 @@ export function useRealtimeSync(): void {
 
       if (!message || !message.conversationId) return;
 
-      // 1. Append message to the message query cache for this conversation
+      // 1. Reconcile or append message to the message query cache for this conversation
       queryClient.setQueriesData<InfiniteData<ApiResponse<MessageResponseDto[]>>>(
         {
           predicate: query =>
             query.queryKey[0] === 'messages' && query.queryKey.includes(message.conversationId),
         },
-        old => appendMessageToInfiniteData(old, message),
+        old => reconcileOrAppendMessage(old, message),
       );
 
       // 2. Update and bubble conversation to top in conversation lists

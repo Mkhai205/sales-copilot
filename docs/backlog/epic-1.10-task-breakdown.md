@@ -1841,10 +1841,10 @@ Add dedup logic trong `message.created` handler:
 
 #### Acceptance Criteria
 
-- [ ] Sent messages appear instantly (no delay)
-- [ ] No duplicate messages khi WebSocket event arrives
-- [ ] Failed messages show retry option
-- [ ] Reconciled messages have correct server data (ID, timestamp)
+- [x] Sent messages appear instantly (no delay)
+- [x] No duplicate messages khi WebSocket event arrives
+- [x] Failed messages show retry option
+- [x] Reconciled messages have correct server data (ID, timestamp)
 
 #### Dependencies
 
