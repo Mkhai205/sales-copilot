@@ -1913,11 +1913,11 @@ Trigger notification trong `message.created` handler:
 
 #### Acceptance Criteria
 
-- [ ] Notification shows khi tab inactive
-- [ ] Click notification focuses tab
-- [ ] Âm thanh chime phát khi có tin nhắn mới
-- [ ] User preference (localStorage) to enable/disable
-- [ ] Only incoming contact messages trigger notifications
+- [x] Notification shows khi tab inactive
+- [x] Click notification focuses tab
+- [x] Âm thanh chime phát khi có tin nhắn mới
+- [x] User preference (localStorage) to enable/disable
+- [x] Only incoming contact messages trigger notifications
 
 #### Dependencies
 

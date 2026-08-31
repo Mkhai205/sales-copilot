@@ -1,9 +1,17 @@
 'use client';
 
+import { useParams, useRouter } from 'next/navigation';
 import { useQueryClient, type InfiniteData } from '@tanstack/react-query';
 import { WsServerEvent } from '@sales-copilot/shared-contracts';
 import type { ApiResponse } from '@/lib/api/client';
-import type { ContactDto, ConversationResponseDto, MessageResponseDto } from '@/lib/api/types';
+import {
+  MessageType,
+  SenderType,
+  type ContactDto,
+  type ConversationResponseDto,
+  type MessageResponseDto,
+} from '@/lib/api/types';
+import { useBrowserNotifications } from '@/lib/hooks';
 import {
   bubbleConversationToTop,
   reconcileOrAppendMessage,
@@ -19,6 +27,10 @@ import { useSocketEvent } from './use-socket';
  */
 export function useRealtimeSync(): void {
   const queryClient = useQueryClient();
+  const router = useRouter();
+  const params = useParams<{ workspaceSlug?: string }>();
+  const workspaceSlug = params?.workspaceSlug;
+  const { notify } = useBrowserNotifications();
 
   // ==========================================================================
   // 1. Message Events
@@ -58,7 +70,7 @@ export function useRealtimeSync(): void {
               lastMessage: message,
               lastActivityAt: message.createdAt,
               unreadMessagesCount:
-                message.messageType === 'INCOMING'
+                message.messageType === MessageType.INCOMING
                   ? (prev.unreadMessagesCount ?? 0) + 1
                   : prev.unreadMessagesCount,
             }),
@@ -85,9 +97,36 @@ export function useRealtimeSync(): void {
             ...old,
             lastMessage: message,
             lastActivityAt: message.createdAt,
+            unreadMessagesCount:
+              message.messageType === MessageType.INCOMING
+                ? (old.unreadMessagesCount ?? 0) + 1
+                : old.unreadMessagesCount,
           };
         },
       );
+
+      // 4. Trigger audio chime & browser notification for incoming messages from contacts
+      const isContactMessage =
+        message.messageType === MessageType.INCOMING || message.senderType === SenderType.CONTACT;
+
+      if (isContactMessage && !message.isPrivate) {
+        const senderName = message.sender?.name || 'Customer';
+        const messagePreview =
+          message.content ||
+          (message.attachments && message.attachments.length > 0
+            ? 'Sent an attachment'
+            : 'New incoming message');
+
+        notify({
+          title: senderName,
+          body: messagePreview,
+          onClick: () => {
+            if (workspaceSlug && message.conversationId) {
+              router.push(`/${workspaceSlug}/conversations/${message.conversationId}`);
+            }
+          },
+        });
+      }
     },
   );
 
