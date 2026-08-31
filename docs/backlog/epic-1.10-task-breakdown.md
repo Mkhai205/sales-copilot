@@ -2436,12 +2436,12 @@ export const automationRulesApi = {
 
 #### Acceptance Criteria
 
-- [ ] Rules list with active/inactive toggle
-- [ ] Builder produces valid condition/action JSON (matching backend format)
-- [ ] Add/remove condition rows works
-- [ ] Add/remove action rows works
-- [ ] Dynamic parameter inputs based on action type
-- [ ] Form validation before save
+- [x] Rules list with active/inactive toggle
+- [x] Builder produces valid condition/action JSON (matching backend format)
+- [x] Add/remove condition rows works
+- [x] Add/remove action rows works
+- [x] Dynamic parameter inputs based on action type
+- [x] Form validation before save
 
 #### Dependencies
 

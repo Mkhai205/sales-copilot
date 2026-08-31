@@ -65,6 +65,14 @@ export type {
   UpdateCannedResponseDto,
   CannedResponseListQueryDto,
 
+  // Automation Rules
+  AutomationRuleDto,
+  CreateAutomationRuleDto,
+  UpdateAutomationRuleDto,
+  AutomationRuleListQueryDto,
+  AutomationCondition,
+  AutomationAction,
+
   // Presence
   PresenceEntry,
   PresenceUpdatedEvent,
@@ -87,4 +95,8 @@ export {
   FileType,
   ChannelType,
   PresenceStatus,
+  AutomationEventTrigger,
+  AutomationAttribute,
+  AutomationOperator,
+  AutomationActionType,
 } from '@sales-copilot/shared-contracts';
