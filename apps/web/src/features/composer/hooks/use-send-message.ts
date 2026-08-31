@@ -6,9 +6,11 @@ import type { ApiResponse } from '@/lib/api/client';
 import { messagesApi } from '@/lib/api/messages';
 import {
   DeliveryStatus,
+  FileType,
   MessageContentType,
   MessageType,
   SenderType,
+  type AttachmentDto,
   type CreateMessageDto,
   type MessageResponseDto,
 } from '@/lib/api/types';
@@ -22,7 +24,8 @@ export interface UseSendMessageOptions {
 }
 
 export interface SendMessageInput {
-  content: string;
+  content?: string;
+  attachments?: File[];
   messageType?: MessageType;
   contentType?: MessageContentType;
   isPrivate?: boolean;
@@ -42,7 +45,7 @@ export function useSendMessage(options: UseSendMessageOptions) {
     workspaces?.[0]?.id;
 
   return useMutation({
-    mutationFn: async (input: SendMessageInput | CreateMessageDto) => {
+    mutationFn: async (input: SendMessageInput) => {
       if (!resolvedWorkspaceId) {
         throw new Error('Workspace ID is required to send a message');
       }
@@ -50,21 +53,46 @@ export function useSendMessage(options: UseSendMessageOptions) {
         throw new Error('Conversation ID is required to send a message');
       }
 
-      const payload: CreateMessageDto = {
-        content: input.content,
-        messageType: input.messageType ?? MessageType.OUTGOING,
-        contentType: input.contentType ?? MessageContentType.TEXT,
-        isPrivate: input.isPrivate ?? false,
-        senderType: SenderType.USER,
-        senderId: currentUser?.id,
-        metadata: input.metadata,
-      };
+      let payload: CreateMessageDto | FormData;
+
+      if (input.attachments && input.attachments.length > 0) {
+        const formData = new FormData();
+        if (input.content) {
+          formData.append('content', input.content);
+        }
+        formData.append('isPrivate', String(Boolean(input.isPrivate)));
+        formData.append('messageType', input.messageType ?? MessageType.OUTGOING);
+        formData.append('senderType', SenderType.USER);
+        if (currentUser?.id) {
+          formData.append('senderId', currentUser.id);
+        }
+        if (input.contentType) {
+          formData.append('contentType', input.contentType);
+        }
+        if (input.metadata) {
+          formData.append('metadata', JSON.stringify(input.metadata));
+        }
+        input.attachments.forEach(file => {
+          formData.append('attachments', file);
+        });
+        payload = formData;
+      } else {
+        payload = {
+          content: input.content || '',
+          messageType: input.messageType ?? MessageType.OUTGOING,
+          contentType: input.contentType ?? MessageContentType.TEXT,
+          isPrivate: input.isPrivate ?? false,
+          senderType: SenderType.USER,
+          senderId: currentUser?.id,
+          metadata: input.metadata,
+        };
+      }
 
       const res = await messagesApi.create(resolvedWorkspaceId, conversationId, payload);
       return res.data;
     },
 
-    onMutate: async (input: SendMessageInput | CreateMessageDto) => {
+    onMutate: async (input: SendMessageInput) => {
       if (!resolvedWorkspaceId || !conversationId) return;
 
       const messageQueryFilter = {
@@ -80,8 +108,37 @@ export function useSendMessage(options: UseSendMessageOptions) {
           messageQueryFilter,
         );
 
-      // 3. Construct optimistic message
+      // 3. Construct optimistic attachments & message
       const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+
+      const optimisticAttachments: AttachmentDto[] = (input.attachments || []).map((file, idx) => {
+        const isImage = file.type.startsWith('image/');
+        return {
+          id: `temp-att-${Date.now()}-${idx}`,
+          messageId: tempId,
+          fileType: isImage ? FileType.IMAGE : FileType.FILE,
+          fileName: file.name,
+          fileSize: file.size,
+          storagePath: '',
+          contentType: file.type,
+          fileUrl: isImage ? URL.createObjectURL(file) : undefined,
+          createdAt: new Date().toISOString(),
+        };
+      });
+
+      const isAllImages =
+        input.attachments &&
+        input.attachments.length > 0 &&
+        input.attachments.every(f => f.type.startsWith('image/'));
+
+      const optimisticContentType =
+        input.contentType ??
+        (input.attachments && input.attachments.length > 0
+          ? isAllImages
+            ? MessageContentType.IMAGE
+            : MessageContentType.FILE
+          : MessageContentType.TEXT);
+
       const optimisticMessage: MessageResponseDto = {
         id: tempId,
         conversationId,
@@ -89,8 +146,8 @@ export function useSendMessage(options: UseSendMessageOptions) {
         senderType: SenderType.USER,
         senderId: currentUser?.id,
         messageType: input.messageType ?? MessageType.OUTGOING,
-        contentType: input.contentType ?? MessageContentType.TEXT,
-        content: input.content,
+        contentType: optimisticContentType,
+        content: input.content || null,
         isPrivate: Boolean(input.isPrivate),
         deliveryStatus: DeliveryStatus.PENDING,
         createdAt: new Date().toISOString(),
@@ -102,7 +159,7 @@ export function useSendMessage(options: UseSendMessageOptions) {
               type: SenderType.USER,
             }
           : undefined,
-        attachments: [],
+        attachments: optimisticAttachments,
       };
 
       // 4. Optimistically append message to the last page of all matching query caches

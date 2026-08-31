@@ -1569,12 +1569,12 @@ dto.attachments?.forEach(file => formData.append('attachments', file));
 
 #### Acceptance Criteria
 
-- [ ] File selection via button và drag-and-drop
-- [ ] Dán ảnh trực tiếp từ clipboard (`Cmd+V` / `Ctrl+V`) vào textarea hiển thị thumbnail preview
-- [ ] Image preview trước send
-- [ ] Upload progress visible
-- [ ] Remove attachment works
-- [ ] File + text message sends correctly
+- [x] File selection via button và drag-and-drop
+- [x] Dán ảnh trực tiếp từ clipboard (`Cmd+V` / `Ctrl+V`) vào textarea hiển thị thumbnail preview
+- [x] Image preview trước send
+- [x] Upload progress visible
+- [x] Remove attachment works
+- [x] File + text message sends correctly
 
 #### Dependencies
 

@@ -1,7 +1,16 @@
 'use client';
 
 import * as React from 'react';
-import { Paperclip, Smile, Send, Lock, MessageSquare, MessageSquareQuote } from 'lucide-react';
+import {
+  Paperclip,
+  Smile,
+  Send,
+  Lock,
+  MessageSquare,
+  MessageSquareQuote,
+  UploadCloud,
+} from 'lucide-react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -10,6 +19,7 @@ import { cn } from '@/lib/utils';
 import type { CannedResponseDto } from '@/lib/api/types';
 import { useSendMessage } from './hooks/use-send-message';
 import { CannedResponsePicker, type CannedResponsePickerHandle } from './canned-response-picker';
+import { AttachmentPreviewBar } from './attachment-preview-bar';
 
 export type ComposerMode = 'reply' | 'note';
 
@@ -23,6 +33,8 @@ export interface ChatComposerProps {
   className?: string;
   onSent?: () => void;
 }
+
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
 
 function findSlashCommand(
   text: string,
@@ -63,12 +75,15 @@ export function ChatComposer({
   onSent,
 }: ChatComposerProps) {
   const [content, setContent] = React.useState('');
+  const [attachments, setAttachments] = React.useState<File[]>([]);
   const [mode, setMode] = React.useState<ComposerMode>(defaultMode);
   const [isPickerOpen, setIsPickerOpen] = React.useState(false);
   const [pickerSearch, setPickerSearch] = React.useState('');
+  const [isDraggingOver, setIsDraggingOver] = React.useState(false);
 
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
   const pickerRef = React.useRef<CannedResponsePickerHandle>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const isNote = mode === 'note';
 
@@ -78,7 +93,7 @@ export function ChatComposer({
     workspaceId,
   });
 
-  const canSend = content.trim().length > 0 && !isPending && !disabled;
+  const canSend = (content.trim().length > 0 || attachments.length > 0) && !isPending && !disabled;
 
   // Auto-resize textarea height as content changes
   const adjustHeight = React.useCallback(() => {
@@ -94,20 +109,112 @@ export function ChatComposer({
     adjustHeight();
   }, [content, adjustHeight]);
 
+  const addFiles = React.useCallback((newFiles: FileList | File[]) => {
+    const validFiles: File[] = [];
+
+    Array.from(newFiles).forEach(file => {
+      if (file.size > MAX_FILE_SIZE_BYTES) {
+        toast.error(`File "${file.name}" exceeds 10MB limit`, {
+          description: 'Please select a file smaller than 10MB.',
+        });
+      } else {
+        validFiles.push(file);
+      }
+    });
+
+    if (validFiles.length > 0) {
+      setAttachments(prev => [...prev, ...validFiles]);
+    }
+  }, []);
+
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      addFiles(e.target.files);
+      e.target.value = ''; // Reset input to allow selecting same file again
+    }
+  };
+
+  const handleRemoveAttachment = (indexToRemove: number) => {
+    setAttachments(prev => prev.filter((_, idx) => idx !== indexToRemove));
+  };
+
+  // Clipboard paste handler for direct image paste (Ctrl+V / Cmd+V)
+  const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const clipboardData = e.clipboardData;
+    if (!clipboardData || !clipboardData.items) return;
+
+    const pastedFiles: File[] = [];
+
+    for (let i = 0; i < clipboardData.items.length; i++) {
+      const item = clipboardData.items[i];
+      if (item.kind === 'file' && item.type.startsWith('image/')) {
+        const file = item.getAsFile();
+        if (file) {
+          // Generate nice filename for pasted screenshot if generic
+          const fileName =
+            file.name === 'image.png' || !file.name
+              ? `screenshot-${new Date().toISOString().replace(/[:.]/g, '-')}.png`
+              : file.name;
+          const renamedFile = new File([file], fileName, { type: file.type });
+          pastedFiles.push(renamedFile);
+        }
+      }
+    }
+
+    if (pastedFiles.length > 0) {
+      addFiles(pastedFiles);
+      toast.success(
+        pastedFiles.length === 1
+          ? 'Image attached from clipboard'
+          : `${pastedFiles.length} images attached from clipboard`,
+      );
+    }
+  };
+
+  // Drag & drop handlers
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isDraggingOver && !disabled && !isPending) {
+      setIsDraggingOver(true);
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+    setIsDraggingOver(false);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingOver(false);
+
+    if (disabled || isPending) return;
+
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      addFiles(e.dataTransfer.files);
+    }
+  };
+
   const handleSend = React.useCallback(() => {
     const trimmed = content.trim();
-    if (!trimmed || isPending || disabled) return;
+    if ((!trimmed && attachments.length === 0) || isPending || disabled) return;
 
     setIsPickerOpen(false);
 
     sendMessage(
       {
-        content: trimmed,
+        content: trimmed || undefined,
+        attachments: attachments.length > 0 ? attachments : undefined,
         isPrivate: isNote,
       },
       {
         onSuccess: () => {
           setContent('');
+          setAttachments([]);
           if (textareaRef.current) {
             textareaRef.current.style.height = 'auto';
             textareaRef.current.focus();
@@ -116,7 +223,7 @@ export function ChatComposer({
         },
       },
     );
-  }, [content, isNote, isPending, disabled, sendMessage, onSent]);
+  }, [content, attachments, isNote, isPending, disabled, sendMessage, onSent]);
 
   const handleSelectCannedResponse = (response: CannedResponseDto) => {
     const textarea = textareaRef.current;
@@ -223,16 +330,39 @@ export function ChatComposer({
     placeholder ||
     (isNote
       ? 'Add a private note (visible only to team members)... (Press Enter to add note)'
-      : "Type a message... (Press Enter to send, '/' for canned responses)");
+      : "Type a message... (Press Enter to send, '/' for canned responses, Paste images)");
 
   return (
     <div
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
       className={cn(
         'relative shrink-0 border-t border-border/80 p-3 bg-card/30 transition-colors',
         disabled && 'opacity-60 pointer-events-none',
         className,
       )}
     >
+      {/* Hidden File Input */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileInputChange}
+        multiple
+        className="hidden"
+        aria-hidden="true"
+      />
+
+      {/* Drag & Drop Visual Overlay */}
+      {isDraggingOver && (
+        <div className="absolute inset-0 z-40 flex items-center justify-center rounded-lg bg-primary/10 backdrop-blur-xs border-2 border-dashed border-primary transition-all animate-in fade-in-0">
+          <div className="flex items-center gap-2 text-primary font-medium text-xs bg-background/90 px-3 py-1.5 rounded-md shadow-md">
+            <UploadCloud className="size-4 animate-bounce" />
+            <span>Drop files here to attach</span>
+          </div>
+        </div>
+      )}
+
       {/* Floating Canned Response Picker */}
       <CannedResponsePicker
         ref={pickerRef}
@@ -304,12 +434,20 @@ export function ChatComposer({
           </Tooltip>
         </div>
 
+        {/* Attachment Previews */}
+        <AttachmentPreviewBar
+          attachments={attachments}
+          onRemove={handleRemoveAttachment}
+          disabled={disabled || isPending}
+        />
+
         {/* Text Input Area */}
         <textarea
           ref={textareaRef}
           value={content}
           onChange={handleContentChange}
           onKeyDown={handleKeyDown}
+          onPaste={handlePaste}
           placeholder={dynamicPlaceholder}
           disabled={disabled || isPending}
           rows={1}
@@ -328,6 +466,7 @@ export function ChatComposer({
           )}
         >
           <div className="flex items-center gap-1">
+            {/* Attachment File Trigger */}
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -335,6 +474,7 @@ export function ChatComposer({
                   variant="ghost"
                   size="icon-xs"
                   disabled={disabled || isPending}
+                  onClick={() => fileInputRef.current?.click()}
                   className="text-muted-foreground hover:text-foreground"
                   aria-label="Attach file"
                 >
@@ -342,7 +482,7 @@ export function ChatComposer({
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="top">
-                <span className="text-xs">Attach file (Coming soon)</span>
+                <span className="text-xs">Attach files (Images, PDFs, Docs up to 10MB)</span>
               </TooltipContent>
             </Tooltip>
 

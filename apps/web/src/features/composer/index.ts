@@ -4,6 +4,7 @@ export {
   type CannedResponsePickerProps,
   type CannedResponsePickerHandle,
 } from './canned-response-picker';
+export { AttachmentPreviewBar, type AttachmentPreviewBarProps } from './attachment-preview-bar';
 export {
   useSendMessage,
   type UseSendMessageOptions,
