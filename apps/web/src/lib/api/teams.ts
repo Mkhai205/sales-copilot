@@ -1,5 +1,12 @@
 import { fetchApi, workspaceHeaders } from './client';
-import type { CreateTeamDto, TeamDto, UpdateTeamDto } from '@sales-copilot/shared-contracts';
+import type {
+  AddTeamMembersDto,
+  CreateTeamDto,
+  RemoveTeamMembersDto,
+  TeamDto,
+  TeamMemberDto,
+  UpdateTeamDto,
+} from '@sales-copilot/shared-contracts';
 
 export const teamsApi = {
   list: (workspaceId: string) =>
@@ -30,5 +37,30 @@ export const teamsApi = {
     fetchApi<{ success: boolean }>(`/teams/${id}`, {
       method: 'DELETE',
       headers: workspaceHeaders(workspaceId),
+    }),
+
+  listMembers: (workspaceId: string, teamId: string) =>
+    fetchApi<TeamMemberDto[]>(`/teams/${teamId}/members`, {
+      headers: workspaceHeaders(workspaceId),
+    }),
+
+  addMembers: (workspaceId: string, teamId: string, userIds: string[]) =>
+    fetchApi<TeamMemberDto[]>(`/teams/${teamId}/members`, {
+      method: 'POST',
+      headers: workspaceHeaders(workspaceId),
+      body: JSON.stringify({ userIds } as AddTeamMembersDto),
+    }),
+
+  removeMember: (workspaceId: string, teamId: string, userId: string) =>
+    fetchApi<{ success: boolean }>(`/teams/${teamId}/members/${userId}`, {
+      method: 'DELETE',
+      headers: workspaceHeaders(workspaceId),
+    }),
+
+  removeMembers: (workspaceId: string, teamId: string, userIds: string[]) =>
+    fetchApi<{ success: boolean }>(`/teams/${teamId}/members`, {
+      method: 'DELETE',
+      headers: workspaceHeaders(workspaceId),
+      body: JSON.stringify({ userIds } as RemoveTeamMembersDto),
     }),
 };

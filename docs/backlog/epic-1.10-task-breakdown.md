@@ -2209,9 +2209,9 @@ export const teamsApi = {
 
 #### Acceptance Criteria
 
-- [ ] Teams CRUD works
-- [ ] Member assignment works
-- [ ] Destructive actions confirmed
+- [x] Teams CRUD works
+- [x] Member assignment works
+- [x] Destructive actions confirmed
 
 #### Dependencies
 
