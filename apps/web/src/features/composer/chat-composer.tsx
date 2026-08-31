@@ -18,6 +18,7 @@ import { Kbd } from '@/components/ui/kbd';
 import { cn } from '@/lib/utils';
 import type { CannedResponseDto } from '@/lib/api/types';
 import { useSendMessage } from './hooks/use-send-message';
+import { useTypingIndicator } from './hooks/use-typing-indicator';
 import { CannedResponsePicker, type CannedResponsePickerHandle } from './canned-response-picker';
 import { AttachmentPreviewBar } from './attachment-preview-bar';
 
@@ -91,6 +92,11 @@ export function ChatComposer({
     conversationId,
     workspaceSlug,
     workspaceId,
+  });
+
+  const { startTyping, stopTyping } = useTypingIndicator({
+    conversationId,
+    disabled: disabled || isPending,
   });
 
   const canSend = (content.trim().length > 0 || attachments.length > 0) && !isPending && !disabled;
@@ -204,6 +210,7 @@ export function ChatComposer({
     if ((!trimmed && attachments.length === 0) || isPending || disabled) return;
 
     setIsPickerOpen(false);
+    stopTyping();
 
     sendMessage(
       {
@@ -223,7 +230,7 @@ export function ChatComposer({
         },
       },
     );
-  }, [content, attachments, isNote, isPending, disabled, sendMessage, onSent]);
+  }, [content, attachments, isNote, isPending, disabled, stopTyping, sendMessage, onSent]);
 
   const handleSelectCannedResponse = (response: CannedResponseDto) => {
     const textarea = textareaRef.current;
@@ -265,6 +272,13 @@ export function ChatComposer({
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newText = e.target.value;
     setContent(newText);
+
+    // Trigger typing indicator
+    if (!isNote && newText.length > 0) {
+      startTyping();
+    } else if (newText.length === 0) {
+      stopTyping();
+    }
 
     // Check for slash command trigger
     const cursorPos = e.target.selectionStart;

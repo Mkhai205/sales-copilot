@@ -51,6 +51,7 @@ import {
 import { useConversation } from './hooks/use-conversation';
 import { useMessages } from './hooks/use-messages';
 import { MessageThreadHeader } from './message-thread-header';
+import { TypingIndicator } from './typing-indicator';
 import { ChatComposer } from '@/features/composer';
 import { useConversationRoom } from '@/lib/socket';
 
@@ -411,6 +412,9 @@ export function MessageThread({
           </MessageScroller>
         )}
       </div>
+
+      {/* Typing Status Indicator */}
+      <TypingIndicator conversationId={conversationId} />
 
       {/* Live Message Composer */}
       <ChatComposer

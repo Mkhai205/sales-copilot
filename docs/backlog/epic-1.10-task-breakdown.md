@@ -2021,9 +2021,9 @@ export function useTypingIndicator(conversationId: string) {
 
 #### Acceptance Criteria
 
-- [ ] "X is typing..." appears khi another agent types
-- [ ] Disappears khi they stop (3s timeout)
-- [ ] Own typing emitted to others
+- [x] "X is typing..." appears khi another agent types
+- [x] Disappears khi they stop (3s timeout)
+- [x] Own typing emitted to others
 
 #### Dependencies
 

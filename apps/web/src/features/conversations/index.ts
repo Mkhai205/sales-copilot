@@ -7,6 +7,7 @@ export * from './conversation-empty-state';
 export * from './conversation-list-placeholder';
 export * from './message-thread';
 export * from './message-thread-header';
+export * from './typing-indicator';
 export * from './detail-panel';
 export * from './contact-info';
 export * from './conversation-actions';
