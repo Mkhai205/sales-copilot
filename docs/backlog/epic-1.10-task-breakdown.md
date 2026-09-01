@@ -19,16 +19,20 @@ Trước khi break down frontend, đây là trạng thái backend và các API s
 | 1.6 Channel Integrations | ✅ Done | Web Chat Widget, Facebook, Telegram adapters |
 | 1.7 Realtime Engine | ✅ Done | Socket.io Gateway `/realtime`, Presence, Realtime Event Dispatcher, all `WsServerEvent` types |
 | 1.8 Assignment & Operations | ✅ Done | Auto-assignment, Canned Responses, Audit Logging |
-| 1.9 Automation & Webhooks | 🟡 Ready | Automation Rules Engine, Webhook Subscriptions & Delivery |
+| 1.9 Automation & Webhooks | ✅ Done | Automation Rules Engine, Webhook Subscriptions & Delivery |
+| 1.10 Frontend Dashboard | ✅ Done | Next.js 16 App Shell, 3-Column Conversation View, Chat Composer, Realtime Sync, Workspace Settings |
 
 **Shared Contracts Available** ([`@sales-copilot/shared-contracts`](file:///d:/workspace/Sales%20Copilot/packages/shared-contracts/src/index.ts)):
 Tất cả TypeScript DTOs, Zod schemas, enums, và event payload types đã defined cho: Auth, Workspaces, Users, Teams, Inboxes, Contacts, Conversations, Messages, Labels, Canned Responses, Automation Rules, Webhooks, Realtime events.
 
 **Current Web App State** ([`apps/web`](file:///d:/workspace/Sales%20Copilot/apps/web)):
-- Next.js 16 (App Router), React 19, Tailwind CSS v4
-- Shadcn v4 initialized (`base-mira` style) — chỉ có 1 Button component
-- Placeholder home page, basic root layout với Inter font
-- Chưa có: data fetching, auth, routing, state management, WebSocket
+- Next.js 16 (App Router), React 19, Tailwind CSS v4, Base UI / Shadcn
+- TanStack Query v5 + thin native fetch client
+- Cookie-based authentication + Next.js Middleware route protection
+- 3-Column Resizable Conversation View với Infinite Scroll & Realtime WebSocket updates
+- Live Chat Composer với Canned responses search (`/`), Attachment upload, Clipboard image paste, Private notes
+- Workspace Administration: General Settings, Inboxes & Channels Wizard, Teams, Members & RBAC, Labels, Canned Responses, Visual Automation Rule Builder, Webhook Subscriptions & Delivery Logs
+- Full Unit & Integration Test Suite passing (143 web tests + 929 server tests = 1,072 tests)
 
 ---
 

@@ -5,7 +5,7 @@
 Xây dựng giao diện ứng dụng web Next.js 16 (App Router) cho Agent Dashboard: bố cục 3 cột tương tác thời gian thực, tích hợp Socket.io client cho live updates, và bảng điều khiển quản trị thiết lập Workspace.
 
 - **ID**: `EPIC-1.10`
-- **Status**: 🟡 Ready
+- **Status**: 🟢 Done
 - **Dependencies**: `EPIC-1.1` (Auth Contracts), `EPIC-1.5` (Conversation API), `EPIC-1.7` (Realtime Gateway), `EPIC-1.8` (Operations), `EPIC-1.9` (Automation)
 - **References**:
   - `docs/references/chatwoot/source/app/javascript/dashboard/`
@@ -48,13 +48,13 @@ Xây dựng application shell bao gồm layout, navigation sidebar, login/logout
 
 #### Acceptance Criteria
 
-- [ ] Login thành công → redirect tới Conversation view
-- [ ] Token expired → auto-refresh transparently
-- [ ] Unauthenticated access → redirect tới login
-- [ ] Workspace switcher hiển thị danh sách workspaces của user
-- [ ] Switch workspace → reload data context
-- [ ] Logout → clear tokens, redirect tới login
-- [ ] Responsive layout (desktop-first, minimum support 1280px)
+- [x] Login thành công → redirect tới Conversation view
+- [x] Token expired → auto-refresh transparently
+- [x] Unauthenticated access → redirect tới login
+- [x] Workspace switcher hiển thị danh sách workspaces của user
+- [x] Switch workspace → reload data context
+- [x] Logout → clear tokens, redirect tới login
+- [x] Responsive layout (desktop-first, minimum support 1280px)
 
 #### Dependencies
 
@@ -93,14 +93,14 @@ Hiện thực giao diện chính của Agent Dashboard theo layout 3 cột để
 
 #### Acceptance Criteria
 
-- [ ] Conversation list loads và hiển thị đúng với filters
-- [ ] Click conversation → load messages trong column 2
-- [ ] Messages hiển thị đúng sender type (contact/agent/system)
-- [ ] Unread badge hiển thị đúng count
-- [ ] Contact panel hiển thị đầy đủ thông tin
-- [ ] Conversation actions (status change, assignment) hoạt động
-- [ ] Empty states cho: no conversations, no messages, unassigned
-- [ ] Loading states cho tất cả data fetching
+- [x] Conversation list loads và hiển thị đúng với filters
+- [x] Click conversation → load messages trong column 2
+- [x] Messages hiển thị đúng sender type (contact/agent/system)
+- [x] Unread badge hiển thị đúng count
+- [x] Contact panel hiển thị đầy đủ thông tin
+- [x] Conversation actions (status change, assignment) hoạt động
+- [x] Empty states cho: no conversations, no messages, unassigned
+- [x] Loading states cho tất cả data fetching
 
 #### Dependencies
 
@@ -130,13 +130,13 @@ Xây dựng chat composer đầy đủ tính năng: soạn tin nhắn, chèn can
 
 #### Acceptance Criteria
 
-- [ ] Gõ `/` trigger canned response search popup
-- [ ] Chọn canned response → insert content vào input
-- [ ] File upload → preview (image) + progress bar
-- [ ] Toggle private note → visual indicator (yellow background)
-- [ ] Send message → message appears in thread immediately (optimistic update)
-- [ ] Empty message (no text, no attachment) → disable send button
-- [ ] Keyboard shortcuts hoạt động
+- [x] Gõ `/` trigger canned response search popup
+- [x] Chọn canned response → insert content vào input
+- [x] File upload → preview (image) + progress bar
+- [x] Toggle private note → visual indicator (yellow background)
+- [x] Send message → message appears in thread immediately (optimistic update)
+- [x] Empty message (no text, no attachment) → disable send button
+- [x] Keyboard shortcuts hoạt động
 
 #### Dependencies
 
@@ -167,12 +167,12 @@ Tích hợp Socket.io client vào dashboard để nhận live updates: tin nhắ
 
 #### Acceptance Criteria
 
-- [ ] New message from contact → appears realtime in conversation thread
-- [ ] Conversation status change by another agent → reflected immediately
-- [ ] Assignment change → conversation moves between tabs
-- [ ] Agent online/offline → indicator updated in real-time
-- [ ] Reconnect after network interruption → resume receiving events
-- [ ] Browser notification cho tin nhắn mới khi tab inactive
+- [x] New message from contact → appears realtime in conversation thread
+- [x] Conversation status change by another agent → reflected immediately
+- [x] Assignment change → conversation moves between tabs
+- [x] Agent online/offline → indicator updated in real-time
+- [x] Reconnect after network interruption → resume receiving events
+- [x] Browser notification cho tin nhắn mới khi tab inactive
 
 #### Dependencies
 
@@ -201,14 +201,14 @@ Cung cấp giao diện quản trị Workspace: cài đặt chung, quản lý Inb
 
 #### Acceptance Criteria
 
-- [ ] ADMIN và OWNER có access đầy đủ vào Settings
-- [ ] AGENT chỉ xem được limited settings (tùy RBAC policy)
-- [ ] VIEWER bị redirect khỏi Settings
-- [ ] Inbox creation wizard: chọn channel type → nhập credentials → review → create
-- [ ] Automation Rule builder: chọn trigger → thêm conditions → thêm actions → save
-- [ ] Webhook delivery logs hiển thị status, attempts, response code
-- [ ] Form validation errors hiển thị rõ ràng
-- [ ] Confirmation dialog cho destructive actions (delete)
+- [x] ADMIN và OWNER có access đầy đủ vào Settings
+- [x] AGENT chỉ xem được limited settings (tùy RBAC policy)
+- [x] VIEWER bị redirect khỏi Settings
+- [x] Inbox creation wizard: chọn channel type → nhập credentials → review → create
+- [x] Automation Rule builder: chọn trigger → thêm conditions → thêm actions → save
+- [x] Webhook delivery logs hiển thị status, attempts, response code
+- [x] Form validation errors hiển thị rõ ràng
+- [x] Confirmation dialog cho destructive actions (delete)
 
 #### Dependencies
 
