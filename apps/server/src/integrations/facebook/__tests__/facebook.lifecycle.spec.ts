@@ -73,8 +73,40 @@ describe('FacebookLifecycleService (Page Webhook Subscription Management)', () =
       getClient: () => clientMock,
     } as unknown as PrismaService;
 
+    const redisStore = new Map<string, string>();
+    const redisMock = {
+      get: async (key: string) => redisStore.get(key) || null,
+      set: async (key: string, val: string) => {
+        redisStore.set(key, val);
+      },
+      del: async (key: string) => {
+        redisStore.delete(key);
+      },
+      incr: async (key: string) => {
+        const val = parseInt(redisStore.get(key) || '0', 10) + 1;
+        redisStore.set(key, val.toString());
+        return val;
+      },
+      getClient: () => ({
+        expire: async () => 1,
+      }),
+    } as any;
+
+    const emittedEvents: Array<{ event: string; payload: any }> = [];
+    const eventEmitterMock = {
+      emit: (event: string, payload: any) => {
+        emittedEvents.push({ event, payload });
+      },
+    } as any;
+
     adapter = new FacebookAdapter();
-    service = new FacebookLifecycleService(prismaMock, adapter, credentialService);
+    service = new FacebookLifecycleService(
+      prismaMock,
+      adapter,
+      credentialService,
+      redisMock,
+      eventEmitterMock,
+    );
   });
 
   afterEach(() => {
@@ -347,6 +379,63 @@ describe('FacebookLifecycleService (Page Webhook Subscription Management)', () =
     it('should return false if channel does not exist when removing page subscription', async () => {
       const result = await service.removePageSubscription(wsId, 'non_existent_chan');
       assert.strictEqual(result, false);
+    });
+  });
+
+  describe('handleAuthorizationError() (Reauthorization Management)', () => {
+    it('should increment error count and not mark reauthorization on first error', async () => {
+      channelsDb.set(chanId, {
+        id: chanId,
+        workspaceId: wsId,
+        inboxId,
+        channelType: ChannelType.FACEBOOK_MESSENGER,
+        isConnected: true,
+        settings: {},
+      });
+
+      await service.handleAuthorizationError({
+        channelId: chanId,
+        workspaceId: wsId,
+        errorMessage: 'Error validating access token: Session has expired',
+      });
+
+      const channel = channelsDb.get(chanId);
+      assert.strictEqual(channel.isConnected, true);
+      assert.strictEqual(channel.settings.reauthorizationRequired, undefined);
+    });
+
+    it('should mark channel as requiring reauthorization when error threshold (2) is reached', async () => {
+      channelsDb.set(chanId, {
+        id: chanId,
+        workspaceId: wsId,
+        inboxId,
+        channelType: ChannelType.FACEBOOK_MESSENGER,
+        isConnected: true,
+        settings: {},
+      });
+
+      // Error 1
+      await service.handleAuthorizationError({
+        channelId: chanId,
+        workspaceId: wsId,
+        errorMessage: 'Error validating access token: Session has expired',
+      });
+
+      // Error 2 (Threshold reached)
+      await service.handleAuthorizationError({
+        channelId: chanId,
+        workspaceId: wsId,
+        errorMessage: 'Error validating access token: Session has expired',
+      });
+
+      const channel = channelsDb.get(chanId);
+      assert.strictEqual(channel.isConnected, false);
+      assert.strictEqual(channel.settings.reauthorizationRequired, true);
+      assert.ok(channel.settings.reauthorizationRequestedAt);
+      assert.strictEqual(
+        channel.settings.lastAuthError,
+        'Error validating access token: Session has expired',
+      );
     });
   });
 });

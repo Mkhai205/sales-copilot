@@ -42,6 +42,14 @@ export const envSchema = z.object({
   CHANNEL_ENCRYPTION_KEY: z
     .string()
     .min(32, 'CHANNEL_ENCRYPTION_KEY must be at least 32 characters'),
+
+  // Public domain for webhook callbacks (Telegram setWebhook, Facebook OAuth redirect)
+  WEBHOOK_BASE_URL: z.string().optional(),
+
+  // Meta / Facebook Platform App (required for OAuth 1-click & Central Webhook)
+  FB_APP_ID: z.string().optional(),
+  FB_APP_SECRET: z.string().optional(),
+  FB_VERIFY_TOKEN: z.string().optional(),
 });
 
 export type EnvConfig = z.infer<typeof envSchema>;

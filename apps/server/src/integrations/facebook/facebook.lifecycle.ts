@@ -1,10 +1,17 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { OnEvent } from '@nestjs/event-emitter';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { ChannelType } from '@sales-copilot/shared-contracts';
 import { PrismaService } from '../../infrastructure/database';
+import { RedisService } from '../../infrastructure/redis';
 import { ChannelCredentialService } from '../../modules/inboxes/channel-credential.service';
 import { FacebookAdapter } from './facebook.adapter';
 import { ChannelContext, ChannelLifecycleEventPayload } from '../channel-adapter.types';
+
+/**
+ * Authorization error threshold before marking channel for reauthorization.
+ * Reference: Chatwoot reauthorizable.rb AUTHORIZATION_ERROR_THRESHOLD = 2
+ */
+const AUTHORIZATION_ERROR_THRESHOLD = 2;
 
 /**
  * Facebook Page Webhook Subscription Lifecycle Service.
@@ -20,6 +27,8 @@ export class FacebookLifecycleService {
     private readonly prisma: PrismaService,
     private readonly adapter: FacebookAdapter,
     private readonly credentialService: ChannelCredentialService,
+    private readonly redis: RedisService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   /**
@@ -240,5 +249,84 @@ export class FacebookLifecycleService {
       );
       return false;
     }
+  }
+
+  // ─── Token Reauthorization ─────────────────────────────────────────────────
+  // Reference: Chatwoot reauthorizable.rb#authorization_error! + prompt_reauthorization!
+
+  /**
+   * Handles Facebook API authorization errors (token expired/revoked).
+   * Increments error counter in Redis; if threshold is reached, marks channel for reauthorization.
+   *
+   * Triggered by OutboundMessageListener or ingestion processor when FacebookAdapter
+   * encounters: "Error validating access token" or "The session has been invalidated".
+   */
+  @OnEvent('facebook.authorization_error')
+  async handleAuthorizationError(payload: {
+    channelId: string;
+    workspaceId: string;
+    errorMessage: string;
+  }): Promise<void> {
+    const { channelId, workspaceId, errorMessage } = payload;
+    const errorCountKey = `channel:${channelId}:auth_errors`;
+    const reauthKey = `channel:${channelId}:reauth_required`;
+
+    // Increment error counter (auto-expires after 24h to avoid stale counts)
+    const errorCount = await this.redis.incr(errorCountKey);
+    if (errorCount === 1) {
+      // Set TTL only on first error
+      const client = this.redis.getClient();
+      if (client) {
+        await client.expire(errorCountKey, 86400); // 24 hours
+      }
+    }
+
+    this.logger.warn(
+      `Facebook auth error #${errorCount} for channel '${channelId}': ${errorMessage}`,
+    );
+
+    if (errorCount < AUTHORIZATION_ERROR_THRESHOLD) {
+      return;
+    }
+
+    // Threshold breached — mark channel for reauthorization
+    const alreadyMarked = await this.redis.get(reauthKey);
+    if (alreadyMarked) {
+      return;
+    }
+
+    await this.redis.set(reauthKey, 'true');
+
+    const client = this.prisma.getClient();
+    const channel = await client.channel.findFirst({
+      where: { id: channelId, workspaceId },
+    });
+
+    if (!channel) return;
+
+    const channelSettings = (channel.settings as Record<string, unknown>) || {};
+
+    await client.channel.update({
+      where: { id: channelId },
+      data: {
+        isConnected: false,
+        settings: {
+          ...channelSettings,
+          reauthorizationRequired: true,
+          reauthorizationRequestedAt: new Date().toISOString(),
+          lastAuthError: errorMessage,
+        },
+      },
+    });
+
+    this.eventEmitter.emit('channel.reauthorization_required', {
+      workspaceId,
+      channelId,
+      channelType: ChannelType.FACEBOOK_MESSENGER,
+    });
+
+    this.logger.warn(
+      `Facebook channel '${channelId}' marked for reauthorization after ${errorCount} auth errors`,
+    );
   }
 }

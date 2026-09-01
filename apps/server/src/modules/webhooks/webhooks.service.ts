@@ -4,7 +4,7 @@ import { Queue } from 'bullmq';
 import * as crypto from 'crypto';
 import { ChannelType } from '@sales-copilot/shared-contracts';
 import { PrismaService } from '../../infrastructure/database';
-import { ChannelAdapterRegistry } from '../../integrations';
+import { ChannelAdapterRegistry } from '../../integrations/channel-adapter.registry';
 import { ChannelCredentialService } from '../inboxes';
 import { CHANNEL_INGESTION_QUEUE } from '../../infrastructure/queue';
 
