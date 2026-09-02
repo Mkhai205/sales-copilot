@@ -557,10 +557,10 @@ graph TD
 - **[NEW]** `apps/server/test/e2e/contact-merge.e2e-spec.ts`: POST merge → assert transfers → assert audit → assert WebSocket.
 
 **Acceptance Criteria**:
-- [ ] Identities transferred to primary contact
-- [ ] Conversations transferred
-- [ ] Messages preserved (no data loss)
-- [ ] AuditLog + WebSocket event
+- [x] Identities transferred to primary contact
+- [x] Conversations transferred
+- [x] Messages preserved (no data loss)
+- [x] AuditLog + WebSocket event
 
 ---
 
