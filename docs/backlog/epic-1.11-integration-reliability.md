@@ -253,9 +253,9 @@ graph TD
 - **[MODIFY]** `apps/server/src/app.module.ts`: Inject `@InjectQueue()` cho 2 queues vào `AppService` (hoặc thông qua `QueueModule` export).
 
 **Acceptance Criteria**:
-- [ ] `/health` response bao gồm `dependencies.queues: { channelIngestion: 'ok', webhookDelivery: 'ok' }`
-- [ ] Queue unavailable → status `degraded`
-- [ ] Không tạo module mới, inject queue references trực tiếp
+- [x] `/health` response bao gồm `dependencies.queues: { channelIngestion: 'ok', webhookDelivery: 'ok' }`
+- [x] Queue unavailable → status `degraded`
+- [x] Không tạo module mới, inject queue references trực tiếp
 
 ---
 

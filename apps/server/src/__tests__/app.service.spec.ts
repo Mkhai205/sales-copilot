@@ -1,12 +1,24 @@
 import { describe, it } from 'node:test';
 import * as assert from 'node:assert';
+import { Queue } from 'bullmq';
 import { AppService } from '../app.service';
 import { PrismaService } from '../infrastructure/database';
 import { RedisService } from '../infrastructure/redis';
 import { StorageService } from '../infrastructure/storage';
 
+const createMockQueue = (isHealthy = true, errorMsg = 'Queue connection failed') =>
+  ({
+    waitUntilReady: async () => {
+      if (!isHealthy) throw new Error(errorMsg);
+    },
+    getJobCounts: async () => {
+      if (!isHealthy) throw new Error(errorMsg);
+      return { active: 1, waiting: 2, failed: 0, completed: 5, delayed: 0 };
+    },
+  }) as unknown as Queue;
+
 describe('AppService (Healthcheck Aggregator)', () => {
-  it('should return status ok when all dependencies are up', async () => {
+  it('should return status ok when all dependencies and queues are up', async () => {
     const mockPrisma = {
       ping: async () => ({ status: 'up' as const, latencyMs: 2 }),
     } as unknown as PrismaService;
@@ -19,13 +31,24 @@ describe('AppService (Healthcheck Aggregator)', () => {
       ping: async () => ({ status: 'up' as const, latencyMs: 5 }),
     } as unknown as StorageService;
 
-    const appService = new AppService(mockPrisma, mockRedis, mockStorage);
+    const mockChannelQueue = createMockQueue(true);
+    const mockWebhookQueue = createMockQueue(true);
+
+    const appService = new AppService(
+      mockPrisma,
+      mockRedis,
+      mockStorage,
+      mockChannelQueue,
+      mockWebhookQueue,
+    );
     const health = await appService.getHealth();
 
     assert.strictEqual(health.status, 'ok');
     assert.strictEqual(health.dependencies.database.status, 'up');
     assert.strictEqual(health.dependencies.redis.status, 'up');
     assert.strictEqual(health.dependencies.storage.status, 'up');
+    assert.strictEqual(health.dependencies.queues.channelIngestion.status, 'ok');
+    assert.strictEqual(health.dependencies.queues.webhookDelivery.status, 'ok');
   });
 
   it('should return status degraded when one dependency is down', async () => {
@@ -41,7 +64,16 @@ describe('AppService (Healthcheck Aggregator)', () => {
       ping: async () => ({ status: 'up' as const, latencyMs: 5 }),
     } as unknown as StorageService;
 
-    const appService = new AppService(mockPrisma, mockRedis, mockStorage);
+    const mockChannelQueue = createMockQueue(true);
+    const mockWebhookQueue = createMockQueue(true);
+
+    const appService = new AppService(
+      mockPrisma,
+      mockRedis,
+      mockStorage,
+      mockChannelQueue,
+      mockWebhookQueue,
+    );
     const health = await appService.getHealth();
 
     assert.strictEqual(health.status, 'degraded');
@@ -51,13 +83,55 @@ describe('AppService (Healthcheck Aggregator)', () => {
     assert.strictEqual(health.dependencies.storage.status, 'up');
   });
 
+  it('should return status degraded when a BullMQ queue is down', async () => {
+    const mockPrisma = {
+      ping: async () => ({ status: 'up' as const, latencyMs: 2 }),
+    } as unknown as PrismaService;
+
+    const mockRedis = {
+      ping: async () => ({ status: 'up' as const, latencyMs: 1 }),
+    } as unknown as RedisService;
+
+    const mockStorage = {
+      ping: async () => ({ status: 'up' as const, latencyMs: 5 }),
+    } as unknown as StorageService;
+
+    const mockChannelQueue = createMockQueue(false, 'Channel queue Redis connection error');
+    const mockWebhookQueue = createMockQueue(true);
+
+    const appService = new AppService(
+      mockPrisma,
+      mockRedis,
+      mockStorage,
+      mockChannelQueue,
+      mockWebhookQueue,
+    );
+    const health = await appService.getHealth();
+
+    assert.strictEqual(health.status, 'degraded');
+    assert.strictEqual(health.dependencies.queues.channelIngestion.status, 'down');
+    assert.strictEqual(
+      health.dependencies.queues.channelIngestion.error,
+      'Channel queue Redis connection error',
+    );
+    assert.strictEqual(health.dependencies.queues.webhookDelivery.status, 'ok');
+  });
+
   describe('getLiveness', () => {
     it('should return status ok and process uptime', () => {
       const mockPrisma = {} as PrismaService;
       const mockRedis = {} as RedisService;
       const mockStorage = {} as StorageService;
+      const mockChannelQueue = createMockQueue(true);
+      const mockWebhookQueue = createMockQueue(true);
 
-      const appService = new AppService(mockPrisma, mockRedis, mockStorage);
+      const appService = new AppService(
+        mockPrisma,
+        mockRedis,
+        mockStorage,
+        mockChannelQueue,
+        mockWebhookQueue,
+      );
       const liveness = appService.getLiveness();
 
       assert.strictEqual(liveness.status, 'ok');
@@ -68,7 +142,7 @@ describe('AppService (Healthcheck Aggregator)', () => {
   });
 
   describe('getReadiness', () => {
-    it('should return status ok when all dependencies are up and migrations applied', async () => {
+    it('should return status ok when all dependencies, queues are up and migrations applied', async () => {
       const mockPrisma = {
         ping: async () => ({ status: 'up' as const, latencyMs: 2 }),
         checkMigrations: async () => ({ applied: true, count: 2 }),
@@ -82,7 +156,16 @@ describe('AppService (Healthcheck Aggregator)', () => {
         ping: async () => ({ status: 'up' as const, latencyMs: 5 }),
       } as unknown as StorageService;
 
-      const appService = new AppService(mockPrisma, mockRedis, mockStorage);
+      const mockChannelQueue = createMockQueue(true);
+      const mockWebhookQueue = createMockQueue(true);
+
+      const appService = new AppService(
+        mockPrisma,
+        mockRedis,
+        mockStorage,
+        mockChannelQueue,
+        mockWebhookQueue,
+      );
       const readiness = await appService.getReadiness();
 
       assert.strictEqual(readiness.status, 'ok');
@@ -91,6 +174,8 @@ describe('AppService (Healthcheck Aggregator)', () => {
       assert.strictEqual(readiness.checks.database.migrationCount, 2);
       assert.strictEqual(readiness.checks.redis.status, 'up');
       assert.strictEqual(readiness.checks.storage.status, 'up');
+      assert.strictEqual(readiness.checks.queues.channelIngestion.status, 'ok');
+      assert.strictEqual(readiness.checks.queues.webhookDelivery.status, 'ok');
     });
 
     it('should return status down when database is down', async () => {
@@ -107,7 +192,16 @@ describe('AppService (Healthcheck Aggregator)', () => {
         ping: async () => ({ status: 'up' as const, latencyMs: 5 }),
       } as unknown as StorageService;
 
-      const appService = new AppService(mockPrisma, mockRedis, mockStorage);
+      const mockChannelQueue = createMockQueue(true);
+      const mockWebhookQueue = createMockQueue(true);
+
+      const appService = new AppService(
+        mockPrisma,
+        mockRedis,
+        mockStorage,
+        mockChannelQueue,
+        mockWebhookQueue,
+      );
       const readiness = await appService.getReadiness();
 
       assert.strictEqual(readiness.status, 'down');
@@ -129,7 +223,16 @@ describe('AppService (Healthcheck Aggregator)', () => {
         ping: async () => ({ status: 'up' as const, latencyMs: 5 }),
       } as unknown as StorageService;
 
-      const appService = new AppService(mockPrisma, mockRedis, mockStorage);
+      const mockChannelQueue = createMockQueue(true);
+      const mockWebhookQueue = createMockQueue(true);
+
+      const appService = new AppService(
+        mockPrisma,
+        mockRedis,
+        mockStorage,
+        mockChannelQueue,
+        mockWebhookQueue,
+      );
       const readiness = await appService.getReadiness();
 
       assert.strictEqual(readiness.status, 'down');
@@ -151,7 +254,16 @@ describe('AppService (Healthcheck Aggregator)', () => {
         ping: async () => ({ status: 'up' as const, latencyMs: 5 }),
       } as unknown as StorageService;
 
-      const appService = new AppService(mockPrisma, mockRedis, mockStorage);
+      const mockChannelQueue = createMockQueue(true);
+      const mockWebhookQueue = createMockQueue(true);
+
+      const appService = new AppService(
+        mockPrisma,
+        mockRedis,
+        mockStorage,
+        mockChannelQueue,
+        mockWebhookQueue,
+      );
       const readiness = await appService.getReadiness();
 
       assert.strictEqual(readiness.status, 'degraded');
@@ -172,11 +284,51 @@ describe('AppService (Healthcheck Aggregator)', () => {
         ping: async () => ({ status: 'down' as const, latencyMs: 0, error: 'S3 unreachable' }),
       } as unknown as StorageService;
 
-      const appService = new AppService(mockPrisma, mockRedis, mockStorage);
+      const mockChannelQueue = createMockQueue(true);
+      const mockWebhookQueue = createMockQueue(true);
+
+      const appService = new AppService(
+        mockPrisma,
+        mockRedis,
+        mockStorage,
+        mockChannelQueue,
+        mockWebhookQueue,
+      );
       const readiness = await appService.getReadiness();
 
       assert.strictEqual(readiness.status, 'degraded');
       assert.strictEqual(readiness.checks.storage.status, 'down');
+    });
+
+    it('should return status degraded when a Queue is down during readiness check', async () => {
+      const mockPrisma = {
+        ping: async () => ({ status: 'up' as const, latencyMs: 2 }),
+        checkMigrations: async () => ({ applied: true, count: 2 }),
+      } as unknown as PrismaService;
+
+      const mockRedis = {
+        ping: async () => ({ status: 'up' as const, latencyMs: 1 }),
+      } as unknown as RedisService;
+
+      const mockStorage = {
+        ping: async () => ({ status: 'up' as const, latencyMs: 5 }),
+      } as unknown as StorageService;
+
+      const mockChannelQueue = createMockQueue(true);
+      const mockWebhookQueue = createMockQueue(false, 'Webhook queue not ready');
+
+      const appService = new AppService(
+        mockPrisma,
+        mockRedis,
+        mockStorage,
+        mockChannelQueue,
+        mockWebhookQueue,
+      );
+      const readiness = await appService.getReadiness();
+
+      assert.strictEqual(readiness.status, 'degraded');
+      assert.strictEqual(readiness.checks.queues.webhookDelivery.status, 'down');
+      assert.strictEqual(readiness.checks.queues.webhookDelivery.error, 'Webhook queue not ready');
     });
   });
 });
