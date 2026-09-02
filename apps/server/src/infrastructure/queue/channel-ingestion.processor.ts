@@ -101,7 +101,7 @@ export class ChannelIngestionProcessor extends WorkerHost {
     });
 
     if (!channel) {
-      this.logger.warn(`Channel with ID '${channelId}' not found during ingestion`);
+      this.logger.warn(`${tracePrefix}Channel with ID '${channelId}' not found during ingestion`);
       return;
     }
 
@@ -117,7 +117,7 @@ export class ChannelIngestionProcessor extends WorkerHost {
         inboundMessages = await adapter.parseInboundPayload(payload);
       } catch (parseErr) {
         this.logger.warn(
-          `Adapter parsing failed for channel '${channelId}': ${(parseErr as Error).message}`,
+          `${tracePrefix}Adapter parsing failed for channel '${channelId}': ${(parseErr as Error).message}`,
         );
       }
     }
@@ -203,11 +203,11 @@ export class ChannelIngestionProcessor extends WorkerHost {
               });
 
               this.logger.log(
-                `Updated deliveryStatus to '${newStatus}' for message '${existingMessage.id}' (externalId: '${externalMsgId}', workspace: '${workspaceId}')`,
+                `${tracePrefix}Updated deliveryStatus to '${newStatus}' for message '${existingMessage.id}' (externalId: '${externalMsgId}', workspace: '${workspaceId}')`,
               );
             } else {
               this.logger.warn(
-                `Message with externalId '${externalMsgId}' not found for delivery status update in workspace '${workspaceId}'`,
+                `${tracePrefix}Message with externalId '${externalMsgId}' not found for delivery status update in workspace '${workspaceId}'`,
               );
             }
           }
@@ -276,7 +276,7 @@ export class ChannelIngestionProcessor extends WorkerHost {
                 }
               } catch (downloadErr) {
                 this.logger.warn(
-                  `Failed to download media file from '${att.fileUrl}' for channel '${channelId}': ${(downloadErr as Error).message}. Proceeding with external URL.`,
+                  `${tracePrefix}Failed to download media file from '${att.fileUrl}' for channel '${channelId}': ${(downloadErr as Error).message}. Proceeding with external URL.`,
                 );
               }
             }
@@ -305,11 +305,11 @@ export class ChannelIngestionProcessor extends WorkerHost {
         });
 
         this.logger.log(
-          `Ingested message '${msg.externalMessageId}' on conversation '${conversation.id}' for contact '${contact.id}' (workspace: '${workspaceId}')`,
+          `${tracePrefix}Ingested message '${msg.externalMessageId}' on conversation '${conversation.id}' for contact '${contact.id}' (workspace: '${workspaceId}')`,
         );
       } catch (msgErr) {
         this.logger.error(
-          `Failed to process inbound message '${msg.externalMessageId}' on channel '${channelId}': ${(msgErr as Error).message}`,
+          `${tracePrefix}Failed to process inbound message '${msg.externalMessageId}' on channel '${channelId}': ${(msgErr as Error).message}`,
           (msgErr as Error).stack,
         );
       }
@@ -324,7 +324,7 @@ export class ChannelIngestionProcessor extends WorkerHost {
         });
       } catch (err) {
         this.logger.warn(
-          `Failed to update processedAt for channelEvent '${channelEventId}': ${(err as Error).message}`,
+          `${tracePrefix}Failed to update processedAt for channelEvent '${channelEventId}': ${(err as Error).message}`,
         );
       }
     }

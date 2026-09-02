@@ -93,6 +93,10 @@ export class WebhookDispatcherListener {
             },
           });
 
+          const requestId =
+            payload?.requestId || payload?.metadata?.requestId || payload?.context?.requestId;
+          const tracePrefix = requestId ? `[${requestId}] ` : '';
+
           await this.deliveryQueue.add(
             'deliver-webhook',
             {
@@ -103,6 +107,7 @@ export class WebhookDispatcherListener {
               secretKey: sub.secretKey,
               eventType,
               payload: formattedPayload,
+              ...(requestId ? { requestId: String(requestId) } : {}),
             },
             {
               jobId: delivery.id,
@@ -117,7 +122,7 @@ export class WebhookDispatcherListener {
           );
 
           this.logger.log(
-            `Enqueued webhook delivery '${delivery.id}' for event '${eventType}' to subscription '${sub.id}' (${sub.url})`,
+            `${tracePrefix}Enqueued webhook delivery '${delivery.id}' for event '${eventType}' to subscription '${sub.id}' (${sub.url})`,
           );
         } catch (subErr) {
           this.logger.error(

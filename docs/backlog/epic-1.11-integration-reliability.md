@@ -315,10 +315,10 @@ graph TD
 - **Verify**: BullMQ processors log với `requestId` context từ job data.
 
 **Acceptance Criteria**:
-- [ ] Mọi log entry chứa `requestId` field
-- [ ] Authenticated request logs chứa `userId`, `workspaceId`
-- [ ] BullMQ processor logs có `requestId` từ original HTTP request
-- [ ] Log format: `{ level, time, requestId, workspaceId?, userId?, msg, ... }`
+- [x] Mọi log entry chứa `requestId` field
+- [x] Authenticated request logs chứa `userId`, `workspaceId`
+- [x] BullMQ processor logs có `requestId` từ original HTTP request
+- [x] Log format: `{ level, time, requestId, workspaceId?, userId?, msg, ... }`
 
 ---
 

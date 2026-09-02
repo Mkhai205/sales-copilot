@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
@@ -60,6 +61,36 @@ import { RequestIdMiddleware } from './common/middlewares';
                 }
               : undefined,
             autoLogging: true,
+            genReqId: (req: any, res: any) => {
+              const existingId =
+                (req.headers['x-request-id'] as string) ||
+                (req.headers['x-correlation-id'] as string);
+              const id = existingId || randomUUID();
+              req.headers['x-request-id'] = id;
+              res.setHeader('x-request-id', id);
+              return id;
+            },
+            customAttributeKeys: {
+              reqId: 'requestId',
+            },
+            customProps: (req: any) => {
+              const requestId =
+                (req.headers?.['x-request-id'] as string) ||
+                (req.headers?.['x-correlation-id'] as string) ||
+                req.id;
+              const workspaceId =
+                req.workspace?.workspaceId ||
+                (typeof req.headers?.['x-workspace-id'] === 'string'
+                  ? req.headers['x-workspace-id']
+                  : undefined);
+              const userId = req.user?.userId;
+
+              return {
+                requestId,
+                ...(workspaceId ? { workspaceId } : {}),
+                ...(userId ? { userId } : {}),
+              };
+            },
             serializers: {
               req: (req: any) => ({
                 id: req.id,

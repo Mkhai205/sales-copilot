@@ -21,6 +21,7 @@ export interface WebhookDeliveryJobData {
     workspaceId: string;
     [key: string]: unknown;
   };
+  requestId?: string;
 }
 
 /**
@@ -59,15 +60,24 @@ export class WebhookDeliveryProcessor extends WorkerHost {
   }
 
   async process(job: Job<WebhookDeliveryJobData, void, string>): Promise<void> {
-    const { deliveryId, subscriptionId, workspaceId, url, secretKey, eventType, payload } =
-      job.data;
+    const {
+      deliveryId,
+      subscriptionId,
+      workspaceId,
+      url,
+      secretKey,
+      eventType,
+      payload,
+      requestId,
+    } = job.data;
+    const tracePrefix = requestId ? `[${requestId}] ` : '';
     const currentAttempt = (job.attemptsMade ?? 0) + 1;
     const maxAttempts = job.opts?.attempts || 3;
     const isFinalAttempt = currentAttempt >= maxAttempts;
     const nextRetryAt = isFinalAttempt ? null : this.calculateNextRetryAt(currentAttempt);
 
     this.logger.log(
-      `Processing webhook delivery '${deliveryId}' (attempt ${currentAttempt}/${maxAttempts}) for event '${eventType}' to '${url}'`,
+      `${tracePrefix}Processing webhook delivery '${deliveryId}' (attempt ${currentAttempt}/${maxAttempts}) for event '${eventType}' to '${url}'`,
     );
 
     const client = this.prisma.getClient();
@@ -85,7 +95,7 @@ export class WebhookDeliveryProcessor extends WorkerHost {
       });
     } catch (dbErr) {
       this.logger.warn(
-        `Failed to update preliminary attempt count for delivery '${deliveryId}': ${(dbErr as Error).message}`,
+        `${tracePrefix}Failed to update preliminary attempt count for delivery '${deliveryId}': ${(dbErr as Error).message}`,
       );
     }
 
@@ -150,7 +160,7 @@ export class WebhookDeliveryProcessor extends WorkerHost {
       });
 
       this.logger.warn(
-        `Webhook delivery '${deliveryId}' failed on attempt ${currentAttempt}/${maxAttempts}: ${errorMsg}`,
+        `${tracePrefix}Webhook delivery '${deliveryId}' failed on attempt ${currentAttempt}/${maxAttempts}: ${errorMsg}`,
       );
       throw fetchErr;
     }
@@ -170,7 +180,7 @@ export class WebhookDeliveryProcessor extends WorkerHost {
       });
 
       this.logger.log(
-        `Webhook delivery '${deliveryId}' successfully delivered to '${url}' (HTTP ${responseStatus}) on attempt ${currentAttempt}`,
+        `${tracePrefix}Webhook delivery '${deliveryId}' successfully delivered to '${url}' (HTTP ${responseStatus}) on attempt ${currentAttempt}`,
       );
     } else {
       // Non-2xx Failure
@@ -185,7 +195,7 @@ export class WebhookDeliveryProcessor extends WorkerHost {
       });
 
       const errorMsg = `Webhook delivery '${deliveryId}' responded with HTTP ${responseStatus}`;
-      this.logger.warn(`${errorMsg} on attempt ${currentAttempt}/${maxAttempts}`);
+      this.logger.warn(`${tracePrefix}${errorMsg} on attempt ${currentAttempt}/${maxAttempts}`);
       throw new Error(errorMsg);
     }
   }
