@@ -1,8 +1,9 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { LoggerModule } from 'nestjs-pino';
 
 import { DatabaseModule } from './infrastructure/database/database.module';
 import { QueueModule } from './infrastructure/queue';
@@ -35,6 +36,44 @@ import { RequestIdMiddleware } from './common/middlewares';
       envFilePath: ['.env', '.env.local'],
       cache: true,
       validate: validateEnv,
+    }),
+    LoggerModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        const nodeEnv = configService.get<string>('NODE_ENV', 'development');
+        const isDev = nodeEnv !== 'production';
+        const logLevel = configService.get<string>('LOG_LEVEL') || (isDev ? 'debug' : 'info');
+
+        return {
+          pinoHttp: {
+            level: logLevel,
+            transport: isDev
+              ? {
+                  target: 'pino-pretty',
+                  options: {
+                    colorize: true,
+                    singleLine: true,
+                    translateTime: 'SYS:standard',
+                    ignore: 'pid,hostname',
+                  },
+                }
+              : undefined,
+            autoLogging: true,
+            serializers: {
+              req: (req: any) => ({
+                id: req.id,
+                method: req.method,
+                url: req.url,
+                query: req.query,
+              }),
+              res: (res: any) => ({
+                statusCode: res.statusCode,
+              }),
+            },
+          },
+        };
+      },
     }),
     EventEmitterModule.forRoot(),
     ScheduleModule.forRoot(),

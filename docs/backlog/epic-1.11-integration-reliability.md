@@ -296,11 +296,11 @@ graph TD
 - **[MODIFY]** `apps/server/.env.example`: Thêm `LOG_LEVEL=debug`.
 
 **Acceptance Criteria**:
-- [ ] Logs output structured JSON format trong production mode
-- [ ] Logs output pretty-printed trong development mode
-- [ ] HTTP requests tự động được log (method, url, status, responseTime)
-- [ ] `LOG_LEVEL` env variable hoạt động
-- [ ] `LoggingInterceptor` đã được remove (tránh duplicate logging)
+- [x] Logs output structured JSON format trong production mode
+- [x] Logs output pretty-printed trong development mode
+- [x] HTTP requests tự động được log (method, url, status, responseTime)
+- [x] `LOG_LEVEL` env variable hoạt động
+- [x] `LoggingInterceptor` đã được remove (tránh duplicate logging)
 
 ---
 
