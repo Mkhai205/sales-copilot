@@ -371,9 +371,9 @@ graph TD
 - Verify `ThrottlerBehindProxyGuard` cho Cloudflare Tunnel (trust `X-Forwarded-For`)
 
 **Acceptance Criteria**:
-- [ ] Webhook: 200 req/min, Upload: 20 req/min, General: 100 req/min
-- [ ] Rate limit exceeded → `429 Too Many Requests`
-- [ ] Correct client IP detection behind proxy
+- [x] Webhook: 200 req/min, Upload: 20 req/min, General: 100 req/min
+- [x] Rate limit exceeded → `429 Too Many Requests`
+- [x] Correct client IP detection behind proxy
 
 ---
 

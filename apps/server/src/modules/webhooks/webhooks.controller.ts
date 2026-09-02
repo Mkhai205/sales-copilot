@@ -12,6 +12,7 @@ import {
 } from '@nestjs/common';
 import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
+import { Throttle } from '@nestjs/throttler';
 import { Public } from '../auth';
 import { WebhooksService } from './webhooks.service';
 
@@ -49,6 +50,7 @@ export class WebhooksController {
   }
 
   @Post(':channelId/webhook')
+  @Throttle({ default: { limit: 200, ttl: 60000 } })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Public inbound webhook ingestion endpoint for omnichannel providers',

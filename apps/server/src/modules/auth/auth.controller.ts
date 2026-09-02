@@ -39,6 +39,7 @@ export class AuthController {
 
   @Public()
   @Post('refresh')
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Rotate refresh token and issue new token pair' })
   @ApiResponse({ status: 200, description: 'Token refreshed successfully' })

@@ -16,6 +16,7 @@ import {
   forwardRef,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Throttle } from '@nestjs/throttler';
 import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import * as crypto from 'crypto';
 import type { Response } from 'express';
@@ -185,6 +186,7 @@ export class FacebookController {
 
   @Post('webhook')
   @Public()
+  @Throttle({ default: { limit: 200, ttl: 60000 } })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Facebook Central Webhook inbound event ingestion' })
   @ApiResponse({ status: 200, description: 'Webhook event received and processed' })

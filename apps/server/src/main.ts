@@ -13,6 +13,7 @@ import { RedisIoAdapter } from './infrastructure/redis';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
+  (app.getHttpAdapter().getInstance() as any).set('trust proxy', 1);
   app.useLogger(app.get(Logger));
   const logger = app.get(Logger);
   const configService = app.get(ConfigService);
