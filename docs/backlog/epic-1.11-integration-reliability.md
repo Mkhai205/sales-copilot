@@ -349,8 +349,8 @@ graph TD
 - **[NEW]** `apps/server/src/common/__tests__/logging.spec.ts`: Test pino redaction config, verify sensitive fields replaced by `[REDACTED]`.
 
 **Acceptance Criteria**:
-- [ ] Test verify password, authorization, credentials redaction
-- [ ] Tests pass với `pnpm nx test server`
+- [x] Test verify password, authorization, credentials redaction
+- [x] Tests pass với `pnpm nx test server`
 
 ---
 
