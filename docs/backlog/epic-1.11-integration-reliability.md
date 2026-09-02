@@ -332,10 +332,10 @@ graph TD
 - **[MODIFY]** Pino config: Thêm `pinoHttp.redact` với paths cho `authorization`, `cookie`, `password`, `accessToken`, `refreshToken`, `credentials`, `pageAccessToken`, `appSecret`, `webhookSecret`, `email`, `phone`, `set-cookie`. Censor: `[REDACTED]`.
 
 **Acceptance Criteria**:
-- [ ] Passwords, tokens, credentials NEVER appear in logs
-- [ ] PII fields (email, phone) redacted
-- [ ] Cookie & Authorization headers redacted
-- [ ] Request body sensitive fields redacted
+- [x] Passwords, tokens, credentials NEVER appear in logs
+- [x] PII fields (email, phone) redacted
+- [x] Cookie & Authorization headers redacted
+- [x] Request body sensitive fields redacted
 
 ---
 

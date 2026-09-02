@@ -29,6 +29,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { validateEnv } from './config';
 import { RequestIdMiddleware } from './common/middlewares';
+import { pinoRedactConfig } from './common/logging';
 
 @Module({
   imports: [
@@ -61,6 +62,7 @@ import { RequestIdMiddleware } from './common/middlewares';
                 }
               : undefined,
             autoLogging: true,
+            redact: pinoRedactConfig,
             genReqId: (req: any, res: any) => {
               const existingId =
                 (req.headers['x-request-id'] as string) ||
@@ -97,6 +99,7 @@ import { RequestIdMiddleware } from './common/middlewares';
                 method: req.method,
                 url: req.url,
                 query: req.query,
+                headers: req.headers,
               }),
               res: (res: any) => ({
                 statusCode: res.statusCode,
