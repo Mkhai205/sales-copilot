@@ -21,6 +21,7 @@ import {
   SenderType,
 } from '@sales-copilot/shared-contracts';
 import { PrismaService } from '../../infrastructure/database';
+import { sanitizeMessageContent } from '../../common/utils';
 import { AttachmentsService, UploadedFile } from './attachments.service';
 import { mapMessageToDto, MessageWithRelations } from './messages.mapper';
 
@@ -121,8 +122,10 @@ export class MessagesService {
       resolvedSenderId = null;
     }
 
-    // 3. Validate Content / Attachment Invariant (BR-5.2)
-    const trimmedContent = dto.content?.trim();
+    // 3. Validate Content / Attachment Invariant (BR-5.2) & Sanitize HTML
+    const rawContent = dto.content;
+    const sanitizedContent = rawContent ? sanitizeMessageContent(rawContent) : '';
+    const trimmedContent = sanitizedContent.trim();
     const hasFiles = files && files.length > 0;
     const hasExternalAttachments = dto.attachments && dto.attachments.length > 0;
     const hasAttachments = hasFiles || hasExternalAttachments;

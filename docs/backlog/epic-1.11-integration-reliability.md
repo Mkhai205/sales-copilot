@@ -407,10 +407,10 @@ graph TD
 - **[NEW]** `apps/server/src/common/__tests__/html-sanitizer.spec.ts`: Tests.
 
 **Acceptance Criteria**:
-- [ ] `<script>` stripped, `onclick` removed, `javascript:` href removed
-- [ ] Safe HTML preserved: `<b>`, `<a href="https://...">`, etc.
-- [ ] Applied cho cả inbound messages và agent replies
-- [ ] Unit tests pass
+- [x] `<script>` stripped, `onclick` removed, `javascript:` href removed
+- [x] Safe HTML preserved: `<b>`, `<a href="https://...">`, etc.
+- [x] Applied cho cả inbound messages và agent replies
+- [x] Unit tests pass
 
 ---
 

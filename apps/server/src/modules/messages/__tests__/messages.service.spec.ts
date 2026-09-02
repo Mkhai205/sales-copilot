@@ -573,6 +573,47 @@ describe('MessagesService (Task T-1.5.6: Message Threading & Polymorphic Senders
       assert.strictEqual(result.attachments?.length, 1);
       assert.strictEqual(result.attachments?.[0].fileName, 'doc.pdf');
     });
+
+    it('should sanitize malicious script tags and inline handlers from USER agent message', async () => {
+      const result = await service.create('ws_1', 'conv_1', {
+        senderType: SenderType.USER,
+        senderId: 'usr_agent_1',
+        content:
+          '<p>Hello <b>Customer</b></p><script>alert("xss")</script><img src="x" onerror="evil()" />',
+      });
+
+      assert.ok(!result.content?.includes('<script>'));
+      assert.ok(!result.content?.includes('onerror'));
+      assert.ok(result.content?.includes('<p>Hello <b>Customer</b></p>'));
+    });
+
+    it('should sanitize inbound malicious HTML from CONTACT sender', async () => {
+      const result = await service.create('ws_1', 'conv_1', {
+        senderType: SenderType.CONTACT,
+        content: '<a href="javascript:alert(1)">Click me</a> Safe question?',
+      });
+
+      assert.ok(!result.content?.includes('javascript:'));
+      assert.ok(result.content?.includes('Click me'));
+      assert.ok(result.content?.includes('Safe question?'));
+    });
+
+    it('should reject message if content is exclusively malicious script and has no attachments', async () => {
+      await assert.rejects(
+        async () => {
+          await service.create('ws_1', 'conv_1', {
+            senderType: SenderType.USER,
+            senderId: 'usr_agent_1',
+            content: '<script>document.cookie="stolen";</script>',
+          });
+        },
+        (err: any) => {
+          assert.strictEqual(err instanceof BadRequestException, true);
+          assert.strictEqual(err.response.code, 'MESSAGE_CONTENT_REQUIRED');
+          return true;
+        },
+      );
+    });
   });
 
   describe('create - Idempotency via externalId', () => {
