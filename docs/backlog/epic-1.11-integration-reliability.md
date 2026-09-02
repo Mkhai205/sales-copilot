@@ -388,9 +388,9 @@ graph TD
 - Document `CORS_ORIGIN` format trong `.env.example`.
 
 **Acceptance Criteria**:
-- [ ] Unlisted origins bị blocked
-- [ ] Listed origins hoạt động (credentials, preflight)
-- [ ] `CORS_ORIGIN` documented
+- [x] Unlisted origins bị blocked
+- [x] Listed origins hoạt động (credentials, preflight)
+- [x] `CORS_ORIGIN` documented
 
 ---
 

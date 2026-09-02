@@ -9,6 +9,7 @@ import { Logger } from 'nestjs-pino';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters';
 import { TransformInterceptor } from './common/interceptors';
+import { createCorsOptions } from './config';
 import { RedisIoAdapter } from './infrastructure/redis';
 
 async function bootstrap() {
@@ -26,10 +27,7 @@ async function bootstrap() {
   app.use(helmet());
 
   const corsOrigins = configService.get<string[]>('CORS_ORIGIN');
-  app.enableCors({
-    origin: corsOrigins && corsOrigins.length > 0 ? corsOrigins : true,
-    credentials: true,
-  });
+  app.enableCors(createCorsOptions(corsOrigins));
 
   const globalPrefix = 'api/v1';
   app.setGlobalPrefix(globalPrefix);

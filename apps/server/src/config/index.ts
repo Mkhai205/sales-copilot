@@ -1,2 +1,3 @@
 export * from './env.schema';
 export * from './env.validation';
+export * from './cors.config';
