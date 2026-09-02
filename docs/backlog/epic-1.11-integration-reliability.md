@@ -428,10 +428,10 @@ graph TD
 - Dùng Shadcn UI components, semantic Tailwind classes, dark-mode compatible.
 
 **Acceptance Criteria**:
-- [ ] Unhandled error → error page với "Try Again"
-- [ ] Non-existent URL → 404 page
-- [ ] Dark-mode compatible
-- [ ] `pnpm nx build web` thành công
+- [x] Unhandled error → error page với "Try Again"
+- [x] Non-existent URL → 404 page
+- [x] Dark-mode compatible
+- [x] `pnpm nx build web` thành công
 
 ---
 
