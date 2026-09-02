@@ -66,4 +66,68 @@ describe('AppController (Health Check Endpoint)', () => {
     assert.strictEqual(result.status, 'degraded');
     assert.strictEqual(statusCodeSet, HttpStatus.SERVICE_UNAVAILABLE);
   });
+
+  it('should return liveness status ok with uptime and timestamp', () => {
+    mockAppService = {
+      getLiveness: () => ({
+        status: 'ok' as const,
+        service: 'sales-copilot-api',
+        uptime: 100,
+        timestamp: new Date().toISOString(),
+      }),
+    };
+
+    controller = new AppController(mockAppService as AppService);
+    const result = controller.getLiveness();
+
+    assert.strictEqual(result.status, 'ok');
+    assert.strictEqual(result.service, 'sales-copilot-api');
+    assert.strictEqual(typeof result.uptime, 'number');
+  });
+
+  it('should return readiness status and 200 when all dependencies and migrations are ready', async () => {
+    mockAppService = {
+      getReadiness: async () => ({
+        status: 'ok' as const,
+        service: 'sales-copilot-api',
+        version: '0.1.0',
+        uptime: 100,
+        timestamp: new Date().toISOString(),
+        checks: {
+          database: { status: 'up', latencyMs: 2, migrationsApplied: true, migrationCount: 2 },
+          redis: { status: 'up', latencyMs: 1 },
+          storage: { status: 'up', latencyMs: 5 },
+        },
+      }),
+    };
+
+    controller = new AppController(mockAppService as AppService);
+    const result = await controller.getReadiness(mockResponse);
+
+    assert.strictEqual(result.status, 'ok');
+    assert.strictEqual(statusCodeSet, null); // Passthrough retains 200
+  });
+
+  it('should set HTTP 503 SERVICE_UNAVAILABLE when readiness is down or degraded', async () => {
+    mockAppService = {
+      getReadiness: async () => ({
+        status: 'down' as const,
+        service: 'sales-copilot-api',
+        version: '0.1.0',
+        uptime: 100,
+        timestamp: new Date().toISOString(),
+        checks: {
+          database: { status: 'down', latencyMs: 0, migrationsApplied: false, error: 'DB down' },
+          redis: { status: 'up', latencyMs: 1 },
+          storage: { status: 'up', latencyMs: 5 },
+        },
+      }),
+    };
+
+    controller = new AppController(mockAppService as AppService);
+    const result = await controller.getReadiness(mockResponse);
+
+    assert.strictEqual(result.status, 'down');
+    assert.strictEqual(statusCodeSet, HttpStatus.SERVICE_UNAVAILABLE);
+  });
 });

@@ -259,4 +259,22 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
       };
     }
   }
+
+  /**
+   * Healthcheck function to verify if database migrations are applied.
+   */
+  public async checkMigrations(): Promise<{ applied: boolean; count?: number; error?: string }> {
+    try {
+      const result = await this._rootClient.$queryRaw<{ count: number }[]>`
+        SELECT count(*)::int as count FROM "_prisma_migrations" WHERE "finished_at" IS NOT NULL AND "rolled_back_at" IS NULL
+      `;
+      const count = Number(result[0]?.count ?? 0);
+      return { applied: count > 0, count };
+    } catch (err) {
+      return {
+        applied: false,
+        error: (err as Error)?.message || 'Database migrations check failed',
+      };
+    }
+  }
 }

@@ -137,4 +137,30 @@ describe('PrismaService (Database & Ambient Transaction Manager)', () => {
     assert.strictEqual(health.status, 'down');
     assert.strictEqual(health.error, 'Connection refused');
   });
+
+  it('should return applied: true when migrations are present', async () => {
+    mockPrismaClient.$queryRaw = async () => [{ count: 2 }];
+
+    const result = await prismaService.checkMigrations();
+    assert.strictEqual(result.applied, true);
+    assert.strictEqual(result.count, 2);
+  });
+
+  it('should return applied: false when migrations count is 0', async () => {
+    mockPrismaClient.$queryRaw = async () => [{ count: 0 }];
+
+    const result = await prismaService.checkMigrations();
+    assert.strictEqual(result.applied, false);
+    assert.strictEqual(result.count, 0);
+  });
+
+  it('should return applied: false and error message when query fails', async () => {
+    mockPrismaClient.$queryRaw = async () => {
+      throw new Error('Table _prisma_migrations does not exist');
+    };
+
+    const result = await prismaService.checkMigrations();
+    assert.strictEqual(result.applied, false);
+    assert.strictEqual(result.error, 'Table _prisma_migrations does not exist');
+  });
 });

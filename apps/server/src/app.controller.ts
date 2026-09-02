@@ -21,4 +21,28 @@ export class AppController {
     }
     return health;
   }
+
+  @Public()
+  @Get('live')
+  @ApiOperation({ summary: 'Liveness probe endpoint' })
+  @ApiResponse({ status: 200, description: 'Process is alive' })
+  getLiveness() {
+    return this.appService.getLiveness();
+  }
+
+  @Public()
+  @Get('ready')
+  @ApiOperation({ summary: 'Readiness probe endpoint' })
+  @ApiResponse({ status: 200, description: 'Service is ready to handle traffic' })
+  @ApiResponse({
+    status: 503,
+    description: 'Service is not ready (dependencies down or migrations pending)',
+  })
+  async getReadiness(@Res({ passthrough: true }) res: Response) {
+    const readiness = await this.appService.getReadiness();
+    if (readiness.status !== 'ok') {
+      res.status(HttpStatus.SERVICE_UNAVAILABLE);
+    }
+    return readiness;
+  }
 }
