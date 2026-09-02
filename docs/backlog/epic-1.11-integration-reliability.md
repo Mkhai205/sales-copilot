@@ -491,9 +491,9 @@ graph TD
 - **[NEW]** `apps/server/test/e2e/helpers/ws-client.ts`: Class `TestWebSocketClient` with `connect()`, `joinWorkspace()`, `waitForEvent<T>(eventName, timeout?, predicate?)`, `getReceivedEvents()`, `disconnect()`.
 
 **Acceptance Criteria**:
-- [ ] `connect()` authenticate với JWT token
-- [ ] `waitForEvent()` resolve khi nhận event, reject on timeout
-- [ ] `disconnect()` cleanup không leak
+- [x] `connect()` authenticate với JWT token
+- [x] `waitForEvent()` resolve khi nhận event, reject on timeout
+- [x] `disconnect()` cleanup không leak
 
 ---
 
