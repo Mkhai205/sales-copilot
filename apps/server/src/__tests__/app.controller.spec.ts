@@ -56,6 +56,10 @@ describe('AppController (Health Check Endpoint)', () => {
           database: { status: 'up' },
           redis: { status: 'down', error: 'Connection refused' },
           storage: { status: 'up' },
+          queues: {
+            channelIngestion: { status: 'ok' },
+            webhookDelivery: { status: 'ok' },
+          },
         },
       }),
     };
@@ -64,6 +68,33 @@ describe('AppController (Health Check Endpoint)', () => {
     const result = await controller.getHealth(mockResponse);
 
     assert.strictEqual(result.status, 'degraded');
+    assert.strictEqual(statusCodeSet, HttpStatus.SERVICE_UNAVAILABLE);
+  });
+
+  it('should set HTTP 503 SERVICE_UNAVAILABLE when dependencies are down', async () => {
+    mockAppService = {
+      getHealth: async () => ({
+        status: 'down' as const,
+        service: 'sales-copilot-api',
+        version: '0.1.0',
+        uptime: 100,
+        timestamp: new Date().toISOString(),
+        dependencies: {
+          database: { status: 'down', error: 'Database connection failed' },
+          redis: { status: 'up' },
+          storage: { status: 'up' },
+          queues: {
+            channelIngestion: { status: 'ok' },
+            webhookDelivery: { status: 'ok' },
+          },
+        },
+      }),
+    };
+
+    controller = new AppController(mockAppService as AppService);
+    const result = await controller.getHealth(mockResponse);
+
+    assert.strictEqual(result.status, 'down');
     assert.strictEqual(statusCodeSet, HttpStatus.SERVICE_UNAVAILABLE);
   });
 
@@ -97,6 +128,10 @@ describe('AppController (Health Check Endpoint)', () => {
           database: { status: 'up', latencyMs: 2, migrationsApplied: true, migrationCount: 2 },
           redis: { status: 'up', latencyMs: 1 },
           storage: { status: 'up', latencyMs: 5 },
+          queues: {
+            channelIngestion: { status: 'ok' },
+            webhookDelivery: { status: 'ok' },
+          },
         },
       }),
     };
@@ -108,7 +143,7 @@ describe('AppController (Health Check Endpoint)', () => {
     assert.strictEqual(statusCodeSet, null); // Passthrough retains 200
   });
 
-  it('should set HTTP 503 SERVICE_UNAVAILABLE when readiness is down or degraded', async () => {
+  it('should set HTTP 503 SERVICE_UNAVAILABLE when readiness is down', async () => {
     mockAppService = {
       getReadiness: async () => ({
         status: 'down' as const,
@@ -120,6 +155,10 @@ describe('AppController (Health Check Endpoint)', () => {
           database: { status: 'down', latencyMs: 0, migrationsApplied: false, error: 'DB down' },
           redis: { status: 'up', latencyMs: 1 },
           storage: { status: 'up', latencyMs: 5 },
+          queues: {
+            channelIngestion: { status: 'ok' },
+            webhookDelivery: { status: 'ok' },
+          },
         },
       }),
     };
@@ -128,6 +167,33 @@ describe('AppController (Health Check Endpoint)', () => {
     const result = await controller.getReadiness(mockResponse);
 
     assert.strictEqual(result.status, 'down');
+    assert.strictEqual(statusCodeSet, HttpStatus.SERVICE_UNAVAILABLE);
+  });
+
+  it('should set HTTP 503 SERVICE_UNAVAILABLE when readiness is degraded', async () => {
+    mockAppService = {
+      getReadiness: async () => ({
+        status: 'degraded' as const,
+        service: 'sales-copilot-api',
+        version: '0.1.0',
+        uptime: 100,
+        timestamp: new Date().toISOString(),
+        checks: {
+          database: { status: 'up', latencyMs: 2, migrationsApplied: true, migrationCount: 2 },
+          redis: { status: 'down', latencyMs: 0, error: 'Redis down' },
+          storage: { status: 'up', latencyMs: 5 },
+          queues: {
+            channelIngestion: { status: 'ok' },
+            webhookDelivery: { status: 'ok' },
+          },
+        },
+      }),
+    };
+
+    controller = new AppController(mockAppService as AppService);
+    const result = await controller.getReadiness(mockResponse);
+
+    assert.strictEqual(result.status, 'degraded');
     assert.strictEqual(statusCodeSet, HttpStatus.SERVICE_UNAVAILABLE);
   });
 });

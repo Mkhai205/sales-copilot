@@ -269,9 +269,9 @@ graph TD
 - **[NEW]** `apps/server/src/__tests__/app.service.spec.ts`: Unit tests cho `getHealth()`, `getLiveness()`, `getReadiness()` với mocked dependencies. Test 4 scenarios: all OK → `ok`, DB down → `down`, Redis down → `degraded`, queue error → `degraded`.
 
 **Acceptance Criteria**:
-- [ ] ≥ 6 test cases covering healthy/degraded/down states
-- [ ] Mock dependencies, không cần real DB/Redis
-- [ ] Tests pass với `pnpm nx test server`
+- [x] ≥ 6 test cases covering healthy/degraded/down states
+- [x] Mock dependencies, không cần real DB/Redis
+- [x] Tests pass với `pnpm nx test server`
 
 ---
 
