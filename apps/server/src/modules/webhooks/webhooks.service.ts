@@ -61,10 +61,13 @@ export class WebhooksService {
       const candidateId =
         body.event_id ||
         body.eventId ||
+        body.externalMessageId ||
+        body.external_message_id ||
         body.entry?.[0]?.messaging?.[0]?.message?.mid ||
         body.entry?.[0]?.messaging?.[0]?.delivery?.mids?.[0] ||
         body.update_id ||
         body.message_id ||
+        body.messageId ||
         body.id ||
         body.entry?.[0]?.id;
 
@@ -258,7 +261,7 @@ export class WebhooksService {
         ...(requestId ? { requestId: String(requestId) } : {}),
       },
       {
-        jobId: `${channelId}:${channelEvent.id}`,
+        jobId: `${channelId}_${channelEvent.id}`,
         attempts: 3,
         backoff: {
           type: 'exponential',

@@ -507,10 +507,10 @@ graph TD
 - **[NEW]** `apps/server/test/e2e/inbound-message.e2e-spec.ts`: POST webhook → assert DB (Contact, ChannelIdentity, Conversation, Message) → assert WebSocket events.
 
 **Acceptance Criteria**:
-- [ ] Complete flow webhook → DB → WebSocket verified
-- [ ] Contact deduplication working
-- [ ] Conversation status = OPEN
-- [ ] WebSocket events received by agent
+- [x] Complete flow webhook → DB → WebSocket verified
+- [x] Contact deduplication working
+- [x] Conversation status = OPEN
+- [x] WebSocket events received by agent
 
 ---
 

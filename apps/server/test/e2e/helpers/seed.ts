@@ -9,6 +9,8 @@ import {
   PrismaService,
 } from '../../../src/infrastructure/database';
 
+import { ChannelCredentialService } from '../../../src/modules/inboxes/channel-credential.service';
+
 export interface SeedTestContext {
   testRunId: string;
   adminUser: User;
@@ -18,12 +20,14 @@ export interface SeedTestContext {
   workspace: Workspace;
   inbox: Inbox;
   channel: Channel;
+  plainCredentials: Record<string, any>;
   contact: Contact;
   channelIdentity: ChannelIdentity;
 }
 
 export interface SeedOptions {
   channelType?: 'WEB_CHAT' | 'FACEBOOK_MESSENGER' | 'TELEGRAM' | 'ZALO' | 'EMAIL';
+  channelCredentials?: Record<string, any>;
   autoAssign?: boolean;
 }
 
@@ -113,13 +117,29 @@ export async function seedTestData(
   // 6. Create Channel attached to Inbox
   const channelType = options?.channelType ?? 'WEB_CHAT';
   const providerAccountId = `e2e-provider-${testRunId}`;
+
+  const credentialService = new ChannelCredentialService({
+    get: (key: string) =>
+      key === 'CHANNEL_ENCRYPTION_KEY'
+        ? process.env.CHANNEL_ENCRYPTION_KEY ||
+          '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'
+        : undefined,
+  } as any);
+
+  const plainCredentials = options?.channelCredentials ?? {
+    widgetToken: `token-${testRunId}`,
+    mockSecret: 'test-secret',
+  };
+
+  const encrypted = credentialService.encrypt(plainCredentials);
+
   const channel = await client.channel.create({
     data: {
       workspaceId: workspace.id,
       inboxId: inbox.id,
       channelType: channelType as any,
       providerAccountId,
-      credentials: { mockSecret: 'test-secret', mockToken: 'test-token' },
+      credentials: { encrypted },
       isConnected: true,
     },
   });
@@ -155,6 +175,7 @@ export async function seedTestData(
     workspace,
     inbox,
     channel,
+    plainCredentials,
     contact,
     channelIdentity,
   };
@@ -194,7 +215,11 @@ export async function cleanupTestData(
       where: { workspaceId },
     });
 
-    // 5. Delete channels and inboxes
+    // 5. Delete channel events & channels and inboxes
+    await client.channelEvent.deleteMany({
+      where: { channel: { workspaceId } },
+    });
+
     await client.channel.deleteMany({
       where: { workspaceId },
     });
