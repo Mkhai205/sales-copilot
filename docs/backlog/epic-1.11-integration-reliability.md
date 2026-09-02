@@ -474,10 +474,10 @@ graph TD
 - **[MODIFY]** `apps/server/project.json`: Thêm target `test:e2e`
 
 **Acceptance Criteria**:
-- [ ] `createTestApp()` boot full NestJS app
-- [ ] `seedTestData()` / `cleanupTestData()` work
-- [ ] `loginAsAgent()` return valid auth cookies
-- [ ] `pnpm nx test:e2e server` target works
+- [x] `createTestApp()` boot full NestJS app
+- [x] `seedTestData()` / `cleanupTestData()` work
+- [x] `loginAsAgent()` return valid auth cookies
+- [x] `pnpm nx test:e2e server` target works
 
 ---
 

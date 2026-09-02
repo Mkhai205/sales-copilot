@@ -48,6 +48,12 @@
       "options": {
         "command": "node --env-file=apps/server/.env -r @swc-node/register --test apps/server/test/integration/**/*.spec.ts"
       }
+    },
+    "test:e2e": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node --experimental-vm-modules --env-file=apps/server/.env apps/server/node_modules/jest/bin/jest.js --config apps/server/test/e2e/jest-e2e.config.ts --runInBand --detectOpenHandles --forceExit"
+      }
     }
   }
 }
