@@ -524,9 +524,9 @@ graph TD
 - **[NEW]** `apps/server/test/e2e/agent-reply.e2e-spec.ts`: POST message → assert DB → assert WebSocket.
 
 **Acceptance Criteria**:
-- [ ] Agent reply saved in DB
-- [ ] Message linked to conversation + agent
-- [ ] WebSocket `message.created` broadcast
+- [x] Agent reply saved in DB
+- [x] Message linked to conversation + agent
+- [x] WebSocket `message.created` broadcast
 
 ---
 
