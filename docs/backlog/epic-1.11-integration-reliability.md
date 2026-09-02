@@ -448,10 +448,10 @@ graph TD
 - **[NEW]** `apps/server/src/__tests__/security-headers.spec.ts`: Test security headers
 
 **Acceptance Criteria**:
-- [ ] JWT expiration configured đúng policy
-- [ ] Cookies set with httpOnly, Secure, SameSite
-- [ ] All Helmet security headers present
-- [ ] Security headers test pass
+- [x] JWT expiration configured đúng policy
+- [x] Cookies set with httpOnly, Secure, SameSite
+- [x] All Helmet security headers present
+- [x] Security headers test pass
 
 ---
 

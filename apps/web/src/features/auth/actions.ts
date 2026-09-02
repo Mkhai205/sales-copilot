@@ -5,6 +5,8 @@ import { redirect } from 'next/navigation';
 import { API_BASE } from '@/lib/api/client';
 import type { LoginDto, LoginResponseDto, UserWorkspaceDto } from '@sales-copilot/shared-contracts';
 
+const REFRESH_TOKEN_MAX_AGE = 7 * 24 * 60 * 60; // 7 days (matching REFRESH_TOKEN_EXPIRES_IN_SECONDS: 604800)
+
 export interface ActionResult<T = unknown> {
   success: boolean;
   data?: T;
@@ -58,7 +60,7 @@ export async function loginAction(
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 30 * 24 * 60 * 60, // 30 days
+      maxAge: REFRESH_TOKEN_MAX_AGE,
       path: '/',
     });
 
@@ -149,7 +151,7 @@ export async function getSocketTokenAction(): Promise<string | null> {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 30 * 24 * 60 * 60,
+      maxAge: REFRESH_TOKEN_MAX_AGE,
       path: '/',
     });
 
@@ -203,7 +205,7 @@ export async function refreshSessionAction(): Promise<string | null> {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 30 * 24 * 60 * 60,
+      maxAge: REFRESH_TOKEN_MAX_AGE,
       path: '/',
     });
 
