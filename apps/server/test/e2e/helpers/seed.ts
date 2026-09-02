@@ -200,6 +200,11 @@ export async function cleanupTestData(
       where: { conversation: { workspaceId } },
     });
 
+    // Clean up operations & automation
+    await client.automationRule.deleteMany({ where: { workspaceId } });
+    await client.auditLog.deleteMany({ where: { workspaceId } });
+    await client.label.deleteMany({ where: { workspaceId } });
+
     // 2. Delete conversations (if any were created)
     await client.conversation.deleteMany({
       where: { workspaceId },

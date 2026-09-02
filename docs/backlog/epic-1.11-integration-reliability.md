@@ -540,10 +540,10 @@ graph TD
 - **[NEW]** `apps/server/test/e2e/assignment-automation.e2e-spec.ts`: Scenario 3 (round-robin assignment) + Scenario 4 (rule conditions → actions execute).
 
 **Acceptance Criteria**:
-- [ ] Auto-assignment via round-robin
-- [ ] WebSocket notification to assigned agent
-- [ ] Automation rule evaluates + executes actions
-- [ ] AuditLog records
+- [x] Auto-assignment via round-robin
+- [x] WebSocket notification to assigned agent
+- [x] Automation rule evaluates + executes actions
+- [x] AuditLog records
 
 ---
 
