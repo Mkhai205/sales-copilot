@@ -1,0 +1,2 @@
+# Credentials file contains sensitive tunnel token
+*.json

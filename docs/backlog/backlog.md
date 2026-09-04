@@ -33,7 +33,7 @@ Toàn bộ các Epic của **Phase 1: Conversation Platform Core** được qu�
 | **Epic 1.8** | **Assignment, Labels & Canned Responses** | Round-Robin auto-assignment, Manual assignment, Canned Responses shortcode search, Audit Logging | [📄 `epic-1.8-assignment-operations.md`](./epic-1.8-assignment-operations.md) | ✅ **Done** |
 | **Epic 1.9** | **Automation Rules & Outbound Webhooks** | Automation Rules Engine (trigger-condition-action DSL), Rule Evaluator & Executor, Outbound Webhook Subscriptions, Webhook Delivery & Retry | [📄 `epic-1.9-automation-webhooks.md`](./epic-1.9-automation-webhooks.md) | ✅ **Done** |
 | **Epic 1.10** | **Frontend Dashboard (Next.js)** | Next.js 16 App Shell, 3-column Realtime Conversation view, Live chat composer, Workspace administration settings | [📄 `epic-1.10-frontend-dashboard.md`](./epic-1.10-frontend-dashboard.md) | ✅ **Done** |
-| **Epic 1.11** | **Integration & Reliability** | Vertical Slice E2E tests, Healthchecks, Structured JSON Logging, Security Hardening | [📄 `epic-1.11-integration-reliability.md`](./epic-1.11-integration-reliability.md) | 🟡 **Ready** |
+| **Epic 1.11** | **Integration & Reliability** | Vertical Slice E2E tests, Healthchecks, Structured JSON Logging, Security Hardening | [📄 `epic-1.11-integration-reliability.md`](./epic-1.11-integration-reliability.md) | ✅ **Done** |
 
 ---
 
@@ -74,7 +74,7 @@ Quy trình triển khai tuân thủ nghiêm ngặt đồ thị phụ thuộc (DA
                [Epic 1.10: Frontend Dashboard (Next.js)] ✅
                                 │
                                 ▼
-               [Epic 1.11: Integration & Reliability]
+               [Epic 1.11: Integration & Reliability] ✅
 ```
 
 ---

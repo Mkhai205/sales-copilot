@@ -261,7 +261,7 @@ describe('Inbound Webhook Ingestion Pipeline (Feature F-1.3.4 & BullMQ Stub)', (
       assert.strictEqual(dispatchedJobs[0].name, 'process-channel-event');
       assert.strictEqual(dispatchedJobs[0].data.channelId, mockChannelId);
       assert.strictEqual(dispatchedJobs[0].data.channelEventId, result.eventId);
-      assert.strictEqual(dispatchedJobs[0].opts.jobId, `${mockChannelId}:${result.eventId}`);
+      assert.strictEqual(dispatchedJobs[0].opts.jobId, `${mockChannelId}_${result.eventId}`);
       assert.strictEqual(dispatchedJobs[0].opts.attempts, 3);
     });
 

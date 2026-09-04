@@ -55,6 +55,20 @@ services:
     networks:
       - sales_copilot_net
 
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    command: tunnel run
+    volumes:
+      - ./config/cloudflared/config.yml:/etc/cloudflared/config.yml:ro
+      - ./config/cloudflared/credentials.json:/etc/cloudflared/credentials.json:ro
+    depends_on:
+      - minio
+    networks:
+      - sales_copilot_net
+    profiles:
+      - tunnel
+    restart: unless-stopped
+
 volumes:
   postgres_data:
     driver: local

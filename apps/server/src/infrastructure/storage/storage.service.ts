@@ -22,32 +22,48 @@ export type StorageUploadBody = Buffer | Uint8Array | Readable | Blob | string;
 export class StorageService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(StorageService.name);
   private readonly s3Client: S3Client;
+  private readonly signerClient: S3Client;
   private readonly endpoint: string;
   private readonly publicEndpoint: string;
   private readonly bucketName: string;
   private readonly presignedUrlExpiresInSeconds: number;
 
   constructor(private readonly configService: ConfigService) {
-    this.endpoint = this.configService.getOrThrow<string>('STORAGE_ENDPOINT');
-    this.publicEndpoint = this.configService.getOrThrow<string>('STORAGE_PUBLIC_ENDPOINT');
+    this.endpoint = this.configService.getOrThrow<string>('STORAGE_ENDPOINT').replace(/\/+$/, '');
+    this.publicEndpoint = this.configService
+      .getOrThrow<string>('STORAGE_PUBLIC_ENDPOINT')
+      .replace(/\/+$/, '');
     this.bucketName = this.configService.getOrThrow<string>('STORAGE_BUCKETS');
     this.presignedUrlExpiresInSeconds = this.configService.get<number>(
       'STORAGE_PRESIGNED_URL_EXPIRES_IN_SECONDS',
       900,
     );
 
+    const region = this.configService.get<string>('STORAGE_REGION', 'us-east-1');
+    const credentials = {
+      accessKeyId: this.configService.getOrThrow<string>('STORAGE_ACCESS_KEY'),
+      secretAccessKey: this.configService.getOrThrow<string>('STORAGE_SECRET_KEY'),
+    };
+
     this.s3Client = new S3Client({
       endpoint: this.endpoint,
-      region: this.configService.get<string>('STORAGE_REGION', 'us-east-1'),
+      region,
       forcePathStyle: true, // Required for MinIO
-      credentials: {
-        accessKeyId: this.configService.getOrThrow<string>('STORAGE_ACCESS_KEY'),
-        secretAccessKey: this.configService.getOrThrow<string>('STORAGE_SECRET_KEY'),
-      },
+      credentials,
     });
 
+    this.signerClient =
+      this.endpoint === this.publicEndpoint
+        ? this.s3Client
+        : new S3Client({
+            endpoint: this.publicEndpoint,
+            region,
+            forcePathStyle: true,
+            credentials,
+          });
+
     this.logger.log(
-      `Initialized S3 client with endpoint: ${this.endpoint}, bucket: ${this.bucketName}`,
+      `Initialized S3 client with endpoint: ${this.endpoint}, publicEndpoint: ${this.publicEndpoint}, bucket: ${this.bucketName}`,
     );
   }
 
@@ -59,6 +75,9 @@ export class StorageService implements OnModuleInit, OnModuleDestroy {
   onModuleDestroy(): void {
     try {
       this.s3Client.destroy();
+      if (this.signerClient !== this.s3Client) {
+        this.signerClient.destroy();
+      }
       this.logger.log('🔌 S3 client destroyed gracefully');
     } catch (err) {
       this.logger.error('Error destroying S3 client:', err);
@@ -194,7 +213,7 @@ export class StorageService implements OnModuleInit, OnModuleDestroy {
       Key: key,
     });
 
-    return getSignedUrl(this.s3Client, command, {
+    return getSignedUrl(this.signerClient, command, {
       expiresIn: expires,
     });
   }
