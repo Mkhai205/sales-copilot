@@ -11,6 +11,7 @@ import {
   Param,
   Post,
   Query,
+  Req,
   Res,
   UseGuards,
   forwardRef,
@@ -19,7 +20,7 @@ import { ConfigService } from '@nestjs/config';
 import { Throttle } from '@nestjs/throttler';
 import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import * as crypto from 'crypto';
-import type { Response } from 'express';
+import type { Request, Response } from 'express';
 import { WorkspaceRole } from '@sales-copilot/shared-contracts';
 import { Public } from '../../modules/auth';
 import { CurrentWorkspace, Roles } from '../../modules/workspaces/decorators';
@@ -194,6 +195,7 @@ export class FacebookController {
     @Body() body: any,
     @Headers() headers: Record<string, any>,
     @Query() query: Record<string, any>,
+    @Req() req?: Request,
   ): Promise<{ success: boolean }> {
     // 1. Verify HMAC signature using platform-level FB_APP_SECRET
     const appSecret = this.configService.get<string>('FB_APP_SECRET');
@@ -206,8 +208,10 @@ export class FacebookController {
       }
 
       const headerValue = Array.isArray(signatureHeader) ? signatureHeader[0] : signatureHeader;
-      const bodyString = typeof body === 'string' ? body : JSON.stringify(body);
-      const expectedHash = crypto.createHmac('sha256', appSecret).update(bodyString).digest('hex');
+      const rawPayload =
+        (req as any)?.rawBody ||
+        Buffer.from(typeof body === 'string' ? body : JSON.stringify(body));
+      const expectedHash = crypto.createHmac('sha256', appSecret).update(rawPayload).digest('hex');
 
       const receivedHash = headerValue?.startsWith('sha256=') ? headerValue.slice(7) : headerValue;
 
@@ -268,6 +272,7 @@ export class FacebookController {
           singleEntryPayload,
           headers,
           query,
+          { skipSignatureVerification: true },
         );
       } catch (err) {
         this.logger.error(

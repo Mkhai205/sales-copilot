@@ -36,7 +36,7 @@ import { pinoRedactConfig } from './common/logging';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: ['.env', '.env.local'],
+      envFilePath: ['.env', '.env.local', 'apps/server/.env', 'apps/server/.env.local'],
       cache: true,
       validate: validateEnv,
     }),

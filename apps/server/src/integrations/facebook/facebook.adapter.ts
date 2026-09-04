@@ -346,8 +346,37 @@ export class FacebookAdapter implements ChannelAdapter {
           }
 
           // Parse attachments
+          let fallbackLinkPreview: { url: string; title?: string } | undefined;
           if (Array.isArray(msg.attachments) && msg.attachments.length > 0) {
+            const seenAttachmentKeys = new Set<string>();
+
             for (const att of msg.attachments) {
+              // Extract Facebook's OpenGraph link preview / fallback attachments
+              if (att.type === 'fallback') {
+                if (att.payload?.url) {
+                  let targetUrl = att.payload.url;
+                  try {
+                    const parsedUrl = new URL(targetUrl);
+                    if (
+                      parsedUrl.hostname.includes('facebook.com') &&
+                      parsedUrl.searchParams.has('u')
+                    ) {
+                      targetUrl = parsedUrl.searchParams.get('u') || targetUrl;
+                    }
+                  } catch {
+                    // Fallback to raw targetUrl if URL cannot be parsed
+                  }
+
+                  if (!fallbackLinkPreview) {
+                    fallbackLinkPreview = {
+                      url: targetUrl,
+                      title: att.payload.title,
+                    };
+                  }
+                }
+                continue;
+              }
+
               if (att.type === 'location' && att.payload?.coordinates) {
                 const lat = att.payload.coordinates.lat;
                 const long = att.payload.coordinates.long;
@@ -356,10 +385,19 @@ export class FacebookAdapter implements ChannelAdapter {
                   content = locText;
                 }
               } else if (att.payload?.url) {
+                // Deduplicate if Facebook sends same URL or sticker_id multiple times (e.g. image + sticker)
+                const dedupKey = att.payload.sticker_id
+                  ? `sticker_${att.payload.sticker_id}`
+                  : att.payload.url;
+                if (seenAttachmentKeys.has(dedupKey)) {
+                  continue;
+                }
+                seenAttachmentKeys.add(dedupKey);
+
                 let mappedType: MessageContentType = MessageContentType.FILE;
                 const attTypeLower = att.type.toLowerCase();
 
-                if (attTypeLower === 'image') {
+                if (attTypeLower === 'image' || attTypeLower === 'sticker') {
                   mappedType = MessageContentType.IMAGE;
                 } else if (attTypeLower === 'video') {
                   mappedType = MessageContentType.VIDEO;
@@ -393,7 +431,10 @@ export class FacebookAdapter implements ChannelAdapter {
             contentType,
             attachments: attachments.length > 0 ? attachments : undefined,
             timestamp,
-            rawPayload: messaging as unknown as Record<string, unknown>,
+            rawPayload: {
+              ...(messaging as unknown as Record<string, unknown>),
+              ...(fallbackLinkPreview ? { linkPreview: fallbackLinkPreview } : {}),
+            },
           });
         }
 
@@ -796,6 +837,26 @@ export class FacebookAdapter implements ChannelAdapter {
       return response.ok && !data.error && data.recipient_id !== undefined;
     } catch {
       return false;
+    }
+  }
+
+  /**
+   * Fetches sender's user profile (name, avatar) from Facebook Graph API via PSID.
+   */
+  async fetchSenderInfo(
+    channel: ChannelContext,
+    externalContactId: string,
+  ): Promise<InboundSenderInfo | null> {
+    try {
+      const pageAccessToken = this.extractPageAccessToken(channel.credentials);
+      const graphVersion =
+        (channel.settings?.graphApiVersion as string) || this.defaultGraphApiVersion;
+      return await this.fetchUserProfile(pageAccessToken, externalContactId, graphVersion);
+    } catch (err) {
+      this.logger.debug(
+        `Failed to fetch sender profile for PSID '${externalContactId}': ${(err as Error).message}`,
+      );
+      return null;
     }
   }
 }

@@ -4,6 +4,7 @@ import {
   Injectable,
   Logger,
   NotFoundException,
+  Optional,
 } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import type {
@@ -23,7 +24,9 @@ import {
 import { PrismaService } from '../../infrastructure/database';
 import { sanitizeMessageContent } from '../../common/utils';
 import { AttachmentsService, UploadedFile } from './attachments.service';
+import { StorageService } from '../../infrastructure/storage/storage.service';
 import { mapMessageToDto, MessageWithRelations } from './messages.mapper';
+import { LinkPreviewService } from '../conversations/link-preview.service';
 
 @Injectable()
 export class MessagesService {
@@ -33,6 +36,8 @@ export class MessagesService {
     private readonly prisma: PrismaService,
     private readonly eventEmitter: EventEmitter2,
     private readonly attachmentsService: AttachmentsService,
+    @Optional() private readonly storageService?: StorageService,
+    @Optional() private readonly linkPreviewService?: LinkPreviewService,
   ) {}
 
   /**
@@ -172,6 +177,39 @@ export class MessagesService {
 
     const isPrivate = dto.isPrivate ?? false;
 
+    // 5.5 Extract or enrich Link Preview metadata if content contains URLs
+    let linkPreview = (dto.metadata as any)?.linkPreview;
+    if (this.linkPreviewService) {
+      if (linkPreview?.url && (!linkPreview.image || !linkPreview.description)) {
+        try {
+          const enriched = await this.linkPreviewService.getPreview(linkPreview.url);
+          if (enriched && (enriched.title || enriched.image || enriched.description)) {
+            linkPreview = {
+              ...enriched,
+              ...linkPreview,
+              image: linkPreview.image || enriched.image,
+              description: linkPreview.description || enriched.description,
+            };
+          }
+        } catch {
+          // ignore error to avoid failing message creation
+        }
+      } else if (!linkPreview && trimmedContent) {
+        const urlRegex = /(https?:\/\/[^\s<]+[^<.,:;"')\]\s])/i;
+        const urlMatch = trimmedContent.match(urlRegex);
+        if (urlMatch && urlMatch[0]) {
+          try {
+            const scraped = await this.linkPreviewService.getPreview(urlMatch[0]);
+            if (scraped && (scraped.title || scraped.image || scraped.description)) {
+              linkPreview = scraped;
+            }
+          } catch {
+            // ignore error
+          }
+        }
+      }
+    }
+
     // 6. Execute Message Creation + Attachments + Conversation Side-effects
     const executeInTransaction = async (trx: any) => {
       // 6a. Insert Message record
@@ -187,7 +225,10 @@ export class MessagesService {
           isPrivate,
           deliveryStatus,
           externalId: dto.externalId ? dto.externalId.trim() : null,
-          metadata: (dto.metadata as any) ?? {},
+          metadata: {
+            ...((dto.metadata as any) ?? {}),
+            ...(linkPreview ? { linkPreview } : {}),
+          },
         },
       });
 
@@ -532,7 +573,17 @@ export class MessagesService {
       message.senderContact = contact;
     }
 
-    return mapMessageToDto(message);
+    const attachmentUrls = new Map<string, string>();
+    for (const att of message.attachments || []) {
+      const url = att.storagePath?.startsWith('http')
+        ? att.storagePath
+        : this.storageService?.getPublicUrl(att.storagePath);
+      if (url) {
+        attachmentUrls.set(att.id, url);
+      }
+    }
+
+    return mapMessageToDto(message, { attachmentUrls });
   }
 
   /**
@@ -586,7 +637,18 @@ export class MessagesService {
       } else if (msg.senderType === SenderType.CONTACT && msg.senderId) {
         msg.senderContact = contactMap.get(msg.senderId) ?? null;
       }
-      return mapMessageToDto(msg);
+
+      const attachmentUrls = new Map<string, string>();
+      for (const att of msg.attachments || []) {
+        const url = att.storagePath?.startsWith('http')
+          ? att.storagePath
+          : this.storageService?.getPublicUrl(att.storagePath);
+        if (url) {
+          attachmentUrls.set(att.id, url);
+        }
+      }
+
+      return mapMessageToDto(msg, { attachmentUrls });
     });
   }
 }

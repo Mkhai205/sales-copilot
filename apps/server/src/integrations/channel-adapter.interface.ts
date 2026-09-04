@@ -3,6 +3,7 @@ import {
   ChannelContext,
   ChannelInfo,
   InboundMessagePayload,
+  InboundSenderInfo,
   OutboundMessagePayload,
   SendMessageResult,
   WebhookVerificationRequest,
@@ -58,4 +59,16 @@ export interface ChannelAdapter {
    * @returns Channel information
    */
   getChannelInfo(channel: ChannelContext): Promise<ChannelInfo>;
+
+  /**
+   * Fetches sender's user profile (e.g. Full Name, Avatar URL) from the channel provider.
+   *
+   * @param channel Channel context including decrypted access tokens
+   * @param externalContactId External user identifier (e.g. Facebook PSID, Telegram user ID)
+   * @returns Sender information or null if unavailable
+   */
+  fetchSenderInfo?(
+    channel: ChannelContext,
+    externalContactId: string,
+  ): Promise<InboundSenderInfo | null>;
 }

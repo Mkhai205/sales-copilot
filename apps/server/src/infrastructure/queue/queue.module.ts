@@ -6,6 +6,7 @@ import { DatabaseModule } from '../database';
 import { ContactsModule } from '../../modules/contacts';
 import { ConversationsModule } from '../../modules/conversations';
 import { MessagesModule } from '../../modules/messages';
+import { InboxesModule } from '../../modules/inboxes';
 
 import { WebhookDeliveryProcessor, WEBHOOK_DELIVERY_QUEUE } from './webhook-delivery.processor';
 
@@ -19,6 +20,7 @@ export { WEBHOOK_DELIVERY_QUEUE };
     ContactsModule,
     ConversationsModule,
     MessagesModule,
+    InboxesModule,
     BullModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {

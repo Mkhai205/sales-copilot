@@ -15,6 +15,7 @@ import { StorageService } from '../storage/storage.service';
 import { ContactResolutionService } from '../../modules/contacts/contact-resolution.service';
 import { ConversationsService } from '../../modules/conversations/conversations.service';
 import { MessagesService } from '../../modules/messages/messages.service';
+import { ChannelCredentialService } from '../../modules/inboxes/channel-credential.service';
 import { ChannelAdapterRegistry } from '../../integrations/channel-adapter.registry';
 import type { InboundMessagePayload } from '../../integrations/channel-adapter.types';
 
@@ -38,8 +39,38 @@ export class ChannelIngestionProcessor extends WorkerHost {
     private readonly messagesService: MessagesService,
     @Optional() private readonly adapterRegistry?: ChannelAdapterRegistry,
     @Optional() private readonly storageService?: StorageService,
+    @Optional() private readonly credentialService?: ChannelCredentialService,
   ) {
     super();
+  }
+
+  /**
+   * Helper to safely decrypt channel credentials.
+   */
+  private decryptCredentials(credentials: unknown): Record<string, unknown> {
+    if (!credentials) return {};
+    if (typeof credentials === 'object' && credentials !== null) {
+      if ('encrypted' in credentials && typeof (credentials as any).encrypted === 'string') {
+        if (this.credentialService) {
+          try {
+            return this.credentialService.decrypt((credentials as any).encrypted);
+          } catch (err) {
+            this.logger.warn(`Failed to decrypt channel credentials: ${(err as Error).message}`);
+            return {};
+          }
+        }
+      }
+      return credentials as Record<string, unknown>;
+    }
+    if (typeof credentials === 'string' && this.credentialService) {
+      try {
+        return this.credentialService.decrypt(credentials);
+      } catch (err) {
+        this.logger.warn(`Failed to decrypt channel credentials string: ${(err as Error).message}`);
+        return {};
+      }
+    }
+    return {};
   }
 
   /**
@@ -214,7 +245,45 @@ export class ChannelIngestionProcessor extends WorkerHost {
           continue;
         }
 
-        // 3b. Resolve Contact & ChannelIdentity
+        // 3b. Enrich sender profile if missing
+        if (
+          (!msg.senderInfo?.name || !msg.senderInfo?.avatarUrl) &&
+          this.adapterRegistry?.has(channel.channelType as ChannelType)
+        ) {
+          try {
+            const adapter = this.adapterRegistry.get(channel.channelType as ChannelType);
+            if (adapter.fetchSenderInfo) {
+              const decryptedCreds = this.decryptCredentials(channel.credentials);
+              const fetchedSender = await adapter.fetchSenderInfo(
+                {
+                  channelId: channel.id,
+                  inboxId: channel.inboxId,
+                  channelType: channel.channelType as ChannelType,
+                  credentials: decryptedCreds,
+                  settings: (channel.settings as Record<string, unknown>) || {},
+                  workspaceId: channel.workspaceId,
+                },
+                msg.externalContactId,
+              );
+              if (fetchedSender) {
+                msg.senderInfo = {
+                  ...msg.senderInfo,
+                  name: fetchedSender.name || msg.senderInfo?.name,
+                  avatarUrl: fetchedSender.avatarUrl || msg.senderInfo?.avatarUrl,
+                  username: fetchedSender.username || msg.senderInfo?.username,
+                  phoneNumber: fetchedSender.phoneNumber || msg.senderInfo?.phoneNumber,
+                  email: fetchedSender.email || msg.senderInfo?.email,
+                };
+              }
+            }
+          } catch (profileErr) {
+            this.logger.debug(
+              `${tracePrefix}Could not enrich sender info from adapter for '${msg.externalContactId}': ${(profileErr as Error).message}`,
+            );
+          }
+        }
+
+        // 3c. Resolve Contact & ChannelIdentity
         const resolution = await this.contactResolutionService.resolveFromChannel({
           workspaceId,
           channelId,

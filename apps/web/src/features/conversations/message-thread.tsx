@@ -12,6 +12,7 @@ import {
   FileText,
   MessageSquare,
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -32,7 +33,6 @@ import { Bubble, BubbleContent } from '@/components/ui/bubble';
 import { Marker, MarkerContent } from '@/components/ui/marker';
 import {
   Attachment,
-  AttachmentGroup,
   AttachmentMedia,
   AttachmentContent,
   AttachmentTitle,
@@ -42,18 +42,24 @@ import {
 } from '@/components/ui/attachment';
 import {
   DeliveryStatus,
-  FileType,
   MessageType,
   SenderType,
   type AttachmentDto,
+  type LinkPreviewData,
   type MessageResponseDto,
 } from '@/lib/api/types';
+import { fetchApi, workspaceHeaders } from '@/lib/api/client';
 import { useConversation } from './hooks/use-conversation';
 import { useMessages } from './hooks/use-messages';
+import { useWorkspaces } from '@/features/workspaces/use-workspaces';
 import { MessageThreadHeader } from './message-thread-header';
 import { TypingIndicator } from './typing-indicator';
 import { ChatComposer } from '@/features/composer';
 import { useConversationRoom } from '@/lib/socket';
+import { RichLinkCard } from './rich-link-card';
+import { ImageLightboxDialog } from './image-lightbox-dialog';
+import { MessageImageGrid, isImageAttachment } from './message-image-grid';
+import { MessageActionsToolbar } from './message-actions-toolbar';
 
 interface MessageThreadProps {
   conversationId: string;
@@ -94,59 +100,119 @@ function renderDeliveryStatusIcon(status: DeliveryStatus) {
   }
 }
 
-function renderMessageAttachments(attachments?: AttachmentDto[]) {
+function renderMessageText(content: string) {
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const parts = content.split(urlRegex);
+
+  return parts.map((part, index) => {
+    if (part.match(urlRegex)) {
+      return (
+        <a
+          key={index}
+          href={part}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline underline-offset-2 hover:opacity-80 break-all text-primary font-medium"
+        >
+          {part}
+        </a>
+      );
+    }
+    return part;
+  });
+}
+
+function renderFileAttachments(attachments?: AttachmentDto[]) {
   if (!attachments || attachments.length === 0) return null;
 
-  const renderSingleAttachment = (att: AttachmentDto) => {
-    const isImage =
-      att.fileType === FileType.IMAGE ||
-      att.contentType?.startsWith('image/') ||
-      /\.(jpg|jpeg|png|webp|gif|svg)$/i.test(att.fileName || '');
-
-    return (
-      <Attachment key={att.id || att.storagePath} size="sm" className="max-w-xs">
-        {isImage && att.fileUrl ? (
-          <AttachmentMedia variant="image" className="size-16 rounded-md">
-            <img src={att.fileUrl} alt={att.fileName} className="size-full object-cover" />
-          </AttachmentMedia>
-        ) : (
+  return (
+    <div className="flex flex-col gap-2 mt-1.5 max-w-full">
+      {attachments.map(att => (
+        <Attachment key={att.id || att.storagePath} size="sm" className="max-w-xs">
           <AttachmentMedia variant="icon">
             <FileText className="size-4 text-muted-foreground" />
           </AttachmentMedia>
-        )}
-        <AttachmentContent>
-          <AttachmentTitle className="text-xs">{att.fileName}</AttachmentTitle>
-          <AttachmentDescription className="text-[10px]">
-            {formatFileSize(att.fileSize)}
-          </AttachmentDescription>
-        </AttachmentContent>
-        {att.fileUrl && (
-          <AttachmentActions>
-            <AttachmentAction asChild size="icon-xs" variant="ghost">
-              <a
-                href={att.fileUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                download={att.fileName}
-              >
-                <Download className="size-3" />
-                <span className="sr-only">Download {att.fileName}</span>
-              </a>
-            </AttachmentAction>
-          </AttachmentActions>
-        )}
-      </Attachment>
-    );
-  };
+          <AttachmentContent>
+            <AttachmentTitle className="text-xs">{att.fileName}</AttachmentTitle>
+            <AttachmentDescription className="text-[10px]">
+              {formatFileSize(att.fileSize)}
+            </AttachmentDescription>
+          </AttachmentContent>
+          {att.fileUrl && (
+            <AttachmentActions>
+              <AttachmentAction asChild size="icon-xs" variant="ghost">
+                <a
+                  href={att.fileUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  download={att.fileName}
+                >
+                  <Download className="size-3" />
+                  <span className="sr-only">Download {att.fileName}</span>
+                </a>
+              </AttachmentAction>
+            </AttachmentActions>
+          )}
+        </Attachment>
+      ))}
+    </div>
+  );
+}
 
-  if (attachments.length === 1) {
-    return <div className="mt-1.5">{renderSingleAttachment(attachments[0])}</div>;
+function MessageLinkPreview({
+  content,
+  previewData,
+  workspaceId,
+  align = 'start',
+}: {
+  content?: string | null;
+  previewData?: LinkPreviewData;
+  workspaceId?: string;
+  align?: 'start' | 'end';
+}) {
+  const [data, setData] = React.useState<LinkPreviewData | undefined>(previewData);
+
+  React.useEffect(() => {
+    if (previewData && (previewData.title || previewData.image || previewData.description)) {
+      setData(previewData);
+      return;
+    }
+
+    if (!content) return;
+    const urlRegex = /(https?:\/\/[^\s<]+[^<.,:;"')\]\s])/i;
+    const match = content.match(urlRegex);
+    if (!match || !match[0]) return;
+
+    const url = match[0];
+    let isCancelled = false;
+
+    fetchApi<LinkPreviewData>(`/conversations/link-preview?url=${encodeURIComponent(url)}`, {
+      headers: workspaceHeaders(workspaceId),
+    })
+      .then(res => {
+        if (
+          !isCancelled &&
+          res.data &&
+          (res.data.title || res.data.image || res.data.description)
+        ) {
+          setData(res.data);
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [content, previewData, workspaceId]);
+
+  if (!data || (!data.title && !data.image && !data.description)) {
+    return null;
   }
 
   return (
-    <AttachmentGroup className="mt-1.5 max-w-full">
-      {attachments.map(renderSingleAttachment)}
-    </AttachmentGroup>
+    <div className={cn('max-w-full', align === 'end' ? 'ml-auto' : 'mr-auto')}>
+      <RichLinkCard preview={data} />
+    </div>
   );
 }
 
@@ -154,16 +220,31 @@ function MessageItem({
   message,
   contactName,
   contactAvatar,
+  workspaceId,
+  onOpenLightbox,
 }: {
   message: MessageResponseDto;
   contactName?: string;
   contactAvatar?: string | null;
+  workspaceId?: string;
+  onOpenLightbox: (images: AttachmentDto[], index?: number) => void;
 }) {
   const isAgent =
     message.senderType === SenderType.USER || message.messageType === MessageType.OUTGOING;
   const isPrivate = message.isPrivate;
   const isSystem =
     message.senderType === SenderType.SYSTEM || message.messageType === MessageType.ACTIVITY;
+
+  const imageAttachments = React.useMemo(
+    () => (message.attachments || []).filter(att => isImageAttachment(att) && att.fileUrl),
+    [message.attachments],
+  );
+  const fileAttachments = React.useMemo(
+    () => (message.attachments || []).filter(att => !isImageAttachment(att)),
+    [message.attachments],
+  );
+
+  const previewData = (message.metadata as any)?.linkPreview as LinkPreviewData | undefined;
 
   // 1. System / Activity Notice
   if (isSystem) {
@@ -218,11 +299,20 @@ function MessageItem({
           {/* Note Content */}
           {message.content && (
             <p className="text-xs text-foreground/90 whitespace-pre-wrap leading-relaxed pt-0.5">
-              {message.content}
+              {renderMessageText(message.content)}
             </p>
           )}
 
-          {renderMessageAttachments(message.attachments)}
+          {/* Images in Note */}
+          {imageAttachments.length > 0 && (
+            <MessageImageGrid
+              attachments={imageAttachments}
+              onImageClick={idx => onOpenLightbox(imageAttachments, idx)}
+            />
+          )}
+
+          {/* Files in Note */}
+          {renderFileAttachments(fileAttachments)}
         </div>
       </MessageScrollerItem>
     );
@@ -233,15 +323,56 @@ function MessageItem({
     return (
       <MessageScrollerItem messageId={message.id}>
         <Message align="end">
-          <MessageContent>
+          <MessageContent className="items-end">
             <MessageHeader className="justify-end">
               You • {formatMessageTime(message.createdAt)}
             </MessageHeader>
+
+            {/* Bubble Row with Left-floating Action Toolbar */}
             {message.content && (
-              <Bubble variant="default" align="end">
-                <BubbleContent className="whitespace-pre-wrap">{message.content}</BubbleContent>
-              </Bubble>
+              <div className="group/msg relative flex items-center justify-end gap-2 max-w-full">
+                <MessageActionsToolbar
+                  message={message}
+                  align="end"
+                  onOpenLightbox={idx => onOpenLightbox(imageAttachments, idx ?? 0)}
+                />
+                <Bubble variant="default" align="end">
+                  <BubbleContent className="whitespace-pre-wrap">
+                    {renderMessageText(message.content)}
+                  </BubbleContent>
+                </Bubble>
+              </div>
             )}
+
+            {/* Link Preview Card */}
+            <MessageLinkPreview
+              content={message.content}
+              previewData={previewData}
+              workspaceId={workspaceId}
+              align="end"
+            />
+
+            {/* Image Grid */}
+            {imageAttachments.length > 0 && (
+              <div className="group/msg relative flex items-center justify-end gap-2 max-w-full">
+                {!message.content && (
+                  <MessageActionsToolbar
+                    message={message}
+                    align="end"
+                    onOpenLightbox={idx => onOpenLightbox(imageAttachments, idx ?? 0)}
+                  />
+                )}
+                <MessageImageGrid
+                  attachments={imageAttachments}
+                  onImageClick={idx => onOpenLightbox(imageAttachments, idx)}
+                  align="end"
+                />
+              </div>
+            )}
+
+            {/* Non-image File Attachments */}
+            {renderFileAttachments(fileAttachments)}
+
             <MessageFooter className="gap-1.5 text-[10px] text-muted-foreground items-center justify-end">
               {renderDeliveryStatusIcon(message.deliveryStatus)}
               {message.deliveryStatus === DeliveryStatus.FAILED && (
@@ -278,17 +409,58 @@ function MessageItem({
             </AvatarFallback>
           </Avatar>
         </MessageAvatar>
-        <MessageContent>
+
+        <MessageContent className="items-start">
           <MessageHeader>
             {message.sender?.name || contactName || 'Contact'} •{' '}
             {formatMessageTime(message.createdAt)}
           </MessageHeader>
+
+          {/* Bubble Row with Right-floating Action Toolbar */}
           {message.content && (
-            <Bubble variant="muted" align="start">
-              <BubbleContent className="whitespace-pre-wrap">{message.content}</BubbleContent>
-            </Bubble>
+            <div className="group/msg relative flex items-center justify-start gap-2 max-w-full">
+              <Bubble variant="muted" align="start">
+                <BubbleContent className="whitespace-pre-wrap">
+                  {renderMessageText(message.content)}
+                </BubbleContent>
+              </Bubble>
+              <MessageActionsToolbar
+                message={message}
+                align="start"
+                onOpenLightbox={idx => onOpenLightbox(imageAttachments, idx ?? 0)}
+              />
+            </div>
           )}
-          {renderMessageAttachments(message.attachments)}
+
+          {/* Link Preview Card */}
+          <MessageLinkPreview
+            content={message.content}
+            previewData={previewData}
+            workspaceId={workspaceId}
+            align="start"
+          />
+
+          {/* Image Grid */}
+          {imageAttachments.length > 0 && (
+            <div className="group/msg relative flex items-center justify-start gap-2 max-w-full">
+              <MessageImageGrid
+                attachments={imageAttachments}
+                onImageClick={idx => onOpenLightbox(imageAttachments, idx)}
+                align="start"
+              />
+              {!message.content && (
+                <MessageActionsToolbar
+                  message={message}
+                  align="start"
+                  onOpenLightbox={idx => onOpenLightbox(imageAttachments, idx ?? 0)}
+                />
+              )}
+            </div>
+          )}
+
+          {/* Non-image File Attachments */}
+          {renderFileAttachments(fileAttachments)}
+
           <MessageFooter className="text-[10px] text-muted-foreground/70">
             {formatMessageTime(message.createdAt)}
           </MessageFooter>
@@ -352,6 +524,35 @@ export function MessageThread({
     limit: 50,
   });
 
+  const [lightboxState, setLightboxState] = React.useState<{
+    isOpen: boolean;
+    images: AttachmentDto[];
+    initialIndex: number;
+  }>({
+    isOpen: false,
+    images: [],
+    initialIndex: 0,
+  });
+
+  const openLightbox = React.useCallback((images: AttachmentDto[], index = 0) => {
+    setLightboxState({
+      isOpen: true,
+      images,
+      initialIndex: index,
+    });
+  }, []);
+
+  const closeLightbox = React.useCallback(() => {
+    setLightboxState(prev => ({ ...prev, isOpen: false }));
+  }, []);
+
+  const { data: workspaces } = useWorkspaces();
+  const activeWorkspaceId =
+    workspaceId ||
+    conversation?.workspaceId ||
+    (workspaceSlug ? workspaces?.find(w => w.slug === workspaceSlug)?.id : undefined) ||
+    workspaces?.[0]?.id;
+
   const isLoading = isConversationLoading || isMessagesLoading;
   const contact = conversation?.contact;
 
@@ -400,6 +601,8 @@ export function MessageThread({
                         message={message}
                         contactName={contact?.name}
                         contactAvatar={contact?.avatarUrl}
+                        workspaceId={activeWorkspaceId}
+                        onOpenLightbox={openLightbox}
                       />
                     ))}
                   </React.Fragment>
@@ -420,7 +623,15 @@ export function MessageThread({
       <ChatComposer
         conversationId={conversationId}
         workspaceSlug={workspaceSlug}
-        workspaceId={workspaceId}
+        workspaceId={activeWorkspaceId}
+      />
+
+      {/* Lightbox Carousel Modal */}
+      <ImageLightboxDialog
+        isOpen={lightboxState.isOpen}
+        images={lightboxState.images}
+        initialIndex={lightboxState.initialIndex}
+        onClose={closeLightbox}
       />
     </div>
   );

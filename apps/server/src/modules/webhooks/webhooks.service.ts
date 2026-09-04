@@ -148,6 +148,7 @@ export class WebhooksService {
     rawBody: unknown,
     headers: Record<string, any>,
     query?: Record<string, any>,
+    options?: { skipSignatureVerification?: boolean },
   ): Promise<InboundWebhookResult> {
     const client = this.prisma.getClient();
 
@@ -167,23 +168,25 @@ export class WebhooksService {
     const adapter = this.adapterRegistry.get(channel.channelType as ChannelType);
     const credentials = this.decryptCredentials(channel.credentials);
 
-    // 3. Authenticate signature
-    const isValidSignature = await adapter.verifyWebhook(
-      {
-        headers,
-        rawBody,
-        query,
-        webhookSecret: (credentials.webhookSecret as string) || (credentials.appSecret as string),
-      },
-      credentials,
-    );
+    // 3. Authenticate signature (skip if already verified at platform level, e.g. Central Webhook)
+    if (!options?.skipSignatureVerification) {
+      const isValidSignature = await adapter.verifyWebhook(
+        {
+          headers,
+          rawBody,
+          query,
+          webhookSecret: (credentials.webhookSecret as string) || (credentials.appSecret as string),
+        },
+        credentials,
+      );
 
-    if (!isValidSignature) {
-      this.logger.warn(`Signature verification failed for channel '${channelId}'`);
-      throw new UnauthorizedException({
-        code: 'INVALID_WEBHOOK_SIGNATURE',
-        message: 'Webhook signature verification failed',
-      });
+      if (!isValidSignature) {
+        this.logger.warn(`Signature verification failed for channel '${channelId}'`);
+        throw new UnauthorizedException({
+          code: 'INVALID_WEBHOOK_SIGNATURE',
+          message: 'Webhook signature verification failed',
+        });
+      }
     }
 
     // 4. Extract external event ID & determine event type

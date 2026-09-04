@@ -111,3 +111,11 @@ export {
   WebhookDeliveryStatus,
   WebhookEventType,
 } from '@sales-copilot/shared-contracts';
+
+export interface LinkPreviewData {
+  url: string;
+  title?: string;
+  description?: string;
+  image?: string;
+  siteName?: string;
+}

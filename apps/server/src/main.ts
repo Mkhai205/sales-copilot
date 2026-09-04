@@ -13,7 +13,7 @@ import { createCorsOptions, HELMET_CONFIG } from './config';
 import { RedisIoAdapter } from './infrastructure/redis';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { bufferLogs: true });
+  const app = await NestFactory.create(AppModule, { bufferLogs: true, rawBody: true });
   (app.getHttpAdapter().getInstance() as any).set('trust proxy', 1);
   app.useLogger(app.get(Logger));
   const logger = app.get(Logger);

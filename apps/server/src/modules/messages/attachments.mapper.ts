@@ -6,6 +6,12 @@ import { FileType } from '@sales-copilot/shared-contracts';
  * Maps a Prisma Attachment entity to a transport-safe AttachmentDto.
  */
 export function mapAttachmentToDto(attachment: Attachment, fileUrl?: string): AttachmentDto {
+  const resolvedUrl =
+    fileUrl ??
+    (attachment.storagePath && attachment.storagePath.startsWith('http')
+      ? attachment.storagePath
+      : undefined);
+
   return {
     id: attachment.id,
     messageId: attachment.messageId,
@@ -14,7 +20,7 @@ export function mapAttachmentToDto(attachment: Attachment, fileUrl?: string): At
     fileSize: attachment.fileSize,
     storagePath: attachment.storagePath,
     contentType: attachment.contentType,
-    fileUrl: fileUrl ?? undefined,
+    fileUrl: resolvedUrl,
     createdAt:
       attachment.createdAt instanceof Date
         ? attachment.createdAt.toISOString()
