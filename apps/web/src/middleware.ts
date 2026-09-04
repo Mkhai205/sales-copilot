@@ -2,6 +2,20 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const PUBLIC_PREFIXES = ['/login', '/api', '/_next', '/favicon.ico', '/widget', '/test-chat.html'];
 
+function getCookieDomain(hostname: string): string | undefined {
+  if (process.env.COOKIE_DOMAIN) {
+    return process.env.COOKIE_DOMAIN;
+  }
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    return undefined;
+  }
+  const parts = hostname.split('.');
+  if (parts.length >= 2) {
+    return '.' + parts.slice(-2).join('.');
+  }
+  return undefined;
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -48,10 +62,17 @@ export async function middleware(request: NextRequest) {
           const tokens = body.data;
           const response = NextResponse.next();
 
+          const cookieDomain = getCookieDomain(request.nextUrl.hostname);
+          const isSecure =
+            request.nextUrl.protocol === 'https:' ||
+            process.env.NODE_ENV === 'production' ||
+            Boolean(process.env.NEXT_PUBLIC_API_URL?.startsWith('https'));
+
           response.cookies.set('access_token', tokens.accessToken, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
+            secure: isSecure,
             sameSite: 'lax',
+            domain: cookieDomain,
             maxAge: tokens.expiresIn || 900,
             path: '/',
           });
@@ -59,8 +80,9 @@ export async function middleware(request: NextRequest) {
           if (tokens.refreshToken) {
             response.cookies.set('refresh_token', tokens.refreshToken, {
               httpOnly: true,
-              secure: process.env.NODE_ENV === 'production',
+              secure: isSecure,
               sameSite: 'lax',
+              domain: cookieDomain,
               maxAge: 7 * 24 * 60 * 60, // 7 days (matching REFRESH_TOKEN_EXPIRES_IN_SECONDS: 604800)
               path: '/',
             });
@@ -79,6 +101,11 @@ export async function middleware(request: NextRequest) {
       loginUrl.searchParams.set('redirect', pathname);
     }
     const response = NextResponse.redirect(loginUrl);
+    const cookieDomain = getCookieDomain(request.nextUrl.hostname);
+    if (cookieDomain) {
+      response.cookies.delete({ name: 'access_token', domain: cookieDomain, path: '/' });
+      response.cookies.delete({ name: 'refresh_token', domain: cookieDomain, path: '/' });
+    }
     response.cookies.delete('access_token');
     response.cookies.delete('refresh_token');
     return response;

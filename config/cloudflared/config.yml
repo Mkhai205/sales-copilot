@@ -1,13 +1,13 @@
 # Cloudflare Tunnel configuration for Sales Copilot
 # Replace <TUNNEL_ID> with your actual tunnel ID from setup-tunnel script
-tunnel: <TUNNEL_ID>
+tunnel: fdc217a9-b455-4f7e-9f5e-439d63eac381
 credentials-file: /etc/cloudflared/credentials.json
 
 ingress:
-  - hostname: api.sales-copilot.kakadev.xyz
+  - hostname: api-sales-copilot.kakadev.xyz
     service: http://host.docker.internal:8000
-  - hostname: app.sales-copilot.kakadev.xyz
+  - hostname: app-sales-copilot.kakadev.xyz
     service: http://host.docker.internal:3000
-  - hostname: storage.sales-copilot.kakadev.xyz
+  - hostname: storage-sales-copilot.kakadev.xyz
     service: http://minio:9000
   - service: http_status:404

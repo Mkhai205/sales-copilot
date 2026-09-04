@@ -13,13 +13,13 @@ Write-Host "Creating tunnel 'sales-copilot'..."
 cloudflared tunnel create sales-copilot
 
 Write-Host "Routing DNS for API..."
-cloudflared tunnel route dns sales-copilot api.sales-copilot.kakadev.xyz
+cloudflared tunnel route dns sales-copilot api-sales-copilot.kakadev.xyz
 
 Write-Host "Routing DNS for App..."
-cloudflared tunnel route dns sales-copilot app.sales-copilot.kakadev.xyz
+cloudflared tunnel route dns sales-copilot app-sales-copilot.kakadev.xyz
 
 Write-Host "Routing DNS for Storage..."
-cloudflared tunnel route dns sales-copilot storage.sales-copilot.kakadev.xyz
+cloudflared tunnel route dns sales-copilot storage-sales-copilot.kakadev.xyz
 
 Write-Host "Please copy your credentials file (usually in ~/.cloudflared/<TUNNEL_ID>.json) to config\cloudflared\credentials.json"
 Write-Host "Then, update config\cloudflared\config.yml with your TUNNEL_ID."

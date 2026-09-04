@@ -42,7 +42,7 @@ describe('FacebookService (OAuth Provisioning & Page Connection)', () => {
         if (key === 'FB_APP_ID') return mockAppId;
         if (key === 'FB_APP_SECRET') return mockAppSecret;
         if (key === 'FB_VERIFY_TOKEN') return mockVerifyToken;
-        if (key === 'WEBHOOK_BASE_URL') return 'https://api.sales-copilot.example.com';
+        if (key === 'WEBHOOK_BASE_URL') return 'https://api-sales-copilot.example.com';
         return undefined;
       },
     };
@@ -164,7 +164,7 @@ describe('FacebookService (OAuth Provisioning & Page Connection)', () => {
       assert.strictEqual(parsedUrl.searchParams.get('client_id'), mockAppId);
       assert.strictEqual(
         parsedUrl.searchParams.get('redirect_uri'),
-        'https://api.sales-copilot.example.com/api/v1/integrations/facebook/callback',
+        'https://api-sales-copilot.example.com/api/v1/integrations/facebook/callback',
       );
       assert.ok(parsedUrl.searchParams.get('state')?.startsWith(`${wsId}:`));
       assert.strictEqual(

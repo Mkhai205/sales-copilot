@@ -1,11 +1,42 @@
 'use server';
 
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { API_BASE } from '@/lib/api/client';
 import type { LoginDto, LoginResponseDto, UserWorkspaceDto } from '@sales-copilot/shared-contracts';
 
 const REFRESH_TOKEN_MAX_AGE = 7 * 24 * 60 * 60; // 7 days (matching REFRESH_TOKEN_EXPIRES_IN_SECONDS: 604800)
+
+async function getAuthCookieBaseOptions() {
+  let domain: string | undefined = process.env.COOKIE_DOMAIN;
+  let isSecure =
+    process.env.NODE_ENV === 'production' ||
+    Boolean(process.env.NEXT_PUBLIC_API_URL?.startsWith('https'));
+
+  try {
+    const headerList = await headers();
+    const host = headerList.get('host')?.split(':')[0];
+    if (host && host !== 'localhost' && host !== '127.0.0.1') {
+      if (!domain) {
+        const parts = host.split('.');
+        if (parts.length >= 2) {
+          domain = '.' + parts.slice(-2).join('.');
+        }
+      }
+      isSecure = true;
+    }
+  } catch {
+    // Non-request context fallback
+  }
+
+  return {
+    httpOnly: true,
+    secure: isSecure,
+    sameSite: 'lax' as const,
+    domain: domain || undefined,
+    path: '/',
+  };
+}
 
 export interface ActionResult<T = unknown> {
   success: boolean;
@@ -47,21 +78,16 @@ export async function loginAction(
     const { tokens } = responseBody.data as LoginResponseDto;
 
     const cookieStore = await cookies();
+    const cookieBase = await getAuthCookieBaseOptions();
 
     cookieStore.set('access_token', tokens.accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      ...cookieBase,
       maxAge: tokens.expiresIn,
-      path: '/',
     });
 
     cookieStore.set('refresh_token', tokens.refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      ...cookieBase,
       maxAge: REFRESH_TOKEN_MAX_AGE,
-      path: '/',
     });
 
     // Resolve user's default workspace
@@ -139,20 +165,16 @@ export async function getSocketTokenAction(): Promise<string | null> {
       expiresIn: number;
     };
 
+    const cookieBase = await getAuthCookieBaseOptions();
+
     cookieStore.set('access_token', tokens.accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      ...cookieBase,
       maxAge: tokens.expiresIn,
-      path: '/',
     });
 
     cookieStore.set('refresh_token', tokens.refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      ...cookieBase,
       maxAge: REFRESH_TOKEN_MAX_AGE,
-      path: '/',
     });
 
     return tokens.accessToken;
@@ -193,20 +215,16 @@ export async function refreshSessionAction(): Promise<string | null> {
       expiresIn: number;
     };
 
+    const cookieBase = await getAuthCookieBaseOptions();
+
     cookieStore.set('access_token', tokens.accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      ...cookieBase,
       maxAge: tokens.expiresIn,
-      path: '/',
     });
 
     cookieStore.set('refresh_token', tokens.refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      ...cookieBase,
       maxAge: REFRESH_TOKEN_MAX_AGE,
-      path: '/',
     });
 
     return tokens.accessToken;
@@ -234,6 +252,11 @@ export async function logoutAction(): Promise<void> {
     }
   }
 
+  const cookieBase = await getAuthCookieBaseOptions();
+  if (cookieBase.domain) {
+    cookieStore.delete({ name: 'access_token', domain: cookieBase.domain, path: '/' });
+    cookieStore.delete({ name: 'refresh_token', domain: cookieBase.domain, path: '/' });
+  }
   cookieStore.delete('access_token');
   cookieStore.delete('refresh_token');
 

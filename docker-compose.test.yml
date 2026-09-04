@@ -88,8 +88,8 @@ services:
       JWT_ACCESS_TOKEN_SECRET: ${JWT_ACCESS_TOKEN_SECRET:-sales_copilot_access_token_secret_32_chars_min!}
       JWT_ACCESS_TOKEN_EXPIRES_IN_SECONDS: 900
       REFRESH_TOKEN_EXPIRES_IN_SECONDS: 604800
-      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000,https://app.sales-copilot.kakadev.xyz}
-      WEBHOOK_BASE_URL: ${WEBHOOK_BASE_URL:-https://api.sales-copilot.kakadev.xyz}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000,https://app-sales-copilot.kakadev.xyz}
+      WEBHOOK_BASE_URL: ${WEBHOOK_BASE_URL:-https://api-sales-copilot.kakadev.xyz}
       FB_APP_ID: ${FB_APP_ID:-}
       FB_APP_SECRET: ${FB_APP_SECRET:-}
       FB_VERIFY_TOKEN: ${FB_VERIFY_TOKEN:-}
