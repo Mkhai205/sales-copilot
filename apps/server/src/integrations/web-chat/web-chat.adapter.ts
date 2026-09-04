@@ -333,7 +333,10 @@ export class WebChatAdapter implements ChannelAdapter {
       channelId: channel.channelId,
       inboxId: channel.inboxId,
       recipientExternalId: message.recipientExternalId,
-      message,
+      message: {
+        ...message,
+        id: (message.metadata?.messageId as string) || externalMessageId,
+      } as any,
       sentAt,
     };
 

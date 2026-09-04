@@ -54,15 +54,53 @@ export class SalesCopilotWidget {
       // 2. Initialize or restore visitor contact session
       await this.initContactSession();
 
-      // 3. Connect Socket.IO
+      // 3. Pre-identify if user passed in init config
+      if (
+        config.user?.identifier ||
+        config.user?.name ||
+        config.user?.email ||
+        config.user?.phoneNumber
+      ) {
+        const id =
+          config.user.identifier ||
+          config.user.email ||
+          config.user.phoneNumber ||
+          this.session?.contactToken ||
+          `vis_${Date.now()}`;
+        const updatedSession = await this.apiClient.getOrCreateContact({
+          websiteToken: config.websiteToken,
+          contactToken: this.session?.contactToken,
+          identifier: id,
+          name: config.user.name,
+          email: config.user.email,
+          phoneNumber: config.user.phoneNumber,
+          avatarUrl: config.user.avatarUrl,
+          customAttributes: config.user.customAttributes,
+        });
+        this.saveSession(updatedSession);
+      }
+
+      // 4. Connect Socket.IO
       this.initWebSocket(baseUrl);
 
-      // 4. Mount Shadow DOM UI
+      // 5. Determine whether pre-chat form is needed
+      const contact = this.session?.contact;
+      const isContactKnown = Boolean(
+        contact?.name &&
+        contact.name !== 'Unknown Contact' &&
+        (contact?.email || contact?.phoneNumber),
+      );
+      const shouldShowPreChat =
+        Boolean(config.preChatForm ?? this.channelConfig?.preChatFormEnabled ?? false) &&
+        !isContactKnown;
+
+      // 6. Mount Shadow DOM UI
       if (typeof window !== 'undefined') {
         this.uiRenderer = new WidgetUIRenderer({
           config: this.channelConfig,
           position: config.position || 'right',
           hideMessageBubble: config.hideMessageBubble || false,
+          showPreChat: shouldShowPreChat,
           onToggle: open => {
             this.isChatOpen = open;
             this.emit('toggle', { isOpen: open });
@@ -75,9 +113,28 @@ export class SalesCopilotWidget {
           onTyping: isTyping => {
             this.socketClient?.emitTyping(isTyping);
           },
+          onPreChatSubmit: async data => {
+            try {
+              await this.setUser({
+                identifier:
+                  data.email ||
+                  data.phoneNumber ||
+                  this.session?.contactToken ||
+                  `vis_${Date.now()}`,
+                name: data.name,
+                email: data.email,
+                phoneNumber: data.phoneNumber,
+              });
+            } catch (err) {
+              console.error('[SalesCopilotWidget] Error submitting pre-chat form:', err);
+            }
+          },
         });
 
         this.uiRenderer.mount();
+
+        // 7. Restore conversation history across page reload
+        await this.loadConversationHistory();
       }
 
       this.isInitialized = true;
@@ -104,21 +161,25 @@ export class SalesCopilotWidget {
     }
 
     try {
-      // Send identify payload to server via socket or REST
+      // 1. Update contact via REST API to persist in DB and update local session
+      const res = await this.apiClient.getOrCreateContact({
+        websiteToken: this.config.websiteToken,
+        contactToken: this.session?.contactToken,
+        identifier: user.identifier,
+        name: user.name,
+        email: user.email,
+        phoneNumber: user.phoneNumber,
+        avatarUrl: user.avatarUrl,
+        customAttributes: user.customAttributes,
+      });
+      this.saveSession(res);
+
+      // 2. If pre-chat form was visible, hide it now that user is identified
+      this.uiRenderer?.showPreChat(false);
+
+      // 3. Emit identify over WebSocket for live Dashboard updates
       if (this.socketClient?.connected) {
         this.socketClient.identify(user);
-      } else {
-        const res = await this.apiClient.getOrCreateContact({
-          websiteToken: this.config.websiteToken,
-          contactToken: this.session?.contactToken,
-          identifier: user.identifier,
-          name: user.name,
-          email: user.email,
-          phoneNumber: user.phoneNumber,
-          avatarUrl: user.avatarUrl,
-          customAttributes: user.customAttributes,
-        });
-        this.saveSession(res);
       }
 
       this.emit('identified', user);
@@ -322,9 +383,53 @@ export class SalesCopilotWidget {
           this.emit('typing:stop', { sender: 'agent' });
         }
       },
+      onIdentified: data => {
+        if (data?.contact && this.session) {
+          this.session.contact = {
+            ...this.session.contact,
+            ...data.contact,
+          };
+          this.saveSession(this.session);
+        }
+      },
     });
 
     this.socketClient.connect();
+  }
+
+  private async loadConversationHistory(): Promise<void> {
+    if (!this.session?.token || !this.apiClient) return;
+
+    try {
+      const convRes = await this.apiClient.getConversations(this.session.token);
+      const conversations = Array.isArray(convRes) ? convRes : (convRes as any)?.items || [];
+      const activeConv = conversations[0];
+      if (activeConv?.id) {
+        const msgsRes = await this.apiClient.getMessages(activeConv.id, this.session.token, {
+          limit: 50,
+        });
+        const messages = Array.isArray(msgsRes) ? msgsRes : (msgsRes as any)?.items || [];
+        if (Array.isArray(messages)) {
+          for (const msg of messages) {
+            const normalized: WidgetMessage = {
+              id: msg.id,
+              conversationId: activeConv.id,
+              content: msg.content || null,
+              messageType: msg.messageType,
+              contentType: msg.contentType || 'TEXT',
+              senderType: msg.senderType,
+              sender: msg.sender,
+              attachments: msg.attachments as any,
+              createdAt: msg.createdAt,
+              status: msg.status || 'SENT',
+            };
+            this.uiRenderer?.addMessage(normalized);
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('[SalesCopilotWidget] Failed to load conversation history:', err);
+    }
   }
 
   // Getters

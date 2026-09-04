@@ -22,6 +22,7 @@ export class WidgetSocketClient {
   private socket: Socket | null = null;
   private readonly options: WidgetSocketOptions;
   private isConnected = false;
+  private readonly receivedMessageIds = new Set<string>();
 
   constructor(options: WidgetSocketOptions) {
     this.options = options;
@@ -73,8 +74,25 @@ export class WidgetSocketClient {
 
     // Inbound agent message
     this.socket.on('widget:message', (rawMsg: any) => {
+      const msgId =
+        rawMsg.id ||
+        rawMsg.metadata?.messageId ||
+        rawMsg.externalId ||
+        (rawMsg.content ? `${rawMsg.content}_${rawMsg.createdAt || ''}` : undefined);
+
+      if (msgId) {
+        if (this.receivedMessageIds.has(msgId)) {
+          return;
+        }
+        this.receivedMessageIds.add(msgId);
+        if (this.receivedMessageIds.size > 500) {
+          const first = this.receivedMessageIds.values().next().value;
+          if (first) this.receivedMessageIds.delete(first);
+        }
+      }
+
       const normalized: WidgetMessage = {
-        id: rawMsg.id || `msg_${Date.now()}`,
+        id: rawMsg.id || rawMsg.metadata?.messageId || msgId || `msg_${Date.now()}`,
         conversationId: rawMsg.conversationId,
         content: rawMsg.content || null,
         messageType: rawMsg.messageType || 'OUTGOING',
@@ -111,6 +129,7 @@ export class WidgetSocketClient {
       this.socket.disconnect();
       this.socket = null;
       this.isConnected = false;
+      this.receivedMessageIds.clear();
     }
   }
 

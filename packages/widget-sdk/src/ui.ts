@@ -4,9 +4,11 @@ export interface WidgetUIOptions {
   config: WidgetConfigResponse;
   position?: 'right' | 'left';
   hideMessageBubble?: boolean;
+  showPreChat?: boolean;
   onToggle?: (isOpen: boolean) => void;
   onSendMessage?: (content: string) => void;
   onTyping?: (isTyping: boolean) => void;
+  onPreChatSubmit?: (data: { name: string; email?: string; phoneNumber?: string }) => void;
 }
 
 /**
@@ -23,13 +25,18 @@ export class WidgetUIRenderer {
   private sendBtn: HTMLElement | null = null;
   private typingIndicator: HTMLElement | null = null;
   private badgeElement: HTMLElement | null = null;
+  private preChatFormEl: HTMLElement | null = null;
+  private chatFooterEl: HTMLElement | null = null;
 
   private isOpen = false;
+  private isPreChatActive = false;
   private unreadCount = 0;
   private options: WidgetUIOptions;
+  private readonly renderedMessageIds = new Set<string>();
 
   constructor(options: WidgetUIOptions) {
     this.options = options;
+    this.isPreChatActive = Boolean(options.showPreChat);
   }
 
   /**
@@ -94,14 +101,41 @@ export class WidgetUIRenderer {
   }
 
   /**
+   * Toggles display between pre-chat form and normal message list.
+   */
+  showPreChat(active: boolean): void {
+    this.isPreChatActive = active;
+    if (this.preChatFormEl) {
+      this.preChatFormEl.style.display = active ? 'flex' : 'none';
+    }
+    if (this.messageList) {
+      this.messageList.style.display = active ? 'none' : 'flex';
+    }
+    if (this.chatFooterEl) {
+      this.chatFooterEl.style.display = active ? 'none' : 'flex';
+    }
+  }
+
+  /**
    * Appends a message to the chat view.
    */
   addMessage(msg: WidgetMessage): void {
     if (!this.messageList) return;
 
+    const key = msg.id || msg.tempId;
+    if (key && this.renderedMessageIds.has(key)) {
+      return;
+    }
+    if (key) {
+      this.renderedMessageIds.add(key);
+    }
+
     const isUser = msg.senderType === 'CONTACT' || msg.messageType === 'INCOMING';
     const msgEl = document.createElement('div');
     msgEl.className = `sc-message-row ${isUser ? 'sc-message-user' : 'sc-message-agent'}`;
+    if (key) {
+      msgEl.dataset.messageId = key;
+    }
 
     const bubble = document.createElement('div');
     bubble.className = 'sc-message-bubble';
@@ -141,6 +175,7 @@ export class WidgetUIRenderer {
    * Clears all messages from view.
    */
   clearMessages(): void {
+    this.renderedMessageIds.clear();
     if (this.messageList) {
       this.messageList.innerHTML = '';
       this.renderGreetingMessage();
@@ -468,6 +503,86 @@ export class WidgetUIRenderer {
           fill: currentColor;
         }
 
+        /* Pre-Chat Form */
+        .sc-prechat-form {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          padding: 24px 20px;
+          gap: 16px;
+          overflow-y: auto;
+          background: #ffffff;
+        }
+
+        .sc-prechat-title {
+          font-size: 14px;
+          font-weight: 500;
+          color: #334155;
+          line-height: 1.4;
+          margin-bottom: 4px;
+        }
+
+        .sc-form-group {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+        }
+
+        .sc-form-label {
+          font-size: 12px;
+          font-weight: 600;
+          color: #475569;
+        }
+
+        .sc-required {
+          color: #ef4444;
+        }
+
+        .sc-form-input {
+          border: 1px solid #cbd5e1;
+          border-radius: 8px;
+          padding: 10px 12px;
+          font-size: 13px;
+          font-family: inherit;
+          outline: none;
+          transition: border-color 0.15s ease, box-shadow 0.15s ease;
+          background: #f8fafc;
+        }
+
+        .sc-form-input:focus {
+          border-color: ${color};
+          background: #ffffff;
+          box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .sc-form-input.sc-input-error {
+          border-color: #ef4444;
+          background: #fef2f2;
+        }
+
+        .sc-prechat-submit-btn {
+          margin-top: 8px;
+          background: ${color};
+          color: #ffffff;
+          border: none;
+          border-radius: 10px;
+          padding: 12px;
+          font-weight: 600;
+          font-size: 14px;
+          cursor: pointer;
+          transition: opacity 0.15s ease, transform 0.15s ease;
+          font-family: inherit;
+        }
+
+        .sc-prechat-submit-btn:hover {
+          opacity: 0.92;
+          transform: translateY(-1px);
+        }
+
+        .sc-prechat-submit-btn:active {
+          transform: translateY(0);
+        }
+
         /* Responsive Mobile Styles */
         @media (max-width: 480px) {
           :host {
@@ -499,7 +614,29 @@ export class WidgetUIRenderer {
           </button>
         </div>
 
-        <div class="sc-body" id="sc-message-list"></div>
+        <!-- Pre-Chat Form -->
+        <div class="sc-prechat-form" id="sc-prechat-form" style="display: ${this.isPreChatActive ? 'flex' : 'none'};">
+          <div class="sc-prechat-title">Vui lòng cung cấp thông tin để bắt đầu trò chuyện:</div>
+          
+          <div class="sc-form-group">
+            <label class="sc-form-label" for="sc-prechat-name">Họ và tên <span class="sc-required">*</span></label>
+            <input class="sc-form-input" id="sc-prechat-name" type="text" placeholder="Ví dụ: Nguyễn Văn A" autocomplete="name" />
+          </div>
+
+          <div class="sc-form-group">
+            <label class="sc-form-label" for="sc-prechat-phone">Số điện thoại <span class="sc-required">*</span></label>
+            <input class="sc-form-input" id="sc-prechat-phone" type="tel" placeholder="Ví dụ: 0912345678" autocomplete="tel" />
+          </div>
+
+          <div class="sc-form-group">
+            <label class="sc-form-label" for="sc-prechat-email">Email</label>
+            <input class="sc-form-input" id="sc-prechat-email" type="email" placeholder="name@example.com" autocomplete="email" />
+          </div>
+
+          <button type="button" class="sc-prechat-submit-btn" id="sc-btn-prechat-submit">Bắt đầu trò chuyện</button>
+        </div>
+
+        <div class="sc-body" id="sc-message-list" style="display: ${this.isPreChatActive ? 'none' : 'flex'};"></div>
 
         <div class="sc-typing-row" id="sc-typing-indicator" style="display: none;">
           <div class="sc-dot"></div>
@@ -507,7 +644,7 @@ export class WidgetUIRenderer {
           <div class="sc-dot"></div>
         </div>
 
-        <div class="sc-footer">
+        <div class="sc-footer" id="sc-chat-footer" style="display: ${this.isPreChatActive ? 'none' : 'flex'};">
           <textarea
             class="sc-input"
             id="sc-chat-input"
@@ -535,7 +672,9 @@ export class WidgetUIRenderer {
 
     this.launcherBtn = this.shadow.getElementById('sc-launcher-btn');
     this.chatWindow = this.shadow.getElementById('sc-chat-window');
+    this.preChatFormEl = this.shadow.getElementById('sc-prechat-form');
     this.messageList = this.shadow.getElementById('sc-message-list');
+    this.chatFooterEl = this.shadow.getElementById('sc-chat-footer');
     this.inputField = this.shadow.getElementById('sc-chat-input') as HTMLTextAreaElement;
     this.sendBtn = this.shadow.getElementById('sc-btn-send');
     this.typingIndicator = this.shadow.getElementById('sc-typing-indicator');
@@ -563,6 +702,9 @@ export class WidgetUIRenderer {
     const closeBtn = this.shadow.getElementById('sc-btn-close');
     closeBtn?.addEventListener('click', () => this.toggle(false));
 
+    const prechatSubmitBtn = this.shadow.getElementById('sc-btn-prechat-submit');
+    prechatSubmitBtn?.addEventListener('click', () => this.handlePreChatSubmit());
+
     this.sendBtn?.addEventListener('click', () => this.handleSendMessage());
 
     this.inputField?.addEventListener('keydown', (e: KeyboardEvent) => {
@@ -580,6 +722,43 @@ export class WidgetUIRenderer {
         this.options.onTyping?.(false);
       }, 2000);
     });
+  }
+
+  private handlePreChatSubmit(): void {
+    if (!this.shadow) return;
+    const nameInput = this.shadow.getElementById('sc-prechat-name') as HTMLInputElement | null;
+    const phoneInput = this.shadow.getElementById('sc-prechat-phone') as HTMLInputElement | null;
+    const emailInput = this.shadow.getElementById('sc-prechat-email') as HTMLInputElement | null;
+
+    const name = nameInput?.value.trim() || '';
+    const phone = phoneInput?.value.trim() || '';
+    const email = emailInput?.value.trim() || '';
+
+    let hasError = false;
+    if (!name) {
+      nameInput?.classList.add('sc-input-error');
+      hasError = true;
+    } else {
+      nameInput?.classList.remove('sc-input-error');
+    }
+
+    if (!phone && !email) {
+      phoneInput?.classList.add('sc-input-error');
+      hasError = true;
+    } else {
+      phoneInput?.classList.remove('sc-input-error');
+    }
+
+    if (hasError) return;
+
+    this.options.onPreChatSubmit?.({
+      name,
+      phoneNumber: phone || undefined,
+      email: email || undefined,
+    });
+
+    this.showPreChat(false);
+    setTimeout(() => this.inputField?.focus(), 150);
   }
 
   private handleSendMessage(): void {

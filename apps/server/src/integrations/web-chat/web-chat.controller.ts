@@ -11,9 +11,14 @@ import {
   Post,
   Query,
   Req,
+  Res,
+  Header,
+  StreamableFile,
 } from '@nestjs/common';
 import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
-import type { Request } from 'express';
+import type { Request, Response } from 'express';
+import * as path from 'path';
+import * as fs from 'fs';
 import {
   ChannelType,
   IdentifyContactDto,
@@ -50,6 +55,35 @@ export class WebChatController {
     private readonly webChatAdapter: WebChatAdapter,
     private readonly widgetTokenService: WidgetTokenService,
   ) {}
+
+  /**
+   * Serves the embeddable Web Chat Widget SDK bundle.
+   */
+  @Get('sdk.js')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Serve the embeddable Web Chat Widget JavaScript SDK' })
+  getSdkScript(@Res() res: Response) {
+    const candidatePaths = [
+      path.resolve(process.cwd(), 'packages/widget-sdk/dist/sdk.js'),
+      path.resolve(__dirname, '../../../../../packages/widget-sdk/dist/sdk.js'),
+      path.resolve(__dirname, '../../../../packages/widget-sdk/dist/sdk.js'),
+      path.resolve(__dirname, '../../../packages/widget-sdk/dist/sdk.js'),
+      path.resolve(__dirname, 'assets/sdk.js'),
+    ];
+
+    for (const filePath of candidatePaths) {
+      if (fs.existsSync(filePath)) {
+        res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+        res.setHeader('Cache-Control', 'no-cache, must-revalidate');
+        return res.sendFile(filePath);
+      }
+    }
+
+    throw new NotFoundException({
+      code: 'WIDGET_SDK_NOT_FOUND',
+      message: 'Widget SDK bundle not found. Please build packages/widget-sdk first.',
+    });
+  }
 
   /**
    * Retrieves public widget configuration (colors, greetings, pre-chat form options, reply times).

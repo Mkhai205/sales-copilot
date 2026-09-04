@@ -30,7 +30,9 @@ async function bootstrap() {
   app.enableCors(createCorsOptions(corsOrigins));
 
   const globalPrefix = 'api/v1';
-  app.setGlobalPrefix(globalPrefix);
+  app.setGlobalPrefix(globalPrefix, {
+    exclude: ['widget/sdk.js', 'widget/sdk'],
+  });
 
   app.use(cookieParser());
 

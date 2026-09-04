@@ -79,3 +79,6 @@ Thumbs.db
 # Custom tooling
 .claude/worktrees
 .claude/settings.local.json
+
+# Apps Web
+apps/web/public/widget/

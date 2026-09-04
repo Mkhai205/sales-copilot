@@ -29,6 +29,16 @@ export interface WidgetInitConfig {
   locale?: string;
 
   /**
+   * Whether to require visitor to fill out pre-chat form before chatting.
+   */
+  preChatForm?: boolean;
+
+  /**
+   * Pre-identified user details (e.g. logged-in customer).
+   */
+  user?: Partial<UserIdentity>;
+
+  /**
    * Callback fired when widget configuration and visitor session are ready.
    */
   onReady?: () => void;

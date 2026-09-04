@@ -210,7 +210,10 @@ export class OutboundMessageListener {
         (conversation.customAttributes as any)?.chat_id ||
         (conversation.channelIdentity?.metadata as any)?.chat_id ||
         undefined,
-      metadata: message.metadata,
+      metadata: {
+        ...(message.metadata || {}),
+        messageId: message.id,
+      },
     };
 
     try {

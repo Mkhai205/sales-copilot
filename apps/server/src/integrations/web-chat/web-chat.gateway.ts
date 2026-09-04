@@ -114,6 +114,8 @@ export class WebChatGateway
     @Optional() private readonly configService?: ConfigService,
   ) {}
 
+  private readonly dispatchedOutboundMessageIds = new Set<string>();
+
   async onModuleDestroy(): Promise<void> {
     // Gateway lifecycle teardown hook
   }
@@ -443,7 +445,30 @@ export class WebChatGateway
     if (!this.server || !payload) return;
 
     const { channelId, recipientExternalId, message } = payload;
-    if (!recipientExternalId) return;
+    if (!recipientExternalId || !message) return;
+
+    // Deduplicate so that multiple events (e.g. 'widget.outbound_message' and 'widget:message')
+    // for the same message only broadcast once.
+    const msgObj = message as any;
+    const msgId =
+      msgObj.id ||
+      msgObj.metadata?.messageId ||
+      msgObj.externalMessageId ||
+      `${channelId}:${recipientExternalId}:${message.content}`;
+
+    if (this.dispatchedOutboundMessageIds.has(msgId)) {
+      return;
+    }
+    this.dispatchedOutboundMessageIds.add(msgId);
+    if (this.dispatchedOutboundMessageIds.size > 1000) {
+      const first = this.dispatchedOutboundMessageIds.values().next().value;
+      if (first) this.dispatchedOutboundMessageIds.delete(first);
+    }
+
+    // Attach consistent ID to message payload before emitting
+    if (!msgObj.id && msgObj.metadata?.messageId) {
+      msgObj.id = msgObj.metadata.messageId;
+    }
 
     // Push to visitor rooms
     this.server.to(`widget:${channelId}:${recipientExternalId}`).emit('widget:message', message);

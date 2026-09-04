@@ -1,4 +1,10 @@
-import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
+import {
+  CallHandler,
+  ExecutionContext,
+  Injectable,
+  NestInterceptor,
+  StreamableFile,
+} from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import type { ApiSuccessResponse, PaginationMeta } from '@sales-copilot/shared-contracts';
@@ -20,8 +26,11 @@ export class TransformInterceptor<T> implements NestInterceptor<T, ApiSuccessRes
           };
         }
 
-        // If response is already an envelope or is a binary buffer/stream, bypass transformation
-        if (typeof data === 'object' && ('success' in data || Buffer.isBuffer(data))) {
+        // If response is already an envelope or is a binary buffer/stream/file, bypass transformation
+        if (
+          typeof data === 'object' &&
+          ('success' in data || Buffer.isBuffer(data) || data instanceof StreamableFile)
+        ) {
           return data;
         }
 

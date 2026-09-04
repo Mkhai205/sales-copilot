@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Test Web Chat Widget</title>
+    <style>
+      body {
+        font-family:
+          system-ui,
+          -apple-system,
+          sans-serif;
+        padding: 50px;
+        background: #f8fafc;
+      }
+      .card {
+        background: white;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        max-width: 600px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h2>Trang Web Bán Hàng Thử Nghiệm</h2>
+      <p>Nhìn xuống góc dưới bên phải màn hình để thấy nút bong bóng chat của Sales Copilot.</p>
+
+      <div style="margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap">
+        <button
+          id="btn-reset"
+          style="
+            padding: 8px 14px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            background: #f1f5f9;
+            cursor: pointer;
+            font-size: 13px;
+          "
+        >
+          🔄 Xóa phiên (Test Khách Mới)
+        </button>
+        <button
+          id="btn-identify"
+          style="
+            padding: 8px 14px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            background: #f1f5f9;
+            cursor: pointer;
+            font-size: 13px;
+          "
+        >
+          👤 Giả lập khách VIP (setUser)
+        </button>
+      </div>
+    </div>
+
+    <!-- Nhúng Widget SDK với token 'webchat_default' -->
+    <script>
+      document.getElementById('btn-reset')?.addEventListener('click', function () {
+        if (window.SalesCopilotWidget) {
+          window.SalesCopilotWidget.resetSession();
+          alert(
+            'Đã xóa phiên khách hàng trong localStorage. Trang sẽ tải lại dưới dạng Khách Hàng Mới!',
+          );
+          window.location.reload();
+        }
+      });
+
+      document.getElementById('btn-identify')?.addEventListener('click', function () {
+        if (window.SalesCopilotWidget) {
+          window.SalesCopilotWidget.setUser({
+            identifier: 'user_vip_mai',
+            name: 'Trần Thị Mai (VIP)',
+            email: 'mai.tran@gmail.com',
+            phoneNumber: '0988776655',
+          });
+          alert('Đã định danh khách hàng thành: Trần Thị Mai (VIP)! Hãy mở chat để kiểm tra.');
+        }
+      });
+
+      (function (d, t) {
+        var BASE_URL = 'http://localhost:8000';
+        var g = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+        g.src = BASE_URL + '/widget/sdk.js?v=' + new Date().getTime();
+        g.defer = true;
+        g.async = true;
+        s.parentNode.insertBefore(g, s);
+        g.onload = function () {
+          var widget =
+            window.SalesCopilotWidget ||
+            (window.SalesCopilotBundle &&
+              (window.SalesCopilotBundle.widgetInstance || window.SalesCopilotBundle.default));
+          if (widget && typeof widget.init === 'function') {
+            widget.init({
+              baseUrl: BASE_URL,
+              websiteToken: 'webchat_default',
+              preChatForm: true,
+            });
+          } else if (window.chatwootSDK && typeof window.chatwootSDK.run === 'function') {
+            window.chatwootSDK.run({
+              baseUrl: BASE_URL,
+              websiteToken: 'webchat_default',
+            });
+          }
+        };
+      })(document, 'script');
+    </script>
+  </body>
+</html>
