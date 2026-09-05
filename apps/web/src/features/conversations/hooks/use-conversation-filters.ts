@@ -41,7 +41,7 @@ export function useConversationFilters() {
 
   const assignmentParam = searchParams.get('assignment') as AssignmentFilter | null;
   const assignment: AssignmentFilter =
-    assignmentParam === 'mine' || assignmentParam === 'unassigned' ? assignmentParam : 'all';
+    assignmentParam === 'all' || assignmentParam === 'unassigned' ? assignmentParam : 'mine';
 
   const q = searchParams.get('q') || '';
   const inboxId = searchParams.get('inboxId') || undefined;
@@ -84,13 +84,13 @@ export function useConversationFilters() {
           value === undefined ||
           value === null ||
           value === '' ||
-          value === 'all' ||
+          (key === 'assignment' && value === 'mine') ||
           (key === 'status' && value === ConversationStatus.OPEN)
         ) {
           // If value is default or empty, remove it to keep clean URLs
           if (key === 'status' && value === ConversationStatus.OPEN) {
             current.delete('status');
-          } else if (key === 'assignment' && value === 'all') {
+          } else if (key === 'assignment' && value === 'mine') {
             current.delete('assignment');
           } else {
             current.delete(key);

@@ -73,6 +73,17 @@ export const conversationListQuerySchema = z.object({
 export type ConversationListQueryDto = z.input<typeof conversationListQuerySchema>;
 export type ConversationListQueryOutput = z.output<typeof conversationListQuerySchema>;
 
+export const conversationCountsQuerySchema = z.object({
+  status: z.nativeEnum(ConversationStatus).optional(),
+});
+export type ConversationCountsQueryDto = z.input<typeof conversationCountsQuerySchema>;
+
+export interface ConversationCountsResponseDto {
+  mine: number;
+  unassigned: number;
+  all: number;
+}
+
 // ==========================================
 // 2. Response DTOs
 // ==========================================

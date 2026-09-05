@@ -59,6 +59,11 @@ describe('ConversationsController (Presentation Layer Endpoints)', () => {
         ],
         meta: { page: 1, limit: 20, total: 1, hasMore: false },
       }),
+      getCounts: async (workspaceId: string, status?: any, userId?: string) => ({
+        mine: 6,
+        unassigned: 10,
+        all: 16,
+      }),
       create: async (workspaceId: string, dto: any) => ({
         id: 'conv_new',
         displayId: 2,
@@ -233,5 +238,14 @@ describe('ConversationsController (Presentation Layer Endpoints)', () => {
   it('should remove label from conversation', async () => {
     const result = await controller.removeLabel(context, 'conv_1', 'lbl_1');
     assert.deepStrictEqual(result, { success: true });
+  });
+
+  it('should get conversation tab counts', async () => {
+    const counts = await controller.getCounts(context, mockUser, {
+      status: ConversationStatus.OPEN,
+    });
+    assert.strictEqual(counts.mine, 6);
+    assert.strictEqual(counts.unassigned, 10);
+    assert.strictEqual(counts.all, 16);
   });
 });

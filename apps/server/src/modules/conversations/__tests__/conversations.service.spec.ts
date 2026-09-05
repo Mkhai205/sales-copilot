@@ -307,6 +307,18 @@ describe('ConversationsService (Core & State Machine)', () => {
           return Array.from(conversationsDb.values()).filter((conv: any) => {
             if (where?.workspaceId && conv.workspaceId !== where.workspaceId) return false;
             if (where?.status && conv.status !== where.status) return false;
+            if (where && 'assigneeId' in where) {
+              if (
+                where.assigneeId === null &&
+                conv.assigneeId !== null &&
+                conv.assigneeId !== undefined
+              ) {
+                return false;
+              }
+              if (where.assigneeId !== null && conv.assigneeId !== where.assigneeId) {
+                return false;
+              }
+            }
             return true;
           }).length;
         },
@@ -917,6 +929,16 @@ describe('ConversationsService (Core & State Machine)', () => {
           return true;
         },
       );
+    });
+  });
+
+  describe('getCounts', () => {
+    it('should return correct counts for all, unassigned, and mine', async () => {
+      const counts = await service.getCounts('ws_1', ConversationStatus.OPEN, 'usr_agent_1');
+      assert.strictEqual(typeof counts.all, 'number');
+      assert.strictEqual(typeof counts.unassigned, 'number');
+      assert.strictEqual(typeof counts.mine, 'number');
+      assert.ok(counts.all >= counts.unassigned);
     });
   });
 });

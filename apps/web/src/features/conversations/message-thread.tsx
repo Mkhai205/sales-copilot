@@ -11,6 +11,7 @@ import {
   Download,
   FileText,
   MessageSquare,
+  ArrowDown,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -21,6 +22,7 @@ import {
   MessageScrollerContent,
   MessageScrollerItem,
   MessageScrollerButton,
+  useMessageScroller,
 } from '@/components/ui/message-scroller';
 import {
   Message,
@@ -472,6 +474,144 @@ function MessageItem({
   );
 }
 
+interface MessageThreadScrollerControllerProps {
+  messages: MessageResponseDto[];
+  conversationId: string;
+  viewportRef: React.RefObject<HTMLDivElement | null>;
+  onAtBottom: () => void;
+  onNewInboundMessage: () => void;
+}
+
+function MessageThreadScrollerController({
+  messages,
+  conversationId,
+  viewportRef,
+  onAtBottom,
+  onNewInboundMessage,
+}: MessageThreadScrollerControllerProps) {
+  const { scrollToEnd } = useMessageScroller();
+  const prevConversationIdRef = React.useRef(conversationId);
+  const prevCountRef = React.useRef(messages.length);
+  const prevLastIdRef = React.useRef(messages[messages.length - 1]?.id);
+
+  // Helper to check if viewport is currently near the bottom (within 150px)
+  const isNearBottom = React.useCallback(() => {
+    const el = viewportRef.current;
+    if (!el) return true;
+    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    return distanceFromBottom <= 150;
+  }, [viewportRef]);
+
+  // Monitor scroll position to auto-reset unread pill when user scrolls back to bottom
+  React.useEffect(() => {
+    const el = viewportRef.current;
+    if (!el) return;
+
+    const handleScroll = () => {
+      const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+      if (distanceFromBottom <= 80) {
+        onAtBottom();
+      }
+    };
+
+    el.addEventListener('scroll', handleScroll, { passive: true });
+    return () => el.removeEventListener('scroll', handleScroll);
+  }, [viewportRef, onAtBottom]);
+
+  // When switching conversations: instant jump to bottom
+  React.useLayoutEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    if (prevConversationIdRef.current !== conversationId) {
+      prevConversationIdRef.current = conversationId;
+      prevCountRef.current = messages.length;
+      prevLastIdRef.current = messages[messages.length - 1]?.id;
+      onAtBottom();
+      scrollToEnd({ behavior: 'auto' });
+      timer = setTimeout(() => {
+        scrollToEnd({ behavior: 'auto' });
+      }, 50);
+    }
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [conversationId, messages, scrollToEnd, onAtBottom]);
+
+  // On first mount when messages load: jump to bottom
+  const isFirstMountRef = React.useRef(true);
+  React.useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    if (isFirstMountRef.current && messages.length > 0) {
+      isFirstMountRef.current = false;
+      scrollToEnd({ behavior: 'auto' });
+      timer = setTimeout(() => {
+        scrollToEnd({ behavior: 'auto' });
+      }, 80);
+    }
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [messages.length, scrollToEnd]);
+
+  // React to new messages
+  React.useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const currentCount = messages.length;
+    const prevCount = prevCountRef.current;
+    const lastMessage = messages[messages.length - 1];
+    const prevLastId = prevLastIdRef.current;
+
+    prevCountRef.current = currentCount;
+    prevLastIdRef.current = lastMessage?.id;
+
+    if (!lastMessage || currentCount === 0) {
+      return () => {
+        if (timer) clearTimeout(timer);
+      };
+    }
+
+    // Trigger only when a new message is appended (count grew or last ID changed)
+    const isNewMessage =
+      currentCount > prevCount || (lastMessage.id && lastMessage.id !== prevLastId);
+    if (!isNewMessage) {
+      return () => {
+        if (timer) clearTimeout(timer);
+      };
+    }
+
+    const isAgent =
+      lastMessage.senderType === SenderType.USER ||
+      lastMessage.messageType === MessageType.OUTGOING ||
+      lastMessage.deliveryStatus === DeliveryStatus.PENDING ||
+      Boolean(lastMessage.isPrivate);
+
+    if (isAgent) {
+      // 1. Agent sent message -> ALWAYS smooth scroll to bottom
+      requestAnimationFrame(() => {
+        scrollToEnd({ behavior: 'smooth' });
+      });
+      timer = setTimeout(() => {
+        scrollToEnd({ behavior: 'smooth' });
+      }, 100);
+    } else {
+      // 2. Inbound message from contact
+      if (isNearBottom()) {
+        requestAnimationFrame(() => {
+          scrollToEnd({ behavior: 'smooth' });
+        });
+      } else {
+        // Scrolled up -> notify via button
+        onNewInboundMessage();
+      }
+    }
+
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [messages, isNearBottom, onNewInboundMessage, scrollToEnd]);
+
+  return null;
+}
+
 function MessageThreadLoading() {
   return (
     <div className="flex flex-col gap-4 p-4">
@@ -517,6 +657,7 @@ export function MessageThread({
   });
 
   const {
+    messages,
     groupedMessages,
     isLoading: isMessagesLoading,
     isEmpty,
@@ -535,6 +676,9 @@ export function MessageThread({
     images: [],
     initialIndex: 0,
   });
+
+  const viewportRef = React.useRef<HTMLDivElement>(null);
+  const [newUnreadCount, setNewUnreadCount] = React.useState(0);
 
   const openLightbox = React.useCallback((images: AttachmentDto[], index = 0) => {
     setLightboxState({
@@ -585,16 +729,28 @@ export function MessageThread({
           </div>
         ) : (
           <MessageScroller autoScroll defaultScrollPosition="end" className="h-full">
-            <MessageScrollerViewport className="p-4">
+            <MessageThreadScrollerController
+              messages={messages}
+              conversationId={conversationId}
+              viewportRef={viewportRef}
+              onAtBottom={() => setNewUnreadCount(0)}
+              onNewInboundMessage={() => setNewUnreadCount(prev => prev + 1)}
+            />
+            <MessageScrollerViewport ref={viewportRef} className="p-4">
               <MessageScrollerContent className="gap-4">
                 {groupedMessages.map(group => (
                   <React.Fragment key={group.dateKey}>
                     {/* Date Separator */}
-                    <Marker variant="separator" className="my-2">
-                      <MarkerContent className="text-[11px] font-medium text-muted-foreground">
-                        {group.dateLabel}
-                      </MarkerContent>
-                    </Marker>
+                    <MessageScrollerItem
+                      messageId={`separator-${group.dateKey}`}
+                      className="min-w-0 shrink-0"
+                    >
+                      <Marker variant="separator" className="my-2">
+                        <MarkerContent className="text-[11px] font-medium text-muted-foreground">
+                          {group.dateLabel}
+                        </MarkerContent>
+                      </Marker>
+                    </MessageScrollerItem>
 
                     {/* Messages in this day */}
                     {group.messages.map(message => (
@@ -613,7 +769,35 @@ export function MessageThread({
             </MessageScrollerViewport>
 
             {/* Floating Jump to Latest Button */}
-            <MessageScrollerButton direction="end" />
+            <MessageScrollerButton
+              direction="end"
+              variant={newUnreadCount > 0 ? 'default' : 'secondary'}
+              size={newUnreadCount > 0 ? 'default' : 'icon-sm'}
+              className={cn(
+                'transition-all duration-200 z-10',
+                newUnreadCount > 0
+                  ? 'h-8 px-3 rounded-full shadow-lg border-0 bg-primary text-primary-foreground hover:bg-primary/90'
+                  : 'rounded-full size-7 shadow-sm border border-border bg-background/90 backdrop-blur-xs hover:bg-muted',
+              )}
+              onClick={() => {
+                setNewUnreadCount(0);
+              }}
+            >
+              {newUnreadCount > 0 ? (
+                <div className="flex items-center gap-1.5 text-xs font-medium">
+                  <ArrowDown className="size-3.5 animate-bounce" />
+                  <span>Tin nhắn mới</span>
+                  <span className="flex size-4 items-center justify-center rounded-full bg-primary-foreground text-primary text-[10px] font-bold">
+                    {newUnreadCount > 9 ? '9+' : newUnreadCount}
+                  </span>
+                </div>
+              ) : (
+                <>
+                  <ArrowDown className="size-3.5" />
+                  <span className="sr-only">Scroll to end</span>
+                </>
+              )}
+            </MessageScrollerButton>
           </MessageScroller>
         )}
       </div>

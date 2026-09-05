@@ -3,7 +3,9 @@ import type {
   AssignConversationDto,
   AssignLabelsDto,
   ConversationListQueryDto,
+  ConversationCountsResponseDto,
   ConversationResponseDto,
+  ConversationStatus,
   CreateConversationDto,
   LabelDto,
   UpdateConversationPriorityDto,
@@ -15,6 +17,14 @@ export const conversationsApi = {
     fetchApi<ConversationResponseDto[]>(`/conversations${buildQueryString(query)}`, {
       headers: workspaceHeaders(workspaceId),
     }),
+
+  getCounts: (workspaceId: string, status?: ConversationStatus) =>
+    fetchApi<ConversationCountsResponseDto>(
+      `/conversations/counts${buildQueryString(status ? { status } : undefined)}`,
+      {
+        headers: workspaceHeaders(workspaceId),
+      },
+    ),
 
   get: (workspaceId: string, id: string) =>
     fetchApi<ConversationResponseDto>(`/conversations/${id}`, {

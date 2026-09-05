@@ -9,6 +9,7 @@ import {
   UpdateConversationPriorityDto,
   UpdateConversationStatusDto,
   ConversationListQueryDto,
+  ConversationCountsResponseDto,
   LabelDto,
   PaginationMeta,
 } from '@sales-copilot/shared-contracts';
@@ -814,5 +815,34 @@ export class ConversationsService {
     });
 
     return junctionList.map(j => mapLabelToDto(j.label));
+  }
+
+  /**
+   * Returns conversation counts (mine, unassigned, all) scoped to workspace and optional status.
+   */
+  async getCounts(
+    workspaceId: string,
+    status?: ConversationStatus,
+    userId?: string,
+  ): Promise<ConversationCountsResponseDto> {
+    const client = this.prisma.getClient();
+    const baseWhere: Record<string, unknown> = { workspaceId };
+    if (status) {
+      baseWhere.status = status;
+    }
+
+    const [all, unassigned, mine] = await Promise.all([
+      client.conversation.count({ where: baseWhere }),
+      client.conversation.count({ where: { ...baseWhere, assigneeId: null } }),
+      userId
+        ? client.conversation.count({ where: { ...baseWhere, assigneeId: userId } })
+        : Promise.resolve(0),
+    ]);
+
+    return {
+      all,
+      unassigned,
+      mine,
+    };
   }
 }

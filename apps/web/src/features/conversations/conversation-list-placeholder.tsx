@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { Search, SlidersHorizontal, User, MessageSquare } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -16,6 +17,9 @@ export function ConversationListPlaceholder({
   workspaceSlug,
   activeConversationId,
 }: ConversationListPlaceholderProps) {
+  const searchParams = useSearchParams();
+  const queryString = searchParams.toString();
+
   return (
     <div className="flex h-full w-full flex-col overflow-hidden bg-card/50">
       {/* Panel Header */}
@@ -115,7 +119,10 @@ export function ConversationListPlaceholder({
           return (
             <Link
               key={item.id}
-              href={`/${workspaceSlug}/conversations/${item.id}`}
+              href={`/${workspaceSlug}/conversations/${item.id}${
+                queryString ? `?${queryString}` : ''
+              }`}
+              scroll={false}
               className={cn(
                 'group flex flex-col gap-1 p-3.5 transition-colors hover:bg-muted/40 text-left cursor-pointer relative',
                 isSelected && 'bg-accent/10 hover:bg-accent/15 border-l-2 border-l-primary',

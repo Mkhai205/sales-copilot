@@ -31,6 +31,8 @@ export type {
   AssignLabelsDto,
   ConversationListQueryDto,
   ConversationSortBy,
+  ConversationCountsResponseDto,
+  ConversationCountsQueryDto,
 
   // Messages & Attachments
   MessageResponseDto,

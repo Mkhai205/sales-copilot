@@ -17,6 +17,9 @@ import {
   assignLabelsSchema,
   ConversationListQueryDto,
   conversationListQuerySchema,
+  ConversationCountsQueryDto,
+  conversationCountsQuerySchema,
+  ConversationCountsResponseDto,
   ConversationResponseDto,
   CreateConversationDto,
   createConversationSchema,
@@ -63,6 +66,21 @@ export class ConversationsController {
     @ZodQuery(conversationListQuerySchema) query?: ConversationListQueryDto,
   ): Promise<{ items: ConversationResponseDto[]; meta: PaginationMeta }> {
     return this.conversationsService.list(context.workspaceId, query);
+  }
+
+  @Get('counts')
+  @HttpCode(HttpStatus.OK)
+  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.AGENT, WorkspaceRole.VIEWER)
+  @ApiOperation({ summary: 'Get conversation counts for tabs (mine, unassigned, all)' })
+  @ApiResponse({ status: 200, description: 'Conversation counts retrieved successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  async getCounts(
+    @CurrentWorkspace() context: WorkspaceContext,
+    @CurrentUser() user: JwtUserPayload,
+    @ZodQuery(conversationCountsQuerySchema) query?: ConversationCountsQueryDto,
+  ): Promise<ConversationCountsResponseDto> {
+    return this.conversationsService.getCounts(context.workspaceId, query?.status, user?.userId);
   }
 
   @Post()

@@ -1,120 +1,93 @@
 'use client';
 
 import * as React from 'react';
-import { Search, X } from 'lucide-react';
+import { useConversationFilters, type AssignmentFilter } from './hooks/use-conversation-filters';
+import { useConversationCounts } from './hooks/use-conversation-counts';
+import { cn } from '@/lib/utils';
 import { ConversationStatus } from '@/lib/api/types';
-import {
-  useConversationFilters,
-  type AssignmentFilter,
-  type StatusFilter,
-} from './hooks/use-conversation-filters';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupButton,
-  InputGroupInput,
-} from '@/components/ui/input-group';
 
-export function ConversationListFilters() {
-  const { filters, setStatus, setAssignment, setSearch } = useConversationFilters();
+interface ConversationListFiltersProps {
+  workspaceSlug: string;
+}
 
-  // Local immediate search input state
-  const [searchInput, setSearchInput] = React.useState(filters.q);
+export function ConversationListFilters({ workspaceSlug }: ConversationListFiltersProps) {
+  const { filters, setAssignment } = useConversationFilters();
 
-  // Synchronize local input if URL search changes externally
+  // Fetch live counts for Mine, Unassigned, All based on current status
+  const effectiveStatus =
+    filters.status !== 'ALL' ? (filters.status as ConversationStatus) : undefined;
+  const { counts, isLoading: isCountsLoading } = useConversationCounts({
+    workspaceSlug,
+    status: effectiveStatus,
+  });
+
+  const tabItems: Array<{ key: AssignmentFilter; label: string; count?: number }> = [
+    {
+      key: 'mine',
+      label: 'Mine',
+      count: counts?.mine,
+    },
+    {
+      key: 'unassigned',
+      label: 'Unassigned',
+      count: counts?.unassigned,
+    },
+    {
+      key: 'all',
+      label: 'All',
+      count: counts?.all,
+    },
+  ];
+
+  // Chatwoot Alt+N shortcut to cycle through tabs
   React.useEffect(() => {
-    setSearchInput(filters.q);
-  }, [filters.q]);
-
-  // Debounce search query 300ms
-  React.useEffect(() => {
-    const timer = setTimeout(() => {
-      if (searchInput !== filters.q) {
-        setSearch(searchInput);
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.altKey && (e.key === 'n' || e.key === 'N')) {
+        e.preventDefault();
+        const currentIndex = tabItems.findIndex(tab => tab.key === filters.assignment);
+        const nextIndex = (currentIndex + 1) % tabItems.length;
+        setAssignment(tabItems[nextIndex].key);
       }
-    }, 300);
+    };
 
-    return () => clearTimeout(timer);
-  }, [searchInput, filters.q, setSearch]);
-
-  const handleClearSearch = () => {
-    setSearchInput('');
-    setSearch('');
-  };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [filters.assignment, setAssignment, tabItems]);
 
   return (
-    <div className="flex flex-col gap-2.5 border-b border-border/60 p-3 bg-card/20">
-      {/* 1. Status Filter Tabs */}
-      <Tabs
-        value={filters.status}
-        onValueChange={val => setStatus(val as StatusFilter)}
-        className="w-full"
-      >
-        <TabsList className="w-full grid grid-cols-4 h-7 p-0.5 bg-muted/60">
-          <TabsTrigger value={ConversationStatus.OPEN} className="text-[11px] py-1">
-            Open
-          </TabsTrigger>
-          <TabsTrigger value={ConversationStatus.PENDING} className="text-[11px] py-1">
-            Pending
-          </TabsTrigger>
-          <TabsTrigger value={ConversationStatus.RESOLVED} className="text-[11px] py-1">
-            Resolved
-          </TabsTrigger>
-          <TabsTrigger value="ALL" className="text-[11px] py-1">
-            All
-          </TabsTrigger>
-        </TabsList>
-      </Tabs>
+    <div className="flex h-10 w-full items-center border-b border-border/60 bg-background/50 px-3 shrink-0">
+      <nav className="flex items-center gap-6 h-full" aria-label="Conversation Assignment Tabs">
+        {tabItems.map(tab => {
+          const isActive = filters.assignment === tab.key;
+          const countDisplay = tab.count !== undefined && !isCountsLoading ? tab.count : null;
 
-      {/* 2. Secondary Assignment Filter & Search Bar */}
-      <div className="flex items-center gap-2">
-        <ToggleGroup
-          type="single"
-          value={filters.assignment}
-          onValueChange={val => {
-            if (val) setAssignment(val as AssignmentFilter);
-          }}
-          className="h-7 bg-muted/40 p-0.5 rounded-md border border-border/50"
-        >
-          <ToggleGroupItem value="all" className="h-6 px-2 text-[10px] font-medium">
-            All
-          </ToggleGroupItem>
-          <ToggleGroupItem value="mine" className="h-6 px-2 text-[10px] font-medium">
-            Mine
-          </ToggleGroupItem>
-          <ToggleGroupItem value="unassigned" className="h-6 px-2 text-[10px] font-medium">
-            Unassigned
-          </ToggleGroupItem>
-        </ToggleGroup>
-      </div>
-
-      {/* 3. Search Bar with InputGroup */}
-      <InputGroup className="h-8 bg-background/80 border-border/70">
-        <InputGroupAddon align="inline-start">
-          <Search className="size-3.5 text-muted-foreground" />
-        </InputGroupAddon>
-        <InputGroupInput
-          type="text"
-          placeholder="Search by contact, text..."
-          value={searchInput}
-          onChange={e => setSearchInput(e.target.value)}
-          className="text-xs h-7"
-        />
-        {searchInput && (
-          <InputGroupAddon align="inline-end">
-            <InputGroupButton
-              size="xs"
-              variant="ghost"
-              onClick={handleClearSearch}
-              aria-label="Clear search"
+          return (
+            <button
+              key={tab.key}
+              type="button"
+              onClick={() => setAssignment(tab.key)}
+              className={cn(
+                'relative flex items-center gap-1.5 h-full text-xs transition-colors cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary/40',
+                isActive
+                  ? 'text-primary font-semibold after:absolute after:bottom-0 after:inset-x-0 after:h-0.5 after:bg-primary'
+                  : 'text-muted-foreground hover:text-foreground font-medium',
+              )}
             >
-              <X className="size-3" />
-            </InputGroupButton>
-          </InputGroupAddon>
-        )}
-      </InputGroup>
+              <span>{tab.label}</span>
+              {countDisplay !== null && (
+                <span
+                  className={cn(
+                    'rounded-full px-1.5 py-0 text-[10px] tabular-nums font-semibold transition-colors',
+                    isActive ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground',
+                  )}
+                >
+                  {countDisplay}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </nav>
     </div>
   );
 }
