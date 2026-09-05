@@ -13,10 +13,13 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
+import { useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { StepSelectChannel } from './step-select-channel';
 import { type ChannelConfigState, StepChannelConfig } from './step-channel-config';
 import { StepMembersReview } from './step-members-review';
 import { useCreateInbox } from '../hooks/use-inboxes';
+import { facebookApi } from '@/lib/api/facebook';
 
 interface InboxWizardDialogProps {
   open: boolean;
@@ -42,6 +45,8 @@ export function InboxWizardDialog({ open, onOpenChange, workspaceId }: InboxWiza
   const [touched, setTouched] = React.useState(false);
 
   const { mutate: createInbox, isPending } = useCreateInbox(workspaceId);
+  const [isConnectingFb, setIsConnectingFb] = React.useState(false);
+  const queryClient = useQueryClient();
 
   // Reset state on open/close
   React.useEffect(() => {
@@ -63,6 +68,18 @@ export function InboxWizardDialog({ open, onOpenChange, workspaceId }: InboxWiza
     if (step === 2) {
       setTouched(true);
       if (!config.name.trim()) return;
+
+      if (channelType === ChannelType.FACEBOOK_MESSENGER) {
+        const hasOAuthPage = !!config.facebookSelectedPage;
+        const hasManualToken = !!config.credentials.pageAccessToken?.trim();
+        if (!hasOAuthPage && !hasManualToken) {
+          toast.error(
+            'Vui lòng kết nối và chọn một Facebook Fanpage, hoặc nhập Page Access Token ở mục thiết lập thủ công.',
+          );
+          return;
+        }
+      }
+
       setStep(3);
       return;
     }
@@ -79,9 +96,37 @@ export function InboxWizardDialog({ open, onOpenChange, workspaceId }: InboxWiza
     );
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!config.name.trim() || isPending) return;
+    if (!config.name.trim() || isPending || isConnectingFb) return;
+
+    if (
+      channelType === ChannelType.FACEBOOK_MESSENGER &&
+      config.facebookSessionId &&
+      config.facebookSelectedPage
+    ) {
+      setIsConnectingFb(true);
+      try {
+        await facebookApi.connectPage(
+          workspaceId,
+          {
+            pageId: config.facebookSelectedPage.pageId,
+            pageName: config.facebookSelectedPage.pageName,
+            inboxName: config.name.trim(),
+            memberUserIds: selectedMemberIds,
+          },
+          config.facebookSessionId,
+        );
+        queryClient.invalidateQueries({ queryKey: ['workspaces', workspaceId, 'inboxes'] });
+        toast.success('Facebook Page connected successfully');
+        onOpenChange(false);
+      } catch (err: any) {
+        toast.error(err.message || 'Failed to connect Facebook Page');
+      } finally {
+        setIsConnectingFb(false);
+      }
+      return;
+    }
 
     createInbox(
       {
@@ -207,6 +252,7 @@ export function InboxWizardDialog({ open, onOpenChange, workspaceId }: InboxWiza
 
             {step === 2 && (
               <StepChannelConfig
+                workspaceId={workspaceId}
                 channelType={channelType}
                 config={config}
                 onChange={setConfig}
@@ -257,6 +303,13 @@ export function InboxWizardDialog({ open, onOpenChange, workspaceId }: InboxWiza
                 variant="default"
                 size="sm"
                 onClick={handleNext}
+                disabled={
+                  step === 2 &&
+                  (!config.name.trim() ||
+                    (channelType === ChannelType.FACEBOOK_MESSENGER &&
+                      !config.facebookSelectedPage &&
+                      !config.credentials.pageAccessToken?.trim()))
+                }
                 className="text-xs font-medium"
               >
                 Next
@@ -267,13 +320,13 @@ export function InboxWizardDialog({ open, onOpenChange, workspaceId }: InboxWiza
                 type="submit"
                 variant="default"
                 size="sm"
-                disabled={isPending || !config.name.trim()}
+                disabled={isPending || isConnectingFb || !config.name.trim()}
                 className="text-xs font-medium"
               >
-                {isPending ? (
+                {isPending || isConnectingFb ? (
                   <>
                     <Spinner className="size-3.5" data-icon="inline-start" />
-                    Creating Inbox...
+                    Connecting...
                   </>
                 ) : (
                   <>

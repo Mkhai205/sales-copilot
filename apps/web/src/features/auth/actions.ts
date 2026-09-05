@@ -16,7 +16,10 @@ async function getAuthCookieBaseOptions() {
   try {
     const headerList = await headers();
     const host = headerList.get('host')?.split(':')[0];
-    if (host && host !== 'localhost' && host !== '127.0.0.1') {
+    if (host === 'localhost' || host === '127.0.0.1') {
+      domain = undefined;
+      isSecure = false;
+    } else if (host) {
       if (!domain) {
         const parts = host.split('.');
         if (parts.length >= 2) {

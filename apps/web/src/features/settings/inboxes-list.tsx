@@ -1,23 +1,10 @@
 'use client';
 
 import * as React from 'react';
-import {
-  Inbox,
-  Plus,
-  Search,
-  Pencil,
-  Trash2,
-  AlertTriangle,
-  X,
-  Users,
-  CheckCircle2,
-  Globe,
-  Send,
-  Mail,
-  MessageSquare,
-  MessageCircle,
-} from 'lucide-react';
+import Image from 'next/image';
+import { Plus, Search, Pencil, Trash2, AlertTriangle, X, Users } from 'lucide-react';
 import { type InboxDto, ChannelType, WorkspaceRole } from '@sales-copilot/shared-contracts';
+import { getChannelMeta } from '@/lib/channels';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Select,
@@ -41,6 +28,7 @@ import {
   AlertDialogMedia,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { useRouter } from 'next/navigation';
 import { useDeleteInbox, useInboxes } from './hooks/use-inboxes';
 import { InboxWizardDialog } from './inbox-wizard/inbox-wizard-dialog';
 import { InboxEditDialog } from './inbox-edit-dialog';
@@ -48,14 +36,24 @@ import { InboxEditDialog } from './inbox-edit-dialog';
 interface InboxesListProps {
   workspaceId: string;
   currentUserRole?: WorkspaceRole;
+  workspaceSlug?: string;
 }
 
-export function InboxesList({ workspaceId, currentUserRole }: InboxesListProps) {
+export function InboxesList({ workspaceId, currentUserRole, workspaceSlug }: InboxesListProps) {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = React.useState('');
   const [channelFilter, setChannelFilter] = React.useState<string>('ALL');
   const [wizardOpen, setWizardOpen] = React.useState(false);
   const [inboxToEdit, setInboxToEdit] = React.useState<InboxDto | null>(null);
   const [inboxToDelete, setInboxToDelete] = React.useState<InboxDto | null>(null);
+
+  const handleAddInbox = () => {
+    if (workspaceSlug) {
+      router.push(`/${workspaceSlug}/settings/inboxes/new`);
+    } else {
+      setWizardOpen(true);
+    }
+  };
 
   const { data: inboxes, isLoading } = useInboxes(workspaceId);
   const { mutate: deleteInbox, isPending: isDeleting } = useDeleteInbox(workspaceId);
@@ -81,40 +79,6 @@ export function InboxesList({ workspaceId, currentUserRole }: InboxesListProps) 
     deleteInbox(inboxToDelete.id, {
       onSuccess: () => setInboxToDelete(null),
     });
-  };
-
-  const getChannelIcon = (type: ChannelType) => {
-    switch (type) {
-      case ChannelType.WEB_CHAT:
-        return <Globe className="size-4 text-blue-500" />;
-      case ChannelType.FACEBOOK_MESSENGER:
-        return <MessageSquare className="size-4 text-indigo-500" />;
-      case ChannelType.TELEGRAM:
-        return <Send className="size-4 text-sky-500" />;
-      case ChannelType.EMAIL:
-        return <Mail className="size-4 text-emerald-500" />;
-      case ChannelType.ZALO:
-        return <MessageCircle className="size-4 text-amber-500" />;
-      default:
-        return <Inbox className="size-4 text-primary" />;
-    }
-  };
-
-  const getChannelBadgeLabel = (type: ChannelType) => {
-    switch (type) {
-      case ChannelType.WEB_CHAT:
-        return 'Web Chat';
-      case ChannelType.FACEBOOK_MESSENGER:
-        return 'Messenger';
-      case ChannelType.TELEGRAM:
-        return 'Telegram';
-      case ChannelType.EMAIL:
-        return 'Email';
-      case ChannelType.ZALO:
-        return 'Zalo OA';
-      default:
-        return type;
-    }
   };
 
   return (
@@ -182,11 +146,7 @@ export function InboxesList({ workspaceId, currentUserRole }: InboxesListProps) 
         </div>
 
         {canManage && (
-          <Button
-            size="sm"
-            onClick={() => setWizardOpen(true)}
-            className="h-8 gap-1.5 text-xs font-medium"
-          >
+          <Button size="sm" onClick={handleAddInbox} className="h-8 gap-1.5 text-xs font-medium">
             <Plus className="size-3.5" data-icon="inline-start" />
             Add Inbox
           </Button>
@@ -217,9 +177,17 @@ export function InboxesList({ workspaceId, currentUserRole }: InboxesListProps) 
           ))}
         </div>
       ) : filteredInboxes.length === 0 ? (
-        <div className="flex min-h-[260px] flex-col items-center justify-center rounded-xl border border-dashed border-border p-8 text-center bg-card/20">
-          <div className="flex size-12 items-center justify-center rounded-full bg-muted text-muted-foreground mb-3">
-            <Inbox className="size-6" />
+        <div className="flex min-h-[300px] flex-col items-center justify-center rounded-xl border border-dashed border-border p-8 text-center bg-card/20">
+          <div className="mb-3 flex items-center justify-center">
+            <Image
+              src={
+                searchQuery || channelFilter !== 'ALL' ? '/empty-search.svg' : '/empty-inboxes.svg'
+              }
+              alt="Empty Inboxes"
+              width={160}
+              height={120}
+              className="max-h-36 w-auto object-contain"
+            />
           </div>
           <h3 className="text-sm font-semibold text-foreground">
             {searchQuery || channelFilter !== 'ALL'
@@ -234,7 +202,7 @@ export function InboxesList({ workspaceId, currentUserRole }: InboxesListProps) 
           {canManage && !searchQuery && channelFilter === 'ALL' && (
             <Button
               size="sm"
-              onClick={() => setWizardOpen(true)}
+              onClick={handleAddInbox}
               className="mt-4 h-8 gap-1.5 text-xs font-medium"
             >
               <Plus className="size-3.5" data-icon="inline-start" />
@@ -247,89 +215,103 @@ export function InboxesList({ workspaceId, currentUserRole }: InboxesListProps) 
           {filteredInboxes.map(inbox => {
             const memberCount = inbox.memberCount ?? 0;
             const isConnected = inbox.channel?.isConnected ?? true;
+            const meta = getChannelMeta(inbox.channelType);
 
             return (
               <Card
                 key={inbox.id}
                 className="group relative flex flex-col justify-between border-border bg-card/40 hover:bg-card/70 transition-all shadow-2xs hover:shadow-sm"
               >
-                <CardHeader className="pb-2.5">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-border/80 bg-muted/40 shadow-2xs">
-                        {getChannelIcon(inbox.channelType)}
+                <CardHeader className="pb-3 pt-4 px-4">
+                  <div className="flex items-start justify-between gap-3 min-w-0">
+                    {/* Left: Channel Icon + Inbox Name & Meta */}
+                    <div className="flex items-start gap-3 min-w-0 flex-1">
+                      <div className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-border/80 bg-muted/40 p-2 shadow-2xs">
+                        <Image
+                          src={meta.iconSrc}
+                          alt={meta.label}
+                          width={24}
+                          height={24}
+                          unoptimized
+                          className="size-6 object-contain"
+                        />
                       </div>
-                      <div className="flex flex-col min-w-0">
-                        <CardTitle className="truncate text-sm font-semibold text-foreground">
+                      <div className="flex flex-col min-w-0 flex-1 pt-0.5">
+                        <CardTitle
+                          className="truncate text-sm font-semibold text-foreground leading-tight"
+                          title={inbox.name}
+                        >
                           {inbox.name}
                         </CardTitle>
-                        <div className="flex items-center gap-1.5 mt-0.5">
-                          <Badge variant="outline" className="px-1.5 py-0 text-[10px] font-medium">
-                            {getChannelBadgeLabel(inbox.channelType)}
+                        <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                          <Badge
+                            variant="outline"
+                            className="px-1.5 py-0 text-[10px] font-medium border-border/70"
+                          >
+                            {meta.label}
                           </Badge>
                           {isConnected ? (
-                            <span className="flex items-center gap-0.5 text-[10px] font-medium text-emerald-500">
-                              <CheckCircle2 className="size-2.5" />
+                            <span className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-500">
+                              <span className="size-1.5 rounded-full bg-emerald-500" />
                               Active
                             </span>
                           ) : (
-                            <span className="text-[10px] text-muted-foreground">Draft</span>
+                            <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
+                              <span className="size-1.5 rounded-full bg-muted-foreground/50" />
+                              Draft
+                            </span>
                           )}
                         </div>
                       </div>
                     </div>
 
+                    {/* Right: Quick Action Buttons (Never pushed off-screen) */}
                     {canManage && (
-                      <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center gap-1 shrink-0 -mr-1">
                         <Button
                           variant="ghost"
-                          size="icon-sm"
+                          size="icon-xs"
                           onClick={() => setInboxToEdit(inbox)}
-                          className="size-7 text-muted-foreground hover:text-foreground"
-                          title="Edit inbox"
+                          className="size-7 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted"
+                          title="Edit inbox settings"
                         >
-                          <Pencil className="size-3" />
+                          <Pencil className="size-3.5" />
+                          <span className="sr-only">Edit inbox</span>
                         </Button>
                         <Button
                           variant="ghost"
-                          size="icon-sm"
+                          size="icon-xs"
                           onClick={() => setInboxToDelete(inbox)}
-                          className="size-7 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+                          className="size-7 rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
                           title="Delete inbox"
                         >
-                          <Trash2 className="size-3" />
+                          <Trash2 className="size-3.5" />
+                          <span className="sr-only">Delete inbox</span>
                         </Button>
                       </div>
                     )}
                   </div>
                 </CardHeader>
 
-                <CardContent className="flex-1 py-1">
-                  <p className="text-xs text-muted-foreground line-clamp-2">
+                <CardContent className="flex-1 py-1 px-4">
+                  <p className="text-xs text-muted-foreground/80 line-clamp-2 leading-relaxed">
                     {inbox.greetingMessage ||
                       (inbox.settings?.greetingMessage as string) ||
                       'No greeting message configured.'}
                   </p>
                 </CardContent>
 
-                <CardFooter className="pt-3 pb-3 border-t border-border/40 flex items-center justify-between">
+                <CardFooter className="pt-3 pb-3 px-4 border-t border-border/40 flex items-center justify-between">
                   <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                    <Users className="size-3" />
+                    <Users className="size-3.5 text-muted-foreground/70" />
                     <span>
                       {memberCount} {memberCount === 1 ? 'agent' : 'agents'}
                     </span>
                   </div>
 
-                  {canManage && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setInboxToEdit(inbox)}
-                      className="h-6 px-2 text-[11px] font-medium text-muted-foreground hover:text-foreground"
-                    >
-                      Settings
-                    </Button>
-                  )}
+                  <span className="text-[10px] text-muted-foreground/60 font-mono">
+                    ID: {inbox.id.slice(0, 8)}
+                  </span>
                 </CardFooter>
               </Card>
             );

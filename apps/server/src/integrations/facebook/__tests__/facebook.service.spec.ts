@@ -126,6 +126,16 @@ describe('FacebookService (OAuth Provisioning & Page Connection)', () => {
           return inbox;
         },
       },
+      inboxMember: {
+        createMany: async ({ data }: { data: any[] }) => {
+          return { count: data.length };
+        },
+      },
+      workspaceMember: {
+        findMany: async ({ where: _where }: { where: any }) => {
+          return [{ userId: 'user_agent_1' }, { userId: 'user_agent_2' }];
+        },
+      },
     };
 
     const prismaMock = {
@@ -160,7 +170,8 @@ describe('FacebookService (OAuth Provisioning & Page Connection)', () => {
       assert.ok(result.authUrl);
 
       const parsedUrl = new URL(result.authUrl);
-      assert.strictEqual(parsedUrl.hostname, 'graph.facebook.com');
+      assert.strictEqual(parsedUrl.hostname, 'www.facebook.com');
+      assert.strictEqual(parsedUrl.pathname, '/v26.0/dialog/oauth');
       assert.strictEqual(parsedUrl.searchParams.get('client_id'), mockAppId);
       assert.strictEqual(
         parsedUrl.searchParams.get('redirect_uri'),
@@ -274,6 +285,13 @@ describe('FacebookService (OAuth Provisioning & Page Connection)', () => {
       assert.strictEqual(pages[0].isAlreadyConnected, false);
       assert.strictEqual(pages[1].pageId, 'page_2');
       assert.strictEqual(pages[1].isAlreadyConnected, true);
+
+      // Verify page tokens were cached in Redis session
+      const updatedSession = redisStore.get(`fb_user_token:${sessionId}`);
+      assert.ok(updatedSession);
+      const parsed = JSON.parse(updatedSession);
+      assert.strictEqual(parsed.pages['page_1'].accessToken, 'EAAB_PAGE_1_TOKEN');
+      assert.strictEqual(parsed.pages['page_2'].accessToken, 'EAAB_PAGE_2_TOKEN');
     });
   });
 
@@ -317,6 +335,42 @@ describe('FacebookService (OAuth Provisioning & Page Connection)', () => {
       assert.strictEqual(emitted.payload.channelType, ChannelType.FACEBOOK_MESSENGER);
     });
 
+    it('should auto-resolve pageAccessToken and userAccessToken from Redis session when omitted in DTO', async () => {
+      const sessionId = 'session_auto_tokens';
+      redisStore.set(
+        `fb_user_token:${sessionId}`,
+        JSON.stringify({
+          userAccessToken: 'EAAB_SESSION_USER_TOKEN',
+          workspaceId: wsId,
+          pages: {
+            page_from_session: {
+              accessToken: 'EAAB_SESSION_PAGE_TOKEN',
+              name: 'Session Fanpage',
+            },
+          },
+        }),
+      );
+
+      const result = await service.connectPage(
+        wsId,
+        {
+          pageId: 'page_from_session',
+          pageName: 'Session Fanpage',
+          memberUserIds: ['user_agent_1', 'user_agent_2'],
+        },
+        sessionId,
+      );
+
+      assert.ok(result.inboxId);
+      assert.ok(result.channelId);
+
+      const channel = channelsDb.get(result.channelId);
+      assert.ok(channel);
+      const decrypted = credentialService.decrypt(channel.credentials.encrypted);
+      assert.strictEqual(decrypted.pageAccessToken, 'EAAB_SESSION_PAGE_TOKEN');
+      assert.strictEqual(decrypted.userAccessToken, 'EAAB_SESSION_USER_TOKEN');
+    });
+
     it('should throw ConflictException if page is already connected in workspace', async () => {
       channelsDb.set('existing_chan', {
         id: 'existing_chan',
@@ -335,6 +389,52 @@ describe('FacebookService (OAuth Provisioning & Page Connection)', () => {
           }),
         /already connected in this workspace/,
       );
+    });
+  });
+
+  describe('connectPagesBatch()', () => {
+    it('should connect multiple pages in batch and auto-assign workspace members', async () => {
+      const sessionId = 'session_batch_test';
+      redisStore.set(
+        `fb_user_token:${sessionId}`,
+        JSON.stringify({
+          userAccessToken: 'EAAB_BATCH_USER_TOKEN',
+          workspaceId: wsId,
+          pages: {
+            page_batch_1: {
+              accessToken: 'EAAB_TOKEN_1',
+              name: 'Batch Fanpage 1',
+              avatarUrl: 'https://example.com/p1.png',
+            },
+            page_batch_2: {
+              accessToken: 'EAAB_TOKEN_2',
+              name: 'Batch Fanpage 2',
+              avatarUrl: 'https://example.com/p2.png',
+            },
+          },
+        }),
+      );
+
+      const result = await service.connectPagesBatch(wsId, {
+        pageIds: ['page_batch_1', 'page_batch_2'],
+        sessionId,
+        assignAllMembers: true,
+      });
+
+      assert.strictEqual(result.inboxes.length, 2);
+      assert.strictEqual(result.inboxes[0].pageId, 'page_batch_1');
+      assert.strictEqual(result.inboxes[0].pageName, 'Batch Fanpage 1');
+      assert.strictEqual(result.inboxes[1].pageId, 'page_batch_2');
+      assert.strictEqual(result.inboxes[1].pageName, 'Batch Fanpage 2');
+
+      // Check DB records
+      assert.ok(channelsDb.get(result.inboxes[0].channelId));
+      assert.ok(channelsDb.get(result.inboxes[1].channelId));
+      assert.ok(inboxesDb.get(result.inboxes[0].inboxId));
+      assert.ok(inboxesDb.get(result.inboxes[1].inboxId));
+
+      // Check session cleaned up
+      assert.strictEqual(redisStore.has(`fb_user_token:${sessionId}`), false);
     });
   });
 

@@ -1,8 +1,9 @@
 'use client';
 
 import * as React from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowLeft, Compass, Home } from 'lucide-react';
+import { ArrowLeft, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -18,11 +19,17 @@ export default function NotFound() {
     <div className="flex min-h-screen w-full items-center justify-center p-6 bg-background text-foreground">
       <Card className="w-full max-w-md border-border bg-card shadow-2xl text-center">
         <CardHeader className="items-center pb-2">
-          <div className="flex size-14 items-center justify-center rounded-full bg-primary/10 text-primary mb-2">
-            <Compass className="size-7" />
+          <div className="mb-2 flex items-center justify-center">
+            <Image
+              src="/not-found.svg"
+              alt="Page Not Found"
+              width={260}
+              height={200}
+              priority
+              className="max-h-48 w-auto object-contain drop-shadow-xs"
+            />
           </div>
-          <div className="text-6xl font-extrabold tracking-tight text-primary">404</div>
-          <CardTitle className="text-xl font-bold text-foreground mt-2">Page Not Found</CardTitle>
+          <CardTitle className="text-xl font-bold text-foreground mt-1">Page Not Found</CardTitle>
           <CardDescription className="text-muted-foreground text-center">
             The page or workspace resource you are looking for might have been moved, deleted, or
             does not exist.

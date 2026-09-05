@@ -1,29 +1,21 @@
 'use client';
 
 import * as React from 'react';
+import Image from 'next/image';
 import {
   PanelRightClose,
   PanelRightOpen,
   CheckCircle2,
   RotateCcw,
   UserPlus,
-  Mail,
-  Send,
-  MessageCircle,
-  Globe,
-  MessageSquare,
   AlertTriangle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import {
-  ChannelType,
-  ConversationStatus,
-  Priority,
-  type ConversationResponseDto,
-} from '@/lib/api/types';
+import { ConversationStatus, Priority, type ConversationResponseDto } from '@/lib/api/types';
+import { getChannelMeta } from '@/lib/channels';
 
 interface MessageThreadHeaderProps {
   conversation?: ConversationResponseDto;
@@ -31,36 +23,6 @@ interface MessageThreadHeaderProps {
   isDetailOpen: boolean;
   onToggleDetail: () => void;
   onResolve?: () => void;
-}
-
-function getChannelInfo(inboxName?: string, channelType?: ChannelType | string) {
-  if (
-    channelType === ChannelType.FACEBOOK_MESSENGER ||
-    inboxName?.toLowerCase().includes('messenger')
-  ) {
-    return { label: 'Messenger', icon: MessageCircle, color: 'text-blue-500' };
-  }
-  if (channelType === ChannelType.TELEGRAM || inboxName?.toLowerCase().includes('telegram')) {
-    return { label: 'Telegram', icon: Send, color: 'text-sky-500' };
-  }
-  if (
-    channelType === ChannelType.EMAIL ||
-    inboxName?.toLowerCase().includes('email') ||
-    inboxName?.toLowerCase().includes('mail')
-  ) {
-    return { label: 'Email', icon: Mail, color: 'text-amber-500' };
-  }
-  if (
-    channelType === ChannelType.WEB_CHAT ||
-    inboxName?.toLowerCase().includes('web') ||
-    inboxName?.toLowerCase().includes('live')
-  ) {
-    return { label: 'Live Chat', icon: Globe, color: 'text-emerald-500' };
-  }
-  if (channelType === ChannelType.ZALO || inboxName?.toLowerCase().includes('zalo')) {
-    return { label: 'Zalo', icon: MessageSquare, color: 'text-blue-600' };
-  }
-  return { label: inboxName || 'Chat', icon: MessageSquare, color: 'text-muted-foreground' };
 }
 
 function getStatusBadge(status?: ConversationStatus) {
@@ -152,8 +114,7 @@ export function MessageThreadHeader({
   onResolve,
 }: MessageThreadHeaderProps) {
   const contact = conversation?.contact;
-  const channelInfo = getChannelInfo(conversation?.inbox?.name);
-  const ChannelIcon = channelInfo.icon;
+  const channelMeta = getChannelMeta(conversation?.inbox?.channelType);
   const isResolved = conversation?.status === ConversationStatus.RESOLVED;
 
   const contactInitials = contact?.name
@@ -175,14 +136,27 @@ export function MessageThreadHeader({
     <div className="flex h-14 shrink-0 items-center justify-between border-b border-border/80 px-4 bg-background/95 backdrop-blur-xs">
       <div className="flex items-center gap-3 min-w-0">
         <div className="relative">
-          <Avatar className="size-8.5 ring-1 ring-border">
-            {contact?.avatarUrl && <AvatarImage src={contact.avatarUrl} alt={contact.name || ''} />}
+          <Avatar className="size-10 ring-1 ring-border/50">
+            <AvatarImage
+              src={contact?.avatarUrl || '/avatar-contact-default.svg'}
+              alt={contact?.name || ''}
+            />
             <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
               {contactInitials}
             </AvatarFallback>
           </Avatar>
-          <div className="absolute -bottom-0.5 -right-0.5 rounded-full bg-background p-0.5 shadow-xs">
-            <ChannelIcon className={`size-3 ${channelInfo.color}`} />
+          <div
+            className="absolute -bottom-1 -right-1 size-4.5 rounded-full border-2 border-background bg-card shadow-xs flex items-center justify-center shrink-0"
+            title={channelMeta.label}
+          >
+            <Image
+              src={channelMeta.iconSrc}
+              alt={channelMeta.label}
+              width={14}
+              height={14}
+              unoptimized
+              className="size-3.5 object-contain"
+            />
           </div>
         </div>
 
@@ -194,8 +168,8 @@ export function MessageThreadHeader({
             {getStatusBadge(conversation?.status)}
             {getPriorityBadge(conversation?.priority)}
           </div>
-          <p className="truncate text-[11px] text-muted-foreground">
-            via {channelInfo.label}
+          <p className="truncate text-[11px] text-muted-foreground flex items-center gap-1">
+            <span>via {channelMeta.label}</span>
             {displayId ? ` • ID ${displayId}` : ''}
             {conversation?.assignee?.name ? ` • Assigned to ${conversation.assignee.name}` : ''}
           </p>

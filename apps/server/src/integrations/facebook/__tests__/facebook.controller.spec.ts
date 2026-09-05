@@ -69,13 +69,13 @@ describe('FacebookController (REST & Central Webhook Endpoints)', () => {
 
     facebookService = {
       getAuthUrl: async (workspaceId: string) => ({
-        authUrl: `https://graph.facebook.com/v19.0/dialog/oauth?client_id=123&state=${workspaceId}:abc`,
+        authUrl: `https://www.facebook.com/v26.0/dialog/oauth?client_id=123&state=${workspaceId}:abc`,
       }),
       handleCallback: async (code: string, state: string) => ({
         workspaceId: state.split(':')[0],
         sessionId: 'session_abc',
       }),
-      discoverPages: async (workspaceId: string, sessionId: string) => [
+      discoverPages: async (_workspaceId: string, _sessionId: string) => [
         {
           pageId: mockPageId,
           pageName: 'Test Page',
@@ -83,20 +83,30 @@ describe('FacebookController (REST & Central Webhook Endpoints)', () => {
           isAlreadyConnected: false,
         },
       ],
-      connectPage: async (workspaceId: string, dto: any, sessionId?: string) => ({
+      connectPage: async (_workspaceId: string, _dto: any, _sessionId?: string) => ({
         inboxId: 'inbox_123',
         channelId: 'chan_123',
       }),
-      disconnectPage: async (workspaceId: string, channelId: string) => ({
+      connectPagesBatch: async (_workspaceId: string, _dto: any) => ({
+        inboxes: [
+          {
+            inboxId: 'inbox_123',
+            channelId: 'chan_123',
+            pageId: mockPageId,
+            pageName: 'Test Page',
+          },
+        ],
+      }),
+      disconnectPage: async (_workspaceId: string, _channelId: string) => ({
         success: true,
       }),
-      reauthorizePage: async (workspaceId: string, channelId: string, token: string) => ({
+      reauthorizePage: async (_workspaceId: string, _channelId: string, _token: string) => ({
         success: true,
       }),
     } as unknown as FacebookService;
 
     webhooksService = {
-      handleInboundWebhook: async (channelId: string, payload: any, headers: any, query: any) => {
+      handleInboundWebhook: async (channelId: string, payload: any, headers: any, _query: any) => {
         forwardedWebhooks.push({ channelId, payload, headers });
         return { success: true, eventId: 'event_123' };
       },
@@ -118,7 +128,7 @@ describe('FacebookController (REST & Central Webhook Endpoints)', () => {
     it('getAuthUrl() should return Facebook OAuth login URL', async () => {
       const result = await controller.getAuthUrl(mockContext);
       assert.ok(result.authUrl);
-      assert.ok(result.authUrl.includes('graph.facebook.com'));
+      assert.ok(result.authUrl.includes('facebook.com'));
     });
 
     it('discoverPages() should return pages for valid session', async () => {
@@ -141,9 +151,81 @@ describe('FacebookController (REST & Central Webhook Endpoints)', () => {
       assert.strictEqual(result.channelId, 'chan_123');
     });
 
+    it('connectPagesBatch() should validate DTO and call service', async () => {
+      const result = await controller.connectPagesBatch(mockContext, {
+        pageIds: [mockPageId],
+        sessionId: 'session_abc',
+        assignAllMembers: true,
+      });
+      assert.strictEqual(result.inboxes.length, 1);
+      assert.strictEqual(result.inboxes[0].pageId, mockPageId);
+    });
+
     it('disconnectPage() should call service to disconnect channel', async () => {
       const result = await controller.disconnectPage(mockContext, chanId);
       assert.strictEqual(result.success, true);
+    });
+
+    it('handleCallback() should return HTML sending postMessage on success', async () => {
+      let sentStatus = 0;
+      let sentHtml = '';
+      let setHeaderKey = '';
+      let setHeaderVal = '';
+
+      const resMock = {
+        setHeader: (k: string, v: string) => {
+          setHeaderKey = k;
+          setHeaderVal = v;
+        },
+        status: (s: number) => {
+          sentStatus = s;
+          return {
+            send: (html: string) => {
+              sentHtml = html;
+            },
+          };
+        },
+      } as any;
+
+      await controller.handleCallback('code_123', `${wsId}:csrf_token`, resMock);
+
+      assert.strictEqual(sentStatus, 200);
+      assert.strictEqual(setHeaderKey, 'Content-Type');
+      assert.strictEqual(setHeaderVal, 'text/html');
+      assert.ok(sentHtml.includes('FACEBOOK_OAUTH_SUCCESS'));
+      assert.ok(sentHtml.includes('session_abc'));
+    });
+
+    it('handleCallback() should return HTML sending postMessage on failure', async () => {
+      let sentStatus = 0;
+      let sentHtml = '';
+
+      const resMock = {
+        setHeader: () => {},
+        status: (s: number) => {
+          sentStatus = s;
+          return {
+            send: (html: string) => {
+              sentHtml = html;
+            },
+          };
+        },
+      } as any;
+
+      // Mock failure in handleCallback
+      const origHandleCallback = facebookService.handleCallback;
+      facebookService.handleCallback = async () => {
+        throw new Error('Invalid code');
+      };
+
+      try {
+        await controller.handleCallback('bad_code', `${wsId}:csrf_token`, resMock);
+        assert.strictEqual(sentStatus, 200);
+        assert.ok(sentHtml.includes('FACEBOOK_OAUTH_ERROR'));
+        assert.ok(sentHtml.includes('Invalid code'));
+      } finally {
+        facebookService.handleCallback = origHandleCallback;
+      }
     });
   });
 

@@ -1,13 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const PUBLIC_PREFIXES = ['/login', '/api', '/_next', '/favicon.ico', '/widget', '/test-chat.html'];
+const PUBLIC_PREFIXES = [
+  '/login',
+  '/auth',
+  '/api',
+  '/_next',
+  '/favicon.ico',
+  '/widget',
+  '/test-chat.html',
+  '/brand',
+  '/channels',
+];
 
 function getCookieDomain(hostname: string): string | undefined {
-  if (process.env.COOKIE_DOMAIN) {
-    return process.env.COOKIE_DOMAIN;
-  }
   if (hostname === 'localhost' || hostname === '127.0.0.1') {
     return undefined;
+  }
+  if (process.env.COOKIE_DOMAIN) {
+    return process.env.COOKIE_DOMAIN;
   }
   const parts = hostname.split('.');
   if (parts.length >= 2) {
@@ -115,5 +125,14 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
+  matcher: [
+    /*
+     * Match all request paths except for:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - Static asset files with extensions (.svg, .png, .jpg, .jpeg, .gif, .webp, .ico, .woff, .woff2)
+     */
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff|woff2|ttf|eot)).*)',
+  ],
 };

@@ -3,6 +3,7 @@ import { ConversationStatus, ConversationPriority, Priority } from './enums';
 import type { LabelDto } from '../labels';
 import type { ContactDto } from '../contacts';
 import type { MessageResponseDto } from '../messages';
+import type { ChannelType } from '../inboxes';
 
 // ==========================================
 // 1. Request Validation Schemas
@@ -103,6 +104,7 @@ export interface ConversationResponseDto {
     id: string;
     name: string;
     avatarUrl?: string | null;
+    channelType?: ChannelType | null;
   } | null;
   assignee?: {
     id: string;

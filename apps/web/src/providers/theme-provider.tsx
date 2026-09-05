@@ -4,6 +4,20 @@ import * as React from 'react';
 import { ThemeProvider as NextThemesProvider, useTheme } from 'next-themes';
 import { isEditableEventTarget } from '@/lib/dom-utils';
 
+// Filter out React 19 false-positive warning for next-themes script tag
+if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+  const origConsoleError = console.error;
+  console.error = (...args: unknown[]) => {
+    if (
+      typeof args[0] === 'string' &&
+      args[0].includes('Encountered a script tag while rendering React component')
+    ) {
+      return;
+    }
+    origConsoleError.apply(console, args);
+  };
+}
+
 function ThemeProvider({ children, ...props }: React.ComponentProps<typeof NextThemesProvider>) {
   return (
     <NextThemesProvider

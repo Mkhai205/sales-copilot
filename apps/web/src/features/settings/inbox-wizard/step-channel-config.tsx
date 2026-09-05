@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { LABEL_PRESET_COLORS, isValidHexColor } from '../constants/label-colors';
+import { FacebookOAuthConnect } from './facebook-oauth-connect';
+import type { FacebookPageInfo } from '@/lib/api/facebook';
 
 export interface ChannelConfigState {
   name: string;
@@ -14,9 +16,12 @@ export interface ChannelConfigState {
   isAutoAssignmentEnabled: boolean;
   credentials: Record<string, string>;
   settings: Record<string, unknown>;
+  facebookSessionId?: string;
+  facebookSelectedPage?: FacebookPageInfo;
 }
 
 interface StepChannelConfigProps {
+  workspaceId: string;
   channelType: ChannelType;
   config: ChannelConfigState;
   onChange: (config: ChannelConfigState) => void;
@@ -24,6 +29,7 @@ interface StepChannelConfigProps {
 }
 
 export function StepChannelConfig({
+  workspaceId,
   channelType,
   config,
   onChange,
@@ -155,42 +161,31 @@ export function StepChannelConfig({
         )}
 
         {channelType === ChannelType.FACEBOOK_MESSENGER && (
-          <>
-            <Field>
-              <FieldLabel htmlFor="fb-page-id">Page ID</FieldLabel>
-              <Input
-                id="fb-page-id"
-                value={config.credentials.pageId || ''}
-                onChange={e => updateCredential('pageId', e.target.value)}
-                placeholder="e.g. 104829104928401"
-                className="text-xs font-mono"
-              />
-            </Field>
-
-            <Field>
-              <FieldLabel htmlFor="fb-access-token">Page Access Token</FieldLabel>
-              <Input
-                id="fb-access-token"
-                type="password"
-                value={config.credentials.pageAccessToken || ''}
-                onChange={e => updateCredential('pageAccessToken', e.target.value)}
-                placeholder="EAA..."
-                className="text-xs font-mono"
-              />
-            </Field>
-
-            <Field>
-              <FieldLabel htmlFor="fb-app-secret">App Secret</FieldLabel>
-              <Input
-                id="fb-app-secret"
-                type="password"
-                value={config.credentials.appSecret || ''}
-                onChange={e => updateCredential('appSecret', e.target.value)}
-                placeholder="Your Meta App Secret"
-                className="text-xs font-mono"
-              />
-            </Field>
-          </>
+          <FacebookOAuthConnect
+            workspaceId={workspaceId}
+            selectedPage={config.facebookSelectedPage}
+            sessionId={config.facebookSessionId}
+            onPageSelect={(page, sid) => {
+              onChange({
+                ...config,
+                name: config.name.trim() ? config.name : page.pageName,
+                facebookSelectedPage: page,
+                facebookSessionId: sid,
+                credentials: {
+                  ...config.credentials,
+                  pageId: page.pageId,
+                },
+              });
+            }}
+            onClearSelection={() => {
+              onChange({
+                ...config,
+                facebookSelectedPage: undefined,
+              });
+            }}
+            manualCredentials={config.credentials}
+            onManualCredentialChange={updateCredential}
+          />
         )}
 
         {channelType === ChannelType.TELEGRAM && (

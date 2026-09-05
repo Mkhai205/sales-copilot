@@ -434,7 +434,7 @@ export class TelegramModule implements OnModuleInit {
 - **Echo events** → skip (our own messages echoed back)
 
 #### `sendMessage()`
-- POST `https://graph.facebook.com/v19.0/me/messages`
+- POST `https://graph.facebook.com/v26.0/me/messages`
 - Headers: `Authorization: Bearer {page_access_token}`
 - Body: 
   ```json
@@ -444,7 +444,7 @@ export class TelegramModule implements OnModuleInit {
 - Return `SendMessageResult` with `message_id`
 
 #### `getChannelInfo()`
-- GET `https://graph.facebook.com/v19.0/me?fields=name,picture&access_token={token}`
+- GET `https://graph.facebook.com/v26.0/me?fields=name,picture&access_token={token}`
 - Return page name + avatar URL
 
 **Acceptance Criteria**:

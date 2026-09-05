@@ -1,55 +1,16 @@
 'use client';
 
 import * as React from 'react';
-import { Send, MessageCircle, Mail, Globe, MessageSquare, Link2 } from 'lucide-react';
-import { ChannelType, type ChannelIdentityDto } from '@/lib/api/types';
+import Image from 'next/image';
+import { Link2 } from 'lucide-react';
+import { type ChannelIdentityDto } from '@/lib/api/types';
+import { getChannelMeta } from '@/lib/channels';
 import { useContactIdentities } from './hooks/use-detail-metadata';
 
 interface ContactIdentitiesProps {
   contactId?: string | null;
   workspaceSlug?: string;
   initialIdentities?: ChannelIdentityDto[];
-}
-
-function getChannelIcon(channelType?: ChannelType) {
-  switch (channelType) {
-    case ChannelType.TELEGRAM:
-      return {
-        icon: Send,
-        label: 'Telegram',
-        color: 'text-sky-500 bg-sky-500/10 border-sky-500/20',
-      };
-    case ChannelType.FACEBOOK_MESSENGER:
-      return {
-        icon: MessageCircle,
-        label: 'Messenger',
-        color: 'text-blue-500 bg-blue-500/10 border-blue-500/20',
-      };
-    case ChannelType.EMAIL:
-      return {
-        icon: Mail,
-        label: 'Email',
-        color: 'text-amber-500 bg-amber-500/10 border-amber-500/20',
-      };
-    case ChannelType.WEB_CHAT:
-      return {
-        icon: Globe,
-        label: 'Live Chat',
-        color: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20',
-      };
-    case ChannelType.ZALO:
-      return {
-        icon: MessageSquare,
-        label: 'Zalo',
-        color: 'text-blue-600 bg-blue-600/10 border-blue-600/20',
-      };
-    default:
-      return {
-        icon: Link2,
-        label: 'Channel',
-        color: 'text-muted-foreground bg-muted border-border',
-      };
-  }
 }
 
 export function ContactIdentities({
@@ -62,7 +23,9 @@ export function ContactIdentities({
     enabled: Boolean(contactId),
   });
 
-  const identities = initialIdentities?.length ? initialIdentities : fetchedIdentities;
+  const identities: ChannelIdentityDto[] | undefined = initialIdentities?.length
+    ? initialIdentities
+    : fetchedIdentities;
 
   if (!identities || identities.length === 0) {
     return (
@@ -85,8 +48,8 @@ export function ContactIdentities({
       </h5>
 
       <div className="flex flex-col gap-1.5 text-xs">
-        {identities.map(identity => {
-          const { icon: ChannelIcon, label, color } = getChannelIcon(identity.channelType);
+        {identities.map((identity: ChannelIdentityDto) => {
+          const meta = getChannelMeta(identity.channelType);
           const displayHandle = identity.username
             ? `@${identity.username}`
             : identity.externalContactId;
@@ -97,14 +60,19 @@ export function ContactIdentities({
               className="flex items-center justify-between gap-2 p-2 rounded-md border border-border/50 bg-card/40 hover:bg-card/70 transition-colors"
             >
               <div className="flex items-center gap-2.5 min-w-0">
-                <div
-                  className={`size-6 rounded-md flex items-center justify-center border shrink-0 ${color}`}
-                >
-                  <ChannelIcon className="size-3.5" />
+                <div className="size-8 rounded-lg flex items-center justify-center border border-border/60 bg-muted/40 p-1.5 shrink-0">
+                  <Image
+                    src={meta.iconSrc}
+                    alt={meta.label}
+                    width={20}
+                    height={20}
+                    unoptimized
+                    className="size-5 object-contain"
+                  />
                 </div>
                 <div className="min-w-0">
-                  <p className="truncate font-medium text-foreground text-xs">{label}</p>
-                  <p className="truncate text-[10px] text-muted-foreground">{displayHandle}</p>
+                  <p className="truncate font-semibold text-foreground text-xs">{meta.label}</p>
+                  <p className="truncate text-[11px] text-muted-foreground">{displayHandle}</p>
                 </div>
               </div>
             </div>

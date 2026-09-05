@@ -96,7 +96,7 @@ export interface ChannelAdapter {
 ### 2. Facebook Messenger (Meta Graph API)
 - **Protocol**: Meta Webhook (HMAC-SHA256 signature with `X-Hub-Signature-256`).
 - **Identity Key**: Page-Scoped User ID (PSID).
-- **Outbound**: Meta Send API (`POST https://graph.facebook.com/v19.0/me/messages`).
+- **Outbound**: Meta Send API (`POST https://graph.facebook.com/v26.0/me/messages`).
 
 ### 3. Zalo Official Account (Zalo OpenAPI)
 - **Protocol**: Zalo OA Webhook.

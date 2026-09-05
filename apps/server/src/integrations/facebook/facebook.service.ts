@@ -14,10 +14,15 @@ import { PrismaService } from '../../infrastructure/database';
 import { RedisService } from '../../infrastructure/redis';
 import { ChannelCredentialService } from '../../modules/inboxes/channel-credential.service';
 import { FacebookAdapter } from './facebook.adapter';
-import type { ConnectFacebookPageDto, FacebookPageInfo } from './facebook.dto';
+import type {
+  ConnectFacebookPageDto,
+  ConnectFacebookPagesBatchDto,
+  FacebookPageInfo,
+} from './facebook.dto';
 
+const FB_DIALOG_BASE = 'https://www.facebook.com';
 const GRAPH_API_BASE = 'https://graph.facebook.com';
-const GRAPH_API_VERSION = 'v19.0';
+const GRAPH_API_VERSION = 'v26.0';
 const OAUTH_STATE_TTL_SECONDS = 600; // 10 minutes
 const OAUTH_STATE_PREFIX = 'fb_oauth_state:';
 const USER_TOKEN_PREFIX = 'fb_user_token:';
@@ -82,17 +87,25 @@ export class FacebookService {
    *
    * The state token is stored in Redis (10 min TTL) and verified in the callback.
    */
-  async getAuthUrl(workspaceId: string): Promise<{ authUrl: string }> {
+  async getAuthUrl(
+    workspaceId: string,
+    clientOrigin?: string,
+    returnUrl?: string,
+  ): Promise<{ authUrl: string }> {
     const appId = this.getAppId();
     const redirectUri = this.getRedirectUri();
 
-    // Generate and store CSRF state token
+    // Generate and store CSRF state token with optional clientOrigin and returnUrl
     const state = `${workspaceId}:${crypto.randomBytes(16).toString('hex')}`;
-    await this.redis.set(`${OAUTH_STATE_PREFIX}${state}`, workspaceId, OAUTH_STATE_TTL_SECONDS);
+    await this.redis.set(
+      `${OAUTH_STATE_PREFIX}${state}`,
+      JSON.stringify({ workspaceId, clientOrigin, returnUrl }),
+      OAUTH_STATE_TTL_SECONDS,
+    );
 
     const scopes = ['pages_show_list', 'pages_messaging', 'pages_manage_metadata'].join(',');
 
-    const authUrl = new URL(`${GRAPH_API_BASE}/${GRAPH_API_VERSION}/dialog/oauth`);
+    const authUrl = new URL(`${FB_DIALOG_BASE}/${GRAPH_API_VERSION}/dialog/oauth`);
     authUrl.searchParams.set('client_id', appId);
     authUrl.searchParams.set('redirect_uri', redirectUri);
     authUrl.searchParams.set('state', state);
@@ -111,16 +124,36 @@ export class FacebookService {
   async handleCallback(
     code: string,
     state: string,
-  ): Promise<{ workspaceId: string; sessionId: string }> {
+  ): Promise<{
+    workspaceId: string;
+    sessionId: string;
+    clientOrigin?: string;
+    returnUrl?: string;
+  }> {
     // 1. Validate CSRF state
-    const storedWorkspaceId = await this.redis.get(`${OAUTH_STATE_PREFIX}${state}`);
-    if (!storedWorkspaceId) {
+    const storedStateData = await this.redis.get(`${OAUTH_STATE_PREFIX}${state}`);
+    if (!storedStateData) {
       throw new BadRequestException({
         code: 'INVALID_OAUTH_STATE',
         message: 'OAuth state token is invalid or expired. Please restart the connection process.',
       });
     }
     await this.redis.del(`${OAUTH_STATE_PREFIX}${state}`);
+
+    let storedWorkspaceId = storedStateData;
+    let clientOrigin: string | undefined;
+    let returnUrl: string | undefined;
+
+    try {
+      const parsed = JSON.parse(storedStateData);
+      if (parsed && typeof parsed === 'object' && parsed.workspaceId) {
+        storedWorkspaceId = parsed.workspaceId;
+        clientOrigin = parsed.clientOrigin;
+        returnUrl = parsed.returnUrl;
+      }
+    } catch {
+      // backward compatibility if stored as plain string
+    }
 
     // 2. Exchange authorization code for short-lived user token
     const appId = this.getAppId();
@@ -171,7 +204,7 @@ export class FacebookService {
       USER_TOKEN_TTL_SECONDS,
     );
 
-    return { workspaceId: storedWorkspaceId, sessionId };
+    return { workspaceId: storedWorkspaceId, sessionId, clientOrigin, returnUrl };
   }
 
   /**
@@ -200,6 +233,9 @@ export class FacebookService {
     let nextUrl: string | null =
       `${GRAPH_API_BASE}/${GRAPH_API_VERSION}/me/accounts?fields=id,name,picture.type(large),category,access_token&access_token=${encodeURIComponent(userAccessToken)}`;
 
+    const pageTokensMap: Record<string, { accessToken: string; name: string; avatarUrl?: string }> =
+      {};
+
     while (nextUrl) {
       const response = await fetch(nextUrl);
       const data = (await response.json()) as {
@@ -223,6 +259,13 @@ export class FacebookService {
 
       if (data.data) {
         for (const page of data.data) {
+          if (page.access_token) {
+            pageTokensMap[page.id] = {
+              accessToken: page.access_token,
+              name: page.name,
+              avatarUrl: page.picture?.data?.url,
+            };
+          }
           pages.push({
             pageId: page.id,
             pageName: page.name,
@@ -235,6 +278,17 @@ export class FacebookService {
 
       nextUrl = data.paging?.next || null;
     }
+
+    // Update Redis session with cached page tokens
+    await this.redis.set(
+      `${USER_TOKEN_PREFIX}${sessionId}`,
+      JSON.stringify({
+        userAccessToken,
+        workspaceId,
+        pages: pageTokensMap,
+      }),
+      USER_TOKEN_TTL_SECONDS,
+    );
 
     // 3. Check which pages are already connected in this workspace
     const client = this.prisma.getClient();
@@ -268,7 +322,39 @@ export class FacebookService {
   ): Promise<{ inboxId: string; channelId: string }> {
     const client = this.prisma.getClient();
 
-    // 1. Check if this page is already connected in the workspace
+    // 1. Resolve tokens from Redis session if not supplied in DTO
+    let pageAccessToken = dto.pageAccessToken;
+    let userAccessToken = dto.userAccessToken;
+
+    if (sessionId) {
+      const sessionData = await this.redis.get(`${USER_TOKEN_PREFIX}${sessionId}`);
+      if (sessionData) {
+        try {
+          const parsed = JSON.parse(sessionData) as {
+            userAccessToken?: string;
+            pages?: Record<string, { accessToken: string; name: string }>;
+          };
+          if (!userAccessToken && parsed.userAccessToken) {
+            userAccessToken = parsed.userAccessToken;
+          }
+          if (!pageAccessToken && parsed.pages?.[dto.pageId]?.accessToken) {
+            pageAccessToken = parsed.pages[dto.pageId].accessToken;
+          }
+        } catch {
+          // ignore parse error
+        }
+      }
+    }
+
+    if (!pageAccessToken || !userAccessToken) {
+      throw new BadRequestException({
+        code: 'MISSING_CREDENTIALS',
+        message:
+          'Both pageAccessToken and userAccessToken are required to connect a Facebook Page.',
+      });
+    }
+
+    // 2. Check if this page is already connected in the workspace
     const existingChannel = await client.channel.findFirst({
       where: {
         workspaceId,
@@ -285,15 +371,15 @@ export class FacebookService {
       });
     }
 
-    // 2. Encrypt credentials
+    // 3. Encrypt credentials
     const credentials = {
-      pageAccessToken: dto.pageAccessToken,
-      userAccessToken: dto.userAccessToken,
+      pageAccessToken,
+      userAccessToken,
       appSecret: this.configService.get<string>('FB_APP_SECRET') || '',
     };
     const encryptedString = this.credentialService.encrypt(credentials);
 
-    // 3. Create Inbox + Channel in a transaction
+    // 4. Create Inbox + Channel (+ InboxMembers) in a transaction
     const inboxName = dto.inboxName || dto.pageName;
 
     const result = await this.prisma.runInTransaction(async txCtx => {
@@ -317,6 +403,16 @@ export class FacebookService {
           isConnected: false, // Will be set to true after webhook subscription succeeds
         },
       });
+
+      if (dto.memberUserIds && dto.memberUserIds.length > 0) {
+        await tx.inboxMember.createMany({
+          data: dto.memberUserIds.map(userId => ({
+            inboxId: inbox.id,
+            userId,
+          })),
+          skipDuplicates: true,
+        });
+      }
 
       return { inboxId: inbox.id, channelId: channel.id };
     });
@@ -346,6 +442,156 @@ export class FacebookService {
     );
 
     return result;
+  }
+
+  /**
+   * Connects multiple selected Facebook Pages in batch:
+   * Creates Inbox + Channel with encrypted credentials for each page,
+   * assigns workspace members, and triggers webhook subscription.
+   */
+  async connectPagesBatch(
+    workspaceId: string,
+    dto: ConnectFacebookPagesBatchDto,
+  ): Promise<{
+    inboxes: Array<{ inboxId: string; channelId: string; pageId: string; pageName: string }>;
+  }> {
+    const client = this.prisma.getClient();
+
+    // 1. Retrieve user tokens and cached page tokens from Redis
+    const sessionData = await this.redis.get(`${USER_TOKEN_PREFIX}${dto.sessionId}`);
+    if (!sessionData) {
+      throw new BadRequestException({
+        code: 'SESSION_EXPIRED',
+        message: 'OAuth session has expired. Please restart the Facebook connection process.',
+      });
+    }
+
+    const parsed = JSON.parse(sessionData) as {
+      userAccessToken?: string;
+      pages?: Record<string, { accessToken: string; name: string; avatarUrl?: string }>;
+    };
+
+    const userAccessToken = parsed.userAccessToken;
+    const pagesMap = parsed.pages || {};
+
+    if (!userAccessToken) {
+      throw new BadRequestException({
+        code: 'MISSING_CREDENTIALS',
+        message: 'User access token not found in OAuth session.',
+      });
+    }
+
+    // 2. Resolve member user IDs
+    let memberUserIds = dto.memberUserIds;
+    if ((!memberUserIds || memberUserIds.length === 0) && dto.assignAllMembers !== false) {
+      const workspaceMembers = await client.workspaceMember.findMany({
+        where: { workspaceId },
+        select: { userId: true },
+      });
+      memberUserIds = workspaceMembers.map(m => m.userId);
+    }
+
+    const appSecret = this.configService.get<string>('FB_APP_SECRET') || '';
+    const createdList: Array<{
+      inboxId: string;
+      channelId: string;
+      pageId: string;
+      pageName: string;
+    }> = [];
+
+    // 3. Connect each selected page
+    for (const pageId of dto.pageIds) {
+      const pageInfo = pagesMap[pageId];
+      if (!pageInfo || !pageInfo.accessToken) {
+        this.logger.warn(`Skipping Facebook page ${pageId}: No access token found in session.`);
+        continue;
+      }
+
+      // Check if page is already connected in this workspace
+      const existing = await client.channel.findFirst({
+        where: {
+          workspaceId,
+          channelType: 'FACEBOOK_MESSENGER',
+          providerAccountId: pageId,
+        },
+      });
+
+      if (existing) {
+        this.logger.warn(
+          `Facebook Page '${pageInfo.name}' (${pageId}) is already connected. Skipping.`,
+        );
+        continue;
+      }
+
+      const credentials = {
+        pageAccessToken: pageInfo.accessToken,
+        userAccessToken,
+        appSecret,
+      };
+      const encryptedString = this.credentialService.encrypt(credentials);
+      const avatarUrl =
+        pageInfo.avatarUrl || `https://graph.facebook.com/${pageId}/picture?type=large`;
+
+      const result = await this.prisma.runInTransaction(async txCtx => {
+        const tx = txCtx.tx;
+
+        const inbox = await tx.inbox.create({
+          data: {
+            workspaceId,
+            name: pageInfo.name,
+            avatarUrl,
+          },
+        });
+
+        const channel = await tx.channel.create({
+          data: {
+            workspaceId,
+            inboxId: inbox.id,
+            channelType: 'FACEBOOK_MESSENGER',
+            providerAccountId: pageId,
+            credentials: { encrypted: encryptedString } as any,
+            settings: {} as any,
+            isConnected: false,
+          },
+        });
+
+        if (memberUserIds && memberUserIds.length > 0) {
+          await tx.inboxMember.createMany({
+            data: memberUserIds.map(userId => ({
+              inboxId: inbox.id,
+              userId,
+            })),
+            skipDuplicates: true,
+          });
+        }
+
+        return { inboxId: inbox.id, channelId: channel.id };
+      });
+
+      // Emit channel.created event -> FacebookLifecycleService will auto-subscribe webhook
+      this.eventEmitter.emit('channel.created', {
+        workspaceId,
+        inboxId: result.inboxId,
+        channelId: result.channelId,
+        channelType: ChannelType.FACEBOOK_MESSENGER,
+      });
+
+      createdList.push({
+        inboxId: result.inboxId,
+        channelId: result.channelId,
+        pageId,
+        pageName: pageInfo.name,
+      });
+
+      this.logger.log(
+        `Connected Facebook Page '${pageInfo.name}' (${pageId}) in batch to workspace '${workspaceId}'`,
+      );
+    }
+
+    // 4. Cleanup Redis session
+    await this.redis.del(`${USER_TOKEN_PREFIX}${dto.sessionId}`);
+
+    return { inboxes: createdList };
   }
 
   /**

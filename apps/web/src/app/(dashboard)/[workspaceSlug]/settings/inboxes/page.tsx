@@ -40,6 +40,7 @@ export default function InboxesSettingsPage() {
           <InboxesList
             workspaceId={currentWorkspace.id}
             currentUserRole={currentRole ?? undefined}
+            workspaceSlug={workspaceSlug}
           />
         )}
       </div>

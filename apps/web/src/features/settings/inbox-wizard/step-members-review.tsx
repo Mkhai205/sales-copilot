@@ -1,7 +1,8 @@
 'use client';
 
 import * as React from 'react';
-import { Check, Search, X, Users, ShieldCheck, Zap } from 'lucide-react';
+import Image from 'next/image';
+import { Check, Search, X, Users, Zap } from 'lucide-react';
 import { ChannelType } from '@sales-copilot/shared-contracts';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -11,7 +12,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card, CardContent } from '@/components/ui/card';
 import { useWorkspaceMembers } from '../hooks/use-workspace-members';
 import type { ChannelConfigState } from './step-channel-config';
-import { CHANNEL_OPTIONS } from './step-select-channel';
+import { getChannelMeta } from '@/lib/channels';
 
 interface StepMembersReviewProps {
   workspaceId: string;
@@ -31,7 +32,7 @@ export function StepMembersReview({
   const [searchMemberQuery, setSearchMemberQuery] = React.useState('');
   const { data: workspaceMembers, isLoading: isLoadingMembers } = useWorkspaceMembers(workspaceId);
 
-  const currentChannel = CHANNEL_OPTIONS.find(c => c.type === channelType);
+  const meta = getChannelMeta(channelType);
 
   const filteredMembers = React.useMemo(() => {
     if (!workspaceMembers) return [];
@@ -70,14 +71,19 @@ export function StepMembersReview({
 
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
             <div className="flex items-center gap-2">
-              <div className="flex size-7 shrink-0 items-center justify-center rounded-md border bg-card">
-                {currentChannel?.icon}
+              <div className="flex size-7 shrink-0 items-center justify-center rounded-md border border-border/80 bg-card p-1 shadow-2xs">
+                <Image
+                  src={meta.iconSrc}
+                  alt={meta.label}
+                  width={20}
+                  height={20}
+                  unoptimized
+                  className="size-4 object-contain"
+                />
               </div>
               <div className="flex flex-col min-w-0">
                 <span className="text-[10px] text-muted-foreground">Channel</span>
-                <span className="truncate text-xs font-semibold text-foreground">
-                  {currentChannel?.title}
-                </span>
+                <span className="truncate text-xs font-semibold text-foreground">{meta.label}</span>
               </div>
             </div>
 

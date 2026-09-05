@@ -690,7 +690,7 @@ describe('FacebookAdapter (Facebook Messenger Platform Integration)', () => {
 
       const result = await adapter.sendMessage(mockChannelContext, outboundPayload);
 
-      assert.strictEqual(interceptedUrl, 'https://graph.facebook.com/v19.0/me/messages');
+      assert.strictEqual(interceptedUrl, 'https://graph.facebook.com/v26.0/me/messages');
       assert.strictEqual(interceptedHeaders['Authorization'], `Bearer ${mockPageAccessToken}`);
       assert.strictEqual(interceptedBody.recipient.id, 'psid_recipient_1');
       assert.strictEqual(
@@ -849,7 +849,7 @@ describe('FacebookAdapter (Facebook Messenger Platform Integration)', () => {
     it('should fetch Page metadata via Graph API /me', async () => {
       globalThis.fetch = (async (url: string | URL | Request) => {
         const urlStr = String(url);
-        assert.ok(urlStr.includes('https://graph.facebook.com/v19.0/me'));
+        assert.ok(urlStr.includes('https://graph.facebook.com/v26.0/me'));
         assert.ok(urlStr.includes('fields=id,name,picture.type(large)'));
 
         return {

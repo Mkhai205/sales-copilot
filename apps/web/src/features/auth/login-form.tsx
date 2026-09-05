@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -17,7 +18,6 @@ import {
   HeadphonesIcon,
   SparklesIcon,
 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 
 const TEST_ACCOUNTS = [
   {
@@ -106,12 +106,26 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
           {/* Left: Form */}
           <form onSubmit={handleSubmit} className="p-6 sm:p-8 flex flex-col justify-center">
             <FieldGroup>
-              <div className="flex flex-col items-center gap-1.5 mb-2">
-                <div className="flex items-center gap-2 mb-1">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-sm shadow-sm">
-                    SC
-                  </div>
-                  <span className="font-semibold text-base tracking-tight">Sales Copilot</span>
+              <div className="flex flex-col items-center gap-2 mb-2">
+                <div className="flex items-center justify-center mb-1">
+                  <Image
+                    src="/brand/logo.png"
+                    alt="Sales Copilot"
+                    width={180}
+                    height={60}
+                    priority
+                    unoptimized
+                    className="h-10 w-auto object-contain dark:hidden"
+                  />
+                  <Image
+                    src="/brand/logo-dark.png"
+                    alt="Sales Copilot"
+                    width={180}
+                    height={60}
+                    priority
+                    unoptimized
+                    className="hidden h-10 w-auto object-contain dark:block"
+                  />
                 </div>
                 <h1 className="text-2xl font-bold tracking-tight">Welcome back</h1>
                 <p className="text-xs text-muted-foreground text-center">
@@ -251,7 +265,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
 
           {/* Right: Feature Showcase Panel */}
           <div className="relative hidden md:flex flex-col justify-between p-8 bg-gradient-to-br from-primary/15 via-primary/5 to-muted border-l border-border/60">
-            <div className="space-y-4">
+            <div className="space-y-3">
               <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-primary/15 text-primary border border-primary/20">
                 Omnichannel Platform
               </div>
@@ -260,21 +274,32 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
               </h2>
               <p className="text-xs text-muted-foreground leading-relaxed">
                 Connect Facebook, Zalo, Telegram, Email, and Web Chat in a single real-time inbox.
-                Accelerate team workflows with smart routing and automated replies.
               </p>
             </div>
 
-            <div className="space-y-3 pt-6 border-t border-border/40">
+            {/* Visual Illustration */}
+            <div className="my-auto flex items-center justify-center py-3">
+              <Image
+                src="/auth-showcase.svg"
+                alt="Sales Copilot Omnichannel Chat"
+                width={300}
+                height={220}
+                priority
+                className="max-h-48 w-auto object-contain drop-shadow-sm"
+              />
+            </div>
+
+            <div className="space-y-2.5 pt-4 border-t border-border/40">
               <div className="flex items-center gap-2.5 text-xs text-muted-foreground">
-                <div className="h-2 w-2 rounded-full bg-emerald-500" />
+                <div className="size-2 rounded-full bg-emerald-500 shrink-0" />
                 <span>Real-time WebSocket event streaming</span>
               </div>
               <div className="flex items-center gap-2.5 text-xs text-muted-foreground">
-                <div className="h-2 w-2 rounded-full bg-blue-500" />
+                <div className="size-2 rounded-full bg-blue-500 shrink-0" />
                 <span>Multi-tenant workspace isolation</span>
               </div>
               <div className="flex items-center gap-2.5 text-xs text-muted-foreground">
-                <div className="h-2 w-2 rounded-full bg-purple-500" />
+                <div className="size-2 rounded-full bg-purple-500 shrink-0" />
                 <span>Smart agent auto-assignment & canned replies</span>
               </div>
             </div>

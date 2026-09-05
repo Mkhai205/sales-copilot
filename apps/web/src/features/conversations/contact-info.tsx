@@ -43,7 +43,10 @@ export function ContactInfo({ contact }: ContactInfoProps) {
       {/* Contact Profile Header */}
       <div className="flex flex-col items-center text-center gap-2 pb-1">
         <Avatar className="size-14 ring-2 ring-border/60 shadow-xs">
-          {contact?.avatarUrl && <AvatarImage src={contact.avatarUrl} alt={contactName} />}
+          <AvatarImage
+            src={contact?.avatarUrl || '/avatar-contact-default.svg'}
+            alt={contactName}
+          />
           <AvatarFallback className="bg-primary/10 text-primary text-base font-bold">
             {initials}
           </AvatarFallback>

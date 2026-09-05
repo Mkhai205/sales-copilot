@@ -1,7 +1,8 @@
 'use client';
 
 import * as React from 'react';
-import { MessageSquare, RotateCcw, SearchX } from 'lucide-react';
+import Image from 'next/image';
+import { RotateCcw } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -133,13 +134,15 @@ export function ConversationList({ workspaceSlug, activeConversationId }: Conver
             </Button>
           </div>
         ) : isEmpty ? (
-          <div className="flex flex-col items-center justify-center p-8 text-center gap-3">
-            <div className="flex size-10 items-center justify-center rounded-full bg-muted text-muted-foreground">
-              {hasActiveFilters ? (
-                <SearchX className="size-5" />
-              ) : (
-                <MessageSquare className="size-5" />
-              )}
+          <div className="flex flex-col items-center justify-center p-8 text-center gap-2.5">
+            <div className="flex items-center justify-center mb-1">
+              <Image
+                src={hasActiveFilters ? '/empty-search.svg' : '/empty-conversations.svg'}
+                alt="Empty"
+                width={120}
+                height={90}
+                className="max-h-24 w-auto object-contain drop-shadow-xs"
+              />
             </div>
             <div>
               <p className="text-xs font-semibold text-foreground">

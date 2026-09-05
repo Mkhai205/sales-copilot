@@ -1,8 +1,8 @@
 'use client';
 
 import * as React from 'react';
-import { MessageSquare, Sparkles, Inbox, ShieldCheck } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import Image from 'next/image';
+import { Inbox, ShieldCheck } from 'lucide-react';
 
 export function ConversationEmptyState() {
   return (
@@ -12,13 +12,15 @@ export function ConversationEmptyState() {
       <div className="pointer-events-none absolute -bottom-24 size-96 rounded-full bg-accent/5 blur-3xl" />
 
       <div className="relative z-10 flex max-w-md flex-col items-center">
-        <div className="relative mb-6 flex size-16 items-center justify-center rounded-2xl border border-border/80 bg-card/80 shadow-sm backdrop-blur-sm">
-          <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-            <MessageSquare className="size-5" />
-          </div>
-          <div className="absolute -bottom-1 -right-1 flex size-5 items-center justify-center rounded-full border border-card bg-primary text-[10px] text-primary-foreground shadow-xs">
-            <Sparkles className="size-3" />
-          </div>
+        <div className="mb-4 flex items-center justify-center">
+          <Image
+            src="/empty-conversations.svg"
+            alt="No Conversation Selected"
+            width={240}
+            height={200}
+            priority
+            className="max-h-44 w-auto object-contain drop-shadow-xs"
+          />
         </div>
 
         <h2 className="text-lg font-semibold tracking-tight text-foreground">

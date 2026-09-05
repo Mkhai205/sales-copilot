@@ -275,11 +275,11 @@ function MessageItem({
           {/* Note Header */}
           <div className="flex items-center justify-between gap-2 border-b border-amber-500/20 pb-2">
             <div className="flex items-center gap-2">
-              <Avatar className="size-5 border border-amber-500/30">
+              <Avatar className="size-6 border border-amber-500/30">
                 {message.sender?.avatarUrl && (
                   <AvatarImage src={message.sender.avatarUrl} alt={authorName} />
                 )}
-                <AvatarFallback className="text-[9px] bg-amber-500/20 text-amber-700 dark:text-amber-300 font-semibold">
+                <AvatarFallback className="text-[10px] bg-amber-500/20 text-amber-700 dark:text-amber-300 font-semibold">
                   {authorInitials}
                 </AvatarFallback>
               </Avatar>
@@ -386,6 +386,10 @@ function MessageItem({
   }
 
   // 4. Inbound Message (Contact / Customer)
+  const isBotSender =
+    message.sender?.name?.toLowerCase().includes('bot') ||
+    message.sender?.name?.toLowerCase().includes('copilot');
+  const defaultAvatar = isBotSender ? '/avatar-bot-copilot.svg' : '/avatar-contact-default.svg';
   const senderInitials = (message.sender?.name || contactName || 'C')
     .split(' ')
     .map(n => n[0])
@@ -397,15 +401,13 @@ function MessageItem({
     <MessageScrollerItem messageId={message.id}>
       <Message align="start">
         <MessageAvatar>
-          <Avatar className="size-7">
-            {(message.sender?.avatarUrl || contactAvatar) && (
-              <AvatarImage
-                src={message.sender?.avatarUrl || contactAvatar || ''}
-                alt={message.sender?.name || contactName || ''}
-              />
-            )}
-            <AvatarFallback className="text-[10px] bg-muted-foreground/20 font-medium">
-              {senderInitials}
+          <Avatar className="size-8">
+            <AvatarImage
+              src={message.sender?.avatarUrl || contactAvatar || defaultAvatar}
+              alt={message.sender?.name || contactName || ''}
+            />
+            <AvatarFallback className="text-[11px] bg-muted-foreground/20 font-medium">
+              {isBotSender ? 'AI' : senderInitials}
             </AvatarFallback>
           </Avatar>
         </MessageAvatar>

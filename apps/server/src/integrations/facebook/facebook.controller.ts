@@ -33,8 +33,9 @@ import { FacebookService } from './facebook.service';
 import { FacebookAdapter } from './facebook.adapter';
 import {
   connectFacebookPageSchema,
+  connectFacebookPagesBatchSchema,
   type ConnectFacebookPageDto,
-  type FacebookCallbackQuery,
+  type ConnectFacebookPagesBatchDto,
 } from './facebook.dto';
 
 /**
@@ -63,42 +64,207 @@ export class FacebookController {
 
   // ─── OAuth Endpoints ────────────────────────────────────────────────────────
 
+  /**
+   * Safely determines the frontend application URL for OAuth redirects.
+   * Prevents redirects to Facebook/Meta domains or unverified origins.
+   */
+  private resolveFrontendUrl(candidateOrigin?: string, req?: Request): string {
+    const corsOrigins = this.configService.get<string[]>('CORS_ORIGIN') || [];
+    const validOrigins = corsOrigins.filter(
+      o =>
+        o &&
+        o !== 'null' &&
+        !o.includes('web:') &&
+        !o.toLowerCase().includes('facebook.com') &&
+        !o.toLowerCase().includes('meta.com'),
+    );
+
+    // 1. Explicit candidate origin (from query param or Redis session)
+    if (candidateOrigin && this.isValidFrontendOrigin(candidateOrigin, validOrigins)) {
+      return new URL(candidateOrigin).origin;
+    }
+
+    // 2. Request Origin header (valid frontend app)
+    const originHeader = req?.headers?.origin as string | undefined;
+    if (originHeader && this.isValidFrontendOrigin(originHeader, validOrigins)) {
+      return new URL(originHeader).origin;
+    }
+
+    // 3. Request Referer header ONLY IF NOT Facebook/Meta
+    const refererHeader = req?.headers?.referer as string | undefined;
+    if (refererHeader && this.isValidFrontendOrigin(refererHeader, validOrigins)) {
+      return new URL(refererHeader).origin;
+    }
+
+    // 4. Domain matching with WEBHOOK_BASE_URL (e.g. *.kakadev.xyz tunnel)
+    const webhookBaseUrl = this.configService.get<string>('WEBHOOK_BASE_URL') || '';
+    if (webhookBaseUrl.includes('kakadev.xyz')) {
+      const kakadevOrigin = validOrigins.find(
+        o => o.includes('app-sales-copilot.kakadev.xyz') || o.includes('kakadev.xyz'),
+      );
+      if (kakadevOrigin) {
+        return new URL(kakadevOrigin).origin;
+      }
+    }
+
+    // 5. Prefer HTTPS origins from CORS_ORIGIN
+    const httpsOrigin = validOrigins.find(o => o.startsWith('https://'));
+    if (httpsOrigin) {
+      return new URL(httpsOrigin).origin;
+    }
+
+    // 6. Safe fallback (first valid origin or localhost:3000)
+    return (validOrigins[0] || 'http://localhost:3000').replace(/\/+$/, '');
+  }
+
+  private isValidFrontendOrigin(candidate: string, allowedOrigins: string[]): boolean {
+    if (!candidate || candidate === 'null') return false;
+    const lower = candidate.toLowerCase();
+    if (lower.includes('facebook.com') || lower.includes('meta.com')) return false;
+
+    try {
+      const u = new URL(candidate);
+      if (u.protocol !== 'http:' && u.protocol !== 'https:') return false;
+      const normalized = u.origin;
+      return (
+        allowedOrigins.some(ao => {
+          try {
+            return new URL(ao).origin === normalized;
+          } catch {
+            return ao === normalized;
+          }
+        }) ||
+        u.hostname.endsWith('.kakadev.xyz') ||
+        u.hostname === 'localhost' ||
+        u.hostname === '127.0.0.1'
+      );
+    } catch {
+      return false;
+    }
+  }
+
   @Get('auth-url')
   @UseGuards(WorkspaceGuard, RolesGuard)
   @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN)
   @ApiOperation({ summary: 'Generate Facebook OAuth authorization URL' })
   @ApiResponse({ status: 200, description: 'Returns the Facebook OAuth login URL' })
-  async getAuthUrl(@CurrentWorkspace() context: WorkspaceContext): Promise<{ authUrl: string }> {
-    return this.facebookService.getAuthUrl(context.workspaceId);
+  async getAuthUrl(
+    @CurrentWorkspace() context: WorkspaceContext,
+    @Query('origin') originQuery?: string,
+    @Query('returnUrl') returnUrlQuery?: string,
+    @Req() req?: Request,
+  ): Promise<{ authUrl: string }> {
+    const origin = this.resolveFrontendUrl(originQuery, req);
+    return this.facebookService.getAuthUrl(context.workspaceId, origin, returnUrlQuery);
   }
 
   @Get('callback')
   @Public()
   @ApiOperation({ summary: 'Handle Facebook OAuth callback redirect' })
-  @ApiResponse({ status: 302, description: 'Redirects to frontend with session data' })
+  @ApiResponse({
+    status: 200,
+    description: 'HTML page sending postMessage to popup opener or redirecting',
+  })
   async handleCallback(
     @Query('code') code: string,
     @Query('state') state: string,
     @Res() res: Response,
+    @Req() req?: Request,
   ): Promise<void> {
     try {
       const result = await this.facebookService.handleCallback(code, state);
+      const frontendUrl = this.resolveFrontendUrl(result.clientOrigin, req);
 
-      // Redirect to frontend with session info
-      const corsOrigins = this.configService.get<string[]>('CORS_ORIGIN');
-      const frontendUrl =
-        corsOrigins && corsOrigins.length > 0 ? corsOrigins[0] : 'http://localhost:3000';
-      const redirectUrl = `${frontendUrl}/settings/inboxes/new/facebook?sessionId=${result.sessionId}&workspaceId=${result.workspaceId}`;
+      let redirectUrl: string;
+      if (result.returnUrl) {
+        try {
+          const returnUrlObj = new URL(result.returnUrl);
+          returnUrlObj.searchParams.set('sessionId', result.sessionId);
+          returnUrlObj.searchParams.set('workspaceId', result.workspaceId);
+          redirectUrl = returnUrlObj.toString();
+        } catch {
+          redirectUrl = `${frontendUrl}/auth/facebook/callback?sessionId=${result.sessionId}&workspaceId=${result.workspaceId}`;
+        }
+      } else {
+        redirectUrl = `${frontendUrl}/auth/facebook/callback?sessionId=${result.sessionId}&workspaceId=${result.workspaceId}`;
+      }
 
-      res.redirect(redirectUrl);
+      const html = `<!DOCTYPE html>
+<html>
+<head>
+  <title>Facebook Authorization</title>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #f8fafc; color: #0f172a; }
+    .card { background: white; padding: 2rem; border-radius: 0.75rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); text-align: center; max-width: 400px; }
+    .spinner { border: 3px solid #e2e8f0; border-top: 3px solid #2563eb; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; margin: 0 auto 1rem; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="spinner"></div>
+    <h3 style="margin: 0 0 0.5rem;">Authorization Successful</h3>
+    <p style="color: #64748b; font-size: 0.875rem; margin: 0;">Connecting your Facebook Pages, this window will close automatically...</p>
+  </div>
+  <script>
+    try {
+      if (window.opener) {
+        window.opener.postMessage({
+          type: 'FACEBOOK_OAUTH_SUCCESS',
+          sessionId: ${JSON.stringify(result.sessionId)},
+          workspaceId: ${JSON.stringify(result.workspaceId)}
+        }, '*');
+      }
+    } catch (e) {
+      // ignore
+    }
+    window.location.href = ${JSON.stringify(redirectUrl)};
+  </script>
+</body>
+</html>`;
+
+      res.setHeader('Content-Type', 'text/html');
+      res.status(HttpStatus.OK).send(html);
     } catch (error) {
-      const corsOrigins = this.configService.get<string[]>('CORS_ORIGIN');
-      const frontendUrl =
-        corsOrigins && corsOrigins.length > 0 ? corsOrigins[0] : 'http://localhost:3000';
-      const errorMsg = encodeURIComponent(
-        (error as Error).message || 'Facebook authorization failed',
-      );
-      res.redirect(`${frontendUrl}/settings/inboxes/new/facebook?error=${errorMsg}`);
+      const errorMsg = (error as Error).message || 'Facebook authorization failed';
+      const frontendUrl = this.resolveFrontendUrl(undefined, req);
+      const redirectUrl = `${frontendUrl}/auth/facebook/callback?error=${encodeURIComponent(errorMsg)}`;
+
+      const errorHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <title>Facebook Authorization Failed</title>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #f8fafc; color: #0f172a; }
+    .card { background: white; padding: 2rem; border-radius: 0.75rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); text-align: center; max-width: 400px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h3 style="margin: 0 0 0.5rem; color: #dc2626;">Authorization Failed</h3>
+    <p style="color: #64748b; font-size: 0.875rem; margin: 0 0 1rem;">${errorMsg.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>
+    <button onclick="window.close()" style="background: #e2e8f0; border: none; padding: 0.5rem 1rem; border-radius: 0.375rem; cursor: pointer; font-size: 0.875rem;">Close Window</button>
+  </div>
+  <script>
+    try {
+      if (window.opener) {
+        window.opener.postMessage({
+          type: 'FACEBOOK_OAUTH_ERROR',
+          error: ${JSON.stringify(errorMsg)}
+        }, '*');
+      }
+    } catch (e) {
+      // ignore
+    }
+    window.location.href = ${JSON.stringify(redirectUrl)};
+  </script>
+</body>
+</html>`;
+
+      res.setHeader('Content-Type', 'text/html');
+      res.status(HttpStatus.OK).send(errorHtml);
     }
   }
 
@@ -127,6 +293,22 @@ export class FacebookController {
   ): Promise<{ inboxId: string; channelId: string }> {
     const dto = connectFacebookPageSchema.parse(body) as ConnectFacebookPageDto;
     return this.facebookService.connectPage(context.workspaceId, dto, sessionId);
+  }
+
+  @Post('connect-batch')
+  @HttpCode(HttpStatus.CREATED)
+  @UseGuards(WorkspaceGuard, RolesGuard)
+  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN)
+  @ApiOperation({ summary: 'Connect multiple Facebook Pages in batch' })
+  @ApiResponse({ status: 201, description: 'Facebook Pages connected successfully' })
+  async connectPagesBatch(
+    @CurrentWorkspace() context: WorkspaceContext,
+    @Body() body: any,
+  ): Promise<{
+    inboxes: Array<{ inboxId: string; channelId: string; pageId: string; pageName: string }>;
+  }> {
+    const dto = connectFacebookPagesBatchSchema.parse(body) as ConnectFacebookPagesBatchDto;
+    return this.facebookService.connectPagesBatch(context.workspaceId, dto);
   }
 
   @Delete('disconnect/:channelId')

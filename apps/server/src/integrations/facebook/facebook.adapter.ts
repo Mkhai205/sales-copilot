@@ -21,7 +21,7 @@ export interface FacebookApiError {
   fbtrace_id?: string;
 }
 
-export interface FacebookApiResponse<T = unknown> {
+export interface FacebookApiResponse<_T = unknown> {
   error?: FacebookApiError;
   success?: boolean;
   recipient_id?: string;
@@ -140,7 +140,7 @@ export class FacebookAdapter implements ChannelAdapter {
   readonly channelType: ChannelType = ChannelType.FACEBOOK_MESSENGER;
 
   private readonly graphApiBaseUrl = 'https://graph.facebook.com';
-  private readonly defaultGraphApiVersion = 'v19.0';
+  private readonly defaultGraphApiVersion = 'v26.0';
 
   /**
    * Helper to extract page access token from channel credentials.

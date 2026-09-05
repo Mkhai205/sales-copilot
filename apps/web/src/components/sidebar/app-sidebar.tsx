@@ -1,6 +1,5 @@
 'use client';
 
-import * as React from 'react';
 import {
   Sidebar,
   SidebarContent,
@@ -19,7 +18,7 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
 export function AppSidebar({ workspaceSlug, ...props }: AppSidebarProps) {
   return (
     <Sidebar collapsible="icon" variant="inset" {...props}>
-      <SidebarHeader className="gap-2">
+      <SidebarHeader className="border-b border-sidebar-border/40 p-2">
         <WorkspaceSwitcher currentSlug={workspaceSlug} />
       </SidebarHeader>
       <SidebarContent>

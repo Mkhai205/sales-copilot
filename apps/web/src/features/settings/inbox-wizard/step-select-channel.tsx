@@ -1,43 +1,12 @@
 'use client';
 
 import * as React from 'react';
-import { Globe, Send, Mail, MessageSquare, MessageCircle, CheckCircle2 } from 'lucide-react';
+import Image from 'next/image';
+import { CheckCircle2 } from 'lucide-react';
 import { ChannelType } from '@sales-copilot/shared-contracts';
 import { Card } from '@/components/ui/card';
-import { SUPPORTED_CHANNELS, type ChannelTypeMeta } from '../constants/inbox-channels';
-
-export interface ChannelOption extends ChannelTypeMeta {
-  icon: React.ReactNode;
-  iconBg: string;
-}
-
-export const CHANNEL_OPTIONS: ChannelOption[] = [
-  {
-    ...SUPPORTED_CHANNELS[0],
-    icon: <Globe className="size-5 text-blue-500" />,
-    iconBg: 'bg-blue-500/10 border-blue-500/20',
-  },
-  {
-    ...SUPPORTED_CHANNELS[1],
-    icon: <MessageSquare className="size-5 text-indigo-500" />,
-    iconBg: 'bg-indigo-500/10 border-indigo-500/20',
-  },
-  {
-    ...SUPPORTED_CHANNELS[2],
-    icon: <Send className="size-5 text-sky-500" />,
-    iconBg: 'bg-sky-500/10 border-sky-500/20',
-  },
-  {
-    ...SUPPORTED_CHANNELS[3],
-    icon: <Mail className="size-5 text-emerald-500" />,
-    iconBg: 'bg-emerald-500/10 border-emerald-500/20',
-  },
-  {
-    ...SUPPORTED_CHANNELS[4],
-    icon: <MessageCircle className="size-5 text-amber-500" />,
-    iconBg: 'bg-amber-500/10 border-amber-500/20',
-  },
-];
+import { SUPPORTED_CHANNELS } from '../constants/inbox-channels';
+import { getChannelMeta } from '@/lib/channels';
 
 interface StepSelectChannelProps {
   selectedType: ChannelType;
@@ -48,8 +17,9 @@ export function StepSelectChannel({ selectedType, onSelectType }: StepSelectChan
   return (
     <div className="flex flex-col gap-3 py-1">
       <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-        {CHANNEL_OPTIONS.map(channel => {
+        {SUPPORTED_CHANNELS.map(channel => {
           const isSelected = selectedType === channel.type;
+          const meta = getChannelMeta(channel.type);
 
           return (
             <Card
@@ -61,10 +31,15 @@ export function StepSelectChannel({ selectedType, onSelectType }: StepSelectChan
                   : 'border-border bg-card/40 hover:border-border/80 hover:bg-card/70'
               }`}
             >
-              <div
-                className={`flex size-9 shrink-0 items-center justify-center rounded-lg border ${channel.iconBg}`}
-              >
-                {channel.icon}
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-border/60 bg-muted/30 p-1.5 shadow-xs">
+                <Image
+                  src={meta.iconSrc}
+                  alt={channel.title}
+                  width={28}
+                  height={28}
+                  unoptimized
+                  className="size-7 object-contain"
+                />
               </div>
 
               <div className="flex flex-col min-w-0 flex-1">

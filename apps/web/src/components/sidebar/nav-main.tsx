@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { useSettingsRbac } from '@/features/settings';
 import {
   SidebarGroup,
   SidebarGroupLabel,
@@ -33,8 +34,52 @@ interface NavMainProps {
   workspaceSlug: string;
 }
 
+const DEFAULT_SETTINGS_SUB_ITEMS = [
+  {
+    title: 'General',
+    segment: 'general',
+    icon: Settings,
+  },
+  {
+    title: 'Inboxes',
+    segment: 'inboxes',
+    icon: Inbox,
+  },
+  {
+    title: 'Teams',
+    segment: 'teams',
+    icon: Users2,
+  },
+  {
+    title: 'Members',
+    segment: 'members',
+    icon: UserCheck,
+  },
+  {
+    title: 'Labels',
+    segment: 'labels',
+    icon: Tag,
+  },
+  {
+    title: 'Canned Responses',
+    segment: 'canned-responses',
+    icon: FileText,
+  },
+  {
+    title: 'Automation Rules',
+    segment: 'automation-rules',
+    icon: Zap,
+  },
+  {
+    title: 'Webhooks',
+    segment: 'webhooks',
+    icon: Webhook,
+  },
+];
+
 export function NavMain({ workspaceSlug }: NavMainProps) {
   const pathname = usePathname();
+  const { accessibleNavItems } = useSettingsRbac(workspaceSlug);
 
   const isConversationsActive =
     pathname === `/${workspaceSlug}/conversations` ||
@@ -45,48 +90,20 @@ export function NavMain({ workspaceSlug }: NavMainProps) {
 
   const isSettingsActive = pathname.startsWith(`/${workspaceSlug}/settings`);
 
-  const settingsSubItems = [
-    {
-      title: 'General',
-      url: `/${workspaceSlug}/settings/general`,
-      icon: Settings,
-    },
-    {
-      title: 'Inboxes',
-      url: `/${workspaceSlug}/settings/inboxes`,
-      icon: Inbox,
-    },
-    {
-      title: 'Teams',
-      url: `/${workspaceSlug}/settings/teams`,
-      icon: Users2,
-    },
-    {
-      title: 'Members',
-      url: `/${workspaceSlug}/settings/members`,
-      icon: UserCheck,
-    },
-    {
-      title: 'Labels',
-      url: `/${workspaceSlug}/settings/labels`,
-      icon: Tag,
-    },
-    {
-      title: 'Canned Responses',
-      url: `/${workspaceSlug}/settings/canned-responses`,
-      icon: FileText,
-    },
-    {
-      title: 'Automation Rules',
-      url: `/${workspaceSlug}/settings/automation-rules`,
-      icon: Zap,
-    },
-    {
-      title: 'Webhooks',
-      url: `/${workspaceSlug}/settings/webhooks`,
-      icon: Webhook,
-    },
-  ];
+  const displaySettingsItems = React.useMemo(() => {
+    if (accessibleNavItems && accessibleNavItems.length > 0) {
+      return accessibleNavItems.map(item => ({
+        title: item.title,
+        url: `/${workspaceSlug}/settings/${item.segment}`,
+        icon: item.icon,
+      }));
+    }
+    return DEFAULT_SETTINGS_SUB_ITEMS.map(item => ({
+      title: item.title,
+      url: `/${workspaceSlug}/settings/${item.segment}`,
+      icon: item.icon,
+    }));
+  }, [accessibleNavItems, workspaceSlug]);
 
   return (
     <SidebarGroup>
@@ -124,7 +141,7 @@ export function NavMain({ workspaceSlug }: NavMainProps) {
             </CollapsibleTrigger>
             <CollapsibleContent>
               <SidebarMenuSub>
-                {settingsSubItems.map(subItem => {
+                {displaySettingsItems.map(subItem => {
                   const isSubActive =
                     pathname === subItem.url || pathname.startsWith(`${subItem.url}/`);
 
