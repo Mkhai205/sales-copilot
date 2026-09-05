@@ -44,12 +44,15 @@ function DetailPanelLoading() {
   );
 }
 
+import { useI18n } from '@/lib/i18n';
+
 export function DetailPanel({
   conversationId,
   workspaceSlug,
   workspaceId,
   onClose,
 }: DetailPanelProps) {
+  const { t } = useI18n();
   const { conversation, isLoading } = useConversation(conversationId, {
     workspaceSlug,
     workspaceId,
@@ -59,7 +62,9 @@ export function DetailPanel({
     <div className="flex h-full w-full min-h-0 flex-1 flex-col overflow-hidden bg-card/40 border-l border-border/70">
       {/* Detail Header */}
       <div className="flex h-14 shrink-0 items-center justify-between border-b border-border/80 px-4 bg-background/95 backdrop-blur-xs">
-        <h3 className="text-xs font-semibold tracking-tight text-foreground">Details</h3>
+        <h3 className="text-xs font-semibold tracking-tight text-foreground">
+          {t('conversations.details.title')}
+        </h3>
         <Button
           variant="ghost"
           size="icon-xs"

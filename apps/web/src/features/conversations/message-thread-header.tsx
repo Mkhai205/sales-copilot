@@ -17,93 +17,14 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { ConversationStatus, Priority, type ConversationResponseDto } from '@/lib/api/types';
 import { getChannelMeta } from '@/lib/channels';
 
+import { useI18n } from '@/lib/i18n';
+
 interface MessageThreadHeaderProps {
   conversation?: ConversationResponseDto;
   isLoading?: boolean;
   isDetailOpen: boolean;
   onToggleDetail: () => void;
   onResolve?: () => void;
-}
-
-function getStatusBadge(status?: ConversationStatus) {
-  switch (status) {
-    case ConversationStatus.OPEN:
-      return (
-        <Badge
-          variant="outline"
-          className="text-[10px] text-emerald-500 border-emerald-500/30 bg-emerald-500/10 py-0 px-1.5 font-medium"
-        >
-          Open
-        </Badge>
-      );
-    case ConversationStatus.PENDING:
-      return (
-        <Badge
-          variant="outline"
-          className="text-[10px] text-amber-500 border-amber-500/30 bg-amber-500/10 py-0 px-1.5 font-medium"
-        >
-          Pending
-        </Badge>
-      );
-    case ConversationStatus.RESOLVED:
-      return (
-        <Badge
-          variant="outline"
-          className="text-[10px] text-muted-foreground border-border bg-muted py-0 px-1.5 font-medium"
-        >
-          Resolved
-        </Badge>
-      );
-    case ConversationStatus.SNOOZED:
-      return (
-        <Badge
-          variant="outline"
-          className="text-[10px] text-purple-500 border-purple-500/30 bg-purple-500/10 py-0 px-1.5 font-medium"
-        >
-          Snoozed
-        </Badge>
-      );
-    default:
-      return null;
-  }
-}
-
-function getPriorityBadge(priority?: Priority) {
-  if (!priority) return null;
-  switch (priority) {
-    case Priority.URGENT:
-      return (
-        <Badge
-          variant="outline"
-          className="text-[10px] text-rose-500 border-rose-500/30 bg-rose-500/10 py-0 px-1.5 font-medium gap-1"
-        >
-          <AlertTriangle className="size-2.5" />
-          Urgent
-        </Badge>
-      );
-    case Priority.HIGH:
-      return (
-        <Badge
-          variant="outline"
-          className="text-[10px] text-orange-500 border-orange-500/30 bg-orange-500/10 py-0 px-1.5 font-medium"
-        >
-          High
-        </Badge>
-      );
-    case Priority.MEDIUM:
-      return null;
-    case Priority.LOW:
-      return (
-        <Badge
-          variant="outline"
-          className="text-[10px] text-slate-400 border-slate-500/30 bg-slate-500/10 py-0 px-1.5 font-medium"
-        >
-          Low
-        </Badge>
-      );
-    default:
-      return null;
-  }
 }
 
 export function MessageThreadHeader({
@@ -113,6 +34,88 @@ export function MessageThreadHeader({
   onToggleDetail,
   onResolve,
 }: MessageThreadHeaderProps) {
+  const { t } = useI18n();
+
+  const getStatusBadge = (status?: ConversationStatus) => {
+    switch (status) {
+      case ConversationStatus.OPEN:
+        return (
+          <Badge
+            variant="outline"
+            className="text-[10px] text-emerald-500 border-emerald-500/30 bg-emerald-500/10 py-0 px-1.5 font-medium"
+          >
+            {t('conversations.status.open')}
+          </Badge>
+        );
+      case ConversationStatus.PENDING:
+        return (
+          <Badge
+            variant="outline"
+            className="text-[10px] text-amber-500 border-amber-500/30 bg-amber-500/10 py-0 px-1.5 font-medium"
+          >
+            {t('conversations.status.pending')}
+          </Badge>
+        );
+      case ConversationStatus.RESOLVED:
+        return (
+          <Badge
+            variant="outline"
+            className="text-[10px] text-muted-foreground border-border bg-muted py-0 px-1.5 font-medium"
+          >
+            {t('conversations.status.resolved')}
+          </Badge>
+        );
+      case ConversationStatus.SNOOZED:
+        return (
+          <Badge
+            variant="outline"
+            className="text-[10px] text-purple-500 border-purple-500/30 bg-purple-500/10 py-0 px-1.5 font-medium"
+          >
+            {t('conversations.status.snoozed')}
+          </Badge>
+        );
+      default:
+        return null;
+    }
+  };
+
+  const getPriorityBadge = (priority?: Priority) => {
+    if (!priority) return null;
+    switch (priority) {
+      case Priority.URGENT:
+        return (
+          <Badge
+            variant="outline"
+            className="text-[10px] text-rose-500 border-rose-500/30 bg-rose-500/10 py-0 px-1.5 font-medium gap-1"
+          >
+            <AlertTriangle className="size-2.5" />
+            {t('conversations.priority.urgent')}
+          </Badge>
+        );
+      case Priority.HIGH:
+        return (
+          <Badge
+            variant="outline"
+            className="text-[10px] text-orange-500 border-orange-500/30 bg-orange-500/10 py-0 px-1.5 font-medium"
+          >
+            {t('conversations.priority.high')}
+          </Badge>
+        );
+      case Priority.MEDIUM:
+        return null;
+      case Priority.LOW:
+        return (
+          <Badge
+            variant="outline"
+            className="text-[10px] text-slate-400 border-slate-500/30 bg-slate-500/10 py-0 px-1.5 font-medium"
+          >
+            {t('conversations.priority.low')}
+          </Badge>
+        );
+      default:
+        return null;
+    }
+  };
   const contact = conversation?.contact;
   const channelMeta = getChannelMeta(conversation?.inbox?.channelType);
   const isResolved = conversation?.status === ConversationStatus.RESOLVED;
@@ -188,12 +191,12 @@ export function MessageThreadHeader({
           {isResolved ? (
             <>
               <RotateCcw className="size-3.5 text-muted-foreground" />
-              Reopen
+              {t('conversations.actions.reopen')}
             </>
           ) : (
             <>
               <CheckCircle2 className="size-3.5 text-emerald-500" />
-              Resolve
+              {t('conversations.actions.resolve')}
             </>
           )}
         </Button>
@@ -205,7 +208,7 @@ export function MessageThreadHeader({
           className="h-7 text-xs gap-1.5 font-normal"
         >
           <UserPlus className="size-3.5 text-muted-foreground" />
-          Assign
+          {t('conversations.actions.assignee')}
         </Button>
 
         <div className="h-4 w-px bg-border mx-0.5" />

@@ -22,12 +22,15 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar';
+import { LanguageSwitcherSubMenu } from '@/components/language-switcher';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useI18n } from '@/lib/i18n';
 
 export function NavUser() {
   const { isMobile } = useSidebar();
   const { data: user, isLoading } = useCurrentUser();
   const { theme, setTheme } = useTheme();
+  const { t } = useI18n();
   const [isLoggingOut, startTransition] = React.useTransition();
 
   const handleLogout = () => {
@@ -114,12 +117,17 @@ export function NavUser() {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
+              <LanguageSwitcherSubMenu />
               <DropdownMenuItem
                 className="gap-2 cursor-pointer"
                 onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
               >
                 {theme === 'dark' ? <Sun className="size-4" /> : <Moon className="size-4" />}
-                <span>Toggle {theme === 'dark' ? 'Light' : 'Dark'} Mode</span>
+                <span>
+                  {t('common.toggleTheme', {
+                    mode: theme === 'dark' ? t('common.lightMode') : t('common.darkMode'),
+                  })}
+                </span>
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
@@ -130,7 +138,7 @@ export function NavUser() {
               variant="destructive"
             >
               <LogOut className="size-4" />
-              <span>{isLoggingOut ? 'Logging out...' : 'Log out'}</span>
+              <span>{isLoggingOut ? t('common.loggingOut') : t('common.logout')}</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

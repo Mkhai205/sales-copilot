@@ -6,20 +6,24 @@ import { QueryProvider } from './query-provider';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { Toaster } from '@/components/ui/sonner';
 
+import { I18nProvider } from '@/lib/i18n';
+
 export function AppProviders({ children }: { children: React.ReactNode }) {
   return (
-    <ThemeProvider
-      attribute="class"
-      defaultTheme="dark"
-      enableSystem={false}
-      disableTransitionOnChange
-    >
-      <QueryProvider>
-        <TooltipProvider>
-          {children}
-          <Toaster position="top-right" richColors />
-        </TooltipProvider>
-      </QueryProvider>
-    </ThemeProvider>
+    <I18nProvider>
+      <ThemeProvider
+        attribute="class"
+        defaultTheme="dark"
+        enableSystem={false}
+        disableTransitionOnChange
+      >
+        <QueryProvider>
+          <TooltipProvider>
+            {children}
+            <Toaster position="top-right" richColors />
+          </TooltipProvider>
+        </QueryProvider>
+      </ThemeProvider>
+    </I18nProvider>
   );
 }

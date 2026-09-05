@@ -10,6 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useSettingsRbac } from './hooks/use-settings-rbac';
+import { useI18n } from '@/lib/i18n';
 
 interface SettingsNavProps {
   workspaceSlug: string;
@@ -18,6 +19,35 @@ interface SettingsNavProps {
 export function SettingsNav({ workspaceSlug }: SettingsNavProps) {
   const pathname = usePathname();
   const { currentRole, isAdmin, isLoading, groupedNavItems } = useSettingsRbac(workspaceSlug);
+  const { t } = useI18n();
+
+  const getSubItemTitle = React.useCallback(
+    (segment: string, fallback: string) => {
+      switch (segment) {
+        case 'general':
+          return t('settings.nav.general');
+        case 'inboxes':
+          return t('settings.nav.inboxes');
+        case 'teams':
+          return t('settings.nav.teams');
+        case 'members':
+          return t('settings.nav.members');
+        case 'labels':
+          return t('settings.nav.labels');
+        case 'canned-responses':
+          return t('settings.nav.cannedResponses');
+        case 'automation-rules':
+          return t('settings.nav.automationRules');
+        case 'webhooks':
+          return t('settings.nav.webhooks');
+        case 'audit-logs':
+          return t('settings.nav.auditLogs');
+        default:
+          return fallback;
+      }
+    },
+    [t],
+  );
 
   return (
     <div className="flex h-full w-full flex-col bg-card/40 backdrop-blur-xs">
@@ -31,13 +61,15 @@ export function SettingsNav({ workspaceSlug }: SettingsNavProps) {
         >
           <Link href={`/${workspaceSlug}/conversations`}>
             <ArrowLeft className="size-3.5" data-icon="inline-start" />
-            <span>Back to Conversations</span>
+            <span>{t('nav.conversations')}</span>
           </Link>
         </Button>
 
         <div className="flex items-center justify-between gap-2 px-1">
           <div>
-            <h2 className="text-base font-semibold tracking-tight text-foreground">Settings</h2>
+            <h2 className="text-base font-semibold tracking-tight text-foreground">
+              {t('settings.title')}
+            </h2>
             <p className="text-xs text-muted-foreground">Manage workspace & workflows</p>
           </div>
           {currentRole && (
@@ -121,7 +153,7 @@ export function SettingsNav({ workspaceSlug }: SettingsNavProps) {
                                 isActive ? 'font-semibold text-foreground' : 'text-foreground/90'
                               }`}
                             >
-                              {item.title}
+                              {getSubItemTitle(item.segment, item.title)}
                             </span>
                             {item.adminOnly && !isAdmin && (
                               <Badge

@@ -90,14 +90,17 @@ function renderPriorityIndicator(priority?: ConversationPriority | Priority | nu
   return null;
 }
 
+import { useI18n, formatRelativeTime } from '@/lib/i18n';
+
 export function ConversationCard({
   conversation,
   workspaceSlug,
   isSelected,
 }: ConversationCardProps) {
+  const { locale, t } = useI18n();
   const contactName = conversation.contact?.name || 'Anonymous Visitor';
-  const lastMessageText = conversation.lastMessage?.content || 'No messages yet';
-  const time = formatTime(conversation.lastActivityAt || conversation.createdAt);
+  const lastMessageText = conversation.lastMessage?.content || '';
+  const time = formatRelativeTime(conversation.lastActivityAt || conversation.createdAt, locale);
   const unreadCount = conversation.unreadMessagesCount || 0;
   const channelName = conversation.inbox?.name || 'Inbox';
   const channelMeta = getChannelMeta(conversation.inbox?.channelType);

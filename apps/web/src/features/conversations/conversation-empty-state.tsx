@@ -4,7 +4,11 @@ import * as React from 'react';
 import Image from 'next/image';
 import { Inbox, ShieldCheck } from 'lucide-react';
 
+import { useI18n } from '@/lib/i18n';
+
 export function ConversationEmptyState() {
+  const { t } = useI18n();
+
   return (
     <div className="relative flex h-full flex-1 flex-col items-center justify-center overflow-hidden p-8 text-center bg-background/50">
       {/* Subtle ambient backdrop */}
@@ -15,7 +19,7 @@ export function ConversationEmptyState() {
         <div className="mb-4 flex items-center justify-center">
           <Image
             src="/empty-conversations.svg"
-            alt="No Conversation Selected"
+            alt={t('conversations.empty.title')}
             width={240}
             height={200}
             priority
@@ -24,12 +28,11 @@ export function ConversationEmptyState() {
         </div>
 
         <h2 className="text-lg font-semibold tracking-tight text-foreground">
-          No Conversation Selected
+          {t('conversations.empty.title')}
         </h2>
 
         <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-          Select an active customer conversation from the list on the left to review message
-          history, reply across channels, or update assignment status.
+          {t('conversations.empty.description')}
         </p>
 
         <div className="mt-8 grid grid-cols-2 gap-3 w-full max-w-sm text-left">

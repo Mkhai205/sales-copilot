@@ -77,9 +77,12 @@ const DEFAULT_SETTINGS_SUB_ITEMS = [
   },
 ];
 
+import { useI18n } from '@/lib/i18n';
+
 export function NavMain({ workspaceSlug }: NavMainProps) {
   const pathname = usePathname();
   const { accessibleNavItems } = useSettingsRbac(workspaceSlug);
+  const { t } = useI18n();
 
   const isConversationsActive =
     pathname === `/${workspaceSlug}/conversations` ||
@@ -90,41 +93,71 @@ export function NavMain({ workspaceSlug }: NavMainProps) {
 
   const isSettingsActive = pathname.startsWith(`/${workspaceSlug}/settings`);
 
+  const getSubItemTitle = React.useCallback(
+    (segment: string, fallback: string) => {
+      switch (segment) {
+        case 'general':
+          return t('settings.nav.general');
+        case 'inboxes':
+          return t('settings.nav.inboxes');
+        case 'teams':
+          return t('settings.nav.teams');
+        case 'members':
+          return t('settings.nav.members');
+        case 'labels':
+          return t('settings.nav.labels');
+        case 'canned-responses':
+          return t('settings.nav.cannedResponses');
+        case 'automation-rules':
+          return t('settings.nav.automationRules');
+        case 'webhooks':
+          return t('settings.nav.webhooks');
+        case 'audit-logs':
+          return t('settings.nav.auditLogs');
+        default:
+          return fallback;
+      }
+    },
+    [t],
+  );
+
   const displaySettingsItems = React.useMemo(() => {
-    if (accessibleNavItems && accessibleNavItems.length > 0) {
-      return accessibleNavItems.map(item => ({
-        title: item.title,
-        url: `/${workspaceSlug}/settings/${item.segment}`,
-        icon: item.icon,
-      }));
-    }
-    return DEFAULT_SETTINGS_SUB_ITEMS.map(item => ({
-      title: item.title,
+    const rawItems =
+      accessibleNavItems && accessibleNavItems.length > 0
+        ? accessibleNavItems
+        : DEFAULT_SETTINGS_SUB_ITEMS;
+
+    return rawItems.map(item => ({
+      title: getSubItemTitle(item.segment, item.title),
       url: `/${workspaceSlug}/settings/${item.segment}`,
       icon: item.icon,
     }));
-  }, [accessibleNavItems, workspaceSlug]);
+  }, [accessibleNavItems, getSubItemTitle, workspaceSlug]);
 
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>Platform</SidebarGroupLabel>
+      <SidebarGroupLabel>{t('nav.platform')}</SidebarGroupLabel>
       <SidebarMenu>
         {/* Conversations */}
         <SidebarMenuItem>
-          <SidebarMenuButton asChild isActive={isConversationsActive} tooltip="Conversations">
+          <SidebarMenuButton
+            asChild
+            isActive={isConversationsActive}
+            tooltip={t('nav.conversations')}
+          >
             <Link href={`/${workspaceSlug}/conversations`}>
               <MessageSquare className="size-4" />
-              <span>Conversations</span>
+              <span>{t('nav.conversations')}</span>
             </Link>
           </SidebarMenuButton>
         </SidebarMenuItem>
 
         {/* Contacts */}
         <SidebarMenuItem>
-          <SidebarMenuButton asChild isActive={isContactsActive} tooltip="Contacts">
+          <SidebarMenuButton asChild isActive={isContactsActive} tooltip={t('nav.contacts')}>
             <Link href={`/${workspaceSlug}/contacts`}>
               <Users className="size-4" />
-              <span>Contacts</span>
+              <span>{t('nav.contacts')}</span>
             </Link>
           </SidebarMenuButton>
         </SidebarMenuItem>
@@ -133,9 +166,9 @@ export function NavMain({ workspaceSlug }: NavMainProps) {
         <Collapsible asChild defaultOpen={isSettingsActive} className="group/collapsible">
           <SidebarMenuItem>
             <CollapsibleTrigger asChild>
-              <SidebarMenuButton isActive={isSettingsActive} tooltip="Settings">
+              <SidebarMenuButton isActive={isSettingsActive} tooltip={t('nav.settings')}>
                 <Settings className="size-4" />
-                <span>Settings</span>
+                <span>{t('nav.settings')}</span>
                 <ChevronRight className="ml-auto size-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
               </SidebarMenuButton>
             </CollapsibleTrigger>
@@ -146,7 +179,7 @@ export function NavMain({ workspaceSlug }: NavMainProps) {
                     pathname === subItem.url || pathname.startsWith(`${subItem.url}/`);
 
                   return (
-                    <SidebarMenuSubItem key={subItem.title}>
+                    <SidebarMenuSubItem key={subItem.url}>
                       <SidebarMenuSubButton asChild isActive={isSubActive}>
                         <Link href={subItem.url}>
                           <subItem.icon className="size-3.5" />

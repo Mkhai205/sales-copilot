@@ -33,7 +33,10 @@ interface WorkspaceSettingsFormProps {
   workspace: WorkspaceDto;
 }
 
+import { useI18n } from '@/lib/i18n';
+
 export function WorkspaceSettingsForm({ workspace }: WorkspaceSettingsFormProps) {
+  const { t } = useI18n();
   const [name, setName] = React.useState(workspace.name);
   const [timezone, setTimezone] = React.useState(workspace.timezone || 'UTC');
   const [defaultLanguage, setDefaultLanguage] = React.useState(workspace.defaultLanguage || 'en');
@@ -208,7 +211,9 @@ export function WorkspaceSettingsForm({ workspace }: WorkspaceSettingsFormProps)
 
             {/* Default Language */}
             <Field>
-              <FieldLabel htmlFor="workspace-language">Default Language</FieldLabel>
+              <FieldLabel htmlFor="workspace-language">
+                {t('settings.workspace.languageLabel')}
+              </FieldLabel>
               <Select value={defaultLanguage} onValueChange={setDefaultLanguage}>
                 <SelectTrigger id="workspace-language" className="w-full max-w-md text-xs">
                   <SelectValue placeholder="Select language" />
@@ -223,9 +228,7 @@ export function WorkspaceSettingsForm({ workspace }: WorkspaceSettingsFormProps)
                   </SelectGroup>
                 </SelectContent>
               </Select>
-              <FieldDescription>
-                Primary language used for system messages, standard templates, and notifications.
-              </FieldDescription>
+              <FieldDescription>{t('settings.workspace.languageHelp')}</FieldDescription>
             </Field>
           </FieldGroup>
         </CardContent>
@@ -298,7 +301,7 @@ export function WorkspaceSettingsForm({ workspace }: WorkspaceSettingsFormProps)
           className="text-xs"
         >
           <RotateCcw className="size-3.5" data-icon="inline-start" />
-          Discard Changes
+          {t('common.cancel')}
         </Button>
 
         <Button
@@ -311,12 +314,12 @@ export function WorkspaceSettingsForm({ workspace }: WorkspaceSettingsFormProps)
           {isPending ? (
             <>
               <Spinner className="size-3.5" data-icon="inline-start" />
-              Saving...
+              {t('common.saving')}
             </>
           ) : (
             <>
               <Save className="size-3.5" data-icon="inline-start" />
-              Save Changes
+              {t('settings.workspace.saveChanges')}
             </>
           )}
         </Button>

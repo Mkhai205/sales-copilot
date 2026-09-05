@@ -46,7 +46,10 @@ const TEST_ACCOUNTS = [
   },
 ];
 
+import { useI18n } from '@/lib/i18n';
+
 export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) {
+  const { t } = useI18n();
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [fieldErrors, setFieldErrors] = React.useState<{ email?: string; password?: string }>({});
@@ -127,9 +130,9 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
                     className="hidden h-10 w-auto object-contain dark:block"
                   />
                 </div>
-                <h1 className="text-2xl font-bold tracking-tight">Welcome back</h1>
+                <h1 className="text-2xl font-bold tracking-tight">{t('auth.welcomeBack')}</h1>
                 <p className="text-xs text-muted-foreground text-center">
-                  Sign in to your account to access conversations
+                  {t('auth.signInDescription')}
                 </p>
               </div>
 
@@ -142,13 +145,13 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
 
               <Field data-invalid={!!fieldErrors.email}>
                 <FieldLabel htmlFor="email" className="text-xs font-medium">
-                  Email address
+                  {t('auth.emailLabel')}
                 </FieldLabel>
                 <Input
                   id="email"
                   name="email"
                   type="email"
-                  placeholder="name@company.com"
+                  placeholder={t('auth.emailPlaceholder')}
                   className="h-9"
                   autoComplete="email"
                   value={email}
@@ -162,13 +165,13 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
               <Field data-invalid={!!fieldErrors.password}>
                 <div className="flex items-center justify-between w-full">
                   <FieldLabel htmlFor="password" className="text-xs font-medium">
-                    Password
+                    {t('auth.passwordLabel')}
                   </FieldLabel>
                   <a
                     href="#"
                     className="text-xs text-muted-foreground hover:text-primary transition-colors underline-offset-2 hover:underline"
                   >
-                    Forgot password?
+                    {t('auth.forgotPassword')}
                   </a>
                 </div>
                 <Input
@@ -196,10 +199,10 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
                   {isPending ? (
                     <>
                       <Spinner className="mr-2" />
-                      Signing in...
+                      {t('auth.loggingIn')}
                     </>
                   ) : (
-                    'Sign In'
+                    t('auth.signIn')
                   )}
                 </Button>
               </Field>
@@ -209,7 +212,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-1 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
                     <SparklesIcon className="size-3 text-primary" />
-                    <span>Test Accounts</span>
+                    <span>{t('auth.quickLoginAccounts')}</span>
                   </div>
                   <span className="text-[10px] text-muted-foreground font-mono">1-Click Fill</span>
                 </div>
@@ -217,6 +220,12 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
                   {TEST_ACCOUNTS.map(acc => {
                     const Icon = acc.icon;
                     const isSelected = email === acc.email;
+                    const roleName =
+                      acc.role === 'Super Admin'
+                        ? t('auth.superAdmin')
+                        : acc.role === 'Admin'
+                          ? t('auth.admin')
+                          : t('auth.agent');
                     return (
                       <button
                         key={acc.email}
@@ -239,7 +248,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
                             )}
                           >
                             <Icon className="size-2.5" />
-                            {acc.role}
+                            {roleName}
                           </span>
                         </div>
                         <span

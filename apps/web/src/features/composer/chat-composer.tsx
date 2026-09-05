@@ -65,6 +65,8 @@ function findSlashCommand(
   return { slashIndex, query };
 }
 
+import { useI18n } from '@/lib/i18n';
+
 export function ChatComposer({
   conversationId,
   workspaceSlug,
@@ -75,6 +77,7 @@ export function ChatComposer({
   className,
   onSent,
 }: ChatComposerProps) {
+  const { t } = useI18n();
   const [content, setContent] = React.useState('');
   const [attachments, setAttachments] = React.useState<File[]>([]);
   const [mode, setMode] = React.useState<ComposerMode>(defaultMode);
@@ -343,8 +346,8 @@ export function ChatComposer({
   const dynamicPlaceholder =
     placeholder ||
     (isNote
-      ? 'Add a private note (visible only to team members)... (Press Enter to add note)'
-      : "Type a message... (Press Enter to send, '/' for canned responses, Paste images)");
+      ? t('conversations.composer.placeholderPrivateNote')
+      : t('conversations.composer.placeholderReply'));
 
   return (
     <div
@@ -416,7 +419,7 @@ export function ChatComposer({
               )}
             >
               <MessageSquare className="size-3.5" data-icon="inline-start" />
-              <span>Reply</span>
+              <span>{t('conversations.composer.replyTab')}</span>
             </button>
 
             <button
@@ -431,7 +434,7 @@ export function ChatComposer({
               )}
             >
               <Lock className="size-3.5" data-icon="inline-start" />
-              <span>Private Note</span>
+              <span>{t('conversations.composer.privateNoteTab')}</span>
             </button>
           </div>
 
@@ -563,16 +566,16 @@ export function ChatComposer({
                   {isPending ? (
                     <>
                       <Spinner className="size-3" data-icon="inline-start" />
-                      <span>{isNote ? 'Saving' : 'Sending'}</span>
+                      <span>{isNote ? t('common.saving') : t('conversations.composer.send')}</span>
                     </>
                   ) : isNote ? (
                     <>
                       <Lock className="size-3" data-icon="inline-start" />
-                      <span>Add Note</span>
+                      <span>{t('conversations.composer.privateNoteTab')}</span>
                     </>
                   ) : (
                     <>
-                      <span>Send</span>
+                      <span>{t('conversations.composer.send')}</span>
                       <Send className="size-3" data-icon="inline-end" />
                     </>
                   )}

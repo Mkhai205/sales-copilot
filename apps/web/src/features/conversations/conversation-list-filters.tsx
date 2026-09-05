@@ -6,12 +6,15 @@ import { useConversationCounts } from './hooks/use-conversation-counts';
 import { cn } from '@/lib/utils';
 import { ConversationStatus } from '@/lib/api/types';
 
+import { useI18n } from '@/lib/i18n';
+
 interface ConversationListFiltersProps {
   workspaceSlug: string;
 }
 
 export function ConversationListFilters({ workspaceSlug }: ConversationListFiltersProps) {
   const { filters, setAssignment } = useConversationFilters();
+  const { t } = useI18n();
 
   // Fetch live counts for Mine, Unassigned, All based on current status
   const effectiveStatus =
@@ -24,17 +27,17 @@ export function ConversationListFilters({ workspaceSlug }: ConversationListFilte
   const tabItems: Array<{ key: AssignmentFilter; label: string; count?: number }> = [
     {
       key: 'mine',
-      label: 'Mine',
+      label: t('conversations.tabs.mine'),
       count: counts?.mine,
     },
     {
       key: 'unassigned',
-      label: 'Unassigned',
+      label: t('conversations.tabs.unassigned'),
       count: counts?.unassigned,
     },
     {
       key: 'all',
-      label: 'All',
+      label: t('conversations.tabs.all'),
       count: counts?.all,
     },
   ];
