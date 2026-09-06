@@ -33,12 +33,30 @@ export class WorkspaceGuard implements CanActivate {
 
     const request = context.switchToHttp().getRequest<Request>();
     const workspaceIdHeader = request.headers['x-workspace-id'];
-    const workspaceId = Array.isArray(workspaceIdHeader) ? workspaceIdHeader[0] : workspaceIdHeader;
+    const headerWorkspaceId = Array.isArray(workspaceIdHeader)
+      ? workspaceIdHeader[0]
+      : workspaceIdHeader;
+    const paramWorkspaceId = request.params?.workspaceId;
+
+    if (
+      headerWorkspaceId &&
+      paramWorkspaceId &&
+      typeof headerWorkspaceId === 'string' &&
+      typeof paramWorkspaceId === 'string' &&
+      headerWorkspaceId.trim() !== paramWorkspaceId.trim()
+    ) {
+      throw new BadRequestException({
+        code: 'WORKSPACE_ID_MISMATCH',
+        message: 'Workspace ID in path parameter does not match X-Workspace-Id header',
+      });
+    }
+
+    const workspaceId = (paramWorkspaceId || headerWorkspaceId) as string | undefined;
 
     if (!workspaceId || typeof workspaceId !== 'string' || workspaceId.trim() === '') {
       throw new BadRequestException({
         code: 'WORKSPACE_ID_REQUIRED',
-        message: 'Header X-Workspace-Id is required for workspace-scoped requests',
+        message: 'Workspace ID is required (via route param or X-Workspace-Id header)',
       });
     }
 

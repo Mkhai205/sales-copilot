@@ -42,6 +42,7 @@ describe('WorkspaceGuard (Tenant Isolation & Context Injection)', () => {
     headers: Record<string, string | string[]> = {},
     user: any = undefined,
     type = 'http',
+    params: Record<string, string> = {},
   ): {
     context: ExecutionContext;
     request: any;
@@ -49,6 +50,7 @@ describe('WorkspaceGuard (Tenant Isolation & Context Injection)', () => {
     const request = {
       headers,
       user,
+      params,
       workspace: undefined,
     };
 
@@ -147,15 +149,33 @@ describe('WorkspaceGuard (Tenant Isolation & Context Injection)', () => {
     );
   });
 
-  it('should throw ForbiddenException for non-http contexts (WebSocket handled separately)', async () => {
-    const { context } = createMockExecutionContext({}, undefined, 'ws');
+  it('should allow access when workspaceId is provided via route params instead of header', async () => {
+    const { context, request } = createMockExecutionContext(
+      {},
+      { userId: 'usr_valid_123', email: 'owner@acme.com', role: 'USER' },
+      'http',
+      { workspaceId: 'ws_tenant_123' },
+    );
+
+    const result = await guard.canActivate(context);
+    assert.strictEqual(result, true);
+    assert.strictEqual(request.workspace?.workspaceId, 'ws_tenant_123');
+  });
+
+  it('should throw BadRequestException with WORKSPACE_ID_MISMATCH when header and param differ', async () => {
+    const { context } = createMockExecutionContext(
+      { 'x-workspace-id': 'ws_tenant_123' },
+      { userId: 'usr_valid_123', email: 'owner@acme.com', role: 'USER' },
+      'http',
+      { workspaceId: 'ws_other_456' },
+    );
 
     await assert.rejects(
       async () => {
         await guard.canActivate(context);
       },
       (err: any) => {
-        assert.strictEqual(err.response?.code, 'UNSUPPORTED_CONTEXT');
+        assert.strictEqual(err.response?.code, 'WORKSPACE_ID_MISMATCH');
         return true;
       },
     );

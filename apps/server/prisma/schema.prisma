@@ -92,6 +92,34 @@ enum FileType {
   FILE
 }
 
+enum LeadStatus {
+  NEW
+  CONTACTED
+  ENGAGED
+  QUALIFIED
+  UNQUALIFIED
+  CONVERTED
+  DISQUALIFIED
+}
+
+enum LeadStage {
+  DISCOVERY
+  EVALUATION
+  PROPOSAL
+  NEGOTIATION
+  WON
+  LOST
+}
+
+enum OpportunityStage {
+  PROSPECTING
+  QUALIFICATION
+  PROPOSAL
+  NEGOTIATION
+  CLOSED_WON
+  CLOSED_LOST
+}
+
 model User {
   id           String       @id @default(uuid())
   email        String       @unique
@@ -107,6 +135,8 @@ model User {
   teamMembers           TeamMember[]
   inboxMembers          InboxMember[]
   assignedConversations Conversation[]    @relation("UserAssignedConversations")
+  assignedLeads         Lead[]              @relation("UserAssignedLeads")
+  assignedOpportunities Opportunity[]       @relation("UserAssignedOpportunities")
   auditLogs             AuditLog[]
 
   @@map("users")
@@ -136,6 +166,8 @@ model Workspace {
   automationRules      AutomationRule[]
   webhookSubscriptions WebhookSubscription[]
   auditLogs            AuditLog[]
+  leads                Lead[]
+  opportunities        Opportunity[]
 
   @@map("workspaces")
 }
@@ -202,6 +234,8 @@ model Contact {
   workspace     Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   identities    ChannelIdentity[]
   conversations Conversation[]
+  leads         Lead[]
+  opportunities Opportunity[]
 
   @@unique([workspaceId, identifier])
   @@index([workspaceId, email])
@@ -506,4 +540,65 @@ model AuditLog {
   @@index([workspaceId, createdAt])
   @@index([resourceType, resourceId])
   @@map("audit_logs")
+}
+
+model Lead {
+  id             String     @id @default(uuid())
+  workspaceId    String
+  contactId      String
+  status         LeadStatus @default(NEW)
+  stage          LeadStage  @default(DISCOVERY)
+  score          Int        @default(0)
+  assignedUserId String?
+  estimatedValue Decimal?   @db.Decimal(15, 2)
+  currency       String     @default("USD")
+  metadata       Json       @default("{}")
+  createdAt      DateTime   @default(now())
+  lastActivityAt DateTime?
+  updatedAt      DateTime   @updatedAt
+
+  workspace     Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  contact       Contact       @relation(fields: [contactId], references: [id], onDelete: Restrict)
+  assignedUser  User?         @relation("UserAssignedLeads", fields: [assignedUserId], references: [id], onDelete: SetNull)
+  opportunities Opportunity[]
+
+  @@unique([workspaceId, contactId])
+  @@index([workspaceId, status])
+  @@index([workspaceId, stage])
+  @@index([workspaceId, score])
+  @@index([workspaceId, assignedUserId])
+  @@index([workspaceId, lastActivityAt])
+  @@index([workspaceId, createdAt])
+  @@map("leads")
+}
+
+model Opportunity {
+  id                String           @id @default(uuid())
+  workspaceId       String
+  leadId            String?
+  contactId         String
+  title             String
+  stage             OpportunityStage @default(PROSPECTING)
+  amount            Decimal          @db.Decimal(15, 2)
+  currency          String           @default("USD")
+  probability       Int              @default(50)
+  expectedCloseDate DateTime?
+  actualCloseDate   DateTime?
+  lostReason        String?
+  assignedUserId    String?
+  metadata          Json             @default("{}")
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  workspace    Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  lead         Lead?     @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  contact      Contact   @relation(fields: [contactId], references: [id], onDelete: Restrict)
+  assignedUser User?     @relation("UserAssignedOpportunities", fields: [assignedUserId], references: [id], onDelete: SetNull)
+
+  @@index([workspaceId, stage])
+  @@index([workspaceId, assignedUserId])
+  @@index([workspaceId, expectedCloseDate])
+  @@index([workspaceId, leadId])
+  @@index([workspaceId, contactId])
+  @@map("opportunities")
 }

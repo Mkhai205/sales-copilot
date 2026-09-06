@@ -25,6 +25,8 @@ import { ConversationsModule } from './modules/conversations';
 import { MessagesModule } from './modules/messages';
 import { IntegrationsModule } from './integrations';
 import { RealtimeModule } from './modules/realtime';
+import { LeadsModule } from './modules/leads';
+import { OpportunitiesModule } from './modules/opportunities';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -136,6 +138,8 @@ import { pinoRedactConfig } from './common/logging';
     MessagesModule,
     IntegrationsModule,
     RealtimeModule,
+    LeadsModule,
+    OpportunitiesModule,
   ],
   controllers: [AppController],
   providers: [

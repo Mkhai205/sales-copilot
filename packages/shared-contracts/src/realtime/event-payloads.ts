@@ -51,6 +51,13 @@ export enum DomainEvent {
   // Typing events
   TYPING_START = 'typing.start',
   TYPING_STOP = 'typing.stop',
+
+  // Sales events (Milestone 2A - Epic 2.1)
+  LEAD_CREATED = 'lead.created',
+  LEAD_UPDATED = 'lead.updated',
+  LEAD_CONVERTED = 'lead.converted',
+  OPPORTUNITY_CREATED = 'opportunity.created',
+  OPPORTUNITY_STAGE_UPDATED = 'opportunity.stage_updated',
 }
 
 // ============================================================================
@@ -134,4 +141,56 @@ export interface ChannelDeletedEvent extends BaseDomainEventPayload {
   inboxId: string;
   channelId: string;
   channelType: ChannelType;
+}
+
+// ============================================================================
+// 7. Sales Event Payloads (Epic 2.1)
+// ============================================================================
+
+export interface LeadCreatedEvent extends BaseDomainEventPayload {
+  leadId: string;
+  contactId: string;
+  status: string;
+  stage: string;
+  score: number;
+  assignedUserId?: string | null;
+  lead: Record<string, unknown>;
+}
+
+export interface LeadUpdatedEvent extends BaseDomainEventPayload {
+  leadId: string;
+  contactId: string;
+  status: string;
+  stage: string;
+  score: number;
+  assignedUserId?: string | null;
+  lead: Record<string, unknown>;
+  previousChanges?: Record<string, unknown>;
+}
+
+export interface LeadConvertedEvent extends BaseDomainEventPayload {
+  leadId: string;
+  contactId: string;
+  opportunityId: string;
+  lead: Record<string, unknown>;
+  opportunity: Record<string, unknown>;
+}
+
+export interface OpportunityCreatedEvent extends BaseDomainEventPayload {
+  opportunityId: string;
+  leadId?: string | null;
+  contactId: string;
+  stage: string;
+  amount: number;
+  currency: string;
+  assignedUserId?: string | null;
+  opportunity: Record<string, unknown>;
+}
+
+export interface OpportunityStageUpdatedEvent extends BaseDomainEventPayload {
+  opportunityId: string;
+  stage: string;
+  previousStage?: string;
+  lostReason?: string | null;
+  opportunity: Record<string, unknown>;
 }

@@ -27,6 +27,11 @@ import {
   ChannelDeletedEvent,
   PresenceUpdatedEvent,
   TypingEventPayload,
+  LeadCreatedEvent,
+  LeadUpdatedEvent,
+  LeadConvertedEvent,
+  OpportunityCreatedEvent,
+  OpportunityStageUpdatedEvent,
 } from '@sales-copilot/shared-contracts';
 import { RealtimeGateway } from './realtime.gateway';
 
@@ -408,6 +413,53 @@ export class RealtimeEventDispatcher {
       lastSeenAt: payload.lastSeenAt,
     };
     this.broadcastSafe(`workspace_${payload.workspaceId}`, WsServerEvent.PRESENCE_UPDATED, data);
+  }
+
+  // ==========================================================================
+  // 8. Sales Domain Event Handlers (Epic 2.1)
+  // ==========================================================================
+
+  @OnEvent(DomainEvent.LEAD_CREATED)
+  @OnEvent('lead.created')
+  handleLeadCreated(payload: LeadCreatedEvent): void {
+    if (!payload?.workspaceId) return;
+    this.broadcastSafe(`workspace_${payload.workspaceId}`, WsServerEvent.LEAD_CREATED, payload);
+  }
+
+  @OnEvent(DomainEvent.LEAD_UPDATED)
+  @OnEvent('lead.updated')
+  handleLeadUpdated(payload: LeadUpdatedEvent): void {
+    if (!payload?.workspaceId) return;
+    this.broadcastSafe(`workspace_${payload.workspaceId}`, WsServerEvent.LEAD_UPDATED, payload);
+  }
+
+  @OnEvent(DomainEvent.LEAD_CONVERTED)
+  @OnEvent('lead.converted')
+  handleLeadConverted(payload: LeadConvertedEvent): void {
+    if (!payload?.workspaceId) return;
+    this.broadcastSafe(`workspace_${payload.workspaceId}`, WsServerEvent.LEAD_CONVERTED, payload);
+  }
+
+  @OnEvent(DomainEvent.OPPORTUNITY_CREATED)
+  @OnEvent('opportunity.created')
+  handleOpportunityCreated(payload: OpportunityCreatedEvent): void {
+    if (!payload?.workspaceId) return;
+    this.broadcastSafe(
+      `workspace_${payload.workspaceId}`,
+      WsServerEvent.OPPORTUNITY_CREATED,
+      payload,
+    );
+  }
+
+  @OnEvent(DomainEvent.OPPORTUNITY_STAGE_UPDATED)
+  @OnEvent('opportunity.stage_updated')
+  handleOpportunityStageUpdated(payload: OpportunityStageUpdatedEvent): void {
+    if (!payload?.workspaceId) return;
+    this.broadcastSafe(
+      `workspace_${payload.workspaceId}`,
+      WsServerEvent.OPPORTUNITY_STAGE_UPDATED,
+      payload,
+    );
   }
 
   // ==========================================================================

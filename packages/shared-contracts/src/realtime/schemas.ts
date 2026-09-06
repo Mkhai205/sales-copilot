@@ -48,6 +48,13 @@ export enum WsServerEvent {
   // Typing events
   TYPING_START = 'typing.start',
   TYPING_STOP = 'typing.stop',
+
+  // Sales events (Milestone 2A - Epic 2.1)
+  LEAD_CREATED = 'lead.created',
+  LEAD_UPDATED = 'lead.updated',
+  LEAD_CONVERTED = 'lead.converted',
+  OPPORTUNITY_CREATED = 'opportunity.created',
+  OPPORTUNITY_STAGE_UPDATED = 'opportunity.stage_updated',
 }
 
 // ============================================================================
