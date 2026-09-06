@@ -1,4 +1,12 @@
-import { Controller, Get, HttpCode, HttpStatus, Patch, Post } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Patch,
+  Post,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import {
@@ -49,6 +57,7 @@ export class AuthController {
     return this.authService.refreshToken(dto);
   }
 
+  @Public()
   @Post('logout')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
@@ -56,10 +65,16 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'Logged out successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async logout(
-    @CurrentUser() user: JwtUserPayload,
+    @CurrentUser() user: JwtUserPayload | undefined,
     @ZodBody(logoutSchema) dto: LogoutDto,
   ): Promise<{ loggedOut: boolean }> {
-    return this.authService.logout(user.userId, dto.refreshToken);
+    if (!user && !dto.refreshToken) {
+      throw new UnauthorizedException({
+        code: 'UNAUTHORIZED',
+        message: 'Either an authorization token or refresh token is required for logout',
+      });
+    }
+    return this.authService.logout(user?.userId, dto.refreshToken);
   }
 
   @Get('me')

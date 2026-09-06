@@ -81,13 +81,13 @@ Quy trình triển khai tuân thủ nghiêm ngặt đồ thị phụ thuộc (DA
 
 ## 📌 4. Phân kỳ Phase 2 & Phase 3 (Future Extensions)
 
-### Phase 2: Sales Intelligence (Future Extension)
-- **Epic 2.1: Lead Lifecycle & Opportunity Core**
-- **Epic 2.2: Sales Evidence & Activity Timeline**
-- **Epic 2.3: Multi-Provider LLM Gateway & Prompt Management**
-- **Epic 2.4: Conversation Intelligence (Intent, Sentiment, Buying Signals)**
-- **Epic 2.5: AI-Driven Lead Scoring Engine**
-- **Epic 2.6: Sales Copilot Assistant & Suggested Actions**
+### Phase 2: Sales Intelligence (Master Backlog: [📄 `phase-2-backlog.md`](./phase-2-backlog.md))
+- **Epic 2.1: Lead Lifecycle & Opportunity Core** — [📄 `epic-2.1.md`](./epic-2.1.md)
+- **Epic 2.2: Sales Evidence & Activity Timeline** — [📄 `epic-2.2.md`](./epic-2.2.md)
+- **Epic 2.3: Multi-Provider LLM Gateway & Prompt Management** — [📄 `epic-2.3.md`](./epic-2.3.md)
+- **Epic 2.4: Conversation Intelligence (Intent, Sentiment, Buying Signals)** — [📄 `epic-2.4.md`](./epic-2.4.md)
+- **Epic 2.5: AI-Driven Lead Scoring Engine** — [📄 `epic-2.5.md`](./epic-2.5.md)
+- **Epic 2.6: Sales Copilot Assistant & Suggested Actions** — [📄 `epic-2.6.md`](./epic-2.6.md)
 
 ### Phase 3: Autonomous & Enterprise Extensions (Long-Term)
 - **Epic 3.1: Tool Registry & Policy Guardrails**

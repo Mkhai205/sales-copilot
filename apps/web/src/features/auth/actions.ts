@@ -238,15 +238,21 @@ export async function refreshSessionAction(): Promise<string | null> {
 
 export async function logoutAction(): Promise<void> {
   const cookieStore = await cookies();
+  const accessToken = cookieStore.get('access_token')?.value;
   const refreshToken = cookieStore.get('refresh_token')?.value;
 
-  if (refreshToken) {
+  if (refreshToken || accessToken) {
     try {
+      const headersInit: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      if (accessToken) {
+        headersInit['Authorization'] = `Bearer ${accessToken}`;
+      }
+
       await fetch(`${API_BASE}/auth/logout`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: headersInit,
         body: JSON.stringify({ refreshToken }),
         cache: 'no-store',
       });

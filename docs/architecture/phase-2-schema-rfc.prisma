@@ -1,0 +1,747 @@
+// =============================================================================
+// Phase 2 Schema RFC: Sales Intelligence & AI Copilot
+// File: docs/architecture/phase-2-schema-rfc.prisma
+// Status: RFC / DESIGN BLUEPRINT ONLY (Do NOT apply to Phase 1 runtime DB)
+// Standard: Prisma 7 Schema Definition (3NF Normalized, Multi-Tenant Scoped)
+// =============================================================================
+//
+// DESIGN PRINCIPLES & GOVERNANCE:
+// 1. Strict Tenant Isolation: Every model incorporates `workspaceId` as a foreign
+//    key with cascade deletion and compound indexing prefix `[workspaceId, ...]`.
+// 2. 3NF Normalization: Clean entity boundaries avoiding data duplication;
+//    score history, sales evidence, and suggestions maintain clear aggregate relations.
+// 3. Phase 1 Protection: This schema is an architectural specification and blueprint.
+//    No migrations or db push operations are permitted against the Phase 1 database.
+// 4. Traceable AI Evidence: LLM-derived insights (Buying Signals, Next Best Actions)
+//    are linked to verbatim conversation message snippets with confidence metrics.
+// =============================================================================
+
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/infrastructure/database/generated-phase2-rfc"
+  moduleFormat = "cjs"
+}
+
+// =============================================================================
+// 1. PHASE 1 ENUMS & ANCHOR MODELS (Reference & Relationship Integrity)
+// =============================================================================
+
+enum PlatformRole {
+  SUPER_ADMIN
+  USER
+}
+
+enum WorkspaceRole {
+  OWNER
+  ADMIN
+  AGENT
+  VIEWER
+}
+
+enum BillingPlanType {
+  FREE
+  STANDARD
+  ENTERPRISE
+}
+
+enum ChannelType {
+  FACEBOOK_MESSENGER
+  ZALO
+  TELEGRAM
+  EMAIL
+  WEB_CHAT
+}
+
+enum ConversationStatus {
+  OPEN
+  RESOLVED
+  PENDING
+  SNOOZED
+}
+
+enum ConversationPriority {
+  URGENT
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum MessageType {
+  INCOMING
+  OUTGOING
+  ACTIVITY
+  TEMPLATE
+}
+
+enum MessageContentType {
+  TEXT
+  IMAGE
+  VIDEO
+  AUDIO
+  FILE
+}
+
+enum DeliveryStatus {
+  PENDING
+  SENT
+  DELIVERED
+  READ
+  FAILED
+}
+
+enum SenderType {
+  CONTACT
+  USER
+  SYSTEM
+}
+
+/// Anchor User Model representing team members and agents.
+/// Extended in Phase 2 with back-relations to assigned leads, opportunities,
+/// resolved suggestions, and created prompt templates.
+model User {
+  id           String       @id @default(uuid())
+  email        String       @unique
+  passwordHash String
+  name         String
+  avatarUrl    String?
+  role         PlatformRole @default(USER)
+  isActive     Boolean      @default(true)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  // Phase 1 Relations
+  workspaceMembers      WorkspaceMember[]
+  assignedConversations Conversation[]    @relation("UserAssignedConversations")
+
+  // Phase 2 Reverse Relations
+  assignedLeads         Lead[]              @relation("UserAssignedLeads")
+  assignedOpportunities Opportunity[]       @relation("UserAssignedOpportunities")
+  resolvedSuggestions   CopilotSuggestion[] @relation("UserResolvedSuggestions")
+  createdTemplates      PromptTemplate[]    @relation("UserCreatedTemplates")
+
+  @@map("users")
+}
+
+/// Anchor Workspace Model representing tenant isolation boundary.
+/// Extended in Phase 2 with 1:N relations to all Sales Intelligence models.
+model Workspace {
+  id              String          @id @default(uuid())
+  name            String
+  slug            String          @unique
+  billingPlan     BillingPlanType @default(FREE)
+  timezone        String          @default("Asia/Ho_Chi_Minh")
+  defaultLanguage String          @default("vi")
+  settings        Json            @default("{}")
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  // Phase 1 Relations
+  members       WorkspaceMember[]
+  contacts      Contact[]
+  conversations Conversation[]
+  messages      Message[]
+
+  // Phase 2 Reverse Relations
+  leads                Lead[]
+  opportunities        Opportunity[]
+  salesEvidences       SalesEvidence[]
+  leadScores           LeadScore[]
+  leadScoreHistories   LeadScoreHistory[]
+  copilotSuggestions   CopilotSuggestion[]
+  promptTemplates      PromptTemplate[]
+
+  @@map("workspaces")
+}
+
+/// Anchor WorkspaceMember linking Users to Workspaces.
+model WorkspaceMember {
+  id          String        @id @default(uuid())
+  workspaceId String
+  userId      String
+  role        WorkspaceRole @default(AGENT)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, userId])
+  @@index([userId])
+  @@map("workspace_members")
+}
+
+/// Anchor Contact Model representing an omnichannel customer entity.
+/// Extended in Phase 2 to associate with qualified Leads and commercial Opportunities.
+model Contact {
+  id                   String   @id @default(uuid())
+  workspaceId          String
+  name                 String
+  email                String?
+  phoneNumber          String?
+  avatarUrl            String?
+  identifier           String?
+  customAttributes     Json     @default("{}")
+  additionalAttributes Json     @default("{}")
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  workspace     Workspace      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  conversations Conversation[]
+
+  // Phase 2 Reverse Relations
+  leads         Lead[]
+  opportunities Opportunity[]
+
+  @@unique([workspaceId, identifier])
+  @@index([workspaceId, email])
+  @@index([workspaceId, phoneNumber])
+  @@index([workspaceId, createdAt])
+  @@map("contacts")
+}
+
+/// Anchor Conversation Model representing an omnichannel communication thread.
+/// Extended in Phase 2 with relations to extracted Sales Evidence and Copilot Suggestions.
+model Conversation {
+  id                  String               @id @default(uuid())
+  displayId           Int                  @default(autoincrement())
+  workspaceId         String
+  inboxId             String
+  contactId           String
+  assigneeId          String?
+  status              ConversationStatus   @default(OPEN)
+  priority            ConversationPriority @default(MEDIUM)
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+
+  workspace  Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  contact    Contact   @relation(fields: [contactId], references: [id], onDelete: Restrict)
+  assignee   User?     @relation("UserAssignedConversations", fields: [assigneeId], references: [id], onDelete: SetNull)
+  messages   Message[]
+
+  // Phase 2 Reverse Relations
+  salesEvidences     SalesEvidence[]
+  copilotSuggestions CopilotSuggestion[]
+
+  @@unique([workspaceId, displayId])
+  @@index([workspaceId, status])
+  @@index([workspaceId, assigneeId])
+  @@index([workspaceId, contactId])
+  @@map("conversations")
+}
+
+/// Anchor Message Model representing an individual chat message.
+/// Extended in Phase 2 to ground Sales Evidence citations against verbatim message text.
+model Message {
+  id             String             @id @default(uuid())
+  conversationId String
+  workspaceId    String
+  senderType     SenderType
+  senderId       String?
+  messageType    MessageType        @default(INCOMING)
+  contentType    MessageContentType @default(TEXT)
+  content        String?
+  isPrivate      Boolean            @default(false)
+  deliveryStatus DeliveryStatus     @default(SENT)
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  workspace    Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  // Phase 2 Reverse Relations
+  salesEvidences SalesEvidence[]
+
+  @@index([conversationId, createdAt])
+  @@index([workspaceId, senderType, senderId])
+  @@map("messages")
+}
+
+// =============================================================================
+// 2. PHASE 2 ENUMS
+// =============================================================================
+
+/// Qualification status of a Lead in the qualification pipeline.
+enum LeadStatus {
+  /// Freshly captured lead from inbound message or manual creation
+  NEW
+  /// Initial contact/outreach has been initiated
+  CONTACTED
+  /// Prospect is actively engaging in two-way discussion
+  ENGAGED
+  /// Lead meets qualification criteria (BANT / CHAMP framework)
+  QUALIFIED
+  /// Lead does not currently match target customer profile
+  UNQUALIFIED
+  /// Successfully converted into an active Opportunity
+  CONVERTED
+  /// Disqualified due to competitor, spam, or explicit refusal
+  DISQUALIFIED
+}
+
+/// Sales engagement stage of a Lead prior to Opportunity conversion.
+enum LeadStage {
+  /// Discovery phase: identifying customer business pains and needs
+  DISCOVERY
+  /// Evaluation phase: matching features, pricing tiers, and solution fit
+  EVALUATION
+  /// Proposal phase: presenting commercial pricing proposal or demo
+  PROPOSAL
+  /// Negotiation phase: discussing terms, discounts, and legal approval
+  NEGOTIATION
+  /// Lead converted successfully / deal closed
+  WON
+  /// Disengaged, dropped out, or lost to competitor
+  LOST
+}
+
+/// Categorical propensity grade derived from aggregate LeadScore (0-100).
+enum LeadGrade {
+  /// High intent and velocity: Score >= 80 (Immediate agent priority)
+  HOT
+  /// Moderate intent: Score 50 - 79 (Active nurture candidate)
+  WARM
+  /// Low engagement or early exploratory: Score 20 - 49 (Automated cadence)
+  COLD
+  /// Unqualified / Spam / No buying signals: Score < 20
+  JUNK
+}
+
+/// Stage of an Opportunity in the formal sales revenue pipeline.
+enum OpportunityStage {
+  /// Pipeline initiation: scoping requirements and stakeholder discovery
+  PROSPECTING
+  /// Formal qualification: budget, timeline, and authority verified
+  QUALIFICATION
+  /// Official quotation or RFP proposal delivered to client
+  PROPOSAL
+  /// Contract, security review, and final pricing negotiation
+  NEGOTIATION
+  /// Contract signed, payment confirmed (Pipeline Won)
+  CLOSED_WON
+  /// Deal lost or cancelled (Pipeline Lost)
+  CLOSED_LOST
+}
+
+/// Taxonomic classification of extracted customer buying signals and intent.
+enum BuyingSignalType {
+  /// Customer confirmed explicit budget range or expressed price acceptability
+  BUDGET_CONFIRMED
+  /// Decision maker, executive buyer, or key technical stakeholder identified
+  AUTHORITY_IDENTIFIED
+  /// Customer clearly articulated specific pain points, requirements, or desired ROI
+  NEED_EXPRESSED
+  /// Explicit deployment or purchase timeline stated (e.g. "by Q4", "this month")
+  TIMELINE_DEFINED
+  /// Customer mentioned competitor solutions, comparative features, or migration
+  COMPETITOR_MENTION
+  /// Pricing, timing, feature gap, or security objections raised
+  OBJECTION_RAISED
+  /// High-intent commercial phrases ("send contract", "payment link", "onboarding steps")
+  PURCHASE_INTENT
+  /// Sentiment signals indicating frustration, delays, or risk of disengagement
+  CHURN_RISK
+  /// Rapid multi-channel interactions or sudden surge in conversation frequency
+  ENGAGEMENT_SPIKE
+}
+
+/// Triggering event source that necessitated a LeadScore recalculation.
+enum ScoreTriggerEvent {
+  /// Initial baseline scoring upon Lead creation
+  INITIAL_CALCULATION
+  /// New inbound message received from customer
+  MESSAGE_RECEIVED
+  /// AI Conversation Intelligence detected new Sales Evidence / Buying Signal
+  EVIDENCE_DETECTED
+  /// Agent manually updated Lead status or stage
+  STAGE_CHANGED
+  /// Manual on-demand recalculation triggered via REST API or Dashboard
+  MANUAL_RECALCULATION
+  /// Background batch decay applied due to days of prospect inactivity
+  TIME_DECAY
+}
+
+/// Type and intent of Copilot Assistant suggestions presented to the sales rep.
+enum CopilotSuggestionType {
+  /// Context-aware recommended message reply or drafted email
+  RECOMMENDED_REPLY
+  /// Next best action recommendation (e.g., "Schedule follow-up demo", "Request budget")
+  NEXT_BEST_ACTION
+  /// Scripted tactical response to handle a specific customer objection
+  OBJECTION_HANDLING
+  /// Recommended incentive, discount tier, or bundling option
+  DISCOUNT_PROPOSAL
+  /// Calendar booking link or meeting invite proposal
+  MEETING_SCHEDULE
+  /// Re-engagement nudge for stalled or quiet leads
+  FOLLOW_UP_REMINDER
+}
+
+/// Lifecycle status of an AI-generated Copilot Suggestion.
+enum SuggestionStatus {
+  /// Suggestion generated and awaiting agent review in chat interface
+  PENDING
+  /// Accepted by agent: applied to composer or executed as an action
+  ACCEPTED
+  /// Dismissed by agent: rejected as irrelevant or inappropriate
+  DISMISSED
+  /// Auto-expired due to subsequent message arrival or conversation resolution
+  EXPIRED
+}
+
+/// Supported Large Language Model providers in the multi-provider LLM Gateway.
+enum LlmProvider {
+  /// Google Gemini (e.g. gemini-1.5-pro, gemini-2.0-flash, gemini-1.5-flash)
+  GEMINI
+  /// OpenAI (e.g. gpt-4o, gpt-4o-mini)
+  OPENAI
+  /// Anthropic Claude (e.g. claude-3-5-sonnet)
+  ANTHROPIC
+  /// DeepSeek (e.g. deepseek-chat, deepseek-reasoner)
+  DEEPSEEK
+}
+
+// =============================================================================
+// 3. PHASE 2 CORE DATA MODELS (3NF Normalized & Multi-Tenant Scoped)
+// =============================================================================
+
+/// Lead Entity: Represents a prospective business deal linked to a Contact.
+///
+/// Invariants:
+/// - Strictly scoped to `workspaceId`.
+/// - 1 active Lead per Contact per Workspace (`@@unique([workspaceId, contactId])`).
+/// - Maintains real-time numeric `score` (0-100) synchronized with `LeadScore`.
+/// - Can be converted into one or more `Opportunity` records.
+model Lead {
+  /// Unique identifier (UUIDv4)
+  id             String     @id @default(uuid())
+  /// Tenant isolation reference
+  workspaceId    String
+  /// Omnichannel Contact identifier
+  contactId      String
+  /// Current qualification status
+  status         LeadStatus @default(NEW)
+  /// Sales stage progression
+  stage          LeadStage  @default(DISCOVERY)
+  /// Composite score calculated by AI scoring engine (0 - 100)
+  score          Int        @default(0)
+  /// User assigned as deal owner / sales rep
+  assignedUserId String?
+  /// Estimated deal revenue value
+  estimatedValue Decimal?   @db.Decimal(15, 2)
+  /// ISO 4217 Currency code (default USD)
+  currency       String     @default("USD")
+  /// Extensible JSON metadata (industry, companySize, leadSource, etc.)
+  metadata       Json       @default("{}")
+  /// Timestamp when lead was recorded
+  createdAt      DateTime   @default(now())
+  /// Timestamp of prospect's last conversation or activity (basis for 48h inactivity decay)
+  lastActivityAt DateTime?
+  /// Timestamp of latest update
+  updatedAt      DateTime   @updatedAt
+
+  // Multi-tenant relations
+  workspace    Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  contact      Contact   @relation(fields: [contactId], references: [id], onDelete: Restrict)
+  assignedUser User?     @relation("UserAssignedLeads", fields: [assignedUserId], references: [id], onDelete: SetNull)
+
+  // Phase 2 Downstream relations
+  opportunities   Opportunity[]
+  evidences       SalesEvidence[]
+  scoreRecord     LeadScore?
+  scoreHistories  LeadScoreHistory[]
+  suggestions     CopilotSuggestion[]
+
+  // Multi-tenant Compound Indexes
+  @@unique([workspaceId, contactId])
+  @@index([workspaceId, status])
+  @@index([workspaceId, stage])
+  @@index([workspaceId, score])
+  @@index([workspaceId, assignedUserId])
+  @@index([workspaceId, lastActivityAt])
+  @@index([workspaceId, createdAt])
+  @@map("leads")
+}
+
+/// Opportunity Entity: Represents a formally qualified revenue pipeline deal.
+///
+/// Invariants:
+/// - Strictly scoped to `workspaceId`.
+/// - Linked to a primary `Contact` and optionally originated from a `Lead`.
+/// - Has explicit commercial `amount`, `probability` (0-100%), and `expectedCloseDate`.
+model Opportunity {
+  /// Unique identifier (UUIDv4)
+  id                String           @id @default(uuid())
+  /// Tenant isolation reference
+  workspaceId       String
+  /// Originating Lead identifier (nullable if created directly)
+  leadId            String?
+  /// Associated customer Contact
+  contactId         String
+  /// Deal title (e.g. "Enterprise Tier Annual Contract - Acme Corp")
+  title             String
+  /// Sales pipeline stage
+  stage             OpportunityStage @default(PROSPECTING)
+  /// Financial deal value
+  amount            Decimal          @db.Decimal(15, 2)
+  /// ISO 4217 Currency code
+  currency          String           @default("USD")
+  /// Win probability percentage (0 - 100)
+  probability       Int              @default(50)
+  /// Target closing date for pipeline forecasting
+  expectedCloseDate DateTime?
+  /// Actual deal closed date (won or lost)
+  actualCloseDate   DateTime?
+  /// Rationale if deal was marked CLOSED_LOST
+  lostReason        String?
+  /// Assigned sales executive / account executive
+  assignedUserId    String?
+  /// Custom properties (contractType, paymentTerms, competitors)
+  metadata          Json             @default("{}")
+  /// Creation timestamp
+  createdAt         DateTime         @default(now())
+  /// Timestamp of latest modification
+  updatedAt         DateTime         @updatedAt
+
+  // Multi-tenant relations
+  workspace    Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  lead         Lead?     @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  contact      Contact   @relation(fields: [contactId], references: [id], onDelete: Restrict)
+  assignedUser User?     @relation("UserAssignedOpportunities", fields: [assignedUserId], references: [id], onDelete: SetNull)
+
+  // Multi-tenant Compound Indexes
+  @@index([workspaceId, stage])
+  @@index([workspaceId, assignedUserId])
+  @@index([workspaceId, expectedCloseDate])
+  @@index([workspaceId, leadId])
+  @@index([workspaceId, contactId])
+  @@index([workspaceId, createdAt])
+  @@map("opportunities")
+}
+
+/// SalesEvidence Entity: Verifiable buying signal grounded in conversation history.
+///
+/// Invariants:
+/// - Strictly scoped to `workspaceId`.
+/// - Must link to an active `Lead` and `Conversation`, optionally citing a specific `Message`.
+/// - Requires verifiable verbatim `snippet` text and LLM reasoning `reason`.
+/// - Aligns with LLM 2-tier signal taxonomy: primary signal mapped to `signalType` enum and sub-category in `signalCategory` for deduplication and scoring.
+/// - Normalized confidence metric (0.00 to 1.00).
+model SalesEvidence {
+  /// Unique identifier (UUIDv4)
+  id             String           @id @default(uuid())
+  /// Tenant isolation reference
+  workspaceId    String
+  /// Associated Lead identifier
+  leadId         String
+  /// Originating Conversation thread
+  conversationId String
+  /// Specific Message cited as source (if text-based)
+  messageId      String?
+  /// Categorized signal type (BANT / Intent enum mapped from LLM classification)
+  signalType     BuyingSignalType
+  /// Granular secondary signal category from LLM 2-tier taxonomy (e.g. "budget_ceiling", "deployment_timeline", "feature_gap")
+  signalCategory String?
+  /// Confidence score between 0.00 and 1.00
+  confidence     Float
+  /// Verbatim message excerpt containing the signal evidence
+  snippet        String           @db.Text
+  /// Chain-of-thought explanation generated by LLM reasoning
+  reason         String           @db.Text
+  /// Optional structured extraction (e.g. { budgetMin: 5000, targetQuarter: "Q4" })
+  metadata       Json             @default("{}")
+  /// Extraction timestamp
+  createdAt      DateTime         @default(now())
+  /// Timestamp of latest update
+  updatedAt      DateTime         @updatedAt
+
+  // Multi-tenant relations
+  workspace    Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  lead         Lead         @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  message      Message?     @relation(fields: [messageId], references: [id], onDelete: SetNull)
+
+  // Multi-tenant Compound Indexes
+  @@index([workspaceId, leadId])
+  @@index([workspaceId, conversationId])
+  @@index([workspaceId, signalType])
+  @@index([workspaceId, signalCategory])
+  @@index([workspaceId, confidence])
+  @@index([workspaceId, createdAt])
+  @@map("sales_evidences")
+}
+
+/// LeadScore Entity: Current aggregated scoring state and contributing factors for a Lead.
+///
+/// Invariants:
+/// - Strictly 1:1 relationship with `Lead` (`@@unique([workspaceId, leadId])`).
+/// - Score bounded between 0 and 100.
+/// - Categorical `grade` (HOT, WARM, COLD, JUNK) computed from numeric score.
+/// - `scoreFactors` captures full transparent breakdown for explainable AI.
+model LeadScore {
+  /// Unique identifier (UUIDv4)
+  id           String    @id @default(uuid())
+  /// Tenant isolation reference
+  workspaceId  String
+  /// Associated Lead (1:1 relation)
+  leadId       String    @unique
+  /// Current aggregate score (0 - 100)
+  score        Int       @default(0)
+  /// High-level propensity grade
+  grade        LeadGrade @default(COLD)
+  /// Array of contributing scoring factors with weights and points
+  /// Example: `[{"factor": "BUDGET_CONFIRMED", "weight": 35, "points": 35, "rationale": "Confirmed $10k budget"}]`
+  scoreFactors Json      @default("[]")
+  /// Timestamp when this score was computed
+  calculatedAt DateTime  @default(now())
+  /// Timestamp of latest update
+  updatedAt    DateTime  @updatedAt
+
+  // Multi-tenant relations
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  lead      Lead      @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  // Multi-tenant Compound Indexes
+  @@unique([workspaceId, leadId])
+  @@index([workspaceId, grade])
+  @@index([workspaceId, score])
+  @@index([workspaceId, calculatedAt])
+  @@map("lead_scores")
+}
+
+/// LeadScoreHistory Entity: Append-only audit log of Lead scoring transitions.
+///
+/// Invariants:
+/// - Immutable audit record (`createdAt` only, no `updatedAt`).
+/// - Records score delta (`previousScore` -> `newScore`) and explicit `eventTrigger`.
+/// - Enables historical trend charts, velocity tracking, and time decay analysis.
+model LeadScoreHistory {
+  /// Unique identifier (UUIDv4)
+  id            String             @id @default(uuid())
+  /// Tenant isolation reference
+  workspaceId   String
+  /// Associated Lead identifier
+  leadId        String
+  /// Score prior to trigger
+  previousScore Int
+  /// Updated score after recalculation
+  newScore      Int
+  /// Explanation or formula summary for the score adjustment
+  reason        String             @db.Text
+  /// Event that initiated the scoring calculation
+  eventTrigger  ScoreTriggerEvent
+  /// Timestamp of scoring event
+  createdAt     DateTime           @default(now())
+
+  // Multi-tenant relations
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  lead      Lead      @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  // Multi-tenant Compound Indexes
+  @@index([workspaceId, leadId, createdAt])
+  @@index([workspaceId, createdAt])
+  @@map("lead_score_histories")
+}
+
+/// CopilotSuggestion Entity: Real-time actionable recommendation for the sales rep.
+///
+/// Invariants:
+/// - Strictly scoped to `workspaceId` and active `Conversation`.
+/// - State machine: `PENDING` -> `ACCEPTED` | `DISMISSED` | `EXPIRED`.
+/// - `actionPayload` provides machine-executable actions (e.g., auto-fill composer, schedule event).
+/// - Tracks agent resolution via `resolvedByUserId` and `resolvedAt`.
+model CopilotSuggestion {
+  /// Unique identifier (UUIDv4)
+  id               String                @id @default(uuid())
+  /// Tenant isolation reference
+  workspaceId      String
+  /// Active Conversation where suggestion was generated
+  conversationId   String
+  /// Associated Lead (if conversation contact is linked to a lead)
+  leadId           String?
+  /// Categorization of suggestion
+  suggestionType   CopilotSuggestionType
+  /// Text suggestion or draft response presented to the rep
+  content          String                @db.Text
+  /// Structured action metadata (e.g. `{ action: "send_quote", quoteId: "..." }`)
+  actionPayload    Json                  @default("{}")
+  /// Model confidence score (0.00 to 1.00)
+  confidence       Float
+  /// Lifecycle status of recommendation
+  status           SuggestionStatus      @default(PENDING)
+  /// User who accepted or dismissed the suggestion
+  resolvedByUserId String?
+  /// Creation timestamp
+  createdAt        DateTime              @default(now())
+  /// Timestamp when suggestion was accepted/dismissed/expired
+  resolvedAt       DateTime?
+
+  // Multi-tenant relations
+  workspace      Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  lead           Lead?        @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  resolvedByUser User?        @relation("UserResolvedSuggestions", fields: [resolvedByUserId], references: [id], onDelete: SetNull)
+
+  // Multi-tenant Compound Indexes
+  @@index([workspaceId, conversationId, status])
+  @@index([workspaceId, status])
+  @@index([workspaceId, leadId])
+  @@index([workspaceId, createdAt])
+  @@map("copilot_suggestions")
+}
+
+/// PromptTemplate Entity: Versioned prompt engineering templates for LLM operations.
+///
+/// Invariants:
+/// - Strictly scoped to `workspaceId`.
+/// - Unique by `(workspaceId, name, version)`.
+/// - Supports multi-provider routing (Gemini, OpenAI, Anthropic).
+/// - Declares parameterized `inputVariables` for dynamic template interpolation.
+model PromptTemplate {
+  /// Unique identifier (UUIDv4)
+  id                 String      @id @default(uuid())
+  /// Tenant isolation reference
+  workspaceId        String
+  /// Semantic template identifier (e.g. "conversation_signal_extractor", "lead_scorer")
+  name               String
+  /// Integer version for controlled rollouts (1, 2, 3...)
+  version            Int         @default(1)
+  /// Target LLM gateway provider
+  provider           LlmProvider @default(GEMINI)
+  /// Model identifier string (e.g. "gemini-2.0-flash", "gpt-4o")
+  model              String      @default("gemini-2.0-flash")
+  /// System instruction prompt defining persona and constraints
+  systemPrompt       String      @db.Text
+  /// User prompt template with interpolation placeholders (e.g. `{{conversation}}`)
+  userPromptTemplate String      @db.Text
+  /// Array of expected variable names: `["conversation_history", "contact_name", "product_catalog"]`
+  inputVariables     Json        @default("[]")
+  /// Sampling temperature (0.0 = deterministic, 1.0 = creative)
+  temperature        Float       @default(0.2)
+  /// Maximum response generation tokens
+  maxTokens          Int         @default(1024)
+  /// Designates whether this version is the active default for the workspace
+  isDefault          Boolean     @default(false)
+  /// Administrative toggle to enable/disable template
+  isActive           Boolean     @default(true)
+  /// User who created this template version
+  createdById        String?
+  /// Creation timestamp
+  createdAt          DateTime    @default(now())
+  /// Timestamp of latest modification
+  updatedAt          DateTime    @updatedAt
+
+  // Multi-tenant relations
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdBy User?     @relation("UserCreatedTemplates", fields: [createdById], references: [id], onDelete: SetNull)
+
+  // Multi-tenant Compound Indexes
+  @@unique([workspaceId, name, version])
+  @@index([workspaceId, isActive])
+  @@index([workspaceId, provider])
+  @@index([workspaceId, isDefault])
+  @@map("prompt_templates")
+}

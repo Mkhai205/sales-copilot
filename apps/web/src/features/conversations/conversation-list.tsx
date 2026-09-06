@@ -186,6 +186,9 @@ export function ConversationList({ workspaceSlug, activeConversationId }: Conver
           </InputGroupAddon>
           <InputGroupInput
             ref={searchInputRef}
+            id="conversation-search"
+            name="conversation-search"
+            aria-label="Search for messages in conversations"
             type="text"
             placeholder="Search for messages in conversations"
             value={searchInput}

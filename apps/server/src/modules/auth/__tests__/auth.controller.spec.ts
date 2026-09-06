@@ -77,6 +77,23 @@ describe('AuthController (Presentation Layer Endpoints)', () => {
     assert.deepStrictEqual(result, { loggedOut: true });
   });
 
+  it('should handle logout with only refreshToken and return loggedOut: true', async () => {
+    const result = await controller.logout(undefined, { refreshToken: 'valid.refresh.token' });
+    assert.deepStrictEqual(result, { loggedOut: true });
+  });
+
+  it('should throw UnauthorizedException when neither user nor refreshToken is provided on logout', async () => {
+    await assert.rejects(
+      async () => {
+        await controller.logout(undefined, {});
+      },
+      (err: any) => {
+        assert.strictEqual(err.response?.code, 'UNAUTHORIZED');
+        return true;
+      },
+    );
+  });
+
   it('should handle me request and return current user profile', async () => {
     const userPayload = {
       userId: 'usr_100',

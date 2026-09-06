@@ -24,16 +24,28 @@ export class JwtAuthGuard implements CanActivate {
       context.getClass(),
     ]);
 
-    if (isPublic) {
-      return true;
-    }
-
     if (context.getType() !== 'http') {
       return true;
     }
 
     const request = context.switchToHttp().getRequest<Request>();
     const token = this.extractTokenFromRequest(request);
+
+    if (isPublic) {
+      if (token) {
+        try {
+          const payload = await this.tokenService.verifyAccessToken(token);
+          request.user = {
+            userId: payload.sub,
+            email: payload.email,
+            role: payload.role,
+          };
+        } catch {
+          // Token invalid/expired in public route -> ignore and proceed
+        }
+      }
+      return true;
+    }
 
     if (!token) {
       throw new UnauthorizedException({

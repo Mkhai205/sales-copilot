@@ -23,6 +23,8 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 import { LanguageSwitcherSubMenu } from '@/components/language-switcher';
+import { useQueryClient } from '@tanstack/react-query';
+import { disconnectSocketClient } from '@/lib/socket/socket-client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useI18n } from '@/lib/i18n';
 
@@ -31,10 +33,17 @@ export function NavUser() {
   const { data: user, isLoading } = useCurrentUser();
   const { theme, setTheme } = useTheme();
   const { t } = useI18n();
+  const queryClient = useQueryClient();
   const [isLoggingOut, startTransition] = React.useTransition();
 
   const handleLogout = () => {
     startTransition(async () => {
+      try {
+        disconnectSocketClient();
+        queryClient.clear();
+      } catch {
+        // Ignore cleanup errors
+      }
       await logoutAction();
     });
   };

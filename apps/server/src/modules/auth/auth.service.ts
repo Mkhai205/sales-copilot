@@ -107,10 +107,10 @@ export class AuthService {
   /**
    * Logs out user by revoking refresh token session.
    */
-  async logout(userId: string, refreshToken?: string): Promise<{ loggedOut: boolean }> {
+  async logout(userId?: string, refreshToken?: string): Promise<{ loggedOut: boolean }> {
     if (refreshToken) {
       await this.tokenService.revokeRefreshToken(refreshToken);
-    } else {
+    } else if (userId) {
       await this.tokenService.revokeAllUserTokens(userId);
     }
 

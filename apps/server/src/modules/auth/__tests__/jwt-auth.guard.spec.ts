@@ -103,6 +103,22 @@ describe('JwtAuthGuard (Authentication & Request Context Injection)', () => {
     assert.strictEqual(result, true);
   });
 
+  it('should attach user context on public route if valid token is provided', async () => {
+    mockReflector.getAllAndOverride = () => true;
+    const { context, request } = createMockExecutionContext({
+      authorization: 'Bearer valid.jwt.token',
+    });
+
+    const result = await guard.canActivate(context);
+
+    assert.strictEqual(result, true);
+    assert.deepStrictEqual(request.user, {
+      userId: 'usr_valid_123',
+      email: 'agent@salescopilot.io',
+      role: PlatformRole.USER,
+    });
+  });
+
   it('should throw UnauthorizedException when no token is provided on non-public route', async () => {
     const { context } = createMockExecutionContext();
 

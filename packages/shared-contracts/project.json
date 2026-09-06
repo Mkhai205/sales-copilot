@@ -15,6 +15,12 @@
       "options": {
         "command": "node -r @swc-node/register --test packages/shared-contracts/src/**/__tests__/*.spec.ts"
       }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "eslint packages/shared-contracts"
+      }
     }
   }
 }
