@@ -2,26 +2,26 @@
 
 ## 1. Mục đích & Vai trò của Chatwoot Reference
 
-[Chatwoot](https://github.com/chatwoot/chatwoot) là nguồn tham chiếu chuẩn về **Quy tắc nghiệp vụ (Business Logic)** và **Hành vi sản phẩm (Product Behavior)** cho nền tảng hội thoại đa kênh của Sales Copilot Platform.
+[Chatwoot](https://github.com/chatwoot/chatwoot) là nguồn tham chiếu chuẩn về **Quy tắc nghiệp vụ (Business Logic)** và **Hành vi sản phẩm (Product Behavior)** cho nền tảng hội thoại đa kênh của Sales Copilot Platform (Phase 1 Baseline).
 
-Mã nguồn Chatwoot đầy đủ đã được lưu trữ cục bộ tại:
-📂 [`docs/references/chatwoot/source/`](./source/)
+Toàn bộ mã nguồn Chatwoot được tham khảo trực tuyến tại:
+🔗 **[Chatwoot Official Repository (GitHub)](https://github.com/chatwoot/chatwoot/tree/develop)**
 
 ---
 
 ## 2. Bản đồ đối chiếu mã nguồn Chatwoot ──► Sales Copilot (Phase 1)
 
-Khi triển khai các use case cho Phase 1, bạn có thể tra cứu mã nguồn Chatwoot tương ứng tại các đường dẫn sau:
+Khi cần đối soát hoặc tham khảo nghiệp vụ, bạn có thể tra cứu các file tương ứng trên repository của Chatwoot:
 
-| Nghiệp vụ Phase 1 | Chatwoot Reference Path | Trọng tâm cần tham khảo |
+| Nghiệp vụ | Chatwoot Reference Path (GitHub) | Trọng tâm cần tham khảo |
 | :--- | :--- | :--- |
-| **Contact Identity & Merge** | `docs/references/chatwoot/source/app/actions/contact_identify_action.rb`<br>`docs/references/chatwoot/source/app/actions/contact_merge_action.rb` | Thuật toán đối soát Contact theo thứ tự `identifier > email > phone_number` và quy trình gộp Contact trong transaction. |
-| **Conversation State Machine** | `docs/references/chatwoot/source/app/models/conversation.rb` | Các trạng thái `OPEN`, `RESOLVED`, `PENDING`, `SNOOZED`, sự kiện tự động reopen khi khách hàng nhắn tin lại. |
-| **Round-Robin Auto-Assignment** | `docs/references/chatwoot/source/app/services/auto_assignment/` | Thuật toán luân phiên gán hội thoại cho các Agent đang online trong Inbox. |
-| **Inboxes & Channel Bindings** | `docs/references/chatwoot/source/app/models/inbox.rb`<br>`docs/references/chatwoot/source/app/models/channel/` | Cách tổ chức 1:1 giữa Inbox và Channel, tách biệt logic của từng kênh (Facebook, Web Widget, Email). |
-| **Webhook Ingestion** | `docs/references/chatwoot/source/app/controllers/webhooks/` | Cách xác thực chữ ký webhook, chuẩn hóa payload tin nhắn và xử lý bất đồng bộ. |
-| **Outbound Webhooks** | `docs/references/chatwoot/source/app/models/webhook.rb`<br>`docs/references/chatwoot/source/app/listeners/webhook_listener.rb` | Cơ chế dispatch webhook sự kiện cho bên thứ 3 và retry khi thất bại. |
-| **Canned Responses & Labels** | `docs/references/chatwoot/source/app/models/canned_response.rb`<br>`docs/references/chatwoot/source/app/models/label.rb` | Quản lý câu trả lời mẫu theo shortcode và nhãn hội thoại. |
+| **Contact Identity & Merge** | [`app/actions/contact_identify_action.rb`](https://github.com/chatwoot/chatwoot/blob/develop/app/actions/contact_identify_action.rb)<br>[`app/actions/contact_merge_action.rb`](https://github.com/chatwoot/chatwoot/blob/develop/app/actions/contact_merge_action.rb) | Thuật toán đối soát Contact theo thứ tự `identifier > email > phone_number` và quy trình gộp Contact trong database transaction. |
+| **Conversation State Machine** | [`app/models/conversation.rb`](https://github.com/chatwoot/chatwoot/blob/develop/app/models/conversation.rb) | Các trạng thái `OPEN`, `RESOLVED`, `PENDING`, `SNOOZED`, sự kiện tự động reopen khi khách hàng nhắn tin lại. |
+| **Round-Robin Auto-Assignment** | [`app/services/auto_assignment/`](https://github.com/chatwoot/chatwoot/tree/develop/app/services/auto_assignment) | Thuật toán luân phiên gán hội thoại cho các Agent đang online trong Inbox. |
+| **Inboxes & Channel Bindings** | [`app/models/inbox.rb`](https://github.com/chatwoot/chatwoot/blob/develop/app/models/inbox.rb)<br>[`app/models/channel/`](https://github.com/chatwoot/chatwoot/tree/develop/app/models/channel) | Cách tổ chức 1:1 giữa Inbox và Channel, tách biệt logic của từng kênh (Facebook, Web Widget, Email). |
+| **Webhook Ingestion** | [`app/controllers/webhooks/`](https://github.com/chatwoot/chatwoot/tree/develop/app/controllers/webhooks) | Cách xác thực chữ ký webhook, chuẩn hóa payload tin nhắn và xử lý bất đồng bộ. |
+| **Outbound Webhooks** | [`app/models/webhook.rb`](https://github.com/chatwoot/chatwoot/blob/develop/app/models/webhook.rb)<br>[`app/listeners/webhook_listener.rb`](https://github.com/chatwoot/chatwoot/blob/develop/app/listeners/webhook_listener.rb) | Cơ chế dispatch webhook sự kiện cho bên thứ 3 và retry khi thất bại. |
+| **Canned Responses & Labels** | [`app/models/canned_response.rb`](https://github.com/chatwoot/chatwoot/blob/develop/app/models/canned_response.rb)<br>[`app/models/label.rb`](https://github.com/chatwoot/chatwoot/blob/develop/app/models/label.rb) | Quản lý câu trả lời mẫu theo shortcode và nhãn hội thoại. |
 
 ---
 
@@ -32,9 +32,9 @@ Khi triển khai các use case cho Phase 1, bạn có thể tra cứu mã nguồ
    - KHÔNG chuyển đổi trực tiếp Ruby ActiveRecord callbacks/concerns sang NestJS.
    - KHÔNG đưa các dependency của Ruby/Rails vào TypeScript.
 3. **Hiện thực theo chuẩn Sales Copilot**:
-   - Sử dụng Clean Architecture (Presentation ──► Application ──► Domain ◄── Infrastructure).
-   - Sử dụng Prisma ORM + PostgreSQL 16 + TypeScript types chặt chẽ.
-   - Sử dụng Redis 7 (Pub/Sub + BullMQ) cho Realtime & Background Queues.
+   - Sử dụng Pragmatic Modular Monolith (Services + Prisma Client).
+   - Sử dụng PostgreSQL 16 + Redis 7 + MinIO S3.
+   - Tuân thủ nghiêm ngặt các quy tắc trong `AGENTS.md`.
 
 ---
 

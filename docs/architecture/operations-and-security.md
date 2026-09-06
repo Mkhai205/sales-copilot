@@ -1,4 +1,4 @@
-# 06. Operations & Security Architecture
+# Operations & Security Architecture
 
 ## 1. Automation Rules Engine
 
@@ -46,7 +46,7 @@ The Webhook Engine reliably sends subscribed events to external HTTP endpoints.
 
 ---
 
-## 3. RBAC Matrix (Phase 1)
+## 3. RBAC Matrix
 
 | Permission / Action | OWNER | ADMIN | AGENT | VIEWER |
 | :--- | :---: | :---: | :---: | :---: |

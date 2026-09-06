@@ -239,3 +239,36 @@
   }
 }
 ```
+
+---
+
+## 4. Internal Domain Events (EventEmitter2)
+
+In addition to client-facing WebSocket events, the backend publishes internal domain events for asynchronous decoupling:
+
+```typescript
+export interface MessageReceivedPayload {
+  messageId: string;
+  conversationId: string;
+  contactId: string;
+  inboxId: string;
+  content?: string;
+  senderType: string;
+  channelType: string;
+}
+
+export interface ConversationAssignedPayload {
+  conversationId: string;
+  previousAssigneeId?: string;
+  newAssigneeId?: string;
+  teamId?: string;
+  assignedByUserId?: string;
+}
+
+export interface ContactMergedPayload {
+  primaryContactId: string;
+  mergedContactId: string;
+  mergedByUserId: string;
+}
+```
+

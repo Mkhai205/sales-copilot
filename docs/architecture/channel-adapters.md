@@ -1,8 +1,8 @@
-# 03. Channel Adapters Guide
+# Channel Adapters Architecture
 
 ## 1. Omnichannel Adapter Architecture
 
-All channel integrations implement a unified `ChannelAdapter` interface. The application core interacts with external platforms only through these standardized adapters.
+All channel integrations implement a unified `ChannelAdapter` interface. The application core interacts with external messaging platforms exclusively through these standardized adapters.
 
 ```text
 ┌─────────────────────────────────────────────────────────────┐
