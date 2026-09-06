@@ -9,7 +9,7 @@ Epic 2.5 xây dựng động cơ chấm điểm khách hàng tiềm năng đa ch
 - **Technical Owner**: Data & Algorithm Engineer / Senior Backend Engineer
 - **Dependencies**: `EPIC-2.1` (Lead Core), `EPIC-2.2` (Sales Evidence), `EPIC-2.4` (Conversation Intelligence)
 - **Target Milestone**: **Milestone 2B** (Intelligence & Scoring Layer)
-- **Status**: 📋 Backlog (Ready for Development)
+- **Status**: ✅ Completed (Implemented in Milestone 2B)
 
 ---
 
@@ -189,11 +189,11 @@ graph TD
 ## 6. Definition of Done & Verification Commands
 
 ### Verification Checklist:
-- [ ] Điểm số `LeadScore.score` luôn luôn nằm trong đoạn `[0, 100]`.
-- [ ] Phân hạng (`HOT`, `WARM`, `COLD`) khớp 100% với ma trận điểm quy định.
-- [ ] Mọi lần thay đổi điểm đều tạo một bản ghi `LeadScoreHistory` tương ứng với nguyên nhân rõ ràng.
-- [ ] Cơ chế debounce trên Redis ngăn chặn hiệu quả các lượt tính toán thừa khi có message burst.
-- [ ] Cập nhật điểm tự động phản ánh trên `Lead.score` và gửi thông báo WebSocket tức thì.
+- [x] Điểm số `LeadScore.score` luôn luôn nằm trong đoạn `[0, 100]`.
+- [x] Phân hạng (`HOT`, `WARM`, `COLD`, `JUNK`) khớp 100% với ma trận điểm quy định.
+- [x] Mọi lần thay đổi điểm đều tạo một bản ghi `LeadScoreHistory` tương ứng với nguyên nhân rõ ràng.
+- [x] Cơ chế debounce trên Redis ngăn chặn hiệu quả các lượt tính toán thừa khi có message burst.
+- [x] Cập nhật điểm tự động phản ánh trên `Lead.score` và gửi thông báo WebSocket tức thì.
 
 ### Command Execution:
 ```bash

@@ -36,6 +36,7 @@ import {
   SalesEvidenceInvalidatedEvent,
   ConversationIntelligenceAnalyzedEvent,
   ConversationUrgentAlertEvent,
+  LeadScoreUpdatedEventPayload,
 } from '@sales-copilot/shared-contracts';
 import { RealtimeGateway } from './realtime.gateway';
 
@@ -563,7 +564,29 @@ export class RealtimeEventDispatcher {
   }
 
   // ==========================================================================
-  // 10. Helper Method with Robust Error Isolation
+  // 10. Lead Scoring Domain Event Handlers (Epic 2.5)
+  // ==========================================================================
+
+  @OnEvent(DomainEvent.LEAD_SCORE_UPDATED)
+  @OnEvent('lead_score.updated')
+  handleLeadScoreUpdated(payload: LeadScoreUpdatedEventPayload): void {
+    if (!payload?.workspaceId) return;
+
+    // Broadcast to workspace room (leads list / pipeline view)
+    this.broadcastSafe(
+      `workspace_${payload.workspaceId}`,
+      WsServerEvent.LEAD_SCORE_UPDATED,
+      payload,
+    );
+
+    // Broadcast to lead drawer room
+    if (payload.leadId) {
+      this.broadcastSafe(`lead_${payload.leadId}`, WsServerEvent.LEAD_SCORE_UPDATED, payload);
+    }
+  }
+
+  // ==========================================================================
+  // 11. Helper Method with Robust Error Isolation
   // ==========================================================================
 
   /**

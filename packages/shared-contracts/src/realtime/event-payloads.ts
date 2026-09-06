@@ -1,5 +1,6 @@
 import type { ChannelType } from '../inboxes/enums';
 import type { MessageResponseDto } from '../messages/schemas';
+import type { LeadGrade, LeadScoreFactors, ScoreTriggerEvent } from '../sales';
 
 // ============================================================================
 // 1. Domain Event Name Constants
@@ -61,9 +62,10 @@ export enum DomainEvent {
   SALES_EVIDENCE_DETECTED = 'sales_evidence.detected',
   SALES_EVIDENCE_INVALIDATED = 'sales_evidence.invalidated',
 
-  // Conversation Intelligence events (Milestone 2B - Epic 2.4)
+  // Conversation Intelligence events (Milestone 2B - Epic 2.4 & Epic 2.5)
   CONVERSATION_INTELLIGENCE_ANALYZED = 'conversation.intelligence_analyzed',
   CONVERSATION_URGENT_ALERT = 'conversation.urgent_alert',
+  LEAD_SCORE_UPDATED = 'lead_score.updated',
 }
 
 // ============================================================================
@@ -240,4 +242,18 @@ export interface ConversationUrgentAlertEvent extends BaseDomainEventPayload {
   sentimentScore: number;
   snippet: string;
   reasoning: string;
+}
+
+// ============================================================================
+// 9. Lead Scoring Event Payloads (Epic 2.5)
+// ============================================================================
+
+export interface LeadScoreUpdatedEventPayload extends BaseDomainEventPayload {
+  leadId: string;
+  score: number;
+  grade: LeadGrade;
+  previousScore?: number;
+  previousGrade?: LeadGrade;
+  scoreFactors: LeadScoreFactors;
+  triggerReason: ScoreTriggerEvent;
 }

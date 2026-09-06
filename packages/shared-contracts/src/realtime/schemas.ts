@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { LeadGrade } from '../sales/enums';
 
 // ============================================================================
 // 1. WebSocket Server Event Enums
@@ -58,9 +59,10 @@ export enum WsServerEvent {
   SALES_EVIDENCE_DETECTED = 'sales_evidence.detected',
   SALES_EVIDENCE_INVALIDATED = 'sales_evidence.invalidated',
 
-  // Conversation Intelligence events (Milestone 2B - Epic 2.4)
+  // Conversation Intelligence events (Milestone 2B - Epic 2.4 & Epic 2.5)
   CONVERSATION_INTELLIGENCE_ANALYZED = 'conversation.intelligence_analyzed',
   CONVERSATION_URGENT_ALERT = 'conversation.urgent_alert',
+  LEAD_SCORE_UPDATED = 'lead_score.updated',
 }
 
 // ============================================================================
@@ -117,3 +119,15 @@ export const typingIndicatorSchema = z.object({
   isTyping: z.boolean(),
 });
 export type TypingIndicatorDto = z.infer<typeof typingIndicatorSchema>;
+
+export const leadScoreUpdatedEventPayloadSchema = z.object({
+  workspaceId: z.string().uuid('Invalid workspace ID format (UUID expected)'),
+  leadId: z.string().uuid('Invalid lead ID format (UUID expected)'),
+  score: z.number().int().min(0).max(100),
+  grade: z.nativeEnum(LeadGrade),
+  previousScore: z.number().int().min(0).max(100).optional(),
+  previousGrade: z.nativeEnum(LeadGrade).optional(),
+  scoreFactors: z.record(z.unknown()),
+  triggerReason: z.string(),
+});
+export type LeadScoreUpdatedEventPayloadDto = z.infer<typeof leadScoreUpdatedEventPayloadSchema>;

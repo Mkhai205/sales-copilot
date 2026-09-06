@@ -100,3 +100,15 @@ export enum TimelineEventType {
 }
 
 export const timelineEventTypeSchema = z.nativeEnum(TimelineEventType);
+
+export enum ScoreTriggerEvent {
+  INITIAL_CALCULATION = 'INITIAL_CALCULATION',
+  MESSAGE_RECEIVED = 'MESSAGE_RECEIVED',
+  EVIDENCE_DETECTED = 'EVIDENCE_DETECTED',
+  EVIDENCE_INVALIDATED = 'EVIDENCE_INVALIDATED',
+  STAGE_CHANGED = 'STAGE_CHANGED',
+  MANUAL_RECALCULATION = 'MANUAL_RECALCULATION',
+  TIME_DECAY = 'TIME_DECAY',
+}
+
+export const scoreTriggerEventSchema = z.nativeEnum(ScoreTriggerEvent);
