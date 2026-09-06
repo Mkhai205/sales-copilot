@@ -12,3 +12,8 @@ export {
 } from './hooks/use-send-message';
 export { useCannedResponses, type UseCannedResponsesOptions } from './hooks/use-canned-responses';
 export { useTypingIndicator, type UseTypingIndicatorOptions } from './hooks/use-typing-indicator';
+export {
+  insertIntoComposer,
+  COPILOT_INSERT_EVENT,
+  type InsertComposerPayload,
+} from './composer-bridge';

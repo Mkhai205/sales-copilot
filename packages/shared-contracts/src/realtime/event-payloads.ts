@@ -66,6 +66,11 @@ export enum DomainEvent {
   CONVERSATION_INTELLIGENCE_ANALYZED = 'conversation.intelligence_analyzed',
   CONVERSATION_URGENT_ALERT = 'conversation.urgent_alert',
   LEAD_SCORE_UPDATED = 'lead_score.updated',
+
+  // Sales Copilot events (Milestone 2C - Epic 2.6)
+  COPILOT_SUGGESTION_GENERATED = 'copilot.suggestion_generated',
+  COPILOT_SUGGESTION_CHUNK = 'copilot.suggestion_chunk',
+  COPILOT_SUGGESTION_ACTED = 'copilot.suggestion_acted',
 }
 
 // ============================================================================
@@ -256,4 +261,33 @@ export interface LeadScoreUpdatedEventPayload extends BaseDomainEventPayload {
   previousGrade?: LeadGrade;
   scoreFactors: LeadScoreFactors;
   triggerReason: ScoreTriggerEvent;
+}
+
+// ============================================================================
+// 10. Sales Copilot Assistant Event Payloads (Epic 2.6)
+// ============================================================================
+
+export interface CopilotSuggestionGeneratedPayload extends BaseDomainEventPayload {
+  conversationId: string;
+  suggestionId: string;
+  suggestionType: string;
+  title: string;
+  content: string;
+  confidence: number;
+  actionPayload?: Record<string, unknown>;
+}
+
+export interface CopilotSuggestionChunkPayload extends BaseDomainEventPayload {
+  conversationId: string;
+  suggestionId?: string;
+  chunk: string;
+  isFinished: boolean;
+}
+
+export interface CopilotSuggestionActedPayload extends BaseDomainEventPayload {
+  conversationId: string;
+  suggestionId: string;
+  action: string;
+  userId?: string | null;
+  reason?: string | null;
 }

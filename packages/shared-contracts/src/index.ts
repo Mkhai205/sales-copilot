@@ -17,3 +17,4 @@ export * from './widget';
 export * from './sales';
 export * from './llm';
 export * from './conversation-intelligence';
+export * from './copilot';

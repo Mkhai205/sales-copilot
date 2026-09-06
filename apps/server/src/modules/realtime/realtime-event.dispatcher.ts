@@ -37,6 +37,8 @@ import {
   ConversationIntelligenceAnalyzedEvent,
   ConversationUrgentAlertEvent,
   LeadScoreUpdatedEventPayload,
+  CopilotSuggestionGeneratedPayload,
+  CopilotSuggestionActedPayload,
 } from '@sales-copilot/shared-contracts';
 import { RealtimeGateway } from './realtime.gateway';
 
@@ -586,7 +588,51 @@ export class RealtimeEventDispatcher {
   }
 
   // ==========================================================================
-  // 11. Helper Method with Robust Error Isolation
+  // 11. Sales Copilot Assistant Event Handlers (Epic 2.6)
+  // ==========================================================================
+
+  @OnEvent(DomainEvent.COPILOT_SUGGESTION_GENERATED)
+  @OnEvent('copilot.suggestion_generated')
+  handleCopilotSuggestionGenerated(payload: CopilotSuggestionGeneratedPayload): void {
+    if (!payload?.workspaceId) return;
+
+    if (payload.conversationId) {
+      this.broadcastSafe(
+        `conversation_${payload.conversationId}`,
+        WsServerEvent.COPILOT_SUGGESTION_GENERATED,
+        payload,
+      );
+    }
+
+    this.broadcastSafe(
+      `workspace_${payload.workspaceId}`,
+      WsServerEvent.COPILOT_SUGGESTION_GENERATED,
+      payload,
+    );
+  }
+
+  @OnEvent(DomainEvent.COPILOT_SUGGESTION_ACTED)
+  @OnEvent('copilot.suggestion_acted')
+  handleCopilotSuggestionActed(payload: CopilotSuggestionActedPayload): void {
+    if (!payload?.workspaceId) return;
+
+    if (payload.conversationId) {
+      this.broadcastSafe(
+        `conversation_${payload.conversationId}`,
+        WsServerEvent.COPILOT_SUGGESTION_ACTED,
+        payload,
+      );
+    }
+
+    this.broadcastSafe(
+      `workspace_${payload.workspaceId}`,
+      WsServerEvent.COPILOT_SUGGESTION_ACTED,
+      payload,
+    );
+  }
+
+  // ==========================================================================
+  // 12. Helper Method with Robust Error Isolation
   // ==========================================================================
 
   /**

@@ -74,6 +74,21 @@ export const BUILT_IN_PROMPTS: Record<string, BuiltInPromptPreset> = {
     isDefault: true,
     isActive: true,
   },
+  COPILOT_BATTLECARD_V1: {
+    name: 'COPILOT_BATTLECARD_V1',
+    version: 1,
+    provider: LlmProvider.GEMINI,
+    model: 'gemini-2.5-flash',
+    systemPrompt:
+      'You are a competitive sales battlecard advisor. When a prospect mentions a competitor or raises objections, generate 3 clear differentiation points and strategic pivot questions to steer the conversation positively. Output strictly valid JSON.',
+    userPromptTemplate:
+      'Customer: {{customerName}}\nContext:\n{{context}}\nObjection/Competitor details:\n{{objectionDetails}}\n\nLatest Inbound Message:\n<user_input>\n{{latestMessage}}\n</user_input>\n\nOutput JSON with structure:\n{\n  "title": "<short battlecard title>",\n  "competitorOrTopic": "<name of competitor or objection topic>",\n  "keyAdvantages": ["<point 1>", "<point 2>", "<point 3>"],\n  "pivotQuestions": ["<question 1>", "<question 2>"],\n  "recommendedResponse": "<suggested phrase or summary>",\n  "confidence": <float 0.0 to 1.0>\n}',
+    inputVariables: ['customerName', 'context', 'objectionDetails', 'latestMessage'],
+    temperature: 0.3,
+    maxTokens: 1024,
+    isDefault: true,
+    isActive: true,
+  },
 };
 
 @Injectable()

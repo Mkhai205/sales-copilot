@@ -33,6 +33,7 @@ import { LlmGatewayModule } from './modules/llm-gateway';
 import { PromptRegistryModule } from './modules/prompt-registry';
 import { ConversationIntelligenceModule } from './modules/conversation-intelligence';
 import { LeadScoringModule } from './modules/lead-scoring';
+import { CopilotModule } from './modules/copilot';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -152,6 +153,7 @@ import { pinoRedactConfig } from './common/logging';
     PromptRegistryModule,
     ConversationIntelligenceModule,
     LeadScoringModule,
+    CopilotModule,
   ],
   controllers: [AppController],
   providers: [

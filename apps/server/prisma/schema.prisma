@@ -158,6 +158,20 @@ enum LlmProvider {
   DEEPSEEK
 }
 
+enum CopilotSuggestionType {
+  REPLY_DRAFT
+  NEXT_BEST_ACTION
+  BATTLECARD
+}
+
+enum SuggestionStatus {
+  PENDING
+  ACCEPTED
+  DISMISSED
+  APPLIED
+  EXPIRED
+}
+
 model User {
   id           String       @id @default(uuid())
   email        String       @unique
@@ -177,6 +191,7 @@ model User {
   assignedOpportunities Opportunity[]       @relation("UserAssignedOpportunities")
   invalidatedEvidences  SalesEvidence[]     @relation("UserInvalidatedEvidence")
   createdTemplates      PromptTemplate[]    @relation("UserCreatedTemplates")
+  resolvedSuggestions   CopilotSuggestion[] @relation("UserResolvedSuggestions")
   auditLogs             AuditLog[]
 
   @@map("users")
@@ -212,6 +227,7 @@ model Workspace {
   leadScores           LeadScore[]
   leadScoreHistories   LeadScoreHistory[]
   promptTemplates      PromptTemplate[]
+  copilotSuggestions   CopilotSuggestion[]
 
   @@map("workspaces")
 }
@@ -407,9 +423,10 @@ model Conversation {
   channelIdentity ChannelIdentity?    @relation(fields: [channelIdentityId], references: [id], onDelete: SetNull)
   assignee        User?               @relation("UserAssignedConversations", fields: [assigneeId], references: [id], onDelete: SetNull)
   team            Team?               @relation(fields: [teamId], references: [id], onDelete: SetNull)
-  messages        Message[]
-  labels          ConversationLabel[]
-  salesEvidences  SalesEvidence[]
+  messages           Message[]
+  labels             ConversationLabel[]
+  salesEvidences     SalesEvidence[]
+  copilotSuggestions CopilotSuggestion[]
 
   @@unique([workspaceId, displayId])
   @@index([workspaceId, status])
@@ -454,6 +471,7 @@ model Message {
   workspace    Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   attachments  Attachment[]
   salesEvidences SalesEvidence[]
+  suggestions  CopilotSuggestion[]
 
   @@unique([conversationId, externalId])
   @@index([conversationId, createdAt])
@@ -610,6 +628,7 @@ model Lead {
   evidences      SalesEvidence[]
   scoreRecord    LeadScore?
   scoreHistories LeadScoreHistory[]
+  suggestions    CopilotSuggestion[]
 
   @@unique([workspaceId, contactId])
   @@index([workspaceId, status])
@@ -751,5 +770,36 @@ model LeadScoreHistory {
 
   @@index([workspaceId, leadId, createdAt])
   @@map("lead_score_histories")
+}
+
+model CopilotSuggestion {
+  id               String                @id @default(uuid())
+  workspaceId      String
+  conversationId   String
+  messageId        String?
+  leadId           String?
+  suggestionType   CopilotSuggestionType
+  title            String
+  content          String                @db.Text
+  actionPayload    Json                  @default("{}")
+  confidence       Float
+  status           SuggestionStatus      @default(PENDING)
+  dismissedReason  String?
+  resolvedByUserId String?
+  expiresAt        DateTime
+  resolvedAt       DateTime?
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+
+  workspace      Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  message        Message?     @relation(fields: [messageId], references: [id], onDelete: SetNull)
+  lead           Lead?        @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  resolvedByUser User?        @relation("UserResolvedSuggestions", fields: [resolvedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([workspaceId, conversationId, status])
+  @@index([workspaceId, status, expiresAt])
+  @@index([workspaceId, leadId])
+  @@map("copilot_suggestions")
 }
 

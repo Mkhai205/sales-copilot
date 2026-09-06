@@ -62,6 +62,7 @@ import { RichLinkCard } from './rich-link-card';
 import { ImageLightboxDialog } from './image-lightbox-dialog';
 import { MessageImageGrid, isImageAttachment } from './message-image-grid';
 import { MessageActionsToolbar } from './message-actions-toolbar';
+import { CopilotDock, CopilotDrawer, useCopilotSuggestions } from '@/features/copilot';
 
 interface MessageThreadProps {
   conversationId: string;
@@ -702,14 +703,25 @@ export function MessageThread({
   const isLoading = isConversationLoading || isMessagesLoading;
   const contact = conversation?.contact;
 
+  const [isCopilotOpen, setIsCopilotOpen] = React.useState(false);
+
+  const { data: copilotSuggestions = [] } = useCopilotSuggestions({
+    workspaceId: activeWorkspaceId,
+    conversationId,
+    enabled: Boolean(activeWorkspaceId && conversationId),
+  });
+
   return (
     <div className="flex h-full w-full min-h-0 flex-1 flex-col overflow-hidden bg-background">
       {/* Thread Header */}
       <MessageThreadHeader
         conversation={conversation}
         isLoading={isConversationLoading}
-        isDetailOpen={isDetailOpen}
-        onToggleDetail={onToggleDetail}
+        isDetailOpen={Boolean(isDetailOpen)}
+        onToggleDetail={() => onToggleDetail?.()}
+        isCopilotOpen={isCopilotOpen}
+        onToggleCopilot={() => setIsCopilotOpen(prev => !prev)}
+        pendingSuggestionsCount={copilotSuggestions.length}
       />
 
       {/* Message Stream Area */}
@@ -805,12 +817,32 @@ export function MessageThread({
       {/* Typing Status Indicator */}
       <TypingIndicator conversationId={conversationId} />
 
+      {/* Floating Copilot Quick Suggestion Dock */}
+      {activeWorkspaceId && (
+        <CopilotDock
+          suggestions={copilotSuggestions}
+          workspaceId={activeWorkspaceId}
+          conversationId={conversationId}
+          onOpenDrawer={() => setIsCopilotOpen(true)}
+        />
+      )}
+
       {/* Live Message Composer */}
       <ChatComposer
         conversationId={conversationId}
         workspaceSlug={workspaceSlug}
         workspaceId={activeWorkspaceId}
       />
+
+      {/* Sales Copilot Assistant Drawer */}
+      {activeWorkspaceId && (
+        <CopilotDrawer
+          open={isCopilotOpen}
+          onOpenChange={setIsCopilotOpen}
+          workspaceId={activeWorkspaceId}
+          conversationId={conversationId}
+        />
+      )}
 
       {/* Lightbox Carousel Modal */}
       <ImageLightboxDialog

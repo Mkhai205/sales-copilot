@@ -63,6 +63,11 @@ export enum WsServerEvent {
   CONVERSATION_INTELLIGENCE_ANALYZED = 'conversation.intelligence_analyzed',
   CONVERSATION_URGENT_ALERT = 'conversation.urgent_alert',
   LEAD_SCORE_UPDATED = 'lead_score.updated',
+
+  // Sales Copilot events (Milestone 2C - Epic 2.6)
+  COPILOT_SUGGESTION_GENERATED = 'copilot.suggestion_generated',
+  COPILOT_SUGGESTION_CHUNK = 'copilot.suggestion_chunk',
+  COPILOT_SUGGESTION_ACTED = 'copilot.suggestion_acted',
 }
 
 // ============================================================================

@@ -453,4 +453,35 @@ export function useRealtimeSync(): void {
       });
     }
   });
+
+  // copilot.suggestion_generated
+  useSocketEvent<any>(WsServerEvent.COPILOT_SUGGESTION_GENERATED, payload => {
+    const data = payload?.data || payload;
+    const conversationId = data?.conversationId;
+    if (conversationId) {
+      queryClient.invalidateQueries({
+        queryKey: ['copilot-suggestions', conversationId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['copilot-suggestions'],
+      });
+    }
+
+    if (data?.title) {
+      toast.info('Gợi ý Sales Copilot mới', {
+        description: data.title,
+      });
+    }
+  });
+
+  // copilot.suggestion_acted
+  useSocketEvent<any>(WsServerEvent.COPILOT_SUGGESTION_ACTED, payload => {
+    const data = payload?.data || payload;
+    const conversationId = data?.conversationId;
+    if (conversationId) {
+      queryClient.invalidateQueries({
+        queryKey: ['copilot-suggestions', conversationId],
+      });
+    }
+  });
 }
