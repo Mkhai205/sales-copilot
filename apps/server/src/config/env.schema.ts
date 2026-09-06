@@ -51,6 +51,10 @@ export const envSchema = z.object({
   FB_APP_ID: z.string().optional(),
   FB_APP_SECRET: z.string().optional(),
   FB_VERIFY_TOKEN: z.string().optional(),
+
+  // LLM Gateway Default API Keys
+  GEMINI_API_KEY: z.string().optional(),
+  OPENAI_API_KEY: z.string().optional(),
 });
 
 export type EnvConfig = z.infer<typeof envSchema>;

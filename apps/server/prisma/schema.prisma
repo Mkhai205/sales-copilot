@@ -134,6 +134,13 @@ enum BuyingSignalType {
   POSITIVE_SENTIMENT
 }
 
+enum LlmProvider {
+  GEMINI
+  OPENAI
+  ANTHROPIC
+  DEEPSEEK
+}
+
 model User {
   id           String       @id @default(uuid())
   email        String       @unique
@@ -152,6 +159,7 @@ model User {
   assignedLeads         Lead[]              @relation("UserAssignedLeads")
   assignedOpportunities Opportunity[]       @relation("UserAssignedOpportunities")
   invalidatedEvidences  SalesEvidence[]     @relation("UserInvalidatedEvidence")
+  createdTemplates      PromptTemplate[]    @relation("UserCreatedTemplates")
   auditLogs             AuditLog[]
 
   @@map("users")
@@ -184,6 +192,7 @@ model Workspace {
   leads                Lead[]
   opportunities        Opportunity[]
   salesEvidences       SalesEvidence[]
+  promptTemplates      PromptTemplate[]
 
   @@map("workspaces")
 }
@@ -653,5 +662,33 @@ model SalesEvidence {
   @@index([workspaceId, isInvalidated])
   @@index([workspaceId, createdAt])
   @@map("sales_evidences")
+}
+
+model PromptTemplate {
+  id                 String      @id @default(uuid())
+  workspaceId        String?
+  name               String
+  version            Int         @default(1)
+  provider           LlmProvider @default(GEMINI)
+  model              String      @default("gemini-2.5-flash")
+  systemPrompt       String      @db.Text
+  userPromptTemplate String      @db.Text
+  inputVariables     Json        @default("[]")
+  temperature        Float       @default(0.2)
+  maxTokens          Int         @default(1024)
+  isDefault          Boolean     @default(false)
+  isActive           Boolean     @default(true)
+  createdById        String?
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+
+  workspace Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdBy User?      @relation("UserCreatedTemplates", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@unique([workspaceId, name, version])
+  @@index([workspaceId, isActive])
+  @@index([workspaceId, provider])
+  @@index([workspaceId, isDefault])
+  @@map("prompt_templates")
 }
 

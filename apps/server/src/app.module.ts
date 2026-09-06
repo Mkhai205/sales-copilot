@@ -29,6 +29,8 @@ import { LeadsModule } from './modules/leads';
 import { OpportunitiesModule } from './modules/opportunities';
 import { SalesEvidenceModule } from './modules/sales-evidence';
 import { ActivityTimelineModule } from './modules/activity-timeline';
+import { LlmGatewayModule } from './modules/llm-gateway';
+import { PromptRegistryModule } from './modules/prompt-registry';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -144,6 +146,8 @@ import { pinoRedactConfig } from './common/logging';
     OpportunitiesModule,
     SalesEvidenceModule,
     ActivityTimelineModule,
+    LlmGatewayModule,
+    PromptRegistryModule,
   ],
   controllers: [AppController],
   providers: [
