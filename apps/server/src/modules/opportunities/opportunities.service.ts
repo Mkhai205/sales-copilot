@@ -99,7 +99,7 @@ export class OpportunitiesService {
         probability,
         expectedCloseDate: dto.expectedCloseDate ? new Date(dto.expectedCloseDate) : null,
         assignedUserId: dto.assignedUserId || null,
-        metadata: dto.metadata || {},
+        metadata: (dto.metadata || {}) as any,
       },
       include: {
         contact: {

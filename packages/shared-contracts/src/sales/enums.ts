@@ -71,3 +71,32 @@ export function computeLeadGrade(score: number): LeadGrade {
   }
   return LeadGrade.JUNK;
 }
+
+export enum BuyingSignalType {
+  BUDGET_CONFIRMED = 'BUDGET_CONFIRMED',
+  AUTHORITY_IDENTIFIED = 'AUTHORITY_IDENTIFIED',
+  NEED_EXPRESSED = 'NEED_EXPRESSED',
+  TIMELINE_DEFINED = 'TIMELINE_DEFINED',
+  COMPETITOR_MENTION = 'COMPETITOR_MENTION',
+  OBJECTION_RAISED = 'OBJECTION_RAISED',
+  PURCHASE_INTENT = 'PURCHASE_INTENT',
+  CHURN_RISK = 'CHURN_RISK',
+  ENGAGEMENT_SPIKE = 'ENGAGEMENT_SPIKE',
+  PAIN_POINT = 'PAIN_POINT',
+  POSITIVE_SENTIMENT = 'POSITIVE_SENTIMENT',
+}
+
+export const buyingSignalTypeSchema = z.preprocess(
+  val => (val === 'TIMELINE_STATED' ? BuyingSignalType.TIMELINE_DEFINED : val),
+  z.nativeEnum(BuyingSignalType),
+);
+
+export enum TimelineEventType {
+  MESSAGE = 'MESSAGE',
+  SALES_EVIDENCE = 'SALES_EVIDENCE',
+  STATUS_CHANGE = 'STATUS_CHANGE',
+  ASSIGNMENT = 'ASSIGNMENT',
+  NOTE = 'NOTE',
+}
+
+export const timelineEventTypeSchema = z.nativeEnum(TimelineEventType);

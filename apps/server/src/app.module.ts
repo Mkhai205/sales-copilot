@@ -27,6 +27,8 @@ import { IntegrationsModule } from './integrations';
 import { RealtimeModule } from './modules/realtime';
 import { LeadsModule } from './modules/leads';
 import { OpportunitiesModule } from './modules/opportunities';
+import { SalesEvidenceModule } from './modules/sales-evidence';
+import { ActivityTimelineModule } from './modules/activity-timeline';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -140,6 +142,8 @@ import { pinoRedactConfig } from './common/logging';
     RealtimeModule,
     LeadsModule,
     OpportunitiesModule,
+    SalesEvidenceModule,
+    ActivityTimelineModule,
   ],
   controllers: [AppController],
   providers: [

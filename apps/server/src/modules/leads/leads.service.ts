@@ -197,7 +197,7 @@ export class LeadsService {
               ? dto.estimatedValue
               : null,
           currency: dto.currency || 'USD',
-          metadata: (dto.metadata as Record<string, unknown>) || {},
+          metadata: ((dto.metadata as Record<string, unknown>) || {}) as any,
           lastActivityAt: new Date(),
         },
         include: {
@@ -377,7 +377,7 @@ export class LeadsService {
     // 1. State machine transition & immutable state check
     if (existing.status === LeadStatus.CONVERTED) {
       if (dto.status !== undefined) {
-        validateLeadTransition(existing.status, dto.status);
+        validateLeadTransition(existing.status as unknown as LeadStatus, dto.status);
       }
       throw new ConflictException({
         code: 'LEAD_ALREADY_CONVERTED',
@@ -388,7 +388,7 @@ export class LeadsService {
 
     // 2. Validate requested status transition
     if (dto.status !== undefined) {
-      validateLeadTransition(existing.status, dto.status);
+      validateLeadTransition(existing.status as unknown as LeadStatus, dto.status);
     }
 
     // 3. Verify assignee if being reassigned
@@ -415,7 +415,7 @@ export class LeadsService {
     if (dto.assignedUserId !== undefined) updateData.assignedUserId = dto.assignedUserId;
     if (dto.estimatedValue !== undefined) updateData.estimatedValue = dto.estimatedValue;
     if (dto.currency !== undefined) updateData.currency = dto.currency;
-    if (dto.metadata !== undefined) updateData.metadata = dto.metadata;
+    if (dto.metadata !== undefined) updateData.metadata = dto.metadata as any;
 
     const updated = await client.lead.update({
       where: { id },

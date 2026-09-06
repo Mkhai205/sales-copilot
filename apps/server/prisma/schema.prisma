@@ -120,6 +120,20 @@ enum OpportunityStage {
   CLOSED_LOST
 }
 
+enum BuyingSignalType {
+  BUDGET_CONFIRMED
+  AUTHORITY_IDENTIFIED
+  NEED_EXPRESSED
+  TIMELINE_DEFINED
+  COMPETITOR_MENTION
+  OBJECTION_RAISED
+  PURCHASE_INTENT
+  CHURN_RISK
+  ENGAGEMENT_SPIKE
+  PAIN_POINT
+  POSITIVE_SENTIMENT
+}
+
 model User {
   id           String       @id @default(uuid())
   email        String       @unique
@@ -137,6 +151,7 @@ model User {
   assignedConversations Conversation[]    @relation("UserAssignedConversations")
   assignedLeads         Lead[]              @relation("UserAssignedLeads")
   assignedOpportunities Opportunity[]       @relation("UserAssignedOpportunities")
+  invalidatedEvidences  SalesEvidence[]     @relation("UserInvalidatedEvidence")
   auditLogs             AuditLog[]
 
   @@map("users")
@@ -168,6 +183,7 @@ model Workspace {
   auditLogs            AuditLog[]
   leads                Lead[]
   opportunities        Opportunity[]
+  salesEvidences       SalesEvidence[]
 
   @@map("workspaces")
 }
@@ -365,6 +381,7 @@ model Conversation {
   team            Team?               @relation(fields: [teamId], references: [id], onDelete: SetNull)
   messages        Message[]
   labels          ConversationLabel[]
+  salesEvidences  SalesEvidence[]
 
   @@unique([workspaceId, displayId])
   @@index([workspaceId, status])
@@ -408,6 +425,7 @@ model Message {
   conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   workspace    Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   attachments  Attachment[]
+  salesEvidences SalesEvidence[]
 
   @@unique([conversationId, externalId])
   @@index([conversationId, createdAt])
@@ -561,6 +579,7 @@ model Lead {
   contact       Contact       @relation(fields: [contactId], references: [id], onDelete: Restrict)
   assignedUser  User?         @relation("UserAssignedLeads", fields: [assignedUserId], references: [id], onDelete: SetNull)
   opportunities Opportunity[]
+  evidences     SalesEvidence[]
 
   @@unique([workspaceId, contactId])
   @@index([workspaceId, status])
@@ -602,3 +621,37 @@ model Opportunity {
   @@index([workspaceId, contactId])
   @@map("opportunities")
 }
+
+model SalesEvidence {
+  id                  String           @id @default(uuid())
+  workspaceId         String
+  leadId              String?
+  conversationId      String
+  messageId           String?
+  signalType          BuyingSignalType
+  signalCategory      String?
+  confidence          Float
+  snippet             String           @db.Text
+  reason              String           @db.Text
+  metadata            Json             @default("{}")
+  isInvalidated       Boolean          @default(false)
+  invalidationReason  String?
+  invalidatedByUserId String?
+  invalidatedAt       DateTime?
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+
+  workspace         Workspace        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  lead              Lead?            @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  conversation      Conversation     @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  message           Message?         @relation(fields: [messageId], references: [id], onDelete: SetNull)
+  invalidatedByUser User?            @relation("UserInvalidatedEvidence", fields: [invalidatedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([workspaceId, leadId])
+  @@index([workspaceId, conversationId])
+  @@index([workspaceId, signalType])
+  @@index([workspaceId, isInvalidated])
+  @@index([workspaceId, createdAt])
+  @@map("sales_evidences")
+}
+

@@ -32,6 +32,8 @@ import {
   LeadConvertedEvent,
   OpportunityCreatedEvent,
   OpportunityStageUpdatedEvent,
+  SalesEvidenceDetectedEvent,
+  SalesEvidenceInvalidatedEvent,
 } from '@sales-copilot/shared-contracts';
 import { RealtimeGateway } from './realtime.gateway';
 
@@ -460,6 +462,52 @@ export class RealtimeEventDispatcher {
       WsServerEvent.OPPORTUNITY_STAGE_UPDATED,
       payload,
     );
+  }
+
+  @OnEvent(DomainEvent.SALES_EVIDENCE_DETECTED)
+  @OnEvent('sales_evidence.detected')
+  handleSalesEvidenceDetected(payload: SalesEvidenceDetectedEvent): void {
+    if (!payload?.workspaceId) return;
+    this.broadcastSafe(
+      `workspace_${payload.workspaceId}`,
+      WsServerEvent.SALES_EVIDENCE_DETECTED,
+      payload,
+    );
+    if (payload.conversationId) {
+      this.broadcastSafe(
+        `conversation_${payload.conversationId}`,
+        WsServerEvent.SALES_EVIDENCE_DETECTED,
+        payload,
+      );
+    }
+    if (payload.leadId) {
+      this.broadcastSafe(`lead_${payload.leadId}`, WsServerEvent.SALES_EVIDENCE_DETECTED, payload);
+    }
+  }
+
+  @OnEvent(DomainEvent.SALES_EVIDENCE_INVALIDATED)
+  @OnEvent('sales_evidence.invalidated')
+  handleSalesEvidenceInvalidated(payload: SalesEvidenceInvalidatedEvent): void {
+    if (!payload?.workspaceId) return;
+    this.broadcastSafe(
+      `workspace_${payload.workspaceId}`,
+      WsServerEvent.SALES_EVIDENCE_INVALIDATED,
+      payload,
+    );
+    if (payload.conversationId) {
+      this.broadcastSafe(
+        `conversation_${payload.conversationId}`,
+        WsServerEvent.SALES_EVIDENCE_INVALIDATED,
+        payload,
+      );
+    }
+    if (payload.leadId) {
+      this.broadcastSafe(
+        `lead_${payload.leadId}`,
+        WsServerEvent.SALES_EVIDENCE_INVALIDATED,
+        payload,
+      );
+    }
   }
 
   // ==========================================================================

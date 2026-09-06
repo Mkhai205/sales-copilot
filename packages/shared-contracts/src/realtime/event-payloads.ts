@@ -52,12 +52,14 @@ export enum DomainEvent {
   TYPING_START = 'typing.start',
   TYPING_STOP = 'typing.stop',
 
-  // Sales events (Milestone 2A - Epic 2.1)
+  // Sales events (Milestone 2A - Epic 2.1 & 2.2)
   LEAD_CREATED = 'lead.created',
   LEAD_UPDATED = 'lead.updated',
   LEAD_CONVERTED = 'lead.converted',
   OPPORTUNITY_CREATED = 'opportunity.created',
   OPPORTUNITY_STAGE_UPDATED = 'opportunity.stage_updated',
+  SALES_EVIDENCE_DETECTED = 'sales_evidence.detected',
+  SALES_EVIDENCE_INVALIDATED = 'sales_evidence.invalidated',
 }
 
 // ============================================================================
@@ -193,4 +195,20 @@ export interface OpportunityStageUpdatedEvent extends BaseDomainEventPayload {
   previousStage?: string;
   lostReason?: string | null;
   opportunity: Record<string, unknown>;
+}
+
+export interface SalesEvidenceDetectedEvent extends BaseDomainEventPayload {
+  leadId?: string | null;
+  conversationId: string;
+  messageId?: string | null;
+  evidence: Record<string, unknown>;
+}
+
+export interface SalesEvidenceInvalidatedEvent extends BaseDomainEventPayload {
+  leadId?: string | null;
+  conversationId: string;
+  evidenceId: string;
+  invalidatedByUserId?: string | null;
+  invalidationReason?: string | null;
+  evidence: Record<string, unknown>;
 }

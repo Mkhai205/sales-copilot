@@ -186,6 +186,14 @@ export class LeadConversionService {
         },
       });
 
+      if (!updatedLead) {
+        throw new NotFoundException({
+          code: 'LEAD_NOT_FOUND',
+          message: 'Lead not found after conversion update',
+          details: { leadId: lead.id, workspaceId },
+        });
+      }
+
       // 4c. Create Opportunity
       const opportunity = await tx.opportunity.create({
         data: {
