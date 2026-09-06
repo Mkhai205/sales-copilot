@@ -35,37 +35,36 @@ Sales Copilot Platform is an omnichannel customer conversation and engagement pl
                            │
               ┌────────────┴────────────┐
               │                         │
-       Conversation Core          Sales Intelligence
-       (PHASE 1 - ACTIVE)        (PHASE 2 - FUTURE)
-              │                         │
-       ┌──────┴──────┐          ┌───────┴────────┐
-       │             │          │                │
-   Channels      Messaging   Lead/Opportunity    AI
-   Contacts      Inbox       Scoring             Copilot
-   Conversation  Teams       Buying Signals      Actions
-   Assignment    Labels      Sales Evidence      ...
-   Webhooks      Automation
+       Conversation Core          Sales Intelligence          Autonomous Extensions
+     (PHASE 1 - COMPLETED)        (PHASE 2 - ACTIVE)            (PHASE 3 - FUTURE)
+              │                         │                               │
+       ┌──────┴──────┐          ┌───────┴────────┐              ┌───────┴────────┐
+       │             │          │                │              │                │
+   Channels      Messaging   Lead/Opportunity    AI          Autonomous       Voice/SIP
+   Contacts      Inbox       Scoring             Copilot     Sales Agents     CRM Sync
+   Conversation  Teams       Buying Signals      Actions     Tool Registry    Advanced BI
+   Assignment    Labels      Sales Evidence      LLM Gateway ...              ...
+   Webhooks      Automation  ...                 ...
 ```
 
-- **Phase 1 (CURRENT ACTIVE SCOPE)**: **Omnichannel Conversation Platform Core**. Focus strictly on:
-  - Multi-tenancy & Workspace isolation
-  - Channels (Facebook Messenger, Zalo, Telegram, Email, Web Chat)
-  - Inboxes & Inbox Members
-  - Contacts & Channel Identities (resolution & deduplication)
-  - Conversations & Messages (threading, attachments, private notes)
-  - Operations (Labels, Canned Responses, Automation Rules, Outbound Webhooks, Team/Agent Auto-assignment)
-  - Realtime WebSocket updates
-- **Phase 2 (FUTURE EXTENSION - FROZEN)**: **Sales Intelligence & AI Copilot**. Lead lifecycle, AI Lead scoring, buying signals extraction, sales evidence, copilot decision engine.
-  - ⛔ **CRITICAL RULE**: **Do NOT create models, DTOs, tables, or services for Phase 2 during Phase 1.**
+- **Phase 1 (COMPLETED & FROZEN BASELINE)**: **Omnichannel Conversation Platform Core**.
+  - 100% verified and signed off across all 11 Epics and 33 remediation items (1,277 automated tests passing).
+  - Production-ready core: Multi-tenancy, Omnichannel ingestion, Contact identity deduplication, Conversation state machine, Realtime WebSockets, Next.js dashboard.
+  - ⛔ **NON-BREAKING INVARIANT**: Phase 1 APIs, schemas, and event contracts are stable and MUST NOT be broken or refactored arbitrarily.
+- **Phase 2 (CURRENT ACTIVE SCOPE)**: **Sales Intelligence & AI Copilot**.
+  - **Milestone 2A (Foundation)**: Epic 2.1 (Lead & Opportunity Core), Epic 2.3 (Multi-Provider LLM Gateway & Prompt Registry).
+  - **Milestone 2B (Intelligence & Scoring)**: Epic 2.2 (Sales Evidence & Activity Timeline), Epic 2.4 (Conversation Intelligence Engine via BullMQ), Epic 2.5 (AI Lead Scoring Engine with Time-Decay).
+  - **Milestone 2C (Copilot & UI)**: Epic 2.6 (Sales Copilot Assistant Drawer, Next Best Actions, WebSocket streaming).
+  - ⛔ **CRITICAL RULE**: **Do NOT create models, DTOs, tables, or services for Phase 3 (Autonomous Agents, Voice/SIP, CRM Sync) during Phase 2.**
+- **Phase 3 (FUTURE EXTENSION - FROZEN)**: Autonomous Sales Agent Execution Engine, Tool Registry & Guardrails, Voice/SIP integration, CRM Sync (HubSpot, Salesforce).
 
 ### Primary Documentation References in [`docs/`](./docs/README.md):
 
-- **Product & Scope**: [Product Vision](./docs/product/vision.md) | [Scope](./docs/product/scope.md) | [Requirements](./docs/product/requirements.md)
-- **Domain & Rules**: [Domain Model](./docs/domain/domain-model.md) | [Business Rules](./docs/domain/business-rules.md)
-- **Architecture**: [System Overview](./docs/architecture/system-architecture.md) | [Module Boundaries](./docs/architecture/module-architecture.md) | [Data & Security](./docs/architecture/data-architecture.md)
-- **API & Contracts**: [REST API](./docs/api/api-contract.md) | [WebSocket Events](./docs/api/websocket-contract.md)
-- **Engineering & Backlog**: [Master Backlog](./docs/backlog/backlog.md) | [Coding Guidelines](./docs/engineering/coding-guidelines.md)
-- **Chatwoot Reference**: [Chatwoot Guide](./docs/references/chatwoot/README.md) & [Chatwoot Source](./docs/references/chatwoot/source)
+- **Phase 1 Baseline & Sign-Off**: [Phase 1 Sign-Off Report](./docs/audit/phase-1-completion-signoff.md) | [Phase 1 Remediation Plan](./docs/audit/10-master-remediation-plan.md)
+- **Phase 2 Architecture & Specs**: [Phase 2 Architecture](./docs/architecture/phase-2-sales-intelligence.md) | [Phase 2 Domain Model](./docs/domain/phase-2-domain-model.md) | [Phase 2 Schema RFC](./docs/architecture/phase-2-schema-rfc.prisma) | [Phase 2 API & Events Spec](./docs/api/phase-2-api-spec.md)
+- **Phase 2 Backlog & Epics**: [Phase 2 Master Backlog](./docs/backlog/phase-2-backlog.md) | [Epic 2.1](./docs/backlog/epic-2.1.md) | [Epic 2.2](./docs/backlog/epic-2.2.md) | [Epic 2.3](./docs/backlog/epic-2.3.md) | [Epic 2.4](./docs/backlog/epic-2.4.md) | [Epic 2.5](./docs/backlog/epic-2.5.md) | [Epic 2.6](./docs/backlog/epic-2.6.md)
+- **Product & Domain Foundation**: [Product Vision](./docs/product/vision.md) | [Scope](./docs/product/scope.md) | [Domain Model](./docs/domain/domain-model.md) | [Business Rules](./docs/domain/business-rules.md)
+- **Architecture & Guidelines**: [System Overview](./docs/architecture/system-architecture.md) | [Module Boundaries](./docs/architecture/module-architecture.md) | [Coding Guidelines](./docs/engineering/coding-guidelines.md)
 
 ---
 
@@ -127,7 +126,7 @@ Sales Copilot Platform is an omnichannel customer conversation and engagement pl
 
 ## 4. Module Boundaries & Communication
 
-Phase 1 Core Modules:
+### 4.1. Phase 1 Core Modules (Frozen & Stable Baseline)
 
 1. **Identity & Tenancy**: User, Workspace, WorkspaceMember, Team, TeamMember.
 2. **Omnichannel**: Channel, ChannelEvent, Inbox, InboxMember, ChannelIdentity, Contact.
@@ -135,14 +134,31 @@ Phase 1 Core Modules:
 4. **Operations**: Label, CannedResponse, AutomationRule, WebhookSubscription, WebhookDelivery, AuditLog.
 5. **Realtime**: WebSocket Gateway & Realtime Event Dispatcher.
 
-### Inter-Module Rules:
+### 4.2. Phase 2 Sales Intelligence Modules (Active Development Scope)
+
+6. **LLM Gateway (`LLMGatewayModule`)**:
+   - Multi-provider abstraction (`LlmProviderAdapter`: Gemini primary / OpenAI fallback).
+   - Token bucket rate limiter, circuit breaker, dynamic prompt template registry.
+7. **Sales Intelligence (`SalesIntelligenceModule`)**:
+   - `Lead` & `Opportunity` lifecycle management and conversion state machine.
+   - `SalesEvidence` ledger (BANT: Budget, Authority, Need, Timeline) and activity timeline.
+   - `LeadScore` engine (Fit, Behavior, Time-Decay cron evaluation after 48h).
+   - Asynchronous conversation intelligence processor (`sales-intelligence` BullMQ queue).
+8. **Sales Copilot (`CopilotModule`)**:
+   - Next Best Action (NBA) suggestion engine and contextual draft replies.
+   - Realtime WebSocket streaming to Copilot Drawer on the Next.js Dashboard.
+   - Suggestion feedback tracking (accepted, edited, rejected).
+
+### 4.3. Inter-Module Rules & AI Performance Standards:
 
 - A module encapsulates its business logic in its NestJS service (`*.service.ts`).
 - Modules communicate across boundaries using:
   1. **Public NestJS Services** exported via `exports: [...]` in the module definition.
-  2. **Domain/Application Events** via `EventEmitter2` (`@OnEvent('conversation.created')`).
+  2. **Domain/Application Events** via `EventEmitter2` (`@OnEvent('conversation.created')`, `@OnEvent('message.created')`).
   3. **Background Queue Jobs** via BullMQ for heavy/retryable tasks.
 - ❌ **DO NOT**: Directly query or mutate another module's internal Prisma models without going through that module's exported service.
+- ⚡ **Asynchronous AI Ingestion Directive**: Inbound chat and message delivery MUST NOT block on LLM inference. Ingestion acknowledges in `< 100ms`; AI extraction, signal detection, and scoring recalculation execute asynchronously via BullMQ jobs.
+- 🔍 **Traceable AI Evidence Directive**: LLM-extracted buying signals and sales evidence MUST link to verbatim quote snippets and reference valid `messageId` and `conversationId`.
 
 ---
 
@@ -211,10 +227,15 @@ ChannelAdapter (interface)
 
 File Storage:
 StorageService (or MinioAdapter)
+
+LLM Providers (Phase 2):
+LlmProviderAdapter (interface)
+├── GeminiAdapter (primary)
+└── OpenAiAdapter (fallback)
 ```
 
-- When implementing a channel integration, encapsulate vendor-specific payloads, webhook formats, and API SDKs inside its adapter.
-- Internal services only consume normalized data types (e.g. `InboundMessagePayload`, `SendMessageResult`).
+- When implementing an external integration, encapsulate vendor-specific payloads, webhook formats, SDK calls, and retry logic inside its adapter.
+- Internal services only consume normalized data types (e.g. `InboundMessagePayload`, `SendMessageResult`, `LlmCompletionResult`, `LlmStreamChunk`).
 
 ---
 
