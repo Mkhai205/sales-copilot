@@ -134,6 +134,7 @@ describe('SalesEvidenceService (Evidence Ingestion, Filtering & Invalidation)', 
             if (where.workspaceId && e.workspaceId !== where.workspaceId) return false;
             if (where.leadId && e.leadId !== where.leadId) return false;
             if (where.conversationId && e.conversationId !== where.conversationId) return false;
+            if (where.messageId && e.messageId !== where.messageId) return false;
             if (where.isInvalidated !== undefined && e.isInvalidated !== where.isInvalidated)
               return false;
             if (where.signalType && e.signalType !== where.signalType) return false;
@@ -441,6 +442,27 @@ describe('SalesEvidenceService (Evidence Ingestion, Filtering & Invalidation)', 
           return true;
         },
       );
+    });
+  });
+
+  describe('findByMessage (Encapsulated Message Deduplication Query)', () => {
+    it('should return active evidence matching messageId and conversationId', async () => {
+      await service.recordEvidence(ws1, {
+        conversationId: conv1,
+        messageId: msg1,
+        signalType: BuyingSignalType.BUDGET_CONFIRMED,
+        confidence: 0.9,
+        snippet: 'Ngân sách 200 triệu',
+        reason: 'Budget stated',
+      });
+
+      const results = await service.findByMessage(ws1, conv1, msg1);
+      assert.strictEqual(results.length, 1);
+      assert.strictEqual(results[0].messageId, msg1);
+      assert.strictEqual(results[0].signalType, BuyingSignalType.BUDGET_CONFIRMED);
+
+      const emptyResults = await service.findByMessage(ws1, conv1, 'non_existent_msg');
+      assert.strictEqual(emptyResults.length, 0);
     });
   });
 });

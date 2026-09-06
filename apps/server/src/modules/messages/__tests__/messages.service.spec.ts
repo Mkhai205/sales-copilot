@@ -868,4 +868,43 @@ describe('MessagesService (Task T-1.5.6: Message Threading & Polymorphic Senders
       assert.strictEqual(deleteEvent.payload.messageId, created.id);
     });
   });
+
+  describe('getRecentMessages (Sliding window for conversation intelligence)', () => {
+    it('should return recent non-private messages ordered chronologically', async () => {
+      const m1 = await service.create('ws_1', 'conv_1', {
+        senderType: SenderType.CONTACT,
+        senderId: 'cnt_1',
+        content: 'Turn 1',
+      });
+      messagesDb.get(m1.id).createdAt = new Date(Date.now() - 3000);
+
+      const m2 = await service.create('ws_1', 'conv_1', {
+        senderType: SenderType.USER,
+        senderId: 'usr_agent_1',
+        content: 'Turn 2',
+      });
+      messagesDb.get(m2.id).createdAt = new Date(Date.now() - 2000);
+
+      const mPriv = await service.create('ws_1', 'conv_1', {
+        senderType: SenderType.USER,
+        senderId: 'usr_agent_1',
+        content: 'Private note',
+        isPrivate: true,
+      });
+      messagesDb.get(mPriv.id).createdAt = new Date(Date.now() - 1500);
+
+      const m3 = await service.create('ws_1', 'conv_1', {
+        senderType: SenderType.CONTACT,
+        senderId: 'cnt_1',
+        content: 'Turn 3',
+      });
+      messagesDb.get(m3.id).createdAt = new Date(Date.now() - 1000);
+
+      const recent = await service.getRecentMessages('ws_1', 'conv_1', 10);
+      assert.strictEqual(recent.length, 3);
+      assert.strictEqual(recent[0].content, 'Turn 1');
+      assert.strictEqual(recent[1].content, 'Turn 2');
+      assert.strictEqual(recent[2].content, 'Turn 3');
+    });
+  });
 });

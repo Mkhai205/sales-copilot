@@ -736,8 +736,71 @@ describe('RealtimeEventDispatcher — Event Routing & Error Isolation (Task 12)'
         dispatcher.handleLeadConverted({} as any);
         dispatcher.handleOpportunityCreated(null as any);
         dispatcher.handleOpportunityStageUpdated({} as any);
+        dispatcher.handleConversationIntelligenceAnalyzed(null as any);
+        dispatcher.handleConversationUrgentAlert(null as any);
       });
       assert.strictEqual(emittedBroadcasts.length, 0);
+    });
+
+    it('should broadcast CONVERSATION_INTELLIGENCE_ANALYZED to workspace, conversation, and lead rooms', () => {
+      dispatcher.handleConversationIntelligenceAnalyzed({
+        workspaceId,
+        conversationId,
+        messageId,
+        leadId: 'lead_123',
+        intent: 'PURCHASE_INTENT',
+        sentiment: { score: 0.9 },
+        signalsCount: 1,
+        detectedSignals: [{ signalType: 'BUDGET_CONFIRMED' }],
+      });
+
+      const wsBroadcast = emittedBroadcasts.find(
+        b =>
+          b.room === `workspace_${workspaceId}` &&
+          b.event === WsServerEvent.CONVERSATION_INTELLIGENCE_ANALYZED,
+      );
+      assert.ok(wsBroadcast);
+
+      const convBroadcast = emittedBroadcasts.find(
+        b =>
+          b.room === `conversation_${conversationId}` &&
+          b.event === WsServerEvent.CONVERSATION_INTELLIGENCE_ANALYZED,
+      );
+      assert.ok(convBroadcast);
+
+      const leadBroadcast = emittedBroadcasts.find(
+        b =>
+          b.room === 'lead_lead_123' &&
+          b.event === WsServerEvent.CONVERSATION_INTELLIGENCE_ANALYZED,
+      );
+      assert.ok(leadBroadcast);
+    });
+
+    it('should broadcast CONVERSATION_URGENT_ALERT to workspace and conversation rooms', () => {
+      dispatcher.handleConversationUrgentAlert({
+        workspaceId,
+        conversationId,
+        messageId,
+        urgency: 'CRITICAL',
+        intent: 'CHURN_RISK',
+        sentimentScore: -0.9,
+        snippet: 'Hủy hợp đồng',
+        reasoning: 'Customer angry',
+      });
+
+      const wsBroadcast = emittedBroadcasts.find(
+        b =>
+          b.room === `workspace_${workspaceId}` &&
+          b.event === WsServerEvent.CONVERSATION_URGENT_ALERT,
+      );
+      assert.ok(wsBroadcast);
+
+      const convBroadcast = emittedBroadcasts.find(
+        b =>
+          b.room === `conversation_${conversationId}` &&
+          b.event === WsServerEvent.CONVERSATION_URGENT_ALERT,
+      );
+      assert.ok(convBroadcast);
     });
   });
 });

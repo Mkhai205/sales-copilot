@@ -34,6 +34,8 @@ import {
   OpportunityStageUpdatedEvent,
   SalesEvidenceDetectedEvent,
   SalesEvidenceInvalidatedEvent,
+  ConversationIntelligenceAnalyzedEvent,
+  ConversationUrgentAlertEvent,
 } from '@sales-copilot/shared-contracts';
 import { RealtimeGateway } from './realtime.gateway';
 
@@ -511,7 +513,57 @@ export class RealtimeEventDispatcher {
   }
 
   // ==========================================================================
-  // 9. Helper Method with Robust Error Isolation
+  // 9. Conversation Intelligence Domain Event Handlers (Epic 2.4)
+  // ==========================================================================
+
+  @OnEvent(DomainEvent.CONVERSATION_INTELLIGENCE_ANALYZED)
+  handleConversationIntelligenceAnalyzed(payload: ConversationIntelligenceAnalyzedEvent): void {
+    if (!payload?.workspaceId) return;
+
+    this.broadcastSafe(
+      `workspace_${payload.workspaceId}`,
+      WsServerEvent.CONVERSATION_INTELLIGENCE_ANALYZED,
+      payload,
+    );
+
+    if (payload.conversationId) {
+      this.broadcastSafe(
+        `conversation_${payload.conversationId}`,
+        WsServerEvent.CONVERSATION_INTELLIGENCE_ANALYZED,
+        payload,
+      );
+    }
+
+    if (payload.leadId) {
+      this.broadcastSafe(
+        `lead_${payload.leadId}`,
+        WsServerEvent.CONVERSATION_INTELLIGENCE_ANALYZED,
+        payload,
+      );
+    }
+  }
+
+  @OnEvent(DomainEvent.CONVERSATION_URGENT_ALERT)
+  handleConversationUrgentAlert(payload: ConversationUrgentAlertEvent): void {
+    if (!payload?.workspaceId) return;
+
+    this.broadcastSafe(
+      `workspace_${payload.workspaceId}`,
+      WsServerEvent.CONVERSATION_URGENT_ALERT,
+      payload,
+    );
+
+    if (payload.conversationId) {
+      this.broadcastSafe(
+        `conversation_${payload.conversationId}`,
+        WsServerEvent.CONVERSATION_URGENT_ALERT,
+        payload,
+      );
+    }
+  }
+
+  // ==========================================================================
+  // 10. Helper Method with Robust Error Isolation
   // ==========================================================================
 
   /**

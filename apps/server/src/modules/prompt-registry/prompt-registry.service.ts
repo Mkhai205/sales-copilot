@@ -35,9 +35,9 @@ export const BUILT_IN_PROMPTS: Record<string, BuiltInPromptPreset> = {
     provider: LlmProvider.GEMINI,
     model: 'gemini-2.5-flash',
     systemPrompt:
-      'You are an expert conversation intelligence engine for an enterprise sales platform. Extract customer buying intent, sentiment, and BANT sales evidence signals from incoming messages with verbatim quotes and confidence scores.',
+      'You are an expert conversation intelligence engine for an enterprise sales platform. Extract customer buying intent, sentiment, and BANT sales evidence signals from incoming messages with verbatim quotes and confidence scores. Output strictly valid JSON.',
     userPromptTemplate:
-      'Analyze the conversation for customer {{customerName}}.\n\nConversation Context:\n{{conversationHistory}}\n\nLatest Inbound Message:\n<user_input>\n{{latestMessage}}\n</user_input>',
+      'Analyze the conversation for customer {{customerName}}.\n\nConversation Context:\n{{conversationHistory}}\n\nLatest Inbound Message:\n<user_input>\n{{latestMessage}}\n</user_input>\n\nOutput MUST be a single valid JSON object strictly matching this schema:\n{\n  "intent": "PRICING_INQUIRY" | "PRODUCT_DEMO" | "FEATURE_COMPARISON" | "TECHNICAL_SUPPORT" | "PURCHASE_INTENT" | "CHURN_RISK" | "GENERAL_INQUIRY",\n  "sentiment": {\n    "polarity": "POSITIVE" | "NEUTRAL" | "NEGATIVE",\n    "score": <float -1.0 to 1.0>,\n    "urgency": "LOW" | "MEDIUM" | "HIGH" | "CRITICAL",\n    "reasoning": "<string>"\n  },\n  "signals": [\n    {\n      "signalType": "BUDGET_CONFIRMED" | "AUTHORITY_IDENTIFIED" | "NEED_EXPRESSED" | "TIMELINE_DEFINED" | "COMPETITOR_MENTION" | "OBJECTION_RAISED" | "PURCHASE_INTENT" | "CHURN_RISK" | "ENGAGEMENT_SPIKE" | "PAIN_POINT" | "POSITIVE_SENTIMENT",\n      "confidence": <float 0.0 to 1.0>,\n      "snippet": "<exact verbatim quote from user input>",\n      "reasoning": "<string>",\n      "metadata": {}\n    }\n  ],\n  "summary": "<string>"\n}\n\nCRITICAL RULES:\n1. Every signal\'s snippet MUST be an EXACT verbatim substring found directly in the latest inbound message or conversation context. Never paraphrase or hallucinate quotes.\n2. Do NOT wrap output in markdown fences; respond with JSON only.',
     inputVariables: ['customerName', 'conversationHistory', 'latestMessage'],
     temperature: 0.1,
     maxTokens: 1024,

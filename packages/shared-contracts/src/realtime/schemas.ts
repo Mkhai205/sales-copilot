@@ -57,6 +57,10 @@ export enum WsServerEvent {
   OPPORTUNITY_STAGE_UPDATED = 'opportunity.stage_updated',
   SALES_EVIDENCE_DETECTED = 'sales_evidence.detected',
   SALES_EVIDENCE_INVALIDATED = 'sales_evidence.invalidated',
+
+  // Conversation Intelligence events (Milestone 2B - Epic 2.4)
+  CONVERSATION_INTELLIGENCE_ANALYZED = 'conversation.intelligence_analyzed',
+  CONVERSATION_URGENT_ALERT = 'conversation.urgent_alert',
 }
 
 // ============================================================================

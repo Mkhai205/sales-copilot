@@ -587,6 +587,33 @@ export class MessagesService {
   }
 
   /**
+   * Retrieves sliding window of recent non-private messages for conversation intelligence.
+   * Returns messages sorted in chronological order (oldest to newest).
+   */
+  async getRecentMessages(
+    workspaceId: string,
+    conversationId: string,
+    limit: number = 10,
+  ): Promise<MessageResponseDto[]> {
+    const client = this.prisma.getClient();
+    const messages = await client.message.findMany({
+      where: {
+        workspaceId,
+        conversationId,
+        isPrivate: false,
+      },
+      take: limit,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        attachments: true,
+      },
+    });
+
+    const enriched = await this.enrichAndMapMessagesBulk(messages, workspaceId);
+    return enriched.reverse();
+  }
+
+  /**
    * Enriches messages in bulk to prevent N+1 queries during listing.
    */
   private async enrichAndMapMessagesBulk(

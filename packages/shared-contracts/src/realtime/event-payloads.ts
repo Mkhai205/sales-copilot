@@ -60,6 +60,10 @@ export enum DomainEvent {
   OPPORTUNITY_STAGE_UPDATED = 'opportunity.stage_updated',
   SALES_EVIDENCE_DETECTED = 'sales_evidence.detected',
   SALES_EVIDENCE_INVALIDATED = 'sales_evidence.invalidated',
+
+  // Conversation Intelligence events (Milestone 2B - Epic 2.4)
+  CONVERSATION_INTELLIGENCE_ANALYZED = 'conversation.intelligence_analyzed',
+  CONVERSATION_URGENT_ALERT = 'conversation.urgent_alert',
 }
 
 // ============================================================================
@@ -211,4 +215,29 @@ export interface SalesEvidenceInvalidatedEvent extends BaseDomainEventPayload {
   invalidatedByUserId?: string | null;
   invalidationReason?: string | null;
   evidence: Record<string, unknown>;
+}
+
+// ============================================================================
+// 8. Conversation Intelligence Event Payloads (Epic 2.4)
+// ============================================================================
+
+export interface ConversationIntelligenceAnalyzedEvent extends BaseDomainEventPayload {
+  conversationId: string;
+  messageId: string;
+  leadId?: string | null;
+  intent: string;
+  sentiment: Record<string, unknown>;
+  signalsCount: number;
+  detectedSignals: Record<string, unknown>[];
+}
+
+export interface ConversationUrgentAlertEvent extends BaseDomainEventPayload {
+  conversationId: string;
+  messageId: string;
+  contactId?: string | null;
+  urgency: string;
+  intent: string;
+  sentimentScore: number;
+  snippet: string;
+  reasoning: string;
 }

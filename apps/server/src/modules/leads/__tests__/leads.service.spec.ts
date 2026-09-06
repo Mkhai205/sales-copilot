@@ -561,4 +561,19 @@ describe('LeadsService (Lead Core & Lifecycle State Machine)', () => {
       assert.strictEqual(updated2.status, LeadStatus.QUALIFIED);
     });
   });
+
+  describe('findByContactId', () => {
+    it('should find lead by contactId within workspace', async () => {
+      await service.createLead(ws1, { contactId: contact1 });
+      const found = await service.findByContactId(ws1, contact1);
+      assert.ok(found);
+      assert.strictEqual(found?.contactId, contact1);
+      assert.strictEqual(found?.workspaceId, ws1);
+    });
+
+    it('should return null if contact has no lead in workspace', async () => {
+      const found = await service.findByContactId(ws1, 'non-existent-contact');
+      assert.strictEqual(found, null);
+    });
+  });
 });

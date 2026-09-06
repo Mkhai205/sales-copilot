@@ -3,6 +3,7 @@
 import { useParams, useRouter } from 'next/navigation';
 import { useQueryClient, type InfiniteData } from '@tanstack/react-query';
 import { WsServerEvent } from '@sales-copilot/shared-contracts';
+import { toast } from 'sonner';
 import type { ApiResponse } from '@/lib/api/client';
 import {
   MessageType,
@@ -385,5 +386,71 @@ export function useRealtimeSync(): void {
         };
       },
     );
+  });
+
+  // ==========================================================================
+  // 4. Sales Evidence & Conversation Intelligence Events (Epic 2.4)
+  // ==========================================================================
+
+  // sales_evidence.detected
+  useSocketEvent<any>(WsServerEvent.SALES_EVIDENCE_DETECTED, payload => {
+    const evidence = payload?.evidence || payload;
+    const conversationId = payload?.conversationId || evidence?.conversationId;
+    const leadId = payload?.leadId || evidence?.leadId;
+
+    if (conversationId) {
+      queryClient.invalidateQueries({
+        queryKey: ['sales-evidence', conversationId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['sales-evidence'],
+      });
+    }
+
+    if (leadId) {
+      queryClient.invalidateQueries({
+        queryKey: ['lead-evidence', leadId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['lead', leadId],
+      });
+    }
+
+    const confidence = Number(evidence?.confidence ?? 0);
+    if (confidence >= 0.85 && evidence?.signalType) {
+      toast.info(`Phát hiện tín hiệu mua hàng: ${evidence.signalType}`, {
+        description: evidence.snippet ? `"${evidence.snippet}"` : undefined,
+      });
+    }
+  });
+
+  // conversation.urgent_alert
+  useSocketEvent<any>(WsServerEvent.CONVERSATION_URGENT_ALERT, payload => {
+    const conversationId = payload?.conversationId;
+    if (conversationId) {
+      queryClient.invalidateQueries({
+        queryKey: ['conversation', conversationId],
+      });
+    }
+    queryClient.invalidateQueries({
+      queryKey: ['conversations'],
+    });
+
+    toast.error('Cảnh báo khách hàng khẩn cấp', {
+      description: payload?.snippet || payload?.reasoning || 'Cần phản hồi ngay lập tức',
+    });
+  });
+
+  // conversation.intelligence_analyzed
+  useSocketEvent<any>(WsServerEvent.CONVERSATION_INTELLIGENCE_ANALYZED, payload => {
+    const conversationId = payload?.conversationId;
+    if (conversationId) {
+      queryClient.invalidateQueries({
+        queryKey: ['conversation', conversationId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['conversation-intelligence', conversationId],
+      });
+    }
   });
 }

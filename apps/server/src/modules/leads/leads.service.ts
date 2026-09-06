@@ -450,4 +450,25 @@ export class LeadsService {
 
     return response;
   }
+
+  /**
+   * Finds a Lead by Contact ID with tenant scoping. Returns null if not found.
+   */
+  async findByContactId(workspaceId: string, contactId: string): Promise<LeadResponseDto | null> {
+    const client = this.prisma.getClient();
+    const lead = await client.lead.findFirst({
+      where: { contactId, workspaceId },
+      include: {
+        contact: {
+          select: { id: true, name: true, email: true, phoneNumber: true, avatarUrl: true },
+        },
+        assignedUser: {
+          select: { id: true, name: true, email: true, avatarUrl: true },
+        },
+      },
+    });
+
+    if (!lead) return null;
+    return formatLeadResponse(lead);
+  }
 }

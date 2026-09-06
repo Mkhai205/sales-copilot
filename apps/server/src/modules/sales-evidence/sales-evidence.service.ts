@@ -264,6 +264,29 @@ export class SalesEvidenceService {
   }
 
   /**
+   * Retrieves active (non-invalidated) SalesEvidence for a specific Message within a Conversation.
+   * Used for deduplication in Conversation Intelligence processing.
+   */
+  async findByMessage(
+    workspaceId: string,
+    conversationId: string,
+    messageId: string,
+  ): Promise<SalesEvidenceResponseDto[]> {
+    const client = this.prisma.getClient();
+    const evidences = await client.salesEvidence.findMany({
+      where: {
+        workspaceId,
+        conversationId,
+        messageId,
+        isInvalidated: false,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return evidences.map(formatSalesEvidenceResponse);
+  }
+
+  /**
    * Marks a SalesEvidence record as invalidated (False Positive Invalidation).
    * Emits DomainEvent.SALES_EVIDENCE_INVALIDATED to trigger lead score recalculation.
    */

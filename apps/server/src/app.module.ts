@@ -31,6 +31,7 @@ import { SalesEvidenceModule } from './modules/sales-evidence';
 import { ActivityTimelineModule } from './modules/activity-timeline';
 import { LlmGatewayModule } from './modules/llm-gateway';
 import { PromptRegistryModule } from './modules/prompt-registry';
+import { ConversationIntelligenceModule } from './modules/conversation-intelligence';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -148,6 +149,7 @@ import { pinoRedactConfig } from './common/logging';
     ActivityTimelineModule,
     LlmGatewayModule,
     PromptRegistryModule,
+    ConversationIntelligenceModule,
   ],
   controllers: [AppController],
   providers: [

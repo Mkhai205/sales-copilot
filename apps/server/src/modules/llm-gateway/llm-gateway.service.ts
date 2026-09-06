@@ -25,7 +25,7 @@ export interface GatewayCompletionRequest {
 }
 
 export interface GatewayStructuredRequest<T> extends GatewayCompletionRequest {
-  schema: z.ZodType<T>;
+  schema: z.ZodType<T, z.ZodTypeDef, any>;
   jsonSchema?: Record<string, any>;
   schemaName?: string;
 }
