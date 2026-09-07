@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerApiBase } from '@/lib/api/client';
 
 const PUBLIC_PREFIXES = [
   '/login',
@@ -16,14 +17,9 @@ function getCookieDomain(hostname: string): string | undefined {
   if (hostname === 'localhost' || hostname === '127.0.0.1') {
     return undefined;
   }
-  if (process.env.COOKIE_DOMAIN) {
-    return process.env.COOKIE_DOMAIN;
-  }
-  const parts = hostname.split('.');
-  if (parts.length >= 2) {
-    return '.' + parts.slice(-2).join('.');
-  }
-  return undefined;
+  // Host-only cookie by default (RFC 6265) for single-domain security.
+  // Explicit COOKIE_DOMAIN can still be provided if cross-subdomain auth is required.
+  return process.env.COOKIE_DOMAIN || undefined;
 }
 
 export async function middleware(request: NextRequest) {
@@ -54,7 +50,7 @@ export async function middleware(request: NextRequest) {
 
   // Access token expired/missing, but refresh token exists -> attempt transparent refresh
   if (refreshToken) {
-    const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+    const apiBase = getServerApiBase();
 
     try {
       const res = await fetch(`${apiBase}/auth/refresh`, {

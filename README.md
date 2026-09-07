@@ -91,12 +91,47 @@ pnpm db:seed
 ### 4. Start Development Servers
 
 ```bash
-# Start Backend (NestJS server on http://localhost:3000, Swagger at /docs)
+# Start Backend (NestJS server on http://localhost:8000, Swagger at /docs)
 pnpm serve:server
 
-# Start Frontend (Next.js web app on http://localhost:4200)
+# Start Frontend (Next.js web app on http://localhost:3000)
 pnpm serve:web
 ```
+
+---
+
+## 🔗 Tunnel Mode (Facebook Webhooks / Share URL)
+
+When you need a public URL for testing Facebook webhooks or sharing with others:
+
+```bash
+# Start infra + nginx + cloudflared tunnel
+docker compose -f docker-compose.dev.yml --profile tunnel up -d
+
+# Start backend & frontend on host as usual
+pnpm serve:server
+pnpm serve:web
+```
+
+Your app is now accessible at `https://sales-copilot.kakadev.xyz` via Cloudflare Tunnel.
+
+> **First-time setup**: Run `.\scripts\setup-tunnel.ps1` (Windows) or `./scripts/setup-tunnel.sh` (Linux/Mac) to create the tunnel and configure DNS.
+
+---
+
+## 🐳 Production Docker
+
+Run the entire stack in Docker (for VPS deployment or local production testing):
+
+```bash
+# Start all services (access via http://localhost)
+docker compose -f docker-compose.prod.yml up -d
+
+# With Cloudflare Tunnel (access via https://sales-copilot.kakadev.xyz)
+docker compose -f docker-compose.prod.yml --profile tunnel up -d
+```
+
+_Architecture: Nginx (port 80) → routes `/api/*` to NestJS, `/` to Next.js_
 
 ---
 

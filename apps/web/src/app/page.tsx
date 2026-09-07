@@ -1,10 +1,9 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+import { API_BASE } from '@/lib/api/client';
 import type { UserWorkspaceDto } from '@/lib/api/types';
 
 export const dynamic = 'force-dynamic';
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
 
 export default async function Home() {
   const cookieStore = await cookies();

@@ -25,7 +25,7 @@ Trước khi bắt đầu, đảm bảo máy của bạn đã cài đặt:
 | :--- | :--- | :--- |
 | **Mode 1: Localhost Only** | Lập trình hàng ngày, test Web Chat Widget, phát triển UI | Tốc độ nhanh nhất, Hot reload cả Backend lẫn Frontend |
 | **Mode 2: Tunnel Dev (Khuyên dùng)** | Test Facebook Webhook, demo khách hàng qua internet | Backend/Frontend chạy native (hot reload), Tunnel expose qua Docker |
-| **Mode 3: Full Containerized** | Test mô phỏng production trước khi release | Toàn bộ hệ thống chạy trong Docker qua `docker-compose.test.yml` |
+| **Mode 3: Full Containerized** | Test mô phỏng production qua cloudflared tunnel local trước khi release | Toàn bộ hệ thống chạy trong Docker qua `docker-compose.prod.yml` |
 
 ---
 
@@ -137,7 +137,11 @@ Web Chat Widget có thể được kiểm thử hoàn chỉnh mà không cần C
 
 **Trên Windows (PowerShell)**:
 ```powershell
-./scripts/setup-tunnel.ps1
+### Bước 1: Khởi Tạo & Đăng Nhập Tunnel
+
+**Trên Windows (PowerShell)**:
+```powershell
+.\scripts\setup-tunnel.ps1
 ```
 
 **Trên Linux / macOS (Bash)**:
@@ -150,22 +154,20 @@ Script sẽ thực hiện:
 1. `cloudflared tunnel login`: Mở trình duyệt để bạn ủy quyền domain `kakadev.xyz`.
 2. `cloudflared tunnel create sales-copilot`: Tạo Named Tunnel cố định.
 3. Tự động trỏ DNS CNAME:
-   - `api-sales-copilot.kakadev.xyz` $\rightarrow$ Tunnel
-   - `app-sales-copilot.kakadev.xyz` $\rightarrow$ Tunnel
-   - `storage-sales-copilot.kakadev.xyz` $\rightarrow$ Tunnel
+   - `sales-copilot.kakadev.xyz` $\rightarrow$ Nginx (phục vụ cả Web App Dashboard, Backend API, WebSocket, và Widget SDK)
+   - `storage-sales-copilot.kakadev.xyz` $\rightarrow$ MinIO Storage
 4. Cập nhật Tunnel ID vào `config/cloudflared/config.yml` và lưu credentials vào `config/cloudflared/credentials.json`.
 
 ### Bước 2: Cập Nhật Biến Môi Trường (Tunnel Mode)
 
-Copy cấu hình từ file `.env.tunnel` vào file `.env` của `apps/server` và `apps/web`:
+Cập nhật cấu hình trong `apps/server/.env`:
 
-**Trong `apps/server/.env`**:
 ```bash
 # Thêm domain tunnel vào danh sách CORS origins cho phép
-CORS_ORIGIN='https://app-sales-copilot.kakadev.xyz,http://localhost:3000'
+CORS_ORIGIN='https://sales-copilot.kakadev.xyz,http://localhost:3000'
 
 # Public Base URL cho Webhooks và OAuth
-WEBHOOK_BASE_URL=https://api-sales-copilot.kakadev.xyz
+WEBHOOK_BASE_URL=https://sales-copilot.kakadev.xyz
 
 # Public URL cho MinIO Storage (phục vụ ảnh/file đính kèm)
 STORAGE_PUBLIC_ENDPOINT=https://storage-sales-copilot.kakadev.xyz
@@ -176,22 +178,18 @@ FB_APP_SECRET=your_facebook_app_secret
 FB_VERIFY_TOKEN=sales_copilot_meta_verify_token_secure123
 ```
 
-**Trong `apps/web/.env`**:
-```bash
-NEXT_PUBLIC_API_URL=https://api-sales-copilot.kakadev.xyz/api/v1
-NEXT_PUBLIC_WS_URL=https://api-sales-copilot.kakadev.xyz
-```
+*(Lưu ý: Trong `apps/web/.env`, trình duyệt tự động dùng relative URL `/api/v1` và same-origin WebSocket khi truy cập qua `sales-copilot.kakadev.xyz`, nên không cần chỉnh sửa)*.
 
-### Bước 3: Khởi Động Cloudflare Tunnel Container
+### Bước 3: Khởi Động Hạ Tầng & Tunnel Container
 
 ```bash
-# Khởi động infra + cloudflared tunnel
+# Khởi động infra + nginx + cloudflared tunnel
 docker compose -f docker-compose.dev.yml --profile tunnel up -d
 ```
 
-Kiểm tra kết nối tunnel:
+Kiểm tra kết nối:
 ```bash
-curl https://api-sales-copilot.kakadev.xyz/health
+curl https://sales-copilot.kakadev.xyz/api/v1/health
 # Kết quả mong đợi: {"status":"ok", ...}
 ```
 
@@ -203,7 +201,7 @@ curl https://api-sales-copilot.kakadev.xyz/health
 
 1. Truy cập [Meta for Developers](https://developers.facebook.com/) $\rightarrow$ Chọn App của bạn.
 2. Vào mục **Messenger > Settings > Webhooks**:
-   - **Callback URL**: `https://api-sales-copilot.kakadev.xyz/api/v1/integrations/facebook/webhook`
+   - **Callback URL**: `https://sales-copilot.kakadev.xyz/api/v1/integrations/facebook/webhook`
    - **Verify Token**: Giá trị trùng với `FB_VERIFY_TOKEN` bạn đặt trong `.env` (ví dụ: `sales_copilot_meta_verify_token_secure123`).
    - Nhấn **Verify and Save**. NestJS server sẽ nhận request `hub.challenge` và phản hồi HTTP 200 thành công.
 3. Trong danh sách **Subscription Fields**, tích chọn:
@@ -212,7 +210,7 @@ curl https://api-sales-copilot.kakadev.xyz/health
 
 ### Bước 2: Kết Nối Facebook Test Page Vào Sales Copilot
 
-1. Đăng nhập Dashboard tại [https://app-sales-copilot.kakadev.xyz](https://app-sales-copilot.kakadev.xyz).
+1. Đăng nhập Dashboard tại [https://sales-copilot.kakadev.xyz](https://sales-copilot.kakadev.xyz).
 2. Vào **Settings > Inboxes > Add Inbox** $\rightarrow$ Chọn **Facebook Messenger**.
 3. Điền thông tin Page:
    - **Page ID**: ID của Facebook Test Page.
@@ -225,7 +223,7 @@ curl https://api-sales-copilot.kakadev.xyz/health
 2. Mở Facebook Messenger, truy cập Test Page và gửi tin nhắn:
    *"Xin chào Sales Copilot, đây là tin nhắn test từ Facebook Messenger!"*
 3. **Quan sát luồng xử lý**:
-   - Meta gửi Webhook POST tới `https://api-sales-copilot.kakadev.xyz/api/v1/integrations/facebook/webhook`.
+   - Meta gửi Webhook POST tới `https://sales-copilot.kakadev.xyz/api/v1/integrations/facebook/webhook`.
    - NestJS xác thực chữ ký HMAC-SHA256 (`x-hub-signature-256`).
    - Đưa event vào BullMQ queue `channel-ingestion`.
    - Contact và ChannelIdentity của Facebook Sender được tự động tạo/khớp (deduplication).
@@ -238,23 +236,23 @@ curl https://api-sales-copilot.kakadev.xyz/health
 
 ---
 
-## 7. Mode 3: Kiểm Thử Full Containerized Stack
+## 7. Mode 3: Kiểm Thử Full Containerized Stack (Production Test)
 
 Khi bạn muốn kiểm tra toàn bộ ứng dụng chạy hoàn toàn bên trong Docker (giống môi trường Production staging):
 
 ```bash
-# Build và khởi chạy toàn bộ 6 containers:
-# postgres, redis, minio, db-migrate, server, web
-docker compose -f docker-compose.test.yml up --build -d
+# Build và khởi chạy toàn bộ containers:
+# postgres, redis, minio, db-migrate, server, web, nginx
+docker compose -f docker-compose.prod.yml up --build -d
 
 # Nếu muốn kèm Cloudflare Tunnel:
-docker compose -f docker-compose.test.yml --profile tunnel up --build -d
+docker compose -f docker-compose.prod.yml --profile tunnel up --build -d
 
 # Xem logs của toàn bộ stack
-docker compose -f docker-compose.test.yml logs -f server
+docker compose -f docker-compose.prod.yml logs -f server
 
 # Tắt và dọn dẹp môi trường test
-docker compose -f docker-compose.test.yml down -v
+docker compose -f docker-compose.prod.yml down -v
 ```
 
 ---
@@ -267,20 +265,14 @@ docker compose -f docker-compose.test.yml down -v
   - Kiểm tra biến `FB_VERIFY_TOKEN` trong `apps/server/.env` có khớp từng ký tự với ô Verify Token trên Meta Console.
   - Kiểm tra log tunnel: `docker compose logs cloudflared`.
 
-### 2. Lỗi CORS khi gọi API từ trình duyệt
-- **Triệu chứng**: Console báo lỗi `Access-Control-Allow-Origin`.
-- **Khắc phục**:
-  - Kiểm tra `CORS_ORIGIN` trong `apps/server/.env` đã có URL `https://app-sales-copilot.kakadev.xyz` chưa.
-  - Không được dùng ký tự đại diện `*` khi `credentials: true` đang bật.
-
-### 3. File Đính Kèm Không Hiển Thị Được Từ Internet
+### 2. File Đính Kèm Không Hiển Thị Được Từ Internet
 - **Triệu chứng**: Trình duyệt báo lỗi khi load ảnh/tệp đính kèm từ MinIO.
 - **Khắc phục**:
   - Kiểm tra `STORAGE_PUBLIC_ENDPOINT` đã đặt thành `https://storage-sales-copilot.kakadev.xyz`.
   - Đảm bảo DNS CNAME cho `storage-sales-copilot.kakadev.xyz` đã được Cloudflare Tunnel định tuyến tới service `http://minio:9000`.
 
-### 4. WebSocket Không Kết Nối Được Qua Tunnel
-- **Triệu chứng**: Dashboard thông báo "Disconnected", không nhận realtime event.
+### 3. Live Chat Widget SDK Báo Lỗi 404
+- **Triệu chứng**: Trang web ngoài nhúng `<script src="https://sales-copilot.kakadev.xyz/widget/sdk.js"></script>` báo 404.
 - **Khắc phục**:
-  - Kiểm tra `NEXT_PUBLIC_WS_URL` trong `apps/web/.env` đã trỏ về `https://api-sales-copilot.kakadev.xyz`.
-  - Cloudflare Tunnel tự động hỗ trợ WebSocket qua port 443 (HTTPS), không cần cấu hình thêm cờ WSS riêng.
+  - Đảm bảo Nginx đã có `location /widget/` chuyển tiếp vào backend server (đã được cấu hình trong `config/nginx/dev.conf` và `config/nginx/prod.conf`).
+

@@ -96,14 +96,24 @@ export class FacebookController {
       return new URL(refererHeader).origin;
     }
 
-    // 4. Domain matching with WEBHOOK_BASE_URL (e.g. *.kakadev.xyz tunnel)
+    // 4. Domain matching with WEBHOOK_BASE_URL (single-domain setup or tunnel)
     const webhookBaseUrl = this.configService.get<string>('WEBHOOK_BASE_URL') || '';
-    if (webhookBaseUrl.includes('kakadev.xyz')) {
-      const kakadevOrigin = validOrigins.find(
-        o => o.includes('app-sales-copilot.kakadev.xyz') || o.includes('kakadev.xyz'),
-      );
-      if (kakadevOrigin) {
-        return new URL(kakadevOrigin).origin;
+    if (webhookBaseUrl) {
+      try {
+        const webhookOrigin = new URL(webhookBaseUrl).origin;
+        const matchingOrigin = validOrigins.find(o => {
+          try {
+            return new URL(o).origin === webhookOrigin;
+          } catch {
+            return o === webhookOrigin;
+          }
+        });
+        if (matchingOrigin) {
+          return new URL(matchingOrigin).origin;
+        }
+        return webhookOrigin;
+      } catch {
+        // Invalid webhookBaseUrl URL, continue to fallbacks
       }
     }
 
@@ -126,6 +136,15 @@ export class FacebookController {
       const u = new URL(candidate);
       if (u.protocol !== 'http:' && u.protocol !== 'https:') return false;
       const normalized = u.origin;
+      const webhookBaseUrl = this.configService.get<string>('WEBHOOK_BASE_URL') || '';
+      let webhookOrigin = '';
+      let webhookHostname = '';
+      if (webhookBaseUrl) {
+        const whUrl = new URL(webhookBaseUrl);
+        webhookOrigin = whUrl.origin;
+        webhookHostname = whUrl.hostname;
+      }
+
       return (
         allowedOrigins.some(ao => {
           try {
@@ -134,7 +153,8 @@ export class FacebookController {
             return ao === normalized;
           }
         }) ||
-        u.hostname.endsWith('.kakadev.xyz') ||
+        (Boolean(webhookOrigin) && normalized === webhookOrigin) ||
+        (Boolean(webhookHostname) && u.hostname === webhookHostname) ||
         u.hostname === 'localhost' ||
         u.hostname === '127.0.0.1'
       );

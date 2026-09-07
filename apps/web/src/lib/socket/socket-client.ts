@@ -4,9 +4,7 @@ import { getSocketTokenAction } from '@/features/auth/actions';
 export function getWsBaseUrl(): string {
   if (typeof window !== 'undefined') {
     const host = window.location.hostname;
-    if (host.includes('kakadev.xyz')) {
-      return 'https://api-sales-copilot.kakadev.xyz';
-    }
+    // Local dev: direct cross-origin access to backend
     if (host === 'localhost' || host === '127.0.0.1') {
       return (
         process.env.NEXT_PUBLIC_WS_URL ||
@@ -14,6 +12,8 @@ export function getWsBaseUrl(): string {
         'http://localhost:8000'
       );
     }
+    // Production / tunnel: same-origin via nginx reverse proxy
+    return window.location.origin;
   }
   return (
     process.env.NEXT_PUBLIC_WS_URL ||

@@ -20,12 +20,6 @@ async function getAuthCookieBaseOptions() {
       domain = undefined;
       isSecure = false;
     } else if (host) {
-      if (!domain) {
-        const parts = host.split('.');
-        if (parts.length >= 2) {
-          domain = '.' + parts.slice(-2).join('.');
-        }
-      }
       isSecure = true;
     }
   } catch {

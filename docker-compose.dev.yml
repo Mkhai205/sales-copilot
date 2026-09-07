@@ -55,6 +55,18 @@ services:
     networks:
       - sales_copilot_net
 
+  nginx:
+    image: nginx:alpine
+    volumes:
+      - ./config/nginx/dev.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - '80:80'
+    profiles:
+      - tunnel
+    networks:
+      - sales_copilot_net
+    restart: unless-stopped
+
   cloudflared:
     image: cloudflare/cloudflared:latest
     command: tunnel run
@@ -62,7 +74,7 @@ services:
       - ./config/cloudflared/config.yml:/etc/cloudflared/config.yml:ro
       - ./config/cloudflared/credentials.json:/etc/cloudflared/credentials.json:ro
     depends_on:
-      - minio
+      - nginx
     networks:
       - sales_copilot_net
     profiles:
