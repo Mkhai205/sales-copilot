@@ -163,9 +163,9 @@ describe('CopilotEngineService (Structured Output, Threshold Filter & Streaming)
   it('should stream reply draft and emit socket chunks with isFinished signal', async () => {
     mockLlmGateway = {
       generateStream: async function* () {
-        yield { content: 'Dạ ' };
-        yield { content: 'chào ' };
-        yield { content: 'chị Mai ạ!' };
+        yield { chunk: 'Dạ ', isDone: false };
+        yield { chunk: 'chào ', isDone: false };
+        yield { chunk: 'chị Mai ạ!', isDone: false };
       },
     };
 

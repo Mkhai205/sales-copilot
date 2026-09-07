@@ -48,8 +48,11 @@ const TEST_ACCOUNTS = [
 
 import { useI18n } from '@/lib/i18n';
 
+import { useQueryClient } from '@tanstack/react-query';
+
 export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) {
   const { t } = useI18n();
+  const queryClient = useQueryClient();
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [fieldErrors, setFieldErrors] = React.useState<{ email?: string; password?: string }>({});
@@ -85,6 +88,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
     }
 
     setIsPending(true);
+    queryClient.clear();
 
     try {
       const result = await loginAction(formData);

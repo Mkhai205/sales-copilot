@@ -101,6 +101,8 @@ export class CopilotService {
       (a, b) => b.confidence - a.confidence,
     );
 
+    const createdList: CopilotSuggestionDto[] = [];
+
     for (const item of sortedItems) {
       const record = await client.copilotSuggestion.create({
         data: {

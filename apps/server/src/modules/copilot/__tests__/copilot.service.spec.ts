@@ -142,8 +142,9 @@ describe('CopilotService (Lifecycle, Single Active Invariant & Metrics)', () => 
       assert.strictEqual(firstRecord.dismissedReason, 'SUPERSEDED_BY_NEW_SUGGESTION');
 
       // Verify event was emitted for new suggestion
-      // Verify event was emitted for new suggestion
-      const emitted = emittedEvents.find(e => e.event === DomainEvent.COPILOT_SUGGESTION_GENERATED);
+      const emitted = emittedEvents
+        .filter(e => e.event === DomainEvent.COPILOT_SUGGESTION_GENERATED)
+        .pop();
       assert.ok(emitted);
       assert.strictEqual(emitted.payload.suggestionId, res2[0].id);
     });
@@ -308,7 +309,8 @@ describe('CopilotService (Lifecycle, Single Active Invariant & Metrics)', () => 
       await assert.rejects(
         () => service.resolveSuggestion(ws1, created[0].id, SuggestionStatus.ACCEPTED),
         (err: any) =>
-          err instanceof BadRequestException && err.getResponse().code === 'SUGGESTION_EXPIRED',
+          err instanceof BadRequestException &&
+          (err.getResponse() as any)?.code === 'SUGGESTION_EXPIRED',
       );
 
       const updated = suggestionsDb.get(created[0].id);

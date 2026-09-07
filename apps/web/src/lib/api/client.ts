@@ -4,6 +4,19 @@ import type {
   PaginationMeta,
 } from '@sales-copilot/shared-contracts';
 
+export function getApiBase(): string {
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    if (host.includes('kakadev.xyz')) {
+      return 'https://api-sales-copilot.kakadev.xyz/api/v1';
+    }
+    if (host === 'localhost' || host === '127.0.0.1') {
+      return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+    }
+  }
+  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+}
+
 export const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
 
 export type ApiResponseMeta = PaginationMeta;
@@ -44,7 +57,10 @@ export async function fetchApi<T>(
   endpoint: string,
   options?: RequestInit,
 ): Promise<ApiResponse<T>> {
-  const url = endpoint.startsWith('http') ? endpoint : `${API_BASE}${endpoint}`;
+  const base = getApiBase();
+  const url = endpoint.startsWith('http')
+    ? endpoint
+    : `${base}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
 
   const isFormData = typeof FormData !== 'undefined' && options?.body instanceof FormData;
   const headers: Record<string, string> = {};

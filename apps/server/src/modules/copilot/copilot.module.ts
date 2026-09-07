@@ -3,6 +3,8 @@ import { BullModule } from '@nestjs/bullmq';
 import { COPILOT_SUGGESTIONS_QUEUE } from '@sales-copilot/shared-contracts';
 import { DatabaseModule } from '../../infrastructure/database';
 import { RedisModule } from '../../infrastructure/redis';
+import { AuthModule } from '../auth';
+import { WorkspacesModule } from '../workspaces';
 import { MessagesModule } from '../messages/messages.module';
 import { ContactsModule } from '../contacts/contacts.module';
 import { LeadsModule } from '../leads/leads.module';
@@ -25,6 +27,8 @@ import { CopilotService } from './copilot.service';
     BullModule.registerQueue({
       name: COPILOT_SUGGESTIONS_QUEUE,
     }),
+    AuthModule,
+    WorkspacesModule,
     MessagesModule,
     ContactsModule,
     LeadsModule,

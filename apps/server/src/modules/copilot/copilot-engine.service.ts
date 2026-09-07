@@ -274,8 +274,8 @@ export class CopilotEngineService {
       });
 
       for await (const chunk of stream) {
-        if (chunk.content) {
-          accumulatedContent += chunk.content;
+        if (chunk.chunk) {
+          accumulatedContent += chunk.chunk;
 
           if (this.realtimeGateway?.server) {
             const payload = {
@@ -283,7 +283,7 @@ export class CopilotEngineService {
               workspaceId,
               data: {
                 conversationId,
-                chunk: chunk.content,
+                chunk: chunk.chunk,
                 isFinished: false,
               },
             };

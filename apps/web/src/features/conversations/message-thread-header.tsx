@@ -225,12 +225,11 @@ export function MessageThreadHeader({
                 variant={isCopilotOpen ? 'secondary' : 'outline'}
                 size="sm"
                 onClick={onToggleCopilot}
-                className={cn(
-                  'h-7 text-xs gap-1.5 font-normal transition-colors',
+                className={`h-7 text-xs gap-1.5 font-normal transition-colors ${
                   pendingSuggestionsCount > 0
                     ? 'border-primary/40 bg-primary/10 text-primary hover:bg-primary/20'
-                    : 'text-muted-foreground hover:text-foreground',
-                )}
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
               >
                 <Sparkles className="size-3.5 text-primary" />
                 <span>Copilot</span>

@@ -1,6 +1,27 @@
 import { io, Socket } from 'socket.io-client';
 import { getSocketTokenAction } from '@/features/auth/actions';
 
+export function getWsBaseUrl(): string {
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    if (host.includes('kakadev.xyz')) {
+      return 'https://api-sales-copilot.kakadev.xyz';
+    }
+    if (host === 'localhost' || host === '127.0.0.1') {
+      return (
+        process.env.NEXT_PUBLIC_WS_URL ||
+        process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/v1\/?$/, '') ||
+        'http://localhost:8000'
+      );
+    }
+  }
+  return (
+    process.env.NEXT_PUBLIC_WS_URL ||
+    process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/v1\/?$/, '') ||
+    'http://localhost:8000'
+  );
+}
+
 export const WS_BASE_URL =
   process.env.NEXT_PUBLIC_WS_URL ||
   process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/v1\/?$/, '') ||
@@ -15,7 +36,7 @@ export function getSocketClient(): Socket {
     return socketInstance;
   }
 
-  const socketUrl = `${WS_BASE_URL.replace(/\/$/, '')}${REALTIME_NAMESPACE}`;
+  const socketUrl = `${getWsBaseUrl().replace(/\/$/, '')}${REALTIME_NAMESPACE}`;
 
   socketInstance = io(socketUrl, {
     transports: ['websocket'],

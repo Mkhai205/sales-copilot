@@ -62,14 +62,16 @@ export function NavUser() {
     );
   }
 
-  const displayName = user?.name || 'Agent User';
-  const displayEmail = user?.email || 'agent@salescopilot.io';
+  const displayName = user?.name || '';
+  const displayEmail = user?.email || '';
   const displayInitials = displayName
-    .split(' ')
-    .map((n: string) => n[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
+    ? displayName
+        .split(' ')
+        .map((n: string) => n[0])
+        .join('')
+        .slice(0, 2)
+        .toUpperCase()
+    : '??';
 
   return (
     <SidebarMenu>
