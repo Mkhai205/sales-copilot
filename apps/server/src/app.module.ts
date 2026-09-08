@@ -34,6 +34,7 @@ import { PromptRegistryModule } from './modules/prompt-registry';
 import { ConversationIntelligenceModule } from './modules/conversation-intelligence';
 import { LeadScoringModule } from './modules/lead-scoring';
 import { CopilotModule } from './modules/copilot';
+import { PosModule } from './modules/pos/pos.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -154,6 +155,7 @@ import { pinoRedactConfig } from './common/logging';
     ConversationIntelligenceModule,
     LeadScoringModule,
     CopilotModule,
+    PosModule,
   ],
   controllers: [AppController],
   providers: [

@@ -1,0 +1,1012 @@
+[
+  {
+    "id": "01",
+    "name": "Thành phố Hà Nội",
+    "code": "HN",
+    "districts": [
+      {
+        "id": "001",
+        "name": "Quận Ba Đình",
+        "wards": [
+          { "id": "00001", "name": "Phường Phúc Xá" },
+          { "id": "00004", "name": "Phường Trúc Bạch" },
+          { "id": "00006", "name": "Phường Vĩnh Phúc" },
+          { "id": "00007", "name": "Phường Cống Vị" },
+          { "id": "00008", "name": "Phường Liễu Giai" },
+          { "id": "00010", "name": "Phường Quán Thánh" },
+          { "id": "00013", "name": "Phường Điện Biên" },
+          { "id": "00016", "name": "Phường Đội Cấn" },
+          { "id": "00019", "name": "Phường Ngọc Hà" },
+          { "id": "00022", "name": "Phường Kim Mã" },
+          { "id": "00025", "name": "Phường Giảng Võ" },
+          { "id": "00028", "name": "Phường Thành Công" }
+        ]
+      },
+      {
+        "id": "002",
+        "name": "Quận Hoàn Kiếm",
+        "wards": [
+          { "id": "00037", "name": "Phường Đồng Xuân" },
+          { "id": "00040", "name": "Phường Hàng Mã" },
+          { "id": "00043", "name": "Phường Hàng Buồm" },
+          { "id": "00046", "name": "Phường Hàng Đào" },
+          { "id": "00049", "name": "Phường Hàng Bồ" },
+          { "id": "00052", "name": "Phường Cửa Đông" },
+          { "id": "00055", "name": "Phường Lý Thái Tổ" },
+          { "id": "00058", "name": "Phường Hàng Bạc" },
+          { "id": "00061", "name": "Phường Hàng Gai" },
+          { "id": "00064", "name": "Phường Chương Dương" },
+          { "id": "00067", "name": "Phường Hàng Trống" },
+          { "id": "00070", "name": "Phường Cửa Nam" },
+          { "id": "00073", "name": "Phường Hàng Bông" },
+          { "id": "00076", "name": "Phường Tràng Tiền" },
+          { "id": "00079", "name": "Phường Phan Chu Trinh" }
+        ]
+      },
+      {
+        "id": "006",
+        "name": "Quận Đống Đa",
+        "wards": [
+          { "id": "00187", "name": "Phường Cát Linh" },
+          { "id": "00190", "name": "Phường Văn Miếu" },
+          { "id": "00193", "name": "Phường Quốc Tử Giám" },
+          { "id": "00196", "name": "Phường Láng Thượng" },
+          { "id": "00199", "name": "Phường Ô Chợ Dừa" },
+          { "id": "00202", "name": "Phường Văn Chương" },
+          { "id": "00205", "name": "Phường Hàng Bột" },
+          { "id": "00208", "name": "Phường Láng Hạ" },
+          { "id": "00211", "name": "Phường Khâm Thiên" },
+          { "id": "00214", "name": "Phường Thổ Quan" },
+          { "id": "00217", "name": "Phường Nam Đồng" },
+          { "id": "00220", "name": "Phường Trung Phụng" },
+          { "id": "00223", "name": "Phường Quang Trung" },
+          { "id": "00226", "name": "Phường Trung Liệt" },
+          { "id": "00229", "name": "Phường Phương Liên" },
+          { "id": "00232", "name": "Phường Thịnh Quang" },
+          { "id": "00235", "name": "Phường Trung Tự" },
+          { "id": "00238", "name": "Phường Kim Liên" },
+          { "id": "00241", "name": "Phường Phương Mai" },
+          { "id": "00244", "name": "Phường Ngã Tư Sở" },
+          { "id": "00247", "name": "Phường Khương Thượng" }
+        ]
+      },
+      {
+        "id": "005",
+        "name": "Quận Cầu Giấy",
+        "wards": [
+          { "id": "00157", "name": "Phường Nghĩa Đô" },
+          { "id": "00160", "name": "Phường Nghĩa Tân" },
+          { "id": "00163", "name": "Phường Mai Dịch" },
+          { "id": "00166", "name": "Phường Dịch Vọng" },
+          { "id": "00167", "name": "Phường Dịch Vọng Hậu" },
+          { "id": "00169", "name": "Phường Quan Hoa" },
+          { "id": "00172", "name": "Phường Yên Hòa" },
+          { "id": "00175", "name": "Phường Trung Hòa" }
+        ]
+      },
+      {
+        "id": "007",
+        "name": "Quận Hai Bà Trưng",
+        "wards": [
+          { "id": "00250", "name": "Phường Nguyễn Du" },
+          { "id": "00253", "name": "Phường Bạch Đằng" },
+          { "id": "00256", "name": "Phường Phạm Đình Hổ" },
+          { "id": "00265", "name": "Phường Lê Đại Hành" },
+          { "id": "00268", "name": "Phường Đồng Nhân" },
+          { "id": "00271", "name": "Phường Phố Huế" },
+          { "id": "00274", "name": "Phường Đống Mác" },
+          { "id": "00277", "name": "Phường Thanh Lương" },
+          { "id": "00280", "name": "Phường Thanh Nhàn" },
+          { "id": "00283", "name": "Phường Cầu Dền" },
+          { "id": "00286", "name": "Phường Bách Khoa" },
+          { "id": "00289", "name": "Phường Quỳnh Lôi" },
+          { "id": "00292", "name": "Phường Bạch Mai" },
+          { "id": "00295", "name": "Phường Quỳnh Mai" },
+          { "id": "00298", "name": "Phường Vĩnh Tuy" },
+          { "id": "00301", "name": "Phường Minh Khai" },
+          { "id": "00304", "name": "Phường Trương Định" }
+        ]
+      },
+      {
+        "id": "008",
+        "name": "Quận Hoàng Mai",
+        "wards": [
+          { "id": "00307", "name": "Phường Thanh Trì" },
+          { "id": "00310", "name": "Phường Vĩnh Hưng" },
+          { "id": "00313", "name": "Phường Định Công" },
+          { "id": "00316", "name": "Phường Mai Động" },
+          { "id": "00319", "name": "Phường Tương Mai" },
+          { "id": "00322", "name": "Phường Đại Kim" },
+          { "id": "00325", "name": "Phường Tân Mai" },
+          { "id": "00328", "name": "Phường Hoàng Văn Thụ" },
+          { "id": "00331", "name": "Phường Giáp Bát" },
+          { "id": "00334", "name": "Phường Lĩnh Nam" },
+          { "id": "00337", "name": "Phường Thịnh Liệt" },
+          { "id": "00340", "name": "Phường Trần Phú" },
+          { "id": "00343", "name": "Phường Hoàng Liệt" },
+          { "id": "00346", "name": "Phường Yên Sở" }
+        ]
+      },
+      {
+        "id": "009",
+        "name": "Quận Thanh Xuân",
+        "wards": [
+          { "id": "00349", "name": "Phường Nhân Chính" },
+          { "id": "00352", "name": "Phường Thượng Đình" },
+          { "id": "00355", "name": "Phường Khương Trung" },
+          { "id": "00358", "name": "Phường Khương Mai" },
+          { "id": "00361", "name": "Phường Thanh Xuân Trung" },
+          { "id": "00364", "name": "Phường Phương Liệt" },
+          { "id": "00367", "name": "Phường Hạ Đình" },
+          { "id": "00370", "name": "Phường Khương Đình" },
+          { "id": "00373", "name": "Phường Thanh Xuân Bắc" },
+          { "id": "00376", "name": "Phường Thanh Xuân Nam" },
+          { "id": "00379", "name": "Phường Kim Giang" }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "79",
+    "name": "Thành phố Hồ Chí Minh",
+    "code": "HCM",
+    "districts": [
+      {
+        "id": "760",
+        "name": "Quận 1",
+        "wards": [
+          { "id": "26734", "name": "Phường Tân Định" },
+          { "id": "26737", "name": "Phường Đa Kao" },
+          { "id": "26740", "name": "Phường Bến Nghé" },
+          { "id": "26743", "name": "Phường Bến Thành" },
+          { "id": "26746", "name": "Phường Nguyễn Thái Bình" },
+          { "id": "26749", "name": "Phường Phạm Ngũ Lão" },
+          { "id": "26752", "name": "Phường Cầu Ông Lãnh" },
+          { "id": "26755", "name": "Phường Cô Giang" },
+          { "id": "26758", "name": "Phường Cầu Kho" },
+          { "id": "26761", "name": "Phường Nguyễn Cư Trinh" }
+        ]
+      },
+      {
+        "id": "769",
+        "name": "Thành phố Thủ Đức",
+        "wards": [
+          { "id": "26827", "name": "Phường Linh Tây" },
+          { "id": "26830", "name": "Phường Linh Chiểu" },
+          { "id": "26833", "name": "Phường Linh Trung" },
+          { "id": "26836", "name": "Phường Tam Bình" },
+          { "id": "26839", "name": "Phường Tam Phú" },
+          { "id": "26842", "name": "Phường Hiệp Bình Chánh" },
+          { "id": "26845", "name": "Phường Hiệp Bình Phước" },
+          { "id": "26857", "name": "Phường Thảo Điền" },
+          { "id": "26860", "name": "Phường An Phú" },
+          { "id": "26863", "name": "Phường An Khánh" },
+          { "id": "26869", "name": "Phường Bình Trưng Tây" }
+        ]
+      },
+      {
+        "id": "770",
+        "name": "Quận 3",
+        "wards": [
+          { "id": "27139", "name": "Phường 01" },
+          { "id": "27142", "name": "Phường 02" },
+          { "id": "27145", "name": "Phường 03" },
+          { "id": "27148", "name": "Phường 04" },
+          { "id": "27151", "name": "Phường 05" },
+          { "id": "27160", "name": "Phường 09" },
+          { "id": "27163", "name": "Phường 10" },
+          { "id": "27166", "name": "Phường 11" },
+          { "id": "27169", "name": "Phường 12" },
+          { "id": "27172", "name": "Phường 13" },
+          { "id": "27175", "name": "Phường 14" },
+          { "id": "27178", "name": "Phường Võ Thị Sáu" }
+        ]
+      },
+      {
+        "id": "771",
+        "name": "Quận 10",
+        "wards": [
+          { "id": "27181", "name": "Phường 01" },
+          { "id": "27184", "name": "Phường 02" },
+          { "id": "27196", "name": "Phường 06" },
+          { "id": "27208", "name": "Phường 10" },
+          { "id": "27214", "name": "Phường 12" },
+          { "id": "27220", "name": "Phường 14" },
+          { "id": "27223", "name": "Phường 15" }
+        ]
+      },
+      {
+        "id": "772",
+        "name": "Quận 11",
+        "wards": [
+          { "id": "27226", "name": "Phường 01" },
+          { "id": "27229", "name": "Phường 02" },
+          { "id": "27232", "name": "Phường 03" },
+          { "id": "27235", "name": "Phường 04" },
+          { "id": "27238", "name": "Phường 05" }
+        ]
+      },
+      {
+        "id": "774",
+        "name": "Quận 7",
+        "wards": [
+          { "id": "27463", "name": "Phường Tân Thuận Đông" },
+          { "id": "27466", "name": "Phường Tân Thuận Tây" },
+          { "id": "27469", "name": "Phường Tân Kiểng" },
+          { "id": "27472", "name": "Phường Tân Hưng" },
+          { "id": "27475", "name": "Phường Bình Thuận" },
+          { "id": "27478", "name": "Phường Tân Quy" },
+          { "id": "27481", "name": "Phường Phú Thuận" },
+          { "id": "27484", "name": "Phường Tân Phú" },
+          { "id": "27487", "name": "Phường Tân Phong" },
+          { "id": "27490", "name": "Phường Phú Mỹ" }
+        ]
+      },
+      {
+        "id": "776",
+        "name": "Quận Bình Thạnh",
+        "wards": [
+          { "id": "27271", "name": "Phường 01" },
+          { "id": "27274", "name": "Phường 02" },
+          { "id": "27277", "name": "Phường 03" },
+          { "id": "27280", "name": "Phường 05" },
+          { "id": "27283", "name": "Phường 06" },
+          { "id": "27319", "name": "Phường 25" }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "48",
+    "name": "Thành phố Đà Nẵng",
+    "code": "DN",
+    "districts": [
+      {
+        "id": "490",
+        "name": "Quận Hải Châu",
+        "wards": [
+          { "id": "20194", "name": "Phường Hải Châu I" },
+          { "id": "20197", "name": "Phường Hải Châu II" },
+          { "id": "20200", "name": "Phường Thạch Thang" },
+          { "id": "20203", "name": "Phường Thanh Bình" },
+          { "id": "20206", "name": "Phường Thuận Phước" }
+        ]
+      },
+      {
+        "id": "492",
+        "name": "Quận Sơn Trà",
+        "wards": [
+          { "id": "20233", "name": "Phường An Hải Bắc" },
+          { "id": "20236", "name": "Phường An Hải Tây" },
+          { "id": "20239", "name": "Phường Phước Mỹ" }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "31",
+    "name": "Thành phố Hải Phòng",
+    "code": "HP",
+    "districts": [
+      {
+        "id": "303",
+        "name": "Quận Hồng Bàng",
+        "wards": [
+          { "id": "11389", "name": "Phường Hoàng Văn Thụ" },
+          { "id": "11392", "name": "Phường Minh Khai" }
+        ]
+      },
+      {
+        "id": "304",
+        "name": "Quận Ngô Quyền",
+        "wards": [
+          { "id": "11419", "name": "Phường Máy Chai" },
+          { "id": "11422", "name": "Phường Vạn Mỹ" }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "92",
+    "name": "Thành phố Cần Thơ",
+    "code": "CT",
+    "districts": [
+      {
+        "id": "916",
+        "name": "Quận Ninh Kiều",
+        "wards": [
+          { "id": "31117", "name": "Phường Cái Khế" },
+          { "id": "31120", "name": "Phường An Hòa" },
+          { "id": "31123", "name": "Phường Thới Bình" }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "74",
+    "name": "Tỉnh Bình Dương",
+    "code": "BD",
+    "districts": [
+      {
+        "id": "718",
+        "name": "Thành phố Thủ Dầu Một",
+        "wards": [
+          { "id": "25741", "name": "Phường Phú Hòa" },
+          { "id": "25744", "name": "Phường Phú Cường" }
+        ]
+      },
+      {
+        "id": "721",
+        "name": "Thành phố Thuận An",
+        "wards": [
+          { "id": "25780", "name": "Phường Lái Thiêu" },
+          { "id": "25783", "name": "Phường An Thạnh" }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "75",
+    "name": "Tỉnh Đồng Nai",
+    "code": "DNA",
+    "districts": [
+      {
+        "id": "731",
+        "name": "Thành phố Biên Hòa",
+        "wards": [
+          { "id": "25990", "name": "Phường Trảng Dài" },
+          { "id": "25993", "name": "Phường Tân Phong" },
+          { "id": "25996", "name": "Phường Tân Hiệp" }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "26",
+    "name": "Tỉnh Vĩnh Phúc",
+    "code": "VP",
+    "districts": [
+      {
+        "id": "243",
+        "name": "Thành phố Vĩnh Yên",
+        "wards": [{ "id": "08779", "name": "Phường Tích Sơn" }]
+      }
+    ]
+  },
+  {
+    "id": "27",
+    "name": "Tỉnh Bắc Ninh",
+    "code": "BN",
+    "districts": [
+      {
+        "id": "256",
+        "name": "Thành phố Bắc Ninh",
+        "wards": [{ "id": "09166", "name": "Phường Vũ Ninh" }]
+      }
+    ]
+  },
+  {
+    "id": "30",
+    "name": "Tỉnh Hải Dương",
+    "code": "HD",
+    "districts": [
+      {
+        "id": "288",
+        "name": "Thành phố Hải Dương",
+        "wards": [{ "id": "10696", "name": "Phường Trần Hưng Đạo" }]
+      }
+    ]
+  },
+  {
+    "id": "33",
+    "name": "Tỉnh Hưng Yên",
+    "code": "HY",
+    "districts": [
+      {
+        "id": "323",
+        "name": "Thành phố Hưng Yên",
+        "wards": [{ "id": "12085", "name": "Phường Lam Sơn" }]
+      }
+    ]
+  },
+  {
+    "id": "35",
+    "name": "Tỉnh Hà Nam",
+    "code": "HNA",
+    "districts": [
+      {
+        "id": "347",
+        "name": "Thành phố Phủ Lý",
+        "wards": [{ "id": "12745", "name": "Phường Minh Khai" }]
+      }
+    ]
+  },
+  {
+    "id": "36",
+    "name": "Tỉnh Nam Định",
+    "code": "ND",
+    "districts": [
+      {
+        "id": "356",
+        "name": "Thành phố Nam Định",
+        "wards": [{ "id": "13282", "name": "Phường Vị Xuyên" }]
+      }
+    ]
+  },
+  {
+    "id": "37",
+    "name": "Tỉnh Ninh Bình",
+    "code": "NB",
+    "districts": [
+      {
+        "id": "369",
+        "name": "Thành phố Ninh Bình",
+        "wards": [{ "id": "14143", "name": "Phường Đông Thành" }]
+      }
+    ]
+  },
+  {
+    "id": "02",
+    "name": "Tỉnh Hà Giang",
+    "code": "HG",
+    "districts": [
+      {
+        "id": "024",
+        "name": "Thành phố Hà Giang",
+        "wards": [{ "id": "00688", "name": "Phường Trần Phú" }]
+      }
+    ]
+  },
+  {
+    "id": "04",
+    "name": "Tỉnh Cao Bằng",
+    "code": "CB",
+    "districts": [
+      {
+        "id": "040",
+        "name": "Thành phố Cao Bằng",
+        "wards": [{ "id": "01207", "name": "Phường Hợp Giang" }]
+      }
+    ]
+  },
+  {
+    "id": "06",
+    "name": "Tỉnh Bắc Kạn",
+    "code": "BK",
+    "districts": [
+      {
+        "id": "058",
+        "name": "Thành phố Bắc Kạn",
+        "wards": [{ "id": "01726", "name": "Phường Đức Xuân" }]
+      }
+    ]
+  },
+  {
+    "id": "08",
+    "name": "Tỉnh Tuyên Quang",
+    "code": "TQ",
+    "districts": [
+      {
+        "id": "070",
+        "name": "Thành phố Tuyên Quang",
+        "wards": [{ "id": "02086", "name": "Phường Phan Thiết" }]
+      }
+    ]
+  },
+  {
+    "id": "10",
+    "name": "Tỉnh Lào Cai",
+    "code": "LC",
+    "districts": [
+      {
+        "id": "080",
+        "name": "Thành phố Lào Cai",
+        "wards": [{ "id": "02545", "name": "Phường Kim Tân" }]
+      }
+    ]
+  },
+  {
+    "id": "11",
+    "name": "Tỉnh Điện Biên",
+    "code": "DB",
+    "districts": [
+      {
+        "id": "094",
+        "name": "Thành phố Điện Biên Phủ",
+        "wards": [{ "id": "03136", "name": "Phường Mường Thanh" }]
+      }
+    ]
+  },
+  {
+    "id": "12",
+    "name": "Tỉnh Lai Châu",
+    "code": "LCH",
+    "districts": [
+      {
+        "id": "105",
+        "name": "Thành phố Lai Châu",
+        "wards": [{ "id": "03436", "name": "Phường Quyết Thắng" }]
+      }
+    ]
+  },
+  {
+    "id": "14",
+    "name": "Tỉnh Sơn La",
+    "code": "SL",
+    "districts": [
+      {
+        "id": "116",
+        "name": "Thành phố Sơn La",
+        "wards": [{ "id": "03706", "name": "Phường Tô Hiệu" }]
+      }
+    ]
+  },
+  {
+    "id": "15",
+    "name": "Tỉnh Yên Bái",
+    "code": "YB",
+    "districts": [
+      {
+        "id": "132",
+        "name": "Thành phố Yên Bái",
+        "wards": [{ "id": "04186", "name": "Phường Yên Thịnh" }]
+      }
+    ]
+  },
+  {
+    "id": "17",
+    "name": "Tỉnh Hoà Bình",
+    "code": "HB",
+    "districts": [
+      {
+        "id": "148",
+        "name": "Thành phố Hòa Bình",
+        "wards": [{ "id": "04753", "name": "Phường Phương Lâm" }]
+      }
+    ]
+  },
+  {
+    "id": "19",
+    "name": "Tỉnh Thái Nguyên",
+    "code": "TN",
+    "districts": [
+      {
+        "id": "164",
+        "name": "Thành phố Thái Nguyên",
+        "wards": [{ "id": "05419", "name": "Phường Phan Đình Phùng" }]
+      }
+    ]
+  },
+  {
+    "id": "20",
+    "name": "Tỉnh Lạng Sơn",
+    "code": "LS",
+    "districts": [
+      {
+        "id": "178",
+        "name": "Thành phố Lạng Sơn",
+        "wards": [{ "id": "06052", "name": "Phường Hoàng Văn Thụ" }]
+      }
+    ]
+  },
+  {
+    "id": "22",
+    "name": "Tỉnh Quảng Ninh",
+    "code": "QN",
+    "districts": [
+      {
+        "id": "193",
+        "name": "Thành phố Hạ Long",
+        "wards": [{ "id": "06700", "name": "Phường Hồng Gai" }]
+      }
+    ]
+  },
+  {
+    "id": "24",
+    "name": "Tỉnh Bắc Giang",
+    "code": "BG",
+    "districts": [
+      {
+        "id": "213",
+        "name": "Thành phố Bắc Giang",
+        "wards": [{ "id": "07435", "name": "Phường Ngô Quyền" }]
+      }
+    ]
+  },
+  {
+    "id": "25",
+    "name": "Tỉnh Phú Thọ",
+    "code": "PT",
+    "districts": [
+      {
+        "id": "227",
+        "name": "Thành phố Việt Trì",
+        "wards": [{ "id": "08077", "name": "Phường Gia Cẩm" }]
+      }
+    ]
+  },
+  {
+    "id": "34",
+    "name": "Tỉnh Thái Bình",
+    "code": "TB",
+    "districts": [
+      {
+        "id": "336",
+        "name": "Thành phố Thái Bình",
+        "wards": [{ "id": "12364", "name": "Phường Lê Hồng Phong" }]
+      }
+    ]
+  },
+  {
+    "id": "38",
+    "name": "Tỉnh Thanh Hóa",
+    "code": "TH",
+    "districts": [
+      {
+        "id": "380",
+        "name": "Thành phố Thanh Hóa",
+        "wards": [{ "id": "14554", "name": "Phường Điện Biên" }]
+      }
+    ]
+  },
+  {
+    "id": "40",
+    "name": "Tỉnh Nghệ An",
+    "code": "NA",
+    "districts": [
+      {
+        "id": "412",
+        "name": "Thành phố Vinh",
+        "wards": [{ "id": "17062", "name": "Phường Lê Mao" }]
+      }
+    ]
+  },
+  {
+    "id": "42",
+    "name": "Tỉnh Hà Tĩnh",
+    "code": "HT",
+    "districts": [
+      {
+        "id": "439",
+        "name": "Thành phố Hà Tĩnh",
+        "wards": [{ "id": "18310", "name": "Phường Bắc Hà" }]
+      }
+    ]
+  },
+  {
+    "id": "44",
+    "name": "Tỉnh Quảng Bình",
+    "code": "QB",
+    "districts": [
+      {
+        "id": "450",
+        "name": "Thành phố Đồng Hới",
+        "wards": [{ "id": "18949", "name": "Phường Đồng Mỹ" }]
+      }
+    ]
+  },
+  {
+    "id": "45",
+    "name": "Tỉnh Quảng Trị",
+    "code": "QT",
+    "districts": [
+      { "id": "461", "name": "Thành phố Đông Hà", "wards": [{ "id": "19405", "name": "Phường 1" }] }
+    ]
+  },
+  {
+    "id": "46",
+    "name": "Tỉnh Thừa Thiên Huế",
+    "code": "TTH",
+    "districts": [
+      {
+        "id": "474",
+        "name": "Thành phố Huế",
+        "wards": [{ "id": "19750", "name": "Phường Phú Nhuận" }]
+      }
+    ]
+  },
+  {
+    "id": "49",
+    "name": "Tỉnh Quảng Nam",
+    "code": "QNA",
+    "districts": [
+      {
+        "id": "502",
+        "name": "Thành phố Tam Kỳ",
+        "wards": [{ "id": "20443", "name": "Phường An Mỹ" }]
+      }
+    ]
+  },
+  {
+    "id": "51",
+    "name": "Tỉnh Quảng Ngãi",
+    "code": "QNG",
+    "districts": [
+      {
+        "id": "522",
+        "name": "Thành phố Quảng Ngãi",
+        "wards": [{ "id": "21043", "name": "Phường Trần Hưng Đạo" }]
+      }
+    ]
+  },
+  {
+    "id": "52",
+    "name": "Tỉnh Bình Định",
+    "code": "BDI",
+    "districts": [
+      {
+        "id": "540",
+        "name": "Thành phố Quy Nhơn",
+        "wards": [{ "id": "21568", "name": "Phường Lê Hồng Phong" }]
+      }
+    ]
+  },
+  {
+    "id": "54",
+    "name": "Tỉnh Phú Yên",
+    "code": "PY",
+    "districts": [
+      { "id": "555", "name": "Thành phố Tuy Hòa", "wards": [{ "id": "22018", "name": "Phường 1" }] }
+    ]
+  },
+  {
+    "id": "56",
+    "name": "Tỉnh Khánh Hòa",
+    "code": "KH",
+    "districts": [
+      {
+        "id": "568",
+        "name": "Thành phố Nha Trang",
+        "wards": [{ "id": "22375", "name": "Phường Lộc Thọ" }]
+      }
+    ]
+  },
+  {
+    "id": "58",
+    "name": "Tỉnh Ninh Thuận",
+    "code": "NT",
+    "districts": [
+      {
+        "id": "582",
+        "name": "Thành phố Phan Rang-Tháp Chàm",
+        "wards": [{ "id": "22858", "name": "Phường Kinh Dinh" }]
+      }
+    ]
+  },
+  {
+    "id": "60",
+    "name": "Tỉnh Bình Thuận",
+    "code": "BTH",
+    "districts": [
+      {
+        "id": "593",
+        "name": "Thành phố Phan Thiết",
+        "wards": [{ "id": "23062", "name": "Phường Đức Nghĩa" }]
+      }
+    ]
+  },
+  {
+    "id": "62",
+    "name": "Tỉnh Kon Tum",
+    "code": "KT",
+    "districts": [
+      {
+        "id": "608",
+        "name": "Thành phố Kon Tum",
+        "wards": [{ "id": "23473", "name": "Phường Quyết Thắng" }]
+      }
+    ]
+  },
+  {
+    "id": "64",
+    "name": "Tỉnh Gia Lai",
+    "code": "GL",
+    "districts": [
+      {
+        "id": "622",
+        "name": "Thành phố Pleiku",
+        "wards": [{ "id": "23824", "name": "Phường Diên Hồng" }]
+      }
+    ]
+  },
+  {
+    "id": "66",
+    "name": "Tỉnh Đắk Lắk",
+    "code": "DL",
+    "districts": [
+      {
+        "id": "643",
+        "name": "Thành phố Buôn Ma Thuột",
+        "wards": [{ "id": "24415", "name": "Phường Thắng Lợi" }]
+      }
+    ]
+  },
+  {
+    "id": "67",
+    "name": "Tỉnh Đắk Nông",
+    "code": "DNO",
+    "districts": [
+      {
+        "id": "660",
+        "name": "Thành phố Gia Nghĩa",
+        "wards": [{ "id": "24883", "name": "Phường Nghĩa Thành" }]
+      }
+    ]
+  },
+  {
+    "id": "68",
+    "name": "Tỉnh Lâm Đồng",
+    "code": "LD",
+    "districts": [
+      { "id": "672", "name": "Thành phố Đà Lạt", "wards": [{ "id": "25042", "name": "Phường 1" }] }
+    ]
+  },
+  {
+    "id": "70",
+    "name": "Tỉnh Bình Phước",
+    "code": "BP",
+    "districts": [
+      {
+        "id": "688",
+        "name": "Thành phố Đồng Xoài",
+        "wards": [{ "id": "25330", "name": "Phường Tân Bình" }]
+      }
+    ]
+  },
+  {
+    "id": "72",
+    "name": "Tỉnh Tây Ninh",
+    "code": "TN",
+    "districts": [
+      {
+        "id": "703",
+        "name": "Thành phố Tây Ninh",
+        "wards": [{ "id": "25540", "name": "Phường 1" }]
+      }
+    ]
+  },
+  {
+    "id": "77",
+    "name": "Tỉnh Bà Rịa - Vũng Tàu",
+    "code": "BRVT",
+    "districts": [
+      {
+        "id": "747",
+        "name": "Thành phố Vũng Tàu",
+        "wards": [{ "id": "26500", "name": "Phường 1" }]
+      }
+    ]
+  },
+  {
+    "id": "80",
+    "name": "Tỉnh Long An",
+    "code": "LA",
+    "districts": [
+      { "id": "794", "name": "Thành phố Tân An", "wards": [{ "id": "27850", "name": "Phường 1" }] }
+    ]
+  },
+  {
+    "id": "82",
+    "name": "Tỉnh Tiền Giang",
+    "code": "TG",
+    "districts": [
+      { "id": "815", "name": "Thành phố Mỹ Tho", "wards": [{ "id": "28375", "name": "Phường 1" }] }
+    ]
+  },
+  {
+    "id": "83",
+    "name": "Tỉnh Bến Tre",
+    "code": "BT",
+    "districts": [
+      {
+        "id": "829",
+        "name": "Thành phố Bến Tre",
+        "wards": [{ "id": "28729", "name": "Phường An Hội" }]
+      }
+    ]
+  },
+  {
+    "id": "84",
+    "name": "Tỉnh Trà Vinh",
+    "code": "TV",
+    "districts": [
+      {
+        "id": "842",
+        "name": "Thành phố Trà Vinh",
+        "wards": [{ "id": "29035", "name": "Phường 1" }]
+      }
+    ]
+  },
+  {
+    "id": "86",
+    "name": "Tỉnh Vĩnh Long",
+    "code": "VL",
+    "districts": [
+      {
+        "id": "855",
+        "name": "Thành phố Vĩnh Long",
+        "wards": [{ "id": "29302", "name": "Phường 1" }]
+      }
+    ]
+  },
+  {
+    "id": "87",
+    "name": "Tỉnh Đồng Tháp",
+    "code": "DT",
+    "districts": [
+      {
+        "id": "866",
+        "name": "Thành phố Cao Lãnh",
+        "wards": [{ "id": "29569", "name": "Phường 1" }]
+      }
+    ]
+  },
+  {
+    "id": "89",
+    "name": "Tỉnh An Giang",
+    "code": "AG",
+    "districts": [
+      {
+        "id": "883",
+        "name": "Thành phố Long Xuyên",
+        "wards": [{ "id": "30046", "name": "Phường Mỹ Bình" }]
+      }
+    ]
+  },
+  {
+    "id": "91",
+    "name": "Tỉnh Kiên Giang",
+    "code": "KG",
+    "districts": [
+      {
+        "id": "899",
+        "name": "Thành phố Rạch Giá",
+        "wards": [{ "id": "30520", "name": "Phường Vĩnh Thanh Vân" }]
+      }
+    ]
+  },
+  {
+    "id": "93",
+    "name": "Tỉnh Hậu Giang",
+    "code": "HGI",
+    "districts": [
+      {
+        "id": "930",
+        "name": "Thành phố Vị Thanh",
+        "wards": [{ "id": "31390", "name": "Phường I" }]
+      }
+    ]
+  },
+  {
+    "id": "94",
+    "name": "Tỉnh Sóc Trăng",
+    "code": "ST",
+    "districts": [
+      {
+        "id": "941",
+        "name": "Thành phố Sóc Trăng",
+        "wards": [{ "id": "31561", "name": "Phường 1" }]
+      }
+    ]
+  },
+  {
+    "id": "95",
+    "name": "Tỉnh Bạc Liêu",
+    "code": "BL",
+    "districts": [
+      {
+        "id": "954",
+        "name": "Thành phố Bạc Liêu",
+        "wards": [{ "id": "31828", "name": "Phường 1" }]
+      }
+    ]
+  },
+  {
+    "id": "96",
+    "name": "Tỉnh Cà Mau",
+    "code": "CM",
+    "districts": [
+      { "id": "964", "name": "Thành phố Cà Mau", "wards": [{ "id": "32095", "name": "Phường 1" }] }
+    ]
+  }
+]

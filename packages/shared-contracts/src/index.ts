@@ -18,3 +18,4 @@ export * from './sales';
 export * from './llm';
 export * from './conversation-intelligence';
 export * from './copilot';
+export * from './pos';

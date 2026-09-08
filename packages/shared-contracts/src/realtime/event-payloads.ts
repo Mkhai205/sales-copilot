@@ -71,6 +71,14 @@ export enum DomainEvent {
   COPILOT_SUGGESTION_GENERATED = 'copilot.suggestion_generated',
   COPILOT_SUGGESTION_CHUNK = 'copilot.suggestion_chunk',
   COPILOT_SUGGESTION_ACTED = 'copilot.suggestion_acted',
+
+  // POS & Order Automation events (Milestone M1)
+  ORDER_CREATED = 'order.created',
+  ORDER_CONFIRMED = 'order.confirmed',
+  ORDER_PAID = 'order.paid',
+  ORDER_PARTIALLY_PAID = 'order.partially_paid',
+  ORDER_CANCELLED = 'order.cancelled',
+  INVENTORY_UPDATED = 'inventory.updated',
 }
 
 // ============================================================================
@@ -289,5 +297,72 @@ export interface CopilotSuggestionActedPayload extends BaseDomainEventPayload {
   suggestionId: string;
   action: string;
   userId?: string | null;
+  reason?: string | null;
+}
+
+// ============================================================================
+// 11. POS & Order Automation Event Payloads (Milestone M1)
+// ============================================================================
+
+export interface OrderCreatedEventPayload extends BaseDomainEventPayload {
+  orderId: string;
+  orderNumber: string;
+  displayId: number;
+  conversationId?: string | null;
+  order: Record<string, unknown>;
+}
+
+export interface OrderConfirmedEventPayload extends BaseDomainEventPayload {
+  orderId: string;
+  orderNumber: string;
+  displayId: number;
+  conversationId?: string | null;
+  confirmedAt: string | Date;
+  reservedItems?: Array<{ variantId: string; quantity: number }>;
+  order: Record<string, unknown>;
+}
+
+export interface OrderPaidEventPayload extends BaseDomainEventPayload {
+  orderId: string;
+  orderNumber: string;
+  displayId: number;
+  conversationId?: string | null;
+  paidAmount: number;
+  paymentMethod: string;
+  transactionCode?: string | null;
+  order: Record<string, unknown>;
+}
+
+export interface OrderPartiallyPaidEventPayload extends BaseDomainEventPayload {
+  orderId: string;
+  orderNumber: string;
+  displayId: number;
+  conversationId?: string | null;
+  paidAmount: number;
+  totalAmount: number;
+  remainingAmount: number;
+  paymentMethod: string;
+  transactionCode?: string | null;
+  order: Record<string, unknown>;
+}
+
+export interface OrderCancelledEventPayload extends BaseDomainEventPayload {
+  orderId: string;
+  orderNumber: string;
+  displayId: number;
+  conversationId?: string | null;
+  cancelReason?: string | null;
+  releasedStock: boolean;
+  order: Record<string, unknown>;
+}
+
+export interface InventoryUpdatedEventPayload extends BaseDomainEventPayload {
+  variantId: string;
+  sku: string;
+  previousStock: number;
+  newStock: number;
+  previousReserved: number;
+  newReserved: number;
+  availableStock: number;
   reason?: string | null;
 }

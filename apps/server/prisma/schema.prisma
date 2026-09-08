@@ -172,6 +172,94 @@ enum SuggestionStatus {
   EXPIRED
 }
 
+// =============================================================================
+// ENUMS: IN-CHAT POS & ORDER CLOSING AUTOMATION
+// =============================================================================
+
+enum OrderStatus {
+  DRAFT
+  CONFIRMED
+  PAID
+  SHIPPING
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  UNPAID
+  PARTIALLY_PAID
+  PAID
+  REFUNDED
+}
+
+enum FulfillmentStatus {
+  UNFULFILLED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  RETURNED
+  CANCELLED
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
+}
+
+enum PaymentMethod {
+  VIETQR
+  BANK_TRANSFER
+  COD
+  CASH
+  CREDIT_CARD
+  OTHER
+}
+
+enum PaymentGateway {
+  SEPAY
+  CASSO
+  MANUAL
+  VNPAY
+  MOMO
+}
+
+enum PaymentTransactionStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  EXPIRED
+  CANCELLED
+}
+
+enum CarrierProvider {
+  GHTK
+  GHN
+  VIETTEL_POST
+  AHAMOVE
+  CUSTOM
+}
+
+enum CarrierNetwork {
+  VIETTEL
+  VINAPHONE
+  MOBIFONE
+  VIETNAMOBILE
+  GMOBILE
+  ITEL
+  WINTEL
+  OTHER
+}
+
+enum InventoryTransactionType {
+  STOCK_IN
+  STOCK_OUT
+  RESERVATION
+  RELEASE_RESERVATION
+  COMMIT_SALE
+  RETURN_RESTOCK
+  INVENTORY_AUDIT
+}
+
 model User {
   id           String       @id @default(uuid())
   email        String       @unique
@@ -193,6 +281,8 @@ model User {
   createdTemplates      PromptTemplate[]    @relation("UserCreatedTemplates")
   resolvedSuggestions   CopilotSuggestion[] @relation("UserResolvedSuggestions")
   auditLogs             AuditLog[]
+  createdOrders                  Order[]                @relation("UserCreatedOrders")
+  performedInventoryTransactions InventoryTransaction[] @relation("UserInventoryTransactions")
 
   @@map("users")
 }
@@ -228,6 +318,13 @@ model Workspace {
   leadScoreHistories   LeadScoreHistory[]
   promptTemplates      PromptTemplate[]
   copilotSuggestions   CopilotSuggestion[]
+  products              Product[]
+  productVariants       ProductVariant[]
+  orders                Order[]
+  orderItems            OrderItem[]
+  shippingAddresses     ShippingAddress[]
+  paymentTransactions   PaymentTransaction[]
+  inventoryTransactions InventoryTransaction[]
 
   @@map("workspaces")
 }
@@ -296,6 +393,8 @@ model Contact {
   conversations Conversation[]
   leads         Lead[]
   opportunities Opportunity[]
+  orders            Order[]
+  shippingAddresses ShippingAddress[]
 
   @@unique([workspaceId, identifier])
   @@index([workspaceId, email])
@@ -427,6 +526,7 @@ model Conversation {
   labels             ConversationLabel[]
   salesEvidences     SalesEvidence[]
   copilotSuggestions CopilotSuggestion[]
+  orders             Order[]
 
   @@unique([workspaceId, displayId])
   @@index([workspaceId, status])
@@ -629,6 +729,7 @@ model Lead {
   scoreRecord    LeadScore?
   scoreHistories LeadScoreHistory[]
   suggestions    CopilotSuggestion[]
+  orders         Order[]
 
   @@unique([workspaceId, contactId])
   @@index([workspaceId, status])
@@ -662,6 +763,7 @@ model Opportunity {
   lead         Lead?     @relation(fields: [leadId], references: [id], onDelete: SetNull)
   contact      Contact   @relation(fields: [contactId], references: [id], onDelete: Restrict)
   assignedUser User?     @relation("UserAssignedOpportunities", fields: [assignedUserId], references: [id], onDelete: SetNull)
+  orders       Order[]
 
   @@index([workspaceId, stage])
   @@index([workspaceId, assignedUserId])
@@ -802,4 +904,257 @@ model CopilotSuggestion {
   @@index([workspaceId, leadId])
   @@map("copilot_suggestions")
 }
+
+// =============================================================================
+// MODELS: IN-CHAT POS & COMMERCE
+// =============================================================================
+
+model Product {
+  id             String           @id @default(uuid())
+  workspaceId    String
+  name           String
+  slug           String
+  description    String?          @db.Text
+  category       String?
+  basePrice      Decimal          @db.Decimal(15, 2)
+  costPrice      Decimal          @default(0) @db.Decimal(15, 2)
+  sku            String
+  barcode        String?
+  imageUrl       String?
+  images         Json             @default("[]")
+  isActive       Boolean          @default(true)
+  trackInventory Boolean          @default(true)
+  metadata       Json             @default("{}")
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  workspace      Workspace        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  variants       ProductVariant[]
+  orderItems     OrderItem[]
+
+  @@unique([workspaceId, id])
+  @@unique([workspaceId, sku])
+  @@unique([workspaceId, slug])
+  @@index([workspaceId, isActive])
+  @@index([workspaceId, barcode])
+  @@index([workspaceId, name])
+  @@index([workspaceId, category])
+  @@map("products")
+}
+
+model ProductVariant {
+  id                    String                 @id @default(uuid())
+  workspaceId           String
+  productId             String
+  name                  String                 // e.g., "Size XL / Xanh Navy"
+  sku                   String
+  barcode               String?
+  price                 Decimal                @db.Decimal(15, 2)
+  costPrice             Decimal                @default(0) @db.Decimal(15, 2)
+  stockQuantity         Int                    @default(0) // Physical available on-hand stock
+  reservedQuantity      Int                    @default(0) // Reserved for CONFIRMED orders
+  imageUrl              String?
+  attributes            Json                   @default("{}") // e.g., {"size": "XL", "color": "Navy"}
+  isActive              Boolean                @default(true)
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+
+  workspace             Workspace              @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  product               Product                @relation(fields: [productId], references: [id], onDelete: Cascade)
+  orderItems            OrderItem[]
+  inventoryTransactions InventoryTransaction[]
+
+  @@unique([workspaceId, id])
+  @@unique([workspaceId, sku])
+  @@index([workspaceId, productId])
+  @@index([workspaceId, barcode])
+  @@index([workspaceId, isActive])
+  @@map("product_variants")
+}
+
+model Order {
+  id                    String                 @id @default(uuid())
+  displayId             Int                    @default(autoincrement())
+  orderNumber           String                 // e.g., "ORD-20260908-1004"
+  workspaceId           String
+  conversationId        String?
+  contactId             String
+  leadId                String?
+  opportunityId         String?
+  createdById           String?
+
+  status                OrderStatus            @default(DRAFT)
+  paymentStatus         PaymentStatus          @default(UNPAID)
+  fulfillmentStatus     FulfillmentStatus      @default(UNFULFILLED)
+
+  subtotal              Decimal                @db.Decimal(15, 2)
+  discountAmount        Decimal                @default(0) @db.Decimal(15, 2)
+  discountType          DiscountType           @default(FIXED_AMOUNT)
+  discountReason        String?
+  shippingFee           Decimal                @default(0) @db.Decimal(15, 2)
+  taxAmount             Decimal                @default(0) @db.Decimal(15, 2)
+  totalAmount           Decimal                @db.Decimal(15, 2)
+  paidAmount            Decimal                @default(0) @db.Decimal(15, 2)
+  currency              String                 @default("VND")
+
+  customerNotes         String?                @db.Text
+  internalNotes         String?                @db.Text
+  cancelReason          String?                @db.Text
+
+  confirmedAt           DateTime?
+  paidAt                DateTime?
+  shippedAt             DateTime?
+  completedAt           DateTime?
+  cancelledAt           DateTime?
+
+  metadata              Json                   @default("{}")
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+
+  workspace             Workspace              @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  conversation          Conversation?          @relation(fields: [conversationId], references: [id], onDelete: SetNull)
+  contact               Contact                @relation(fields: [contactId], references: [id], onDelete: Restrict)
+  lead                  Lead?                  @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  opportunity           Opportunity?           @relation(fields: [opportunityId], references: [id], onDelete: SetNull)
+  createdBy             User?                  @relation("UserCreatedOrders", fields: [createdById], references: [id], onDelete: SetNull)
+
+  items                 OrderItem[]
+  shippingAddress       ShippingAddress?
+  paymentTransactions   PaymentTransaction[]
+  inventoryTransactions InventoryTransaction[]
+
+  @@unique([workspaceId, id])
+  @@unique([workspaceId, displayId])
+  @@unique([workspaceId, orderNumber])
+  @@index([workspaceId, status])
+  @@index([workspaceId, paymentStatus])
+  @@index([workspaceId, contactId])
+  @@index([workspaceId, conversationId])
+  @@index([workspaceId, leadId])
+  @@index([workspaceId, opportunityId])
+  @@index([workspaceId, createdAt])
+  @@map("orders")
+}
+
+model OrderItem {
+  id             String          @id @default(uuid())
+  workspaceId    String
+  orderId        String
+  productId      String
+  variantId      String
+  productName    String          // Snapshot at time of order
+  variantName    String          // Snapshot at time of order
+  sku            String          // Snapshot at time of order
+  unitPrice      Decimal         @db.Decimal(15, 2)
+  costPrice      Decimal         @default(0) @db.Decimal(15, 2)
+  quantity       Int
+  discountAmount Decimal         @default(0) @db.Decimal(15, 2)
+  totalPrice     Decimal         @db.Decimal(15, 2)
+  metadata       Json            @default("{}")
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  workspace      Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  order          Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product        Product         @relation(fields: [productId], references: [id], onDelete: Restrict)
+  variant        ProductVariant  @relation(fields: [variantId], references: [id], onDelete: Restrict)
+
+  @@unique([workspaceId, id])
+  @@index([workspaceId, orderId])
+  @@index([workspaceId, productId])
+  @@index([workspaceId, variantId])
+  @@map("order_items")
+}
+
+model ShippingAddress {
+  id              String          @id @default(uuid())
+  workspaceId     String
+  orderId         String          @unique
+  contactId       String?
+  recipientName   String
+  phoneNumber     String
+  carrierNetwork  CarrierNetwork  @default(OTHER)
+  streetAddress   String          // e.g., "Số 45 ngõ 120 Trường Chinh"
+  ward            String          // Phường / Xã
+  district        String          // Quận / Huyện
+  province        String          // Tỉnh / Thành phố
+  country         String          @default("VN")
+  postalCode      String?
+  shippingCarrier CarrierProvider @default(CUSTOM)
+  trackingCode    String?
+  shippingNotes   String?         @db.Text
+  carrierMetadata Json?           @default("{}")
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  workspace       Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  order           Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  contact         Contact?        @relation(fields: [contactId], references: [id], onDelete: SetNull)
+
+  @@unique([workspaceId, id])
+  @@index([workspaceId, trackingCode])
+  @@index([workspaceId, phoneNumber])
+  @@index([workspaceId, province, district])
+  @@map("shipping_addresses")
+}
+
+model PaymentTransaction {
+  id                 String                   @id @default(uuid())
+  workspaceId        String
+  orderId            String
+  paymentMethod      PaymentMethod            @default(VIETQR)
+  gateway            PaymentGateway           @default(MANUAL)
+  amount             Decimal                  @db.Decimal(15, 2)
+  currency           String                   @default("VND")
+  status             PaymentTransactionStatus @default(PENDING)
+  transactionCode    String?                  // Bank / Gateway transaction reference
+  accountNumber      String?                  // Receiving bank account
+  bankCode           String?                  // Bank short code: "MB", "VCB", "TCB", "ICB"
+  transferContent    String?                  // Transfer memo e.g., "ORD 1004"
+  qrUrl              String?                  @db.Text
+  rawWebhookPayload  Json?
+  idempotencyKey     String                   // Unique key per gateway event
+  paidAt             DateTime?
+  createdAt          DateTime                 @default(now())
+  updatedAt          DateTime                 @updatedAt
+
+  workspace          Workspace                @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  order              Order                    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, id])
+  @@unique([workspaceId, idempotencyKey])
+  @@index([workspaceId, orderId])
+  @@index([workspaceId, transactionCode])
+  @@index([workspaceId, status])
+  @@index([workspaceId, createdAt])
+  @@map("payment_transactions")
+}
+
+model InventoryTransaction {
+  id                 String                   @id @default(uuid())
+  workspaceId        String
+  variantId          String
+  orderId            String?
+  type               InventoryTransactionType
+  quantity           Int                      // Number of units affected (positive integer)
+  previousStock      Int                      // Stock quantity before transaction
+  newStock           Int                      // Stock quantity after transaction
+  previousReserved   Int                      // Reserved quantity before transaction
+  newReserved        Int                      // Reserved quantity after transaction
+  reason             String?
+  performedByUserId  String?
+  createdAt          DateTime                 @default(now())
+
+  workspace          Workspace                @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  variant            ProductVariant           @relation(fields: [variantId], references: [id], onDelete: Restrict)
+  order              Order?                   @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  performedByUser    User?                    @relation("UserInventoryTransactions", fields: [performedByUserId], references: [id], onDelete: SetNull)
+
+  @@unique([workspaceId, id])
+  @@index([workspaceId, variantId, createdAt])
+  @@index([workspaceId, orderId])
+  @@index([workspaceId, type])
+  @@map("inventory_transactions")
+}
+
 
