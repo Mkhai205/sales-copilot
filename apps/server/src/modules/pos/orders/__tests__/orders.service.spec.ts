@@ -1,6 +1,7 @@
 import { describe, it, beforeEach } from 'node:test';
 import * as assert from 'node:assert';
 import {
+  DiscountType,
   DomainEvent,
   InventoryTransactionType,
   OrderStatus,
@@ -288,12 +289,39 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
           return { count };
         },
       },
+      orderItem: {
+        deleteMany: async ({ where }: any) => {
+          let count = 0;
+          for (const [id, item] of Array.from(orderItemsDb.entries())) {
+            if (where.orderId && item.orderId !== where.orderId) continue;
+            if (where.workspaceId && item.workspaceId !== where.workspaceId) continue;
+            orderItemsDb.delete(id);
+            count++;
+          }
+          return { count };
+        },
+        createMany: async ({ data }: any) => {
+          for (const item of data) {
+            const id = `item_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+            orderItemsDb.set(id, { id, ...item, createdAt: new Date(), updatedAt: new Date() });
+          }
+          return { count: data.length };
+        },
+      },
       shippingAddress: {
         create: async ({ data }: any) => {
           const id = `sa_${Date.now()}`;
           const record = { id, ...data, createdAt: new Date(), updatedAt: new Date() };
           shippingAddressesDb.set(data.orderId, record);
           return record;
+        },
+        deleteMany: async ({ where }: any) => {
+          let count = 0;
+          if (where.orderId && shippingAddressesDb.has(where.orderId)) {
+            shippingAddressesDb.delete(where.orderId);
+            count++;
+          }
+          return { count };
         },
       },
       paymentTransaction: {
@@ -792,6 +820,153 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
       await assert.rejects(
         async () => {
           await service.getOrderById(ws2, order.id);
+        },
+        (err: any) => {
+          assert.strictEqual(err.response?.code, 'ORDER_NOT_FOUND');
+          return true;
+        },
+      );
+    });
+  });
+
+  describe('updateOrder', () => {
+    it('should update draft order line items, shipping fee, discount, and address', async () => {
+      const order = await service.createOrder(ws1, {
+        contactId: contact1,
+        items: [{ productId: prod1, variantId: varA, quantity: 1, unitPrice: 350000 }],
+        shippingFee: 20000,
+      });
+
+      emittedEvents = [];
+
+      const updated = await service.updateOrder(
+        ws1,
+        order.id,
+        {
+          items: [
+            { productId: prod1, variantId: varA, quantity: 2, unitPrice: 350000 },
+            { productId: prod1, variantId: varB, quantity: 1, unitPrice: 350000 },
+          ],
+          discountAmount: 100000,
+          shippingFee: 30000,
+          customerNotes: 'Giao hàng giờ hành chính',
+          shippingAddress: {
+            recipientName: 'Nguyễn Văn An Cập Nhật',
+            phoneNumber: '0988121234',
+            streetAddress: '15 Duy Tân',
+            ward: 'Dịch Vọng Hậu',
+            district: 'Cầu Giấy',
+            province: 'Hà Nội',
+          },
+        },
+        userId,
+      );
+
+      assert.strictEqual(updated.id, order.id);
+      assert.strictEqual(updated.status, OrderStatus.DRAFT);
+      assert.strictEqual(updated.subtotal, 1050000); // 2 * 350k + 1 * 350k
+      assert.strictEqual(updated.discountAmount, 100000);
+      assert.strictEqual(updated.shippingFee, 30000);
+      assert.strictEqual(updated.totalAmount, 980000); // 1050000 - 100000 + 30000
+      assert.strictEqual(updated.customerNotes, 'Giao hàng giờ hành chính');
+      assert.strictEqual(updated.items?.length, 2);
+      assert.strictEqual(updated.shippingAddress?.recipientName, 'Nguyễn Văn An Cập Nhật');
+      assert.strictEqual(updated.shippingAddress?.streetAddress, '15 Duy Tân');
+
+      // Verify domain event emitted
+      assert.strictEqual(emittedEvents.length, 1);
+      assert.strictEqual(emittedEvents[0].event, DomainEvent.ORDER_UPDATED);
+      assert.strictEqual(emittedEvents[0].payload.orderId, order.id);
+    });
+
+    it('should preserve and correctly recalculate percentage discount when items change and discountAmount is not passed', async () => {
+      // Subtotal = 500k. 10% discount => discountAmount = 50,000, total = 450,000
+      const order = await service.createOrder(ws1, {
+        contactId: contact1,
+        items: [{ productId: prod1, variantId: varA, quantity: 1, unitPrice: 500000 }],
+        discountType: DiscountType.PERCENTAGE,
+        discountAmount: 10,
+        shippingFee: 0,
+      });
+
+      assert.strictEqual(order.subtotal, 500000);
+      assert.strictEqual(order.discountAmount, 50000);
+      assert.strictEqual(order.totalAmount, 450000);
+
+      // Now update order: change items to 2 units (subtotal = 1,000,000), without passing discountAmount or discountType
+      const updated = await service.updateOrder(
+        ws1,
+        order.id,
+        {
+          items: [{ productId: prod1, variantId: varA, quantity: 2, unitPrice: 500000 }],
+        },
+        userId,
+      );
+
+      // Should maintain 10% discount on new subtotal: 10% of 1,000,000 = 100,000
+      assert.strictEqual(updated.subtotal, 1000000);
+      assert.strictEqual(updated.discountAmount, 100000);
+      assert.strictEqual(updated.totalAmount, 900000);
+    });
+
+    it('should correctly update order with a new percentage discount', async () => {
+      const order = await service.createOrder(ws1, {
+        contactId: contact1,
+        items: [{ productId: prod1, variantId: varA, quantity: 1, unitPrice: 500000 }],
+        shippingFee: 0,
+      });
+
+      assert.strictEqual(order.subtotal, 500000);
+      assert.strictEqual(order.discountAmount, 0);
+
+      // Update with 20% discount
+      const updated = await service.updateOrder(
+        ws1,
+        order.id,
+        {
+          discountType: DiscountType.PERCENTAGE,
+          discountAmount: 20,
+        },
+        userId,
+      );
+
+      assert.strictEqual(updated.subtotal, 500000);
+      assert.strictEqual(updated.discountAmount, 100000); // 20% of 500,000
+      assert.strictEqual(updated.totalAmount, 400000);
+    });
+
+    it('should reject updating order if not in DRAFT status', async () => {
+      const order = await service.createOrder(ws1, {
+        contactId: contact1,
+        items: [{ productId: prod1, variantId: varA, quantity: 1, unitPrice: 350000 }],
+      });
+
+      await service.confirmOrder(ws1, order.id, userId);
+
+      await assert.rejects(
+        async () => {
+          await service.updateOrder(ws1, order.id, {
+            shippingFee: 50000,
+          });
+        },
+        (err: any) => {
+          assert.strictEqual(err.response?.code, 'INVALID_STATUS_FOR_UPDATE');
+          return true;
+        },
+      );
+    });
+
+    it('should reject updating order belonging to another workspace (multi-tenant guard)', async () => {
+      const order = await service.createOrder(ws1, {
+        contactId: contact1,
+        items: [{ productId: prod1, variantId: varA, quantity: 1, unitPrice: 350000 }],
+      });
+
+      await assert.rejects(
+        async () => {
+          await service.updateOrder(ws2, order.id, {
+            shippingFee: 50000,
+          });
         },
         (err: any) => {
           assert.strictEqual(err.response?.code, 'ORDER_NOT_FOUND');

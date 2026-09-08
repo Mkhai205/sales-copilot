@@ -39,6 +39,13 @@ import {
   LeadScoreUpdatedEventPayload,
   CopilotSuggestionGeneratedPayload,
   CopilotSuggestionActedPayload,
+  OrderCreatedEventPayload,
+  OrderUpdatedEventPayload,
+  OrderConfirmedEventPayload,
+  OrderPaidEventPayload,
+  OrderPartiallyPaidEventPayload,
+  OrderCancelledEventPayload,
+  InventoryUpdatedEventPayload,
 } from '@sales-copilot/shared-contracts';
 import { RealtimeGateway } from './realtime.gateway';
 
@@ -632,7 +639,123 @@ export class RealtimeEventDispatcher {
   }
 
   // ==========================================================================
-  // 12. Helper Method with Robust Error Isolation
+  // 12. POS & Order Domain Event Handlers (Milestone M1 & M2)
+  // ==========================================================================
+
+  @OnEvent(DomainEvent.ORDER_CREATED)
+  @OnEvent('order.created')
+  handleOrderCreated(payload: OrderCreatedEventPayload): void {
+    if (!payload?.workspaceId) return;
+
+    if (payload.conversationId) {
+      this.broadcastSafe(
+        `conversation_${payload.conversationId}`,
+        WsServerEvent.ORDER_CREATED,
+        payload,
+      );
+    }
+
+    this.broadcastSafe(`workspace_${payload.workspaceId}`, WsServerEvent.ORDER_CREATED, payload);
+  }
+
+  @OnEvent(DomainEvent.ORDER_UPDATED)
+  @OnEvent('order.updated')
+  handleOrderUpdated(payload: OrderUpdatedEventPayload): void {
+    if (!payload?.workspaceId) return;
+
+    if (payload.conversationId) {
+      this.broadcastSafe(
+        `conversation_${payload.conversationId}`,
+        WsServerEvent.ORDER_UPDATED,
+        payload,
+      );
+    }
+
+    this.broadcastSafe(`workspace_${payload.workspaceId}`, WsServerEvent.ORDER_UPDATED, payload);
+  }
+
+  @OnEvent(DomainEvent.ORDER_CONFIRMED)
+  @OnEvent('order.confirmed')
+  handleOrderConfirmed(payload: OrderConfirmedEventPayload): void {
+    if (!payload?.workspaceId) return;
+
+    if (payload.conversationId) {
+      this.broadcastSafe(
+        `conversation_${payload.conversationId}`,
+        WsServerEvent.ORDER_CONFIRMED,
+        payload,
+      );
+    }
+
+    this.broadcastSafe(`workspace_${payload.workspaceId}`, WsServerEvent.ORDER_CONFIRMED, payload);
+  }
+
+  @OnEvent(DomainEvent.ORDER_PAID)
+  @OnEvent('order.paid')
+  handleOrderPaid(payload: OrderPaidEventPayload): void {
+    if (!payload?.workspaceId) return;
+
+    if (payload.conversationId) {
+      this.broadcastSafe(
+        `conversation_${payload.conversationId}`,
+        WsServerEvent.ORDER_PAID,
+        payload,
+      );
+    }
+
+    this.broadcastSafe(`workspace_${payload.workspaceId}`, WsServerEvent.ORDER_PAID, payload);
+  }
+
+  @OnEvent(DomainEvent.ORDER_PARTIALLY_PAID)
+  @OnEvent('order.partially_paid')
+  handleOrderPartiallyPaid(payload: OrderPartiallyPaidEventPayload): void {
+    if (!payload?.workspaceId) return;
+
+    if (payload.conversationId) {
+      this.broadcastSafe(
+        `conversation_${payload.conversationId}`,
+        WsServerEvent.ORDER_PARTIALLY_PAID,
+        payload,
+      );
+    }
+
+    this.broadcastSafe(
+      `workspace_${payload.workspaceId}`,
+      WsServerEvent.ORDER_PARTIALLY_PAID,
+      payload,
+    );
+  }
+
+  @OnEvent(DomainEvent.ORDER_CANCELLED)
+  @OnEvent('order.cancelled')
+  handleOrderCancelled(payload: OrderCancelledEventPayload): void {
+    if (!payload?.workspaceId) return;
+
+    if (payload.conversationId) {
+      this.broadcastSafe(
+        `conversation_${payload.conversationId}`,
+        WsServerEvent.ORDER_CANCELLED,
+        payload,
+      );
+    }
+
+    this.broadcastSafe(`workspace_${payload.workspaceId}`, WsServerEvent.ORDER_CANCELLED, payload);
+  }
+
+  @OnEvent(DomainEvent.INVENTORY_UPDATED)
+  @OnEvent('inventory.updated')
+  handleInventoryUpdated(payload: InventoryUpdatedEventPayload): void {
+    if (!payload?.workspaceId) return;
+
+    this.broadcastSafe(
+      `workspace_${payload.workspaceId}`,
+      WsServerEvent.INVENTORY_UPDATED,
+      payload,
+    );
+  }
+
+  // ==========================================================================
+  // 13. Helper Method with Robust Error Isolation
   // ==========================================================================
 
   /**

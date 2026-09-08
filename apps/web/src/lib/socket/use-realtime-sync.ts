@@ -484,4 +484,38 @@ export function useRealtimeSync(): void {
       });
     }
   });
+
+  // ==========================================================================
+  // 5. POS & Orders Events (Milestone M2)
+  // ==========================================================================
+
+  const handleOrderEvent = (payload: any) => {
+    const order = payload?.order || payload;
+    const conversationId = order?.conversationId;
+    const contactId = order?.contactId;
+
+    queryClient.invalidateQueries({ queryKey: ['pos-orders'] });
+    queryClient.invalidateQueries({ queryKey: ['active-conversation-order'] });
+    if (conversationId) {
+      queryClient.invalidateQueries({
+        queryKey: ['active-conversation-order', conversationId],
+      });
+    }
+    if (contactId) {
+      queryClient.invalidateQueries({
+        queryKey: ['active-conversation-order', contactId],
+      });
+    }
+  };
+
+  useSocketEvent(WsServerEvent.ORDER_CREATED, handleOrderEvent);
+  useSocketEvent(WsServerEvent.ORDER_UPDATED, handleOrderEvent);
+  useSocketEvent(WsServerEvent.ORDER_CONFIRMED, handleOrderEvent);
+  useSocketEvent(WsServerEvent.ORDER_PAID, handleOrderEvent);
+  useSocketEvent(WsServerEvent.ORDER_PARTIALLY_PAID, handleOrderEvent);
+  useSocketEvent(WsServerEvent.ORDER_CANCELLED, handleOrderEvent);
+
+  useSocketEvent(WsServerEvent.INVENTORY_UPDATED, () => {
+    queryClient.invalidateQueries({ queryKey: ['pos-products'] });
+  });
 }

@@ -5,3 +5,4 @@ export * from './payment.schemas';
 export * from './inventory.schemas';
 export * from './shipping.schemas';
 export * from './address';
+export * from './vietnam-telco';

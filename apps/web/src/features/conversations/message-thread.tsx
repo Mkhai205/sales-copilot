@@ -63,6 +63,7 @@ import { ImageLightboxDialog } from './image-lightbox-dialog';
 import { MessageImageGrid, isImageAttachment } from './message-image-grid';
 import { MessageActionsToolbar } from './message-actions-toolbar';
 import { CopilotDock, CopilotDrawer, useCopilotSuggestions } from '@/features/copilot';
+import { QuickTagActionBar } from './quick-tag-action-bar';
 
 interface MessageThreadProps {
   conversationId: string;
@@ -70,6 +71,7 @@ interface MessageThreadProps {
   workspaceId?: string;
   isDetailOpen?: boolean;
   onToggleDetail?: () => void;
+  onOpenPosDrawer?: () => void;
 }
 
 function formatMessageTime(dateInput?: string): string {
@@ -649,6 +651,7 @@ export function MessageThread({
   workspaceId,
   isDetailOpen = true,
   onToggleDetail = () => {},
+  onOpenPosDrawer,
 }: MessageThreadProps) {
   useConversationRoom(conversationId);
 
@@ -722,6 +725,7 @@ export function MessageThread({
         isCopilotOpen={isCopilotOpen}
         onToggleCopilot={() => setIsCopilotOpen(prev => !prev)}
         pendingSuggestionsCount={copilotSuggestions.length}
+        onOpenPosDrawer={onOpenPosDrawer}
       />
 
       {/* Message Stream Area */}
@@ -826,6 +830,13 @@ export function MessageThread({
           onOpenDrawer={() => setIsCopilotOpen(true)}
         />
       )}
+
+      {/* Ergonomic Quick Tag Action Bar */}
+      <QuickTagActionBar
+        workspaceId={activeWorkspaceId}
+        conversationId={conversationId}
+        conversation={conversation}
+      />
 
       {/* Live Message Composer */}
       <ChatComposer

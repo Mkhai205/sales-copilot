@@ -68,6 +68,16 @@ export enum WsServerEvent {
   COPILOT_SUGGESTION_GENERATED = 'copilot.suggestion_generated',
   COPILOT_SUGGESTION_CHUNK = 'copilot.suggestion_chunk',
   COPILOT_SUGGESTION_ACTED = 'copilot.suggestion_acted',
+
+  // POS & Order events (Milestone M1 & M2)
+  ORDER_CREATED = 'order.created',
+  ORDER_UPDATED = 'order.updated',
+  ORDER_CONFIRMED = 'order.confirmed',
+  ORDER_PAID = 'order.paid',
+  ORDER_PARTIALLY_PAID = 'order.partially_paid',
+  ORDER_CANCELLED = 'order.cancelled',
+  INVENTORY_UPDATED = 'inventory.updated',
+  POS_COLLISION_STATUS = 'pos.collision_status',
 }
 
 // ============================================================================
@@ -82,6 +92,12 @@ export enum WsClientEvent {
   START_TYPING = 'start_typing',
   STOP_TYPING = 'stop_typing',
   HEARTBEAT = 'heartbeat',
+
+  // POS Collision events (Milestone M2)
+  POS_EDITING_START = 'pos.editing_start',
+  POS_EDITING_HEARTBEAT = 'pos.editing_heartbeat',
+  POS_EDITING_STOP = 'pos.editing_stop',
+  POS_EDITING_TAKEOVER = 'pos.editing_takeover',
 }
 
 // ============================================================================
@@ -136,3 +152,9 @@ export const leadScoreUpdatedEventPayloadSchema = z.object({
   triggerReason: z.string(),
 });
 export type LeadScoreUpdatedEventPayloadDto = z.infer<typeof leadScoreUpdatedEventPayloadSchema>;
+
+export const posEditingActionSchema = z.object({
+  workspaceId: z.string().uuid('Invalid workspace ID format (UUID expected)'),
+  conversationId: z.string().uuid('Invalid conversation ID format (UUID expected)'),
+});
+export type PosEditingActionDto = z.infer<typeof posEditingActionSchema>;

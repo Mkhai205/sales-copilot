@@ -10,6 +10,7 @@ import {
   UserPlus,
   AlertTriangle,
   Sparkles,
+  ShoppingBag,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -29,6 +30,7 @@ interface MessageThreadHeaderProps {
   isCopilotOpen?: boolean;
   onToggleCopilot?: () => void;
   pendingSuggestionsCount?: number;
+  onOpenPosDrawer?: () => void;
 }
 
 export function MessageThreadHeader({
@@ -40,6 +42,7 @@ export function MessageThreadHeader({
   isCopilotOpen = false,
   onToggleCopilot,
   pendingSuggestionsCount = 0,
+  onOpenPosDrawer,
 }: MessageThreadHeaderProps) {
   const { t } = useI18n();
 
@@ -243,6 +246,27 @@ export function MessageThreadHeader({
             <TooltipContent side="bottom">
               {isCopilotOpen ? 'Đóng trợ lý Sales Copilot' : 'Mở trợ lý Sales Copilot'}
             </TooltipContent>
+          </Tooltip>
+        )}
+
+        {onOpenPosDrawer && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onOpenPosDrawer}
+                disabled={isLoading || !conversation}
+                className="h-7 text-xs gap-1.5 font-medium border-primary/40 text-primary hover:bg-primary/10 hover:text-primary transition-colors"
+              >
+                <ShoppingBag className="size-3.5" />
+                <span>Tạo đơn</span>
+                <kbd className="hidden lg:inline-flex text-[9px] font-mono bg-primary/10 text-primary px-1 rounded">
+                  F4
+                </kbd>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">Mở POS lập đơn hàng nhanh (F4)</TooltipContent>
           </Tooltip>
         )}
 

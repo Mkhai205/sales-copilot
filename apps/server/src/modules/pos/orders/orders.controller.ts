@@ -1,13 +1,24 @@
-import { Controller, Get, HttpCode, HttpStatus, Param, Post, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiHeader, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import {
   WorkspaceRole,
   cancelOrderSchema,
   createOrderSchema,
+  updateOrderSchema,
   listOrdersQuerySchema,
   manualPayOrderSchema,
   type CancelOrderDto,
   type CreateOrderDto,
+  type UpdateOrderDto,
   type ListOrdersQueryOutput,
   type ManualPayOrderDto,
   type OrderResponseDto,
@@ -70,6 +81,22 @@ export class OrdersController {
     @ZodBody(createOrderSchema) dto: CreateOrderDto,
   ): Promise<OrderResponseDto> {
     return this.ordersService.createOrder(context.workspaceId, dto, user?.userId);
+  }
+
+  @Patch(':id')
+  @HttpCode(HttpStatus.OK)
+  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.AGENT)
+  @ApiOperation({ summary: 'Update draft order' })
+  @ApiResponse({ status: 200, description: 'Order updated successfully' })
+  @ApiResponse({ status: 400, description: 'Validation failed or order not in DRAFT status' })
+  @ApiResponse({ status: 404, description: 'Order not found' })
+  async updateOrder(
+    @CurrentWorkspace() context: WorkspaceContext,
+    @CurrentUser() user: JwtUserPayload,
+    @Param('id') id: string,
+    @ZodBody(updateOrderSchema) dto: UpdateOrderDto,
+  ): Promise<OrderResponseDto> {
+    return this.ordersService.updateOrder(context.workspaceId, id, dto, user?.userId);
   }
 
   @Post(':id/confirm')

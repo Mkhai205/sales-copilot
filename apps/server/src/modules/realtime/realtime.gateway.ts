@@ -18,11 +18,13 @@ import {
   joinConversationSchema,
   leaveConversationSchema,
   typingIndicatorSchema,
+  posEditingActionSchema,
 } from '@sales-copilot/shared-contracts';
 import { PrismaService } from '../../infrastructure/database';
 import { WorkspacesService } from '../workspaces/workspaces.service';
 import { TokenService } from '../auth/token.service';
 import { PresenceService } from './presence.service';
+import { PosPresenceService } from '../pos/presence/pos-presence.service';
 import {
   RealtimeConnectedPayload,
   RealtimeErrorPayload,
@@ -61,6 +63,7 @@ export class RealtimeGateway
     @Optional() private readonly eventEmitter?: EventEmitter2,
     @Optional() private readonly presenceService?: PresenceService,
     @Optional() private readonly workspacesService?: WorkspacesService,
+    @Optional() private readonly posPresenceService?: PosPresenceService,
   ) {}
 
   async onModuleDestroy(): Promise<void> {
@@ -204,6 +207,30 @@ export class RealtimeGateway
       this.logger.log(
         `Realtime client disconnected (socket: ${client.id}, userId: ${data.userId}, email: ${data.email}, durationMs: ${durationMs}ms, joinedWorkspaces: [${data.joinedWorkspaceIds.join(', ')}])`,
       );
+
+      if (this.posPresenceService) {
+        this.posPresenceService
+          .cleanupUserLocks(data.userId)
+          .then(unlockedList => {
+            for (const item of unlockedList) {
+              const room = `conversation_${item.conversationId}`;
+              const envelope = {
+                event: WsServerEvent.POS_COLLISION_STATUS,
+                workspaceId: item.workspaceId,
+                timestamp: new Date().toISOString(),
+                data: {
+                  conversationId: item.conversationId,
+                  isLocked: false,
+                  lockedBy: null,
+                  remainingTtlSeconds: 0,
+                },
+              };
+              this.server.to(room).emit(WsServerEvent.POS_COLLISION_STATUS, envelope);
+              this.server.to(room).emit('event', envelope);
+            }
+          })
+          .catch(() => {});
+      }
 
       if (this.eventEmitter) {
         this.eventEmitter.emit('agent.disconnected', {
@@ -718,6 +745,180 @@ export class RealtimeGateway
       success: true,
       timestamp: new Date().toISOString(),
     };
+  }
+
+  // ==========================================================================
+  // POS Collision Locking Handlers (Milestone M2)
+  // ==========================================================================
+
+  @SubscribeMessage(WsClientEvent.POS_EDITING_START)
+  @SubscribeMessage('pos.editing_start')
+  async handlePosEditingStart(
+    client: Socket,
+    payload: unknown,
+  ): Promise<{
+    success: boolean;
+    isLocked: boolean;
+    lockedBy?: any;
+    remainingTtlSeconds?: number;
+    error?: any;
+  }> {
+    try {
+      const socketData = client.data as RealtimeSocketData | undefined;
+      if (!socketData?.userId) {
+        return {
+          success: false,
+          isLocked: false,
+          error: { code: 'UNAUTHORIZED', message: 'Not authenticated' },
+        };
+      }
+
+      const parseResult = posEditingActionSchema.safeParse(payload);
+      if (!parseResult.success) {
+        return {
+          success: false,
+          isLocked: false,
+          error: { code: 'BAD_REQUEST', message: 'Invalid payload' },
+        };
+      }
+
+      const { workspaceId, conversationId } = parseResult.data;
+      if (!this.posPresenceService) {
+        return { success: true, isLocked: false, remainingTtlSeconds: 30 };
+      }
+
+      const user = {
+        userId: socketData.userId,
+        userName: socketData.email ? socketData.email.split('@')[0] : 'Agent',
+        userEmail: socketData.email,
+      };
+
+      const result = await this.posPresenceService.startEditing(workspaceId, conversationId, user);
+
+      // Broadcast updated collision status to the conversation room
+      const status = await this.posPresenceService.getEditingStatus(workspaceId, conversationId);
+      const room = `conversation_${conversationId}`;
+      const envelope = {
+        event: WsServerEvent.POS_COLLISION_STATUS,
+        workspaceId,
+        timestamp: new Date().toISOString(),
+        data: {
+          conversationId,
+          ...status,
+        },
+      };
+      client.to(room).emit(WsServerEvent.POS_COLLISION_STATUS, envelope);
+      client.to(room).emit('event', envelope);
+
+      return result;
+    } catch (err) {
+      this.logger.error(`Error in handlePosEditingStart: ${(err as Error).message}`);
+      return {
+        success: false,
+        isLocked: false,
+        error: { code: 'INTERNAL_ERROR', message: 'Internal error' },
+      };
+    }
+  }
+
+  @SubscribeMessage(WsClientEvent.POS_EDITING_HEARTBEAT)
+  @SubscribeMessage('pos.editing_heartbeat')
+  async handlePosEditingHeartbeat(
+    client: Socket,
+    payload: unknown,
+  ): Promise<{ success: boolean; remainingTtlSeconds: number }> {
+    const socketData = client.data as RealtimeSocketData | undefined;
+    if (!socketData?.userId || !this.posPresenceService) {
+      return { success: false, remainingTtlSeconds: 0 };
+    }
+
+    const parseResult = posEditingActionSchema.safeParse(payload);
+    if (!parseResult.success) {
+      return { success: false, remainingTtlSeconds: 0 };
+    }
+
+    const { workspaceId, conversationId } = parseResult.data;
+    return this.posPresenceService.refreshHeartbeat(workspaceId, conversationId, socketData.userId);
+  }
+
+  @SubscribeMessage(WsClientEvent.POS_EDITING_STOP)
+  @SubscribeMessage('pos.editing_stop')
+  async handlePosEditingStop(client: Socket, payload: unknown): Promise<{ success: boolean }> {
+    const socketData = client.data as RealtimeSocketData | undefined;
+    if (!socketData?.userId || !this.posPresenceService) {
+      return { success: false };
+    }
+
+    const parseResult = posEditingActionSchema.safeParse(payload);
+    if (!parseResult.success) {
+      return { success: false };
+    }
+
+    const { workspaceId, conversationId } = parseResult.data;
+    const released = await this.posPresenceService.stopEditing(
+      workspaceId,
+      conversationId,
+      socketData.userId,
+    );
+
+    // Broadcast unlocked status
+    const status = await this.posPresenceService.getEditingStatus(workspaceId, conversationId);
+    const room = `conversation_${conversationId}`;
+    const envelope = {
+      event: WsServerEvent.POS_COLLISION_STATUS,
+      workspaceId,
+      timestamp: new Date().toISOString(),
+      data: {
+        conversationId,
+        ...status,
+      },
+    };
+    client.to(room).emit(WsServerEvent.POS_COLLISION_STATUS, envelope);
+    client.to(room).emit('event', envelope);
+
+    return { success: released };
+  }
+
+  @SubscribeMessage(WsClientEvent.POS_EDITING_TAKEOVER)
+  @SubscribeMessage('pos.editing_takeover')
+  async handlePosEditingTakeover(
+    client: Socket,
+    payload: unknown,
+  ): Promise<{ success: boolean; previousLockedBy?: any; remainingTtlSeconds: number }> {
+    const socketData = client.data as RealtimeSocketData | undefined;
+    if (!socketData?.userId || !this.posPresenceService) {
+      return { success: false, remainingTtlSeconds: 0 };
+    }
+
+    const parseResult = posEditingActionSchema.safeParse(payload);
+    if (!parseResult.success) {
+      return { success: false, remainingTtlSeconds: 0 };
+    }
+
+    const { workspaceId, conversationId } = parseResult.data;
+    const user = {
+      userId: socketData.userId,
+      userName: socketData.email ? socketData.email.split('@')[0] : 'Agent',
+      userEmail: socketData.email,
+    };
+
+    const res = await this.posPresenceService.takeoverEditing(workspaceId, conversationId, user);
+
+    const status = await this.posPresenceService.getEditingStatus(workspaceId, conversationId);
+    const room = `conversation_${conversationId}`;
+    const envelope = {
+      event: WsServerEvent.POS_COLLISION_STATUS,
+      workspaceId,
+      timestamp: new Date().toISOString(),
+      data: {
+        conversationId,
+        ...status,
+      },
+    };
+    this.server.to(room).emit(WsServerEvent.POS_COLLISION_STATUS, envelope);
+    this.server.to(room).emit('event', envelope);
+
+    return res;
   }
 
   // --- Helper Methods ---

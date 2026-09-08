@@ -25,6 +25,7 @@ import {
   type OrderResponseDto,
   type PaginationMeta,
   type ShippingAddressResponseDto,
+  type UpdateOrderDto,
 } from '@sales-copilot/shared-contracts';
 import { PrismaService } from '../../../infrastructure/database/prisma.service';
 
@@ -239,6 +240,226 @@ export class OrdersService {
           orderNumber: order.orderNumber,
           displayId: order.displayId,
           conversationId: order.conversationId,
+          order: formatted,
+        });
+      });
+
+      return formatted;
+    });
+  }
+
+  /**
+   * Updates an existing order draft strictly scoped to workspace.
+   * Only orders in DRAFT status can be modified.
+   */
+  async updateOrder(
+    workspaceId: string,
+    orderId: string,
+    dto: UpdateOrderDto,
+    _userId?: string,
+  ): Promise<OrderResponseDto> {
+    return this.prisma.runInTransaction(async ctx => {
+      const tx = ctx.tx;
+
+      // 1. Fetch current order with line items strictly scoped to workspaceId
+      const order = await tx.order.findFirst({
+        where: { id: orderId, workspaceId },
+        include: { items: true, shippingAddress: true },
+      });
+
+      if (!order) {
+        throw new NotFoundException({
+          code: 'ORDER_NOT_FOUND',
+          message: 'Order not found in this workspace',
+          details: { orderId, workspaceId },
+        });
+      }
+
+      if (order.status !== OrderStatus.DRAFT) {
+        throw new BadRequestException({
+          code: 'INVALID_STATUS_FOR_UPDATE',
+          message: `Only DRAFT orders can be updated. Current status: ${order.status}`,
+          details: { currentStatus: order.status },
+        });
+      }
+
+      let subtotal = Number(order.subtotal);
+
+      // 2. Update line items if provided
+      if (dto.items && dto.items.length > 0) {
+        // Delete existing items
+        await tx.orderItem.deleteMany({
+          where: { orderId: order.id, workspaceId },
+        });
+
+        // Verify and snapshot new items
+        const lineItemSnapshots: Array<{
+          productId: string;
+          variantId: string;
+          productName: string;
+          variantName: string;
+          sku: string;
+          unitPrice: number;
+          costPrice: number;
+          quantity: number;
+          discountAmount: number;
+          totalPrice: number;
+          metadata: any;
+        }> = [];
+
+        subtotal = 0;
+
+        for (const item of dto.items) {
+          const variant = await tx.productVariant.findFirst({
+            where: { id: item.variantId, productId: item.productId, workspaceId },
+            include: { product: true },
+          });
+
+          if (!variant) {
+            throw new NotFoundException({
+              code: 'VARIANT_NOT_FOUND',
+              message: `Product variant '${item.variantId}' not found in this workspace`,
+              details: { variantId: item.variantId, productId: item.productId, workspaceId },
+            });
+          }
+
+          const itemSubtotal = item.unitPrice * item.quantity;
+          const itemDiscount = item.discountAmount || 0;
+          const itemTotalPrice = Math.max(0, itemSubtotal - itemDiscount);
+
+          subtotal += itemSubtotal;
+
+          lineItemSnapshots.push({
+            productId: variant.productId,
+            variantId: variant.id,
+            productName: variant.product.name,
+            variantName: variant.name,
+            sku: variant.sku,
+            unitPrice: item.unitPrice,
+            costPrice: Number(variant.costPrice || 0),
+            quantity: item.quantity,
+            discountAmount: itemDiscount,
+            totalPrice: itemTotalPrice,
+            metadata: item.metadata || {},
+          });
+        }
+
+        await tx.orderItem.createMany({
+          data: lineItemSnapshots.map(li => ({
+            workspaceId,
+            orderId: order.id,
+            productId: li.productId,
+            variantId: li.variantId,
+            productName: li.productName,
+            variantName: li.variantName,
+            sku: li.sku,
+            unitPrice: li.unitPrice,
+            costPrice: li.costPrice,
+            quantity: li.quantity,
+            discountAmount: li.discountAmount,
+            totalPrice: li.totalPrice,
+            metadata: li.metadata,
+          })),
+        });
+      }
+
+      // 3. Recalculate Financials
+      const discountType = dto.discountType !== undefined ? dto.discountType : order.discountType;
+      let discountAmount: number;
+
+      if (dto.discountAmount !== undefined) {
+        discountAmount =
+          discountType === DiscountType.PERCENTAGE
+            ? Math.min(subtotal, Math.round((subtotal * Math.min(100, dto.discountAmount)) / 100))
+            : Math.min(subtotal, dto.discountAmount);
+      } else {
+        if (discountType === DiscountType.PERCENTAGE) {
+          const originalSubtotal = Number(order.subtotal);
+          const originalPct =
+            originalSubtotal > 0 ? (Number(order.discountAmount) * 100) / originalSubtotal : 0;
+          discountAmount = Math.min(
+            subtotal,
+            Math.round((subtotal * Math.min(100, originalPct)) / 100),
+          );
+        } else {
+          discountAmount = Math.min(subtotal, Number(order.discountAmount));
+        }
+      }
+
+      const shippingFee =
+        dto.shippingFee !== undefined ? dto.shippingFee : Number(order.shippingFee);
+      const totalAmount = Math.max(0, subtotal - discountAmount + shippingFee);
+
+      // 4. Update Shipping Address if provided
+      if (dto.shippingAddress !== undefined) {
+        await tx.shippingAddress.deleteMany({
+          where: { orderId: order.id, workspaceId },
+        });
+
+        if (dto.shippingAddress) {
+          await tx.shippingAddress.create({
+            data: {
+              workspaceId,
+              orderId: order.id,
+              contactId: order.contactId,
+              recipientName: dto.shippingAddress.recipientName,
+              phoneNumber: dto.shippingAddress.phoneNumber,
+              carrierNetwork: dto.shippingAddress.carrierNetwork || CarrierNetwork.OTHER,
+              streetAddress: dto.shippingAddress.streetAddress,
+              ward: dto.shippingAddress.ward,
+              district: dto.shippingAddress.district,
+              province: dto.shippingAddress.province,
+              country: dto.shippingAddress.country || 'VN',
+              postalCode: dto.shippingAddress.postalCode || null,
+              shippingCarrier: dto.shippingAddress.shippingCarrier,
+              trackingCode: dto.shippingAddress.trackingCode || null,
+              shippingNotes: dto.shippingAddress.shippingNotes || null,
+              carrierMetadata: dto.shippingAddress.carrierMetadata || {},
+            },
+          });
+        }
+      }
+
+      // 5. Update Order Record
+      const updateData: any = {
+        subtotal,
+        discountAmount,
+        discountType,
+        shippingFee,
+        totalAmount,
+        updatedAt: new Date(),
+      };
+
+      if (dto.discountReason !== undefined) updateData.discountReason = dto.discountReason;
+      if (dto.customerNotes !== undefined) updateData.customerNotes = dto.customerNotes;
+      if (dto.internalNotes !== undefined) updateData.internalNotes = dto.internalNotes;
+      if (dto.metadata !== undefined) updateData.metadata = dto.metadata;
+
+      await tx.order.updateMany({
+        where: { id: order.id, workspaceId },
+        data: updateData,
+      });
+
+      // 6. Fetch complete updated order
+      const updatedOrder = await tx.order.findFirstOrThrow({
+        where: { id: order.id, workspaceId },
+        include: {
+          items: true,
+          shippingAddress: true,
+          paymentTransactions: true,
+        },
+      });
+
+      const formatted = this.formatOrder(updatedOrder);
+
+      // 7. Post-commit hook: Realtime broadcast
+      ctx.addPostCommitHook(() => {
+        this.eventEmitter.emit(DomainEvent.ORDER_UPDATED, {
+          workspaceId,
+          orderId: updatedOrder.id,
+          orderNumber: updatedOrder.orderNumber,
+          displayId: updatedOrder.displayId,
+          conversationId: updatedOrder.conversationId,
           order: formatted,
         });
       });

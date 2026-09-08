@@ -23,6 +23,9 @@ import {
   getProvinces,
   searchProvinces,
   parseAddressHierarchy,
+  normalizeVietnamesePhone,
+  isValidVietnamesePhone,
+  detectCarrierNetwork,
 } from '../index';
 
 describe('POS Shared Contracts & Schemas', () => {
@@ -399,6 +402,48 @@ describe('POS Shared Contracts & Schemas', () => {
         `Expected Hàng Bông, got: ${parsedHanoi.ward}`,
       );
       assert.strictEqual(parsedHanoi.streetAddress, '123 Phố Huế');
+    });
+  });
+
+  describe('Vietnamese Telco Detection & Phone Normalization', () => {
+    it('should normalize various phone formats correctly', () => {
+      assert.strictEqual(normalizeVietnamesePhone('+84988123456'), '0988123456');
+      assert.strictEqual(normalizeVietnamesePhone('84988123456'), '0988123456');
+      assert.strictEqual(normalizeVietnamesePhone('0988 123 456'), '0988123456');
+      assert.strictEqual(normalizeVietnamesePhone('0988-123-456'), '0988123456');
+      assert.strictEqual(normalizeVietnamesePhone('(0988) 123.456'), '0988123456');
+    });
+
+    it('should validate standard Vietnamese mobile numbers', () => {
+      assert.strictEqual(isValidVietnamesePhone('0988123456'), true);
+      assert.strictEqual(isValidVietnamesePhone('+84988123456'), true);
+      assert.strictEqual(isValidVietnamesePhone('0123456789'), false); // 01 is not a mobile prefix
+      assert.strictEqual(isValidVietnamesePhone('098812345'), false); // 9 digits
+      assert.strictEqual(isValidVietnamesePhone('09881234567'), false); // 11 digits
+    });
+
+    it('should detect carrier networks accurately', () => {
+      assert.strictEqual(detectCarrierNetwork('0988123456'), CarrierNetwork.VIETTEL);
+      assert.strictEqual(detectCarrierNetwork('0861234567'), CarrierNetwork.VIETTEL);
+      assert.strictEqual(detectCarrierNetwork('0351234567'), CarrierNetwork.VIETTEL);
+
+      assert.strictEqual(detectCarrierNetwork('0912345678'), CarrierNetwork.VINAPHONE);
+      assert.strictEqual(detectCarrierNetwork('0881234567'), CarrierNetwork.VINAPHONE);
+      assert.strictEqual(detectCarrierNetwork('0821234567'), CarrierNetwork.VINAPHONE);
+
+      assert.strictEqual(detectCarrierNetwork('0901234567'), CarrierNetwork.MOBIFONE);
+      assert.strictEqual(detectCarrierNetwork('0791234567'), CarrierNetwork.MOBIFONE);
+
+      assert.strictEqual(detectCarrierNetwork('0921234567'), CarrierNetwork.VIETNAMOBILE);
+      assert.strictEqual(detectCarrierNetwork('0561234567'), CarrierNetwork.VIETNAMOBILE);
+
+      assert.strictEqual(detectCarrierNetwork('0991234567'), CarrierNetwork.GMOBILE);
+      assert.strictEqual(detectCarrierNetwork('0591234567'), CarrierNetwork.GMOBILE);
+
+      assert.strictEqual(detectCarrierNetwork('0871234567'), CarrierNetwork.ITEL);
+      assert.strictEqual(detectCarrierNetwork('0551234567'), CarrierNetwork.WINTEL);
+
+      assert.strictEqual(detectCarrierNetwork('0243123456'), CarrierNetwork.OTHER);
     });
   });
 });

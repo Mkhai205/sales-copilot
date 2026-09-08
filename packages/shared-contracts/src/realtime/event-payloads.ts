@@ -72,13 +72,15 @@ export enum DomainEvent {
   COPILOT_SUGGESTION_CHUNK = 'copilot.suggestion_chunk',
   COPILOT_SUGGESTION_ACTED = 'copilot.suggestion_acted',
 
-  // POS & Order Automation events (Milestone M1)
+  // POS & Order Automation events (Milestone M1 & M2)
   ORDER_CREATED = 'order.created',
+  ORDER_UPDATED = 'order.updated',
   ORDER_CONFIRMED = 'order.confirmed',
   ORDER_PAID = 'order.paid',
   ORDER_PARTIALLY_PAID = 'order.partially_paid',
   ORDER_CANCELLED = 'order.cancelled',
   INVENTORY_UPDATED = 'inventory.updated',
+  POS_COLLISION_STATUS = 'pos.collision_status',
 }
 
 // ============================================================================
@@ -312,6 +314,14 @@ export interface OrderCreatedEventPayload extends BaseDomainEventPayload {
   order: Record<string, unknown>;
 }
 
+export interface OrderUpdatedEventPayload extends BaseDomainEventPayload {
+  orderId: string;
+  orderNumber: string;
+  displayId: number;
+  conversationId?: string | null;
+  order: Record<string, unknown>;
+}
+
 export interface OrderConfirmedEventPayload extends BaseDomainEventPayload {
   orderId: string;
   orderNumber: string;
@@ -365,4 +375,18 @@ export interface InventoryUpdatedEventPayload extends BaseDomainEventPayload {
   newReserved: number;
   availableStock: number;
   reason?: string | null;
+}
+
+export interface PosCollisionStatusPayload extends BaseDomainEventPayload {
+  conversationId: string;
+  isLocked: boolean;
+  lockedBy?: {
+    userId: string;
+    userName?: string;
+    userEmail?: string;
+    avatarUrl?: string;
+    startedAt: string;
+    lastHeartbeatAt: string;
+  } | null;
+  remainingTtlSeconds?: number;
 }
