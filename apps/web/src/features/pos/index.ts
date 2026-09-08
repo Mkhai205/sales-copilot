@@ -18,3 +18,8 @@ export * from './components/pos-detail-tab';
 export * from './components/pos-drawer';
 export * from './components/vietqr-chat-card';
 export * from './components/vietqr-dialog';
+export * from './components/thermal-waybill-k80';
+export * from './components/thermal-receipt-k58';
+export * from './components/thermal-print-dialog';
+export * from './components/ai-autofill-banner';
+export * from './lib/code128-svg';

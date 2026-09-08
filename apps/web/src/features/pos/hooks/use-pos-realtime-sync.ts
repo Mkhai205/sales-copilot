@@ -8,6 +8,8 @@ import {
   type OrderPartiallyPaidEventPayload,
   type OrderConfirmedEventPayload,
   type OrderCancelledEventPayload,
+  type OrderShippedEventPayload,
+  type PosDraftSuggestedEventPayload,
 } from '@sales-copilot/shared-contracts';
 import { toast } from 'sonner';
 import { useSocketEvent } from '@/lib/socket/use-socket';
@@ -15,6 +17,7 @@ import { useSocketEvent } from '@/lib/socket/use-socket';
 interface UsePosRealtimeSyncOptions {
   workspaceId?: string;
   conversationId?: string;
+  onDraftSuggested?: (payload: PosDraftSuggestedEventPayload) => void;
 }
 
 /**
@@ -25,6 +28,7 @@ interface UsePosRealtimeSyncOptions {
 export function usePosRealtimeSync({
   workspaceId,
   conversationId,
+  onDraftSuggested,
 }: UsePosRealtimeSyncOptions): void {
   const queryClient = useQueryClient();
 
@@ -103,5 +107,38 @@ export function usePosRealtimeSync({
   useSocketEvent<OrderCancelledEventPayload>(WsServerEvent.ORDER_CANCELLED, data => {
     if (!data) return;
     invalidatePosQueries(data.orderId);
+  });
+
+  // 5. Order Shipped (Dispatched to carrier)
+  useSocketEvent<OrderShippedEventPayload>(WsServerEvent.ORDER_SHIPPED, data => {
+    if (!data) return;
+    invalidatePosQueries(data.orderId);
+
+    if (
+      (!workspaceId || data.workspaceId === workspaceId) &&
+      (!conversationId || !data.conversationId || data.conversationId === conversationId)
+    ) {
+      const orderRef = data.displayId ? `#${data.displayId}` : data.orderNumber;
+      toast.success(`Đơn hàng ${orderRef} đã xuất kho giao cho ${data.shippingCarrier}!`, {
+        description: `Mã vận đơn: ${data.trackingCode}`,
+      });
+    }
+  });
+
+  // 6. POS Draft Suggested (AI In-Chat Order Extractor)
+  useSocketEvent<PosDraftSuggestedEventPayload>(WsServerEvent.POS_DRAFT_SUGGESTED, data => {
+    if (!data) return;
+
+    if (
+      (!workspaceId || data.workspaceId === workspaceId) &&
+      (!conversationId || data.conversationId === conversationId)
+    ) {
+      if (onDraftSuggested) {
+        onDraftSuggested(data);
+      }
+      toast.info(`✨ AI phát hiện đơn hàng (${data.confidenceScore}% tin cậy)`, {
+        description: `${data.suggestedCustomer?.recipientName || 'Khách hàng'} - ${data.suggestedCustomer?.phoneNumber || ''}`,
+      });
+    }
   });
 }

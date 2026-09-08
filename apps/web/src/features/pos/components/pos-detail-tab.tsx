@@ -12,12 +12,14 @@ import {
   MapPin,
   Package,
   QrCode,
+  Printer,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { OrderStatusBadge, PaymentStatusBadge } from './order-status-badge';
 import { CarrierBadge } from './carrier-badge';
 import { OrderHistoryList } from './order-history-list';
+import { ThermalPrintDialog } from './thermal-print-dialog';
 import { useActiveConversationOrder } from '../hooks/use-active-conversation-order';
 import { usePosOrders } from '../hooks/use-pos-orders';
 import { posApi } from '../api/pos-client';
@@ -44,6 +46,8 @@ export function PosDetailTab({
   const { confirmOrder, payOrder, cancelOrder, isConfirming, isPaying, isCancelling } =
     usePosOrders(workspaceId);
   const [isSendingQr, setIsSendingQr] = React.useState(false);
+  const [printDialogOpen, setPrintDialogOpen] = React.useState(false);
+  const [printFormat, setPrintFormat] = React.useState<'K80' | 'K58'>('K80');
 
   const formatCurrency = (val: number | string) => {
     return new Intl.NumberFormat('vi-VN', {
@@ -260,6 +264,19 @@ export function PosDetailTab({
                   </Button>
                   <Button
                     type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-xs px-2 gap-1"
+                    onClick={() => {
+                      setPrintFormat('K80');
+                      setPrintDialogOpen(true);
+                    }}
+                  >
+                    <Printer className="size-3.5" />
+                    In K80
+                  </Button>
+                  <Button
+                    type="button"
                     variant="default"
                     size="sm"
                     className="h-7 text-xs px-2.5 gap-1 font-semibold"
@@ -272,10 +289,41 @@ export function PosDetailTab({
                 </>
               )}
 
-              {activeOrder.status === OrderStatus.PAID && (
-                <div className="flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
-                  <CheckCircle className="size-3.5" />
-                  Đã hoàn tất thanh toán
+              {(activeOrder.status === OrderStatus.PAID ||
+                activeOrder.status === OrderStatus.SHIPPING) && (
+                <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
+                    <CheckCircle className="size-3.5" />
+                    {activeOrder.status === OrderStatus.SHIPPING
+                      ? 'Đang vận chuyển'
+                      : 'Đã thanh toán'}
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-xs px-2 gap-1"
+                    onClick={() => {
+                      setPrintFormat('K80');
+                      setPrintDialogOpen(true);
+                    }}
+                  >
+                    <Printer className="size-3.5" />
+                    In phiếu K80
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-xs px-2 gap-1"
+                    onClick={() => {
+                      setPrintFormat('K58');
+                      setPrintDialogOpen(true);
+                    }}
+                  >
+                    <Printer className="size-3.5" />
+                    In K58
+                  </Button>
                 </div>
               )}
             </div>
@@ -315,6 +363,16 @@ export function PosDetailTab({
             />
           </div>
         </div>
+      )}
+
+      {activeOrder && (
+        <ThermalPrintDialog
+          open={printDialogOpen}
+          onOpenChange={setPrintDialogOpen}
+          workspaceId={workspaceId}
+          orderId={activeOrder.id}
+          defaultFormat={printFormat}
+        />
       )}
     </div>
   );

@@ -173,4 +173,56 @@ export class PosEventListener {
       }
     }
   }
+
+  @OnEvent(DomainEvent.ORDER_SHIPPED)
+  @OnEvent('order.shipped')
+  async handleOrderShipped(payload: {
+    workspaceId: string;
+    orderId: string;
+    orderNumber?: string;
+    displayId: number;
+    conversationId?: string | null;
+    trackingCode: string;
+    shippingCarrier: string;
+    shippedAt?: string | Date;
+  }): Promise<void> {
+    if (!payload?.workspaceId || !payload?.orderId) {
+      return;
+    }
+
+    this.logger.log(
+      `Handling ORDER_SHIPPED post-commit side-effects for Order #${payload.displayId} (ID: ${payload.orderId})`,
+    );
+
+    if (payload.conversationId) {
+      try {
+        const carrierLabel = payload.shippingCarrier || 'Đơn vị vận chuyển';
+        const trackingSnippet = payload.trackingCode ? ` Mã vận đơn: ${payload.trackingCode}.` : '';
+        const content = `🚚 [Hệ thống] Đơn hàng #${payload.displayId} đã được xuất kho và bàn giao cho ${carrierLabel}.${trackingSnippet}`;
+
+        await this.messagesService.create(payload.workspaceId, payload.conversationId, {
+          content,
+          senderType: SenderType.SYSTEM,
+          senderId: undefined,
+          messageType: MessageType.ACTIVITY,
+          metadata: {
+            type: 'ORDER_SHIPPED',
+            orderId: payload.orderId,
+            displayId: payload.displayId,
+            trackingCode: payload.trackingCode,
+            shippingCarrier: payload.shippingCarrier,
+          },
+        });
+
+        this.logger.log(
+          `Posted order shipped activity message to conversation ${payload.conversationId} for Order #${payload.displayId}`,
+        );
+      } catch (msgErr: any) {
+        this.logger.error(
+          `Failed to post order shipped message for Order #${payload.displayId}: ${msgErr.message}`,
+          msgErr.stack,
+        );
+      }
+    }
+  }
 }

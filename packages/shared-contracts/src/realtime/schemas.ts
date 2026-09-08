@@ -78,6 +78,8 @@ export enum WsServerEvent {
   ORDER_CANCELLED = 'order.cancelled',
   INVENTORY_UPDATED = 'inventory.updated',
   POS_COLLISION_STATUS = 'pos.collision_status',
+  ORDER_SHIPPED = 'order.shipped',
+  POS_DRAFT_SUGGESTED = 'pos.draft_suggested',
 }
 
 // ============================================================================
@@ -158,3 +160,50 @@ export const posEditingActionSchema = z.object({
   conversationId: z.string().uuid('Invalid conversation ID format (UUID expected)'),
 });
 export type PosEditingActionDto = z.infer<typeof posEditingActionSchema>;
+
+export const orderShippedEventPayloadSchema = z.object({
+  workspaceId: z.string().uuid(),
+  orderId: z.string().uuid(),
+  orderNumber: z.string(),
+  displayId: z.number(),
+  conversationId: z.string().uuid().optional().nullable(),
+  trackingCode: z.string(),
+  shippingCarrier: z.string(),
+  shippedAt: z.union([z.string(), z.date()]),
+  order: z.record(z.unknown()),
+});
+export type OrderShippedEventPayloadDto = z.infer<typeof orderShippedEventPayloadSchema>;
+
+export const posDraftSuggestedEventPayloadSchema = z.object({
+  workspaceId: z.string().uuid(),
+  conversationId: z.string().uuid(),
+  contactId: z.string().uuid().optional().nullable(),
+  suggestedCustomer: z
+    .object({
+      recipientName: z.string().optional(),
+      phoneNumber: z.string().optional(),
+      carrierNetwork: z.string().optional(),
+      streetAddress: z.string().optional(),
+      ward: z.string().optional(),
+      district: z.string().optional(),
+      province: z.string().optional(),
+    })
+    .optional(),
+  suggestedItems: z
+    .array(
+      z.object({
+        productId: z.string().optional(),
+        variantId: z.string().optional(),
+        productName: z.string(),
+        variantName: z.string().optional().nullable(),
+        sku: z.string().optional().nullable(),
+        quantity: z.number(),
+        unitPrice: z.number().optional(),
+      }),
+    )
+    .optional(),
+  rawExtractedData: z.record(z.unknown()).optional(),
+  confidenceScore: z.number(),
+  messageId: z.string().optional(),
+});
+export type PosDraftSuggestedEventPayloadDto = z.infer<typeof posDraftSuggestedEventPayloadSchema>;

@@ -802,5 +802,53 @@ describe('RealtimeEventDispatcher — Event Routing & Error Isolation (Task 12)'
       );
       assert.ok(convBroadcast);
     });
+
+    it('should broadcast ORDER_SHIPPED to conversation and workspace rooms', () => {
+      dispatcher.handleOrderShipped({
+        workspaceId,
+        orderId: 'ord_123',
+        orderNumber: 'ORD-123',
+        displayId: 101,
+        conversationId,
+        trackingCode: 'GHTK123456',
+        shippingCarrier: 'GHTK',
+        shippedAt: new Date().toISOString(),
+        order: { id: 'ord_123' },
+      });
+
+      const wsBroadcast = emittedBroadcasts.find(
+        b => b.room === `workspace_${workspaceId}` && b.event === WsServerEvent.ORDER_SHIPPED,
+      );
+      assert.ok(wsBroadcast);
+
+      const convBroadcast = emittedBroadcasts.find(
+        b => b.room === `conversation_${conversationId}` && b.event === WsServerEvent.ORDER_SHIPPED,
+      );
+      assert.ok(convBroadcast);
+    });
+
+    it('should broadcast POS_DRAFT_SUGGESTED to conversation and workspace rooms', () => {
+      dispatcher.handlePosDraftSuggested({
+        workspaceId,
+        conversationId,
+        confidenceScore: 90,
+        suggestedCustomer: {
+          recipientName: 'Nguyễn Văn A',
+          phoneNumber: '0988123456',
+        },
+      });
+
+      const wsBroadcast = emittedBroadcasts.find(
+        b => b.room === `workspace_${workspaceId}` && b.event === WsServerEvent.POS_DRAFT_SUGGESTED,
+      );
+      assert.ok(wsBroadcast);
+
+      const convBroadcast = emittedBroadcasts.find(
+        b =>
+          b.room === `conversation_${conversationId}` &&
+          b.event === WsServerEvent.POS_DRAFT_SUGGESTED,
+      );
+      assert.ok(convBroadcast);
+    });
   });
 });

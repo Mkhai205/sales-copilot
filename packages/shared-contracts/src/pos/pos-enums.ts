@@ -96,4 +96,6 @@ export const carrierNetworkSchema = z.nativeEnum(CarrierNetwork);
 export const inventoryTransactionTypeSchema = z.nativeEnum(InventoryTransactionType);
 
 export const POS_RECONCILIATION_QUEUE = 'pos-reconciliation';
+export const POS_ORDER_AUTOMATION_QUEUE = 'pos-order-automation';
+export const POS_AUTOMATION_JOB = 'extract-order-from-message';
 export type PaymentGatewayType = 'sepay' | 'casso' | 'manual';

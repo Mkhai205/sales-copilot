@@ -8,6 +8,7 @@ import {
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import {
   CarrierNetwork,
+  CarrierProvider,
   DiscountType,
   DomainEvent,
   FulfillmentStatus,
@@ -25,6 +26,7 @@ import {
   type OrderResponseDto,
   type PaginationMeta,
   type ShippingAddressResponseDto,
+  type ShippingLabelDataDto,
   type UpdateOrderDto,
 } from '@sales-copilot/shared-contracts';
 import { PrismaService } from '../../../infrastructure/database/prisma.service';
@@ -1125,6 +1127,79 @@ export class OrdersService {
     }
 
     return this.formatOrder(order);
+  }
+
+  /**
+   * Retrieves data needed to print a thermal shipping label (K80 / K58).
+   */
+  async getShippingLabelData(workspaceId: string, orderId: string): Promise<ShippingLabelDataDto> {
+    const client = this.prisma.getClient();
+    const order = await client.order.findFirst({
+      where: { id: orderId, workspaceId },
+      include: {
+        items: true,
+        shippingAddress: true,
+        contact: true,
+        workspace: true,
+      },
+    });
+
+    if (!order) {
+      throw new NotFoundException({
+        code: 'ORDER_NOT_FOUND',
+        message: 'Order not found in this workspace',
+        details: { orderId, workspaceId },
+      });
+    }
+
+    const isPaid = order.paymentStatus === PaymentStatus.PAID;
+    const totalAmount = Number(order.totalAmount);
+    const paidAmount = Number(order.paidAmount);
+    const codAmount = isPaid ? 0 : Math.max(0, totalAmount - paidAmount);
+
+    const trackingCode = order.shippingAddress?.trackingCode || `INTERNAL-${order.displayId}`;
+
+    const carrier =
+      (order.shippingAddress?.shippingCarrier as CarrierProvider) || CarrierProvider.CUSTOM;
+
+    const totalWeightInGrams =
+      order.items.reduce((sum: number, it: any) => sum + it.quantity * 250, 0) || 500;
+
+    return {
+      orderId: order.id,
+      orderNumber: order.orderNumber,
+      displayId: order.displayId,
+      trackingCode,
+      carrier,
+      sender: {
+        name: order.workspace?.name || 'Cửa hàng',
+        phone: '1900 6868',
+        address: 'Kho hàng trung tâm',
+        province: 'Hà Nội',
+        district: 'Hoàng Mai',
+        ward: 'Hoàng Văn Thụ',
+      },
+      recipient: {
+        name: order.shippingAddress?.recipientName || order.contact?.name || 'Khách hàng',
+        phone: order.shippingAddress?.phoneNumber || order.contact?.phoneNumber || '',
+        address: order.shippingAddress?.streetAddress || 'Địa chỉ nhận hàng',
+        province: order.shippingAddress?.province || 'Hà Nội',
+        district: order.shippingAddress?.district || 'Hoàng Mai',
+        ward: order.shippingAddress?.ward || 'Hoàng Văn Thụ',
+      },
+      codAmount,
+      isPaid,
+      items: (order.items || []).map((it: any) => ({
+        productName: it.productName,
+        variantName: it.variantName,
+        sku: it.sku,
+        quantity: it.quantity,
+        price: Number(it.unitPrice),
+      })),
+      totalWeightInGrams,
+      shippingNotes: order.shippingAddress?.shippingNotes || order.customerNotes,
+      createdAt: order.createdAt,
+    };
   }
 
   /**

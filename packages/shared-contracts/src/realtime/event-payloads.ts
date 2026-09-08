@@ -81,6 +81,8 @@ export enum DomainEvent {
   ORDER_CANCELLED = 'order.cancelled',
   INVENTORY_UPDATED = 'inventory.updated',
   POS_COLLISION_STATUS = 'pos.collision_status',
+  ORDER_SHIPPED = 'order.shipped',
+  POS_DRAFT_SUGGESTED = 'pos.draft_suggested',
 }
 
 // ============================================================================
@@ -389,4 +391,41 @@ export interface PosCollisionStatusPayload extends BaseDomainEventPayload {
     lastHeartbeatAt: string;
   } | null;
   remainingTtlSeconds?: number;
+}
+
+export interface OrderShippedEventPayload extends BaseDomainEventPayload {
+  orderId: string;
+  orderNumber: string;
+  displayId: number;
+  conversationId?: string | null;
+  trackingCode: string;
+  shippingCarrier: string;
+  shippedAt: string | Date;
+  order: Record<string, unknown>;
+}
+
+export interface PosDraftSuggestedEventPayload extends BaseDomainEventPayload {
+  conversationId: string;
+  contactId?: string | null;
+  suggestedCustomer?: {
+    recipientName?: string;
+    phoneNumber?: string;
+    carrierNetwork?: string;
+    streetAddress?: string;
+    ward?: string;
+    district?: string;
+    province?: string;
+  };
+  suggestedItems?: Array<{
+    productId?: string;
+    variantId?: string;
+    productName: string;
+    variantName?: string;
+    sku?: string;
+    quantity: number;
+    unitPrice?: number;
+  }>;
+  rawExtractedData?: Record<string, unknown>;
+  confidenceScore: number;
+  messageId?: string;
 }

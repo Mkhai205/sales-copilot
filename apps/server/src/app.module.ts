@@ -120,7 +120,10 @@ import { pinoRedactConfig } from './common/logging';
         };
       },
     }),
-    EventEmitterModule.forRoot(),
+    EventEmitterModule.forRoot({
+      maxListeners: 100,
+      verboseMemoryLeak: false,
+    }),
     ScheduleModule.forRoot(),
     ThrottlerModule.forRoot([
       {

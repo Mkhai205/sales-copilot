@@ -142,4 +142,27 @@ describe('PosEventListener (Realtime Chat Receipt & CRM Sync)', () => {
     assert.strictEqual(msg.dto.metadata.type, 'PAYMENT_RECEIPT');
     assert.strictEqual(msg.dto.metadata.status, 'PARTIALLY_PAID');
   });
+
+  it('should post order shipped activity message to conversation thread on ORDER_SHIPPED', async () => {
+    await listener.handleOrderShipped({
+      workspaceId: wsId,
+      orderId,
+      displayId: 1004,
+      conversationId,
+      trackingCode: 'GHTK998877',
+      shippingCarrier: 'GHTK',
+    });
+
+    assert.strictEqual(createdMessages.length, 1);
+    const msg = createdMessages[0];
+    assert.strictEqual(msg.workspaceId, wsId);
+    assert.strictEqual(msg.convId, conversationId);
+    assert.strictEqual(msg.dto.senderType, SenderType.SYSTEM);
+    assert.strictEqual(msg.dto.messageType, MessageType.ACTIVITY);
+    assert.ok(msg.dto.content.includes('1004'));
+    assert.ok(msg.dto.content.includes('GHTK'));
+    assert.ok(msg.dto.content.includes('GHTK998877'));
+    assert.strictEqual(msg.dto.metadata.type, 'ORDER_SHIPPED');
+    assert.strictEqual(msg.dto.metadata.trackingCode, 'GHTK998877');
+  });
 });

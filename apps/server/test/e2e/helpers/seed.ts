@@ -215,6 +215,15 @@ export async function cleanupTestData(
       where: { workspaceId },
     });
 
+    // 3.5 Delete POS records (orders reference contacts with Restrict)
+    await client.inventoryTransaction.deleteMany({ where: { workspaceId } }).catch(() => {});
+    await client.paymentTransaction.deleteMany({ where: { workspaceId } }).catch(() => {});
+    await client.orderItem.deleteMany({ where: { workspaceId } }).catch(() => {});
+    await client.shippingAddress.deleteMany({ where: { workspaceId } }).catch(() => {});
+    await client.order.deleteMany({ where: { workspaceId } }).catch(() => {});
+    await client.productVariant.deleteMany({ where: { workspaceId } }).catch(() => {});
+    await client.product.deleteMany({ where: { workspaceId } }).catch(() => {});
+
     // 4. Delete contacts
     await client.contact.deleteMany({
       where: { workspaceId },

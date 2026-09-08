@@ -65,3 +65,97 @@ export const createShipmentSchema = z.object({
 });
 
 export type CreateShipmentDto = z.input<typeof createShipmentSchema>;
+
+export const dispatchOrderSchema = z.object({
+  carrier: z.nativeEnum(CarrierProvider).default(CarrierProvider.CUSTOM),
+  note: z.string().optional().nullable(),
+  pickShift: z.string().optional().nullable(),
+  codAmount: z.coerce.number().min(0).optional(),
+});
+
+export type DispatchOrderDto = z.input<typeof dispatchOrderSchema>;
+export type DispatchOrderOutputDto = z.output<typeof dispatchOrderSchema>;
+
+export const carrierQuoteResultSchema = z.object({
+  carrier: z.nativeEnum(CarrierProvider),
+  serviceName: z.string(),
+  fee: z.number().min(0),
+  estimatedDeliveryDays: z.number().min(0).optional(),
+  insuranceFee: z.number().min(0).default(0),
+  estimatedDeliveryDate: z.string().optional(),
+});
+
+export type CarrierQuoteResultDto = z.infer<typeof carrierQuoteResultSchema>;
+
+export const shippingLabelItemSchema = z.object({
+  productName: z.string(),
+  variantName: z.string().optional().nullable(),
+  sku: z.string().optional().nullable(),
+  quantity: z.number(),
+  price: z.number(),
+});
+
+export type ShippingLabelItemDto = z.infer<typeof shippingLabelItemSchema>;
+
+export const shippingLabelDataSchema = z.object({
+  orderId: z.string(),
+  orderNumber: z.string(),
+  displayId: z.number(),
+  trackingCode: z.string(),
+  carrier: z.nativeEnum(CarrierProvider),
+  barcodeSvg: z.string().optional(),
+  sender: z.object({
+    name: z.string(),
+    phone: z.string(),
+    address: z.string(),
+    province: z.string().optional(),
+    district: z.string().optional(),
+    ward: z.string().optional(),
+  }),
+  recipient: z.object({
+    name: z.string(),
+    phone: z.string(),
+    address: z.string(),
+    province: z.string().optional().nullable(),
+    district: z.string().optional().nullable(),
+    ward: z.string().optional().nullable(),
+  }),
+  codAmount: z.number(),
+  isPaid: z.boolean(),
+  items: z.array(shippingLabelItemSchema),
+  totalWeightInGrams: z.number().default(500),
+  shippingNotes: z.string().optional().nullable(),
+  createdAt: z.union([z.date(), z.string()]),
+});
+
+export type ShippingLabelDataDto = z.infer<typeof shippingLabelDataSchema>;
+
+export const shipmentResultSchema = z.object({
+  trackingCode: z.string(),
+  carrier: z.nativeEnum(CarrierProvider),
+  fee: z.number().default(0),
+  estimatedDeliveryDate: z.string().optional(),
+  rawResponse: z.record(z.any()).optional(),
+  labelUrl: z.string().optional(),
+});
+
+export type ShipmentResultDto = z.infer<typeof shipmentResultSchema>;
+
+export const trackingTimelineItemSchema = z.object({
+  timestamp: z.string(),
+  status: z.string(),
+  description: z.string(),
+  location: z.string().optional(),
+});
+
+export type TrackingTimelineItemDto = z.infer<typeof trackingTimelineItemSchema>;
+
+export const trackingStatusSchema = z.object({
+  trackingCode: z.string(),
+  carrier: z.nativeEnum(CarrierProvider),
+  status: z.string(),
+  statusDescription: z.string().optional(),
+  timeline: z.array(trackingTimelineItemSchema).default([]),
+});
+
+export type TrackingStatusDto = z.infer<typeof trackingStatusSchema>;

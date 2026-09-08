@@ -2,9 +2,12 @@
 
 import * as React from 'react';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
-import { PosDrawer, usePosRealtimeSync } from '@/features/pos';
+import { PosDrawer, usePosRealtimeSync, AiAutofillBanner } from '@/features/pos';
 import { useWorkspaces } from '@/features/workspaces/use-workspaces';
-import type { OrderResponseDto } from '@sales-copilot/shared-contracts';
+import type {
+  OrderResponseDto,
+  PosDraftSuggestedEventPayload,
+} from '@sales-copilot/shared-contracts';
 import { ConversationEmptyState } from './conversation-empty-state';
 import { ConversationList } from './conversation-list';
 import { MessageThread } from './message-thread';
@@ -20,6 +23,8 @@ export function ConversationLayout({ workspaceSlug, conversationId }: Conversati
   const [isDetailOpen, setIsDetailOpen] = React.useState(true);
   const [isPosDrawerOpen, setIsPosDrawerOpen] = React.useState(false);
   const [orderToEdit, setOrderToEdit] = React.useState<OrderResponseDto | null>(null);
+  const [posDraftSuggestion, setPosDraftSuggestion] =
+    React.useState<PosDraftSuggestedEventPayload | null>(null);
 
   const { data: workspaces } = useWorkspaces();
   const currentWorkspace = workspaces?.find(w => w.slug === workspaceSlug);
@@ -32,10 +37,18 @@ export function ConversationLayout({ workspaceSlug, conversationId }: Conversati
 
   const resolvedWorkspaceId = workspaceId || conversation?.workspaceId;
 
+  // Clear suggestion on conversation switch
+  React.useEffect(() => {
+    setPosDraftSuggestion(null);
+  }, [conversationId]);
+
   // Real-time synchronization for POS order changes, bank reconciliation, and chat receipts
   usePosRealtimeSync({
     workspaceId: resolvedWorkspaceId,
     conversationId,
+    onDraftSuggested: payload => {
+      setPosDraftSuggestion(payload);
+    },
   });
 
   const handleOpenPosDrawer = React.useCallback((order?: OrderResponseDto | null) => {
@@ -91,14 +104,29 @@ export function ConversationLayout({ workspaceSlug, conversationId }: Conversati
           className="min-h-0 overflow-hidden"
         >
           {conversationId ? (
-            <MessageThread
-              conversationId={conversationId}
-              workspaceSlug={workspaceSlug}
-              workspaceId={resolvedWorkspaceId}
-              isDetailOpen={isDetailOpen}
-              onToggleDetail={() => setIsDetailOpen(prev => !prev)}
-              onOpenPosDrawer={() => handleOpenPosDrawer(null)}
-            />
+            <div className="flex flex-col h-full w-full min-h-0">
+              {posDraftSuggestion && !isPosDrawerOpen && (
+                <div className="p-2 border-b bg-background shrink-0">
+                  <AiAutofillBanner
+                    suggestion={posDraftSuggestion}
+                    onApply={() => {
+                      setIsPosDrawerOpen(true);
+                    }}
+                    onDismiss={() => setPosDraftSuggestion(null)}
+                  />
+                </div>
+              )}
+              <div className="flex-1 min-h-0">
+                <MessageThread
+                  conversationId={conversationId}
+                  workspaceSlug={workspaceSlug}
+                  workspaceId={resolvedWorkspaceId}
+                  isDetailOpen={isDetailOpen}
+                  onToggleDetail={() => setIsDetailOpen(prev => !prev)}
+                  onOpenPosDrawer={() => handleOpenPosDrawer(null)}
+                />
+              </div>
+            </div>
           ) : (
             <ConversationEmptyState />
           )}
@@ -143,6 +171,8 @@ export function ConversationLayout({ workspaceSlug, conversationId }: Conversati
           initialOrder={orderToEdit}
           contactName={conversation?.contact?.name}
           contactPhone={conversation?.contact?.phoneNumber}
+          draftSuggestion={posDraftSuggestion}
+          onDismissSuggestion={() => setPosDraftSuggestion(null)}
         />
       )}
     </div>

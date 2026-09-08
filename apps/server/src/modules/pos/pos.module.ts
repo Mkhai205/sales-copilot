@@ -6,6 +6,8 @@ import { VietQrModule } from './payments/vietqr.module';
 import { PaymentWebhooksModule } from './webhooks/payment-webhooks.module';
 import { PosReconciliationModule } from './reconciliation/pos-reconciliation.module';
 import { PosListenersModule } from './listeners/pos-listeners.module';
+import { ShippingModule } from './shipping/shipping.module';
+import { PosAutomationModule } from './automation/pos-automation.module';
 
 @Module({
   imports: [
@@ -16,6 +18,8 @@ import { PosListenersModule } from './listeners/pos-listeners.module';
     PaymentWebhooksModule,
     PosReconciliationModule,
     PosListenersModule,
+    ShippingModule,
+    PosAutomationModule,
   ],
   exports: [
     ProductsModule,
@@ -25,6 +29,8 @@ import { PosListenersModule } from './listeners/pos-listeners.module';
     PaymentWebhooksModule,
     PosReconciliationModule,
     PosListenersModule,
+    ShippingModule,
+    PosAutomationModule,
   ],
 })
 export class PosModule {}

@@ -10,9 +10,10 @@ import {
   type OrderResponseDto,
   type ShippingAddressInputDto,
   type CreateOrderItemDto,
+  type PosDraftSuggestedEventPayload,
 } from '@sales-copilot/shared-contracts';
 import { toast } from 'sonner';
-import { ShoppingBag, CheckCircle2 } from 'lucide-react';
+import { ShoppingBag, CheckCircle2, Printer } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -25,10 +26,12 @@ import { Button } from '@/components/ui/button';
 import { usePosOrders } from '../hooks/use-pos-orders';
 import { usePosCollision } from '../hooks/use-pos-collision';
 import { AgentCollisionBanner } from './agent-collision-banner';
+import { AiAutofillBanner } from './ai-autofill-banner';
 import { ProductPickerCommand } from './product-picker-command';
 import { LineItemsTable, type PosLineItem } from './line-items-table';
 import { RecipientInfoForm } from './recipient-info-form';
 import { OrderFinancialSummary } from './order-financial-summary';
+import { ThermalPrintDialog } from './thermal-print-dialog';
 import type { FlatProductVariant } from '../hooks/use-pos-products';
 import { posApi } from '../api/pos-client';
 
@@ -41,6 +44,8 @@ interface PosDrawerProps {
   initialOrder?: OrderResponseDto | null;
   contactName?: string | null;
   contactPhone?: string | null;
+  draftSuggestion?: PosDraftSuggestedEventPayload | null;
+  onDismissSuggestion?: () => void;
 }
 
 export function PosDrawer({
@@ -52,6 +57,8 @@ export function PosDrawer({
   initialOrder,
   contactName,
   contactPhone,
+  draftSuggestion,
+  onDismissSuggestion,
 }: PosDrawerProps) {
   const [items, setItems] = React.useState<PosLineItem[]>([]);
   const [shippingAddress, setShippingAddress] = React.useState<Partial<ShippingAddressInputDto>>(
@@ -63,6 +70,7 @@ export function PosDrawer({
   const [shippingFee, setShippingFee] = React.useState<number>(0);
   const [paymentMethod, setPaymentMethod] = React.useState<PaymentMethod>(PaymentMethod.COD);
   const [customerNotes, setCustomerNotes] = React.useState<string>('');
+  const [printDialogOpen, setPrintDialogOpen] = React.useState<boolean>(false);
 
   const { createOrder, updateOrder, isCreating, isUpdating } = usePosOrders(workspaceId);
   const { isLocked, lockedBy, remainingTtlSeconds, takeover } = usePosCollision({
@@ -132,6 +140,58 @@ export function PosDrawer({
       setCustomerNotes('');
     }
   }, [isOpen, initialOrder, contactName, contactPhone]);
+
+  // Handle applying AI extracted draft suggestion
+  const handleApplySuggestion = React.useCallback(
+    (suggestion: PosDraftSuggestedEventPayload) => {
+      const cust = suggestion.suggestedCustomer;
+      setShippingAddress(prev => ({
+        ...prev,
+        recipientName: cust?.recipientName || prev.recipientName,
+        phoneNumber: cust?.phoneNumber || prev.phoneNumber,
+        streetAddress: cust?.streetAddress || prev.streetAddress,
+        ward: cust?.ward || prev.ward,
+        district: cust?.district || prev.district,
+        province: cust?.province || prev.province,
+      }));
+
+      if (suggestion.suggestedItems && suggestion.suggestedItems.length > 0) {
+        setItems(prev => {
+          const newItems = [...prev];
+          for (const sItem of suggestion.suggestedItems || []) {
+            const existingIdx = sItem.variantId
+              ? newItems.findIndex(i => i.variantId === sItem.variantId)
+              : newItems.findIndex(i => i.productName === sItem.productName);
+
+            if (existingIdx !== -1) {
+              newItems[existingIdx] = {
+                ...newItems[existingIdx],
+                quantity: newItems[existingIdx].quantity + sItem.quantity,
+              };
+            } else {
+              newItems.push({
+                productId: sItem.productId || `ai-prod-${Date.now()}`,
+                variantId: sItem.variantId || `ai-var-${Date.now()}`,
+                productName: sItem.productName,
+                variantName: sItem.variantName || 'Tiêu chuẩn',
+                sku: sItem.sku || 'SKU-AI',
+                unitPrice: sItem.unitPrice || 0,
+                quantity: sItem.quantity,
+                discountAmount: 0,
+              });
+            }
+          }
+          return newItems;
+        });
+      }
+
+      toast.success('Đã áp dụng thông tin khách hàng và sản phẩm từ AI gợi ý!');
+      if (onDismissSuggestion) {
+        onDismissSuggestion();
+      }
+    },
+    [onDismissSuggestion],
+  );
 
   // Handle adding variant from command palette
   const handleSelectVariant = (variant: FlatProductVariant) => {
@@ -297,9 +357,23 @@ export function PosDrawer({
                 ? `Chỉnh sửa đơn #${initialOrder.displayId}`
                 : 'Tạo đơn hàng nhanh (POS)'}
             </SheetTitle>
-            <kbd className="hidden sm:inline-flex items-center gap-1 font-mono text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded border">
-              F4 đóng/mở
-            </kbd>
+            <div className="flex items-center gap-2">
+              {initialOrder && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-7 text-xs px-2 gap-1"
+                  onClick={() => setPrintDialogOpen(true)}
+                >
+                  <Printer className="size-3.5" />
+                  In phiếu
+                </Button>
+              )}
+              <kbd className="hidden sm:inline-flex items-center gap-1 font-mono text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded border">
+                F4 đóng/mở
+              </kbd>
+            </div>
           </div>
           <SheetDescription className="text-xs text-muted-foreground mt-0.5">
             Tìm sản phẩm, phân tích địa chỉ khách hàng và lập đơn ngay trong phiên chat
@@ -316,6 +390,15 @@ export function PosDrawer({
             onTakeover={takeover}
             disabled={isSaving}
           />
+
+          {/* AI Autofill Banner inside POS Drawer */}
+          {draftSuggestion && draftSuggestion.confidenceScore >= 80 && (
+            <AiAutofillBanner
+              suggestion={draftSuggestion}
+              onApply={handleApplySuggestion}
+              onDismiss={onDismissSuggestion || (() => {})}
+            />
+          )}
 
           {/* Product Command Search */}
           <div className="flex flex-col gap-1.5">
@@ -412,6 +495,15 @@ export function PosDrawer({
             </Button>
           </div>
         </SheetFooter>
+
+        {initialOrder && (
+          <ThermalPrintDialog
+            open={printDialogOpen}
+            onOpenChange={setPrintDialogOpen}
+            workspaceId={workspaceId}
+            orderId={initialOrder.id}
+          />
+        )}
       </SheetContent>
     </Sheet>
   );
