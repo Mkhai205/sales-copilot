@@ -40,28 +40,3 @@ export interface PaymentTransactionResponseDto {
   createdAt: Date | string;
   updatedAt: Date | string;
 }
-
-export const generateVietQrSchema = z.object({
-  bankBin: z.string().trim().optional(),
-  accountNumber: z.string().trim().optional(),
-  accountName: z.string().trim().optional(),
-});
-
-export type GenerateVietQrDto = z.input<typeof generateVietQrSchema>;
-
-export const vietQrPayloadResponseSchema = z.object({
-  orderId: z.string(),
-  orderNumber: z.string(),
-  displayId: z.number(),
-  amount: z.number(),
-  bankBin: z.string(),
-  bankCode: z.string(),
-  bankName: z.string(),
-  accountNumber: z.string(),
-  accountName: z.string(),
-  transferContent: z.string(),
-  qrUrl: z.string(),
-  qrPayload: z.string(),
-});
-
-export type VietQrPayloadResponseDto = z.infer<typeof vietQrPayloadResponseSchema>;

@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
-import { PosDrawer } from '@/features/pos';
+import { PosDrawer, usePosRealtimeSync } from '@/features/pos';
 import { useWorkspaces } from '@/features/workspaces/use-workspaces';
 import type { OrderResponseDto } from '@sales-copilot/shared-contracts';
 import { ConversationEmptyState } from './conversation-empty-state';
@@ -31,6 +31,12 @@ export function ConversationLayout({ workspaceSlug, conversationId }: Conversati
   });
 
   const resolvedWorkspaceId = workspaceId || conversation?.workspaceId;
+
+  // Real-time synchronization for POS order changes, bank reconciliation, and chat receipts
+  usePosRealtimeSync({
+    workspaceId: resolvedWorkspaceId,
+    conversationId,
+  });
 
   const handleOpenPosDrawer = React.useCallback((order?: OrderResponseDto | null) => {
     setOrderToEdit(order || null);

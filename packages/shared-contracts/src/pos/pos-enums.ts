@@ -94,3 +94,6 @@ export const paymentTransactionStatusSchema = z.nativeEnum(PaymentTransactionSta
 export const carrierProviderSchema = z.nativeEnum(CarrierProvider);
 export const carrierNetworkSchema = z.nativeEnum(CarrierNetwork);
 export const inventoryTransactionTypeSchema = z.nativeEnum(InventoryTransactionType);
+
+export const POS_RECONCILIATION_QUEUE = 'pos-reconciliation';
+export type PaymentGatewayType = 'sepay' | 'casso' | 'manual';

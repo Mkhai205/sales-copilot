@@ -11,13 +11,16 @@ import {
   Edit,
   MapPin,
   Package,
+  QrCode,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { OrderStatusBadge, PaymentStatusBadge } from './order-status-badge';
 import { CarrierBadge } from './carrier-badge';
 import { OrderHistoryList } from './order-history-list';
 import { useActiveConversationOrder } from '../hooks/use-active-conversation-order';
 import { usePosOrders } from '../hooks/use-pos-orders';
+import { posApi } from '../api/pos-client';
 
 interface PosDetailTabProps {
   workspaceId: string;
@@ -40,6 +43,7 @@ export function PosDetailTab({
 
   const { confirmOrder, payOrder, cancelOrder, isConfirming, isPaying, isCancelling } =
     usePosOrders(workspaceId);
+  const [isSendingQr, setIsSendingQr] = React.useState(false);
 
   const formatCurrency = (val: number | string) => {
     return new Intl.NumberFormat('vi-VN', {
@@ -47,6 +51,19 @@ export function PosDetailTab({
       currency: 'VND',
       maximumFractionDigits: 0,
     }).format(Number(val));
+  };
+
+  const handleSendVietQr = async () => {
+    if (!activeOrder) return;
+    setIsSendingQr(true);
+    try {
+      await posApi.generateVietQr(workspaceId, activeOrder.id, { sendToChat: true });
+      toast.success(`Đã gửi mã VietQR cho đơn #${activeOrder.displayId} vào chat!`);
+    } catch (err: any) {
+      toast.error(`Không thể gửi VietQR: ${err.message || 'Lỗi hệ thống'}`);
+    } finally {
+      setIsSendingQr(false);
+    }
   };
 
   const handleConfirm = async () => {
@@ -186,6 +203,17 @@ export function PosDetailTab({
                     type="button"
                     variant="outline"
                     size="sm"
+                    className="h-7 text-xs px-2 gap-1 text-primary"
+                    onClick={handleSendVietQr}
+                    disabled={isSendingQr}
+                  >
+                    <QrCode className="size-3.5" />
+                    {isSendingQr ? 'Đang gửi...' : 'Gửi VietQR'}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
                     className="h-7 text-xs px-2 gap-1"
                     onClick={() => onOpenDrawer(activeOrder)}
                   >
@@ -218,6 +246,17 @@ export function PosDetailTab({
                   >
                     <XCircle className="size-3.5 mr-1" />
                     Hủy
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-xs px-2 gap-1 text-primary"
+                    onClick={handleSendVietQr}
+                    disabled={isSendingQr}
+                  >
+                    <QrCode className="size-3.5" />
+                    {isSendingQr ? 'Đang gửi...' : 'Gửi VietQR'}
                   </Button>
                   <Button
                     type="button"

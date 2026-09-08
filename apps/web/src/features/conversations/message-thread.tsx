@@ -64,6 +64,8 @@ import { MessageImageGrid, isImageAttachment } from './message-image-grid';
 import { MessageActionsToolbar } from './message-actions-toolbar';
 import { CopilotDock, CopilotDrawer, useCopilotSuggestions } from '@/features/copilot';
 import { QuickTagActionBar } from './quick-tag-action-bar';
+import { VietQrChatCard } from '@/features/pos/components/vietqr-chat-card';
+import type { VietQrResponseDto } from '@sales-copilot/shared-contracts';
 
 interface MessageThreadProps {
   conversationId: string;
@@ -250,9 +252,21 @@ function MessageItem({
   );
 
   const previewData = (message.metadata as any)?.linkPreview as LinkPreviewData | undefined;
+  const vietQrData =
+    (message.metadata as any)?.type === 'VIETQR_PAYMENT'
+      ? ((message.metadata as any)?.qrData as VietQrResponseDto | undefined)
+      : undefined;
 
   // 1. System / Activity Notice
   if (isSystem) {
+    if (vietQrData) {
+      return (
+        <MessageScrollerItem messageId={message.id} className="py-2 flex justify-center">
+          <VietQrChatCard qrData={vietQrData} />
+        </MessageScrollerItem>
+      );
+    }
+
     return (
       <MessageScrollerItem messageId={message.id} className="py-1">
         <Marker variant="default" className="justify-center text-center">
@@ -357,6 +371,13 @@ function MessageItem({
               align="end"
             />
 
+            {/* VietQR Payment Card */}
+            {vietQrData && (
+              <div className="pt-1 flex justify-end w-full">
+                <VietQrChatCard qrData={vietQrData} />
+              </div>
+            )}
+
             {/* Image Grid */}
             {imageAttachments.length > 0 && (
               <div className="group/msg relative flex items-center justify-end gap-2 max-w-full">
@@ -446,6 +467,13 @@ function MessageItem({
             workspaceId={workspaceId}
             align="start"
           />
+
+          {/* VietQR Payment Card */}
+          {vietQrData && (
+            <div className="pt-1 flex justify-start w-full">
+              <VietQrChatCard qrData={vietQrData} />
+            </div>
+          )}
 
           {/* Image Grid */}
           {imageAttachments.length > 0 && (

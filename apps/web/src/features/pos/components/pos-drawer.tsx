@@ -30,6 +30,7 @@ import { LineItemsTable, type PosLineItem } from './line-items-table';
 import { RecipientInfoForm } from './recipient-info-form';
 import { OrderFinancialSummary } from './order-financial-summary';
 import type { FlatProductVariant } from '../hooks/use-pos-products';
+import { posApi } from '../api/pos-client';
 
 interface PosDrawerProps {
   isOpen: boolean;
@@ -230,7 +231,7 @@ export function PosDrawer({
         });
       } else {
         // Create new order draft
-        await createOrder({
+        const createdOrder = await createOrder({
           contactId,
           conversationId: conversationId || null,
           items: formattedItems,
@@ -245,6 +246,17 @@ export function PosDrawer({
             paymentMethod,
           },
         });
+
+        if (paymentMethod === PaymentMethod.VIETQR && createdOrder?.id) {
+          try {
+            await posApi.generateVietQr(workspaceId, createdOrder.id, { sendToChat: true });
+            toast.success(`Đã sinh mã VietQR cho đơn #${createdOrder.displayId} và gửi vào chat!`);
+          } catch (qrErr: any) {
+            toast.warning(
+              `Đã tạo đơn #${createdOrder.displayId}, nhưng chưa thể gửi VietQR: ${qrErr.message}`,
+            );
+          }
+        }
       }
 
       onOpenChange(false);
@@ -389,7 +401,11 @@ export function PosDrawer({
               ) : (
                 <>
                   <CheckCircle2 className="size-4" />
-                  {initialOrder ? 'Lưu cập nhật' : 'Tạo đơn hàng'}
+                  {initialOrder
+                    ? 'Lưu cập nhật'
+                    : paymentMethod === PaymentMethod.VIETQR
+                      ? '⚡ Tạo đơn & Gửi VietQR'
+                      : 'Tạo đơn hàng'}
                   <span className="text-[10px] opacity-75 font-normal ml-1">(Ctrl+Enter)</span>
                 </>
               )}

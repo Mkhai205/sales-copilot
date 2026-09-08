@@ -6,3 +6,4 @@ export * from './inventory.schemas';
 export * from './shipping.schemas';
 export * from './address';
 export * from './vietnam-telco';
+export * from './vietqr.dto';

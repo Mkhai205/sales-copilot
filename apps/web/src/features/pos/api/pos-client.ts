@@ -2,6 +2,7 @@ import { buildQueryString, fetchApi, workspaceHeaders } from '@/lib/api/client';
 import type {
   CancelOrderDto,
   CreateOrderDto,
+  GenerateVietQrDto,
   ListOrdersQueryOutput,
   ListProductsQueryOutput,
   ManualPayOrderDto,
@@ -9,6 +10,7 @@ import type {
   ProductResponseDto,
   UpdateOrderDto,
   PaginationMeta,
+  VietQrResponseDto,
 } from '@sales-copilot/shared-contracts';
 
 export const posApi = {
@@ -72,5 +74,12 @@ export const posApi = {
       method: 'POST',
       headers: workspaceHeaders(workspaceId),
       body: JSON.stringify(dto),
+    }),
+
+  generateVietQr: (workspaceId: string, orderId: string, dto?: GenerateVietQrDto) =>
+    fetchApi<VietQrResponseDto>(`/workspaces/${workspaceId}/orders/${orderId}/vietqr`, {
+      method: 'POST',
+      headers: workspaceHeaders(workspaceId),
+      body: dto ? JSON.stringify(dto) : undefined,
     }),
 };
