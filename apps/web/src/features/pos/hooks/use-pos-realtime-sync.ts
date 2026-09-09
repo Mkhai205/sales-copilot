@@ -38,8 +38,6 @@ export function usePosRealtimeSync({
         queryClient.invalidateQueries({ queryKey: ['pos-orders', workspaceId] });
         queryClient.invalidateQueries({ queryKey: ['active-conversation-order', workspaceId] });
         queryClient.invalidateQueries({ queryKey: ['pos-products', workspaceId] });
-        queryClient.invalidateQueries({ queryKey: ['opportunities', workspaceId] });
-        queryClient.invalidateQueries({ queryKey: ['pipeline-summary', workspaceId] });
       }
 
       if (orderId && workspaceId) {

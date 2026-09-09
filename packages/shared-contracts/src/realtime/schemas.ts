@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { LeadGrade } from '../sales/enums';
 
 // ============================================================================
 // 1. WebSocket Server Event Enums
@@ -49,25 +48,6 @@ export enum WsServerEvent {
   // Typing events
   TYPING_START = 'typing.start',
   TYPING_STOP = 'typing.stop',
-
-  // Sales events (Milestone 2A - Epic 2.1 & 2.2)
-  LEAD_CREATED = 'lead.created',
-  LEAD_UPDATED = 'lead.updated',
-  LEAD_CONVERTED = 'lead.converted',
-  OPPORTUNITY_CREATED = 'opportunity.created',
-  OPPORTUNITY_STAGE_UPDATED = 'opportunity.stage_updated',
-  SALES_EVIDENCE_DETECTED = 'sales_evidence.detected',
-  SALES_EVIDENCE_INVALIDATED = 'sales_evidence.invalidated',
-
-  // Conversation Intelligence events (Milestone 2B - Epic 2.4 & Epic 2.5)
-  CONVERSATION_INTELLIGENCE_ANALYZED = 'conversation.intelligence_analyzed',
-  CONVERSATION_URGENT_ALERT = 'conversation.urgent_alert',
-  LEAD_SCORE_UPDATED = 'lead_score.updated',
-
-  // Sales Copilot events (Milestone 2C - Epic 2.6)
-  COPILOT_SUGGESTION_GENERATED = 'copilot.suggestion_generated',
-  COPILOT_SUGGESTION_CHUNK = 'copilot.suggestion_chunk',
-  COPILOT_SUGGESTION_ACTED = 'copilot.suggestion_acted',
 
   // POS & Order events (Milestone M1 & M2)
   ORDER_CREATED = 'order.created',
@@ -142,18 +122,6 @@ export const typingIndicatorSchema = z.object({
   isTyping: z.boolean(),
 });
 export type TypingIndicatorDto = z.infer<typeof typingIndicatorSchema>;
-
-export const leadScoreUpdatedEventPayloadSchema = z.object({
-  workspaceId: z.string().uuid('Invalid workspace ID format (UUID expected)'),
-  leadId: z.string().uuid('Invalid lead ID format (UUID expected)'),
-  score: z.number().int().min(0).max(100),
-  grade: z.nativeEnum(LeadGrade),
-  previousScore: z.number().int().min(0).max(100).optional(),
-  previousGrade: z.nativeEnum(LeadGrade).optional(),
-  scoreFactors: z.record(z.unknown()),
-  triggerReason: z.string(),
-});
-export type LeadScoreUpdatedEventPayloadDto = z.infer<typeof leadScoreUpdatedEventPayloadSchema>;
 
 export const posEditingActionSchema = z.object({
   workspaceId: z.string().uuid('Invalid workspace ID format (UUID expected)'),

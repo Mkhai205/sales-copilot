@@ -49,8 +49,6 @@ export interface OrderItemResponseDto {
 export const createOrderSchema = z.object({
   conversationId: z.string().uuid().optional().nullable(),
   contactId: z.string().uuid('Contact ID không hợp lệ'),
-  leadId: z.string().uuid().optional().nullable(),
-  opportunityId: z.string().uuid().optional().nullable(),
   // Status defaults strictly to DRAFT. Advanced statuses cannot be injected by client
   status: z.literal(OrderStatus.DRAFT).default(OrderStatus.DRAFT),
   discountAmount: z.coerce.number().min(0, 'Chiết khấu không được âm').default(0),
@@ -100,8 +98,6 @@ export const listOrdersQuerySchema = z.object({
   limit: z.coerce.number().int().positive().max(100).default(20),
   conversationId: z.string().uuid().optional(),
   contactId: z.string().uuid().optional(),
-  leadId: z.string().uuid().optional(),
-  opportunityId: z.string().uuid().optional(),
   status: z.nativeEnum(OrderStatus).optional(),
   paymentStatus: z.nativeEnum(PaymentStatus).optional(),
   fulfillmentStatus: z.nativeEnum(FulfillmentStatus).optional(),
@@ -120,8 +116,6 @@ export interface OrderResponseDto {
   workspaceId: string;
   conversationId: string | null;
   contactId: string;
-  leadId: string | null;
-  opportunityId: string | null;
   createdById: string | null;
   status: OrderStatus;
   paymentStatus: PaymentStatus;

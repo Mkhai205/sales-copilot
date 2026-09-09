@@ -476,8 +476,6 @@ export class ShippingService {
       workspaceId: order.workspaceId,
       conversationId: order.conversationId,
       contactId: order.contactId,
-      leadId: order.leadId,
-      opportunityId: order.opportunityId,
       createdById: order.createdById,
       status: order.status,
       paymentStatus: order.paymentStatus,

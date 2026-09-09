@@ -2,7 +2,7 @@
 
 ## 1. Scope Phasing & Objectives
 
-Sales Copilot Platform được chia thành 3 giai đoạn chiến lược:
+Sales Copilot Platform được phân kỳ chiến lược tập trung vào **Thương Mại Hội Thoại D2C (Conversational Commerce)**:
 
 ```text
 Phase 1: Omnichannel Conversation Platform Core (COMPLETED BASELINE)
@@ -13,18 +13,18 @@ Phase 1: Omnichannel Conversation Platform Core (COMPLETED BASELINE)
   ├── Operations (Canned Responses, Automation Rules, Webhooks, Audit Logs)
   └── Realtime Engine (WebSocket Gateway, Redis Pub/Sub)
 
-Phase 2: Sales Intelligence & AI Copilot (CURRENT ACTIVE SCOPE)
-  ├── Lead / Opportunity Lifecycle & Conversion State Machine
-  ├── Sales Evidence Ledger (BANT: Budget, Authority, Need, Timeline)
-  ├── AI Lead Scoring Engine with 48h Time-Decay
-  ├── Conversation Intelligence Pipeline via BullMQ
-  └── Sales Copilot Assistant Drawer & Next Best Actions (NBA)
+Phase 2: Conversational Commerce & AI Auto-pilot POS (CURRENT ACTIVE SCOPE)
+  ├── Built-in In-Chat POS & Inventory (Products, Variants, Atomic Stock Reserve)
+  ├── Dynamic VietQR (NAPAS 247) & Instant Bank Webhook Reconciliation (< 1s)
+  ├── AI NER 3-Tier Administrative Address Extraction & 1-Click Order Generation
+  ├── 24/7 Autonomous AI Auto-pilot & Guarded Discount Policy Engine
+  ├── Anti-theft Realtime Comment Masking (< 1s) & Comment-to-Inbox Pipeline
+  └── Browser-based Thermal Printing (K80/K58 via @media print)
 
-Phase 3: Autonomous Sales Extensions (FUTURE SCOPE - FROZEN)
-  ├── Autonomous Sales Agent Execution Engine
-  ├── Tool Registry & Guardrails
+Phase 3: Autonomous Scale & Advanced Operations (FUTURE SCOPE - FROZEN)
+  ├── Autonomous Sales Agent Execution Loop
   ├── Voice / SIP Integration (WebRTC)
-  └── External CRM Sync (HubSpot, Salesforce)
+  └── Advanced Two-way E-commerce Marketplace Sync (Shopee, TikTok Shop APIs)
 ```
 
 ---
@@ -39,20 +39,22 @@ Phase 3: Autonomous Sales Extensions (FUTURE SCOPE - FROZEN)
 
 ---
 
-## 3. Phase 2 Scope (Current Active Scope)
+## 3. Phase 2 Scope (Current Active Scope — D2C Conversational Commerce)
 
-- **Lead & Opportunity Core**: Lead lifecycle (`NEW`, `CONTACTED`, `QUALIFIED`, `UNQUALIFIED`), Opportunity pipeline stages, win/loss tracking.
-- **Multi-Provider LLM Gateway**: Provider adapter abstraction (`GeminiAdapter` primary, `OpenAiAdapter` fallback), token bucket rate limiting, circuit breaker.
-- **Sales Evidence & Activity Timeline**: BANT evidence ledger linked to verbatim conversation quotes, unified timeline.
-- **AI Lead Scoring Engine**: Fit score + Behavior score + Time-decay evaluation after 48h inactivity.
-- **Sales Copilot Assistant Drawer**: Next Best Action suggestions, contextual draft replies, feedback collection (`accepted`, `edited`, `rejected`).
+- **Built-in In-Chat POS & Inventory Management**: Quản lý biến thể (Size/Màu), SKU, tồn kho khả dụng (`Available = Physical - Reserved`). Tra cứu tồn kho `< 50ms`. Lên đơn trực tiếp qua phím tắt `F4`.
+- **Dynamic VietQR & Instant Webhook Bank Reconciliation**: Tự động sinh mã VietQR theo chuẩn NAPAS 247 có logo, số tiền chính xác và memo `DH{code}`. Webhook gạch nợ tự động trong `< 1s` sang `PAID`, triệt tiêu bill giả.
+- **AI NER 3-Tier Address Extraction**: Trích xuất SĐT, Tên, Badge nhà mạng và chuẩn hóa địa chỉ 3 cấp (Tỉnh-Huyện-Xã) từ tin nhắn văn bản không cấu trúc, điền đơn trong 1 cú click.
+- **24/7 Autonomous AI Auto-pilot**: Tự vấn size, tư vấn mẫu, đàm phán giảm giá/freeship theo hạn mức an toàn của `DiscountPolicyEngine` và tự động chốt đơn lúc 02:00 sáng.
+- **Anti-theft Comment Auto-masking**: Tự động ẩn bình luận chứa SĐT `< 1s` chống đối thủ quét cướp khách và tự động gửi tin nhắn riêng (Private Message) kéo khách vào inbox.
+- **Browser-based Thermal Printing**: In phiếu gửi K80 (80mm) và K58 (58mm) trực tiếp trên trình duyệt qua `@media print`, không độ trễ hộp thoại in.
+- **Agent Collision Prevention**: Khóa hội thoại Redis Distributed Sliding Lock 30 giây khi có nhân viên mở form đơn hàng.
 
 ---
 
-## 4. Explicitly Out of Scope for Phase 2 (Prohibited)
+## 4. Explicitly Out of Scope & Deprecated for Phase 2
 
-Các thành phần sau thuộc **Phase 3 và tuyệt đối không tạo code/schema trong Phase 2**:
-- Autonomous Sales Agent loop & tool execution engine.
-- Voice/SIP integration & VoIP softphones.
-- External CRM bidirectional synchronization (HubSpot, Salesforce).
-- Deep BI / Data warehousing analytics.
+Các thành phần sau **không thuộc phạm vi Phase 2 và đã được lưu trữ an toàn tại branch `archive/phase-2-b2b-leads`**:
+- ⛔ **B2B Lead Management & Deal Pipelines**: Vòng đời Lead (`NEW`, `QUALIFIED`), Pipeline stages (`PROPOSAL`, `NEGOTIATION`), Win/Loss tracking.
+- ⛔ **BANT Sales Evidence & Lead Scoring**: Trích xuất tín hiệu BANT, bảng điểm suy giảm theo thời gian (48h time-decay scoring).
+- ⛔ **External CRM Sync**: Đồng bộ 2 chiều với HubSpot, Salesforce.
+- ⛔ **Voice / SIP Integration**: Tích hợp tổng đài thoại WebRTC.

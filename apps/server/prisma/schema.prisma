@@ -92,84 +92,11 @@ enum FileType {
   FILE
 }
 
-enum LeadStatus {
-  NEW
-  CONTACTED
-  ENGAGED
-  QUALIFIED
-  UNQUALIFIED
-  CONVERTED
-  DISQUALIFIED
-}
-
-enum LeadStage {
-  DISCOVERY
-  EVALUATION
-  PROPOSAL
-  NEGOTIATION
-  WON
-  LOST
-}
-
-enum LeadGrade {
-  HOT
-  WARM
-  COLD
-  JUNK
-}
-
-enum ScoreTriggerEvent {
-  INITIAL_CALCULATION
-  MESSAGE_RECEIVED
-  EVIDENCE_DETECTED
-  EVIDENCE_INVALIDATED
-  STAGE_CHANGED
-  MANUAL_RECALCULATION
-  TIME_DECAY
-}
-
-enum OpportunityStage {
-  PROSPECTING
-  QUALIFICATION
-  PROPOSAL
-  NEGOTIATION
-  CLOSED_WON
-  CLOSED_LOST
-}
-
-enum BuyingSignalType {
-  BUDGET_CONFIRMED
-  AUTHORITY_IDENTIFIED
-  NEED_EXPRESSED
-  TIMELINE_DEFINED
-  COMPETITOR_MENTION
-  OBJECTION_RAISED
-  PURCHASE_INTENT
-  CHURN_RISK
-  ENGAGEMENT_SPIKE
-  PAIN_POINT
-  POSITIVE_SENTIMENT
-}
-
 enum LlmProvider {
   GEMINI
   OPENAI
   ANTHROPIC
   DEEPSEEK
-}
-
-enum CopilotSuggestionType {
-  REPLY_DRAFT
-  NEXT_BEST_ACTION
-  BATTLECARD
-}
-
-enum SuggestionStatus {
-  PENDING
-  ACCEPTED
-  DISMISSED
-  APPLIED
-  EXPIRED
 }
 
 // =============================================================================
@@ -275,11 +202,6 @@ model User {
   teamMembers           TeamMember[]
   inboxMembers          InboxMember[]
   assignedConversations Conversation[]    @relation("UserAssignedConversations")
-  assignedLeads         Lead[]              @relation("UserAssignedLeads")
-  assignedOpportunities Opportunity[]       @relation("UserAssignedOpportunities")
-  invalidatedEvidences  SalesEvidence[]     @relation("UserInvalidatedEvidence")
-  createdTemplates      PromptTemplate[]    @relation("UserCreatedTemplates")
-  resolvedSuggestions   CopilotSuggestion[] @relation("UserResolvedSuggestions")
   auditLogs             AuditLog[]
   createdOrders                  Order[]                @relation("UserCreatedOrders")
   performedInventoryTransactions InventoryTransaction[] @relation("UserInventoryTransactions")
@@ -311,13 +233,6 @@ model Workspace {
   automationRules      AutomationRule[]
   webhookSubscriptions WebhookSubscription[]
   auditLogs            AuditLog[]
-  leads                Lead[]
-  opportunities        Opportunity[]
-  salesEvidences       SalesEvidence[]
-  leadScores           LeadScore[]
-  leadScoreHistories   LeadScoreHistory[]
-  promptTemplates      PromptTemplate[]
-  copilotSuggestions   CopilotSuggestion[]
   products              Product[]
   productVariants       ProductVariant[]
   orders                Order[]
@@ -391,8 +306,6 @@ model Contact {
   workspace     Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   identities    ChannelIdentity[]
   conversations Conversation[]
-  leads         Lead[]
-  opportunities Opportunity[]
   orders            Order[]
   shippingAddresses ShippingAddress[]
 
@@ -524,8 +437,6 @@ model Conversation {
   team            Team?               @relation(fields: [teamId], references: [id], onDelete: SetNull)
   messages           Message[]
   labels             ConversationLabel[]
-  salesEvidences     SalesEvidence[]
-  copilotSuggestions CopilotSuggestion[]
   orders             Order[]
 
   @@unique([workspaceId, displayId])
@@ -570,8 +481,6 @@ model Message {
   conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   workspace    Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   attachments  Attachment[]
-  salesEvidences SalesEvidence[]
-  suggestions  CopilotSuggestion[]
 
   @@unique([conversationId, externalId])
   @@index([conversationId, createdAt])
@@ -706,205 +615,6 @@ model AuditLog {
   @@map("audit_logs")
 }
 
-model Lead {
-  id             String     @id @default(uuid())
-  workspaceId    String
-  contactId      String
-  status         LeadStatus @default(NEW)
-  stage          LeadStage  @default(DISCOVERY)
-  score          Int        @default(0)
-  assignedUserId String?
-  estimatedValue Decimal?   @db.Decimal(15, 2)
-  currency       String     @default("USD")
-  metadata       Json       @default("{}")
-  createdAt      DateTime   @default(now())
-  lastActivityAt DateTime?
-  updatedAt      DateTime   @updatedAt
-
-  workspace     Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  contact       Contact       @relation(fields: [contactId], references: [id], onDelete: Restrict)
-  assignedUser  User?         @relation("UserAssignedLeads", fields: [assignedUserId], references: [id], onDelete: SetNull)
-  opportunities  Opportunity[]
-  evidences      SalesEvidence[]
-  scoreRecord    LeadScore?
-  scoreHistories LeadScoreHistory[]
-  suggestions    CopilotSuggestion[]
-  orders         Order[]
-
-  @@unique([workspaceId, contactId])
-  @@index([workspaceId, status])
-  @@index([workspaceId, stage])
-  @@index([workspaceId, score])
-  @@index([workspaceId, assignedUserId])
-  @@index([workspaceId, lastActivityAt])
-  @@index([workspaceId, createdAt])
-  @@map("leads")
-}
-
-model Opportunity {
-  id                String           @id @default(uuid())
-  workspaceId       String
-  leadId            String?
-  contactId         String
-  title             String
-  stage             OpportunityStage @default(PROSPECTING)
-  amount            Decimal          @db.Decimal(15, 2)
-  currency          String           @default("USD")
-  probability       Int              @default(50)
-  expectedCloseDate DateTime?
-  actualCloseDate   DateTime?
-  lostReason        String?
-  assignedUserId    String?
-  metadata          Json             @default("{}")
-  createdAt         DateTime         @default(now())
-  updatedAt         DateTime         @updatedAt
-
-  workspace    Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  lead         Lead?     @relation(fields: [leadId], references: [id], onDelete: SetNull)
-  contact      Contact   @relation(fields: [contactId], references: [id], onDelete: Restrict)
-  assignedUser User?     @relation("UserAssignedOpportunities", fields: [assignedUserId], references: [id], onDelete: SetNull)
-  orders       Order[]
-
-  @@index([workspaceId, stage])
-  @@index([workspaceId, assignedUserId])
-  @@index([workspaceId, expectedCloseDate])
-  @@index([workspaceId, leadId])
-  @@index([workspaceId, contactId])
-  @@map("opportunities")
-}
-
-model SalesEvidence {
-  id                  String           @id @default(uuid())
-  workspaceId         String
-  leadId              String?
-  conversationId      String
-  messageId           String?
-  signalType          BuyingSignalType
-  signalCategory      String?
-  confidence          Float
-  snippet             String           @db.Text
-  reason              String           @db.Text
-  metadata            Json             @default("{}")
-  isInvalidated       Boolean          @default(false)
-  invalidationReason  String?
-  invalidatedByUserId String?
-  invalidatedAt       DateTime?
-  createdAt           DateTime         @default(now())
-  updatedAt           DateTime         @updatedAt
-
-  workspace         Workspace        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  lead              Lead?            @relation(fields: [leadId], references: [id], onDelete: Cascade)
-  conversation      Conversation     @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  message           Message?         @relation(fields: [messageId], references: [id], onDelete: SetNull)
-  invalidatedByUser User?            @relation("UserInvalidatedEvidence", fields: [invalidatedByUserId], references: [id], onDelete: SetNull)
-
-  @@index([workspaceId, leadId])
-  @@index([workspaceId, conversationId])
-  @@index([workspaceId, signalType])
-  @@index([workspaceId, isInvalidated])
-  @@index([workspaceId, createdAt])
-  @@map("sales_evidences")
-}
-
-model PromptTemplate {
-  id                 String      @id @default(uuid())
-  workspaceId        String?
-  name               String
-  version            Int         @default(1)
-  provider           LlmProvider @default(GEMINI)
-  model              String      @default("gemini-2.5-flash")
-  systemPrompt       String      @db.Text
-  userPromptTemplate String      @db.Text
-  inputVariables     Json        @default("[]")
-  temperature        Float       @default(0.2)
-  maxTokens          Int         @default(1024)
-  isDefault          Boolean     @default(false)
-  isActive           Boolean     @default(true)
-  createdById        String?
-  createdAt          DateTime    @default(now())
-  updatedAt          DateTime    @updatedAt
-
-  workspace Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  createdBy User?      @relation("UserCreatedTemplates", fields: [createdById], references: [id], onDelete: SetNull)
-
-  @@unique([workspaceId, name, version])
-  @@index([workspaceId, isActive])
-  @@index([workspaceId, provider])
-  @@index([workspaceId, isDefault])
-  @@map("prompt_templates")
-}
-
-model LeadScore {
-  id           String    @id @default(uuid())
-  workspaceId  String
-  leadId       String    @unique
-  score        Int       @default(0)
-  grade        LeadGrade @default(COLD)
-  scoreFactors Json      @default("[]")
-  calculatedAt DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-
-  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  lead      Lead      @relation(fields: [leadId], references: [id], onDelete: Cascade)
-
-  @@unique([workspaceId, leadId])
-  @@index([workspaceId, grade])
-  @@index([workspaceId, score])
-  @@map("lead_scores")
-}
-
-model LeadScoreHistory {
-  id            String            @id @default(uuid())
-  workspaceId   String
-  leadId        String
-  previousScore Int
-  newScore      Int
-  delta         Int               @default(0)
-  previousGrade LeadGrade?
-  newGrade      LeadGrade?
-  reason        String            @db.Text
-  eventTrigger  ScoreTriggerEvent
-  scoreFactors  Json              @default("[]")
-  createdAt     DateTime          @default(now())
-
-  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  lead      Lead      @relation(fields: [leadId], references: [id], onDelete: Cascade)
-
-  @@index([workspaceId, leadId, createdAt])
-  @@map("lead_score_histories")
-}
-
-model CopilotSuggestion {
-  id               String                @id @default(uuid())
-  workspaceId      String
-  conversationId   String
-  messageId        String?
-  leadId           String?
-  suggestionType   CopilotSuggestionType
-  title            String
-  content          String                @db.Text
-  actionPayload    Json                  @default("{}")
-  confidence       Float
-  status           SuggestionStatus      @default(PENDING)
-  dismissedReason  String?
-  resolvedByUserId String?
-  expiresAt        DateTime
-  resolvedAt       DateTime?
-  createdAt        DateTime              @default(now())
-  updatedAt        DateTime              @updatedAt
-
-  workspace      Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  message        Message?     @relation(fields: [messageId], references: [id], onDelete: SetNull)
-  lead           Lead?        @relation(fields: [leadId], references: [id], onDelete: Cascade)
-  resolvedByUser User?        @relation("UserResolvedSuggestions", fields: [resolvedByUserId], references: [id], onDelete: SetNull)
-
-  @@index([workspaceId, conversationId, status])
-  @@index([workspaceId, status, expiresAt])
-  @@index([workspaceId, leadId])
-  @@map("copilot_suggestions")
-}
-
 // =============================================================================
 // MODELS: IN-CHAT POS & COMMERCE
 // =============================================================================
@@ -979,8 +689,6 @@ model Order {
   workspaceId           String
   conversationId        String?
   contactId             String
-  leadId                String?
-  opportunityId         String?
   createdById           String?
 
   status                OrderStatus            @default(DRAFT)
@@ -1014,8 +722,6 @@ model Order {
   workspace             Workspace              @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   conversation          Conversation?          @relation(fields: [conversationId], references: [id], onDelete: SetNull)
   contact               Contact                @relation(fields: [contactId], references: [id], onDelete: Restrict)
-  lead                  Lead?                  @relation(fields: [leadId], references: [id], onDelete: SetNull)
-  opportunity           Opportunity?           @relation(fields: [opportunityId], references: [id], onDelete: SetNull)
   createdBy             User?                  @relation("UserCreatedOrders", fields: [createdById], references: [id], onDelete: SetNull)
 
   items                 OrderItem[]
@@ -1030,8 +736,6 @@ model Order {
   @@index([workspaceId, paymentStatus])
   @@index([workspaceId, contactId])
   @@index([workspaceId, conversationId])
-  @@index([workspaceId, leadId])
-  @@index([workspaceId, opportunityId])
   @@index([workspaceId, createdAt])
   @@map("orders")
 }

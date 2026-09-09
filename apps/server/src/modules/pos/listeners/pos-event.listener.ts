@@ -1,14 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
-import {
-  DomainEvent,
-  MessageType,
-  OpportunityStage,
-  SenderType,
-  WorkspaceRole,
-} from '@sales-copilot/shared-contracts';
+import { DomainEvent, MessageType, SenderType } from '@sales-copilot/shared-contracts';
 import { MessagesService } from '../../messages/messages.service';
-import { OpportunitiesService } from '../../opportunities/opportunities.service';
 
 export interface OrderPaidListenerPayload {
   workspaceId: string;
@@ -16,7 +9,6 @@ export interface OrderPaidListenerPayload {
   orderNumber?: string;
   displayId: number;
   conversationId?: string | null;
-  opportunityId?: string | null;
   paidAmount: number;
   receivedAmount?: number;
   paymentMethod?: string;
@@ -30,10 +22,7 @@ export interface OrderPaidListenerPayload {
 export class PosEventListener {
   private readonly logger = new Logger(PosEventListener.name);
 
-  constructor(
-    private readonly messagesService: MessagesService,
-    private readonly opportunitiesService: OpportunitiesService,
-  ) {}
+  constructor(private readonly messagesService: MessagesService) {}
 
   @OnEvent(DomainEvent.ORDER_PAID)
   @OnEvent('order.paid')
@@ -81,27 +70,6 @@ export class PosEventListener {
         this.logger.error(
           `Failed to post payment receipt message for Order #${payload.displayId}: ${msgErr.message}`,
           msgErr.stack,
-        );
-      }
-    }
-
-    // 2. Synchronize CRM Opportunity to CLOSED_WON
-    if (payload.opportunityId) {
-      try {
-        await this.opportunitiesService.updateStage(
-          payload.workspaceId,
-          payload.opportunityId,
-          { stage: OpportunityStage.CLOSED_WON },
-          WorkspaceRole.ADMIN,
-        );
-
-        this.logger.log(
-          `Successfully transitioned Opportunity ${payload.opportunityId} to CLOSED_WON for Order #${payload.displayId}`,
-        );
-      } catch (oppErr: any) {
-        this.logger.error(
-          `Failed to transition Opportunity ${payload.opportunityId} to CLOSED_WON for Order #${payload.displayId}: ${oppErr.message}`,
-          oppErr.stack,
         );
       }
     }

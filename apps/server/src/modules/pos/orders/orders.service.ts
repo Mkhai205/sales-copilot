@@ -154,8 +154,6 @@ export class OrdersService {
           workspaceId,
           conversationId: dto.conversationId || null,
           contactId: dto.contactId,
-          leadId: dto.leadId || null,
-          opportunityId: dto.opportunityId || null,
           createdById: userId || null,
           status: OrderStatus.DRAFT,
           paymentStatus: PaymentStatus.UNPAID,
@@ -1041,8 +1039,6 @@ export class OrdersService {
 
     if (query.conversationId) where.conversationId = query.conversationId;
     if (query.contactId) where.contactId = query.contactId;
-    if (query.leadId) where.leadId = query.leadId;
-    if (query.opportunityId) where.opportunityId = query.opportunityId;
     if (query.status) where.status = query.status;
     if (query.paymentStatus) where.paymentStatus = query.paymentStatus;
     if (query.fulfillmentStatus) where.fulfillmentStatus = query.fulfillmentStatus;
@@ -1258,8 +1254,6 @@ export class OrdersService {
       workspaceId: order.workspaceId,
       conversationId: order.conversationId,
       contactId: order.contactId,
-      leadId: order.leadId,
-      opportunityId: order.opportunityId,
       createdById: order.createdById,
       status: order.status,
       paymentStatus: order.paymentStatus,

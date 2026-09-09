@@ -14,8 +14,5 @@ export * from './automation-rules';
 export * from './webhooks';
 export * from './realtime';
 export * from './widget';
-export * from './sales';
 export * from './llm';
-export * from './conversation-intelligence';
-export * from './copilot';
 export * from './pos';

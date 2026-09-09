@@ -9,7 +9,6 @@ import {
   RotateCcw,
   UserPlus,
   AlertTriangle,
-  Sparkles,
   ShoppingBag,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -27,9 +26,6 @@ interface MessageThreadHeaderProps {
   isDetailOpen: boolean;
   onToggleDetail: () => void;
   onResolve?: () => void;
-  isCopilotOpen?: boolean;
-  onToggleCopilot?: () => void;
-  pendingSuggestionsCount?: number;
   onOpenPosDrawer?: () => void;
 }
 
@@ -39,9 +35,6 @@ export function MessageThreadHeader({
   isDetailOpen,
   onToggleDetail,
   onResolve,
-  isCopilotOpen = false,
-  onToggleCopilot,
-  pendingSuggestionsCount = 0,
   onOpenPosDrawer,
 }: MessageThreadHeaderProps) {
   const { t } = useI18n();
@@ -220,34 +213,6 @@ export function MessageThreadHeader({
           <UserPlus className="size-3.5 text-muted-foreground" />
           {t('conversations.actions.assignee')}
         </Button>
-
-        {onToggleCopilot && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant={isCopilotOpen ? 'secondary' : 'outline'}
-                size="sm"
-                onClick={onToggleCopilot}
-                className={`h-7 text-xs gap-1.5 font-normal transition-colors ${
-                  pendingSuggestionsCount > 0
-                    ? 'border-primary/40 bg-primary/10 text-primary hover:bg-primary/20'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                <Sparkles className="size-3.5 text-primary" />
-                <span>Copilot</span>
-                {pendingSuggestionsCount > 0 && (
-                  <Badge variant="default" className="h-4 px-1 text-[9px] font-bold">
-                    {pendingSuggestionsCount}
-                  </Badge>
-                )}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom">
-              {isCopilotOpen ? 'Đóng trợ lý Sales Copilot' : 'Mở trợ lý Sales Copilot'}
-            </TooltipContent>
-          </Tooltip>
-        )}
 
         {onOpenPosDrawer && (
           <Tooltip>

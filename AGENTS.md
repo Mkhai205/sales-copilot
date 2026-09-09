@@ -13,17 +13,22 @@
 
 ## 1. Project Vision & Phasing
 
-Sales Copilot is an omnichannel customer conversation & sales engagement platform (NestJS, Next.js App Router, Prisma ORM, PostgreSQL, Redis, MinIO, WebSockets).
+Sales Copilot is an omnichannel conversational commerce & AI sales platform for D2C & Retail (NestJS, Next.js App Router, Prisma ORM, PostgreSQL, Redis, MinIO, WebSockets).
 
 - **Phase 1 (FROZEN BASELINE)**: Omnichannel core (Conversations, Inboxes, Channels, Contacts, Identity Resolution).
   - ⛔ **NON-BREAKING INVARIANT**: Phase 1 APIs, schemas, and event contracts are stable and MUST NOT be broken or refactored arbitrarily.
-- **Phase 2 (CURRENT ACTIVE SCOPE)**: Sales Intelligence & AI Copilot (Leads, Opportunities, Evidence ledger, AI Lead Scoring with time-decay, Copilot Assistant Drawer).
-  - ⛔ **PROHIBITED**: Do NOT create models, tables, DTOs, or services for Phase 3 (Autonomous Sales Agents, Voice/SIP, external CRM sync).
+- **Phase 2 (CURRENT ACTIVE SCOPE)**: Conversational Commerce & AI Auto-pilot POS for D2C & Retail:
+  - Built-in In-Chat POS & Inventory Management (Variants, SKUs, Atomic Stock Reservation).
+  - Dynamic VietQR (NAPAS 247) & Instant Bank Webhook Reconciliation (< 1s).
+  - AI NER 3-Tier Administrative Address Extraction & 1-Click Order Generation.
+  - 24/7 AI Auto-pilot & Guarded Discount Policy Engine (Midnight Checkout).
+  - Anti-theft Realtime Comment Masking (< 1s) & Comment-to-Inbox Pipeline.
+  - ⛔ **PROHIBITED & DEPRECATED**: Do NOT build B2B CRM, Voice/SIP, or external CRM sync (HubSpot/Salesforce).
 - 📖 **Documentation References** (inspect when needed via `view_file`):
   - Hub: [`docs/README.md`](./docs/README.md) | Guidelines: [`docs/engineering/coding-guidelines.md`](./docs/engineering/coding-guidelines.md)
-  - Architecture: [`docs/architecture/phase-2-sales-intelligence.md`](./docs/architecture/phase-2-sales-intelligence.md) | [`docs/architecture/system-architecture.md`](./docs/architecture/system-architecture.md)
-  - Domain & Schema: [`docs/domain/phase-2-domain-model.md`](./docs/domain/phase-2-domain-model.md) | [`docs/architecture/phase-2-schema-rfc.prisma`](./docs/architecture/phase-2-schema-rfc.prisma)
-  - Backlog & Epics: [`docs/backlog/phase-2-backlog.md`](./docs/backlog/phase-2-backlog.md) | [`docs/backlog/`](./docs/backlog/)
+  - In-Chat POS PRD: [`docs/product/in-chat-pos-prd.md`](./docs/product/in-chat-pos-prd.md) | RFC: [`docs/architecture/in-chat-pos-technical-rfc.md`](./docs/architecture/in-chat-pos-technical-rfc.md)
+  - Product Vision: [`docs/product/vision.md`](./docs/product/vision.md) | Scope: [`docs/product/scope.md`](./docs/product/scope.md)
+  - Backlog: [`docs/backlog/phase-2-backlog.md`](./docs/backlog/phase-2-backlog.md)
 
 ---
 
@@ -59,8 +64,8 @@ Sales Copilot is an omnichannel customer conversation & sales engagement platfor
 2. **Inter-Module Communication**:
    - In-process: `EventEmitter2` for non-blocking side effects (`@OnEvent(...)`).
    - High-latency / retries: BullMQ (Redis queues) for background jobs (`sales-intelligence`, webhooks, media).
-3. **⚡ Asynchronous AI Ingestion Directive**: Inbound chat and message delivery MUST NOT block on LLM inference. Ingestion acknowledges in `< 100ms`; AI extraction, signal detection, and scoring execute asynchronously via BullMQ.
-4. **🔍 Traceable AI Evidence Directive**: LLM-extracted buying signals and evidence MUST link to verbatim quote snippets and reference valid `messageId` and `conversationId`.
+3. **⚡ Asynchronous AI Ingestion Directive**: Inbound chat and message delivery MUST NOT block on LLM inference. Ingestion acknowledges in `< 100ms`; AI address extraction, auto-pilot draft generation, and courier dispatch execute asynchronously via BullMQ.
+4. **🛡️ Traceable In-Chat POS & Pricing Directive**: AI Auto-pilot discounts must strictly respect the Workspace `DiscountPolicyEngine` limits; every order creation must atomically reserve stock. Multi-agent collision is strictly prevented via 30s Redis sliding locks.
 
 ---
 

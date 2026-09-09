@@ -13,16 +13,16 @@ Sales Copilot Platform được thiết kế và thực thi theo lộ trình ph�
                            │
               ┌────────────┴────────────┐
               │                         │
-       Conversation Core          Sales Intelligence          Autonomous Extensions
-     (PHASE 1 - COMPLETED)        (PHASE 2 - ACTIVE)            (PHASE 3 - FUTURE)
-              │                         │                               │
-       ┌──────┴──────┐          ┌───────┴────────┐              ┌───────┴────────┐
-       │             │          │                │              │                │
-   Channels      Messaging   Lead/Opportunity    AI          Autonomous       Voice/SIP
-   Contacts      Inbox       Scoring             Copilot     Sales Agents     CRM Sync
-   Conversation  Teams       Buying Signals      Actions     Tool Registry    Advanced BI
-   Assignment    Labels      Sales Evidence      LLM Gateway ...              ...
-   Webhooks      Automation  ...                 ...
+       Conversation Core      Conversational Commerce     Autonomous Extensions
+     (PHASE 1 - COMPLETED)      (PHASE 2 - ACTIVE)          (PHASE 3 - FUTURE)
+              │                         │                             │
+       ┌──────┴──────┐          ┌───────┴────────┐            ┌───────┴────────┐
+       │             │          │                │            │                │
+   Channels      Messaging   In-Chat POS     VietQR        Autonomous       Voice/SIP
+   Contacts      Inbox       Products/SKUs   Reconciliation Sales Agents    Marketplace
+   Conversation  Teams       AI 3-Tier NER   Auto-pilot    Tool Registry    Sync (Shopee/
+   Assignment    Labels      Comment Masking Print K80     ...              TikTok)
+   Webhooks      Automation  Discount Engine ...           ...
 ```
 
 ### 🟢 Phase 1: Omnichannel Conversation Platform Core (COMPLETED BASELINE)
@@ -30,13 +30,12 @@ Sales Copilot Platform được thiết kế và thực thi theo lộ trình ph�
 - **Phạm vi**: Multi-tenancy, Omnichannel Ingestion, 3NF Contact & Channel Identity resolution, Vòng đời Conversation & Message đa hình, Auto-assignment Round-Robin, Canned Responses, Automation Rules, Outbound Webhooks, Realtime WebSocket (Socket.io + Redis Pub/Sub), và Next.js Dashboard.
 - ⛔ **QUY TẮC BẤT BIẾN**: Phase 1 APIs, schemas và contracts đã ổn định, **tuyệt đối không refactor làm vỡ Phase 1 baseline**.
 
-### 🟡 Phase 2: Sales Intelligence & AI Copilot (CURRENT ACTIVE SCOPE)
+### 🟡 Phase 2: D2C Conversational Commerce & AI Auto-pilot POS (CURRENT ACTIVE SCOPE)
 - **Trạng thái**: **Đang triển khai tích cực** ([Master Backlog](./backlog/phase-2-backlog.md)).
 - **Phạm vi**:
-  - **Milestone 2A (Foundation)**: Epic 2.1 (Lead & Opportunity Core), Epic 2.3 (Multi-Provider LLM Gateway & Prompt Registry).
-  - **Milestone 2B (Intelligence & Scoring)**: Epic 2.2 (Sales Evidence & Activity Timeline), Epic 2.4 (Conversation Intelligence Engine via BullMQ), Epic 2.5 (AI Lead Scoring Engine with Time-Decay).
-  - **Milestone 2C (Copilot & UI)**: Epic 2.6 (Sales Copilot Assistant Drawer, Next Best Actions, WebSocket streaming).
-- ⛔ **QUY TẮC BẢO VỆ**: Tuyệt đối không tạo models, tables, DTOs, hoặc services cho Phase 3 khi đang làm Phase 2.
+  - **Milestone 2A (Commerce Core)**: Epic 2.1 (Built-in In-Chat POS & Inventory), Epic 2.2 (Dynamic VietQR & Instant Webhook Reconciliation).
+  - **Milestone 2B (AI Automation)**: Epic 2.3 (AI NER 3-Tier Address Extraction), Epic 2.4 (24/7 AI Auto-pilot & Guarded Discount Policy Engine).
+- ⛔ **QUY TẮC BẢO VỆ**: Tuyệt đối không tạo models cho B2B CRM hoặc Phase 3 khi đang làm Phase 2. Toàn bộ trọng tâm dành riêng cho Bán lẻ & D2C Conversational Commerce.
 
 ### ❄️ Phase 3: Autonomous Sales Extensions (FUTURE EXTENSIONS - FROZEN)
 - **Trạng thái**: **Đóng băng quy hoạch**.
@@ -51,29 +50,28 @@ Sales Copilot Platform được thiết kế và thực thi theo lộ trình ph�
 | :--- | :--- |
 | **[System Architecture](./architecture/system-architecture.md)** | Tổng quan kiến trúc Pragmatic Modular Monolith, Technology Stack (NestJS, Next.js, Prisma, Redis, MinIO), Ingestion Pipeline và Multi-Tenancy. |
 | **[Module Architecture](./architecture/module-architecture.md)** | Ranh giới Bounded Contexts, quyền sở hữu model, chuẩn co-location và quy tắc giao tiếp liên module. |
+| **[In-Chat POS Technical RFC](./architecture/in-chat-pos-technical-rfc.md)** | Đặc tả kiến trúc kỹ thuật toàn diện cho In-Chat POS: Database models (Products, Orders, Payments), Redis Anti-Collision Lock, Dynamic VietQR và In bill K80. |
 | **[Channel Adapters](./architecture/channel-adapters.md)** | Kiến trúc adapter kênh (Web Chat, Facebook Messenger, Zalo OA, Telegram), chuẩn hóa webhook và mã hóa AES-256-GCM credentials. |
 | **[Operations & Security](./architecture/operations-and-security.md)** | Động cơ Automation Rules, Outbound Webhooks với BullMQ retry, RBAC Matrix và Audit Logging. |
 | **[Data Architecture](./architecture/data-architecture.md)** | Thiết kế lưu trữ PostgreSQL 16, Redis 7 (Cache + Locks + Pub/Sub), MinIO S3. |
-| **[Phase 2 Architecture](./architecture/phase-2-sales-intelligence.md)** | Kiến trúc chi tiết lớp Sales Intelligence: LLM Gateway, Conversation Intelligence, AI Lead Scoring và Copilot Assistant. |
-| **[Phase 2 Schema RFC](./architecture/phase-2-schema-rfc.prisma)** | Đặc tả Prisma Schema mở rộng cho Phase 2 (Leads, Opportunities, SalesEvidence, LeadScores). |
 
 ---
 
 ### 🏛️ Domain Model & Quy tắc nghiệp vụ (`domain/`)
 | Tài liệu | Mô tả chi tiết |
 | :--- | :--- |
-| **[Domain Model](./domain/domain-model.md)** | Ubiquitous Language và cấu trúc Aggregate 21 models của Phase 1. |
+| **[Domain Model](./domain/domain-model.md)** | Ubiquitous Language và cấu trúc Aggregate 21 models của Phase 1 Core. |
 | **[Business Rules & State Machine](./domain/business-rules.md)** | Quy tắc nghiệp vụ, Invariants, State Machine hội thoại (`OPEN`, `PENDING`, `RESOLVED`, `SNOOZED`) và thuật toán Round-Robin. |
-| **[Phase 2 Domain Model](./domain/phase-2-domain-model.md)** | Domain model cho Lead, Opportunity, Sales Evidence (BANT), Lead Scoring với 48h Time-Decay. |
 
 ---
 
 ### 📦 Product & Yêu cầu sản phẩm (`product/`)
 | Tài liệu | Mô tả chi tiết |
 | :--- | :--- |
-| **[Product Vision](./product/vision.md)** | Tầm nhìn sản phẩm Conversation-First, triết lý thiết kế và lộ trình 3 giai đoạn. |
-| **[Product Scope](./product/scope.md)** | Phạm vi chi tiết Phase 1 (Baseline), Phase 2 (Active), và Phase 3 (Future). |
+| **[Product Vision](./product/vision.md)** | Tầm nhìn "The Chat IS the Point of Sale", triết lý thiết kế và lộ trình chuyển đổi D2C. |
+| **[Product Scope](./product/scope.md)** | Phạm vi chi tiết Phase 1 (Baseline), Phase 2 (D2C Active), và Phase 3 (Future). |
 | **[Product Requirements](./product/requirements.md)** | Đặc tả toàn bộ yêu cầu chức năng (FR) và phi chức năng (NFR, Ingestion non-blocking < 100ms). |
+| **[In-Chat POS PRD](./product/in-chat-pos-prd.md)** | Bản đặc tả yêu cầu sản phẩm chi tiết cho In-Chat POS: Benchmark Pancake.vn, 4 Personas, 8-Stage Customer Journey, UX Wireframes. |
 
 ---
 
@@ -82,16 +80,14 @@ Sales Copilot Platform được thiết kế và thực thi theo lộ trình ph�
 | :--- | :--- |
 | **[REST API Contract](./api/api-contract.md)** | Chuẩn REST API, Header `X-Workspace-Id`, Response Envelope `{ success, data, meta }`, Error codes và danh sách Endpoints. |
 | **[WebSocket Contract](./api/websocket-contract.md)** | Chuẩn Socket.io Realtime, cấu trúc Room (`workspace_*`, `conversation_*`, `user_*`), Typed Event Payloads và Internal Domain Events. |
-| **[Phase 2 API Spec](./api/phase-2-api-spec.md)** | Toàn bộ API Contracts và DTOs cho Leads, Opportunities, Sales Evidence, Copilot Assistant Drawer. |
 
 ---
 
 ### 📋 Backlog & Kế hoạch thực thi (`backlog/`)
 | Tài liệu | Mô tả chi tiết |
 | :--- | :--- |
-| **[Phase 2 Master Backlog](./backlog/phase-2-backlog.md)** | Backlog hoạt động chính: Epics 2.1 đến 2.6 cho Sales Intelligence. |
-| **[Epic 2.1](./backlog/epic-2.1.md) — [Epic 2.6](./backlog/epic-2.6.md)** | Đặc tả chi tiết từng Epic Phase 2 (Lead/Opp, Timeline, LLM Gateway, Intelligence Engine, Scoring, Copilot UI). |
-| **[Phase 1 Master Backlog](./backlog/backlog.md)** | Kế hoạch lịch sử 12 Epics Phase 1 (`epic-1.0` đến `epic-1.11`) đã hoàn thành. |
+| **[Phase 2 Master Backlog](./backlog/phase-2-backlog.md)** | Master Backlog hoạt động chính: 6 Epics D2C (POS, VietQR, AI NER, Auto-pilot 24/7, Ẩn comment, In bill K80). |
+| **[Phase 1 Master Backlog](./backlog/backlog.md)** | Kế hoạch lịch sử 12 Epics Phase 1 (`epic-1.0` đến `epic-1.11`) đã hoàn thành 100%. |
 
 ---
 

@@ -33,12 +33,14 @@
 - **FR-5.4**: Đánh giá và thực thi quy tắc tự động hóa (`AutomationRule`) khi có sự kiện `MESSAGE_CREATED` hoặc `CONVERSATION_OPENED`.
 - **FR-5.5**: Phát tán sự kiện ra hệ thống bên ngoài qua Outbound Webhooks với cơ chế tự động thử lại (Exponential Backoff).
 
-### 1.6 Sales Intelligence & AI Copilot (Phase 2 Active)
-- **FR-6.1**: Quản lý vòng đời Lead (`NEW`, `CONTACTED`, `QUALIFIED`, `UNQUALIFIED`) và Opportunity pipeline stages.
-- **FR-6.2**: Trích xuất tín hiệu mua hàng và bằng chứng bán hàng (BANT ledger) gắn liền với trích dẫn nguyên văn và `messageId`.
-- **FR-6.3**: Động cơ tính điểm Lead Scoring kết hợp Fit + Behavior + Độ suy giảm sau 48h không tương tác (time-decay).
-- **FR-6.4**: Copilot Assistant gợi ý hành động tiếp theo tốt nhất (Next Best Action) và tạo nháp phản hồi ngữ cảnh (Contextual Draft Reply) theo thời gian thực.
-- **FR-6.5**: Giao diện Copilot Assistant Drawer trực quan trên Next.js Dashboard.
+### 1.6 D2C Conversational Commerce & In-Chat POS (Phase 2 Active)
+- **FR-6.1 (Built-in Inventory & POS)**: Quản lý biến thể sản phẩm (SKU, Màu, Size), kiểm tra tồn kho khả dụng (`Available = Physical - Reserved`) trong `< 50ms`. Lên đơn trực tiếp qua phím tắt `F4`.
+- **FR-6.2 (Agent Collision Lock)**: Khóa hội thoại thời gian thực (Redis Sliding Lock 30 giây) khi có nhân viên mở form đơn hàng, ngăn chặn va chạm và trùng lặp đơn.
+- **FR-6.3 (AI NER 3-Tier Address)**: Tự động trích xuất Tên, SĐT, nhà mạng và chuẩn hóa địa chỉ hành chính 3 cấp (Tỉnh-Huyện-Xã) từ tin nhắn chat, điền đơn trong 1-click.
+- **FR-6.4 (Dynamic VietQR & Auto-Reconcile)**: Tự động render mã Dynamic VietQR (NAPAS 247) có logo và memo `DH{code}`. Webhook ngân hàng (SePay/Casso) tự động gạch nợ sang `PAID` trong `< 1s`.
+- **FR-6.5 (Autonomous AI Auto-pilot 24/7)**: Tự động tư vấn size, gợi ý sản phẩm, đàm phán giảm giá/freeship theo hạn mức an toàn của `DiscountPolicyEngine` và tự chốt đơn ban đêm (Midnight Checkout lúc 02:00 sáng).
+- **FR-6.6 (Anti-theft Comment Auto-masking)**: Tự động ẩn bình luận chứa số điện thoại trên Fanpage/TikTok trong `< 1s` chống cướp khách và tự động gửi tin nhắn riêng (Private Message) vào hộp thư của khách.
+- **FR-6.7 (Browser Thermal Printing)**: In phiếu gửi nhiệt chuẩn K80 (80mm) và K58 (58mm) trực tiếp trên trình duyệt qua `@media print`, không độ trễ hộp thoại in.
 
 ---
 
@@ -46,6 +48,6 @@
 
 - **NFR-1 (Realtime Latency)**: Độ trễ phát tán sự kiện qua WebSocket đến Agent Dashboard dưới **200ms**.
 - **NFR-2 (Tenant Isolation)**: Đảm bảo 100% các truy vấn cơ sở dữ liệu và kênh WebSocket đều có bộ lọc `workspaceId`.
-- **NFR-3 (Idempotency)**: Đảm bảo không trùng lặp tin nhắn khi webhook được gửi lại nhiều lần.
-- **NFR-4 (Security)**: Tuyệt đối không lưu plaintext token/secret, áp dụng HMAC verification và JWT token rotation.
-- **NFR-5 (Non-Blocking AI Ingestion)**: Inbound message ingestion phản hồi trong `< 100ms`; toàn bộ quá trình phân tích AI và chấm điểm chạy ngầm qua BullMQ.
+- **NFR-3 (Idempotency)**: Đảm bảo không trùng lặp tin nhắn và giao dịch webhook thanh toán khi gửi lại nhiều lần.
+- **NFR-4 (Security)**: Tuyệt đối không lưu plaintext token/secret, áp dụng mã hóa AES-256-GCM, HMAC verification và JWT token rotation.
+- **NFR-5 (Non-Blocking AI Ingestion)**: Inbound message ingestion phản hồi trong `< 100ms`; toàn bộ quá trình phân tích AI, bóc tách địa chỉ và xử lý đơn hàng chạy ngầm qua BullMQ.

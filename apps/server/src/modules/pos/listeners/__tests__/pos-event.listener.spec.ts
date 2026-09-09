@@ -1,29 +1,20 @@
 import { describe, it, beforeEach } from 'node:test';
 import * as assert from 'node:assert';
-import {
-  MessageType,
-  OpportunityStage,
-  SenderType,
-  WorkspaceRole,
-} from '@sales-copilot/shared-contracts';
+import { MessageType, SenderType } from '@sales-copilot/shared-contracts';
 import { PosEventListener } from '../pos-event.listener';
 
-describe('PosEventListener (Realtime Chat Receipt & CRM Sync)', () => {
+describe('PosEventListener (Realtime Chat Receipt)', () => {
   let listener: PosEventListener;
   let mockMessagesService: any;
-  let mockOpportunitiesService: any;
 
   let createdMessages: Array<any>;
-  let updatedOpportunities: Array<any>;
 
   const wsId = 'ws-listener-test';
   const orderId = 'order-test-123';
   const conversationId = 'conv-test-456';
-  const opportunityId = 'opp-test-789';
 
   beforeEach(() => {
     createdMessages = [];
-    updatedOpportunities = [];
 
     mockMessagesService = {
       create: async (workspaceId: string, convId: string, dto: any) => {
@@ -32,14 +23,7 @@ describe('PosEventListener (Realtime Chat Receipt & CRM Sync)', () => {
       },
     };
 
-    mockOpportunitiesService = {
-      updateStage: async (workspaceId: string, id: string, dto: any, role: any) => {
-        updatedOpportunities.push({ workspaceId, id, dto, role });
-        return { id, stage: dto.stage };
-      },
-    };
-
-    listener = new PosEventListener(mockMessagesService, mockOpportunitiesService);
+    listener = new PosEventListener(mockMessagesService);
   });
 
   it('should post system receipt to conversation thread on ORDER_PAID', async () => {
@@ -63,56 +47,6 @@ describe('PosEventListener (Realtime Chat Receipt & CRM Sync)', () => {
     assert.ok(msg.dto.content.includes('1004'));
     assert.ok(msg.dto.content.includes('SEPAY'));
     assert.ok(msg.dto.content.includes('TX_SEPAY_111'));
-  });
-
-  it('should sync CRM opportunity to CLOSED_WON on ORDER_PAID', async () => {
-    await listener.handleOrderPaid({
-      workspaceId: wsId,
-      orderId,
-      displayId: 1004,
-      opportunityId,
-      paidAmount: 500000,
-    });
-
-    assert.strictEqual(updatedOpportunities.length, 1);
-    const opp = updatedOpportunities[0];
-    assert.strictEqual(opp.workspaceId, wsId);
-    assert.strictEqual(opp.id, opportunityId);
-    assert.strictEqual(opp.dto.stage, OpportunityStage.CLOSED_WON);
-    assert.strictEqual(opp.role, WorkspaceRole.ADMIN);
-  });
-
-  it('should perform both chat receipt and CRM sync when both IDs are present', async () => {
-    await listener.handleOrderPaid({
-      workspaceId: wsId,
-      orderId,
-      displayId: 1004,
-      conversationId,
-      opportunityId,
-      paidAmount: 500000,
-    });
-
-    assert.strictEqual(createdMessages.length, 1);
-    assert.strictEqual(updatedOpportunities.length, 1);
-  });
-
-  it('should isolate errors when messagesService fails and continue CRM sync', async () => {
-    mockMessagesService.create = async () => {
-      throw new Error('Chat service network timeout');
-    };
-
-    await listener.handleOrderPaid({
-      workspaceId: wsId,
-      orderId,
-      displayId: 1004,
-      conversationId,
-      opportunityId,
-      paidAmount: 500000,
-    });
-
-    // Message creation failed, but opportunity sync must still succeed
-    assert.strictEqual(updatedOpportunities.length, 1);
-    assert.strictEqual(updatedOpportunities[0].dto.stage, OpportunityStage.CLOSED_WON);
   });
 
   it('should post system receipt to conversation thread on ORDER_PARTIALLY_PAID', async () => {

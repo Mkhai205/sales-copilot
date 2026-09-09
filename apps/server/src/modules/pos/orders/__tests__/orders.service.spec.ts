@@ -240,8 +240,6 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
             workspaceId: data.workspaceId,
             conversationId: data.conversationId,
             contactId: data.contactId,
-            leadId: data.leadId,
-            opportunityId: data.opportunityId,
             createdById: data.createdById,
             status: data.status,
             paymentStatus: data.paymentStatus,

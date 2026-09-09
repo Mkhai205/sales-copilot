@@ -576,98 +576,7 @@ describe('RealtimeEventDispatcher — Event Routing & Error Isolation (Task 12)'
     });
   });
 
-  describe('7. Sales Domain Event Dispatches (Epic 2.1)', () => {
-    it('should broadcast lead.created to workspace room', () => {
-      const payload: any = {
-        workspaceId,
-        leadId: 'lead_001',
-        contactId: 'contact_001',
-        status: 'NEW',
-        stage: 'DISCOVERY',
-        score: 0,
-      };
-
-      dispatcher.handleLeadCreated(payload);
-
-      const wsBroadcast = emittedBroadcasts.find(
-        e => e.room === `workspace_${workspaceId}` && e.event === WsServerEvent.LEAD_CREATED,
-      );
-      assert.ok(wsBroadcast);
-      assert.deepStrictEqual((wsBroadcast.payload as any).data, payload);
-    });
-
-    it('should broadcast lead.updated to workspace room', () => {
-      const payload: any = {
-        workspaceId,
-        leadId: 'lead_001',
-        previousStatus: 'NEW',
-        newStatus: 'CONTACTED',
-      };
-
-      dispatcher.handleLeadUpdated(payload);
-
-      const wsBroadcast = emittedBroadcasts.find(
-        e => e.room === `workspace_${workspaceId}` && e.event === WsServerEvent.LEAD_UPDATED,
-      );
-      assert.ok(wsBroadcast);
-      assert.deepStrictEqual((wsBroadcast.payload as any).data, payload);
-    });
-
-    it('should broadcast lead.converted to workspace room', () => {
-      const payload: any = {
-        workspaceId,
-        leadId: 'lead_001',
-        opportunityId: 'opp_001',
-      };
-
-      dispatcher.handleLeadConverted(payload);
-
-      const wsBroadcast = emittedBroadcasts.find(
-        e => e.room === `workspace_${workspaceId}` && e.event === WsServerEvent.LEAD_CONVERTED,
-      );
-      assert.ok(wsBroadcast);
-      assert.deepStrictEqual((wsBroadcast.payload as any).data, payload);
-    });
-
-    it('should broadcast opportunity.created to workspace room', () => {
-      const payload: any = {
-        workspaceId,
-        opportunityId: 'opp_001',
-        title: 'Big Deal',
-        amount: 50000,
-        stage: 'QUALIFICATION',
-      };
-
-      dispatcher.handleOpportunityCreated(payload);
-
-      const wsBroadcast = emittedBroadcasts.find(
-        e => e.room === `workspace_${workspaceId}` && e.event === WsServerEvent.OPPORTUNITY_CREATED,
-      );
-      assert.ok(wsBroadcast);
-      assert.deepStrictEqual((wsBroadcast.payload as any).data, payload);
-    });
-
-    it('should broadcast opportunity.stage_updated to workspace room', () => {
-      const payload: any = {
-        workspaceId,
-        opportunityId: 'opp_001',
-        previousStage: 'QUALIFICATION',
-        newStage: 'CLOSED_WON',
-      };
-
-      dispatcher.handleOpportunityStageUpdated(payload);
-
-      const wsBroadcast = emittedBroadcasts.find(
-        e =>
-          e.room === `workspace_${workspaceId}` &&
-          e.event === WsServerEvent.OPPORTUNITY_STAGE_UPDATED,
-      );
-      assert.ok(wsBroadcast);
-      assert.deepStrictEqual((wsBroadcast.payload as any).data, payload);
-    });
-  });
-
-  describe('8. Error Isolation & Resilience (Task 12)', () => {
+  describe('7. Error Isolation & Resilience (Task 12)', () => {
     it('should not throw or crash when gateway server throws during emission', () => {
       mockGateway.server.to = () => {
         throw new Error('Socket adapter network failure');
@@ -730,77 +639,10 @@ describe('RealtimeEventDispatcher — Event Routing & Error Isolation (Task 12)'
         dispatcher.handleConversationCreated({} as any);
         dispatcher.handleContactCreated({} as any);
         dispatcher.handlePresenceUpdated(null as any);
-        dispatcher.handleLeadCreated(null as any);
-        dispatcher.handleLeadCreated({} as any);
-        dispatcher.handleLeadUpdated(null as any);
-        dispatcher.handleLeadConverted({} as any);
-        dispatcher.handleOpportunityCreated(null as any);
-        dispatcher.handleOpportunityStageUpdated({} as any);
-        dispatcher.handleConversationIntelligenceAnalyzed(null as any);
-        dispatcher.handleConversationUrgentAlert(null as any);
+        dispatcher.handleOrderShipped(null as any);
+        dispatcher.handlePosDraftSuggested(null as any);
       });
       assert.strictEqual(emittedBroadcasts.length, 0);
-    });
-
-    it('should broadcast CONVERSATION_INTELLIGENCE_ANALYZED to workspace, conversation, and lead rooms', () => {
-      dispatcher.handleConversationIntelligenceAnalyzed({
-        workspaceId,
-        conversationId,
-        messageId,
-        leadId: 'lead_123',
-        intent: 'PURCHASE_INTENT',
-        sentiment: { score: 0.9 },
-        signalsCount: 1,
-        detectedSignals: [{ signalType: 'BUDGET_CONFIRMED' }],
-      });
-
-      const wsBroadcast = emittedBroadcasts.find(
-        b =>
-          b.room === `workspace_${workspaceId}` &&
-          b.event === WsServerEvent.CONVERSATION_INTELLIGENCE_ANALYZED,
-      );
-      assert.ok(wsBroadcast);
-
-      const convBroadcast = emittedBroadcasts.find(
-        b =>
-          b.room === `conversation_${conversationId}` &&
-          b.event === WsServerEvent.CONVERSATION_INTELLIGENCE_ANALYZED,
-      );
-      assert.ok(convBroadcast);
-
-      const leadBroadcast = emittedBroadcasts.find(
-        b =>
-          b.room === 'lead_lead_123' &&
-          b.event === WsServerEvent.CONVERSATION_INTELLIGENCE_ANALYZED,
-      );
-      assert.ok(leadBroadcast);
-    });
-
-    it('should broadcast CONVERSATION_URGENT_ALERT to workspace and conversation rooms', () => {
-      dispatcher.handleConversationUrgentAlert({
-        workspaceId,
-        conversationId,
-        messageId,
-        urgency: 'CRITICAL',
-        intent: 'CHURN_RISK',
-        sentimentScore: -0.9,
-        snippet: 'Hủy hợp đồng',
-        reasoning: 'Customer angry',
-      });
-
-      const wsBroadcast = emittedBroadcasts.find(
-        b =>
-          b.room === `workspace_${workspaceId}` &&
-          b.event === WsServerEvent.CONVERSATION_URGENT_ALERT,
-      );
-      assert.ok(wsBroadcast);
-
-      const convBroadcast = emittedBroadcasts.find(
-        b =>
-          b.room === `conversation_${conversationId}` &&
-          b.event === WsServerEvent.CONVERSATION_URGENT_ALERT,
-      );
-      assert.ok(convBroadcast);
     });
 
     it('should broadcast ORDER_SHIPPED to conversation and workspace rooms', () => {

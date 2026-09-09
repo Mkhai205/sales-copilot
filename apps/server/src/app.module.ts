@@ -25,15 +25,7 @@ import { ConversationsModule } from './modules/conversations';
 import { MessagesModule } from './modules/messages';
 import { IntegrationsModule } from './integrations';
 import { RealtimeModule } from './modules/realtime';
-import { LeadsModule } from './modules/leads';
-import { OpportunitiesModule } from './modules/opportunities';
-import { SalesEvidenceModule } from './modules/sales-evidence';
-import { ActivityTimelineModule } from './modules/activity-timeline';
 import { LlmGatewayModule } from './modules/llm-gateway';
-import { PromptRegistryModule } from './modules/prompt-registry';
-import { ConversationIntelligenceModule } from './modules/conversation-intelligence';
-import { LeadScoringModule } from './modules/lead-scoring';
-import { CopilotModule } from './modules/copilot';
 import { PosModule } from './modules/pos/pos.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { AppController } from './app.controller';
@@ -149,15 +141,7 @@ import { pinoRedactConfig } from './common/logging';
     MessagesModule,
     IntegrationsModule,
     RealtimeModule,
-    LeadsModule,
-    OpportunitiesModule,
-    SalesEvidenceModule,
-    ActivityTimelineModule,
     LlmGatewayModule,
-    PromptRegistryModule,
-    ConversationIntelligenceModule,
-    LeadScoringModule,
-    CopilotModule,
     PosModule,
   ],
   controllers: [AppController],

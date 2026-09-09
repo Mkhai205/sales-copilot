@@ -4,7 +4,7 @@ import {
   insertIntoComposer,
   COPILOT_INSERT_EVENT,
   type InsertComposerPayload,
-} from '../../composer/composer-bridge';
+} from '../composer-bridge';
 
 describe('Composer Bridge & Copilot Custom Event Dispatcher', () => {
   it('should define correct event name', () => {

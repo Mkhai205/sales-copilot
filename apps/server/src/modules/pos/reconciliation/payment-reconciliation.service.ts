@@ -309,7 +309,6 @@ export class PaymentReconciliationService {
             orderNumber: order.orderNumber,
             displayId: order.displayId,
             conversationId: order.conversationId,
-            opportunityId: order.opportunityId,
             paidAmount: totalPaid,
             receivedAmount: amount,
             overpaidAmount,
@@ -328,7 +327,6 @@ export class PaymentReconciliationService {
               paidAmount: totalPaid,
               conversationId: order.conversationId,
               contactId: order.contactId,
-              opportunityId: order.opportunityId,
             },
           });
         });
@@ -455,7 +453,6 @@ export class PaymentReconciliationService {
               paidAmount: totalPaid,
               conversationId: order.conversationId,
               contactId: order.contactId,
-              opportunityId: order.opportunityId,
             },
           });
         });
