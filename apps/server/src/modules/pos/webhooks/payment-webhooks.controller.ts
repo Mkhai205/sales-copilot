@@ -27,7 +27,7 @@ export interface PaymentReconciliationJobData {
   rawPayload: any;
 }
 
-@Controller('api/v1/workspaces/:workspaceId/webhooks/payments/:gateway')
+@Controller('workspaces/:workspaceId/webhooks/payments/:gateway')
 @Public()
 @UseGuards(PaymentWebhooksGuard)
 export class PaymentWebhooksController {

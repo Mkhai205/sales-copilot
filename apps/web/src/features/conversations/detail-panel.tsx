@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { X, User, ShoppingBag, Sparkles, RefreshCw } from 'lucide-react';
+import { X, User, ShoppingBag, Sparkles, RefreshCw, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -9,6 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useWorkspaces } from '@/features/workspaces/use-workspaces';
 import { PosDetailTab } from '@/features/pos';
+import { SalesEvidenceTab } from '@/features/sales';
 import {
   ReplyDraftCard,
   ActionCard,
@@ -199,21 +200,25 @@ export function DetailPanel({
           <DetailPanelLoading />
         </div>
       ) : (
-        /* 3-Tab Ergonomics Navigation */
+        /* 4-Tab Ergonomics Navigation: Contact, POS, Sales & BANT, AI */
         <Tabs defaultValue="contact" className="flex flex-1 flex-col overflow-hidden min-h-0 gap-0">
-          <div className="px-3 pt-2.5 pb-2 border-b border-border/60 bg-muted/20 shrink-0">
-            <TabsList className="grid w-full grid-cols-3 h-8 p-0.5">
-              <TabsTrigger value="contact" className="text-xs gap-1.5">
-                <User className="size-3" />
-                <span>{t('conversations.details.tabContact')}</span>
+          <div className="px-2 pt-2.5 pb-2 border-b border-border/60 bg-muted/20 shrink-0">
+            <TabsList className="grid w-full grid-cols-4 h-8 p-0.5">
+              <TabsTrigger value="contact" className="text-[11px] gap-1 px-1">
+                <User className="size-3 shrink-0" />
+                <span className="truncate">{t('conversations.details.tabContact')}</span>
               </TabsTrigger>
-              <TabsTrigger value="pos" className="text-xs gap-1.5">
-                <ShoppingBag className="size-3" />
-                <span>{t('conversations.details.tabPos')}</span>
+              <TabsTrigger value="pos" className="text-[11px] gap-1 px-1">
+                <ShoppingBag className="size-3 shrink-0" />
+                <span className="truncate">{t('conversations.details.tabPos')}</span>
               </TabsTrigger>
-              <TabsTrigger value="ai" className="text-xs gap-1.5">
-                <Sparkles className="size-3" />
-                <span>{t('conversations.details.tabAi')}</span>
+              <TabsTrigger value="sales" className="text-[11px] gap-1 px-1">
+                <TrendingUp className="size-3 shrink-0" />
+                <span className="truncate">{t('conversations.details.tabSales')}</span>
+              </TabsTrigger>
+              <TabsTrigger value="ai" className="text-[11px] gap-1 px-1">
+                <Sparkles className="size-3 shrink-0" />
+                <span className="truncate">{t('conversations.details.tabAi')}</span>
               </TabsTrigger>
             </TabsList>
           </div>
@@ -269,7 +274,25 @@ export function DetailPanel({
             )}
           </TabsContent>
 
-          {/* Tab 3: Sales AI */}
+          {/* Tab 3: Bán hàng & BANT (Sales Evidence & Lead Score) */}
+          <TabsContent
+            value="sales"
+            className="min-h-0 flex-1 overflow-y-auto p-4 flex flex-col gap-4 m-0"
+          >
+            {resolvedWorkspaceId ? (
+              <SalesEvidenceTab
+                workspaceId={resolvedWorkspaceId}
+                conversationId={conversation.id}
+                contactId={conversation.contactId}
+              />
+            ) : (
+              <div className="py-8 text-center text-xs text-muted-foreground">
+                Đang xác định không gian làm việc...
+              </div>
+            )}
+          </TabsContent>
+
+          {/* Tab 4: Sales AI (Gợi ý thông minh) */}
           <TabsContent
             value="ai"
             className="min-h-0 flex-1 overflow-y-auto p-4 flex flex-col gap-4 m-0"

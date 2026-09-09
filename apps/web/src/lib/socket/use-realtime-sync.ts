@@ -424,6 +424,44 @@ export function useRealtimeSync(): void {
     }
   });
 
+  // lead_score.updated
+  useSocketEvent<any>(WsServerEvent.LEAD_SCORE_UPDATED, payload => {
+    const leadId = payload?.leadId;
+    if (leadId) {
+      queryClient.invalidateQueries({
+        queryKey: ['lead-score'],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['lead-score-history'],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['lead', leadId],
+      });
+    }
+    queryClient.invalidateQueries({
+      queryKey: ['contact-lead'],
+    });
+    queryClient.invalidateQueries({
+      queryKey: ['leads'],
+    });
+  });
+
+  // lead.updated
+  useSocketEvent<any>(WsServerEvent.LEAD_UPDATED, payload => {
+    const leadId = payload?.leadId || payload?.id;
+    if (leadId) {
+      queryClient.invalidateQueries({
+        queryKey: ['lead', leadId],
+      });
+    }
+    queryClient.invalidateQueries({
+      queryKey: ['contact-lead'],
+    });
+    queryClient.invalidateQueries({
+      queryKey: ['leads'],
+    });
+  });
+
   // conversation.urgent_alert
   useSocketEvent<any>(WsServerEvent.CONVERSATION_URGENT_ALERT, payload => {
     const conversationId = payload?.conversationId;

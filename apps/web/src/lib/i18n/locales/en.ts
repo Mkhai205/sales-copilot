@@ -129,6 +129,7 @@ export const en: TranslationSchema = {
       title: 'Contact Information',
       tabContact: 'Contact',
       tabPos: 'POS Orders',
+      tabSales: 'Sales & BANT',
       tabAi: 'Sales AI',
       name: 'Full name',
       email: 'Email',

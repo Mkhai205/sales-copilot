@@ -127,6 +127,7 @@ export const vi = {
       title: 'Thông tin liên hệ',
       tabContact: 'Khách hàng',
       tabPos: 'Đơn POS',
+      tabSales: 'Bán hàng & BANT',
       tabAi: 'Sales AI',
       name: 'Họ và tên',
       email: 'Email',

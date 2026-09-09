@@ -86,6 +86,8 @@ services:
       FB_APP_ID: ${FB_APP_ID:-}
       FB_APP_SECRET: ${FB_APP_SECRET:-}
       FB_VERIFY_TOKEN: ${FB_VERIFY_TOKEN:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
     depends_on:
       postgres:
         condition: service_healthy

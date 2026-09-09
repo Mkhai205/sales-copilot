@@ -256,6 +256,9 @@ export class LeadsService {
     if (query.assignedUserId) {
       where.assignedUserId = query.assignedUserId;
     }
+    if (query.contactId) {
+      where.contactId = query.contactId;
+    }
 
     // Score filtering
     if (query.minScore !== undefined || query.maxScore !== undefined) {

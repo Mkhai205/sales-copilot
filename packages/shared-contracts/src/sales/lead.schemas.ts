@@ -67,6 +67,7 @@ export const listLeadsQuerySchema = z.object({
   stage: z.nativeEnum(LeadStage).optional(),
   grade: z.nativeEnum(LeadGrade).optional(),
   assignedUserId: z.string().uuid('Invalid assigned user ID').optional(),
+  contactId: z.string().uuid('Invalid contact ID').optional(),
   minScore: z.coerce.number().min(0).max(100).optional(),
   maxScore: z.coerce.number().min(0).max(100).optional(),
   search: z.string().trim().optional(),

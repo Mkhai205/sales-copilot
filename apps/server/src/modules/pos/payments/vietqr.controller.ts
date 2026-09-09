@@ -8,12 +8,14 @@ import {
   WorkspaceRole,
 } from '@sales-copilot/shared-contracts';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
-import { Roles, RolesGuard, WorkspaceGuard } from '../../workspaces';
+import { CurrentWorkspace, Roles } from '../../workspaces/decorators';
+import { RolesGuard, WorkspaceGuard } from '../../workspaces/guards';
+import type { WorkspaceContext } from '../../workspaces/types/workspace-context.type';
 import { VietQrService } from './vietqr.service';
 import { MessagesService } from '../../messages/messages.service';
 import { PrismaService } from '../../../infrastructure/database/prisma.service';
 
-@Controller('api/v1/workspaces/:workspaceId/orders/:id/vietqr')
+@Controller('workspaces/:workspaceId/orders/:id/vietqr')
 @UseGuards(WorkspaceGuard, RolesGuard)
 export class VietQrController {
   private readonly logger = new Logger(VietQrController.name);
@@ -27,11 +29,13 @@ export class VietQrController {
   @Post()
   @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.AGENT)
   async generateVietQr(
-    @Param('workspaceId') workspaceId: string,
+    @Param('workspaceId') workspaceIdParam: string,
     @Param('id') orderId: string,
     @Body() rawBody?: GenerateVietQrDto,
     @CurrentUser() user?: { id: string },
+    @CurrentWorkspace() context?: WorkspaceContext,
   ): Promise<VietQrResponseDto> {
+    const workspaceId = context?.workspaceId || workspaceIdParam;
     const validatedDto = rawBody ? generateVietQrSchema.parse(rawBody) : undefined;
 
     const vietQr = await this.vietQrService.generateForOrder(workspaceId, orderId, validatedDto);

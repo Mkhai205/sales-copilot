@@ -71,6 +71,22 @@ async function seed() {
 
   // 2. Seed Default Workspace (Tenant / Account)
   const defaultWorkspaceSlug = 'default-workspace';
+  const defaultWorkspaceSettings = {
+    currency: 'VND',
+    features: {
+      autoAssign: true,
+      webhooks: true,
+    },
+    paymentSettings: {
+      bankBin: '970422', // MBBank (Napas)
+      bankCode: 'MB',
+      bankName: 'MBBank',
+      accountNumber: '0988123456',
+      accountName: 'CONG TY SALES COPILOT',
+      webhookSecret: 'sepay_test_secret_key_2026',
+    },
+  };
+
   const workspace = await prisma.workspace.upsert({
     where: { slug: defaultWorkspaceSlug },
     update: {
@@ -78,6 +94,7 @@ async function seed() {
       billingPlan: 'ENTERPRISE',
       timezone: 'Asia/Ho_Chi_Minh',
       defaultLanguage: 'vi',
+      settings: defaultWorkspaceSettings,
     },
     create: {
       name: 'Sales Copilot Default Workspace',
@@ -85,13 +102,7 @@ async function seed() {
       billingPlan: 'ENTERPRISE',
       timezone: 'Asia/Ho_Chi_Minh',
       defaultLanguage: 'vi',
-      settings: {
-        currency: 'VND',
-        features: {
-          autoAssign: true,
-          webhooks: true,
-        },
-      },
+      settings: defaultWorkspaceSettings,
     },
   });
 
@@ -531,6 +542,358 @@ async function seed() {
       },
     });
   }
+
+  // 10. Seed POS Products and Variants
+  const sampleProducts = [
+    {
+      name: 'Gói Bản Quyền Sales Copilot Enterprise (1 Năm)',
+      slug: 'goi-ban-quyen-sales-copilot-enterprise-1-nam',
+      description:
+        'Gói giải pháp phần mềm quản trị bán hàng và hội thoại đa kênh AI dành cho doanh nghiệp vừa và lớn.',
+      category: 'Phần mềm & Bản quyền',
+      basePrice: 12000000,
+      costPrice: 8000000,
+      sku: 'SaaS-ENTERPRISE-1Y',
+      barcode: '893850123001',
+      imageUrl:
+        'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=500&auto=format&fit=crop&q=60',
+      variants: [
+        {
+          name: 'Tiêu chuẩn (50 Users)',
+          sku: 'SaaS-ENTERPRISE-1Y-50U',
+          barcode: '893850123002',
+          price: 12000000,
+          costPrice: 8000000,
+          stockQuantity: 100,
+          attributes: { users: '50', duration: '12 months' },
+        },
+        {
+          name: 'Mở rộng (100 Users)',
+          sku: 'SaaS-ENTERPRISE-1Y-100U',
+          barcode: '893850123003',
+          price: 20000000,
+          costPrice: 14000000,
+          stockQuantity: 50,
+          attributes: { users: '100', duration: '12 months' },
+        },
+      ],
+    },
+    {
+      name: 'Tai nghe Bluetooth Sony WH-1000XM5 Chống Ồn',
+      slug: 'tai-nghe-bluetooth-sony-wh-1000xm5',
+      description:
+        'Tai nghe chụp tai không dây chống ồn đỉnh cao, thời lượng pin 30 giờ, đàm thoại sắc nét cho tư vấn viên.',
+      category: 'Thiết bị & Phụ kiện',
+      basePrice: 7990000,
+      costPrice: 6200000,
+      sku: 'SONY-WH1000XM5',
+      barcode: '893850123004',
+      imageUrl:
+        'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&auto=format&fit=crop&q=60',
+      variants: [
+        {
+          name: 'Màu Đen (Black)',
+          sku: 'SONY-WH1000XM5-BLK',
+          barcode: '893850123005',
+          price: 7990000,
+          costPrice: 6200000,
+          stockQuantity: 30,
+          attributes: { color: 'Đen' },
+        },
+        {
+          name: 'Màu Bạc (Silver)',
+          sku: 'SONY-WH1000XM5-SLV',
+          barcode: '893850123006',
+          price: 7990000,
+          costPrice: 6200000,
+          stockQuantity: 25,
+          attributes: { color: 'Bạc' },
+        },
+      ],
+    },
+    {
+      name: 'Áo Polo Đồng Phục Doanh Nghiệp Sales Copilot',
+      slug: 'ao-polo-dong-phuc-doanh-nghiep',
+      description:
+        'Áo thun polo chất liệu cotton co giãn 4 chiều cao cấp, thoáng khí và thấm hút mồ hôi tốt.',
+      category: 'Đồng phục & Quà tặng',
+      basePrice: 250000,
+      costPrice: 150000,
+      sku: 'POLO-CORP-2026',
+      barcode: '893850123007',
+      imageUrl:
+        'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=500&auto=format&fit=crop&q=60',
+      variants: [
+        {
+          name: 'Size L / Xanh Navy',
+          sku: 'POLO-CORP-L-NAVY',
+          barcode: '893850123008',
+          price: 250000,
+          costPrice: 150000,
+          stockQuantity: 80,
+          attributes: { size: 'L', color: 'Xanh Navy' },
+        },
+        {
+          name: 'Size XL / Xanh Navy',
+          sku: 'POLO-CORP-XL-NAVY',
+          barcode: '893850123009',
+          price: 250000,
+          costPrice: 150000,
+          stockQuantity: 60,
+          attributes: { size: 'XL', color: 'Xanh Navy' },
+        },
+      ],
+    },
+  ];
+
+  for (const prodData of sampleProducts) {
+    const { variants, ...productFields } = prodData;
+    const seededProduct = await prisma.product.upsert({
+      where: {
+        workspaceId_sku: {
+          workspaceId: workspace.id,
+          sku: productFields.sku,
+        },
+      },
+      update: {
+        name: productFields.name,
+        basePrice: productFields.basePrice,
+        costPrice: productFields.costPrice,
+        description: productFields.description,
+        category: productFields.category,
+        imageUrl: productFields.imageUrl,
+        barcode: productFields.barcode,
+      },
+      create: {
+        workspaceId: workspace.id,
+        name: productFields.name,
+        slug: productFields.slug,
+        description: productFields.description,
+        category: productFields.category,
+        basePrice: productFields.basePrice,
+        costPrice: productFields.costPrice,
+        sku: productFields.sku,
+        barcode: productFields.barcode,
+        imageUrl: productFields.imageUrl,
+        isActive: true,
+        trackInventory: true,
+      },
+    });
+
+    for (const variant of variants) {
+      const seededVariant = await prisma.productVariant.upsert({
+        where: {
+          workspaceId_sku: {
+            workspaceId: workspace.id,
+            sku: variant.sku,
+          },
+        },
+        update: {
+          name: variant.name,
+          price: variant.price,
+          costPrice: variant.costPrice,
+          stockQuantity: variant.stockQuantity,
+          barcode: variant.barcode,
+          attributes: variant.attributes,
+        },
+        create: {
+          workspaceId: workspace.id,
+          productId: seededProduct.id,
+          name: variant.name,
+          sku: variant.sku,
+          barcode: variant.barcode,
+          price: variant.price,
+          costPrice: variant.costPrice,
+          stockQuantity: variant.stockQuantity,
+          reservedQuantity: 0,
+          attributes: variant.attributes,
+          isActive: true,
+        },
+      });
+
+      // Seed initial stock transaction if none exists
+      const existingTx = await prisma.inventoryTransaction.findFirst({
+        where: { variantId: seededVariant.id, workspaceId: workspace.id },
+      });
+      if (!existingTx && variant.stockQuantity > 0) {
+        await prisma.inventoryTransaction.create({
+          data: {
+            workspaceId: workspace.id,
+            variantId: seededVariant.id,
+            type: 'STOCK_IN',
+            quantity: variant.stockQuantity,
+            previousStock: 0,
+            newStock: variant.stockQuantity,
+            previousReserved: 0,
+            newReserved: 0,
+            reason: 'Khởi tạo tồn kho ban đầu từ hệ thống seed',
+          },
+        });
+      }
+    }
+  }
+
+  console.log(`📦 POS Products initialized: 3 sample catalog items with variants and stock`);
+
+  // 11. Seed Sales Intelligence: Lead, BANT Sales Evidence & Lead Score
+  const sampleLead = await prisma.lead.upsert({
+    where: {
+      workspaceId_contactId: {
+        workspaceId: workspace.id,
+        contactId: contact.id,
+      },
+    },
+    update: {
+      status: 'QUALIFIED',
+      stage: 'EVALUATION',
+      score: 85,
+      estimatedValue: 12000000,
+      currency: 'VND',
+    },
+    create: {
+      workspaceId: workspace.id,
+      contactId: contact.id,
+      status: 'QUALIFIED',
+      stage: 'EVALUATION',
+      score: 85,
+      assignedUserId: superAdmin.id,
+      estimatedValue: 12000000,
+      currency: 'VND',
+      metadata: { source: 'inbound_chat', intent: 'ENTERPRISE_PURCHASE' },
+      lastActivityAt: new Date(),
+    },
+  });
+
+  const sampleEvidences = [
+    {
+      signalType: 'NEED_EXPRESSED' as const,
+      signalCategory: 'BANT',
+      confidence: 0.95,
+      snippet: 'tìm kiếm giải pháp quản lý hội thoại đa kênh cho đội ngũ 50 nhân sự',
+      reason: 'Khách hàng nêu rõ nhu cầu quản lý hội thoại đa kênh với quy mô cụ thể 50 người',
+    },
+    {
+      signalType: 'BUDGET_CONFIRMED' as const,
+      signalCategory: 'BANT',
+      confidence: 0.9,
+      snippet: 'gói Enterprise rất phù hợp với quy mô 50 nhân sự',
+      reason: 'Khách hàng quan tâm và tiếp nhận thông tin báo giá gói Enterprise',
+    },
+    {
+      signalType: 'AUTHORITY_IDENTIFIED' as const,
+      signalCategory: 'BANT',
+      confidence: 0.88,
+      snippet: 'tôi đang tìm kiếm giải pháp quản lý hội thoại đa kênh cho đội ngũ',
+      reason: 'Người liên hệ đóng vai trò quản lý / quyết định giải pháp cho doanh nghiệp',
+    },
+    {
+      signalType: 'TIMELINE_DEFINED' as const,
+      signalCategory: 'BANT',
+      confidence: 0.82,
+      snippet: 'Hệ thống có hỗ trợ tích hợp Zalo và Facebook không',
+      reason: 'Khảo sát khả năng tích hợp kênh thực tế chuẩn bị triển khai trong tháng',
+    },
+  ];
+
+  for (const ev of sampleEvidences) {
+    const existingEv = await prisma.salesEvidence.findFirst({
+      where: {
+        workspaceId: workspace.id,
+        conversationId: conversation.id,
+        signalType: ev.signalType,
+      },
+    });
+    if (!existingEv) {
+      await prisma.salesEvidence.create({
+        data: {
+          workspaceId: workspace.id,
+          leadId: sampleLead.id,
+          conversationId: conversation.id,
+          signalType: ev.signalType,
+          signalCategory: ev.signalCategory,
+          confidence: ev.confidence,
+          snippet: ev.snippet,
+          reason: ev.reason,
+          isInvalidated: false,
+        },
+      });
+    }
+  }
+
+  const scoreFactors = {
+    fitScore: 25,
+    velocityScore: 20,
+    signalScore: 45,
+    decayPenalty: 5,
+    totalScore: 85,
+    breakdown: [
+      {
+        factor: 'Fit: Doanh nghiệp quy mô 50+ nhân sự',
+        points: 25,
+        reason: 'Quy mô đội ngũ phù hợp phân khúc khách hàng mục tiêu',
+      },
+      {
+        factor: 'Velocity: Tương tác trực tiếp Live Chat',
+        points: 20,
+        reason: 'Khách hàng phản hồi nhanh qua kênh trực tuyến',
+      },
+      {
+        factor: 'Signal: Xác nhận đầy đủ 4 tiêu chí BANT',
+        points: 45,
+        reason: 'Phát hiện tín hiệu rõ ràng về Need, Budget, Authority, Timeline',
+      },
+      {
+        factor: 'Time Decay: Khấu trừ thời gian',
+        points: -5,
+        reason: 'Khấu trừ nhẹ theo chu kỳ thời gian tương tác',
+      },
+    ],
+  };
+
+  await prisma.leadScore.upsert({
+    where: {
+      workspaceId_leadId: {
+        workspaceId: workspace.id,
+        leadId: sampleLead.id,
+      },
+    },
+    update: {
+      score: 85,
+      grade: 'HOT',
+      scoreFactors,
+    },
+    create: {
+      workspaceId: workspace.id,
+      leadId: sampleLead.id,
+      score: 85,
+      grade: 'HOT',
+      scoreFactors,
+    },
+  });
+
+  const existingHistory = await prisma.leadScoreHistory.findFirst({
+    where: { workspaceId: workspace.id, leadId: sampleLead.id },
+  });
+  if (!existingHistory) {
+    await prisma.leadScoreHistory.create({
+      data: {
+        workspaceId: workspace.id,
+        leadId: sampleLead.id,
+        previousScore: 50,
+        newScore: 85,
+        delta: 35,
+        previousGrade: 'WARM',
+        newGrade: 'HOT',
+        reason: 'BANT signals detected: Need expressed, Budget confirmed for Enterprise plan',
+        eventTrigger: 'EVIDENCE_DETECTED',
+        scoreFactors,
+      },
+    });
+  }
+
+  console.log(
+    `🎯 Sales Intelligence initialized: Lead #${sampleLead.id.slice(0, 8)}, BANT Evidence Ledger, Score 85 (HOT)`,
+  );
 
   console.log(`⚙️ Operations initialized: Canned Responses, Automation Rules, Webhook Deliveries`);
   console.log('✨ Database seeding completed successfully!');
