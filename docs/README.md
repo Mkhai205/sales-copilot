@@ -101,6 +101,7 @@ Sales Copilot Platform được thiết kế và thực thi theo lộ trình ph�
 | **[Coding Guidelines](./engineering/coding-guidelines.md)** | Tiêu chuẩn viết code Pragmatic Modular Monolith, YAGNI, KISS, quy tắc co-location, Zod pipes và cấm abstraction thừa. |
 | **[Testing Strategy](./engineering/testing-strategy.md)** | Chiến lược kiểm thử tự động: Unit Tests, Integration Tests, E2E Vertical Slices. |
 | **[Local Testing Guide](./guides/local-testing-guide.md)** | Hướng dẫn chạy môi trường dev và kiểm thử cục bộ với Docker Compose. |
+| **[Manual Testing & Features Guide](./test/manual-testing-guide.md)** | Hướng dẫn manual test chi tiết 8 kịch bản thực tế, tổng hợp tính năng, use cases và bug radar. |
 
 ---
 

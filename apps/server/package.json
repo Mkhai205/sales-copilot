@@ -7,6 +7,7 @@
     "db:migrate:dev": "npx prisma migrate dev --schema=./prisma/schema.prisma",
     "db:migrate:deploy": "npx prisma migrate deploy --schema=./prisma/schema.prisma",
     "db:seed": "npx ts-node ./prisma/seed.ts",
+    "db:reset": "npx prisma migrate reset --force",
     "db:studio": "npx prisma studio --schema=./prisma/schema.prisma",
     "db:push": "npx prisma db push --schema=./prisma/schema.prisma"
   },

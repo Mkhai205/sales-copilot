@@ -19,6 +19,7 @@
     "db:migrate:dev": "pnpm --filter @sales-copilot/server db:migrate:dev",
     "db:migrate:deploy": "pnpm --filter @sales-copilot/server db:migrate:deploy",
     "db:seed": "pnpm --filter @sales-copilot/server db:seed",
+    "db:reset": "pnpm --filter @sales-copilot/server db:reset",
     "db:studio": "pnpm --filter @sales-copilot/server db:studio",
     "db:push": "pnpm --filter @sales-copilot/server db:push"
   },
