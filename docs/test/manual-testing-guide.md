@@ -1,7 +1,7 @@
 # Tài Liệu Tổng Hợp Tính Năng, Use Cases & Kịch Bản Manual Test Chi Tiết (Sales Copilot Platform)
 
 > **Dành cho**: QA / Tester / Product Owner & Kỹ sư phát triển  
-> **Phiên bản hệ thống**: Phase 1 Baseline (Omnichannel Core) & Phase 2 (Sales Intelligence, POS & In-Chat Commerce)  
+> **Phiên bản hệ thống**: Phase 1 Baseline (Omnichannel Core) & Phase 2 (In-Chat POS & D2C Conversational Commerce)  
 > **Ngày cập nhật**: 09/09/2026  
 > **Vị trí file**: [`docs/test/manual-testing-guide.md`](../../docs/test/manual-testing-guide.md)
 
@@ -13,19 +13,15 @@
    - [Phân hệ 1: Quản trị Workspace & Phân quyền RBAC](#21-phân-hệ-1-quản-trị-workspace--phân-quyền-rbac)
    - [Phân hệ 2: Live Chat Đa kênh & Trực quan hóa Hội thoại](#22-phân-hệ-2-live-chat-đa-kênh--trực-quan-hóa-hội-thoại)
    - [Phân hệ 3: Khung Soạn thảo Kép & Tin nhắn mẫu Canned Responses](#23-phân-hệ-3-khung-soạn-thảo-kép--tin-nhắn-mẫu-canned-responses)
-   - [Phân hệ 4: Trợ lý AI Copilot (Dock, Drawer & Streaming)](#24-phân-hệ-4-trợ-lý-ai-copilot-dock-drawer--streaming)
-   - [Phân hệ 5: Bán hàng Trực tiếp trong Chat POS (In-Chat Commerce)](#25-phân-hệ-5-bán-hàng-trực-tiếp-trong-chat-pos-in-chat-commerce)
-   - [Phân hệ 6: Thanh toán VietQR & Đối soát Ngân hàng Webhook](#26-phân-hệ-6-thanh-toán-vietqr--đối-soát-ngân-hàng-webhook)
-   - [Phân hệ 7: Sổ cái Bằng chứng BANT & Điểm Lead Score](#27-phân-hệ-7-sổ-cái-bằng-chứng-bant--điểm-lead-score)
+   - [Phân hệ 4: Bán hàng Trực tiếp trong Chat POS (In-Chat Commerce)](#24-phân-hệ-4-bán-hàng-trực-tiếp-trong-chat-pos-in-chat-commerce)
+   - [Phân hệ 5: Thanh toán VietQR & Đối soát Ngân hàng Webhook](#25-phân-hệ-5-thanh-toán-vietqr--đối-soát-ngân-hàng-webhook)
 3. [Bộ Kịch Bản Manual Test Chi Tiết Theo Luồng Thực Tế](#3-bộ-kịch-bản-manual-test-chi-tiết-theo-luồng-thực-tế)
    - [Kịch bản 1: Đăng nhập 1-Click, Phiên HttpOnly & RBAC Protection](#kịch-bản-1-đăng-nhập-1-click-phiên-httponly--rbac-protection)
    - [Kịch bản 2: Live Chat Realtime, Typing Indicator & Tải ảnh Lightbox](#kịch-bản-2-live-chat-realtime-typing-indicator--tải-ảnh-lightbox)
    - [Kịch bản 3: Khung soạn thảo kép, Ghi chú nội bộ bí mật & Phím tắt `/`](#kịch-bản-3-khung-soạn-thảo-kép-ghi-chú-nội-bộ-bí-mật--phím-tắt-)
-   - [Kịch bản 4: Trợ lý Copilot Dock, Drawer, Battlecards & AI Streaming](#kịch-bản-4-trợ-lý-copilot-dock-drawer-battlecards--ai-streaming)
-   - [Kịch bản 5: Bán hàng POS (`F4`), AI Autofill & Khóa va chạm (Collision Lock)](#kịch-bản-5-bán-hàng-pos-f4-ai-autofill--khóa-va-chạm-collision-lock)
-   - [Kịch bản 6: Quản lý Tồn kho & Chống bán vượt (Anti-Overselling Model A)](#kịch-bản-6-quản-lý-tồn-kho--chống-bán-vượt-anti-overselling-model-a)
-   - [Kịch bản 7: Thanh toán VietQR & Đối soát Webhook Ngân hàng](#kịch-bản-7-thanh-toán-vietqr--đối-soát-webhook-ngân-hàng)
-   - [Kịch bản 8: Quản lý Bằng chứng BANT & Điểm Lead Score trên Tab Bán hàng](#kịch-bản-8-quản-lý-bằng-chứng-bant--điểm-lead-score-trên-tab-bán-hàng)
+   - [Kịch bản 4: Bán hàng POS (`F4`), AI Autofill & Khóa va chạm (Collision Lock)](#kịch-bản-4-bán-hàng-pos-f4-ai-autofill--khóa-va-chạm-collision-lock)
+   - [Kịch bản 5: Quản lý Tồn kho & Chống bán vượt (Anti-Overselling Model A)](#kịch-bản-5-quản-lý-tồn-kho--chống-bán-vượt-anti-overselling-model-a)
+   - [Kịch bản 6: Thanh toán VietQR & Đối soát Webhook Ngân hàng](#kịch-bản-6-thanh-toán-vietqr--đối-soát-webhook-ngân-hàng)
 4. [Radar Săn Bug & Các Tình Huống Thử Thách Biên (Bug-Hunting Radar)](#4-radar-săn-bug--các-tình-huống-thử-thách-biên-bug-hunting-radar)
 5. [Biểu Mẫu Chuẩn Ghi Nhận Bug Dành Cho AI Coding Agent](#5-biểu-mẫu-chuẩn-ghi-nhận-bug-dành-cho-ai-coding-agent)
 
@@ -40,7 +36,7 @@ Dự án đã được tích hợp sẵn toàn bộ dữ liệu mẫu trong file
 # 1. Khởi động Docker containers (PostgreSQL, Redis, MinIO)
 docker compose -f docker-compose.dev.yml up -d
 
-# 2. Nạp dữ liệu mẫu hoàn chỉnh (Users, Workspace, Products, Inventory, Bank, Leads, BANT)
+# 2. Nạp dữ liệu mẫu hoàn chỉnh (Users, Workspace, Products, Inventory, Bank)
 pnpm db:seed
 
 # 3. Khởi động ứng dụng
@@ -59,7 +55,7 @@ pnpm dev
 | **Sản phẩm 3 (POS)** | `PROD-AO-SO-MI-OXFORD`: Áo Sơ mi Oxford Dài tay (Giá: 380k) | 2 Biến thể (Size M, L / Xanh Pastel) - Tồn 40 |
 | **Cấu hình Ngân hàng** | Ngân hàng: **MBBank** (`bankBin: 970422`, `bankCode: MB`)<br>STK: `0988123456`<br>Tên TK: `CONG TY SALES COPILOT` | Đã cấu hình sẵn trong `workspace.settings` |
 | **Webhook Secret** | `sepay_test_secret_key_2026` | Dùng trong header `secure-token` khi giả lập Webhook SePay |
-| **Lead & BANT có sẵn** | Khách hàng `Nguyễn Văn A` liên kết sẵn Lead `#6a8e6889`, 4 bằng chứng BANT, Điểm: **85 (HOT)** | Hiển thị sẵn trên tab Bán hàng & BANT |
+| **Đơn hàng mẫu (POS)** | Khách hàng `Nguyễn Văn A` có sẵn đơn hàng `#ORD-20260908-1001` (Áo Polo Basic) | Hiển thị sẵn trên tab POS |
 
 ---
 
@@ -97,20 +93,7 @@ pnpm dev
   - `UC-COMP-01`: Agent gõ `/chao` chèn lời chào chuẩn hóa có tự động điền tên khách.
   - `UC-COMP-02`: Agent chuyển sang chế độ Note để ghi chú riêng cho ca trực sau mà khách không hề biết.
 
-### 2.4. Phân hệ 4: Trợ lý AI Copilot (Dock, Drawer & Streaming)
-- **Tính năng**:
-  - **Copilot Dock** ([`copilot-dock.tsx`](../../apps/web/src/features/copilot/components/copilot-dock.tsx)): Thanh đề xuất nổi trên Composer, hiển thị % match và nút chèn nhanh vào chat.
-  - **Copilot Drawer** ([`copilot-drawer.tsx`](../../apps/web/src/features/copilot/components/copilot-drawer.tsx)):
-    - Bản thảo câu trả lời thông minh (`ReplyDraftCard`).
-    - Hành động tiếp theo (`ActionCard`): Chứa nút mở dialog [`ConvertOpportunityDialog`](../../apps/web/src/features/copilot/components/convert-opportunity-dialog.tsx).
-    - Cẩm nang đối ứng (`BattlecardCard`): Lập luận xử lý từ chối giá và so sánh đối thủ.
-    - AI Custom Streaming ([`use-copilot-stream.ts`](../../apps/web/src/features/copilot/hooks/use-copilot-stream.ts)): Gõ prompt tùy ý, nhận văn bản stream thời gian thực qua WebSocket.
-- **Danh mục Use Cases**:
-  - `UC-AI-01`: Áp dụng câu trả lời thông minh từ Copilot Dock chỉ với 1 click.
-  - `UC-AI-02`: Mở Drawer, nhập yêu cầu tùy biến và xem văn bản dạng gõ chữ trực tiếp.
-  - `UC-AI-03`: Chuyển đổi Lead sang Cơ hội bán hàng (Opportunity) từ Action Card.
-
-### 2.5. Phân hệ 5: Bán hàng Trực tiếp trong Chat POS (In-Chat Commerce)
+### 2.4. Phân hệ 4: Bán hàng Trực tiếp trong Chat POS (In-Chat Commerce)
 - **Tính năng**:
   - Khởi tạo đơn hàng tức thì bằng phím tắt **`F4`** ([`pos-drawer.tsx`](../../apps/web/src/features/pos/components/pos-drawer.tsx)).
   - **AI Autofill Banner** ([`ai-autofill-banner.tsx`](../../apps/web/src/features/pos/components/ai-autofill-banner.tsx)): Bóc tách SĐT, nhận diện nhà mạng, phân giải địa chỉ 3 cấp (Tỉnh/Huyện/Xã) và sản phẩm từ câu chat của khách (confidence >= 80%).
@@ -122,7 +105,7 @@ pnpm dev
   - `UC-POS-02`: Khóa chống va chạm kích hoạt khi 2 nhân viên cùng mở POS trong 1 cuộc trò chuyện.
   - `UC-POS-03`: Xác nhận đơn hàng, kiểm tra giữ kho và in bill nhiệt K58/K80.
 
-### 2.6. Phân hệ 6: Thanh toán VietQR & Đối soát Ngân hàng Webhook
+### 2.5. Phân hệ 5: Thanh toán VietQR & Đối soát Ngân hàng Webhook
 - **Tính năng**:
   - Sinh mã VietQR động chuẩn EMVCo NAPAS 24/7 ([`vietqr.service.ts`](../../apps/server/src/modules/pos/payments/vietqr.service.ts)) kẹp sẵn cú pháp memo `ORD <displayId>`.
   - Thẻ thanh toán tương tác trong Chat ([`vietqr-chat-card.tsx`](../../apps/web/src/features/pos/components/vietqr-chat-card.tsx)): Bắn thẻ QR vào hội thoại cho khách hàng.
@@ -131,16 +114,7 @@ pnpm dev
   - `UC-PAY-01`: Agent bấm gửi thẻ VietQR vào cuộc trò chuyện cho khách hàng.
   - `UC-PAY-02`: Ngân hàng bắn Webhook giao dịch, hệ thống tự động gạch nợ đơn đã thanh toán.
 
-### 2.7. Phân hệ 7: Sổ cái Bằng chứng BANT & Điểm Lead Score
-- **Tính năng**:
-  - Tab chuyên biệt "Bán hàng & BANT" (`SalesEvidenceTab`) trên panel bên phải của màn hình hội thoại ([`detail-panel.tsx`](../../apps/web/src/features/conversations/detail-panel.tsx)).
-  - **Thẻ Điểm số Lead Score**: Điểm số lớn, xếp loại huy hiệu (`HOT >= 70`, `WARM >= 40`, `COLD < 40`), giai đoạn Lead (`LeadStage`) và thanh đo trực quan kèm nút **Tính lại điểm (Recalculate)**.
-  - **Ma trận BANT (BANT Matrix)**: Hiển thị trạng thái xác thực 4 tiêu chuẩn (Ngân sách - Thẩm quyền - Nhu cầu - Thời gian) với icon xanh lá khi đã có bằng chứng xác nhận.
-  - **Danh sách Bằng chứng BANT**: Lọc theo `Tất cả` / `Chỉ BANT` / `Rủi ro`, hiển thị trích dẫn nguyên văn câu chat (`verbatim quote`) và độ tin cậy. Mỗi bằng chứng có nút **Hủy bỏ (Invalidate)** cho phép Agent tự tay loại trừ nếu AI phân tích nhầm.
-- **Danh mục Use Cases**:
-  - `UC-SALES-01`: Xem trạng thái xác thực BANT của khách hàng ngay trong lúc chat.
-  - `UC-SALES-02`: Bấm nút Hủy bỏ (Invalidate) một bằng chứng AI phát hiện sai.
-  - `UC-SALES-03`: Bấm nút Tính lại điểm Lead Score để cập nhật điểm mới nhất.
+---
 
 ---
 
@@ -203,21 +177,7 @@ pnpm dev
 
 ---
 
-### 🔹 Kịch bản 4: Trợ lý Copilot Dock, Drawer, Battlecards & AI Streaming
-- **Mục tiêu**: Kiểm tra gợi ý trả lời thông minh của Copilot, cẩm nang đối ứng và luồng stream câu trả lời theo yêu cầu.
-- **Yêu cầu môi trường**: Server có cấu hình `GEMINI_API_KEY` trong `.env`.
-- **Các bước thực hiện**:
-  1. Giả lập tin nhắn khách hỏi: `"Chính sách bảo hành và đổi trả của bên mình thế nào?"`.
-  2. Quan sát thanh **Copilot Dock** nổi trên composer:
-     - Hiển thị câu trả lời đề xuất cùng % tin cậy. Bấm nút **Chèn nhanh** để điền câu trả lời vào composer.
-  3. Mở **Copilot Drawer** (bằng cách click vào dock hoặc icon Sparkles trên header):
-     - Chuyển sang tab **Cẩm nang (Battlecards)**: Kiểm tra các thẻ gợi ý đối ứng xử lý từ chối.
-     - Tại ô nhập lệnh tùy chỉnh (**Custom Instruction**), gõ: `"Tóm tắt chính sách đổi hàng trong 1 câu ngắn gọn 15 từ"` và bấm Gửi.
-     - *Kết quả mong đợi*: Văn bản hiển thị dạng gõ chữ trực tiếp (Streaming qua WebSocket). Bấm **Chèn vào chat** để đưa nội dung vào khung nhập.
-
----
-
-### 🔹 Kịch bản 5: Bán hàng POS (`F4`), AI Autofill & Khóa va chạm (Collision Lock)
+### 🔹 Kịch bản 4: Bán hàng POS (`F4`), AI Autofill & Khóa va chạm (Collision Lock)
 - **Mục tiêu**: Kiểm tra bóc tách thông tin đơn hàng tự động, cơ chế khóa va chạm giữa các nhân viên và in bill nhiệt K58/K80.
 - **Các bước thực hiện**:
   1. Giả lập tin nhắn khách hàng chốt đơn:
@@ -240,7 +200,7 @@ pnpm dev
 
 ---
 
-### 🔹 Kịch bản 6: Quản lý Tồn kho & Chống bán vượt (Anti-Overselling Model A)
+### 🔹 Kịch bản 5: Quản lý Tồn kho & Chống bán vượt (Anti-Overselling Model A)
 - **Mục tiêu**: Đảm bảo hệ thống không cho phép bán âm kho và tự động hoàn trả tồn giữ hàng khi hủy đơn.
 - **Các bước thực hiện**:
   1. Kiểm tra sản phẩm có tồn khả dụng là 2 sản phẩm (`stockQuantity = 2`, `reservedQuantity = 0`).
@@ -255,7 +215,7 @@ pnpm dev
 
 ---
 
-### 🔹 Kịch bản 7: Thanh toán VietQR & Đối soát Webhook Ngân hàng
+### 🔹 Kịch bản 6: Thanh toán VietQR & Đối soát Webhook Ngân hàng
 - **Mục tiêu**: Kiểm tra sinh mã VietQR động, gửi thẻ vào chat và gạch nợ tự động qua Webhook ngân hàng.
 - **Các bước thực hiện**:
   1. Tại Tab Đơn POS của đơn hàng đã Confirm, bấm nút **Gửi VietQR**:
@@ -281,24 +241,6 @@ pnpm dev
      - Trong luồng chat xuất hiện tin nhắn hệ thống xác nhận đã thanh toán thành công.
   4. Bắn lại đúng lệnh cURL trên một lần nữa (Kiểm tra Idempotency):
      - Hệ thống ghi nhận `DUPLICATE` và bỏ qua, không trừ kho lần hai.
-
----
-
-### 🔹 Kịch bản 8: Quản lý Bằng chứng BANT & Điểm Lead Score trên Tab Bán hàng
-- **Mục tiêu**: Kiểm tra hiển thị Ma trận BANT, thẻ Lead Score và thao tác Hủy bỏ (Invalidate) bằng chứng.
-- **Các bước thực hiện**:
-  1. Tại cột bên phải của màn hình hội thoại, chuyển sang **Tab thứ 3: Bán hàng & BANT (`SalesEvidenceTab`)**:
-     - *Kết quả mong đợi*: 
-       - Thẻ **LeadScoreCard** hiển thị điểm số (ví dụ: `85 HOT`), giai đoạn `DISCOVERY` và thanh tiến trình màu cam/đỏ.
-       - Ma trận **BantMatrix** hiển thị 4 tiêu chuẩn với icon tích xanh xác nhận: Ngân sách (Budget), Thẩm quyền (Authority), Nhu cầu (Need), Thời gian (Timeline).
-       - Danh sách **Bằng chứng bán hàng**: Hiển thị 4 bằng chứng BANT kèm trích dẫn nguyên văn câu chat (`verbatim quote`) và độ tin cậy (`confidence`).
-  2. Bấm vào bộ lọc: Chọn **Chỉ BANT** hoặc **Rủi ro**:
-     - Danh sách bằng chứng được lọc theo đúng danh mục đã chọn.
-  3. Tại một bằng chứng (ví dụ `BUDGET_CONFIRMED`), bấm nút **Hủy bỏ (Invalidate)**:
-     - Hệ thống gọi API hủy bằng chứng. Thẻ bằng chứng hiển thị trạng thái đã bị gạch bỏ/vô hiệu hóa.
-     - Ma trận BANT tự động cập nhật tiêu chí Ngân sách thành chưa xác thực.
-  4. Bấm nút **Tính lại điểm (Recalculate)** trên thẻ Lead Score:
-     - Hệ thống gửi yêu cầu tính lại điểm số, điểm mới được cập nhật sau khi đã loại trừ bằng chứng bị hủy.
 
 ---
 

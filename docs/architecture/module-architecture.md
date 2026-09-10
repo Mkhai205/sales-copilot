@@ -20,8 +20,8 @@ Sales Copilot is organized into high-cohesion, loosely coupled feature modules w
 ├──────────────────┴──────────────────┴──────────────────┴───────────────┤
 │                  5. Realtime & WebSocket Gateway                       │
 ├────────────────────────────────────────────────────────────────────────┤
-│                  6. Sales Intelligence (Phase 2 Active)                │
-│ • Lead           │ • Opportunity    │ • SalesEvidence  │ • Activity    │
+│                  6. In-Chat POS & Commerce (Phase 2 Active)            │
+│ • Product        │ • ProductVariant │ • Order          │ • InventoryTx │
 └──────────────────┴──────────────────┴──────────────────┴───────────────┘
 ```
 
@@ -36,7 +36,7 @@ Sales Copilot is organized into high-cohesion, loosely coupled feature modules w
 | **`conversations`** / **`messages`** | Conversation & Messaging | `Conversation`, `ConversationLabel`, `Message`, `Attachment` | `ConversationsService`, `MessagesService`, `AutoAssignmentService` |
 | **`operations`** / **`webhooks`** / **`automation-rules`** | Operations & Automation | `Label`, `CannedResponse`, `AutomationRule`, `WebhookSubscription`, `WebhookDelivery`, `AuditLog` | `LabelsService`, `CannedResponsesService`, `AutomationRulesService`, `WebhooksService` |
 | **`realtime`** | Realtime Gateway | None (In-memory + Redis Pub/Sub) | `RealtimeGateway`, `RealtimeService` |
-| **`sales-intelligence`** (Phase 2) | Sales Intelligence & AI | `Lead`, `Opportunity`, `SalesEvidence`, `LeadScore`, `TimelineActivity` | `LeadsService`, `OpportunitiesService`, `SalesEvidenceService` |
+| **`pos`** (Phase 2) | In-Chat POS & Commerce | `Product`, `ProductVariant`, `Order`, `OrderItem`, `PaymentTransaction`, `InventoryTransaction` | `ProductsService`, `OrdersService`, `VietQrService`, `PaymentReconciliationService`, `ShippingService` |
 
 ---
 

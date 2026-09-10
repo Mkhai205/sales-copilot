@@ -80,8 +80,6 @@ CREATE TABLE "orders" (
     "workspaceId" TEXT NOT NULL,
     "conversationId" TEXT,
     "contactId" TEXT NOT NULL,
-    "leadId" TEXT,
-    "opportunityId" TEXT,
     "createdById" TEXT,
     "status" "OrderStatus" NOT NULL DEFAULT 'DRAFT',
     "paymentStatus" "PaymentStatus" NOT NULL DEFAULT 'UNPAID',
@@ -227,8 +225,6 @@ CREATE INDEX "orders_workspaceId_status_idx" ON "orders"("workspaceId", "status"
 CREATE INDEX "orders_workspaceId_paymentStatus_idx" ON "orders"("workspaceId", "paymentStatus");
 CREATE INDEX "orders_workspaceId_contactId_idx" ON "orders"("workspaceId", "contactId");
 CREATE INDEX "orders_workspaceId_conversationId_idx" ON "orders"("workspaceId", "conversationId");
-CREATE INDEX "orders_workspaceId_leadId_idx" ON "orders"("workspaceId", "leadId");
-CREATE INDEX "orders_workspaceId_opportunityId_idx" ON "orders"("workspaceId", "opportunityId");
 CREATE INDEX "orders_workspaceId_createdAt_idx" ON "orders"("workspaceId", "createdAt");
 
 -- CreateIndex
@@ -275,12 +271,6 @@ ALTER TABLE "orders" ADD CONSTRAINT "orders_conversationId_fkey" FOREIGN KEY ("c
 
 -- AddForeignKey
 ALTER TABLE "orders" ADD CONSTRAINT "orders_contactId_fkey" FOREIGN KEY ("contactId") REFERENCES "contacts"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "orders" ADD CONSTRAINT "orders_leadId_fkey" FOREIGN KEY ("leadId") REFERENCES "leads"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "orders" ADD CONSTRAINT "orders_opportunityId_fkey" FOREIGN KEY ("opportunityId") REFERENCES "opportunities"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "orders" ADD CONSTRAINT "orders_createdById_fkey" FOREIGN KEY ("createdById") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;

@@ -153,10 +153,10 @@ describe('LabelsService (Label CRUD & Workspace Scoping)', () => {
 
     it('should trim title and apply defaults', async () => {
       const result = await service.create('ws_1', {
-        title: '   Sales Lead   ',
+        title: '   VIP Customer   ',
       });
 
-      assert.strictEqual(result.title, 'Sales Lead');
+      assert.strictEqual(result.title, 'VIP Customer');
       assert.strictEqual(result.color, '#2563eb');
       assert.strictEqual(result.description, null);
       assert.strictEqual(result.showOnSidebar, true);

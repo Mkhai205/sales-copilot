@@ -53,8 +53,8 @@ Phase 3: Autonomous Scale & Advanced Operations (FUTURE SCOPE - FROZEN)
 
 ## 4. Explicitly Out of Scope & Deprecated for Phase 2
 
-Các thành phần sau **không thuộc phạm vi Phase 2 và đã được lưu trữ an toàn tại branch `archive/phase-2-b2b-leads`**:
-- ⛔ **B2B Lead Management & Deal Pipelines**: Vòng đời Lead (`NEW`, `QUALIFIED`), Pipeline stages (`PROPOSAL`, `NEGOTIATION`), Win/Loss tracking.
-- ⛔ **BANT Sales Evidence & Lead Scoring**: Trích xuất tín hiệu BANT, bảng điểm suy giảm theo thời gian (48h time-decay scoring).
+Các thành phần sau **không thuộc phạm vi Phase 2 (đã lưu trữ an toàn tại branch `archive/phase-2-b2b-leads`)**:
+- ⛔ **B2B Enterprise CRM & Deal Pipelines**: Phễu bán hàng B2B phức tạp, các giai đoạn đàm phán hợp đồng doanh nghiệp (`PROPOSAL`, `NEGOTIATION`), Win/Loss tracking.
+- ⛔ **BANT Sales Evidence Scoring**: Phân tích ma trận thẩm quyền ngân sách BANT, bảng điểm doanh nghiệp theo thời gian.
 - ⛔ **External CRM Sync**: Đồng bộ 2 chiều với HubSpot, Salesforce.
 - ⛔ **Voice / SIP Integration**: Tích hợp tổng đài thoại WebRTC.

@@ -7,7 +7,7 @@
 - thiết kế trang danh bạ hồ sơ khách hàng
 - xây dựng bộ lọc fillter
 - làm rõ luồng hoạt động của bot ai tự động trả lời. Khi nào thì ngừng trả qua nhân viên, hoặc khi có nhân viên tiếp nhận đoạn hội thoại đó.
-- thiết kế lại giao diện phần lead và ai copilot
+- thiết kế lại giao diện phần ai copilot
 - thêm thư viện để hỗ trợ emoji
 - bỏ phần thẻ nhanh
 - thiết kế trang thống kê

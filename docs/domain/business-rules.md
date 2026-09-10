@@ -2,7 +2,7 @@
 
 ## 1. Multi-Tenancy Invariants
 
-- **BR-1.1 (Mandatory Tenant Scoping)**: Mọi bản ghi dữ liệu hoạt động (`Contact`, `Inbox`, `Channel`, `Conversation`, `Message`, `Label`, `AutomationRule`, `WebhookSubscription`, `Lead`, `Opportunity`) bắt buộc phải có `workspaceId`.
+- **BR-1.1 (Mandatory Tenant Scoping)**: Mọi bản ghi dữ liệu hoạt động (`Contact`, `Inbox`, `Channel`, `Conversation`, `Message`, `Label`, `AutomationRule`, `WebhookSubscription`, `Product`, `Order`) bắt buộc phải có `workspaceId`.
 - **BR-1.2 (Membership Verification)**: Người dùng thực hiện thao tác trên tài nguyên phải là `WorkspaceMember` của Workspace đó và có vai trò (`WorkspaceRole`) hợp lệ.
 - **BR-1.3 (Inbox Scoping)**: `InboxMember` chỉ được thêm những `User` đã là thành viên hợp lệ trong cùng `Workspace`.
 

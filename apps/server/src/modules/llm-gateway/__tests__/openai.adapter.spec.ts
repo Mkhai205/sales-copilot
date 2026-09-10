@@ -92,9 +92,9 @@ describe('OpenAIAdapter', () => {
     });
 
     const result = await adapter.generateStructuredOutput<{ status: string; score: number }>(
-      [{ role: 'user', content: 'Evaluate lead' }],
+      [{ role: 'user', content: 'Extract customer intent' }],
       {
-        schemaName: 'lead_eval',
+        schemaName: 'order_eval',
         jsonSchema: { type: 'object', properties: { status: { type: 'string' } } },
       },
     );

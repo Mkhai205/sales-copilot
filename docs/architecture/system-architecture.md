@@ -94,10 +94,14 @@ apps/server/
     │   ├── automation-rules/                # Event-driven rule evaluation & auto-assign
     │   ├── webhooks/                        # Outbound Webhook Subscriptions & Retries
     │   ├── realtime/                        # WebSocket Gateway & Realtime Event Dispatcher
-    │   ├── leads/                           # Phase 2: Lead lifecycle & qualification
-    │   ├── opportunities/                   # Phase 2: Sales opportunities & stages
-    │   ├── sales-evidence/                  # Phase 2: BANT evidence ledger & buying signals
-    │   └── activity-timeline/               # Phase 2: Unified customer engagement timeline
+    │   ├── llm-gateway/                     # Multi-provider LLM integration (Gemini, OpenAI, Anthropic, DeepSeek)
+    │   └── pos/                             # Built-in In-Chat POS & Mini Inventory Subsystem
+    │       ├── catalog/                     # Products, Variants, SKUs
+    │       ├── orders/                      # POS Orders, State Machine, Atomic Stock Reservation
+    │       ├── vietqr/                      # Dynamic VietQR Generator (NAPAS 247)
+    │       ├── reconciliation/              # Instant Bank Webhook Reconciliation (<1s)
+    │       ├── shipping/                    # 3PL Carriers (GHN, GHTK) & Thermal Waybills
+    │       └── listeners/                   # POS Event Listeners & WebSocket Dispatch
     │
     └── integrations/                        # Omnichannel Ingestion Adapters
         ├── web-chat/                        # Live Web Chat Widget Ingestion
@@ -143,7 +147,7 @@ apps/server/
             │
             ├── 10. Realtime Event Broadcast (WebSocket room: `workspace_${workspaceId}`)
             │
-            └── 11. (Phase 2) Async AI Ingestion: Extract signals, score lead via BullMQ
+            └── 11. (Phase 2) Async AI Ingestion: AI NER 3-tier address & order draft extraction via BullMQ
 ```
 
 ---

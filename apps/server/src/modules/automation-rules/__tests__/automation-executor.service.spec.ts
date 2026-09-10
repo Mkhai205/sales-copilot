@@ -27,8 +27,8 @@ describe('AutomationExecutorService (Feature F-1.9.2)', () => {
   const baseRule: AutomationRuleDto = {
     id: 'rule_1',
     workspaceId: 'ws_1',
-    name: 'VIP Lead Handler',
-    description: 'Auto assign and tag VIP leads',
+    name: 'VIP Customer Handler',
+    description: 'Auto assign and tag VIP customers',
     eventTrigger: AutomationEventTrigger.CONVERSATION_CREATED,
     conditions: [],
     actions: [],

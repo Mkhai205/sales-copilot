@@ -34,10 +34,10 @@ describe('Teams Management (Task 30)', () => {
 
     it('should trim team name whitespace', () => {
       const payload = {
-        name: '   APAC Sales Leads   ',
+        name: '   APAC Retail Sales   ',
       };
       const parsed = createTeamSchema.parse(payload);
-      assert.strictEqual(parsed.name, 'APAC Sales Leads');
+      assert.strictEqual(parsed.name, 'APAC Retail Sales');
     });
 
     it('should reject empty team names', () => {

@@ -11,7 +11,7 @@ Trong **Phase 1: Omnichannel Platform Core**, Sales Copilot Platform đã hoàn 
 4. **Autonomous AI Auto-pilot 24/7 & Discount Policy Engine**: Tự động tư vấn size, chốt đơn ban đêm (Midnight Checkout lúc 02:00 sáng) và đàm phán giảm giá/freeship có kiểm soát theo hạn mức an toàn của chủ shop.
 5. **Chống cướp khách thời gian thực**: Tự động ẩn bình luận chứa SĐT `< 1s` trên bài viết Fanpage và tự động gửi tin nhắn riêng (Private Message) kéo khách vào hộp thư.
 
-> ℹ️ *Ghi chú Lưu trữ*: Toàn bộ mã nguồn và tài liệu của mô hình B2B Leads / BANT / Lead Scoring trước đây đã được lưu trữ nguyên vẹn tại branch git: `archive/phase-2-b2b-leads`.
+> ℹ️ *Ghi chú Lưu trữ*: Toàn bộ mã nguồn và tài liệu của mô hình B2B CRM trước đây đã được lưu trữ nguyên vẹn tại branch git: `archive/phase-2-b2b-leads`.
 
 ---
 

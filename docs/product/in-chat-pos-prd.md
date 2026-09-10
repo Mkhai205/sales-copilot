@@ -37,7 +37,7 @@ However, Pancake possesses notable limitations:
 ### 1.3 Critical Operational Pain Points
 Through extensive field research and operations surveys, four severe bottlenecks were identified in existing chat workflows:
 1. **Context Switching Friction**: Agents toggle back and forth between chat windows and external ERP/POS tools (KiotViet, Sapo, Excel). This introduces a **1.5 to 3 minute latency penalty per order**, causing customer interest to cool and chat queues to stall during peak traffic (11:00–13:00 and 20:00–23:00).
-2. **Manual Address Entry & High Return Rates ("Bom Hàng")**: Customers provide unstructured addresses with informal abbreviations (e.g., *"15 ngõ 45 Cầu Giấy, Quan Hoa, CG, HN"*). Manual retyping causes typos in ward or district codes, leading to courier rejection, misrouting, and delivery failure rates of **15% to 25%**.
+2. **Manual Address Entry & High Return Rates ("Bom Hàng")**: Customers provide unstructured addresses with informal abbreviations (e.g., *"15 ngõ 45 Cầu Giấy, Quan Hoa, CG, HN"*). Manual retyping causes typos in ward or district codes, causing courier rejection, misrouting, and delivery failure rates of **15% to 25%**.
 3. **Payment Drop-Off & Manual Bank Reconciliation**: Requesting bank transfers by pasting raw bank account numbers requires customers to manually open their banking app, select the receiving bank, type the account number, type the exact amount, and transcribe an order code. This friction causes up to **30% payment drop-off** and leaves merchants vulnerable to fabricated payment receipt screenshots ("bill giả").
 4. **Agent Collision & Duplicate Orders**: In high-velocity teams (5–30 agents sharing incoming queues), multiple agents frequently open the same conversation and simultaneously create duplicate draft orders or quote conflicting prices, causing inventory discrepancies and customer dissatisfaction.
 5. **Delayed Packaging & Fulfillment**: Lack of integrated, browser-based thermal waybill printing (58mm/80mm) forces warehouse staff to manually re-enter order numbers into logistics portals, delaying same-day carrier handover.
@@ -55,7 +55,7 @@ The **In-Chat POS & Order Closing Automation** subsystem bridges this gap by emb
 ### 1.5 Architectural Guardrails & Invariants (AGENTS.md Compliance)
 To ensure long-term maintainability and system integrity, this subsystem strictly adheres to the core directives of `AGENTS.md`:
 1. **Multi-Tenancy Isolation (Non-Negotiable)**: Every entity (`Product`, `ProductVariant`, `Order`, `OrderItem`, `ShippingAddress`, `PaymentTransaction`, `InventoryTransaction`) enforces tenant scoping via `workspaceId` in all database queries, mutations, and compound indexes. Cross-tenant queries are strictly prevented.
-2. **Phase 1 & Phase 2 Non-Breaking Invariant**: Existing Phase 1 entities (`Conversation`, `Message`, `Contact`, `Channel`) and Phase 2 entities (`Lead`, `Opportunity`, `SalesEvidence`) remain intact. The POS module links to them cleanly via optional foreign keys (`conversationId`, `contactId`, `leadId`, `opportunityId`).
+2. **Phase 1 Non-Breaking Invariant**: Existing Phase 1 entities (`Conversation`, `Message`, `Contact`, `Channel`) remain intact. The POS module links to them cleanly via foreign keys (`conversationId`, `contactId`, `createdById`).
 3. **Anti-Over-Engineering (KISS & YAGNI)**: Implementation uses direct, idiomatic NestJS Services with Prisma queries and Zod contracts. No unnecessary Clean Architecture abstraction layers, no single-implementation interfaces, and no DTO/Presenter pipeline explosions.
 4. **Asynchronous Ingestion Directive**: Chat ingestion acknowledges incoming events in `< 100ms`. AI address extraction, carrier dispatch, and reconciliation execute asynchronously in BullMQ background queues.
 5. **Mandatory Reuse of Shadcn UI Primitives**: 100% of UI elements are built from the 50+ existing components in `apps/web/src/components/ui/` (`Sheet`, `Tabs`, `FieldGroup`, `Field`, `Command`, `Badge`, `Button`, `Dialog`, etc.). No custom div-based UI reinventions.
@@ -69,7 +69,7 @@ graph TD
     subgraph Core User Personas
         P1[Agent: Tư Vấn Viên]
         P2[Sales Manager: Quản Lý KD]
-        P3[Warehouse Lead: Quản Lý Kho]
+        P3[Warehouse Specialist: Quản Lý Kho]
         P4[Customer: Khách Hàng Chat]
     end
 
@@ -91,7 +91,7 @@ graph TD
   5. Avoid colliding with teammates working the same inbox.
 - **Key Frustrations**:
   - Toggling to external ERP tools causes lag, missing customer replies, and losing impulse buyers.
-  - Manual typing of complex Vietnamese administrative wards leads to mistakes and courier penalties.
+    - Manual typing of complex Vietnamese administrative wards causes mistakes and courier penalties.
   - Asking customers for payment screenshots and manually checking bank notifications.
 - **Job-To-Be-Done (JTBD)**:
   > *"When a prospective customer indicates purchase intent in chat, I want to check variant stock in real time, autofill their address with 1 click, and send an exact VietQR card so that I can close the sale within 15 seconds without administrative overhead."*
@@ -105,13 +105,13 @@ graph TD
   3. Eliminate agent collision and duplicate order creation on shared customer conversations.
   4. Audit discount overrides, price adjustments, and cancellation reasons.
 - **Key Frustrations**:
-  - Multiple agents clashing on high-value conversations or poaching leads.
+  - Multiple agents clashing on high-value conversations or poaching customers.
   - Revenue leakages from unmonitored agent discounts.
   - Difficulty determining which marketing campaign or channel generated which revenue.
 - **Job-To-Be-Done (JTBD)**:
   > *"When managing multi-agent chat queues, I want real-time collision prevention, transparent revenue attribution, and strict order status tracking so that our team maximizes closing rates and eliminates duplicate or lost orders."*
 
-### 2.3 Persona 3: Warehouse & Fulfillment Lead (Quản Lý Kho & Đóng Gói)
+### 2.3 Persona 3: Warehouse & Fulfillment Specialist (Quản Lý Kho & Đóng Gói)
 - **Demographics & Profile**: 25–40 years old; oversees physical inventory levels, stock reservation, picking, packing, label printing, and 3PL courier handovers.
 - **Work Environment**: Warehouse floor packing station equipped with thermal barcode printers (Xprinter K80/K58, 80mm/58mm) and handheld barcode scanners.
 - **Core Goals**:
@@ -147,7 +147,7 @@ graph TD
 | :--- | :--- | :--- | :--- |
 | **Agent** | Closed GMV, First Response Time (< 30s), Closing Rate | In-Chat POS Drawer (`Sheet`), Quick Tags, VietQR Trigger | Search `< 50ms`, Order Creation `< 100ms` |
 | **Sales Manager** | Queue Velocity, Conversion Rate, Zero Collisions | Presence Monitor, Audit Log, Attribution Reports | Real-time presence sync `< 200ms` |
-| **Warehouse Lead** | Picking Speed, Zero Overselling, Dispatch Accuracy | Stock Locking, Browser Thermal Print (K80), Carrier Push | Print Modal `< 50ms`, Zero Oversell (Atomic Tx) |
+| **Warehouse Specialist** | Picking Speed, Zero Overselling, Dispatch Accuracy | Stock Locking, Browser Thermal Print (K80), Carrier Push | Print Modal `< 50ms`, Zero Oversell (Atomic Tx) |
 | **End-Customer** | Checkout Friction, Payment Security, Delivery Speed | Interactive VietQR Card in chat, Realtime Payment Receipt | Bank Webhook Reconcile `< 1s` |
 
 ---
@@ -185,11 +185,11 @@ journey
     section 7. Carrier Dispatch
       System pushes address to GHTK/GHN: 5: System
       Tracking code & shipping fee returned: 5: System
-      Order shifts to SHIPPING: 5: Warehouse Lead
+      Order shifts to SHIPPING: 5: Warehouse Specialist
     section 8. Thermal Waybill Print
-      Warehouse clicks 1-click thermal print: 5: Warehouse Lead
-      Browser prints K80 zero-margin slip: 5: Warehouse Lead
-      Package dispatched to carrier: 5: Warehouse Lead
+      Warehouse clicks 1-click thermal print: 5: Warehouse Specialist
+      Browser prints K80 zero-margin slip: 5: Warehouse Specialist
+      Package dispatched to carrier: 5: Warehouse Specialist
 ```
 
 ### 3.1 Detailed 8-Stage Journey Breakdown
@@ -356,7 +356,7 @@ graph LR
   - Automated confirmation message posted to customer in chat thread.
 
 ### 4.6 Use Case 6 (UC6): Browser-Based Thermal Printing (58mm & 80mm)
-- **Primary Actor**: Warehouse Operator / Packing Lead.
+- **Primary Actor**: Warehouse Operator / Packing Specialist.
 - **Goal**: Generate high-contrast, zero-margin thermal shipping slips and packing invoices directly from the browser without third-party print drivers.
 - **Supported Formats & Hardware**:
   - **80mm Roll Width (K80 / 72mm printable width / 576 dots)**: Standard size for retail packing slips.

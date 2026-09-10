@@ -39,9 +39,9 @@ Unit tests tập trung vào deterministic business logic.
 
 Ưu tiên test:
 
-- Lead lifecycle
-- Lead score rules
-- Qualification rules
+- Order state transitions
+- Stock reservation & locking rules
+- Discount policy limits
 - Conversation state transitions
 - Assignment rules
 - Authorization rules
@@ -52,12 +52,12 @@ Unit tests tập trung vào deterministic business logic.
 Ví dụ:
 
 ```text
-NEW → ENGAGED       valid
-ENGAGED → QUALIFIED valid
-QUALIFIED → HOT     valid
-HOT → CONVERTED     valid
+DRAFT → CONFIRMED    valid
+CONFIRMED → PAID     valid
+PAID → SHIPPING      valid
+SHIPPING → COMPLETED valid
 
-NEW → CONVERTED     invalid
+DRAFT → COMPLETED    invalid
 ```
 
 ## 4. Application Tests
@@ -67,12 +67,13 @@ Application tests kiểm tra use-case behavior.
 Ví dụ:
 
 ```text
-CreateLead
+CreateOrder
+ConfirmOrder
+ReconcilePayment
 AssignConversation
 ReceiveMessage
 SendMessage
-AnalyzeConversation
-UpdateLeadScore
+ExtractAddress
 GenerateReply
 ExecuteAgentAction
 ```
@@ -201,11 +202,10 @@ Test:
 Đánh giá:
 
 - Intent accuracy
-- Sentiment quality
-- Lead qualification
-- Lead scoring consistency
+- Address parsing accuracy (3-tier administrative lookup)
+- Order item extraction accuracy
+- Guarded discount policy compliance
 - Reply quality
-- Next-best-action quality
 - Hallucination rate
 
 AI evaluation không nên phụ thuộc hoàn toàn vào exact string matching.
@@ -218,21 +218,21 @@ Mỗi scenario có:
 
 - Input conversation
 - Expected intent
-- Expected qualification
-- Expected score range
-- Expected action constraints
+- Expected shipping address (Province, District, Ward)
+- Expected extracted items and quantities
+- Expected discount constraints
 
 Ví dụ:
 
 ```text
 Scenario:
-Customer asks price and confirms budget.
+Customer requests 2 units of size XL and provides delivery address in Hanoi.
 
 Expected:
-Intent = purchase
-Qualification = qualified
-Lead score = high range
-Recommended action = provide pricing / continue qualification
+Intent = order_creation
+Extracted address = valid 3-tier (Hà Nội, Cầu Giấy, Dịch Vọng Hậu)
+Extracted items = [{ sku: "TSHIRT-XL", quantity: 2 }]
+Recommended action = generate order draft / calculate shipping
 ```
 
 AI model/provider thay đổi phải chạy regression evaluation.
@@ -271,7 +271,7 @@ Kiểm tra:
 - Cross-organization access
 - Cross-workspace access
 - Unauthorized conversation access
-- Unauthorized lead access
+- Unauthorized order or customer access
 - RBAC violations
 - Webhook spoofing
 - Invalid tokens
@@ -302,7 +302,7 @@ Regression tests phải ưu tiên:
 
 - Message duplication
 - Conversation state corruption
-- Lead score corruption
+- Inventory / stock reservation corruption
 - Tenant data leakage
 - Unauthorized action
 - AI autonomous action errors
@@ -347,13 +347,13 @@ Test name phải mô tả behavior.
 Tốt:
 
 ```text
-should reject invalid lead transition from NEW to CONVERTED
+should reject invalid order transition from DRAFT to COMPLETED
 ```
 
 Không tốt:
 
 ```text
-test lead service
+test order service
 ```
 
 ## 19. Definition of Test Completion

@@ -79,23 +79,19 @@ Quy trình triển khai tuân thủ nghiêm ngặt đồ thị phụ thuộc (DA
 
 ---
 
-## 📌 4. Phân kỳ Phase 2 & Phase 3 (Future Extensions)
+## 📌 4. Phân kỳ Phase 2 (Active Scope)
 
-### Phase 2: Sales Intelligence (Master Backlog: [📄 `phase-2-backlog.md`](./phase-2-backlog.md))
-- **Epic 2.1: Lead Lifecycle & Opportunity Core** — [📄 `epic-2.1.md`](./epic-2.1.md)
-- **Epic 2.2: Sales Evidence & Activity Timeline** — [📄 `epic-2.2.md`](./epic-2.2.md)
-- **Epic 2.3: Multi-Provider LLM Gateway & Prompt Management** — [📄 `epic-2.3.md`](./epic-2.3.md)
-- **Epic 2.4: Conversation Intelligence (Intent, Sentiment, Buying Signals)** — [📄 `epic-2.4.md`](./epic-2.4.md)
-- **Epic 2.5: AI-Driven Lead Scoring Engine** — [📄 `epic-2.5.md`](./epic-2.5.md)
-- **Epic 2.6: Sales Copilot Assistant & Suggested Actions** — [📄 `epic-2.6.md`](./epic-2.6.md)
+### Phase 2: Conversational Commerce & In-Chat POS (Master Backlog: [📄 `phase-2-backlog.md`](./phase-2-backlog.md))
+- **Milestone M1: Core Catalog & Atomic Stock Reservation** (Products, Variants, SKUs, Inventory Locking)
+- **Milestone M2: Dynamic VietQR & Instant Webhook Reconciliation** (EMVCo VietQR, Casso/SePay Webhook < 1s)
+- **Milestone M3: AI 3-Tier Address Extraction & 1-Click Order Draft** (NER Province/District/Ward resolution)
+- **Milestone M4: 24/7 AI Auto-pilot & Guarded Discount Policy Engine** (Midnight auto-checkout, max discount limits)
+- **Milestone M5: Anti-theft Realtime Comment Masking** (Facebook comment phone/address masking < 1s)
 
-### Phase 3: Autonomous & Enterprise Extensions (Long-Term)
-- **Epic 3.1: Tool Registry & Policy Guardrails**
-- **Epic 3.2: Autonomous Sales Agent Execution Engine**
-- **Epic 3.3: Voice & Call Center Integration (VoIP/SIP)**
-- **Epic 3.4: Advanced Analytics, SLA & CSAT Reporting**
-- **Epic 3.5: CRM Sync Adapters (HubSpot, Salesforce, Pipedrive)**
-- **Epic 3.6: Production Scale & High-Availability**
+### ⛔ Prohibited & Deprecated
+- External B2B CRM Sync (HubSpot, Salesforce, Pipedrive)
+- B2B CRM Pipelines, Deal Stages & B2B Scoring
+- Voice / VoIP / SIP integrations
 
 ### Deferred Channels (Post-Phase 1)
 - **Zalo OA Channel** — `ZaloAdapter` implementation

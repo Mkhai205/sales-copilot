@@ -84,10 +84,11 @@ const conv = await this.prisma.conversation.findFirst({
 
 ### 5.2. Nguyên tắc tiếp nhận tin nhắn AI không chặn (Async AI Ingestion)
 - Luồng tiếp nhận tin nhắn (`inbound webhook / message ingestion`) **TUYỆT ĐỐI KHÔNG CHẶN (BLOCK) ĐỂ CHỜ LLM INFERENCE**.
-- Webhook tiếp nhận phải phản hồi thành công trong vòng `< 100ms`. Việc phân tích tín hiệu mua hàng (buying signals), tính điểm lead scoring và tạo draft reply phải được đẩy vào BullMQ queue để xử lý bất đồng bộ.
+- Webhook tiếp nhận phải phản hồi thành công trong vòng `< 100ms`. Việc trích xuất địa chỉ giao hàng 3 cấp NER, tạo bản thảo đơn hàng POS và tạo phản hồi tự động phải được đẩy vào BullMQ queue để xử lý bất đồng bộ.
 
-### 5.3. Bằng chứng AI phải có nguồn gốc rõ ràng (Traceable AI Evidence)
-- Mọi tín hiệu mua hàng (buying signals) và bằng chứng bán hàng do LLM trích xuất bắt buộc phải gắn kèm trích dẫn nguyên văn (`verbatim quote`) và tham chiếu chính xác `messageId` và `conversationId`.
+### 5.3. Kiểm soát chính sách giảm giá & Chống xung đột chốt đơn (POS Safeguards & Anti-Collision)
+- Mọi đề xuất giảm giá của AI Auto-pilot phải tuân thủ giới hạn thiết lập trong `DiscountPolicyEngine` của Workspace; mọi thao tác chốt đơn phải khóa kho nguyên tử (`Atomic Stock Lock`).
+- Chống xung đột nhiều nhân viên cùng tạo đơn cho một khách hàng bằng Redis lock trượt 30 giây (`pos:lock:<conversationId>`).
 
 ---
 

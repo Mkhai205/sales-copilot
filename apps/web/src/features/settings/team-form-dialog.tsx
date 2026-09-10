@@ -188,7 +188,7 @@ export function TeamFormDialog({
                     setName(e.target.value);
                     if (!touched) setTouched(true);
                   }}
-                  placeholder="e.g. Tier 1 Support, Sales Leads, VIP Account"
+                  placeholder="e.g. Tier 1 Support, Retail Sales, VIP Account"
                   maxLength={100}
                   aria-invalid={!!nameError}
                   required

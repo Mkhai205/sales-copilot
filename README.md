@@ -12,13 +12,13 @@
 
 ## 📖 Overview
 
-**Sales Copilot** is a high-performance customer engagement platform inspired by Chatwoot, designed with a **Conversation-First** philosophy. It unites multiple messaging channels (Live Web Chat, Facebook Messenger, Zalo OA, Telegram, Email) into a centralized, real-time agent dashboard, enhanced by an asynchronous **AI Sales Intelligence** engine that extracts buying signals, scores leads with time-decay, and suggests next best actions.
+**Sales Copilot** is an omnichannel conversational commerce & AI sales platform for D2C & Retail, designed with a **Conversation-First** philosophy. It unites multiple messaging channels (Live Web Chat, Facebook Messenger, Zalo OA, Telegram) into a centralized, real-time agent dashboard, enhanced by built-in In-Chat POS, instant VietQR payment reconciliation, and AI Auto-pilot.
 
 ### Project Roadmap & Phasing:
 
-- 🟢 **Phase 1 (COMPLETED BASELINE)**: Omnichannel conversation core, contact identity deduplication, round-robin auto-assignment, automation rules, canned responses, outbound webhooks, and realtime WebSocket streaming. _(Signed off with 1,277 automated tests passing)._
-- 🟡 **Phase 2 (CURRENT ACTIVE SCOPE)**: Sales Intelligence & AI Copilot — Lead/Opportunity lifecycle, BANT evidence ledger, AI lead scoring with 48h time-decay, BullMQ conversation intelligence, and Copilot Assistant Drawer.
-- ❄️ **Phase 3 (FUTURE EXTENSIONS)**: Autonomous Sales Agents, Voice/SIP (WebRTC), and bidirectional external CRM sync (HubSpot, Salesforce).
+- 🟢 **Phase 1 (COMPLETED BASELINE)**: Omnichannel conversation core, contact identity deduplication, round-robin auto-assignment, automation rules, canned responses, outbound webhooks, and realtime WebSocket streaming.
+- 🟡 **Phase 2 (CURRENT ACTIVE SCOPE)**: Conversational Commerce & AI Auto-pilot POS for D2C & Retail — Built-in In-Chat POS & Inventory (Variants, SKUs), Dynamic VietQR & instant bank webhook reconciliation (< 1s), AI NER 3-tier address extraction & 1-click order generation, 24/7 AI Auto-pilot & guarded discount policy engine, and anti-theft realtime comment masking.
+- ⛔ **PROHIBITED & DEPRECATED**: Do NOT build B2B CRM, Voice/SIP, or external CRM sync (HubSpot/Salesforce).
 
 ---
 

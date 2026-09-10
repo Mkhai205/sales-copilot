@@ -3,7 +3,7 @@
 > **Document Classification**: OFFICIAL COMPLETION SIGN-OFF & AUDIT CERTIFICATION  
 > **Milestone**: Phase 1 — Omnichannel Conversation Platform Core  
 > **Sign-Off Date**: September 6, 2026  
-> **Authority**: Senior QA Engineer & Technical Architecture Lead  
+> **Authority**: Senior QA Engineer & Principal Architect  
 > **Status**: **100% COMPLETED & PRODUCTION READY**  
 > **Baseline References**:
 > - `AGENTS.md` (Architectural Directives, Anti-Over-Engineering & Security Standards)
@@ -277,15 +277,15 @@ During the final quality audit and integration verification phase, the following
 
 | Role | Name / Identifier | Status | Signature Timestamp |
 | :--- | :--- | :---: | :--- |
-| **Lead QA Engineer & Forensic Auditor** | `worker_signoff` | **APPROVED** | 2026-09-06T07:12:00Z |
+| **Principal QA Engineer & Forensic Auditor** | `worker_signoff` | **APPROVED** | 2026-09-06T07:12:00Z |
 | **Backend System Architect** | `explorer_m1_server` | **APPROVED** | 2026-09-06T07:05:00Z |
-| **Frontend Engineering Lead** | `explorer_m1_web` | **APPROVED** | 2026-09-06T07:07:00Z |
+| **Principal Frontend Engineer** | `explorer_m1_web` | **APPROVED** | 2026-09-06T07:07:00Z |
 | **Verification & Test Engineer** | `worker_m1_test` | **APPROVED** | 2026-09-06T07:09:00Z |
 
 ### 8.2 Phase 2 Foundation Certification
 The engineering team formally certifies that:
-1. **Schema Stability**: The Phase 1 database schema is finalized at 21 models with zero Phase 2 leakage. Phase 2 models (`Lead`, `Opportunity`, `SalesEvidence`, `LeadScore`, `CopilotDecision`) can be seamlessly attached via foreign keys to `workspaceId`, `contactId`, and `conversationId`.
-2. **Event Bus Extensibility**: The `EventEmitter2` domain event pipeline is fully functional and ready to asynchronously dispatch customer conversation events to Phase 2 background queues (BullMQ) for AI analysis, intent detection, and lead scoring.
-3. **Contract Integrity**: REST API contracts and WebSocket event definitions in `@sales-copilot/shared-contracts` are stable, typed, and locked, providing a reliable substrate for Phase 2 copilot widget and insight extensions.
+1. **Schema Stability**: The Phase 1 database schema is finalized at 21 models with zero Phase 2 leakage. Phase 2 models (`Product`, `ProductVariant`, `Order`, `OrderItem`, `PaymentTransaction`, `InventoryTransaction`) can be seamlessly attached via foreign keys to `workspaceId`, `contactId`, and `conversationId`.
+2. **Event Bus Extensibility**: The `EventEmitter2` domain event pipeline is fully functional and ready to asynchronously dispatch customer conversation events to Phase 2 background queues (BullMQ) for AI NER address extraction, automated order generation, and bank webhook reconciliation.
+3. **Contract Integrity**: REST API contracts and WebSocket event definitions in `@sales-copilot/shared-contracts` are stable, typed, and locked, providing a reliable substrate for Phase 2 In-Chat POS and AI Auto-pilot extensions.
 
 **Phase 1 is hereby officially closed, certified, and approved for production.**

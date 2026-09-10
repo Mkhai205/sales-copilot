@@ -15,22 +15,23 @@
 ## 1. Executive Summary & Architectural Invariants
 
 ### 1.1. Context & Business Imperative
-In Vietnamese conversational commerce (via Facebook Messenger, Zalo OA, Web Chat, and Telegram), customer checkout is intensely conversational. As established in the Pancake.vn field audit, sales representatives lose 1.5 to 3 minutes per order when forced to switch away from chat threads to separate ERP or warehouse software. Furthermore, manual entry of Vietnamese administrative addresses leads to return rates of 15–25%, multi-agent collision (two agents creating duplicate orders for the same customer) damages trust, and manual verification of bank transfer SMS notifications stalls packaging pipelines.
+In Vietnamese conversational commerce (via Facebook Messenger, Zalo OA, Web Chat, and Telegram), customer checkout is intensely conversational. As established in the Pancake.vn field audit, sales representatives lose 1.5 to 3 minutes per order when forced to switch away from chat threads to separate ERP or warehouse software. Furthermore, manual entry of Vietnamese administrative addresses results in return rates of 15-25%, multi-agent collision (two agents creating duplicate orders for the same customer) damages trust, and manual verification of bank transfer SMS notifications stalls packaging pipelines.
 
 The **In-Chat POS & Order Closing Automation** subsystem embeds complete point-of-sale capabilities, real-time inventory locking, dynamic VietQR generation, bank webhook reconciliation, and thermal label generation directly into the Sales Copilot agent interface via a dedicated Right Drawer and DetailPanel POS Tab.
 
-```text
-┌───────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│                                     SALES COPILOT PLATFORM                                            │
-├───────────────────────────────────┬───────────────────────────────────┬───────────────────────────────┤
-│    PHASE 1: CONVERSATION CORE     │    PHASE 2: SALES INTELLIGENCE    │    IN-CHAT POS SUBSYSTEM      │
-│     (Omnichannel Baseline)        │     (Revenue & AI Engine)         │     (Closing & Fulfillment)   │
+```
+┌───────────────────────────────────┬───────────────────────────────────┬───────────────────────────────┐
+│           SALES COPILOT           │     D2C CONVERSATIONAL COMMERCE   │       IN-CHAT POS SUBSYSTEM   │
+│             PLATFORM              │      (PHASE 2 FOCUSED SCOPE)      │     (BUILT-IN MINI INVENTORY) │
+├───────────────────────────────────┼───────────────────────────────────┼───────────────────────────────┤
+│    PHASE 1: CONVERSATION CORE     │   PHASE 2: D2C AI COMMERCE        │    IN-CHAT POS SUBSYSTEM      │
+│     (Omnichannel Baseline)        │     (Revenue & AI Auto-pilot)     │     (Closing & Fulfillment)   │
 ├───────────────────────────────────┼───────────────────────────────────┼───────────────────────────────┤
 │ • Inbound Webhook Ingestion       │ • Multi-Provider LLM Gateway      │ • Fast Catalog Search (<50ms) │
-│ • Contact & Identity Resolution   │ • Real-time Buying Signal Ledger  │ • Atomic Stock Lock (Anti-OOS)│
-│ • Unified Threading & Messages    │ • AI Multi-Factor Lead Scoring    │ • Dynamic VietQR (NAPAS 247)  │
-│ • Inbox RBAC & Presence Routing   │ • Copilot Suggestion Drawer (NBA) │ • Auto Webhook Reconciliation │
-│ • Realtime Socket.io Fanout       │ • CRM Opportunities & Pipelines   │ • 58mm/80mm Thermal Waybills  │
+│ • Contact & Identity Resolution   │ • AI NER 3-Tier Address Parser    │ • Atomic Stock Lock (Anti-OOS)│
+│ • Unified Threading & Messages    │ • 24/7 AI Auto-pilot Checkout     │ • Dynamic VietQR (NAPAS 247)  │
+│ • Inbox RBAC & Presence Routing   │ • Anti-theft Comment Masking      │ • Auto Webhook Reconciliation │
+│ • Realtime Socket.io Fanout       │ • Discount Policy Engine          │ • 58mm/80mm Thermal Waybills  │
 └───────────────────────────────────┴───────────────────────────────────┴───────────────────────────────┘
 ```
 
@@ -47,15 +48,13 @@ In strict compliance with `AGENTS.md`, the In-Chat POS subsystem adheres to five
    - ❌ Cross-tenant queries are strictly prohibited: `prisma.order.findUnique({ where: { id } })`.
    - ✅ Always tenant-scoped: `prisma.order.findFirst({ where: { id, workspaceId } })` or compound unique `prisma.order.update({ where: { workspaceId_id: { workspaceId, id } } })`.
 
-2. **Phase 1 & Phase 2 Non-Breaking Guarantee**:
-   - Zero destructive alterations to Phase 1 tables (`conversations`, `messages`, `contacts`, `channels`, `inboxes`) and Phase 2 tables (`leads`, `opportunities`, `sales_evidences`, `lead_scores`).
+2. **Phase 1 Non-Breaking Guarantee**:
+   - Zero destructive alterations to Phase 1 tables (`conversations`, `messages`, `contacts`, `channels`, `inboxes`).
    - Clean, non-blocking foreign key relations:
      - `Order.conversationId -> Conversation.id` (onDelete: SetNull)
      - `Order.contactId -> Contact.id` (onDelete: Restrict)
-     - `Order.leadId -> Lead.id` (onDelete: SetNull)
-     - `Order.opportunityId -> Opportunity.id` (onDelete: SetNull)
      - `Order.createdById -> User.id` (onDelete: SetNull)
-   - Phase 1 & 2 APIs, schemas, and event contracts remain 100% stable.
+   - Phase 1 APIs, schemas, and event contracts remain 100% stable.
 
 3. **Anti-Over-Engineering (KISS / YAGNI Directives)**:
    - Idiomatic NestJS Services (`ProductService`, `OrderService`, `VietQrService`, `PaymentReconciliationService`) directly executing typed Prisma queries within `$transaction`.
@@ -249,8 +248,6 @@ model Order {
   workspaceId           String
   conversationId        String?
   contactId             String
-  leadId                String?
-  opportunityId         String?
   createdById           String?
   
   status                OrderStatus            @default(DRAFT)
@@ -284,8 +281,6 @@ model Order {
   workspace             Workspace              @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   conversation          Conversation?          @relation(fields: [conversationId], references: [id], onDelete: SetNull)
   contact               Contact                @relation(fields: [contactId], references: [id], onDelete: Restrict)
-  lead                  Lead?                  @relation(fields: [leadId], references: [id], onDelete: SetNull)
-  opportunity           Opportunity?           @relation(fields: [opportunityId], references: [id], onDelete: SetNull)
   createdBy             User?                  @relation("UserCreatedOrders", fields: [createdById], references: [id], onDelete: SetNull)
   
   items                 OrderItem[]
@@ -300,8 +295,6 @@ model Order {
   @@index([workspaceId, paymentStatus])
   @@index([workspaceId, contactId])
   @@index([workspaceId, conversationId])
-  @@index([workspaceId, leadId])
-  @@index([workspaceId, opportunityId])
   @@index([workspaceId, createdAt])
   @@map("orders")
 }
@@ -464,18 +457,6 @@ To satisfy bidirectional Prisma relation rules without altering runtime behavior
    // Add inside model Contact:
    orders                Order[]
    shippingAddresses     ShippingAddress[]
-   ```
-
-5. **`Lead` model** (`apps/server/prisma/schema.prisma:610`):
-   ```prisma
-   // Add inside model Lead:
-   orders                Order[]
-   ```
-
-6. **`Opportunity` model** (`apps/server/prisma/schema.prisma:644`):
-   ```prisma
-   // Add inside model Opportunity:
-   orders                Order[]
    ```
 
 ---
@@ -780,7 +761,7 @@ export class OrdersService {
  │             PAID              │              │       │          CANCELLED            │
  │ • Stock committed (sale)      │              │       │ • Terminal state              │
  │ • Real-time in-chat confetti  │              │       │ • Reserved stock released     │
- │ • CRM Opportunity auto-won    │              │       │   (reservedQuantity - Q)      │
+ │ • Instant payment confirmed   │              │       │   (reservedQuantity - Q)      │
  └──────────────┬────────────────┘              │       └───────────────────────────────┘
                 │                               │                      ▲
                 │ [Package Ready / Carrier]     │                      │
@@ -812,8 +793,8 @@ export class OrdersService {
 | *(None)* | `DRAFT` | Agent / AI Parser | Valid `contactId`, `workspaceId` | None | Emits `order.created`, broadcasts to conversation room |
 | `DRAFT` | `CONFIRMED` | Agent clicks "Tạo đơn" | `items.length > 0`, address present | Increments `reservedQuantity += Q` (Physical stock untouched) | Emits `order.confirmed`, generates VietQR, schedules 24h expiry |
 | `DRAFT` | `CANCELLED` | Agent discards draft | None | None | Emits `order.cancelled` |
-| `DRAFT` | `PAID` | Direct Bank Webhook | `paidAmount >= totalAmount` | Decrements `stockQuantity -= Q` (`COMMIT_SALE`) | Emits `order.paid`, CRM Opportunity auto-won |
-| `CONFIRMED` | `PAID` | Bank Webhook / VietQR | `paidAmount >= totalAmount` | Decrements `stockQuantity -= Q` AND `reservedQuantity -= Q` (`COMMIT_SALE`) | Emits `order.paid`, plays confetti chime, marks Opportunity WON |
+| `DRAFT` | `PAID` | Direct Bank Webhook | `paidAmount >= totalAmount` | Decrements `stockQuantity -= Q` (`COMMIT_SALE`) | Emits `order.paid`, updates conversation order state |
+| `CONFIRMED` | `PAID` | Bank Webhook / VietQR | `paidAmount >= totalAmount` | Decrements `stockQuantity -= Q` AND `reservedQuantity -= Q` (`COMMIT_SALE`) | Emits `order.paid`, plays confetti chime, updates conversation state |
 | `CONFIRMED` | `SHIPPING` | 3PL Dispatch (COD) | `paymentMethod === COD && trackingCode present` | Decrements `stockQuantity -= Q` AND `reservedQuantity -= Q` (`COMMIT_SALE`) | Emits `order.shipping`, generates thermal print waybill |
 | `CONFIRMED` | `CANCELLED` | Agent / 24h Expiry | Order is unpaid | Decrements `reservedQuantity -= Q` (`RELEASE_RESERVATION`) | Emits `order.cancelled`, creates `RELEASE_RESERVATION` ledger |
 | `PAID` | `SHIPPING` | Agent / Courier Push | Tracking code present | None (Stock already committed at `PAID`) | Emits `order.shipping`, generates print data |
@@ -960,8 +941,6 @@ Creates a new order directly from the POS Drawer.
 export const createOrderSchema = z.object({
   conversationId: z.string().uuid().optional(),
   contactId: z.string().uuid('Contact ID không hợp lệ'),
-  leadId: z.string().uuid().optional(),
-  opportunityId: z.string().uuid().optional(),
   // Status defaults strictly to DRAFT. Advanced statuses (CONFIRMED, PAID, COMPLETED) cannot be injected by client
   status: z.literal(OrderStatus.DRAFT).default(OrderStatus.DRAFT),
   discountAmount: z.coerce.number().min(0).default(0),

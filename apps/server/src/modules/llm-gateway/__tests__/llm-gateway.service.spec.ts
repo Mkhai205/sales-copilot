@@ -226,7 +226,7 @@ describe('LlmGatewayService (Multi-Provider Failover Orchestrator)', () => {
   });
 
   it('US-2.3.3: should generate type-safe structured output with 1-shot auto-repair', async () => {
-    const leadSchema = z.object({
+    const intentSchema = z.object({
       intent: z.string(),
       score: z.number(),
     });
@@ -271,7 +271,7 @@ describe('LlmGatewayService (Multi-Provider Failover Orchestrator)', () => {
     const structured = await gateway.generateStructured({
       workspaceId: wsId,
       messages: [{ role: 'user', content: 'Extract intent' }],
-      schema: leadSchema,
+      schema: intentSchema,
     });
 
     assert.strictEqual(callCount, 2); // 1 initial + 1 repair
