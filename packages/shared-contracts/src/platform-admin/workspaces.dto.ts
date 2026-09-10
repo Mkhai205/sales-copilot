@@ -19,10 +19,10 @@ export type QueryPlatformWorkspacesDto = z.infer<typeof queryPlatformWorkspacesS
 // 2. Mutation Schemas
 // ==========================================
 export const workspaceCustomQuotasSchema = z.object({
-  maxAgents: z.number().int().min(1).optional(),
-  maxChannels: z.number().int().min(1).optional(),
-  storageLimitMb: z.number().int().min(100).optional(),
-  aiMonthlyTokens: z.number().int().min(0).optional(),
+  maxAgents: z.number().int().min(1).nullable().optional(),
+  maxChannels: z.number().int().min(1).nullable().optional(),
+  storageLimitMb: z.number().int().min(100).nullable().optional(),
+  aiMonthlyTokens: z.number().int().min(0).nullable().optional(),
 });
 
 export type WorkspaceCustomQuotasDto = z.infer<typeof workspaceCustomQuotasSchema>;

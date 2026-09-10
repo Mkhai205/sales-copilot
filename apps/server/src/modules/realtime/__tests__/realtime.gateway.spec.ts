@@ -34,6 +34,8 @@ describe('RealtimeGateway (Agent Realtime WebSocket Namespace /realtime — Task
   const validConversationId2 = '55555555-5555-5555-5555-555555555555';
   const dynamicConversationId = '66666666-6666-6666-6666-666666666666';
   const unauthorizedConversationId = '88888888-8888-8888-8888-888888888888';
+  const suspendedWorkspaceId = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+  const suspendedConversationId = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
 
   const mockJwtPayload = {
     sub: validUserId,
@@ -50,6 +52,10 @@ describe('RealtimeGateway (Agent Realtime WebSocket Namespace /realtime — Task
     [unauthorizedConversationId]: {
       id: unauthorizedConversationId,
       workspaceId: unauthorizedWorkspaceId,
+    },
+    [suspendedConversationId]: {
+      id: suspendedConversationId,
+      workspaceId: suspendedWorkspaceId,
     },
   };
 
@@ -181,7 +187,23 @@ describe('RealtimeGateway (Agent Realtime WebSocket Namespace /realtime — Task
         conversation: {
           findFirst: async (args: any) => {
             const match = mockConversations[args.where?.id];
-            return match || null;
+            if (!match) return null;
+            return {
+              ...match,
+              workspace: {
+                isSuspended: match.workspaceId === suspendedWorkspaceId,
+                suspendedReason:
+                  match.workspaceId === suspendedWorkspaceId ? 'Payment overdue' : null,
+              },
+            };
+          },
+        },
+        workspace: {
+          findUnique: async (args: any) => {
+            if (args.where?.id === suspendedWorkspaceId) {
+              return { isSuspended: true, suspendedReason: 'Account suspended by platform admin' };
+            }
+            return { isSuspended: false, suspendedReason: null };
           },
         },
       }),
@@ -560,6 +582,55 @@ describe('RealtimeGateway (Agent Realtime WebSocket Namespace /realtime — Task
       assert.ok(socket.data.availableWorkspaceIds.includes(dynamicWorkspaceId));
     });
 
+    it('should reject join_workspace when workspace is suspended', async () => {
+      const socket = createAuthenticatedSocket({
+        availableWorkspaceIds: [suspendedWorkspaceId],
+      });
+
+      const res = await gateway.handleJoinWorkspace(socket, {
+        workspaceId: suspendedWorkspaceId,
+      });
+
+      assert.strictEqual(res.success, false);
+      assert.strictEqual(res.error?.code, 'WORKSPACE_SUSPENDED');
+      assert.strictEqual(res.error?.message, 'Account suspended by platform admin');
+      assert.strictEqual(
+        socket._getJoinedRooms().includes(`workspace_${suspendedWorkspaceId}`),
+        false,
+      );
+    });
+
+    it('should handle workspace.suspended event by broadcasting and evicting room sockets', async () => {
+      let emittedEvent: any = null;
+      let socketsLeftRoom: string | null = null;
+      const testRoom = 'workspace_suspended_ws_001';
+
+      (gateway as any).server = {
+        to: (room: string) => ({
+          emit: (event: string, payload: any) => {
+            emittedEvent = { room, event, payload };
+          },
+        }),
+        in: (room: string) => ({
+          socketsLeave: (r: string) => {
+            socketsLeftRoom = r;
+          },
+          fetchSockets: async () => [],
+        }),
+      };
+
+      await gateway.handleWorkspaceSuspended({
+        workspaceId: 'suspended_ws_001',
+        reason: 'Terms violation',
+      });
+
+      assert.ok(emittedEvent);
+      assert.strictEqual(emittedEvent.room, testRoom);
+      assert.strictEqual(emittedEvent.payload.event, 'workspace_suspended');
+      assert.strictEqual(emittedEvent.payload.data.reason, 'Terms violation');
+      assert.strictEqual(socketsLeftRoom, testRoom);
+    });
+
     it('should reject leave_workspace if socket is unauthenticated', () => {
       const socket = createMockSocket({});
       const res = gateway.handleLeaveWorkspace(socket, { workspaceId: validWorkspaceId1 });
@@ -690,6 +761,24 @@ describe('RealtimeGateway (Agent Realtime WebSocket Namespace /realtime — Task
       assert.strictEqual(res.success, true);
       assert.strictEqual(res.room, `conversation_${dynamicConversationId}`);
       assert.strictEqual(res.workspaceId, dynamicWorkspaceId);
+    });
+
+    it('should reject join_conversation when workspace of conversation is suspended', async () => {
+      const socket = createAuthenticatedSocket({
+        availableWorkspaceIds: [suspendedWorkspaceId],
+      });
+
+      const res = await gateway.handleJoinConversation(socket, {
+        conversationId: suspendedConversationId,
+      });
+
+      assert.strictEqual(res.success, false);
+      assert.strictEqual(res.error?.code, 'WORKSPACE_SUSPENDED');
+      assert.strictEqual(res.error?.message, 'Payment overdue');
+      assert.strictEqual(
+        socket._getJoinedRooms().includes(`conversation_${suspendedConversationId}`),
+        false,
+      );
     });
 
     it('should reject leave_conversation if socket is unauthenticated', () => {

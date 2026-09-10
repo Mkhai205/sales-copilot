@@ -183,4 +183,68 @@ describe('WorkspaceGuard (Tenant Isolation & Context Injection)', () => {
       },
     );
   });
+
+  it('should throw ForbiddenException with WORKSPACE_SUSPENDED when workspace is suspended', async () => {
+    const suspendedDate = new Date('2026-03-01T12:00:00Z');
+    mockWorkspacesService.findMember = async () => ({
+      id: 'wm_123',
+      role: WorkspaceRole.OWNER,
+      workspace: {
+        ...mockWorkspace,
+        isSuspended: true,
+        suspendedReason: 'Payment overdue',
+        suspendedAt: suspendedDate,
+      },
+    });
+
+    const { context } = createMockExecutionContext(
+      { 'x-workspace-id': 'ws_tenant_123' },
+      { userId: 'usr_valid_123', email: 'owner@acme.com', role: 'USER' },
+    );
+
+    await assert.rejects(
+      async () => {
+        await guard.canActivate(context);
+      },
+      (err: any) => {
+        assert.strictEqual(err.response?.code, 'WORKSPACE_SUSPENDED');
+        assert.strictEqual(err.response?.message, 'Payment overdue');
+        assert.strictEqual(err.response?.details?.suspendedReason, 'Payment overdue');
+        assert.strictEqual(err.response?.details?.suspendedAt, suspendedDate);
+        return true;
+      },
+    );
+  });
+
+  it('should use fallback message when workspace is suspended without specific reason', async () => {
+    mockWorkspacesService.findMember = async () => ({
+      id: 'wm_123',
+      role: WorkspaceRole.OWNER,
+      workspace: {
+        ...mockWorkspace,
+        isSuspended: true,
+        suspendedReason: null,
+        suspendedAt: null,
+      },
+    });
+
+    const { context } = createMockExecutionContext(
+      { 'x-workspace-id': 'ws_tenant_123' },
+      { userId: 'usr_valid_123', email: 'owner@acme.com', role: 'USER' },
+    );
+
+    await assert.rejects(
+      async () => {
+        await guard.canActivate(context);
+      },
+      (err: any) => {
+        assert.strictEqual(err.response?.code, 'WORKSPACE_SUSPENDED');
+        assert.strictEqual(
+          err.response?.message,
+          'Workspace has been suspended by platform administrator',
+        );
+        return true;
+      },
+    );
+  });
 });

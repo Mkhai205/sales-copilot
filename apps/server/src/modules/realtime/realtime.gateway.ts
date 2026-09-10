@@ -1,6 +1,6 @@
 import { Injectable, Logger, OnModuleDestroy, Optional } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { EventEmitter2 } from '@nestjs/event-emitter';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import {
   OnGatewayConnection,
   OnGatewayDisconnect,
@@ -307,6 +307,24 @@ export class RealtimeGateway
         return { success: false, error };
       }
 
+      // Check if workspace is suspended
+      const wsRecord = await this.prisma.getClient().workspace?.findUnique?.({
+        where: { id: workspaceId },
+        select: { isSuspended: true, suspendedReason: true },
+      });
+
+      if (wsRecord?.isSuspended) {
+        this.logger.warn(
+          `User ${socketData.userId} attempted to join suspended workspace ${workspaceId}`,
+        );
+        const error: RealtimeErrorPayload = {
+          code: 'WORKSPACE_SUSPENDED',
+          message: wsRecord.suspendedReason || 'Workspace has been suspended',
+        };
+        client.emit('error', error);
+        return { success: false, error };
+      }
+
       const roomName = `workspace_${workspaceId}`;
       client.join(roomName);
 
@@ -340,6 +358,66 @@ export class RealtimeGateway
       };
       client.emit('error', error);
       return { success: false, error };
+    }
+  }
+
+  /**
+   * Listens for workspace suspension events, notifies all sockets in the workspace room,
+   * and evicts all connected sockets from the room.
+   */
+  @OnEvent('workspace.suspended')
+  async handleWorkspaceSuspended(payload: { workspaceId: string; reason?: string }): Promise<void> {
+    try {
+      const { workspaceId, reason } = payload;
+      const roomName = `workspace_${workspaceId}`;
+      this.logger.warn(`Workspace ${workspaceId} suspended. Evicting sockets from ${roomName}`);
+
+      const envelope = {
+        event: 'workspace_suspended',
+        workspaceId,
+        timestamp: new Date().toISOString(),
+        data: {
+          workspaceId,
+          reason: reason || 'Workspace has been suspended by platform administrator',
+        },
+      };
+
+      if (this.server) {
+        this.server.to(roomName).emit('workspace_suspended', envelope);
+        this.server.to(roomName).emit('event', envelope);
+
+        if (typeof this.server.in(roomName)?.fetchSockets === 'function') {
+          const sockets = await this.server.in(roomName).fetchSockets();
+          for (const socket of sockets) {
+            const socketData = socket.data as RealtimeSocketData | undefined;
+            if (socketData) {
+              socketData.joinedWorkspaceIds = socketData.joinedWorkspaceIds.filter(
+                id => id !== workspaceId,
+              );
+              if (socketData.joinedConversations) {
+                for (const [convId, wsId] of Object.entries(socketData.joinedConversations)) {
+                  if (wsId === workspaceId) {
+                    socket.leave(`conversation_${convId}`);
+                    delete socketData.joinedConversations[convId];
+                  }
+                }
+              }
+              if (this.presenceService && socketData.userId) {
+                await this.presenceService
+                  .setOffline(workspaceId, socketData.userId)
+                  .catch(() => {});
+              }
+            }
+          }
+        }
+
+        this.server.in(roomName).socketsLeave?.(roomName);
+      }
+    } catch (err) {
+      this.logger.error(
+        `Error handling workspace.suspended event: ${(err as Error).message}`,
+        (err as Error).stack,
+      );
     }
   }
 
@@ -448,13 +526,31 @@ export class RealtimeGateway
       // Look up conversation
       const conversation = await this.prisma.getClient().conversation.findFirst({
         where: { id: conversationId },
-        select: { id: true, workspaceId: true },
+        select: {
+          id: true,
+          workspaceId: true,
+          workspace: {
+            select: { isSuspended: true, suspendedReason: true },
+          },
+        },
       });
 
       if (!conversation) {
         const error: RealtimeErrorPayload = {
           code: 'CONVERSATION_NOT_FOUND',
           message: `Conversation with id '${conversationId}' not found`,
+        };
+        client.emit('error', error);
+        return { success: false, error };
+      }
+
+      if (conversation.workspace?.isSuspended) {
+        this.logger.warn(
+          `User ${socketData.userId} attempted to join conversation in suspended workspace ${conversation.workspaceId}`,
+        );
+        const error: RealtimeErrorPayload = {
+          code: 'WORKSPACE_SUSPENDED',
+          message: conversation.workspace.suspendedReason || 'Workspace has been suspended',
         };
         client.emit('error', error);
         return { success: false, error };

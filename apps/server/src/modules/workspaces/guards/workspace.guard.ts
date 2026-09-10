@@ -76,6 +76,19 @@ export class WorkspaceGuard implements CanActivate {
       });
     }
 
+    if (member.workspace.isSuspended) {
+      throw new ForbiddenException({
+        code: 'WORKSPACE_SUSPENDED',
+        message:
+          member.workspace.suspendedReason ||
+          'Workspace has been suspended by platform administrator',
+        details: {
+          suspendedReason: member.workspace.suspendedReason,
+          suspendedAt: member.workspace.suspendedAt,
+        },
+      });
+    }
+
     request.workspace = {
       workspaceId: member.workspace.id,
       role: member.role,

@@ -143,9 +143,9 @@ graph LR
      - Shadcn `AlertDialog` "Tạm khóa Workspace": Bắt buộc nhập lý do tạm khóa trước khi bấm xác nhận.
 
 #### Tiêu chí nghiệm thu (Definition of Done):
-- [] Tìm kiếm và lọc danh sách workspace mượt mà dưới 200ms.
-- [] Khi một workspace bị chuyển sang trạng thái Suspended, nhân viên của workspace đó khi gửi tin nhắn hoặc mở chat sẽ nhận thông báo tài khoản bị tạm khóa.
-- [] Thao tác thay đổi quota hoặc trạng thái được ghi lại đầy đủ trong audit log.
+- [x] Tìm kiếm và lọc danh sách workspace mượt mà dưới 200ms.
+- [x] Khi một workspace bị chuyển sang trạng thái Suspended, nhân viên của workspace đó khi gửi tin nhắn hoặc mở chat sẽ nhận thông báo tài khoản bị tạm khóa.
+- [x] Thao tác thay đổi quota hoặc trạng thái được ghi lại đầy đủ trong audit log.
 
 ---
 
