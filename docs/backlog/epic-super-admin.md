@@ -74,8 +74,9 @@ graph LR
      - Nếu có token nhưng JWT payload `role !== 'SUPER_ADMIN'` ➔ Chặn truy cập và redirect về trang chủ `/`.
 
 #### Tiêu chí nghiệm thu (Definition of Done):
+
 - [x] Schema Prisma biên dịch thành công, types generated đầy đủ.
-- [x] Shared contracts biên dịch không có lỗi TypeScript (`pnpm nx run shared-contracts:build`).
+- [x] Shared contracts biên dịch không có lỗi TypeScript (`pnpm nx run shared-contracts:typecheck`).
 - [x] Unit test của `PlatformRolesGuard` đạt 100% test coverage.
 - [x] User thường khi gõ trực tiếp URL `/admin` trên trình duyệt bị chuyển hướng về `/`.
 
@@ -108,9 +109,9 @@ graph LR
      - Nút "Lưu thay đổi" gửi request tới API và hiển thị Sonner Toast thành công.
 
 #### Tiêu chí nghiệm thu (Definition of Done):
-- [x] Đọc cấu hình từ cache Redis đạt thời gian phản hồi `< 5ms`.
-- [x] Khi Super Admin bấm tắt Feature Flag `feature.ai_autopilot_enabled` trên UI, Redis cache cập nhật ngay lập tức mà không cần restart server.
-- [x] Thao tác lưu cấu hình sinh ra 1 bản ghi trong `platform_audit_logs`.
+- [] Đọc cấu hình từ cache Redis đạt thời gian phản hồi `< 5ms`.
+- [] Khi Super Admin bấm tắt Feature Flag `feature.ai_autopilot_enabled` trên UI, Redis cache cập nhật ngay lập tức mà không cần restart server.
+- [] Thao tác lưu cấu hình sinh ra 1 bản ghi trong `platform_audit_logs`.
 
 ---
 
@@ -141,9 +142,9 @@ graph LR
      - Shadcn `AlertDialog` "Tạm khóa Workspace": Bắt buộc nhập lý do tạm khóa trước khi bấm xác nhận.
 
 #### Tiêu chí nghiệm thu (Definition of Done):
-- [x] Tìm kiếm và lọc danh sách workspace mượt mà dưới 200ms.
-- [x] Khi một workspace bị chuyển sang trạng thái Suspended, nhân viên của workspace đó khi gửi tin nhắn hoặc mở chat sẽ nhận thông báo tài khoản bị tạm khóa.
-- [x] Thao tác thay đổi quota hoặc trạng thái được ghi lại đầy đủ trong audit log.
+- [] Tìm kiếm và lọc danh sách workspace mượt mà dưới 200ms.
+- [] Khi một workspace bị chuyển sang trạng thái Suspended, nhân viên của workspace đó khi gửi tin nhắn hoặc mở chat sẽ nhận thông báo tài khoản bị tạm khóa.
+- [] Thao tác thay đổi quota hoặc trạng thái được ghi lại đầy đủ trong audit log.
 
 ---
 
@@ -164,8 +165,8 @@ graph LR
      - Nút "Xem chi tiết": Mở modal hiển thị JSON Diff giữa giá trị trước và sau khi thay đổi (`oldValue` vs `newValue`).
 
 #### Tiêu chí nghiệm thu (Definition of Done):
-- [x] Bảng `platform_audit_logs` không có API sửa (`UPDATE`) hay xóa (`DELETE`).
-- [x] Mọi thao tác từ Feature 2 và Feature 3 đều hiển thị tức thì trên màn hình Audit Logs.
+- [] Bảng `platform_audit_logs` không có API sửa (`UPDATE`) hay xóa (`DELETE`).
+- [] Mọi thao tác từ Feature 2 và Feature 3 đều hiển thị tức thì trên màn hình Audit Logs.
 
 ---
 
@@ -198,5 +199,5 @@ graph LR
    - Chạy toàn bộ lint, type-check và build (`pnpm nx affected -t build,lint,test`).
 
 #### Tiêu chí nghiệm thu (Definition of Done):
-- [x] Giao diện Admin Portal hiển thị đồng bộ, chuẩn responsive, hoạt động tốt trên cả Dark Mode và Light Mode.
-- [x] Toàn bộ 5 Features hoạt động gắn kết, không có lỗi console, không có memory leak.
+- [] Giao diện Admin Portal hiển thị đồng bộ, chuẩn responsive, hoạt động tốt trên cả Dark Mode và Light Mode.
+- [] Toàn bộ 5 Features hoạt động gắn kết, không có lỗi console, không có memory leak.

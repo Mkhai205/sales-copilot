@@ -27,6 +27,7 @@ import { IntegrationsModule } from './integrations';
 import { RealtimeModule } from './modules/realtime';
 import { LlmGatewayModule } from './modules/llm-gateway';
 import { PosModule } from './modules/pos/pos.module';
+import { PlatformAdminModule } from './modules/platform-admin';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -143,6 +144,7 @@ import { pinoRedactConfig } from './common/logging';
     RealtimeModule,
     LlmGatewayModule,
     PosModule,
+    PlatformAdminModule,
   ],
   controllers: [AppController],
   providers: [

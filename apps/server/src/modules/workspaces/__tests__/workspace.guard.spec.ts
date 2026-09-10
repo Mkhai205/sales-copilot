@@ -17,6 +17,9 @@ describe('WorkspaceGuard (Tenant Isolation & Context Injection)', () => {
     timezone: 'Asia/Ho_Chi_Minh',
     defaultLanguage: 'vi',
     settings: {},
+    isSuspended: false,
+    suspendedReason: null,
+    suspendedAt: null,
     createdAt: new Date('2026-01-01T00:00:00Z'),
     updatedAt: new Date('2026-01-01T00:00:00Z'),
   };

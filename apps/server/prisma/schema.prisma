@@ -217,6 +217,9 @@ model Workspace {
   timezone        String          @default("Asia/Ho_Chi_Minh")
   defaultLanguage String          @default("vi")
   settings        Json            @default("{}")
+  isSuspended     Boolean         @default(false)
+  suspendedReason String?
+  suspendedAt     DateTime?
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
 
@@ -241,6 +244,7 @@ model Workspace {
   paymentTransactions   PaymentTransaction[]
   inventoryTransactions InventoryTransaction[]
 
+  @@index([isSuspended])
   @@map("workspaces")
 }
 
@@ -860,5 +864,43 @@ model InventoryTransaction {
   @@index([workspaceId, type])
   @@map("inventory_transactions")
 }
+
+// =============================================================================
+// PLATFORM ADMINISTRATION & DYNAMIC CONFIGURATION
+// =============================================================================
+
+model SystemSetting {
+  key         String   @id
+  value       Json
+  category    String   @default("GENERAL")
+  description String?
+  isEncrypted Boolean  @default(false)
+  updatedBy   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([category])
+  @@map("system_settings")
+}
+
+model PlatformAuditLog {
+  id         String   @id @default(uuid())
+  actorId    String
+  actorEmail String
+  action     String
+  targetType String
+  targetId   String?
+  metadata   Json?    @default("{}")
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  @@index([actorId])
+  @@index([action])
+  @@index([targetType, targetId])
+  @@index([createdAt])
+  @@map("platform_audit_logs")
+}
+
 
 

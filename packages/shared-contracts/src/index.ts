@@ -16,3 +16,4 @@ export * from './realtime';
 export * from './widget';
 export * from './llm';
 export * from './pos';
+export * from './platform-admin';
