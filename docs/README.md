@@ -49,6 +49,7 @@ Sales Copilot Platform được thiết kế và thực thi theo lộ trình ph�
 | Tài liệu | Mô tả chi tiết |
 | :--- | :--- |
 | **[System Architecture](./architecture/system-architecture.md)** | Tổng quan kiến trúc Pragmatic Modular Monolith, Technology Stack (NestJS, Next.js, Prisma, Redis, MinIO), Ingestion Pipeline và Multi-Tenancy. |
+| **[Super Admin Technical RFC](./architecture/super-admin-technical-rfc.md)** | Đặc tả kiến trúc Super Admin Portal: Models SystemSetting, PlatformAuditLog, Redis 2-tier Caching, PlatformRolesGuard, và Layout /admin. |
 | **[Module Architecture](./architecture/module-architecture.md)** | Ranh giới Bounded Contexts, quyền sở hữu model, chuẩn co-location và quy tắc giao tiếp liên module. |
 | **[In-Chat POS Technical RFC](./architecture/in-chat-pos-technical-rfc.md)** | Đặc tả kiến trúc kỹ thuật toàn diện cho In-Chat POS: Database models (Products, Orders, Payments), Redis Anti-Collision Lock, Dynamic VietQR và In bill K80. |
 | **[Channel Adapters](./architecture/channel-adapters.md)** | Kiến trúc adapter kênh (Web Chat, Facebook Messenger, Zalo OA, Telegram), chuẩn hóa webhook và mã hóa AES-256-GCM credentials. |
@@ -71,6 +72,7 @@ Sales Copilot Platform được thiết kế và thực thi theo lộ trình ph�
 | **[Product Vision](./product/vision.md)** | Tầm nhìn "The Chat IS the Point of Sale", triết lý thiết kế và lộ trình chuyển đổi D2C. |
 | **[Product Scope](./product/scope.md)** | Phạm vi chi tiết Phase 1 (Baseline), Phase 2 (D2C Active), và Phase 3 (Future). |
 | **[Product Requirements](./product/requirements.md)** | Đặc tả toàn bộ yêu cầu chức năng (FR) và phi chức năng (NFR, Ingestion non-blocking < 100ms). |
+| **[Super Admin PRD](./product/super-admin-prd.md)** | Đặc tả yêu cầu sản phẩm Super Admin Portal & Cấu hình Động: Quản lý Workspaces, Hạn mức Quota, Feature Flags và Platform Audit Logs. |
 | **[In-Chat POS PRD](./product/in-chat-pos-prd.md)** | Bản đặc tả yêu cầu sản phẩm chi tiết cho In-Chat POS: Benchmark Pancake.vn, 4 Personas, 8-Stage Customer Journey, UX Wireframes. |
 
 ---
@@ -86,6 +88,7 @@ Sales Copilot Platform được thiết kế và thực thi theo lộ trình ph�
 ### 📋 Backlog & Kế hoạch thực thi (`backlog/`)
 | Tài liệu | Mô tả chi tiết |
 | :--- | :--- |
+| **[Epic Super Admin](./backlog/epic-super-admin.md)** | Kế hoạch chi tiết 5 Features của Super Admin Portal: Foundation/Guard, Settings Engine, Workspaces, Audit Logs, Dashboard Shell. |
 | **[Phase 2 Master Backlog](./backlog/phase-2-backlog.md)** | Master Backlog hoạt động chính: 6 Epics D2C (POS, VietQR, AI NER, Auto-pilot 24/7, Ẩn comment, In bill K80). |
 | **[Phase 1 Master Backlog](./backlog/backlog.md)** | Kế hoạch lịch sử 12 Epics Phase 1 (`epic-1.0` đến `epic-1.11`) đã hoàn thành 100%. |
 
