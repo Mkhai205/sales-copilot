@@ -26,8 +26,8 @@ graph LR
     classDef active fill:#1e293b,stroke:#38bdf8,stroke-width:2px,color:#f8fafc;
     classDef future fill:#334155,stroke:#94a3b8,stroke-width:1px,color:#cbd5e1;
 
-    F1["Feature 1: Foundation & Security<br/>(Prisma Models, Contracts, Guards)"]:::active
-    F2["Feature 2: Dynamic Settings Engine<br/>(Redis 2-Tier Cache, Config UI)"]:::active
+    F1["Feature 1: Foundation & Security<br/>(Prisma Models, Contracts, Guards)"]:::done
+    F2["Feature 2: Dynamic Settings Engine<br/>(Redis 2-Tier Cache, Config UI)"]:::done
     F3["Feature 3: Tenant Workspaces Management<br/>(Quota Overrides, Suspend/Activate)"]:::active
     F4["Feature 4: Platform Audit Logs<br/>(Append-Only Log, Diff Viewer)"]:::active
     F5["Feature 5: Admin Shell & Dashboard<br/>(Layout, KPI Cards, Health)"]:::active
@@ -109,9 +109,10 @@ graph LR
      - Nút "Lưu thay đổi" gửi request tới API và hiển thị Sonner Toast thành công.
 
 #### Tiêu chí nghiệm thu (Definition of Done):
-- [] Đọc cấu hình từ cache Redis đạt thời gian phản hồi `< 5ms`.
-- [] Khi Super Admin bấm tắt Feature Flag `feature.ai_autopilot_enabled` trên UI, Redis cache cập nhật ngay lập tức mà không cần restart server.
-- [] Thao tác lưu cấu hình sinh ra 1 bản ghi trong `platform_audit_logs`.
+- [x] Đọc cấu hình từ cache Redis đạt thời gian phản hồi `< 5ms`.
+- [x] Khi Super Admin bấm tắt Feature Flag `feature.ai_autopilot_enabled` trên UI, Redis cache cập nhật ngay lập tức mà không cần restart server.
+- [x] Thao tác lưu cấu hình sinh ra 1 bản ghi trong `platform_audit_logs`.
+
 
 ---
 
