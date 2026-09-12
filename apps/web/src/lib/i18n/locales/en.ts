@@ -65,6 +65,17 @@ export const en: TranslationSchema = {
     contacts: 'Contacts',
     settings: 'Settings',
     switchWorkspace: 'Switch workspace',
+    conversationsGroup: 'Conversations',
+    inbox: 'Inbox',
+    posGroup: 'Commerce & POS',
+    orders: 'Orders',
+    products: 'Products',
+    inventory: 'Inventory',
+    reconciliation: 'VietQR Reconciliation',
+    analyticsGroup: 'Analytics & Reports',
+    analyticsOverview: 'Revenue Overview',
+    analyticsAgents: 'Agent Performance',
+    analyticsChannels: 'Channel Attribution',
   },
   conversations: {
     tabs: {

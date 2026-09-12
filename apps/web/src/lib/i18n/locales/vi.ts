@@ -63,6 +63,17 @@ export const vi = {
     contacts: 'Danh bạ',
     settings: 'Cài đặt',
     switchWorkspace: 'Chuyển không gian làm việc',
+    conversationsGroup: 'Hội thoại',
+    inbox: 'Hộp thư đến',
+    posGroup: 'Bán hàng & POS',
+    orders: 'Đơn hàng',
+    products: 'Sản phẩm',
+    inventory: 'Tồn kho',
+    reconciliation: 'Đối soát VietQR',
+    analyticsGroup: 'Phân tích & Báo cáo',
+    analyticsOverview: 'Tổng quan doanh thu',
+    analyticsAgents: 'Hiệu suất nhân viên',
+    analyticsChannels: 'Báo cáo theo kênh',
   },
   conversations: {
     tabs: {
