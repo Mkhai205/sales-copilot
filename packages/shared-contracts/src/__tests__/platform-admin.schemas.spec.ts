@@ -12,6 +12,9 @@ import {
   querySystemSettingsSchema,
   updateSystemSettingSchema,
   queryPlatformAuditLogsSchema,
+  systemServiceHealthStatusSchema,
+  platformSystemHealthSchema,
+  platformMetricsOverviewSchema,
 } from '../index';
 
 describe('Shared Contracts — Platform Admin Schemas & Validation', () => {
@@ -280,6 +283,99 @@ describe('Shared Contracts — Platform Admin Schemas & Validation', () => {
           endDate: '2026-09-01',
         });
       }, /startDate must be before or equal to endDate/);
+    });
+  });
+
+  describe('systemServiceHealthStatusSchema', () => {
+    it('should accept valid health status values', () => {
+      assert.strictEqual(systemServiceHealthStatusSchema.parse('HEALTHY'), 'HEALTHY');
+      assert.strictEqual(systemServiceHealthStatusSchema.parse('DEGRADED'), 'DEGRADED');
+      assert.strictEqual(systemServiceHealthStatusSchema.parse('DOWN'), 'DOWN');
+    });
+
+    it('should reject invalid health status values', () => {
+      assert.throws(() => systemServiceHealthStatusSchema.parse('UNKNOWN'));
+      assert.throws(() => systemServiceHealthStatusSchema.parse('UP'));
+    });
+  });
+
+  describe('platformSystemHealthSchema', () => {
+    it('should accept valid health status without storage', () => {
+      const parsed = platformSystemHealthSchema.parse({
+        postgres: 'HEALTHY',
+        redis: 'HEALTHY',
+      });
+      assert.strictEqual(parsed.postgres, 'HEALTHY');
+      assert.strictEqual(parsed.redis, 'HEALTHY');
+      assert.strictEqual(parsed.storage, undefined);
+    });
+
+    it('should accept valid health status with storage', () => {
+      const parsed = platformSystemHealthSchema.parse({
+        postgres: 'HEALTHY',
+        redis: 'DEGRADED',
+        storage: 'DOWN',
+      });
+      assert.strictEqual(parsed.postgres, 'HEALTHY');
+      assert.strictEqual(parsed.redis, 'DEGRADED');
+      assert.strictEqual(parsed.storage, 'DOWN');
+    });
+
+    it('should reject missing postgres or redis', () => {
+      assert.throws(() => platformSystemHealthSchema.parse({ postgres: 'HEALTHY' }));
+      assert.throws(() => platformSystemHealthSchema.parse({ redis: 'HEALTHY' }));
+    });
+  });
+
+  describe('platformMetricsOverviewSchema', () => {
+    it('should accept valid metrics overview payload', () => {
+      const payload = {
+        totalWorkspaces: 10,
+        activeWorkspaces: 8,
+        suspendedWorkspaces: 2,
+        totalUsers: 50,
+        systemHealth: {
+          postgres: 'HEALTHY' as const,
+          redis: 'HEALTHY' as const,
+          storage: 'HEALTHY' as const,
+        },
+      };
+      const parsed = platformMetricsOverviewSchema.parse(payload);
+      assert.strictEqual(parsed.totalWorkspaces, 10);
+      assert.strictEqual(parsed.activeWorkspaces, 8);
+      assert.strictEqual(parsed.suspendedWorkspaces, 2);
+      assert.strictEqual(parsed.totalUsers, 50);
+      assert.strictEqual(parsed.systemHealth.postgres, 'HEALTHY');
+    });
+
+    it('should reject negative integers or floats', () => {
+      assert.throws(() =>
+        platformMetricsOverviewSchema.parse({
+          totalWorkspaces: -1,
+          activeWorkspaces: 0,
+          suspendedWorkspaces: 0,
+          totalUsers: 0,
+          systemHealth: { postgres: 'HEALTHY', redis: 'HEALTHY' },
+        }),
+      );
+      assert.throws(() =>
+        platformMetricsOverviewSchema.parse({
+          totalWorkspaces: 10.5,
+          activeWorkspaces: 8,
+          suspendedWorkspaces: 2,
+          totalUsers: 50,
+          systemHealth: { postgres: 'HEALTHY', redis: 'HEALTHY' },
+        }),
+      );
+    });
+
+    it('should reject missing required fields', () => {
+      assert.throws(() =>
+        platformMetricsOverviewSchema.parse({
+          totalWorkspaces: 10,
+          systemHealth: { postgres: 'HEALTHY', redis: 'HEALTHY' },
+        }),
+      );
     });
   });
 });

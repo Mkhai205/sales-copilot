@@ -1,85 +1,118 @@
-import Link from 'next/link';
-import { Sliders, Building2, ScrollText, ArrowRight } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { buttonVariants } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+'use client';
+
+import * as React from 'react';
+import { RefreshCw, AlertCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { usePlatformMetricsOverview } from '@/features/platform-admin/overview/hooks/use-platform-metrics';
+import { KpiMetricCards } from '@/features/platform-admin/overview/components/kpi-metric-cards';
+import { QuickShortcuts } from '@/features/platform-admin/overview/components/quick-shortcuts';
 
 export default function AdminOverviewPage() {
+  const {
+    data: metrics,
+    isLoading,
+    isError,
+    error,
+    isFetching,
+    refetch,
+  } = usePlatformMetricsOverview();
+
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold tracking-tight">Trung tâm Quản trị Cấp cao</h1>
-        <p className="text-sm text-muted-foreground">
-          Quản trị nền tảng SaaS Sales Copilot, cấu hình động thời gian thực và giám sát hoạt động.
-        </p>
+      {/* Top Banner Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+            Trung tâm Quản trị Cấp cao
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Quản trị nền tảng SaaS Sales Copilot, cấu hình động thời gian thực và giám sát hoạt
+            động.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => refetch()}
+            disabled={isFetching}
+            className="gap-2 text-xs"
+          >
+            <RefreshCw className={isFetching ? 'size-3.5 animate-spin' : 'size-3.5'} />
+            <span>Làm mới</span>
+          </Button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <Card className="flex flex-col justify-between border-border bg-card">
-          <CardHeader className="gap-2">
-            <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-              <Sliders className="size-5" />
-            </div>
-            <CardTitle className="text-base">Cấu hình Hệ thống</CardTitle>
-            <CardDescription className="text-xs">
-              Điều chỉnh Feature Flags, LLM Defaults, hạn mức mặc định và thông báo toàn hệ thống.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <Link
-              href="/admin/settings"
-              className={cn(buttonVariants({ variant: 'default', size: 'sm' }), 'w-full gap-2')}
-            >
-              <span>Truy cập Cấu hình</span>
-              <ArrowRight className="size-3.5" />
-            </Link>
-          </CardContent>
-        </Card>
+      {/* Main Body States */}
+      {isLoading ? (
+        <div className="flex flex-col gap-6">
+          {/* Skeleton KPI Cards */}
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+            {[1, 2, 3].map(i => (
+              <div
+                key={i}
+                className="flex flex-col gap-3 rounded-lg border border-border bg-card p-5"
+              >
+                <div className="flex items-center justify-between">
+                  <Skeleton className="size-10 rounded-lg" />
+                  <Skeleton className="h-5 w-20 rounded-full" />
+                </div>
+                <Skeleton className="h-4 w-32 mt-2" />
+                <Skeleton className="h-8 w-24" />
+                <Skeleton className="h-3 w-full mt-1" />
+              </div>
+            ))}
+          </div>
 
-        <Card className="flex flex-col justify-between border-border bg-card">
-          <CardHeader className="gap-2">
-            <div className="flex size-10 items-center justify-center rounded-lg bg-blue-500/10 text-blue-500">
-              <Building2 className="size-5" />
-            </div>
-            <CardTitle className="text-base">Quản trị Workspaces</CardTitle>
-            <CardDescription className="text-xs">
-              Quản lý danh sách doanh nghiệp, điều chỉnh gói cước, ghi đè hạn mức quota và khóa tài
-              khoản.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <Link
-              href="/admin/workspaces"
-              className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'w-full gap-2')}
-            >
-              <span>Quản lý Shop</span>
-              <ArrowRight className="size-3.5" />
-            </Link>
-          </CardContent>
-        </Card>
+          {/* Skeleton Quick Shortcuts */}
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            {[1, 2, 3].map(i => (
+              <div
+                key={i}
+                className="flex flex-col gap-3 rounded-lg border border-border bg-card p-5"
+              >
+                <Skeleton className="size-10 rounded-lg" />
+                <Skeleton className="h-5 w-40" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-8 w-full mt-4 rounded-md" />
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : isError ? (
+        <Alert variant="destructive" className="flex flex-col gap-2 p-4">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="size-4" />
+            <AlertTitle>Không thể tải dữ liệu chỉ số tổng quan</AlertTitle>
+          </div>
+          <AlertDescription className="mt-1">
+            {error?.message ||
+              'Đã có lỗi xảy ra khi kết nối tới dịch vụ quản trị nền tảng. Vui lòng thử lại.'}
+          </AlertDescription>
+          <div className="mt-2">
+            <Button variant="outline" size="sm" onClick={() => refetch()} className="text-xs">
+              Thử lại
+            </Button>
+          </div>
+        </Alert>
+      ) : metrics ? (
+        <div className="flex flex-col gap-6">
+          {/* Reactive KPI Metric Cards */}
+          <KpiMetricCards metrics={metrics} />
 
-        <Card className="flex flex-col justify-between border-border bg-card">
-          <CardHeader className="gap-2">
-            <div className="flex size-10 items-center justify-center rounded-lg bg-amber-500/10 text-amber-500">
-              <ScrollText className="size-5" />
-            </div>
-            <CardTitle className="text-base">Nhật ký Kiểm toán</CardTitle>
-            <CardDescription className="text-xs">
-              Truy vết 100% lịch sử can thiệp của Super Admin, diff thay đổi tham số và an toàn dữ
-              liệu.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <Link
-              href="/admin/audit-logs"
-              className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'w-full gap-2')}
-            >
-              <span>Xem Nhật ký</span>
-              <ArrowRight className="size-3.5" />
-            </Link>
-          </CardContent>
-        </Card>
-      </div>
+          {/* Quick Navigation Shortcuts */}
+          <div className="flex flex-col gap-3 pt-2">
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+              Lối tắt Truy cập Nhanh
+            </h2>
+            <QuickShortcuts />
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -10,6 +10,7 @@ import type {
   ToggleWorkspaceStatusDto,
   QueryPlatformAuditLogsDto,
   PlatformAuditLogDto,
+  PlatformMetricsOverviewDto,
 } from '@sales-copilot/shared-contracts';
 
 export const platformAdminApi = {
@@ -102,5 +103,12 @@ export const platformAdminApi = {
    */
   async getAuditLogById(id: string): Promise<ApiResponse<PlatformAuditLogDto>> {
     return fetchApi<PlatformAuditLogDto>(`/platform-admin/audit-logs/${encodeURIComponent(id)}`);
+  },
+
+  /**
+   * Fetch platform metrics overview and infrastructure health status.
+   */
+  async getMetricsOverview(): Promise<ApiResponse<PlatformMetricsOverviewDto>> {
+    return fetchApi<PlatformMetricsOverviewDto>('/platform-admin/metrics/overview');
   },
 };

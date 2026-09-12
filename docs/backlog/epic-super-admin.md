@@ -4,7 +4,7 @@
 | :--- | :--- |
 | **Epic ID** | **EPIC-SA** |
 | **Epic Title** | Super Admin Portal & Dynamic System Settings Engine |
-| **Status** | 🟡 READY FOR SPRINT PLANNING |
+| **Status** | 🟢 COMPLETED (100% DONE) |
 | **Target Milestone** | Platform Governance & SaaS Operations |
 | **Architectural RFC** | [Super Admin Technical RFC](../architecture/super-admin-technical-rfc.md) |
 | **Product PRD** | [Super Admin PRD](../product/super-admin-prd.md) |
@@ -28,9 +28,9 @@ graph LR
 
     F1["Feature 1: Foundation & Security<br/>(Prisma Models, Contracts, Guards)"]:::done
     F2["Feature 2: Dynamic Settings Engine<br/>(Redis 2-Tier Cache, Config UI)"]:::done
-    F3["Feature 3: Tenant Workspaces Management<br/>(Quota Overrides, Suspend/Activate)"]:::active
-    F4["Feature 4: Platform Audit Logs<br/>(Append-Only Log, Diff Viewer)"]:::active
-    F5["Feature 5: Admin Shell & Dashboard<br/>(Layout, KPI Cards, Health)"]:::active
+    F3["Feature 3: Tenant Workspaces Management<br/>(Quota Overrides, Suspend/Activate)"]:::done
+    F4["Feature 4: Platform Audit Logs<br/>(Append-Only Log, Diff Viewer)"]:::done
+    F5["Feature 5: Admin Shell & Dashboard<br/>(Layout, KPI Cards, Health)"]:::done
 
     F1 --> F2
     F1 --> F3
@@ -166,8 +166,8 @@ graph LR
      - Nút "Xem chi tiết": Mở modal hiển thị JSON Diff giữa giá trị trước và sau khi thay đổi (`oldValue` vs `newValue`).
 
 #### Tiêu chí nghiệm thu (Definition of Done):
-- [] Bảng `platform_audit_logs` không có API sửa (`UPDATE`) hay xóa (`DELETE`).
-- [] Mọi thao tác từ Feature 2 và Feature 3 đều hiển thị tức thì trên màn hình Audit Logs.
+- [x] Bảng `platform_audit_logs` không có API sửa (`UPDATE`) hay xóa (`DELETE`).
+- [x] Mọi thao tác từ Feature 2 và Feature 3 đều hiển thị tức thì trên màn hình Audit Logs.
 
 ---
 
@@ -179,26 +179,26 @@ graph LR
 
 #### Danh sách công việc (Work Breakdown):
 1. **Task 5.1: Xây dựng `PlatformMetricsService` & REST API**:
-   - Endpoint `GET /platform-admin/metrics/overview`:
-     - Tính tổng số Workspaces (phân loại Active vs Suspended).
-     - Tính tổng số Người dùng (Users).
-     - Kiểm tra tình trạng kết nối tới PostgreSQL, Redis Cache.
+   - [x] Endpoint `GET /platform-admin/metrics/overview`:
+     - [x] Tính tổng số Workspaces (phân loại Active vs Suspended).
+     - [x] Tính tổng số Người dùng (Users).
+     - [x] Kiểm tra tình trạng kết nối tới PostgreSQL, Redis Cache.
 2. **Task 5.2: Xây dựng Admin Master Layout & Navigation (`apps/web`)**:
-   - Tạo `apps/web/src/app/(admin)/admin/layout.tsx`:
-     - Sidebar độc lập dành riêng cho Super Admin:
-       - 📊 **Tổng quan (Overview)**
-       - 🏢 **Workspaces (Tenants & Quotas)**
-       - ⚙️ **Cấu hình Hệ thống (System Settings)**
-       - 🛡️ **Nhật ký Hoạt động (Audit Logs)**
-     - Header: Badge nhận diện "Platform Super Administrator", Dark/Light mode toggle, Nút "Quay lại Workspace thông thường".
+   - [x] Tạo `apps/web/src/app/(admin)/admin/layout.tsx`:
+     - [x] Sidebar độc lập dành riêng cho Super Admin:
+       - [x] 📊 **Tổng quan (Overview)**
+       - [x] 🏢 **Workspaces (Tenants & Quotas)**
+       - [x] ⚙️ **Cấu hình Hệ thống (System Settings)**
+       - [x] 🛡️ **Nhật ký Hoạt động (Audit Logs)**
+     - [x] Header: Badge nhận diện "Platform Super Administrator", Dark/Light mode toggle, Nút "Quay lại Workspace thông thường".
 3. **Task 5.3: Xây dựng Trang Dashboard Overview (`apps/web`)**:
-   - Tạo `apps/web/src/app/(admin)/admin/page.tsx`:
-     - Thẻ KPI hiển thị: Tổng số Workspaces, Tỷ lệ hoạt động, Tổng Users, Trạng thái Dịch vụ (Postgres: Connected, Redis: Connected).
-     - Lối tắt nhanh tới trang Quản lý Workspaces và Cấu hình Hệ thống.
+   - [x] Tạo `apps/web/src/app/(admin)/admin/page.tsx`:
+     - [x] Thẻ KPI hiển thị: Tổng số Workspaces, Tỷ lệ hoạt động, Tổng Users, Trạng thái Dịch vụ (Postgres: Connected, Redis: Connected).
+     - [x] Lối tắt nhanh tới trang Quản lý Workspaces và Cấu hình Hệ thống.
 4. **Task 5.4: Kiểm thử Tích hợp & Đóng gói Nghiệm thu (E2E Verification)**:
-   - Đăng nhập bằng `superadmin@salescopilot.io` ➔ Kiểm tra toàn bộ luồng thao tác.
-   - Chạy toàn bộ lint, type-check và build (`pnpm nx affected -t build,lint,test`).
+   - [x] Đăng nhập bằng `superadmin@salescopilot.io` ➔ Kiểm tra toàn bộ luồng thao tác.
+   - [x] Chạy toàn bộ lint, type-check và build (`pnpm nx affected -t build,lint,test`).
 
 #### Tiêu chí nghiệm thu (Definition of Done):
-- [] Giao diện Admin Portal hiển thị đồng bộ, chuẩn responsive, hoạt động tốt trên cả Dark Mode và Light Mode.
-- [] Toàn bộ 5 Features hoạt động gắn kết, không có lỗi console, không có memory leak.
+- [x] Giao diện Admin Portal hiển thị đồng bộ, chuẩn responsive, hoạt động tốt trên cả Dark Mode và Light Mode.
+- [x] Toàn bộ 5 Features hoạt động gắn kết, không có lỗi console, không có memory leak.
