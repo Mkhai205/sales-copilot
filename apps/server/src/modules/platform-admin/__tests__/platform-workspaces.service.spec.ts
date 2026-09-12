@@ -180,7 +180,7 @@ describe('PlatformWorkspacesService (Super Admin Workspace Management)', () => {
             members: w.members.filter((m: any) => m.role === 'OWNER').slice(0, 1),
           }));
         },
-        findUnique: async ({ where, include }: any) => {
+        findUnique: async ({ where, include: _include }: any) => {
           const found = dbWorkspaces.get(where.id);
           if (!found) return null;
           return {

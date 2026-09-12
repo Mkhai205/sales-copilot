@@ -263,5 +263,23 @@ describe('Shared Contracts — Platform Admin Schemas & Validation', () => {
       assert.strictEqual(parsed.startDate, '2026-09-01T12:00:00.000Z');
       assert.strictEqual(parsed.endDate, '2026-09-10T12:00:00.000Z');
     });
+
+    it('should accept plain YYYY-MM-DD date strings', () => {
+      const parsed = queryPlatformAuditLogsSchema.parse({
+        startDate: '2026-09-01',
+        endDate: '2026-09-10',
+      });
+      assert.strictEqual(parsed.startDate, '2026-09-01');
+      assert.strictEqual(parsed.endDate, '2026-09-10');
+    });
+
+    it('should reject YYYY-MM-DD when startDate is after endDate', () => {
+      assert.throws(() => {
+        queryPlatformAuditLogsSchema.parse({
+          startDate: '2026-09-15',
+          endDate: '2026-09-01',
+        });
+      }, /startDate must be before or equal to endDate/);
+    });
   });
 });

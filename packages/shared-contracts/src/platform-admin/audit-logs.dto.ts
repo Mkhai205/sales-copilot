@@ -11,8 +11,26 @@ export const queryPlatformAuditLogsSchema = paginationParamsSchema
     targetType: z.nativeEnum(PlatformAuditTargetType).optional(),
     targetId: z.string().trim().optional(),
     actorEmail: z.string().trim().optional(),
-    startDate: z.string().datetime({ offset: true }).or(z.string().datetime()).optional(),
-    endDate: z.string().datetime({ offset: true }).or(z.string().datetime()).optional(),
+    startDate: z
+      .string()
+      .datetime({ offset: true })
+      .or(z.string().datetime())
+      .or(
+        z
+          .string()
+          .regex(/^\d{4}-\d{2}-\d{2}$/, 'Must be a valid date YYYY-MM-DD or ISO-8601 datetime'),
+      )
+      .optional(),
+    endDate: z
+      .string()
+      .datetime({ offset: true })
+      .or(z.string().datetime())
+      .or(
+        z
+          .string()
+          .regex(/^\d{4}-\d{2}-\d{2}$/, 'Must be a valid date YYYY-MM-DD or ISO-8601 datetime'),
+      )
+      .optional(),
   })
   .refine(
     data => {
