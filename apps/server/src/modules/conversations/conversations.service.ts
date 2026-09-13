@@ -26,7 +26,11 @@ const CONVERSATION_STANDARD_INCLUDE = {
       identities: true,
     },
   },
-  inbox: true,
+  inbox: {
+    include: {
+      channel: true,
+    },
+  },
   assignee: true,
   team: true,
   labels: {

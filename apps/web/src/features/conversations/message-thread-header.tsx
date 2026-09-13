@@ -150,6 +150,7 @@ export function MessageThreadHeader({
               width={14}
               height={14}
               unoptimized
+              style={{ width: '14px', height: '14px' }}
               className="size-3.5 object-contain"
             />
           </div>

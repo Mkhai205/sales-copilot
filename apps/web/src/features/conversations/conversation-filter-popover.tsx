@@ -185,7 +185,7 @@ export function ConversationFilterPopover({
 
   return (
     <Popover open={isOpen} onOpenChange={handleOpenChange}>
-      <Tooltip open={isOpen ? false : undefined}>
+      <Tooltip>
         <TooltipTrigger asChild>
           <PopoverTrigger asChild>
             <Button
@@ -210,12 +210,14 @@ export function ConversationFilterPopover({
             </Button>
           </PopoverTrigger>
         </TooltipTrigger>
-        <TooltipContent side="bottom">
-          <span className="text-xs">
-            {t('common.filter')}
-            {activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
-          </span>
-        </TooltipContent>
+        {!isOpen && (
+          <TooltipContent side="bottom">
+            <span className="text-xs">
+              {t('common.filter')}
+              {activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
+            </span>
+          </TooltipContent>
+        )}
       </Tooltip>
 
       <PopoverContent
@@ -519,6 +521,7 @@ export function ConversationFilterPopover({
                         alt={meta.label}
                         width={14}
                         height={14}
+                        style={{ width: '14px', height: '14px' }}
                         className="shrink-0 object-contain"
                       />
                       <span className="truncate">{inbox.name}</span>

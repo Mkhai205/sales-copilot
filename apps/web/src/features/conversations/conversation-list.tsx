@@ -261,6 +261,8 @@ export function ConversationList({ workspaceSlug, activeConversationId }: Conver
                 alt="Empty"
                 width={120}
                 height={90}
+                priority
+                style={{ width: 'auto', height: 'auto' }}
                 className="max-h-24 w-auto object-contain drop-shadow-xs"
               />
             </div>

@@ -78,6 +78,7 @@ export function StepMembersReview({
                   width={20}
                   height={20}
                   unoptimized
+                  style={{ width: '20px', height: '20px' }}
                   className="size-4 object-contain"
                 />
               </div>

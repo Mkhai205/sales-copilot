@@ -23,6 +23,7 @@ export function ConversationEmptyState() {
             width={240}
             height={200}
             priority
+            style={{ width: 'auto', height: 'auto' }}
             className="max-h-44 w-auto object-contain drop-shadow-xs"
           />
         </div>

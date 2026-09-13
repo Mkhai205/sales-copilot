@@ -10,6 +10,7 @@ export default function ContactsPage() {
           width={220}
           height={160}
           priority
+          style={{ width: 'auto', height: 'auto' }}
           className="max-h-44 w-auto object-contain drop-shadow-xs"
         />
       </div>

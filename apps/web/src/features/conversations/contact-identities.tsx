@@ -67,6 +67,7 @@ export function ContactIdentities({
                     width={20}
                     height={20}
                     unoptimized
+                    style={{ width: '20px', height: '20px' }}
                     className="size-5 object-contain"
                   />
                 </div>

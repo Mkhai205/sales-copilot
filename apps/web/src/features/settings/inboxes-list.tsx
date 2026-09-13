@@ -186,6 +186,7 @@ export function InboxesList({ workspaceId, currentUserRole, workspaceSlug }: Inb
               alt="Empty Inboxes"
               width={160}
               height={120}
+              style={{ width: 'auto', height: 'auto' }}
               className="max-h-36 w-auto object-contain"
             />
           </div>
@@ -233,6 +234,7 @@ export function InboxesList({ workspaceId, currentUserRole, workspaceSlug }: Inb
                           width={24}
                           height={24}
                           unoptimized
+                          style={{ width: '24px', height: '24px' }}
                           className="size-6 object-contain"
                         />
                       </div>

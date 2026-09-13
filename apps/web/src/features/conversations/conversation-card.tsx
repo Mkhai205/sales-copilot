@@ -4,17 +4,12 @@ import * as React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
-import { CornerUpLeft, Lock } from 'lucide-react';
-import { formatDistanceToNowStrict } from 'date-fns';
-import {
-  type ConversationResponseDto,
-  ConversationPriority,
-  Priority,
-  SenderType,
-} from '@/lib/api/types';
+import { CornerUpLeft, Lock, Flame, Flag, UserX, ImageIcon } from 'lucide-react';
+import { type ConversationResponseDto, Priority, SenderType } from '@/lib/api/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { getChannelMeta } from '@/lib/channels';
+import { useI18n, formatRelativeTime } from '@/lib/i18n';
 
 interface ConversationCardProps {
   conversation: ConversationResponseDto;
@@ -29,27 +24,32 @@ function getInitials(name?: string | null): string {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
-function formatTime(dateStr?: string | null): string {
-  if (!dateStr) return '';
-  try {
-    const date = new Date(dateStr);
-    if (isNaN(date.getTime())) return '';
-    return formatDistanceToNowStrict(date, { addSuffix: false });
-  } catch {
-    return '';
-  }
+function getShortName(fullName?: string | null): string {
+  if (!fullName) return '';
+  const trimmed = fullName.trim();
+  const parts = trimmed.split(/\s+/);
+  return parts[parts.length - 1] || trimmed;
 }
 
-function renderPriorityIndicator(priority?: ConversationPriority | Priority | null) {
+function getLabelBadgeStyle(color?: string) {
+  const baseColor = color || '#64748b';
+  const isHex = /^#[0-9a-fA-F]{6}$/.test(baseColor);
+  return {
+    backgroundColor: isHex ? `${baseColor}15` : 'rgba(100, 116, 139, 0.1)',
+    borderColor: isHex ? `${baseColor}30` : 'rgba(100, 116, 139, 0.25)',
+  };
+}
+
+function renderPriorityIndicator(priority?: Priority | null) {
   if (!priority) return null;
 
   if (priority === Priority.URGENT) {
     return (
       <span
-        className="text-rose-600 dark:text-rose-500 font-bold text-xs tracking-tighter cursor-default"
-        title="Urgent Priority"
+        className="inline-flex items-center gap-0.5 text-rose-600 dark:text-rose-400 shrink-0"
+        title="Độ ưu tiên: Khẩn cấp"
       >
-        !!!
+        <Flame className="size-3 text-rose-500 fill-rose-500 animate-pulse" />
       </span>
     );
   }
@@ -57,32 +57,10 @@ function renderPriorityIndicator(priority?: ConversationPriority | Priority | nu
   if (priority === Priority.HIGH) {
     return (
       <span
-        className="text-amber-600 dark:text-amber-500 font-bold text-xs tracking-tighter cursor-default"
-        title="High Priority"
+        className="inline-flex items-center gap-0.5 text-amber-600 dark:text-amber-400 shrink-0"
+        title="Độ ưu tiên: Cao"
       >
-        !!
-      </span>
-    );
-  }
-
-  if (priority === Priority.MEDIUM) {
-    return (
-      <span
-        className="text-muted-foreground/70 font-semibold text-xs tracking-tighter cursor-default"
-        title="Medium Priority"
-      >
-        !
-      </span>
-    );
-  }
-
-  if (priority === Priority.LOW) {
-    return (
-      <span
-        className="text-muted-foreground/40 font-normal text-xs tracking-tighter cursor-default"
-        title="Low Priority"
-      >
-        !
+        <Flag className="size-3 text-amber-500 fill-amber-500" />
       </span>
     );
   }
@@ -90,22 +68,34 @@ function renderPriorityIndicator(priority?: ConversationPriority | Priority | nu
   return null;
 }
 
-import { useI18n, formatRelativeTime } from '@/lib/i18n';
-
 export function ConversationCard({
   conversation,
   workspaceSlug,
   isSelected,
 }: ConversationCardProps) {
-  const { locale, t } = useI18n();
-  const contactName = conversation.contact?.name || 'Anonymous Visitor';
-  const lastMessageText = conversation.lastMessage?.content || '';
-  const time = formatRelativeTime(conversation.lastActivityAt || conversation.createdAt, locale);
+  const { locale } = useI18n();
+  const contactName = conversation.contact?.name || 'Khách vãng lai';
   const unreadCount = conversation.unreadMessagesCount || 0;
-  const channelName = conversation.inbox?.name || 'Inbox';
+  const isUnread = unreadCount > 0;
+  const time = formatRelativeTime(conversation.lastActivityAt || conversation.createdAt, locale);
+  const channelName = conversation.inbox?.name || 'Hộp thư';
   const channelMeta = getChannelMeta(conversation.inbox?.channelType);
   const isPrivateNote = conversation.lastMessage?.isPrivate;
   const isAgentReply = conversation.lastMessage?.senderType === SenderType.USER;
+
+  // Determine last message preview and media indicator
+  const hasAttachments = Boolean(
+    conversation.lastMessage?.attachments && conversation.lastMessage.attachments.length > 0,
+  );
+  let lastMessageText = conversation.lastMessage?.content?.trim() || '';
+  if (!lastMessageText && hasAttachments) {
+    const isImg = conversation.lastMessage?.attachments?.some(
+      a => a.fileType === 'IMAGE' || a.contentType?.startsWith('image/'),
+    );
+    lastMessageText = isImg ? 'Hình ảnh' : 'Tệp đính kèm';
+  } else if (!lastMessageText) {
+    lastMessageText = 'Chưa có tin nhắn';
+  }
 
   const searchParams = useSearchParams();
   const queryString = searchParams.toString();
@@ -123,7 +113,7 @@ export function ConversationCard({
           'bg-primary/8 dark:bg-primary/12 border-l-[3.5px] border-l-primary hover:bg-primary/10',
       )}
     >
-      {/* Left: Contact Avatar with Channel Badge Overlay */}
+      {/* Left: Clean Contact Avatar (No redundant badge) */}
       <div className="relative shrink-0 mt-0.5">
         <Avatar className="size-10 shrink-0 ring-1 ring-border/50">
           <AvatarImage
@@ -134,65 +124,100 @@ export function ConversationCard({
             {getInitials(contactName)}
           </AvatarFallback>
         </Avatar>
-
-        {/* Channel Icon Badge Overlay at Bottom-Right */}
-        <div className="absolute -bottom-0.5 -right-0.5 size-4 rounded-full bg-background ring-2 ring-background flex items-center justify-center shadow-xs overflow-hidden">
-          <Image
-            src={channelMeta.iconSrc}
-            alt={channelMeta.label}
-            width={14}
-            height={14}
-            unoptimized
-            className="size-3 object-contain"
-          />
-        </div>
       </div>
 
-      {/* Right: Structured 4-Row Information Architecture */}
+      {/* Right: Structured Information Architecture */}
       <div className="flex flex-1 flex-col gap-1 min-w-0">
-        {/* Row 1: Channel icon + Inbox Name (left) & Priority + Time (right) */}
+        {/* Row 1: Contact Name (left) & Priority + Time (right) */}
         <div className="flex items-center justify-between gap-2 min-w-0">
-          <div className="flex items-center gap-1.5 min-w-0 text-[11px] leading-4 text-muted-foreground">
+          <div className="flex items-center gap-1.5 min-w-0">
+            {isUnread && (
+              <span
+                className="size-2 rounded-full bg-primary shrink-0 animate-pulse"
+                title="Tin nhắn mới chưa đọc"
+              />
+            )}
+            <h3
+              className={cn(
+                'truncate text-sm leading-snug',
+                isUnread ? 'font-bold text-foreground' : 'font-medium text-foreground/90',
+              )}
+            >
+              {contactName}
+            </h3>
+          </div>
+
+          <div className="flex items-center gap-1.5 shrink-0 text-muted-foreground">
+            {renderPriorityIndicator(conversation.priority)}
+            <span className="text-[11px] tabular-nums">{time}</span>
+          </div>
+        </div>
+
+        {/* Row 2: Channel icon + Page name (left) & Assignee with short name (right) */}
+        <div className="flex items-center justify-between gap-2 min-w-0">
+          <div className="flex items-center gap-1.5 min-w-0 flex-1">
             <Image
               src={channelMeta.iconSrc}
               alt={channelMeta.label}
-              width={13}
-              height={13}
+              width={14}
+              height={14}
               unoptimized
-              className="size-3 object-contain shrink-0"
+              style={{ width: '14px', height: '14px' }}
+              className="size-3.5 object-contain shrink-0"
             />
-            <span className="truncate font-medium">{channelName}</span>
+            <span
+              className="truncate text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors"
+              title={channelName}
+            >
+              {channelName}
+            </span>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
-            {renderPriorityIndicator(conversation.priority)}
-            <span className="text-[10px] text-muted-foreground tabular-nums">{time}</span>
-          </div>
-        </div>
-
-        {/* Row 2: Contact Name */}
-        <div className="min-w-0">
-          <h3
-            className={cn(
-              'truncate text-sm leading-snug',
-              unreadCount > 0 ? 'font-semibold text-foreground' : 'font-medium text-foreground/90',
+          <div className="shrink-0 flex items-center">
+            {conversation.assignee ? (
+              <div
+                className="flex items-center gap-1 text-[11px] text-muted-foreground/80 font-medium"
+                title={`Phụ trách: ${conversation.assignee.name || conversation.assignee.email}`}
+              >
+                <Avatar className="size-4 shrink-0 ring-1 ring-border/50">
+                  <AvatarImage
+                    src={conversation.assignee.avatarUrl || undefined}
+                    alt={conversation.assignee.name}
+                  />
+                  <AvatarFallback className="text-[8px] font-bold bg-muted text-muted-foreground">
+                    {getInitials(conversation.assignee.name || conversation.assignee.email)}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="truncate max-w-[65px] text-[10px] text-muted-foreground">
+                  {getShortName(conversation.assignee.name || conversation.assignee.email)}
+                </span>
+              </div>
+            ) : (
+              <span
+                className="inline-flex items-center gap-1 text-[10px] text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+                title="Chưa phân công"
+              >
+                <UserX className="size-3 text-muted-foreground/40" />
+                <span>Chưa nhận</span>
+              </span>
             )}
-          >
-            {contactName}
-          </h3>
+          </div>
         </div>
 
-        {/* Row 3: Last message snippet preview with Private/Reply indicator + Unread badge */}
+        {/* Row 3: Last message preview (left) & Unread count badge (right) */}
         <div className="flex items-center justify-between gap-2 min-w-0">
           <p
             className={cn(
               'truncate text-xs flex items-center gap-1.5 flex-1 min-w-0 leading-normal',
-              unreadCount > 0 ? 'text-foreground font-medium' : 'text-muted-foreground',
+              isUnread ? 'text-foreground font-medium' : 'text-muted-foreground',
             )}
           >
             {isPrivateNote && <Lock className="size-3 text-amber-500 shrink-0" />}
             {!isPrivateNote && isAgentReply && (
               <CornerUpLeft className="size-3 text-muted-foreground shrink-0" />
+            )}
+            {!isPrivateNote && !isAgentReply && hasAttachments && (
+              <ImageIcon className="size-3 text-muted-foreground shrink-0" />
             )}
             <span className="truncate">{lastMessageText}</span>
           </p>
@@ -204,16 +229,21 @@ export function ConversationCard({
           )}
         </div>
 
-        {/* Row 4: Labels with Square Color Chips & Expand/Overflow */}
+        {/* Row 4: Labels (Dedicated row with soft pastel tint pills) */}
         {conversation.labels && conversation.labels.length > 0 && (
           <div className="flex items-center gap-1.5 pt-0.5 flex-wrap min-w-0">
             {conversation.labels.slice(0, 3).map(label => (
               <span
                 key={label.id}
-                className="inline-flex items-center gap-1 rounded-[4px] px-1.5 py-0.5 text-[10px] font-medium bg-muted/60 border border-border/40 text-foreground/90 max-w-[120px] truncate"
+                className="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-medium border max-w-[120px] truncate transition-colors"
+                style={{
+                  ...getLabelBadgeStyle(label.color),
+                  color: label.color || undefined,
+                }}
+                title={label.title}
               >
                 <span
-                  className="size-1.5 rounded-[2px] shrink-0"
+                  className="size-1.5 rounded-full shrink-0 shadow-2xs"
                   style={{ backgroundColor: label.color || '#64748b' }}
                 />
                 <span className="truncate">{label.title}</span>
@@ -221,7 +251,13 @@ export function ConversationCard({
             ))}
 
             {conversation.labels.length > 3 && (
-              <span className="text-[10px] text-muted-foreground font-medium px-0.5">
+              <span
+                className="text-[10px] text-muted-foreground/70 font-medium px-1"
+                title={conversation.labels
+                  .slice(3)
+                  .map(l => l.title)
+                  .join(', ')}
+              >
                 +{conversation.labels.length - 3}
               </span>
             )}

@@ -48,7 +48,7 @@ export function EmojiPickerPopover({ onEmojiSelect, disabled = false }: EmojiPic
 
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>
-      <Tooltip open={open ? false : undefined}>
+      <Tooltip>
         <TooltipTrigger asChild>
           <PopoverTrigger asChild>
             <Button
@@ -66,9 +66,11 @@ export function EmojiPickerPopover({ onEmojiSelect, disabled = false }: EmojiPic
             </Button>
           </PopoverTrigger>
         </TooltipTrigger>
-        <TooltipContent side="top">
-          <span className="text-xs">Insert emoji</span>
-        </TooltipContent>
+        {!open && (
+          <TooltipContent side="top">
+            <span className="text-xs">Insert emoji</span>
+          </TooltipContent>
+        )}
       </Tooltip>
 
       <PopoverContent

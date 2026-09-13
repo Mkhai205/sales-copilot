@@ -368,6 +368,7 @@ function NewInboxPageContent() {
                         width={28}
                         height={28}
                         unoptimized
+                        style={{ width: '28px', height: '28px' }}
                         className="size-7 object-contain"
                       />
                     </div>
@@ -413,6 +414,7 @@ function NewInboxPageContent() {
                           width={28}
                           height={28}
                           unoptimized
+                          style={{ width: '28px', height: '28px' }}
                           className="size-7 object-contain"
                         />
                       </div>
@@ -742,6 +744,7 @@ function NewInboxPageContent() {
                     width={28}
                     height={28}
                     unoptimized
+                    style={{ width: '28px', height: '28px' }}
                     className="size-7 object-contain"
                   />
                 </div>

@@ -1,4 +1,4 @@
-import type { ConversationResponseDto } from '@sales-copilot/shared-contracts';
+import { ChannelType, type ConversationResponseDto } from '@sales-copilot/shared-contracts';
 import { mapContactToDto } from '../contacts/contacts.mapper';
 
 /**
@@ -59,6 +59,10 @@ export function mapConversationToDto(conv: any): ConversationResponseDto {
       id: conv.inbox.id,
       name: conv.inbox.name,
       avatarUrl: conv.inbox.avatarUrl ?? null,
+      channelType:
+        (conv.inbox.channel?.channelType as ChannelType) ??
+        (conv.inbox.channelType as ChannelType) ??
+        null,
     };
   }
 

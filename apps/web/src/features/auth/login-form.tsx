@@ -122,6 +122,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
                     height={60}
                     priority
                     unoptimized
+                    style={{ width: 'auto', height: 'auto' }}
                     className="h-10 w-auto object-contain dark:hidden"
                   />
                   <Image
@@ -131,6 +132,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
                     height={60}
                     priority
                     unoptimized
+                    style={{ width: 'auto', height: 'auto' }}
                     className="hidden h-10 w-auto object-contain dark:block"
                   />
                 </div>
