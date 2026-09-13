@@ -119,7 +119,7 @@ function clearAuthCookies(response: NextResponse, request: NextRequest): void {
   response.cookies.delete('refresh_token');
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // 1. Allow public paths and Next.js internal static assets

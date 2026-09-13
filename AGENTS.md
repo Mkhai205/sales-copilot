@@ -91,7 +91,7 @@ Sales Copilot is an omnichannel conversational commerce & AI sales platform for 
    - Before creating any UI component, check `src/components/ui/` and consult the `shadcn` skill (`.agents/skills/shadcn/SKILL.md`).
    - Forms: use `FieldGroup` + `Field`. Spacing: `gap-*` (never `space-y-*`). Sizing: `size-*`.
 2. **Server State**: Use `@tanstack/react-query` exclusively. Use thin native `fetch` in `src/lib/api/client.ts` with contracts from `@sales-copilot/shared-contracts`. ❌ No Axios/SWR.
-3. **Auth**: JWT tokens stored strictly in `httpOnly` secure cookies via Next.js Server Actions & Middleware (`src/middleware.ts`). ❌ No `localStorage`.
+3. **Auth**: JWT tokens stored strictly in `httpOnly` secure cookies via Next.js Server Actions & Edge Proxy (`src/proxy.ts`). ❌ No `localStorage`.
 4. **Theming**: Use semantic Tailwind classes (`bg-background`, `text-foreground`, `text-primary`, `border-border`). Support dark mode by default. Toast notifications via `sonner` (`toast.success()`, etc.).
 5. **Realtime**: Use `queryClient.setQueryData()` in WebSocket listeners (`useRealtimeSync`) for single-source-of-truth state.
 

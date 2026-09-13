@@ -1,7 +1,7 @@
 import { describe, it, beforeEach, afterEach } from 'node:test';
 import * as assert from 'node:assert';
 import { NextRequest } from 'next/server';
-import { middleware } from '../../../middleware';
+import { proxy } from '../../../proxy';
 
 function makeJwt(payload: Record<string, unknown>): string {
   const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url');
@@ -9,7 +9,7 @@ function makeJwt(payload: Record<string, unknown>): string {
   return `${header}.${body}.mockSignature`;
 }
 
-describe('Next.js Edge Middleware — /admin Protection & Security (apps/web/src/middleware.ts)', () => {
+describe('Next.js Edge Proxy — /admin Protection & Security (apps/web/src/proxy.ts)', () => {
   const originalFetch = global.fetch;
 
   beforeEach(() => {
@@ -23,14 +23,14 @@ describe('Next.js Edge Middleware — /admin Protection & Security (apps/web/src
 
   it('should allow public routes to pass through unconditionally', async () => {
     const req = new NextRequest('http://localhost:3000/login');
-    const res = await middleware(req);
+    const res = await proxy(req);
     assert.strictEqual(res.status, 200);
     assert.strictEqual(res.headers.get('location'), null);
   });
 
   it('should redirect unauthenticated user from /admin to /login with redirect parameter', async () => {
     const req = new NextRequest('http://localhost:3000/admin');
-    const res = await middleware(req);
+    const res = await proxy(req);
     assert.strictEqual(res.status, 307);
     const location = res.headers.get('location');
     assert.ok(location?.includes('/login?redirect=%2Fadmin'));
@@ -38,7 +38,7 @@ describe('Next.js Edge Middleware — /admin Protection & Security (apps/web/src
 
   it('should preserve query parameters in redirect when accessing /admin/workspaces?page=2', async () => {
     const req = new NextRequest('http://localhost:3000/admin/workspaces?page=2&status=ACTIVE');
-    const res = await middleware(req);
+    const res = await proxy(req);
     assert.strictEqual(res.status, 307);
     const location = res.headers.get('location');
     assert.ok(
@@ -57,7 +57,7 @@ describe('Next.js Edge Middleware — /admin Protection & Security (apps/web/src
         cookie: `access_token=${token}`,
       },
     });
-    const res = await middleware(req);
+    const res = await proxy(req);
     assert.strictEqual(res.status, 200);
     assert.strictEqual(res.headers.get('location'), null);
   });
@@ -73,7 +73,7 @@ describe('Next.js Edge Middleware — /admin Protection & Security (apps/web/src
         cookie: `access_token=${token}`,
       },
     });
-    const res = await middleware(req);
+    const res = await proxy(req);
     assert.strictEqual(res.status, 307);
     const location = res.headers.get('location');
     assert.ok(location?.endsWith('/'));
@@ -91,7 +91,7 @@ describe('Next.js Edge Middleware — /admin Protection & Security (apps/web/src
         cookie: `access_token=${token}`,
       },
     });
-    const res = await middleware(req);
+    const res = await proxy(req);
     // Should proceed because it's a regular protected route with valid token, not the /admin gate
     assert.strictEqual(res.status, 200);
     assert.strictEqual(res.headers.get('location'), null);
@@ -127,7 +127,7 @@ describe('Next.js Edge Middleware — /admin Protection & Security (apps/web/src
       },
     });
 
-    const res = await middleware(req);
+    const res = await proxy(req);
     assert.strictEqual(res.status, 200);
     assert.strictEqual(res.headers.get('location'), null);
     // Should have set refreshed access_token cookie
@@ -153,7 +153,7 @@ describe('Next.js Edge Middleware — /admin Protection & Security (apps/web/src
       },
     });
 
-    const res = await middleware(req);
+    const res = await proxy(req);
     assert.strictEqual(res.status, 307);
     const location = res.headers.get('location');
     assert.ok(location?.includes('/login?redirect=%2Fadmin%2Faudit-logs'));
