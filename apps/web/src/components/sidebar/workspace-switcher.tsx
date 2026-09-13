@@ -1,7 +1,8 @@
 'use client';
 
 import * as React from 'react';
-import { Building2, Check, ChevronsUpDown, Plus, Settings } from 'lucide-react';
+import Image from 'next/image';
+import { Check, ChevronsUpDown, Plus, Settings } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useWorkspaces, CreateWorkspaceDialog } from '@/features/workspaces';
@@ -31,7 +32,7 @@ export function WorkspaceSwitcher({ currentSlug }: WorkspaceSwitcherProps) {
   const router = useRouter();
   const [isCreateOpen, setIsCreateOpen] = React.useState(false);
 
-  const { data: workspaces, isLoading } = useWorkspaces();
+  const { data: workspaces } = useWorkspaces();
 
   const activeWorkspace = workspaces?.find(w => w.slug === currentSlug) ?? {
     id: 'current',
@@ -56,8 +57,16 @@ export function WorkspaceSwitcher({ currentSlug }: WorkspaceSwitcherProps) {
                 size="lg"
                 className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
               >
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-semibold">
-                  <Building2 className="size-4" />
+                <div className="flex aspect-square size-8 items-center justify-center rounded-lg">
+                  <Image
+                    src="/brand/logo-icon.png"
+                    alt={activeWorkspace.name || 'Sales Copilot'}
+                    width={32}
+                    height={32}
+                    className="size-7 object-contain"
+                    priority
+                    unoptimized
+                  />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">{activeWorkspace.name}</span>
