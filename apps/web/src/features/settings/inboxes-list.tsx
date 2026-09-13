@@ -32,6 +32,7 @@ import { useRouter } from 'next/navigation';
 import { useDeleteInbox, useInboxes } from './hooks/use-inboxes';
 import { InboxWizardDialog } from './inbox-wizard/inbox-wizard-dialog';
 import { InboxEditDialog } from './inbox-edit-dialog';
+import { useI18n } from '@/lib/i18n';
 
 interface InboxesListProps {
   workspaceId: string;
@@ -41,6 +42,7 @@ interface InboxesListProps {
 
 export function InboxesList({ workspaceId, currentUserRole, workspaceSlug }: InboxesListProps) {
   const router = useRouter();
+  const { t } = useI18n();
   const [searchQuery, setSearchQuery] = React.useState('');
   const [channelFilter, setChannelFilter] = React.useState<string>('ALL');
   const [wizardOpen, setWizardOpen] = React.useState(false);
@@ -92,7 +94,7 @@ export function InboxesList({ workspaceId, currentUserRole, workspaceSlug }: Inb
             <Input
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Search inboxes..."
+              placeholder={t('settings.inboxes.searchPlaceholder')}
               className="h-8 pl-8 pr-8 text-xs bg-card/40"
             />
             {searchQuery && (
@@ -111,26 +113,26 @@ export function InboxesList({ workspaceId, currentUserRole, workspaceSlug }: Inb
           {/* Channel Type Filter */}
           <Select value={channelFilter} onValueChange={setChannelFilter}>
             <SelectTrigger className="h-8 w-36 text-xs bg-card/40">
-              <SelectValue placeholder="All Channels" />
+              <SelectValue placeholder={t('settings.inboxes.allChannels')} />
             </SelectTrigger>
             <SelectContent position="popper">
               <SelectItem value="ALL" className="text-xs">
-                All Channels
+                {t('settings.inboxes.allChannels')}
               </SelectItem>
               <SelectItem value={ChannelType.WEB_CHAT} className="text-xs">
-                Web Chat
+                {t('settings.inboxes.channelWebChat')}
               </SelectItem>
               <SelectItem value={ChannelType.FACEBOOK_MESSENGER} className="text-xs">
-                Messenger
+                {t('settings.inboxes.channelMessenger')}
               </SelectItem>
               <SelectItem value={ChannelType.TELEGRAM} className="text-xs">
-                Telegram
+                {t('settings.inboxes.channelTelegram')}
               </SelectItem>
               <SelectItem value={ChannelType.EMAIL} className="text-xs">
-                Email
+                {t('settings.inboxes.channelEmail')}
               </SelectItem>
               <SelectItem value={ChannelType.ZALO} className="text-xs">
-                Zalo OA
+                {t('settings.inboxes.channelZalo')}
               </SelectItem>
             </SelectContent>
           </Select>
@@ -140,7 +142,12 @@ export function InboxesList({ workspaceId, currentUserRole, workspaceSlug }: Inb
               variant="secondary"
               className="px-2 py-0.5 text-[11px] font-normal text-muted-foreground"
             >
-              {filteredInboxes.length} {filteredInboxes.length === 1 ? 'inbox' : 'inboxes'}
+              {t(
+                filteredInboxes.length === 1
+                  ? 'settings.inboxes.inboxCount_one'
+                  : 'settings.inboxes.inboxCount_other',
+                { count: filteredInboxes.length },
+              )}
             </Badge>
           )}
         </div>
@@ -148,7 +155,7 @@ export function InboxesList({ workspaceId, currentUserRole, workspaceSlug }: Inb
         {canManage && (
           <Button size="sm" onClick={handleAddInbox} className="h-8 gap-1.5 text-xs font-medium">
             <Plus className="size-3.5" data-icon="inline-start" />
-            Add Inbox
+            {t('settings.inboxes.addInbox')}
           </Button>
         )}
       </div>
@@ -192,13 +199,13 @@ export function InboxesList({ workspaceId, currentUserRole, workspaceSlug }: Inb
           </div>
           <h3 className="text-sm font-semibold text-foreground">
             {searchQuery || channelFilter !== 'ALL'
-              ? 'No inboxes match your filter'
-              : 'No inboxes created yet'}
+              ? t('settings.inboxes.emptyFilterTitle')
+              : t('settings.inboxes.emptyTitle')}
           </h3>
           <p className="mt-1 text-xs text-muted-foreground max-w-sm">
             {searchQuery || channelFilter !== 'ALL'
-              ? 'Try changing your search terms or reset the channel filter.'
-              : 'Connect communication channels (Web Chat, Messenger, Telegram, etc.) to receive and reply to customer inquiries.'}
+              ? t('settings.inboxes.emptyFilterDesc')
+              : t('settings.inboxes.emptyDesc')}
           </p>
           {canManage && !searchQuery && channelFilter === 'ALL' && (
             <Button
@@ -207,7 +214,7 @@ export function InboxesList({ workspaceId, currentUserRole, workspaceSlug }: Inb
               className="mt-4 h-8 gap-1.5 text-xs font-medium"
             >
               <Plus className="size-3.5" data-icon="inline-start" />
-              Create First Inbox
+              {t('settings.inboxes.createFirstInbox')}
             </Button>
           )}
         </div>
@@ -255,12 +262,12 @@ export function InboxesList({ workspaceId, currentUserRole, workspaceSlug }: Inb
                           {isConnected ? (
                             <span className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-500">
                               <span className="size-1.5 rounded-full bg-emerald-500" />
-                              Active
+                              {t('settings.inboxes.activeStatus')}
                             </span>
                           ) : (
                             <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
                               <span className="size-1.5 rounded-full bg-muted-foreground/50" />
-                              Draft
+                              {t('settings.inboxes.draftStatus')}
                             </span>
                           )}
                         </div>
@@ -275,20 +282,20 @@ export function InboxesList({ workspaceId, currentUserRole, workspaceSlug }: Inb
                           size="icon-xs"
                           onClick={() => setInboxToEdit(inbox)}
                           className="size-7 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted"
-                          title="Edit inbox settings"
+                          title={t('settings.inboxes.editInboxSettings')}
                         >
                           <Pencil className="size-3.5" />
-                          <span className="sr-only">Edit inbox</span>
+                          <span className="sr-only">{t('settings.inboxes.editInbox')}</span>
                         </Button>
                         <Button
                           variant="ghost"
                           size="icon-xs"
                           onClick={() => setInboxToDelete(inbox)}
                           className="size-7 rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
-                          title="Delete inbox"
+                          title={t('settings.inboxes.deleteInbox')}
                         >
                           <Trash2 className="size-3.5" />
-                          <span className="sr-only">Delete inbox</span>
+                          <span className="sr-only">{t('settings.inboxes.deleteInbox')}</span>
                         </Button>
                       </div>
                     )}
@@ -299,7 +306,7 @@ export function InboxesList({ workspaceId, currentUserRole, workspaceSlug }: Inb
                   <p className="text-xs text-muted-foreground/80 line-clamp-2 leading-relaxed">
                     {inbox.greetingMessage ||
                       (inbox.settings?.greetingMessage as string) ||
-                      'No greeting message configured.'}
+                      t('settings.inboxes.noGreeting')}
                   </p>
                 </CardContent>
 
@@ -307,7 +314,12 @@ export function InboxesList({ workspaceId, currentUserRole, workspaceSlug }: Inb
                   <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
                     <Users className="size-3.5 text-muted-foreground/70" />
                     <span>
-                      {memberCount} {memberCount === 1 ? 'agent' : 'agents'}
+                      {t(
+                        memberCount === 1
+                          ? 'settings.inboxes.agentCount_one'
+                          : 'settings.inboxes.agentCount_other',
+                        { count: memberCount },
+                      )}
                     </span>
                   </div>
 
@@ -346,17 +358,18 @@ export function InboxesList({ workspaceId, currentUserRole, workspaceSlug }: Inb
             <AlertDialogMedia className="bg-destructive/10 text-destructive">
               <AlertTriangle className="size-4" />
             </AlertDialogMedia>
-            <AlertDialogTitle className="text-sm font-semibold">Delete Inbox?</AlertDialogTitle>
+            <AlertDialogTitle className="text-sm font-semibold">
+              {t('settings.inboxes.deleteDialog.title')}
+            </AlertDialogTitle>
             <AlertDialogDescription className="text-xs">
-              Are you sure you want to delete{' '}
-              <strong className="text-foreground font-semibold">"{inboxToDelete?.name}"</strong>?
-              Its connected channel and assigned agents will be unlinked, and incoming conversations
-              through this channel will stop being ingested. This action cannot be undone.
+              {t('settings.inboxes.deleteDialog.description', {
+                name: inboxToDelete?.name || '',
+              })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isDeleting} className="text-xs">
-              Cancel
+              {t('settings.inboxes.deleteDialog.cancel')}
             </AlertDialogCancel>
             <Button
               variant="destructive"
@@ -368,10 +381,10 @@ export function InboxesList({ workspaceId, currentUserRole, workspaceSlug }: Inb
               {isDeleting ? (
                 <>
                   <Spinner className="size-3.5" data-icon="inline-start" />
-                  Deleting...
+                  {t('settings.inboxes.deleteDialog.deleting')}
                 </>
               ) : (
-                'Delete Inbox'
+                t('settings.inboxes.deleteDialog.confirm')
               )}
             </Button>
           </AlertDialogFooter>

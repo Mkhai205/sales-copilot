@@ -29,48 +29,7 @@ import { Switch } from '@/components/ui/switch';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { facebookApi, type FacebookPageInfo } from '@/lib/api/facebook';
 import { inboxesApi } from '@/lib/api/inboxes';
-
-const CHANNEL_CARDS = [
-  {
-    type: ChannelType.FACEBOOK_MESSENGER,
-    key: 'facebook',
-    title: 'Facebook Messenger',
-    description:
-      'Connect Facebook Fanpages via 1-click OAuth to receive and reply to customer messages.',
-    badge: 'Popular',
-    logoSrc: '/channels/messenger.png',
-  },
-  {
-    type: ChannelType.WEB_CHAT,
-    key: 'web_chat',
-    title: 'Website Live Chat',
-    description: 'Embed an interactive customer live chat widget on your website or web store.',
-    logoSrc: '/channels/website.png',
-  },
-  {
-    type: ChannelType.TELEGRAM,
-    key: 'telegram',
-    title: 'Telegram Bot',
-    description: 'Connect a Telegram bot token to handle customer messages directly from Telegram.',
-    logoSrc: '/channels/telegram.png',
-  },
-  {
-    type: ChannelType.ZALO,
-    key: 'zalo',
-    title: 'Zalo Official Account',
-    description:
-      'Engage Vietnamese customers by integrating your Zalo OA via OA ID and Secret Key.',
-    logoSrc: '/channels/zalo.png',
-  },
-  {
-    type: ChannelType.EMAIL,
-    key: 'email',
-    title: 'Email Support',
-    description:
-      'Connect a shared mailbox via SMTP / IMAP to handle customer emails as conversations.',
-    logoSrc: '/channels/email.png',
-  },
-];
+import { useI18n } from '@/lib/i18n';
 
 export default function NewInboxPage() {
   return (
@@ -91,6 +50,49 @@ function NewInboxPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
+  const { t } = useI18n();
+
+  const channelCards = React.useMemo(
+    () => [
+      {
+        type: ChannelType.FACEBOOK_MESSENGER,
+        key: 'facebook',
+        title: t('settings.inboxes.newPage.channels.messengerTitle'),
+        description: t('settings.inboxes.newPage.channels.messengerDesc'),
+        badge: t('settings.inboxes.newPage.badgePopular'),
+        logoSrc: '/channels/messenger.png',
+      },
+      {
+        type: ChannelType.WEB_CHAT,
+        key: 'web_chat',
+        title: t('settings.inboxes.newPage.channels.webChatTitle'),
+        description: t('settings.inboxes.newPage.channels.webChatDesc'),
+        logoSrc: '/channels/website.png',
+      },
+      {
+        type: ChannelType.TELEGRAM,
+        key: 'telegram',
+        title: t('settings.inboxes.newPage.channels.telegramTitle'),
+        description: t('settings.inboxes.newPage.channels.telegramDesc'),
+        logoSrc: '/channels/telegram.png',
+      },
+      {
+        type: ChannelType.ZALO,
+        key: 'zalo',
+        title: t('settings.inboxes.newPage.channels.zaloTitle'),
+        description: t('settings.inboxes.newPage.channels.zaloDesc'),
+        logoSrc: '/channels/zalo.png',
+      },
+      {
+        type: ChannelType.EMAIL,
+        key: 'email',
+        title: t('settings.inboxes.newPage.channels.emailTitle'),
+        description: t('settings.inboxes.newPage.channels.emailDesc'),
+        logoSrc: '/channels/email.png',
+      },
+    ],
+    [t],
+  );
 
   const workspaceSlug = (params?.workspaceSlug as string) || '';
   const { currentWorkspace } = useSettingsRbac(workspaceSlug);
@@ -127,7 +129,7 @@ function NewInboxPageContent() {
   const [emailAddress, setEmailAddress] = React.useState('');
   const [isSubmittingGeneric, setIsSubmittingGeneric] = React.useState(false);
 
-  const selectedChannel = CHANNEL_CARDS.find(c => c.key === selectedChannelKey);
+  const selectedChannel = channelCards.find(c => c.key === selectedChannelKey);
 
   // If sessionId is present in URL on mount, automatically discover pages
   React.useEffect(() => {
@@ -148,7 +150,7 @@ function NewInboxPageContent() {
       const eligibleIds = fetchedPages.filter(p => !p.isAlreadyConnected).map(p => p.pageId);
       setSelectedPageIds(eligibleIds);
     } catch (err: any) {
-      toast.error(err.message || 'Failed to discover Facebook Fanpages');
+      toast.error(err.message || t('settings.inboxes.newPage.toasts.discoverFailed'));
     } finally {
       setIsLoadingPages(false);
     }
@@ -170,7 +172,7 @@ function NewInboxPageContent() {
       // In-place Full Redirect (Option A)
       window.location.href = authUrl;
     } catch (err: any) {
-      toast.error(err.message || 'Failed to initiate Facebook OAuth authorization');
+      toast.error(err.message || t('settings.inboxes.newPage.toasts.oauthFailed'));
       setIsRedirectingFb(false);
     }
   };
@@ -203,14 +205,17 @@ function NewInboxPageContent() {
 
       const count = res.data.inboxes.length;
       toast.success(
-        `Successfully connected ${count} Facebook Fanpage${count > 1 ? 's' : ''} to Sales Copilot!`,
+        t('settings.inboxes.newPage.toasts.batchSuccess', {
+          count,
+          plural: count > 1 ? 's' : '',
+        }),
       );
 
       // Invalidate inboxes query & navigate back to inboxes list
       queryClient.invalidateQueries({ queryKey: ['inboxes', currentWorkspace.id] });
       router.push(`/${workspaceSlug}/settings/inboxes`);
     } catch (err: any) {
-      toast.error(err.message || 'Failed to connect selected Facebook Pages');
+      toast.error(err.message || t('settings.inboxes.newPage.toasts.batchFailed'));
     } finally {
       setIsSubmittingBatch(false);
     }
@@ -218,7 +223,7 @@ function NewInboxPageContent() {
 
   const handleConnectManualFb = async () => {
     if (!currentWorkspace?.id || !manualFbPageId.trim() || !manualFbToken.trim()) {
-      toast.error('Page ID and Page Access Token are required');
+      toast.error(t('settings.inboxes.newPage.toasts.manualRequired'));
       return;
     }
 
@@ -232,11 +237,11 @@ function NewInboxPageContent() {
         inboxName: manualFbPageName.trim() || undefined,
       });
 
-      toast.success('Facebook Page connected successfully!');
+      toast.success(t('settings.inboxes.newPage.toasts.manualSuccess'));
       queryClient.invalidateQueries({ queryKey: ['inboxes', currentWorkspace.id] });
       router.push(`/${workspaceSlug}/settings/inboxes`);
     } catch (err: any) {
-      toast.error(err.message || 'Failed to connect Facebook Page manually');
+      toast.error(err.message || t('settings.inboxes.newPage.toasts.manualFailed'));
     } finally {
       setIsSubmittingManualFb(false);
     }
@@ -257,7 +262,7 @@ function NewInboxPageContent() {
       switch (selectedChannel.type) {
         case ChannelType.TELEGRAM: {
           if (!telegramBotToken.trim()) {
-            toast.error('Telegram Bot Token is required');
+            toast.error(t('settings.inboxes.newPage.toasts.telegramTokenRequired'));
             setIsSubmittingGeneric(false);
             return;
           }
@@ -272,7 +277,7 @@ function NewInboxPageContent() {
         }
         case ChannelType.ZALO: {
           if (!zaloOaId.trim() || !zaloSecretKey.trim()) {
-            toast.error('Zalo OA ID and Secret Key are required');
+            toast.error(t('settings.inboxes.newPage.toasts.zaloRequired'));
             setIsSubmittingGeneric(false);
             return;
           }
@@ -283,7 +288,7 @@ function NewInboxPageContent() {
         }
         case ChannelType.EMAIL: {
           if (!emailAddress.trim()) {
-            toast.error('Email address is required');
+            toast.error(t('settings.inboxes.newPage.toasts.emailRequired'));
             setIsSubmittingGeneric(false);
             return;
           }
@@ -301,11 +306,15 @@ function NewInboxPageContent() {
         providerAccountId,
       });
 
-      toast.success(`${selectedChannel.title} inbox created successfully!`);
+      toast.success(
+        t('settings.inboxes.newPage.toasts.genericSuccess', {
+          title: selectedChannel.title,
+        }),
+      );
       queryClient.invalidateQueries({ queryKey: ['inboxes', currentWorkspace.id] });
       router.push(`/${workspaceSlug}/settings/inboxes`);
     } catch (err: any) {
-      toast.error(err.message || 'Failed to create inbox');
+      toast.error(err.message || t('settings.inboxes.newPage.toasts.genericFailed'));
     } finally {
       setIsSubmittingGeneric(false);
     }
@@ -332,17 +341,21 @@ function NewInboxPageContent() {
             className="w-fit -ml-2 h-8 gap-1.5 text-xs text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="size-3.5" data-icon="inline-start" />
-            {selectedChannelKey ? 'Back to Channel Selection' : 'Back to Inboxes'}
+            {selectedChannelKey
+              ? t('settings.inboxes.newPage.backToChannels')
+              : t('settings.inboxes.newPage.backToInboxes')}
           </Button>
 
           <div>
             <h1 className="text-xl font-semibold tracking-tight text-foreground">
-              {selectedChannel ? `Connect ${selectedChannel.title}` : 'Set up a new Inbox'}
+              {selectedChannel
+                ? t('settings.inboxes.newPage.connectTitle', { title: selectedChannel.title })
+                : t('settings.inboxes.newPage.setupTitle')}
             </h1>
             <p className="text-xs text-muted-foreground mt-0.5">
               {selectedChannel
                 ? selectedChannel.description
-                : 'Choose a communication channel to start conversing with your customers in Sales Copilot.'}
+                : t('settings.inboxes.newPage.setupDesc')}
             </p>
           </div>
         </div>
@@ -350,7 +363,7 @@ function NewInboxPageContent() {
         {/* ─── STEP 1: CHANNEL SELECTION GRID ───────────────────────────────────── */}
         {!selectedChannelKey && (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {CHANNEL_CARDS.map(channel => (
+            {channelCards.map(channel => (
               <Card
                 key={channel.key}
                 onClick={() => {
@@ -390,7 +403,7 @@ function NewInboxPageContent() {
                 </div>
 
                 <div className="mt-5 pt-3 border-t border-border/50 flex items-center justify-between text-xs font-medium text-primary">
-                  <span>Get Started</span>
+                  <span>{t('settings.inboxes.newPage.getStarted')}</span>
                   <span className="transition-transform group-hover:translate-x-0.5">→</span>
                 </div>
               </Card>
@@ -420,11 +433,10 @@ function NewInboxPageContent() {
                       </div>
                       <div>
                         <CardTitle className="text-base font-semibold">
-                          Log in with Facebook
+                          {t('settings.inboxes.newPage.facebook.loginTitle')}
                         </CardTitle>
                         <CardDescription className="text-xs">
-                          Grant Sales Copilot permission to access your Fanpages and manage
-                          messages.
+                          {t('settings.inboxes.newPage.facebook.loginDesc')}
                         </CardDescription>
                       </div>
                     </div>
@@ -433,13 +445,9 @@ function NewInboxPageContent() {
                     <div className="rounded-lg border border-border bg-muted/40 p-4 text-xs leading-relaxed text-muted-foreground flex flex-col gap-2">
                       <div className="flex items-center gap-2 font-medium text-foreground">
                         <ShieldCheck className="size-4 text-emerald-500" />
-                        <span>Secure OAuth Direct Connection (Option A)</span>
+                        <span>{t('settings.inboxes.newPage.facebook.oauthTitle')}</span>
                       </div>
-                      <p>
-                        When you click the button below, you will be redirected to Meta’s official
-                        authorization page. You can choose which Fanpages to manage. Upon approval,
-                        Meta will safely redirect you back here with your Fanpages ready to connect.
-                      </p>
+                      <p>{t('settings.inboxes.newPage.facebook.oauthDesc')}</p>
                     </div>
 
                     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
@@ -452,7 +460,7 @@ function NewInboxPageContent() {
                         {isRedirectingFb ? (
                           <>
                             <Spinner className="size-3.5" data-icon="inline-start" />
-                            Connecting to Facebook...
+                            {t('settings.inboxes.newPage.facebook.connectingButton')}
                           </>
                         ) : (
                           <>
@@ -463,7 +471,7 @@ function NewInboxPageContent() {
                             >
                               <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
                             </svg>
-                            Continue with Facebook
+                            {t('settings.inboxes.newPage.facebook.continueButton')}
                           </>
                         )}
                       </Button>
@@ -480,7 +488,7 @@ function NewInboxPageContent() {
                           type="button"
                           className="flex w-full items-center justify-between text-left text-xs font-medium text-muted-foreground hover:text-foreground"
                         >
-                          <span>Looking for manual credential entry (Page ID & Access Token)?</span>
+                          <span>{t('settings.inboxes.newPage.facebook.manualTrigger')}</span>
                           {isManualFbOpen ? (
                             <ChevronUp className="size-3.5" />
                           ) : (
@@ -494,38 +502,44 @@ function NewInboxPageContent() {
                         <FieldGroup className="gap-3">
                           <Field>
                             <FieldLabel htmlFor="manual-page-id" className="text-xs">
-                              Page ID
+                              {t('settings.inboxes.newPage.facebook.manualPageId')}
                             </FieldLabel>
                             <Input
                               id="manual-page-id"
                               value={manualFbPageId}
                               onChange={e => setManualFbPageId(e.target.value)}
-                              placeholder="e.g. 104829104812"
+                              placeholder={t(
+                                'settings.inboxes.newPage.facebook.manualPageIdPlaceholder',
+                              )}
                               className="h-8 text-xs"
                             />
                           </Field>
                           <Field>
                             <FieldLabel htmlFor="manual-page-name" className="text-xs">
-                              Page Name (Optional)
+                              {t('settings.inboxes.newPage.facebook.manualPageName')}
                             </FieldLabel>
                             <Input
                               id="manual-page-name"
                               value={manualFbPageName}
                               onChange={e => setManualFbPageName(e.target.value)}
-                              placeholder="e.g. My Awesome Fanpage"
+                              placeholder={t(
+                                'settings.inboxes.newPage.facebook.manualPageNamePlaceholder',
+                              )}
                               className="h-8 text-xs"
                             />
                           </Field>
                           <Field>
                             <FieldLabel htmlFor="manual-page-token" className="text-xs">
-                              Page Access Token
+                              {t('settings.inboxes.newPage.facebook.manualToken')}
                             </FieldLabel>
                             <Input
                               id="manual-page-token"
                               type="password"
                               value={manualFbToken}
                               onChange={e => setManualFbToken(e.target.value)}
-                              placeholder="EAAB..."
+                              placeholder={t(
+                                'settings.inboxes.newPage.facebook.manualTokenPlaceholder',
+                              )}
                               className="h-8 text-xs"
                             />
                           </Field>
@@ -540,10 +554,10 @@ function NewInboxPageContent() {
                           {isSubmittingManualFb ? (
                             <>
                               <Spinner className="size-3.5" data-icon="inline-start" />
-                              Connecting...
+                              {t('settings.inboxes.newPage.facebook.manualButtonConnecting')}
                             </>
                           ) : (
-                            'Connect Manually'
+                            t('settings.inboxes.newPage.facebook.manualButton')
                           )}
                         </Button>
                       </CardContent>
@@ -557,10 +571,10 @@ function NewInboxPageContent() {
                 <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <h2 className="text-base font-semibold text-foreground">
-                      Select Facebook Pages to Connect
+                      {t('settings.inboxes.newPage.facebook.selectPagesTitle')}
                     </h2>
                     <p className="text-xs text-muted-foreground">
-                      Choose which Fanpages you want to import as Inboxes in Sales Copilot.
+                      {t('settings.inboxes.newPage.facebook.selectPagesDesc')}
                     </p>
                   </div>
 
@@ -572,7 +586,7 @@ function NewInboxPageContent() {
                     className="h-8 gap-1.5 text-xs text-muted-foreground hover:text-foreground"
                   >
                     <RefreshCw className="size-3" data-icon="inline-start" />
-                    Switch Account / Refresh
+                    {t('settings.inboxes.newPage.facebook.switchAccount')}
                   </Button>
                 </div>
 
@@ -580,17 +594,16 @@ function NewInboxPageContent() {
                   <div className="flex flex-col items-center justify-center gap-3 p-12 rounded-xl border border-border bg-card/30 text-center">
                     <Spinner className="size-6 text-primary" />
                     <p className="text-xs text-muted-foreground">
-                      Fetching your Facebook Fanpages from Meta...
+                      {t('settings.inboxes.newPage.facebook.loadingPages')}
                     </p>
                   </div>
                 ) : pages.length === 0 ? (
                   <div className="flex flex-col items-center justify-center gap-3 p-10 rounded-xl border border-dashed border-border bg-card/20 text-center">
                     <p className="text-xs text-muted-foreground">
-                      No Facebook Pages found for this account. Ensure you have admin access to at
-                      least one Fanpage and granted the necessary permissions.
+                      {t('settings.inboxes.newPage.facebook.noPages')}
                     </p>
                     <Button size="sm" onClick={handleStartFacebookOAuth} className="text-xs h-8">
-                      Try Again
+                      {t('settings.inboxes.newPage.facebook.tryAgain')}
                     </Button>
                   </div>
                 ) : (
@@ -610,12 +623,17 @@ function NewInboxPageContent() {
                           htmlFor="select-all"
                           className="text-xs font-medium text-foreground cursor-pointer select-none"
                         >
-                          Select all eligible pages ({eligiblePages.length})
+                          {t('settings.inboxes.newPage.facebook.selectAll', {
+                            count: eligiblePages.length,
+                          })}
                         </label>
                       </div>
 
                       <span className="text-xs text-muted-foreground">
-                        {selectedPageIds.length} of {eligiblePages.length} selected
+                        {t('settings.inboxes.newPage.facebook.selectedCount', {
+                          selected: selectedPageIds.length,
+                          total: eligiblePages.length,
+                        })}
                       </span>
                     </div>
 
@@ -669,7 +687,7 @@ function NewInboxPageContent() {
                                 variant="secondary"
                                 className="text-[10px] shrink-0 font-normal"
                               >
-                                Already Linked
+                                {t('settings.inboxes.newPage.facebook.alreadyLinked')}
                               </Badge>
                             ) : isSelected ? (
                               <Check className="size-4 text-primary shrink-0" />
@@ -683,10 +701,10 @@ function NewInboxPageContent() {
                     <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 p-3.5 mt-2">
                       <div className="flex flex-col gap-0.5">
                         <span className="text-xs font-medium text-foreground">
-                          Auto-assign workspace agents
+                          {t('settings.inboxes.newPage.facebook.autoAssignTitle')}
                         </span>
                         <span className="text-[11px] text-muted-foreground">
-                          Automatically grant all active workspace members access to these inboxes.
+                          {t('settings.inboxes.newPage.facebook.autoAssignDesc')}
                         </span>
                       </div>
                       <Switch checked={assignAllMembers} onCheckedChange={setAssignAllMembers} />
@@ -703,7 +721,7 @@ function NewInboxPageContent() {
                         }}
                         className="text-xs h-9"
                       >
-                        Cancel
+                        {t('settings.inboxes.newPage.facebook.cancel')}
                       </Button>
                       <Button
                         size="sm"
@@ -714,13 +732,15 @@ function NewInboxPageContent() {
                         {isSubmittingBatch ? (
                           <>
                             <Spinner className="size-3.5" data-icon="inline-start" />
-                            Connecting Inboxes...
+                            {t('settings.inboxes.newPage.facebook.connectingInboxes')}
                           </>
                         ) : (
                           <>
                             <CheckCircle2 className="size-3.5" data-icon="inline-start" />
-                            Connect {selectedPageIds.length} Selected Page
-                            {selectedPageIds.length === 1 ? '' : 's'}
+                            {t('settings.inboxes.newPage.facebook.connectSelected', {
+                              count: selectedPageIds.length,
+                              plural: selectedPageIds.length === 1 ? '' : 's',
+                            })}
                           </>
                         )}
                       </Button>
@@ -750,10 +770,12 @@ function NewInboxPageContent() {
                 </div>
                 <div>
                   <CardTitle className="text-sm font-semibold">
-                    Configure {selectedChannel.title}
+                    {t('settings.inboxes.newPage.generic.configureTitle', {
+                      title: selectedChannel.title,
+                    })}
                   </CardTitle>
                   <CardDescription className="text-xs">
-                    Fill in the required details to create this inbox.
+                    {t('settings.inboxes.newPage.generic.configureDesc')}
                   </CardDescription>
                 </div>
               </div>
@@ -765,17 +787,19 @@ function NewInboxPageContent() {
                   {/* Optional Custom Inbox Name */}
                   <Field>
                     <FieldLabel htmlFor="inbox-name" className="text-xs">
-                      Inbox Name
+                      {t('settings.inboxes.newPage.generic.nameLabel')}
                     </FieldLabel>
                     <Input
                       id="inbox-name"
                       value={genericInboxName}
                       onChange={e => setGenericInboxName(e.target.value)}
-                      placeholder={`e.g. My ${selectedChannel.title}`}
+                      placeholder={t('settings.inboxes.newPage.generic.namePlaceholder', {
+                        title: selectedChannel.title,
+                      })}
                       className="h-8 text-xs"
                     />
                     <FieldDescription className="text-[11px]">
-                      Leave empty to use the channel default name.
+                      {t('settings.inboxes.newPage.generic.nameHelp')}
                     </FieldDescription>
                   </Field>
 
@@ -783,7 +807,8 @@ function NewInboxPageContent() {
                   {selectedChannel.type === ChannelType.TELEGRAM && (
                     <Field>
                       <FieldLabel htmlFor="telegram-token" className="text-xs">
-                        Telegram Bot Token <span className="text-destructive">*</span>
+                        {t('settings.inboxes.newPage.generic.telegramTokenLabel')}{' '}
+                        <span className="text-destructive">*</span>
                       </FieldLabel>
                       <Input
                         id="telegram-token"
@@ -791,11 +816,11 @@ function NewInboxPageContent() {
                         required
                         value={telegramBotToken}
                         onChange={e => setTelegramBotToken(e.target.value)}
-                        placeholder="123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ"
+                        placeholder={t('settings.inboxes.newPage.generic.telegramTokenPlaceholder')}
                         className="h-8 text-xs"
                       />
                       <FieldDescription className="text-[11px]">
-                        Obtain your token by messaging @BotFather on Telegram.
+                        {t('settings.inboxes.newPage.generic.telegramTokenHelp')}
                       </FieldDescription>
                     </Field>
                   )}
@@ -804,13 +829,13 @@ function NewInboxPageContent() {
                   {selectedChannel.type === ChannelType.WEB_CHAT && (
                     <Field>
                       <FieldLabel htmlFor="webchat-domain" className="text-xs">
-                        Website Domain / URL (Optional)
+                        {t('settings.inboxes.newPage.generic.webChatDomainLabel')}
                       </FieldLabel>
                       <Input
                         id="webchat-domain"
                         value={webChatDomain}
                         onChange={e => setWebChatDomain(e.target.value)}
-                        placeholder="e.g. https://mycompany.com"
+                        placeholder={t('settings.inboxes.newPage.generic.webChatDomainPlaceholder')}
                         className="h-8 text-xs"
                       />
                     </Field>
@@ -821,20 +846,22 @@ function NewInboxPageContent() {
                     <>
                       <Field>
                         <FieldLabel htmlFor="zalo-oa-id" className="text-xs">
-                          Zalo Official Account ID <span className="text-destructive">*</span>
+                          {t('settings.inboxes.newPage.generic.zaloOaIdLabel')}{' '}
+                          <span className="text-destructive">*</span>
                         </FieldLabel>
                         <Input
                           id="zalo-oa-id"
                           required
                           value={zaloOaId}
                           onChange={e => setZaloOaId(e.target.value)}
-                          placeholder="e.g. 182736451928"
+                          placeholder={t('settings.inboxes.newPage.generic.zaloOaIdPlaceholder')}
                           className="h-8 text-xs"
                         />
                       </Field>
                       <Field>
                         <FieldLabel htmlFor="zalo-secret" className="text-xs">
-                          Zalo OA Secret Key <span className="text-destructive">*</span>
+                          {t('settings.inboxes.newPage.generic.zaloSecretKeyLabel')}{' '}
+                          <span className="text-destructive">*</span>
                         </FieldLabel>
                         <Input
                           id="zalo-secret"
@@ -842,7 +869,9 @@ function NewInboxPageContent() {
                           required
                           value={zaloSecretKey}
                           onChange={e => setZaloSecretKey(e.target.value)}
-                          placeholder="Enter your Zalo OA Secret Key"
+                          placeholder={t(
+                            'settings.inboxes.newPage.generic.zaloSecretKeyPlaceholder',
+                          )}
                           className="h-8 text-xs"
                         />
                       </Field>
@@ -853,7 +882,8 @@ function NewInboxPageContent() {
                   {selectedChannel.type === ChannelType.EMAIL && (
                     <Field>
                       <FieldLabel htmlFor="email-address" className="text-xs">
-                        Support Email Address <span className="text-destructive">*</span>
+                        {t('settings.inboxes.newPage.generic.emailAddressLabel')}{' '}
+                        <span className="text-destructive">*</span>
                       </FieldLabel>
                       <Input
                         id="email-address"
@@ -861,7 +891,7 @@ function NewInboxPageContent() {
                         required
                         value={emailAddress}
                         onChange={e => setEmailAddress(e.target.value)}
-                        placeholder="e.g. support@company.com"
+                        placeholder={t('settings.inboxes.newPage.generic.emailAddressPlaceholder')}
                         className="h-8 text-xs"
                       />
                     </Field>
@@ -879,7 +909,7 @@ function NewInboxPageContent() {
                     }}
                     className="text-xs h-8"
                   >
-                    Cancel
+                    {t('settings.inboxes.newPage.generic.cancel')}
                   </Button>
                   <Button
                     type="submit"
@@ -890,10 +920,10 @@ function NewInboxPageContent() {
                     {isSubmittingGeneric ? (
                       <>
                         <Spinner className="size-3.5" data-icon="inline-start" />
-                        Creating Inbox...
+                        {t('settings.inboxes.newPage.generic.submitting')}
                       </>
                     ) : (
-                      'Create Inbox'
+                      t('settings.inboxes.newPage.generic.submit')
                     )}
                   </Button>
                 </div>

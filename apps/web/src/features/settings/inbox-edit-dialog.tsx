@@ -35,6 +35,7 @@ import {
   useUpdateInbox,
 } from './hooks/use-inboxes';
 import { useWorkspaceMembers } from './hooks/use-workspace-members';
+import { useI18n } from '@/lib/i18n';
 
 interface InboxEditDialogProps {
   open: boolean;
@@ -49,6 +50,7 @@ export function InboxEditDialog({
   workspaceId,
   inboxToEdit,
 }: InboxEditDialogProps) {
+  const { t } = useI18n();
   const [name, setName] = React.useState('');
   const [greetingMessage, setGreetingMessage] = React.useState('');
   const [isAutoAssignmentEnabled, setIsAutoAssignmentEnabled] = React.useState(false);
@@ -94,7 +96,7 @@ export function InboxEditDialog({
     return workspaceMembers.filter(m => !currentMemberUserIds.has(m.userId));
   }, [workspaceMembers, inboxMembers]);
 
-  const nameError = touched && !name.trim() ? 'Inbox name is required' : null;
+  const nameError = touched && !name.trim() ? t('settings.inboxes.editDialog.nameRequired') : null;
 
   const handleSaveSettings = (e: React.FormEvent) => {
     e.preventDefault();
@@ -154,11 +156,11 @@ export function InboxEditDialog({
           <div className="flex items-center gap-2">
             <Inbox className="size-4 text-primary" />
             <DialogTitle className="text-sm font-semibold">
-              Edit Inbox: {inboxToEdit?.name}
+              {t('settings.inboxes.editDialog.title', { name: inboxToEdit?.name || '' })}
             </DialogTitle>
           </div>
           <DialogDescription className="text-xs">
-            Manage channel settings, secure credentials, and assigned agents.
+            {t('settings.inboxes.editDialog.description')}
           </DialogDescription>
         </DialogHeader>
 
@@ -166,11 +168,13 @@ export function InboxEditDialog({
           <TabsList className="grid w-full grid-cols-2 mb-3">
             <TabsTrigger value="settings" className="text-xs gap-1.5">
               <Settings className="size-3.5" />
-              General & Credentials
+              {t('settings.inboxes.editDialog.tabSettings')}
             </TabsTrigger>
             <TabsTrigger value="members" className="text-xs gap-1.5">
               <Users className="size-3.5" />
-              Agents ({inboxMembers?.length || 0})
+              {t('settings.inboxes.editDialog.tabMembers', {
+                count: inboxMembers?.length || 0,
+              })}
             </TabsTrigger>
           </TabsList>
 
@@ -184,7 +188,9 @@ export function InboxEditDialog({
               <FieldGroup className="gap-4">
                 {/* Inbox Name */}
                 <Field data-invalid={!!nameError}>
-                  <FieldLabel htmlFor="edit-name">Inbox Name</FieldLabel>
+                  <FieldLabel htmlFor="edit-name">
+                    {t('settings.inboxes.editDialog.nameLabel')}
+                  </FieldLabel>
                   <Input
                     id="edit-name"
                     value={name}
@@ -198,7 +204,9 @@ export function InboxEditDialog({
 
                 {/* Greeting Message */}
                 <Field>
-                  <FieldLabel htmlFor="edit-greeting">Greeting Message</FieldLabel>
+                  <FieldLabel htmlFor="edit-greeting">
+                    {t('settings.inboxes.editDialog.greetingLabel')}
+                  </FieldLabel>
                   <Textarea
                     id="edit-greeting"
                     value={greetingMessage}
@@ -212,10 +220,10 @@ export function InboxEditDialog({
                 <div className="flex items-center justify-between rounded-lg border border-border/70 p-3 bg-muted/20">
                   <div className="flex flex-col gap-0.5">
                     <span className="text-xs font-medium text-foreground">
-                      Auto-assign Conversations
+                      {t('settings.inboxes.editDialog.autoAssignTitle')}
                     </span>
                     <span className="text-[11px] text-muted-foreground">
-                      Distribute new conversations round-robin to assigned agents.
+                      {t('settings.inboxes.editDialog.autoAssignDesc')}
                     </span>
                   </div>
                   <Switch
@@ -228,16 +236,18 @@ export function InboxEditDialog({
                 <div className="flex flex-col gap-3 rounded-lg border border-border/70 p-3 bg-card/40">
                   <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
                     <Lock className="size-3.5 text-amber-500" />
-                    Channel Credentials (Encrypted)
+                    {t('settings.inboxes.editDialog.credentialsTitle')}
                   </div>
                   <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
                     <AlertCircle className="size-3 text-muted-foreground" />
-                    Leave credential fields empty to keep existing encrypted tokens.
+                    {t('settings.inboxes.editDialog.credentialsNote')}
                   </div>
 
                   {channelType === ChannelType.TELEGRAM && (
                     <Field>
-                      <FieldLabel htmlFor="edit-tg-token">Bot Token</FieldLabel>
+                      <FieldLabel htmlFor="edit-tg-token">
+                        {t('settings.inboxes.editDialog.botTokenLabel')}
+                      </FieldLabel>
                       <Input
                         id="edit-tg-token"
                         type="password"
@@ -257,7 +267,9 @@ export function InboxEditDialog({
                   {channelType === ChannelType.FACEBOOK_MESSENGER && (
                     <>
                       <Field>
-                        <FieldLabel htmlFor="edit-fb-page">Page ID</FieldLabel>
+                        <FieldLabel htmlFor="edit-fb-page">
+                          {t('settings.inboxes.editDialog.pageIdLabel')}
+                        </FieldLabel>
                         <Input
                           id="edit-fb-page"
                           value={credentials.pageId || ''}
@@ -272,7 +284,9 @@ export function InboxEditDialog({
                         />
                       </Field>
                       <Field>
-                        <FieldLabel htmlFor="edit-fb-token">Page Access Token</FieldLabel>
+                        <FieldLabel htmlFor="edit-fb-token">
+                          {t('settings.inboxes.editDialog.pageAccessTokenLabel')}
+                        </FieldLabel>
                         <Input
                           id="edit-fb-token"
                           type="password"
@@ -293,7 +307,9 @@ export function InboxEditDialog({
                   {channelType === ChannelType.ZALO && (
                     <>
                       <Field>
-                        <FieldLabel htmlFor="edit-zalo-oa">Zalo OA ID</FieldLabel>
+                        <FieldLabel htmlFor="edit-zalo-oa">
+                          {t('settings.inboxes.editDialog.zaloOaIdLabel')}
+                        </FieldLabel>
                         <Input
                           id="edit-zalo-oa"
                           value={credentials.oaId || ''}
@@ -308,7 +324,9 @@ export function InboxEditDialog({
                         />
                       </Field>
                       <Field>
-                        <FieldLabel htmlFor="edit-zalo-token">Access Token</FieldLabel>
+                        <FieldLabel htmlFor="edit-zalo-token">
+                          {t('settings.inboxes.editDialog.accessTokenLabel')}
+                        </FieldLabel>
                         <Input
                           id="edit-zalo-token"
                           type="password"
@@ -336,7 +354,9 @@ export function InboxEditDialog({
             <div className="flex items-center gap-2">
               <Select value={selectedAddUserId} onValueChange={setSelectedAddUserId}>
                 <SelectTrigger className="flex-1 h-8 text-xs">
-                  <SelectValue placeholder="Select workspace agent to add..." />
+                  <SelectValue
+                    placeholder={t('settings.inboxes.editDialog.selectAgentPlaceholder')}
+                  />
                 </SelectTrigger>
                 <SelectContent position="popper">
                   {availableMembers.map(m => (
@@ -346,7 +366,7 @@ export function InboxEditDialog({
                   ))}
                   {availableMembers.length === 0 && (
                     <div className="p-2 text-center text-xs text-muted-foreground">
-                      All workspace members already assigned.
+                      {t('settings.inboxes.editDialog.allMembersAssigned')}
                     </div>
                   )}
                 </SelectContent>
@@ -364,7 +384,7 @@ export function InboxEditDialog({
                 ) : (
                   <UserPlus className="size-3.5" data-icon="inline-start" />
                 )}
-                Add
+                {t('settings.inboxes.editDialog.addAgentBtn')}
               </Button>
             </div>
 
@@ -378,7 +398,7 @@ export function InboxEditDialog({
                   </div>
                 ) : !inboxMembers || inboxMembers.length === 0 ? (
                   <div className="flex h-36 items-center justify-center p-4 text-center text-xs text-muted-foreground">
-                    No agents assigned to this inbox yet.
+                    {t('settings.inboxes.editDialog.noAgents')}
                   </div>
                 ) : (
                   <div className="flex flex-col gap-1">
@@ -417,7 +437,7 @@ export function InboxEditDialog({
                             onClick={() => removeMember(m.userId)}
                             disabled={isRemovingMember}
                             className="size-6 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                            title="Remove agent from inbox"
+                            title={t('settings.inboxes.editDialog.removeAgentTooltip')}
                           >
                             <Trash2 className="size-3" />
                           </Button>
@@ -440,7 +460,7 @@ export function InboxEditDialog({
             disabled={isUpdating}
             className="text-xs"
           >
-            Cancel
+            {t('settings.inboxes.editDialog.cancel')}
           </Button>
           <Button
             type="submit"
@@ -453,10 +473,10 @@ export function InboxEditDialog({
             {isUpdating ? (
               <>
                 <Spinner className="size-3.5" data-icon="inline-start" />
-                Saving...
+                {t('settings.inboxes.editDialog.saving')}
               </>
             ) : (
-              'Save Changes'
+              t('settings.inboxes.editDialog.save')
             )}
           </Button>
         </DialogFooter>

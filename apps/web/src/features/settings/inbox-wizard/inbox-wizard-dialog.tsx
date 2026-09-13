@@ -238,15 +238,30 @@ export function InboxWizardDialog({ open, onOpenChange, workspaceId }: InboxWiza
                   // Update default name based on type
                   if (!config.name || config.name === DEFAULT_CONFIG.name) {
                     if (type === ChannelType.WEB_CHAT)
-                      setConfig(prev => ({ ...prev, name: 'Website Live Chat' }));
+                      setConfig(prev => ({
+                        ...prev,
+                        name: t('settings.inboxes.newPage.channels.webChatTitle'),
+                      }));
                     if (type === ChannelType.FACEBOOK_MESSENGER)
-                      setConfig(prev => ({ ...prev, name: 'Facebook Messenger' }));
+                      setConfig(prev => ({
+                        ...prev,
+                        name: t('settings.inboxes.newPage.channels.messengerTitle'),
+                      }));
                     if (type === ChannelType.TELEGRAM)
-                      setConfig(prev => ({ ...prev, name: 'Telegram Bot' }));
+                      setConfig(prev => ({
+                        ...prev,
+                        name: t('settings.inboxes.newPage.channels.telegramTitle'),
+                      }));
                     if (type === ChannelType.EMAIL)
-                      setConfig(prev => ({ ...prev, name: 'Email Support' }));
+                      setConfig(prev => ({
+                        ...prev,
+                        name: t('settings.inboxes.newPage.channels.emailTitle'),
+                      }));
                     if (type === ChannelType.ZALO)
-                      setConfig(prev => ({ ...prev, name: 'Zalo Official Account' }));
+                      setConfig(prev => ({
+                        ...prev,
+                        name: t('settings.inboxes.newPage.channels.zaloTitle'),
+                      }));
                   }
                 }}
               />

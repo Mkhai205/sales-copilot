@@ -13,6 +13,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useWorkspaceMembers } from '../hooks/use-workspace-members';
 import type { ChannelConfigState } from './step-channel-config';
 import { getChannelMeta } from '@/lib/channels';
+import { useI18n } from '@/lib/i18n';
 
 interface StepMembersReviewProps {
   workspaceId: string;
@@ -29,6 +30,7 @@ export function StepMembersReview({
   selectedMemberIds,
   onToggleMember,
 }: StepMembersReviewProps) {
+  const { t } = useI18n();
   const [searchMemberQuery, setSearchMemberQuery] = React.useState('');
   const { data: workspaceMembers, isLoading: isLoadingMembers } = useWorkspaceMembers(workspaceId);
 
@@ -66,7 +68,7 @@ export function StepMembersReview({
       <Card className="border-border bg-muted/20">
         <CardContent className="p-3.5 flex flex-col gap-2.5">
           <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-            Configuration Summary
+            {t('settings.inboxes.wizard.review.summaryTitle')}
           </span>
 
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
@@ -83,20 +85,26 @@ export function StepMembersReview({
                 />
               </div>
               <div className="flex flex-col min-w-0">
-                <span className="text-[10px] text-muted-foreground">Channel</span>
+                <span className="text-[10px] text-muted-foreground">
+                  {t('settings.inboxes.wizard.review.channel')}
+                </span>
                 <span className="truncate text-xs font-semibold text-foreground">{meta.label}</span>
               </div>
             </div>
 
             <div className="flex flex-col min-w-0">
-              <span className="text-[10px] text-muted-foreground">Inbox Name</span>
+              <span className="text-[10px] text-muted-foreground">
+                {t('settings.inboxes.wizard.review.inboxName')}
+              </span>
               <span className="truncate text-xs font-semibold text-foreground">
-                {config.name || 'Unnamed Inbox'}
+                {config.name || t('settings.inboxes.wizard.review.unnamedInbox')}
               </span>
             </div>
 
             <div className="flex flex-col min-w-0">
-              <span className="text-[10px] text-muted-foreground">Auto-Assignment</span>
+              <span className="text-[10px] text-muted-foreground">
+                {t('settings.inboxes.wizard.review.autoAssignment')}
+              </span>
               <div className="flex items-center gap-1 mt-0.5">
                 {config.isAutoAssignmentEnabled ? (
                   <Badge
@@ -104,11 +112,11 @@ export function StepMembersReview({
                     className="h-4 gap-1 px-1 text-[9px] text-emerald-500 border-emerald-500/30 bg-emerald-500/10"
                   >
                     <Zap className="size-2.5" />
-                    Enabled
+                    {t('settings.inboxes.wizard.review.enabled')}
                   </Badge>
                 ) : (
                   <Badge variant="secondary" className="h-4 px-1 text-[9px] text-muted-foreground">
-                    Disabled
+                    {t('settings.inboxes.wizard.review.disabled')}
                   </Badge>
                 )}
               </div>
@@ -123,15 +131,20 @@ export function StepMembersReview({
           <div className="flex items-center gap-1.5">
             <Users className="size-3.5 text-primary" />
             <span className="text-xs font-semibold text-foreground">
-              Assign Agents to this Inbox
+              {t('settings.inboxes.wizard.review.assignTitle')}
             </span>
           </div>
           <Badge variant="secondary" className="px-1.5 py-0.2 text-[10px]">
-            {selectedMemberIds.length} agents selected
+            {t(
+              selectedMemberIds.length === 1
+                ? 'settings.inboxes.wizard.review.agentsSelected_one'
+                : 'settings.inboxes.wizard.review.agentsSelected_other',
+              { count: selectedMemberIds.length },
+            )}
           </Badge>
         </div>
         <p className="text-[11px] text-muted-foreground">
-          Assigned agents will receive and respond to conversations in this inbox.
+          {t('settings.inboxes.wizard.review.assignDesc')}
         </p>
 
         {/* Search Members Bar */}
@@ -140,7 +153,7 @@ export function StepMembersReview({
           <Input
             value={searchMemberQuery}
             onChange={e => setSearchMemberQuery(e.target.value)}
-            placeholder="Search agents by name or email..."
+            placeholder={t('settings.inboxes.wizard.review.searchPlaceholder')}
             className="h-7 pl-7 pr-7 text-xs bg-muted/30"
           />
           {searchMemberQuery && (
@@ -167,7 +180,7 @@ export function StepMembersReview({
               </div>
             ) : filteredMembers.length === 0 ? (
               <div className="flex h-32 items-center justify-center p-4 text-center text-xs text-muted-foreground">
-                No workspace members found.
+                {t('settings.inboxes.wizard.review.noMembersFound')}
               </div>
             ) : (
               <div className="flex flex-col gap-1">
@@ -196,7 +209,7 @@ export function StepMembersReview({
                         </Avatar>
                         <div className="flex flex-col min-w-0">
                           <span className="truncate text-xs font-medium text-foreground">
-                            {member.user?.name || 'Unnamed'}
+                            {member.user?.name || t('settings.inboxes.wizard.review.unnamedMember')}
                           </span>
                           <span className="truncate text-[10px] text-muted-foreground">
                             {member.user?.email}

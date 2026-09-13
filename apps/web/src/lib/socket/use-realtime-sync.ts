@@ -301,6 +301,7 @@ export function useRealtimeSync(): void {
 
     // Invalidate conversations to preserve tab grouping (e.g. Open vs. Resolved)
     queryClient.invalidateQueries({ queryKey: ['conversations'] });
+    queryClient.invalidateQueries({ queryKey: ['conversation-counts'] });
   };
 
   useSocketEvent(WsServerEvent.CONVERSATION_STATUS_UPDATED, handleStatusUpdate);
@@ -344,6 +345,7 @@ export function useRealtimeSync(): void {
     );
 
     queryClient.invalidateQueries({ queryKey: ['conversations'] });
+    queryClient.invalidateQueries({ queryKey: ['conversation-counts'] });
   });
 
   // conversation.priority_updated

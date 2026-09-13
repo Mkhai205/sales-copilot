@@ -21,6 +21,7 @@ import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui
 import { Input } from '@/components/ui/input';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { facebookApi, type FacebookPageInfo } from '@/lib/api/facebook';
+import { useI18n } from '@/lib/i18n';
 
 interface FacebookOAuthConnectProps {
   workspaceId: string;
@@ -41,6 +42,7 @@ export function FacebookOAuthConnect({
   manualCredentials,
   onManualCredentialChange,
 }: FacebookOAuthConnectProps) {
+  const { t } = useI18n();
   const [isAuthenticating, setIsAuthenticating] = React.useState(false);
   const [isLoadingPages, setIsLoadingPages] = React.useState(false);
   const [currentSessionId, setCurrentSessionId] = React.useState<string | undefined>(sessionId);
@@ -63,7 +65,7 @@ export function FacebookOAuthConnect({
       const res = await facebookApi.discoverPages(workspaceId, activeSessionId);
       setPages(res.data || []);
     } catch (err: any) {
-      toast.error(err.message || 'Failed to discover Facebook Pages');
+      toast.error(err.message || t('settings.inboxes.wizard.facebook.discoverFailed'));
     } finally {
       setIsLoadingPages(false);
     }
@@ -92,7 +94,7 @@ export function FacebookOAuthConnect({
       );
 
       if (!popup) {
-        toast.error('Popup blocked by browser. Please allow popups for this site and try again.');
+        toast.error(t('settings.inboxes.wizard.facebook.popupBlocked'));
         setIsAuthenticating(false);
         return;
       }
@@ -101,14 +103,14 @@ export function FacebookOAuthConnect({
         cleanup();
         setIsAuthenticating(false);
         setCurrentSessionId(newSessionId);
-        toast.success('Facebook authorization successful!');
+        toast.success(t('settings.inboxes.wizard.facebook.authSuccess'));
         loadPages(newSessionId);
       };
 
       const onAuthError = (errorMsg: string) => {
         cleanup();
         setIsAuthenticating(false);
-        toast.error(errorMsg || 'Facebook authorization failed');
+        toast.error(errorMsg || t('settings.inboxes.wizard.facebook.authFailed'));
       };
 
       // 1. PostMessage listener
@@ -190,7 +192,7 @@ export function FacebookOAuthConnect({
       }, 1000);
     } catch (err: any) {
       setIsAuthenticating(false);
-      toast.error(err.message || 'Failed to initialize Facebook OAuth');
+      toast.error(err.message || t('settings.inboxes.wizard.facebook.initFailed'));
     }
   };
 
@@ -218,7 +220,7 @@ export function FacebookOAuthConnect({
                   <Check className="size-3" />
                 </span>
                 <CardTitle className="text-xs font-semibold text-primary">
-                  Connected Facebook Page
+                  {t('settings.inboxes.wizard.facebook.connectedPageTitle')}
                 </CardTitle>
               </div>
               <Button
@@ -228,7 +230,7 @@ export function FacebookOAuthConnect({
                 onClick={onClearSelection}
                 className="h-7 text-xs text-muted-foreground hover:text-foreground"
               >
-                Change Page
+                {t('settings.inboxes.wizard.facebook.changePage')}
               </Button>
             </div>
           </CardHeader>
@@ -252,7 +254,7 @@ export function FacebookOAuthConnect({
                 </div>
               </div>
               <Badge variant="outline" className="border-primary/30 text-primary bg-primary/10">
-                Selected
+                {t('settings.inboxes.wizard.facebook.selectedBadge')}
               </Badge>
             </div>
           </CardContent>
@@ -265,9 +267,11 @@ export function FacebookOAuthConnect({
           <CardHeader className="pb-2 pt-4">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-xs font-semibold">Select a Facebook Page</CardTitle>
+                <CardTitle className="text-xs font-semibold">
+                  {t('settings.inboxes.wizard.facebook.selectPageTitle')}
+                </CardTitle>
                 <CardDescription className="text-[11px]">
-                  Choose which Facebook Fanpage you want to connect to this inbox.
+                  {t('settings.inboxes.wizard.facebook.selectPageDesc')}
                 </CardDescription>
               </div>
               <Button
@@ -279,7 +283,7 @@ export function FacebookOAuthConnect({
                 className="h-7 text-xs"
               >
                 <RefreshCw data-icon="inline-start" className="size-3" />
-                Switch Account
+                {t('settings.inboxes.wizard.facebook.switchAccount')}
               </Button>
             </div>
           </CardHeader>
@@ -288,16 +292,17 @@ export function FacebookOAuthConnect({
               <div className="flex flex-col items-center justify-center gap-2 py-8 text-center">
                 <Spinner className="size-6 text-primary" />
                 <p className="text-xs text-muted-foreground">
-                  Discovering Facebook Pages you manage...
+                  {t('settings.inboxes.wizard.facebook.discoveringPages')}
                 </p>
               </div>
             ) : pages.length === 0 ? (
               <div className="flex flex-col items-center justify-center gap-2 py-6 text-center">
                 <AlertCircle className="size-6 text-muted-foreground" />
-                <p className="text-xs font-medium text-foreground">No Facebook Pages Found</p>
+                <p className="text-xs font-medium text-foreground">
+                  {t('settings.inboxes.wizard.facebook.noPagesTitle')}
+                </p>
                 <p className="max-w-xs text-[11px] text-muted-foreground">
-                  The logged-in Facebook account does not manage any Fanpages or does not have
-                  sufficient permissions.
+                  {t('settings.inboxes.wizard.facebook.noPagesDesc')}
                 </p>
                 <Button
                   type="button"
@@ -306,7 +311,7 @@ export function FacebookOAuthConnect({
                   onClick={handleSwitchAccount}
                   className="mt-2 text-xs"
                 >
-                  Try Another Account
+                  {t('settings.inboxes.wizard.facebook.tryAnotherAccount')}
                 </Button>
               </div>
             ) : (
@@ -345,7 +350,7 @@ export function FacebookOAuthConnect({
 
                       {isConnected ? (
                         <Badge variant="secondary" className="text-[10px]">
-                          Already Connected
+                          {t('settings.inboxes.wizard.facebook.alreadyConnected')}
                         </Badge>
                       ) : (
                         <Button
@@ -358,7 +363,7 @@ export function FacebookOAuthConnect({
                           }}
                           className="h-7 text-xs font-medium"
                         >
-                          Select
+                          {t('settings.inboxes.wizard.facebook.selectBtn')}
                         </Button>
                       )}
                     </div>
@@ -386,14 +391,16 @@ export function FacebookOAuthConnect({
               </div>
               <div>
                 <div className="flex items-center gap-1.5">
-                  <CardTitle className="text-xs font-semibold">1-Click Facebook OAuth</CardTitle>
+                  <CardTitle className="text-xs font-semibold">
+                    {t('settings.inboxes.wizard.facebook.oauthTitle')}
+                  </CardTitle>
                   <Badge variant="outline" className="text-[10px] text-primary border-primary/30">
-                    <Sparkles className="size-2.5 mr-0.5 text-primary" /> Recommended
+                    <Sparkles className="size-2.5 mr-0.5 text-primary" />{' '}
+                    {t('settings.inboxes.wizard.facebook.recommended')}
                   </Badge>
                 </div>
                 <CardDescription className="text-[11px] mt-0.5">
-                  Connect your Facebook account to automatically discover Fanpages and configure
-                  webhooks with zero hassle.
+                  {t('settings.inboxes.wizard.facebook.oauthDesc')}
                 </CardDescription>
               </div>
             </div>
@@ -408,17 +415,17 @@ export function FacebookOAuthConnect({
               {isAuthenticating ? (
                 <>
                   <Spinner className="size-4" />
-                  Waiting for Facebook login...
+                  {t('settings.inboxes.wizard.facebook.waitingLogin')}
                 </>
               ) : (
                 <>
                   <ExternalLink data-icon="inline-start" className="size-4" />
-                  Connect with Facebook
+                  {t('settings.inboxes.wizard.facebook.connectBtn')}
                 </>
               )}
             </Button>
             <p className="text-[11px] text-muted-foreground mt-2 text-center">
-              Requires permissions to manage pages and send/receive Messenger conversations.
+              {t('settings.inboxes.wizard.facebook.permissionsNote')}
             </p>
           </CardContent>
         </Card>
@@ -432,7 +439,7 @@ export function FacebookOAuthConnect({
       >
         <div className="flex items-center justify-between py-1">
           <span className="text-[11px] text-muted-foreground font-medium">
-            Need custom tokens or offline setup?
+            {t('settings.inboxes.wizard.facebook.manualPrompt')}
           </span>
           <CollapsibleTrigger asChild>
             <Button
@@ -440,7 +447,9 @@ export function FacebookOAuthConnect({
               size="sm"
               className="h-6 gap-1 px-2 text-[11px] text-muted-foreground"
             >
-              {isManualOpen ? 'Hide Manual Setup' : 'Configure Manually'}
+              {isManualOpen
+                ? t('settings.inboxes.wizard.facebook.hideManual')
+                : t('settings.inboxes.wizard.facebook.configureManual')}
               {isManualOpen ? <ChevronUp className="size-3" /> : <ChevronDown className="size-3" />}
             </Button>
           </CollapsibleTrigger>
@@ -450,7 +459,7 @@ export function FacebookOAuthConnect({
           <FieldGroup className="gap-3 rounded-lg border border-border/70 bg-muted/20 p-3">
             <Field>
               <FieldLabel htmlFor="fb-page-id" className="text-xs">
-                Page ID
+                {t('settings.inboxes.wizard.facebook.pageIdLabel')}
               </FieldLabel>
               <Input
                 id="fb-page-id"
@@ -463,7 +472,7 @@ export function FacebookOAuthConnect({
 
             <Field>
               <FieldLabel htmlFor="fb-access-token" className="text-xs">
-                Page Access Token
+                {t('settings.inboxes.wizard.facebook.pageAccessTokenLabel')}
               </FieldLabel>
               <Input
                 id="fb-access-token"
@@ -474,20 +483,20 @@ export function FacebookOAuthConnect({
                 className="text-xs font-mono"
               />
               <FieldDescription className="text-[11px]">
-                Long-lived Page Access Token generated from Meta Developer Tools.
+                {t('settings.inboxes.wizard.facebook.pageAccessTokenHelp')}
               </FieldDescription>
             </Field>
 
             <Field>
               <FieldLabel htmlFor="fb-app-secret" className="text-xs">
-                App Secret (Optional)
+                {t('settings.inboxes.wizard.facebook.appSecretLabel')}
               </FieldLabel>
               <Input
                 id="fb-app-secret"
                 type="password"
                 value={manualCredentials.appSecret || ''}
                 onChange={e => onManualCredentialChange('appSecret', e.target.value)}
-                placeholder="Your Meta App Secret"
+                placeholder={t('settings.inboxes.wizard.facebook.appSecretPlaceholder')}
                 className="text-xs font-mono"
               />
             </Field>

@@ -4,12 +4,14 @@ import * as React from 'react';
 import { useParams } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SettingsGuard, InboxesList, useSettingsRbac } from '@/features/settings';
+import { useI18n } from '@/lib/i18n';
 
 export default function InboxesSettingsPage() {
   const params = useParams();
   const workspaceSlug = (params?.workspaceSlug as string) || '';
 
   const { currentWorkspace, currentRole, isLoading } = useSettingsRbac(workspaceSlug);
+  const { t } = useI18n();
 
   return (
     <SettingsGuard workspaceSlug={workspaceSlug} segment="inboxes">
@@ -17,10 +19,10 @@ export default function InboxesSettingsPage() {
         {/* Page Header */}
         <div>
           <h1 className="text-xl font-semibold tracking-tight text-foreground">
-            Inboxes & Channels
+            {t('settings.inboxes.title')}
           </h1>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Manage your connected customer communication channels and agent inbox assignments.
+            {t('settings.inboxes.description')}
           </p>
         </div>
 
