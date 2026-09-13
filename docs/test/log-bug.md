@@ -4,7 +4,7 @@
 - [x] bỏ phần thẻ nhanh
 - [x] migrate middleware-to-proxy
 - [x] thêm thư viện để hỗ trợ emoji
-- xây dựng bộ lọc fillter
+- [x] xây dựng bộ lọc fillter
 - tạo trang supper admin để quản lý hệ thống.
 - xây dựng chat widget plugin hoàn chỉnh với tùy chỉnh hiển thị, biểu mẫu, câu hởi thường gặp, chức năng,...
 - thiết kế chuyển đổi ngôn ngữ

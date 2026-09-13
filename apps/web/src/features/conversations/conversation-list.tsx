@@ -2,18 +2,11 @@
 
 import * as React from 'react';
 import Image from 'next/image';
-import { ArrowUpDown, Check, ChevronDown, RotateCcw, Search, X } from 'lucide-react';
+import { RotateCcw, Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Kbd } from '@/components/ui/kbd';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   InputGroup,
   InputGroupAddon,
@@ -22,36 +15,17 @@ import {
 } from '@/components/ui/input-group';
 import { ConversationCard } from './conversation-card';
 import { ConversationListFilters } from './conversation-list-filters';
+import { ConversationFilterPopover } from './conversation-filter-popover';
+import { ConversationActiveChips } from './conversation-active-chips';
 import { useConversations } from './hooks/use-conversations';
-import { useConversationFilters, type StatusFilter } from './hooks/use-conversation-filters';
-import { ConversationStatus, type ConversationSortBy } from '@/lib/api/types';
+import { useConversationFilters } from './hooks/use-conversation-filters';
+import { useI18n } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 
 interface ConversationListProps {
   workspaceSlug: string;
   activeConversationId?: string;
 }
-
-const STATUS_OPTIONS: Array<{ value: StatusFilter; label: string }> = [
-  { value: ConversationStatus.OPEN, label: 'Open' },
-  { value: ConversationStatus.PENDING, label: 'Pending' },
-  { value: ConversationStatus.SNOOZED, label: 'Snoozed' },
-  { value: ConversationStatus.RESOLVED, label: 'Resolved' },
-  { value: 'ALL', label: 'All' },
-];
-
-const SORT_OPTIONS: Array<{
-  label: string;
-  sortBy: ConversationSortBy;
-  sortOrder: 'asc' | 'desc';
-}> = [
-  { label: 'Last activity: Newest first', sortBy: 'lastActivityAt', sortOrder: 'desc' },
-  { label: 'Last activity: Oldest first', sortBy: 'lastActivityAt', sortOrder: 'asc' },
-  { label: 'Created at: Newest first', sortBy: 'createdAt', sortOrder: 'desc' },
-  { label: 'Created at: Oldest first', sortBy: 'createdAt', sortOrder: 'asc' },
-  { label: 'Priority: Highest first', sortBy: 'priority', sortOrder: 'desc' },
-  { label: 'Unread count: Highest first', sortBy: 'unreadMessagesCount', sortOrder: 'desc' },
-];
 
 function ConversationListSkeleton() {
   return (
@@ -78,19 +52,32 @@ function ConversationListSkeleton() {
 }
 
 export function ConversationList({ workspaceSlug, activeConversationId }: ConversationListProps) {
-  const { apiQuery, resetFilters, filters, setStatus, setSearch, setSorting } =
-    useConversationFilters();
+  const { t } = useI18n();
+  const {
+    apiQuery,
+    resetFilters,
+    resetAdvancedFilters,
+    filters,
+    activeFilterCount,
+    setStatus,
+    setSearch,
+    setInbox,
+    setPriority,
+    setLabel,
+    setAssignee,
+  } = useConversationFilters();
 
   const {
     conversations,
-    totalCount,
     isLoading,
+    isFetching,
     isError,
     isEmpty,
     hasNextPage,
     isFetchingNextPage,
     fetchNextPage,
     refetch,
+    workspaceId,
   } = useConversations({
     workspaceSlug,
     filters: apiQuery,
@@ -162,25 +149,15 @@ export function ConversationList({ workspaceSlug, activeConversationId }: Conver
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const hasActiveFilters = Boolean(
-    filters.q ||
-    filters.status !== 'OPEN' ||
-    filters.assignment !== 'mine' ||
-    filters.priority ||
-    filters.inboxId ||
-    filters.labelId,
+    filters.q || activeFilterCount > 0 || filters.assignment !== 'mine',
   );
-
-  const activeStatusLabel =
-    STATUS_OPTIONS.find(opt => opt.value === filters.status)?.label || 'Open';
-
-  const isCurrentSort = (sortBy: ConversationSortBy, sortOrder: 'asc' | 'desc') =>
-    filters.sortBy === sortBy && filters.sortOrder === sortOrder;
 
   return (
     <div className="flex h-full w-full min-h-0 flex-1 flex-col overflow-hidden bg-background">
-      {/* 1. Top Search Header */}
-      <div className="border-b border-border/60 p-2.5 bg-background">
-        <InputGroup className="h-8.5 bg-muted/30 hover:bg-muted/50 focus-within:bg-background border-border/70 rounded-lg transition-colors">
+      {/* 1. Unified Search & Action Toolbar (Linear/Slack Style) */}
+      <div className="flex items-center gap-1.5 border-b border-border/60 p-2 bg-background shrink-0">
+        {/* Search Input */}
+        <InputGroup className="h-8 flex-1 min-w-0 bg-muted/30 hover:bg-muted/50 focus-within:bg-background border-border/70 rounded-md transition-colors">
           <InputGroupAddon align="inline-start">
             <Search className="size-3.5 text-muted-foreground" />
           </InputGroupAddon>
@@ -190,10 +167,10 @@ export function ConversationList({ workspaceSlug, activeConversationId }: Conver
             name="conversation-search"
             aria-label="Search for messages in conversations"
             type="text"
-            placeholder="Search for messages in conversations"
+            placeholder={t('conversations.filter.searchPlaceholder')}
             value={searchInput}
             onChange={e => setSearchInput(e.target.value)}
-            className="text-xs h-7 placeholder:text-muted-foreground/70"
+            className="text-xs h-6.5 placeholder:text-muted-foreground/70"
           />
           <InputGroupAddon align="inline-end">
             {searchInput ? (
@@ -202,111 +179,68 @@ export function ConversationList({ workspaceSlug, activeConversationId }: Conver
                 variant="ghost"
                 onClick={handleClearSearch}
                 aria-label="Clear search"
-                className="size-5 p-0 text-muted-foreground hover:text-foreground"
+                className="size-4.5 p-0 text-muted-foreground hover:text-foreground cursor-pointer"
               >
                 <X className="size-3" />
               </InputGroupButton>
             ) : (
-              <Kbd className="text-[10px] opacity-70">⌘K</Kbd>
+              <Kbd className="text-[9px] opacity-70">⌘K</Kbd>
             )}
           </InputGroupAddon>
         </InputGroup>
-      </div>
 
-      {/* 2. Header Row: Title + Status Dropdown Pill + Action Buttons */}
-      <div className="flex h-11 shrink-0 items-center justify-between border-b border-border/60 px-3 bg-background">
-        {/* Left: Title + Status Pill */}
-        <div className="flex items-center gap-2">
-          <h1 className="text-base font-semibold tracking-tight text-foreground">Conversations</h1>
+        {/* Action Group: Filter & Refresh */}
+        <div className="flex items-center gap-0.5 shrink-0">
+          {/* Advanced Filter Popover */}
+          <ConversationFilterPopover
+            workspaceId={workspaceId}
+            filters={filters}
+            activeFilterCount={activeFilterCount}
+            setStatus={setStatus}
+            setInbox={setInbox}
+            setPriority={setPriority}
+            setLabel={setLabel}
+            setAssignee={setAssignee}
+            resetAdvancedFilters={resetAdvancedFilters}
+            disabled={isLoading}
+          />
 
-          {/* Status Dropdown Pill */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                size="xs"
-                className="h-6 gap-1 px-2 rounded-md text-xs font-medium text-foreground/80 hover:text-foreground bg-muted/40 hover:bg-muted/70 border-border/60 cursor-pointer"
-              >
-                <span>{activeStatusLabel}</span>
-                <ChevronDown className="size-3 text-muted-foreground" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-36">
-              <DropdownMenuLabel className="text-[11px] text-muted-foreground">
-                Filter by Status
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {STATUS_OPTIONS.map(opt => (
-                <DropdownMenuItem
-                  key={opt.value}
-                  onClick={() => setStatus(opt.value)}
-                  className="flex items-center justify-between text-xs cursor-pointer"
-                >
-                  <span>{opt.label}</span>
-                  {filters.status === opt.value && <Check className="size-3.5 text-primary" />}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-
-        {/* Right: Sort Dropdown & Refresh */}
-        <div className="flex items-center gap-0.5">
-          {/* Sort Dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
+          {/* Refresh Button */}
+          <Tooltip>
+            <TooltipTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon-xs"
-                className="text-muted-foreground hover:text-foreground size-7"
-                title="Sort conversations"
+                onClick={() => refetch()}
+                disabled={isLoading || isFetching}
+                className="text-muted-foreground hover:text-foreground size-7 cursor-pointer"
+                aria-label="Refresh conversations"
               >
-                <ArrowUpDown className="size-3.5" />
-                <span className="sr-only">Sort conversations</span>
+                <RotateCcw className={cn('size-3.5', isFetching && 'animate-spin')} />
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-52">
-              <DropdownMenuLabel className="text-[11px] text-muted-foreground">
-                Order by
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {SORT_OPTIONS.map(opt => (
-                <DropdownMenuItem
-                  key={`${opt.sortBy}-${opt.sortOrder}`}
-                  onClick={() => setSorting(opt.sortBy, opt.sortOrder)}
-                  className="flex items-center justify-between text-xs cursor-pointer"
-                >
-                  <span
-                    className={cn(
-                      isCurrentSort(opt.sortBy, opt.sortOrder) && 'font-medium text-primary',
-                    )}
-                  >
-                    {opt.label}
-                  </span>
-                  {isCurrentSort(opt.sortBy, opt.sortOrder) && (
-                    <Check className="size-3.5 text-primary shrink-0" />
-                  )}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {/* Refresh Button */}
-          <Button
-            variant="ghost"
-            size="icon-xs"
-            onClick={() => refetch()}
-            className="text-muted-foreground hover:text-foreground size-7"
-            title="Refresh conversations"
-          >
-            <RotateCcw className="size-3.5" />
-            <span className="sr-only">Refresh conversations</span>
-          </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">
+              <span className="text-xs">{t('common.refresh')}</span>
+            </TooltipContent>
+          </Tooltip>
         </div>
       </div>
 
-      {/* 3. Underline Navigation Tabs (Mine / Unassigned / All) */}
+      {/* 2. Underline Navigation Tabs (Mine / Unassigned / All) */}
       <ConversationListFilters workspaceSlug={workspaceSlug} />
+
+      {/* 3. Active Filter Chips (Auto-rendered when activeFilterCount > 0) */}
+      <ConversationActiveChips
+        workspaceId={workspaceId}
+        filters={filters}
+        activeFilterCount={activeFilterCount}
+        setStatus={setStatus}
+        setInbox={setInbox}
+        setPriority={setPriority}
+        setLabel={setLabel}
+        setAssignee={setAssignee}
+        resetAdvancedFilters={resetAdvancedFilters}
+      />
 
       {/* 4. Conversations Scroll Area */}
       <div className="min-w-0 min-h-0 flex-1 overflow-y-auto">

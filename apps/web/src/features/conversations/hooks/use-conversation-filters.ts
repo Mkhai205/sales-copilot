@@ -20,6 +20,7 @@ export interface ConversationFilters {
   inboxId?: string;
   priority?: Priority;
   labelId?: string;
+  assigneeId?: string;
   sortBy: ConversationSortBy;
   sortOrder: 'asc' | 'desc';
 }
@@ -49,6 +50,7 @@ export function useConversationFilters() {
   const priority =
     priorityParam && Object.values(Priority).includes(priorityParam) ? priorityParam : undefined;
   const labelId = searchParams.get('labelId') || undefined;
+  const assigneeId = searchParams.get('assigneeId') || undefined;
 
   const sortByParam = searchParams.get('sortBy') as ConversationSortBy | null;
   const sortBy: ConversationSortBy =
@@ -68,10 +70,11 @@ export function useConversationFilters() {
       inboxId,
       priority,
       labelId,
+      assigneeId,
       sortBy,
       sortOrder,
     }),
-    [status, assignment, q, inboxId, priority, labelId, sortBy, sortOrder],
+    [status, assignment, q, inboxId, priority, labelId, assigneeId, sortBy, sortOrder],
   );
 
   // 2. Helper to batch update search params
@@ -150,6 +153,13 @@ export function useConversationFilters() {
     [updateFilters],
   );
 
+  const setAssignee = React.useCallback(
+    (newAssigneeId?: string) => {
+      updateFilters({ assigneeId: newAssigneeId });
+    },
+    [updateFilters],
+  );
+
   const setSorting = React.useCallback(
     (newSortBy: ConversationSortBy, newSortOrder: 'asc' | 'desc' = 'desc') => {
       updateFilters({ sortBy: newSortBy, sortOrder: newSortOrder });
@@ -160,6 +170,27 @@ export function useConversationFilters() {
   const resetFilters = React.useCallback(() => {
     router.replace(pathname, { scroll: false });
   }, [router, pathname]);
+
+  const resetAdvancedFilters = React.useCallback(() => {
+    updateFilters({
+      status: ConversationStatus.OPEN,
+      inboxId: null,
+      priority: null,
+      labelId: null,
+      assigneeId: null,
+    });
+  }, [updateFilters]);
+
+  // Count active filters excluding default state (OPEN status, no other filters)
+  const activeFilterCount = React.useMemo(() => {
+    let count = 0;
+    if (status !== ConversationStatus.OPEN) count++;
+    if (inboxId) count++;
+    if (priority) count++;
+    if (labelId) count++;
+    if (assigneeId) count++;
+    return count;
+  }, [status, inboxId, priority, labelId, assigneeId]);
 
   // 4. Resolve exact DTO for conversations API
   const apiQuery: ConversationListQueryDto = React.useMemo(() => {
@@ -176,6 +207,8 @@ export function useConversationFilters() {
       query.assigneeId = currentUser.id;
     } else if (assignment === 'unassigned') {
       query.assigneeId = 'unassigned';
+    } else if (assigneeId) {
+      query.assigneeId = assigneeId;
     }
 
     if (q.trim()) {
@@ -195,19 +228,33 @@ export function useConversationFilters() {
     }
 
     return query;
-  }, [status, assignment, q, inboxId, priority, labelId, sortBy, sortOrder, currentUser]);
+  }, [
+    status,
+    assignment,
+    q,
+    inboxId,
+    priority,
+    labelId,
+    assigneeId,
+    sortBy,
+    sortOrder,
+    currentUser,
+  ]);
 
   return {
     filters,
     apiQuery,
+    activeFilterCount,
     setStatus,
     setAssignment,
     setSearch,
     setInbox,
     setPriority,
     setLabel,
+    setAssignee,
     setSorting,
     resetFilters,
+    resetAdvancedFilters,
     updateFilters,
   };
 }
