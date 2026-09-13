@@ -24,8 +24,10 @@ import { Megaphone, AlertTriangle, Info, Flame, Wrench, Save, Loader2, Eye } fro
 import { SystemSettingCategory } from '@sales-copilot/shared-contracts';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { useI18n } from '@/lib/i18n';
 
 export function AnnouncementsTab() {
+  const { t } = useI18n();
   const { data: settings, isLoading } = useSystemSettings(SystemSettingCategory.SYSTEM);
   const updateMutation = useUpdateSystemSetting();
 
@@ -72,7 +74,7 @@ export function AnnouncementsTab() {
           silent: true,
         }),
       ]);
-      toast.success('Cập nhật thông báo hệ thống thành công');
+      toast.success(t('admin.systemSettings.saveAnnouncementSuccess'));
     } catch {
       // Handled by mutation hook
     } finally {
@@ -107,12 +109,12 @@ export function AnnouncementsTab() {
   const getBannerIcon = (level: string) => {
     switch (level) {
       case 'CRITICAL':
-        return <Flame className="size-4 shrink-0" />;
+        return <Flame className="size-4 shrink-0 text-destructive" />;
       case 'WARNING':
-        return <AlertTriangle className="size-4 shrink-0" />;
+        return <AlertTriangle className="size-4 shrink-0 text-amber-500" />;
       case 'INFO':
       default:
-        return <Info className="size-4 shrink-0" />;
+        return <Info className="size-4 shrink-0 text-primary" />;
     }
   };
 
@@ -128,10 +130,10 @@ export function AnnouncementsTab() {
               </div>
               <div>
                 <CardTitle className="text-base font-semibold">
-                  Chế độ Bảo trì Hệ thống (Maintenance Mode)
+                  {t('admin.systemSettings.announcementsMaintenanceTitle')}
                 </CardTitle>
                 <CardDescription className="text-xs">
-                  Khóa tạm thời các tác vụ ghi và thông báo cho người dùng hệ thống đang bảo trì.
+                  {t('admin.systemSettings.announcementsMaintenanceDesc')}
                 </CardDescription>
               </div>
             </div>
@@ -153,11 +155,10 @@ export function AnnouncementsTab() {
             </div>
             <div>
               <CardTitle className="text-base font-semibold">
-                Thông báo Toàn Hệ thống (System Banner)
+                {t('admin.systemSettings.announcementsBannerTitle')}
               </CardTitle>
               <CardDescription className="text-xs">
-                Nội dung thông báo nổi ghim trên đầu màn hình làm việc của toàn bộ người dùng và
-                nhân viên.
+                {t('admin.systemSettings.announcementsBannerDesc')}
               </CardDescription>
             </div>
           </div>
@@ -167,7 +168,7 @@ export function AnnouncementsTab() {
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
               <Eye className="size-3.5" />
-              <span>Xem trước trực tiếp (Live Preview)</span>
+              <span>{t('admin.systemSettings.announcementsLivePreview')}</span>
             </div>
             {bannerMessage.trim() ? (
               <div
@@ -181,7 +182,7 @@ export function AnnouncementsTab() {
               </div>
             ) : (
               <div className="flex items-center justify-center rounded-lg border border-dashed border-border py-4 text-xs text-muted-foreground">
-                Chưa có thông báo nào được đặt (Thanh thông báo đang ẩn)
+                {t('admin.systemSettings.announcementsEmpty')}
               </div>
             )}
           </div>
@@ -189,47 +190,53 @@ export function AnnouncementsTab() {
           <form onSubmit={handleSaveBanner} className="flex flex-col gap-6">
             <FieldGroup>
               <Field>
-                <FieldLabel htmlFor="banner-text">Nội dung Thông điệp</FieldLabel>
+                <FieldLabel htmlFor="banner-text">
+                  {t('admin.systemSettings.announcementsMessageLabel')}
+                </FieldLabel>
                 <Input
                   id="banner-text"
                   value={bannerMessage}
                   onChange={e => setBannerMessage(e.target.value)}
-                  placeholder="VD: Hệ thống sẽ bảo trì nâng cấp từ 01:00 đến 03:00 ngày 15/09..."
+                  placeholder={t('admin.systemSettings.announcementsMessagePlaceholder')}
                 />
                 <FieldDescription>
-                  Để trống nếu bạn muốn tắt hoàn toàn thanh thông báo nổi trên hệ thống.
+                  {t('admin.systemSettings.announcementsMessageHelp')}
                 </FieldDescription>
               </Field>
 
               <Field>
-                <FieldLabel htmlFor="banner-level">Mức độ Cảnh báo (Alert Level)</FieldLabel>
+                <FieldLabel htmlFor="banner-level">
+                  {t('admin.systemSettings.announcementsLevelLabel')}
+                </FieldLabel>
                 <Select value={bannerLevel} onValueChange={setBannerLevel}>
                   <SelectTrigger id="banner-level" className="w-full">
-                    <SelectValue placeholder="Chọn mức độ cảnh báo" />
+                    <SelectValue
+                      placeholder={t('admin.systemSettings.announcementsLevelPlaceholder')}
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="INFO">
                       <div className="flex items-center gap-2">
                         <Info className="size-3.5 text-blue-500" />
-                        <span>Thông tin (INFO - Xanh lam)</span>
+                        <span>{t('admin.systemSettings.announcementsLevelInfo')}</span>
                       </div>
                     </SelectItem>
                     <SelectItem value="WARNING">
                       <div className="flex items-center gap-2">
                         <AlertTriangle className="size-3.5 text-amber-500" />
-                        <span>Cảnh báo (WARNING - Vàng cam)</span>
+                        <span>{t('admin.systemSettings.announcementsLevelWarning')}</span>
                       </div>
                     </SelectItem>
                     <SelectItem value="CRITICAL">
                       <div className="flex items-center gap-2">
                         <Flame className="size-3.5 text-rose-500" />
-                        <span>Nghiêm trọng (CRITICAL - Đỏ)</span>
+                        <span>{t('admin.systemSettings.announcementsLevelCritical')}</span>
                       </div>
                     </SelectItem>
                   </SelectContent>
                 </Select>
                 <FieldDescription>
-                  Màu sắc và mức độ ưu tiên biểu thị cho người dùng khi xem thông báo.
+                  {t('admin.systemSettings.announcementsLevelHelp')}
                 </FieldDescription>
               </Field>
             </FieldGroup>
@@ -245,7 +252,7 @@ export function AnnouncementsTab() {
                 ) : (
                   <Save className="size-4" />
                 )}
-                <span>Lưu Thông báo Hệ thống</span>
+                <span>{t('admin.systemSettings.announcementsSaveButton')}</span>
               </Button>
             </div>
           </form>

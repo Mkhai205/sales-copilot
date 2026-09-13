@@ -21,6 +21,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { useI18n } from '@/lib/i18n';
 
 interface VietQrDialogProps {
   open: boolean;
@@ -29,6 +30,7 @@ interface VietQrDialogProps {
 }
 
 export function VietQrDialog({ open, onOpenChange, qrData }: VietQrDialogProps) {
+  const { t } = useI18n();
   const [copiedField, setCopiedField] = React.useState<string | null>(null);
 
   if (!qrData) return null;
@@ -36,7 +38,7 @@ export function VietQrDialog({ open, onOpenChange, qrData }: VietQrDialogProps) 
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
     setCopiedField(label);
-    toast.success(`Đã sao chép ${label}: ${text}`);
+    toast.success(t('pos.vietQr.copiedSuccess', { label, text }));
     setTimeout(() => {
       setCopiedField(null);
     }, 2000);
@@ -54,10 +56,10 @@ export function VietQrDialog({ open, onOpenChange, qrData }: VietQrDialogProps) 
         <DialogHeader className="text-center sm:text-center">
           <DialogTitle className="text-base font-bold flex items-center justify-center gap-2">
             <QrCode className="size-5 text-primary" />
-            Thanh toán VietQR Napas 247
+            {t('pos.vietQr.napasTitle')}
           </DialogTitle>
           <DialogDescription className="text-xs text-muted-foreground">
-            Quét mã qua ứng dụng ngân hàng hoặc ví điện tử bất kỳ
+            {t('pos.vietQr.napasSubtitle')}
           </DialogDescription>
         </DialogHeader>
 
@@ -65,7 +67,7 @@ export function VietQrDialog({ open, onOpenChange, qrData }: VietQrDialogProps) 
         <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-white border border-border/80 shadow-inner max-w-[260px] mx-auto w-full">
           <img
             src={qrData.qrUrl}
-            alt={`VietQR đơn hàng #${qrData.displayId}`}
+            alt={t('pos.vietQr.orderQrAlt', { id: qrData.displayId })}
             className="w-full h-auto aspect-square object-contain rounded-lg"
           />
           <span className="text-[10px] text-gray-500 font-medium mt-1">NAPAS 247 • VIETQR</span>
@@ -77,7 +79,7 @@ export function VietQrDialog({ open, onOpenChange, qrData }: VietQrDialogProps) 
           <div className="flex items-center justify-between">
             <span className="text-muted-foreground flex items-center gap-1.5">
               <Building2 className="size-3.5" />
-              Ngân hàng:
+              {t('pos.vietQr.bankLabel')}
             </span>
             <span className="font-semibold text-foreground">
               {qrData.bankName} {qrData.bankCode ? `(${qrData.bankCode})` : ''}
@@ -88,7 +90,7 @@ export function VietQrDialog({ open, onOpenChange, qrData }: VietQrDialogProps) 
           <div className="flex items-center justify-between">
             <span className="text-muted-foreground flex items-center gap-1.5">
               <CreditCard className="size-3.5" />
-              Số tài khoản:
+              {t('pos.vietQr.accountNumberLabel')}
             </span>
             <div className="flex items-center gap-1.5">
               <span className="font-mono font-bold text-foreground text-sm">
@@ -99,9 +101,14 @@ export function VietQrDialog({ open, onOpenChange, qrData }: VietQrDialogProps) 
                 variant="ghost"
                 size="icon"
                 className="size-6 text-muted-foreground hover:text-foreground"
-                onClick={() => copyToClipboard(qrData.accountNumber, 'Số tài khoản')}
+                onClick={() =>
+                  copyToClipboard(
+                    qrData.accountNumber,
+                    t('pos.vietQr.accountNumberLabel').replace(':', ''),
+                  )
+                }
               >
-                {copiedField === 'Số tài khoản' ? (
+                {copiedField === t('pos.vietQr.accountNumberLabel').replace(':', '') ? (
                   <Check className="size-3.5 text-emerald-600" />
                 ) : (
                   <Copy className="size-3.5" />
@@ -112,7 +119,7 @@ export function VietQrDialog({ open, onOpenChange, qrData }: VietQrDialogProps) 
 
           {/* Account Name */}
           <div className="flex items-center justify-between">
-            <span className="text-muted-foreground">Chủ tài khoản:</span>
+            <span className="text-muted-foreground">{t('pos.vietQr.accountHolder')}:</span>
             <span className="font-bold text-foreground uppercase">{qrData.accountName}</span>
           </div>
 
@@ -120,7 +127,7 @@ export function VietQrDialog({ open, onOpenChange, qrData }: VietQrDialogProps) 
           <div className="flex items-center justify-between border-t border-border/60 pt-1.5">
             <span className="text-muted-foreground flex items-center gap-1.5">
               <DollarSign className="size-3.5" />
-              Số tiền:
+              {t('pos.vietQr.amountLabel')}
             </span>
             <div className="flex items-center gap-1.5">
               <span className="font-bold text-primary text-sm">{formattedAmount}</span>
@@ -129,9 +136,14 @@ export function VietQrDialog({ open, onOpenChange, qrData }: VietQrDialogProps) 
                 variant="ghost"
                 size="icon"
                 className="size-6 text-muted-foreground hover:text-foreground"
-                onClick={() => copyToClipboard(qrData.amount.toString(), 'Số tiền')}
+                onClick={() =>
+                  copyToClipboard(
+                    qrData.amount.toString(),
+                    t('pos.vietQr.amountLabel').replace(':', ''),
+                  )
+                }
               >
-                {copiedField === 'Số tiền' ? (
+                {copiedField === t('pos.vietQr.amountLabel').replace(':', '') ? (
                   <Check className="size-3.5 text-emerald-600" />
                 ) : (
                   <Copy className="size-3.5" />
@@ -144,7 +156,7 @@ export function VietQrDialog({ open, onOpenChange, qrData }: VietQrDialogProps) 
           <div className="flex items-center justify-between border-t border-border/60 pt-1.5">
             <span className="text-muted-foreground flex items-center gap-1.5">
               <FileText className="size-3.5" />
-              Nội dung CK:
+              {t('pos.vietQr.memoLabel')}
             </span>
             <div className="flex items-center gap-1.5">
               <span className="font-mono font-bold text-amber-600 dark:text-amber-400">
@@ -155,9 +167,9 @@ export function VietQrDialog({ open, onOpenChange, qrData }: VietQrDialogProps) 
                 variant="ghost"
                 size="icon"
                 className="size-6 text-muted-foreground hover:text-foreground"
-                onClick={() => copyToClipboard(qrData.memo, 'Nội dung chuyển khoản')}
+                onClick={() => copyToClipboard(qrData.memo, t('pos.vietQr.transferContent'))}
               >
-                {copiedField === 'Nội dung chuyển khoản' ? (
+                {copiedField === t('pos.vietQr.transferContent') ? (
                   <Check className="size-3.5 text-emerald-600" />
                 ) : (
                   <Copy className="size-3.5" />
@@ -177,7 +189,7 @@ export function VietQrDialog({ open, onOpenChange, qrData }: VietQrDialogProps) 
             onClick={() => window.open(qrData.qrUrl, '_blank')}
           >
             <ExternalLink className="size-3.5" />
-            Mở ảnh lớn
+            {t('pos.vietQr.openLargeImage')}
           </Button>
 
           <Button
@@ -187,7 +199,7 @@ export function VietQrDialog({ open, onOpenChange, qrData }: VietQrDialogProps) 
             className="text-xs h-8 px-4"
             onClick={() => onOpenChange(false)}
           >
-            Hoàn tất
+            {t('pos.vietQr.done')}
           </Button>
         </div>
       </DialogContent>

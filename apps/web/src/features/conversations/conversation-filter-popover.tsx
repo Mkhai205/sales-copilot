@@ -460,7 +460,7 @@ export function ConversationFilterPopover({
                 <Search className="size-3 text-muted-foreground shrink-0" />
                 <input
                   type="text"
-                  placeholder="Tìm theo tên kênh hoặc loại..."
+                  placeholder={t('conversations.popover.searchChannel')}
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
                   className="w-full bg-transparent text-xs text-foreground placeholder:text-muted-foreground/70 focus:outline-none"
@@ -628,7 +628,7 @@ export function ConversationFilterPopover({
                 <Search className="size-3 text-muted-foreground shrink-0" />
                 <input
                   type="text"
-                  placeholder="Tìm kiếm nhãn..."
+                  placeholder={t('conversations.popover.searchLabel')}
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
                   className="w-full bg-transparent text-xs text-foreground placeholder:text-muted-foreground/70 focus:outline-none"
@@ -734,7 +734,7 @@ export function ConversationFilterPopover({
                 <Search className="size-3 text-muted-foreground shrink-0" />
                 <input
                   type="text"
-                  placeholder="Tìm nhân viên theo tên, email..."
+                  placeholder={t('conversations.popover.searchAssignee')}
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
                   className="w-full bg-transparent text-xs text-foreground placeholder:text-muted-foreground/70 focus:outline-none"
@@ -773,7 +773,8 @@ export function ConversationFilterPopover({
 
               {filteredMembers.map(member => {
                 const isSelected = filters.assigneeId === member.user?.id;
-                const name = member.user?.name || member.user?.email || 'Thành viên';
+                const name =
+                  member.user?.name || member.user?.email || t('conversations.chips.member');
                 return (
                   <button
                     key={member.id}

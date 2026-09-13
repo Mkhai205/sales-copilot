@@ -11,8 +11,10 @@ import { getSettingValue, parseSettingNumber } from '../utils/settings-helpers';
 import { Scale, Save, Loader2, Users, Radio, HardDrive, Cpu } from 'lucide-react';
 import { SystemSettingCategory } from '@sales-copilot/shared-contracts';
 import { toast } from 'sonner';
+import { useI18n } from '@/lib/i18n';
 
 export function QuotasTab() {
+  const { t } = useI18n();
   const { data: settings, isLoading } = useSystemSettings(SystemSettingCategory.BILLING);
   const updateMutation = useUpdateSystemSetting();
 
@@ -54,22 +56,22 @@ export function QuotasTab() {
       const tokens = Number(aiTokens);
 
       if (Number.isNaN(agents) || agents < 1) {
-        toast.error('Số nhân viên tối đa phải là số nguyên lớn hơn 0');
+        toast.error(t('admin.systemSettings.quotasErrAgents'));
         setIsSaving(false);
         return;
       }
       if (Number.isNaN(channels) || channels < 1) {
-        toast.error('Số kênh kết nối tối đa phải là số nguyên lớn hơn 0');
+        toast.error(t('admin.systemSettings.quotasErrChannels'));
         setIsSaving(false);
         return;
       }
       if (Number.isNaN(storage) || storage < 50) {
-        toast.error('Dung lượng lưu trữ tối thiểu là 50 MB');
+        toast.error(t('admin.systemSettings.quotasErrStorage'));
         setIsSaving(false);
         return;
       }
       if (Number.isNaN(tokens) || tokens < 0) {
-        toast.error('Hạn mức AI tokens không được âm');
+        toast.error(t('admin.systemSettings.quotasErrTokens'));
         setIsSaving(false);
         return;
       }
@@ -96,7 +98,7 @@ export function QuotasTab() {
           silent: true,
         }),
       ]);
-      toast.success('Cập nhật hạn mức Quota thành công');
+      toast.success(t('admin.systemSettings.saveQuotasSuccess'));
     } catch {
       // Handled by mutation hook toast
     } finally {
@@ -126,11 +128,10 @@ export function QuotasTab() {
           </div>
           <div>
             <CardTitle className="text-base font-semibold">
-              Hạn mức Mặc định Gói Khởi đầu (FREE Tier Quotas)
+              {t('admin.systemSettings.quotasTitle')}
             </CardTitle>
             <CardDescription className="text-xs">
-              Quy định tài nguyên tối đa được cấp phát tự động cho một Workspace mới đăng ký gói
-              miễn phí.
+              {t('admin.systemSettings.quotasDesc')}
             </CardDescription>
           </div>
         </div>
@@ -142,7 +143,9 @@ export function QuotasTab() {
             <Field>
               <div className="flex items-center gap-2">
                 <Users className="size-3.5 text-muted-foreground" />
-                <FieldLabel htmlFor="quota-agents">Số lượng Nhân viên Bán hàng tối đa</FieldLabel>
+                <FieldLabel htmlFor="quota-agents">
+                  {t('admin.systemSettings.quotasAgentsLabel')}
+                </FieldLabel>
               </div>
               <Input
                 id="quota-agents"
@@ -152,16 +155,16 @@ export function QuotasTab() {
                 value={maxAgents}
                 onChange={e => setMaxAgents(e.target.value)}
               />
-              <FieldDescription>
-                Tổng số tài khoản thành viên (Owner, Admin, Agent) được phép mời vào workspace.
-              </FieldDescription>
+              <FieldDescription>{t('admin.systemSettings.quotasAgentsHelp')}</FieldDescription>
             </Field>
 
             {/* Max Channels */}
             <Field>
               <div className="flex items-center gap-2">
                 <Radio className="size-3.5 text-muted-foreground" />
-                <FieldLabel htmlFor="quota-channels">Số lượng Kênh Liên lạc Tích hợp</FieldLabel>
+                <FieldLabel htmlFor="quota-channels">
+                  {t('admin.systemSettings.quotasChannelsLabel')}
+                </FieldLabel>
               </div>
               <Input
                 id="quota-channels"
@@ -171,16 +174,16 @@ export function QuotasTab() {
                 value={maxChannels}
                 onChange={e => setMaxChannels(e.target.value)}
               />
-              <FieldDescription>
-                Số lượng kênh Fanpage, Zalo OA hoặc Livechat widget được kết nối đồng thời.
-              </FieldDescription>
+              <FieldDescription>{t('admin.systemSettings.quotasChannelsHelp')}</FieldDescription>
             </Field>
 
             {/* Storage MB */}
             <Field>
               <div className="flex items-center gap-2">
                 <HardDrive className="size-3.5 text-muted-foreground" />
-                <FieldLabel htmlFor="quota-storage">Dung lượng Tệp Đính kèm (MB)</FieldLabel>
+                <FieldLabel htmlFor="quota-storage">
+                  {t('admin.systemSettings.quotasStorageLabel')}
+                </FieldLabel>
               </div>
               <Input
                 id="quota-storage"
@@ -190,16 +193,16 @@ export function QuotasTab() {
                 value={storageMb}
                 onChange={e => setStorageMb(e.target.value)}
               />
-              <FieldDescription>
-                Tổng dung lượng lưu trữ hình ảnh sản phẩm, ảnh chat và tệp tài liệu trên MinIO S3.
-              </FieldDescription>
+              <FieldDescription>{t('admin.systemSettings.quotasStorageHelp')}</FieldDescription>
             </Field>
 
             {/* AI Tokens */}
             <Field>
               <div className="flex items-center gap-2">
                 <Cpu className="size-3.5 text-muted-foreground" />
-                <FieldLabel htmlFor="quota-tokens">Hạn mức AI Tokens hàng tháng</FieldLabel>
+                <FieldLabel htmlFor="quota-tokens">
+                  {t('admin.systemSettings.quotasTokensLabel')}
+                </FieldLabel>
               </div>
               <Input
                 id="quota-tokens"
@@ -209,17 +212,14 @@ export function QuotasTab() {
                 value={aiTokens}
                 onChange={e => setAiTokens(e.target.value)}
               />
-              <FieldDescription>
-                Số lượng token AI tối đa được cấp để trợ lý chốt đơn và trích xuất địa chỉ NER mỗi
-                tháng.
-              </FieldDescription>
+              <FieldDescription>{t('admin.systemSettings.quotasTokensHelp')}</FieldDescription>
             </Field>
           </FieldGroup>
 
           <div className="flex justify-end pt-2">
             <Button type="submit" disabled={isSaving || updateMutation.isPending} className="gap-2">
               {isSaving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
-              <span>Lưu Hạn mức Quota</span>
+              <span>{t('admin.systemSettings.quotasSaveButton')}</span>
             </Button>
           </div>
         </form>

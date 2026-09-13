@@ -4,6 +4,7 @@ import * as React from 'react';
 import { CarrierNetwork, detectCarrierNetwork } from '@sales-copilot/shared-contracts';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/lib/i18n';
 
 interface CarrierBadgeProps {
   phone?: string;
@@ -42,7 +43,7 @@ const CARRIER_CONFIG: Record<CarrierNetwork, { label: string; className: string 
     className: 'bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/20',
   },
   [CarrierNetwork.OTHER]: {
-    label: 'Khác',
+    label: 'Other',
     className: 'bg-muted text-muted-foreground border-border',
   },
 };
@@ -53,6 +54,7 @@ export function CarrierBadge({
   className,
   showOther = false,
 }: CarrierBadgeProps) {
+  const { t } = useI18n();
   const resolvedCarrier = React.useMemo<CarrierNetwork>(() => {
     if (explicitCarrier) return explicitCarrier;
     if (phone) return detectCarrierNetwork(phone);
@@ -64,6 +66,7 @@ export function CarrierBadge({
   }
 
   const config = CARRIER_CONFIG[resolvedCarrier] || CARRIER_CONFIG[CarrierNetwork.OTHER];
+  const label = resolvedCarrier === CarrierNetwork.OTHER ? t('common.other') : config.label;
 
   return (
     <Badge
@@ -74,7 +77,7 @@ export function CarrierBadge({
         className,
       )}
     >
-      {config.label}
+      {label}
     </Badge>
   );
 }

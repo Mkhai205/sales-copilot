@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { VietQrDialog } from './vietqr-dialog';
+import { useI18n } from '@/lib/i18n';
 
 interface VietQrChatCardProps {
   qrData: VietQrResponseDto;
@@ -28,6 +29,7 @@ interface VietQrChatCardProps {
 }
 
 export function VietQrChatCard({ qrData, isPaid = false }: VietQrChatCardProps) {
+  const { t } = useI18n();
   const [copiedField, setCopiedField] = React.useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
   const [localPaid, setLocalPaid] = React.useState(isPaid);
@@ -49,7 +51,7 @@ export function VietQrChatCard({ qrData, isPaid = false }: VietQrChatCardProps) 
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
     setCopiedField(label);
-    toast.success(`Đã sao chép ${label}: ${text}`);
+    toast.success(t('pos.vietQr.copiedSuccess', { label, text }));
     setTimeout(() => {
       setCopiedField(null);
     }, 2000);
@@ -70,7 +72,7 @@ export function VietQrChatCard({ qrData, isPaid = false }: VietQrChatCardProps) 
             <div className="size-5 rounded bg-primary/10 flex items-center justify-center text-primary">
               <QrCode className="size-3.5" />
             </div>
-            <span>VietQR Thanh toán</span>
+            <span>{t('pos.vietQr.cardTitle')}</span>
             <span className="text-muted-foreground font-normal">#{qrData.displayId}</span>
           </div>
 
@@ -78,7 +80,7 @@ export function VietQrChatCard({ qrData, isPaid = false }: VietQrChatCardProps) 
           {isActuallyPaid ? (
             <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
               <CheckCircle2 className="size-3" />
-              Đã thanh toán
+              {t('pos.payment.paid')}
             </span>
           ) : (
             <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-medium text-amber-600 dark:text-amber-400">
@@ -86,7 +88,7 @@ export function VietQrChatCard({ qrData, isPaid = false }: VietQrChatCardProps) 
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full size-1.5 bg-amber-500"></span>
               </span>
-              Chờ thanh toán
+              {t('pos.payment.unpaid')}
             </span>
           )}
         </div>
@@ -97,7 +99,7 @@ export function VietQrChatCard({ qrData, isPaid = false }: VietQrChatCardProps) 
           <div
             onClick={() => setIsDialogOpen(true)}
             className="group/qr relative shrink-0 cursor-pointer rounded-lg border border-border/80 bg-white p-1.5 shadow-2xs hover:shadow-xs transition-all w-24 h-24 flex items-center justify-center"
-            title="Bấm để phóng to mã QR"
+            title={t('pos.vietQr.clickToEnlarge')}
           >
             <img
               src={qrData.qrUrl}
@@ -127,10 +129,15 @@ export function VietQrChatCard({ qrData, isPaid = false }: VietQrChatCardProps) 
                 variant="ghost"
                 size="icon"
                 className="size-5 shrink-0 text-muted-foreground hover:text-foreground"
-                onClick={() => copyToClipboard(qrData.accountNumber, 'Số tài khoản')}
-                title="Sao chép số tài khoản"
+                onClick={() =>
+                  copyToClipboard(
+                    qrData.accountNumber,
+                    t('pos.vietQr.accountNumberLabel').replace(':', ''),
+                  )
+                }
+                title={t('pos.vietQr.copyAccount')}
               >
-                {copiedField === 'Số tài khoản' ? (
+                {copiedField === t('pos.vietQr.accountNumberLabel').replace(':', '') ? (
                   <Check className="size-3 text-emerald-600" />
                 ) : (
                   <Copy className="size-3" />
@@ -149,10 +156,15 @@ export function VietQrChatCard({ qrData, isPaid = false }: VietQrChatCardProps) 
                 variant="ghost"
                 size="icon"
                 className="size-5 shrink-0 text-muted-foreground hover:text-foreground"
-                onClick={() => copyToClipboard(qrData.amount.toString(), 'Số tiền')}
-                title="Sao chép số tiền"
+                onClick={() =>
+                  copyToClipboard(
+                    qrData.amount.toString(),
+                    t('pos.vietQr.amountLabel').replace(':', ''),
+                  )
+                }
+                title={t('pos.vietQr.copyAmount')}
               >
-                {copiedField === 'Số tiền' ? (
+                {copiedField === t('pos.vietQr.amountLabel').replace(':', '') ? (
                   <Check className="size-3 text-emerald-600" />
                 ) : (
                   <Copy className="size-3" />
@@ -165,7 +177,7 @@ export function VietQrChatCard({ qrData, isPaid = false }: VietQrChatCardProps) 
         {/* Memo Row */}
         <div className="flex items-center justify-between rounded bg-muted/50 px-2.5 py-1.5 text-[11px] border border-border/60">
           <div className="flex items-center gap-1.5 truncate">
-            <span className="text-muted-foreground shrink-0">Nội dung:</span>
+            <span className="text-muted-foreground shrink-0">{t('pos.vietQr.memoShort')}</span>
             <span className="font-mono font-bold text-amber-600 dark:text-amber-400 truncate">
               {qrData.memo}
             </span>
@@ -176,10 +188,10 @@ export function VietQrChatCard({ qrData, isPaid = false }: VietQrChatCardProps) 
             variant="ghost"
             size="icon"
             className="size-5 shrink-0 text-muted-foreground hover:text-foreground ml-1"
-            onClick={() => copyToClipboard(qrData.memo, 'Nội dung chuyển khoản')}
-            title="Sao chép nội dung"
+            onClick={() => copyToClipboard(qrData.memo, t('pos.vietQr.transferContent'))}
+            title={t('pos.vietQr.copyMemo')}
           >
-            {copiedField === 'Nội dung chuyển khoản' ? (
+            {copiedField === t('pos.vietQr.transferContent') ? (
               <Check className="size-3 text-emerald-600" />
             ) : (
               <Copy className="size-3" />
@@ -197,7 +209,7 @@ export function VietQrChatCard({ qrData, isPaid = false }: VietQrChatCardProps) 
             onClick={() => setIsDialogOpen(true)}
           >
             <Maximize2 className="size-3" />
-            Xem mã QR lớn & chi tiết
+            {t('pos.vietQr.viewDetails')}
           </Button>
         </div>
       </div>

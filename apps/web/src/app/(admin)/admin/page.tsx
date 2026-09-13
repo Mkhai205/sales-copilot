@@ -8,8 +8,10 @@ import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { usePlatformMetricsOverview } from '@/features/platform-admin/overview/hooks/use-platform-metrics';
 import { KpiMetricCards } from '@/features/platform-admin/overview/components/kpi-metric-cards';
 import { QuickShortcuts } from '@/features/platform-admin/overview/components/quick-shortcuts';
+import { useI18n } from '@/lib/i18n';
 
 export default function AdminOverviewPage() {
+  const { t } = useI18n();
   const {
     data: metrics,
     isLoading,
@@ -25,12 +27,9 @@ export default function AdminOverviewPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex flex-col gap-1">
           <h1 className="text-2xl font-bold tracking-tight text-foreground">
-            Trung tâm Quản trị Cấp cao
+            {t('admin.overview.centerTitle')}
           </h1>
-          <p className="text-sm text-muted-foreground">
-            Quản trị nền tảng SaaS Sales Copilot, cấu hình động thời gian thực và giám sát hoạt
-            động.
-          </p>
+          <p className="text-sm text-muted-foreground">{t('admin.overview.centerSubtitle')}</p>
         </div>
 
         <div className="flex items-center gap-2 self-start sm:self-auto">
@@ -42,7 +41,7 @@ export default function AdminOverviewPage() {
             className="gap-2 text-xs"
           >
             <RefreshCw className={isFetching ? 'size-3.5 animate-spin' : 'size-3.5'} />
-            <span>Làm mới</span>
+            <span>{t('common.refresh')}</span>
           </Button>
         </div>
       </div>
@@ -87,15 +86,14 @@ export default function AdminOverviewPage() {
         <Alert variant="destructive" className="flex flex-col gap-2 p-4">
           <div className="flex items-center gap-2">
             <AlertCircle className="size-4" />
-            <AlertTitle>Không thể tải dữ liệu chỉ số tổng quan</AlertTitle>
+            <AlertTitle>{t('admin.overview.loadMetricsFailed')}</AlertTitle>
           </div>
           <AlertDescription className="mt-1">
-            {error?.message ||
-              'Đã có lỗi xảy ra khi kết nối tới dịch vụ quản trị nền tảng. Vui lòng thử lại.'}
+            {error?.message || t('admin.overview.connectError')}
           </AlertDescription>
           <div className="mt-2">
             <Button variant="outline" size="sm" onClick={() => refetch()} className="text-xs">
-              Thử lại
+              {t('common.retry')}
             </Button>
           </div>
         </Alert>
@@ -107,7 +105,7 @@ export default function AdminOverviewPage() {
           {/* Quick Navigation Shortcuts */}
           <div className="flex flex-col gap-3 pt-2">
             <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-              Lối tắt Truy cập Nhanh
+              {t('admin.overview.quickShortcutsTitle')}
             </h2>
             <QuickShortcuts />
           </div>

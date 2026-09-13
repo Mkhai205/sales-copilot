@@ -120,9 +120,9 @@ export function ConversationActiveChips({
         {/* Inbox / Channel Chip */}
         {filters.inboxId && (
           <span className="inline-flex items-center gap-1 rounded-md bg-background px-2 py-0.5 font-medium text-foreground border border-border/60 shadow-2xs">
-            <span className="text-muted-foreground">Kênh:</span>
+            <span className="text-muted-foreground">{t('conversations.chips.channel')}</span>
             <span className="font-semibold text-primary">
-              {activeInbox ? activeInbox.name : 'Hộp thư'}
+              {activeInbox ? activeInbox.name : t('conversations.card.inboxFallback')}
             </span>
             <button
               type="button"
@@ -164,7 +164,7 @@ export function ConversationActiveChips({
         {/* Label Chip */}
         {filters.labelId && (
           <span className="inline-flex items-center gap-1 rounded-md bg-background px-2 py-0.5 font-medium text-foreground border border-border/60 shadow-2xs">
-            <span className="text-muted-foreground">Nhãn:</span>
+            <span className="text-muted-foreground">{t('conversations.chips.label')}</span>
             {activeLabel && (
               <span
                 className="size-2 rounded-full shrink-0"
@@ -172,7 +172,7 @@ export function ConversationActiveChips({
               />
             )}
             <span className="font-semibold text-primary">
-              {activeLabel ? activeLabel.title : 'Nhãn'}
+              {activeLabel ? activeLabel.title : t('conversations.actions.labels')}
             </span>
             <button
               type="button"
@@ -188,9 +188,11 @@ export function ConversationActiveChips({
         {/* Assignee Chip */}
         {filters.assigneeId && (
           <span className="inline-flex items-center gap-1 rounded-md bg-background px-2 py-0.5 font-medium text-foreground border border-border/60 shadow-2xs">
-            <span className="text-muted-foreground">Phụ trách:</span>
+            <span className="text-muted-foreground">{t('conversations.chips.assignee')}</span>
             <span className="font-semibold text-primary">
-              {activeMember?.user?.name || activeMember?.user?.email || 'Thành viên'}
+              {activeMember?.user?.name ||
+                activeMember?.user?.email ||
+                t('conversations.chips.member')}
             </span>
             <button
               type="button"

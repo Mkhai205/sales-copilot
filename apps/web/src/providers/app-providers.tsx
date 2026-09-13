@@ -6,11 +6,16 @@ import { QueryProvider } from './query-provider';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { Toaster } from '@/components/ui/sonner';
 
-import { I18nProvider } from '@/lib/i18n';
+import { I18nProvider, type Locale } from '@/lib/i18n';
 
-export function AppProviders({ children }: { children: React.ReactNode }) {
+export interface AppProvidersProps {
+  children: React.ReactNode;
+  initialLocale?: Locale;
+}
+
+export function AppProviders({ children, initialLocale }: AppProvidersProps) {
   return (
-    <I18nProvider>
+    <I18nProvider initialLocale={initialLocale}>
       <ThemeProvider
         attribute="class"
         defaultTheme="dark"

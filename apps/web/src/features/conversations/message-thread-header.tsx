@@ -191,7 +191,9 @@ export function MessageThreadHeader({
             </Button>
           </TooltipTrigger>
           <TooltipContent side="bottom">
-            {isDetailOpen ? 'Ẩn thông tin liên hệ' : 'Hiện thông tin liên hệ'}
+            {isDetailOpen
+              ? t('conversations.details.hideContactInfo')
+              : t('conversations.details.showContactInfo')}
           </TooltipContent>
         </Tooltip>
       </div>

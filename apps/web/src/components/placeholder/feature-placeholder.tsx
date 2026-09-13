@@ -1,3 +1,5 @@
+'use client';
+
 import * as React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,6 +22,8 @@ export interface FeaturePlaceholderProps {
   onAction?: () => void;
 }
 
+import { useI18n } from '@/lib/i18n';
+
 export function FeaturePlaceholder({
   title,
   subtitle,
@@ -29,6 +33,8 @@ export function FeaturePlaceholder({
   actionLabel,
   onAction,
 }: FeaturePlaceholderProps) {
+  const { t } = useI18n();
+
   return (
     <div className="flex h-full w-full flex-col overflow-y-auto bg-muted/20 p-6 md:p-8">
       {/* Header section */}
@@ -76,7 +82,7 @@ export function FeaturePlaceholder({
                       className="text-xs text-emerald-600 bg-emerald-500/10 border-emerald-500/20 gap-1"
                     >
                       <CheckCircle2 className="size-3" />
-                      Đã sẵn sàng
+                      {t('placeholders.statusReady')}
                     </Badge>
                   )}
                   {feature.status === 'in_progress' && (
@@ -85,12 +91,12 @@ export function FeaturePlaceholder({
                       className="text-xs text-amber-600 bg-amber-500/10 border-amber-500/20 gap-1"
                     >
                       <Clock className="size-3" />
-                      Đang hoàn thiện
+                      {t('placeholders.statusInProgress')}
                     </Badge>
                   )}
                   {feature.status === 'planned' && (
                     <Badge variant="secondary" className="text-xs text-muted-foreground">
-                      Kế hoạch
+                      {t('placeholders.statusPlanned')}
                     </Badge>
                   )}
                 </div>
@@ -106,9 +112,10 @@ export function FeaturePlaceholder({
         <div className="rounded-lg border border-border/80 bg-background/80 p-4 shadow-xs backdrop-blur-xs flex items-start gap-3">
           <div className="size-2 rounded-full bg-primary mt-1.5 shrink-0" />
           <div className="text-xs text-muted-foreground leading-relaxed">
-            <span className="font-semibold text-foreground">Kết nối đa kênh thời gian thực:</span>{' '}
-            Dữ liệu trên module này được đồng bộ tức thì với các hội thoại bán hàng qua Socket.io và
-            cơ chế khóa chống bán âm kho (Atomic Reservation).
+            <span className="font-semibold text-foreground">
+              {t('placeholders.realtimeSyncTitle')}
+            </span>{' '}
+            {t('placeholders.realtimeSyncDesc')}
           </div>
         </div>
       </div>

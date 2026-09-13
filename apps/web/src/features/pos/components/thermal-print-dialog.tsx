@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { posApi } from '../api/pos-client';
 import { ThermalWaybillK80 } from './thermal-waybill-k80';
 import { ThermalReceiptK58 } from './thermal-receipt-k58';
+import { useI18n } from '@/lib/i18n';
 
 interface ThermalPrintDialogProps {
   open: boolean;
@@ -31,6 +32,7 @@ export function ThermalPrintDialog({
   orderId,
   defaultFormat = 'K80',
 }: ThermalPrintDialogProps) {
+  const { t } = useI18n();
   const [paperFormat, setPaperFormat] = React.useState<'K80' | 'K58'>(defaultFormat);
 
   React.useEffect(() => {
@@ -145,16 +147,16 @@ export function ThermalPrintDialog({
         <DialogHeader className="text-left">
           <DialogTitle className="text-base font-bold flex items-center gap-2">
             <Printer className="size-5 text-primary" />
-            In phiếu nhiệt (K80 / K58)
+            {t('pos.print.dialogTitle')}
           </DialogTitle>
           <DialogDescription className="text-xs text-muted-foreground">
-            Bản in tối ưu hóa vạch Code128 vector không khử răng cưa cho đầu in nhiệt 203 DPI
+            {t('pos.print.dialogDesc')}
           </DialogDescription>
         </DialogHeader>
 
         {/* Format Selector */}
         <div className="flex items-center justify-between bg-muted/40 p-1.5 rounded-lg border">
-          <span className="text-xs font-medium pl-1">Khổ giấy in:</span>
+          <span className="text-xs font-medium pl-1">{t('pos.print.paperFormat')}</span>
           <div className="flex gap-1">
             <Button
               type="button"
@@ -163,7 +165,7 @@ export function ThermalPrintDialog({
               className="h-7 text-xs px-2.5"
               onClick={() => setPaperFormat('K80')}
             >
-              Phiếu giao hàng (K80)
+              {t('pos.print.formatK80')}
             </Button>
             <Button
               type="button"
@@ -172,7 +174,7 @@ export function ThermalPrintDialog({
               className="h-7 text-xs px-2.5"
               onClick={() => setPaperFormat('K58')}
             >
-              Hóa đơn mini (K58)
+              {t('pos.print.formatK58')}
             </Button>
           </div>
         </div>
@@ -211,12 +213,12 @@ export function ThermalPrintDialog({
           {isLoading ? (
             <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground py-12">
               <Loader2 className="size-6 animate-spin" />
-              <span className="text-xs">Đang tải dữ liệu phiếu in...</span>
+              <span className="text-xs">{t('pos.print.loading')}</span>
             </div>
           ) : error || !labelData ? (
             <div className="flex flex-col items-center justify-center gap-1 text-destructive py-12 text-center">
-              <span className="text-xs font-medium">Không thể lấy thông tin phiếu in</span>
-              <span className="text-[11px] text-muted-foreground">Vui lòng thử lại sau</span>
+              <span className="text-xs font-medium">{t('pos.print.error')}</span>
+              <span className="text-[11px] text-muted-foreground">{t('pos.print.retryLater')}</span>
             </div>
           ) : (
             <div id="thermal-printable-area" className="shadow-sm">
@@ -232,11 +234,11 @@ export function ThermalPrintDialog({
         <DialogFooter className="flex items-center justify-between sm:justify-between gap-2 pt-1 border-t">
           <div className="text-[11px] text-muted-foreground flex items-center gap-1">
             <CheckCircle2 className="size-3.5 text-emerald-600" />
-            Trình duyệt Chrome / Edge tự ngắt trang
+            {t('pos.print.pageBreakNotice')}
           </div>
           <div className="flex gap-2">
             <Button type="button" variant="outline" size="sm" onClick={() => onOpenChange(false)}>
-              Đóng
+              {t('common.close')}
             </Button>
             <Button
               type="button"
@@ -246,7 +248,7 @@ export function ThermalPrintDialog({
               className="gap-1.5"
             >
               <Printer className="size-4" />
-              In ngay
+              {t('pos.print.printNow')}
             </Button>
           </div>
         </DialogFooter>

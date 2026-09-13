@@ -11,6 +11,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { usePlatformWorkspaceDetail } from '../hooks/use-platform-workspaces';
 import { WorkspaceDetailView } from './workspace-detail-view';
+import { useI18n } from '@/lib/i18n';
 
 export interface WorkspaceDetailModalProps {
   workspaceId: string | null;
@@ -23,6 +24,7 @@ export function WorkspaceDetailModal({
   open,
   onOpenChange,
 }: WorkspaceDetailModalProps) {
+  const { t } = useI18n();
   const {
     data: workspace,
     isLoading,
@@ -35,10 +37,10 @@ export function WorkspaceDetailModal({
       <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto sm:max-w-4xl p-6">
         <DialogHeader className="pb-2">
           <DialogTitle className="text-base font-semibold">
-            Chi tiết Workspace & Hạn mức Quota
+            {t('admin.workspaces.detailModalTitle')}
           </DialogTitle>
           <DialogDescription className="text-xs text-muted-foreground">
-            Thông số kỹ thuật, cấu hình gói cước và mức tiêu thụ tài nguyên thực tế.
+            {t('admin.workspaces.detailModalDesc')}
           </DialogDescription>
         </DialogHeader>
 
@@ -55,7 +57,9 @@ export function WorkspaceDetailModal({
           </div>
         ) : isError ? (
           <div className="p-6 text-center text-xs text-destructive">
-            Không thể tải thông tin chi tiết: {error?.message || 'Lỗi không xác định'}
+            {t('admin.workspaces.cannotLoadWorkspace', {
+              error: error?.message || t('common.none'),
+            })}
           </div>
         ) : workspace ? (
           <WorkspaceDetailView workspace={workspace} />

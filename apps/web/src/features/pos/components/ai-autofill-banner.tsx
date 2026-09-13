@@ -4,6 +4,7 @@ import * as React from 'react';
 import type { PosDraftSuggestedEventPayload } from '@sales-copilot/shared-contracts';
 import { Sparkles, ArrowRight, X, User, Phone, MapPin, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useI18n } from '@/lib/i18n';
 
 interface AiAutofillBannerProps {
   suggestion: PosDraftSuggestedEventPayload | null;
@@ -12,6 +13,7 @@ interface AiAutofillBannerProps {
 }
 
 export function AiAutofillBanner({ suggestion, onApply, onDismiss }: AiAutofillBannerProps) {
+  const { t } = useI18n();
   if (!suggestion || suggestion.confidenceScore < 80) return null;
 
   const { suggestedCustomer, suggestedItems } = suggestion;
@@ -37,10 +39,10 @@ export function AiAutofillBanner({ suggestion, onApply, onDismiss }: AiAutofillB
           <div className="flex flex-col gap-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-xs font-bold text-foreground">
-                AI phát hiện thông tin đơn hàng
+                {t('pos.aiAutofill.detectedTitle')}
               </span>
               <span className="rounded-full bg-emerald-500/10 px-1.5 py-0.2 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
-                {suggestion.confidenceScore}% tin cậy
+                {t('pos.aiAutofill.confidence', { score: suggestion.confidenceScore })}
               </span>
             </div>
 
@@ -95,7 +97,7 @@ export function AiAutofillBanner({ suggestion, onApply, onDismiss }: AiAutofillB
             className="h-7 text-xs px-2.5 font-semibold gap-1 shadow-xs"
             onClick={() => onApply(suggestion)}
           >
-            Áp dụng vào POS (F4)
+            {t('pos.aiAutofill.applyPos')}
             <ArrowRight className="size-3" />
           </Button>
 
@@ -105,7 +107,7 @@ export function AiAutofillBanner({ suggestion, onApply, onDismiss }: AiAutofillB
             variant="ghost"
             className="size-7 text-muted-foreground hover:text-foreground"
             onClick={onDismiss}
-            title="Bỏ qua gợi ý"
+            title={t('pos.aiAutofill.dismissTitle')}
           >
             <X className="size-3.5" />
           </Button>

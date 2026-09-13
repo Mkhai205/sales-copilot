@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { BillingPlanType } from '@sales-copilot/shared-contracts';
+import { useI18n } from '@/lib/i18n';
 
 export interface WorkspaceFilterToolbarProps {
   search: string;
@@ -32,6 +33,7 @@ export function WorkspaceFilterToolbar({
   onStatusChange,
   onReset,
 }: WorkspaceFilterToolbarProps) {
+  const { t } = useI18n();
   const isFiltered = Boolean(search || plan !== 'ALL' || status !== 'ALL');
 
   return (
@@ -43,7 +45,7 @@ export function WorkspaceFilterToolbar({
           <Input
             value={search}
             onChange={e => onSearchChange(e.target.value)}
-            placeholder="Tìm theo tên shop, slug, email owner..."
+            placeholder={t('admin.workspaces.searchPlaceholder')}
             className="pl-8.5 h-8 text-xs"
           />
         </div>
@@ -51,25 +53,29 @@ export function WorkspaceFilterToolbar({
         {/* Plan Filter */}
         <Select value={plan} onValueChange={onPlanChange}>
           <SelectTrigger className="h-8 text-xs min-w-[130px]">
-            <SelectValue placeholder="Gói cước" />
+            <SelectValue placeholder={t('admin.workspaces.planFilter')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="ALL">Tất cả gói</SelectItem>
-            <SelectItem value={BillingPlanType.FREE}>Gói FREE</SelectItem>
-            <SelectItem value={BillingPlanType.STANDARD}>Gói STANDARD</SelectItem>
-            <SelectItem value={BillingPlanType.ENTERPRISE}>Gói ENTERPRISE</SelectItem>
+            <SelectItem value="ALL">{t('admin.workspaces.allPlans')}</SelectItem>
+            <SelectItem value={BillingPlanType.FREE}>{t('admin.workspaces.planFree')}</SelectItem>
+            <SelectItem value={BillingPlanType.STANDARD}>
+              {t('admin.workspaces.planStandard')}
+            </SelectItem>
+            <SelectItem value={BillingPlanType.ENTERPRISE}>
+              {t('admin.workspaces.planEnterprise')}
+            </SelectItem>
           </SelectContent>
         </Select>
 
         {/* Status Filter */}
         <Select value={status} onValueChange={onStatusChange}>
           <SelectTrigger className="h-8 text-xs min-w-[140px]">
-            <SelectValue placeholder="Trạng thái" />
+            <SelectValue placeholder={t('admin.workspaces.statusFilter')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="ALL">Tất cả trạng thái</SelectItem>
-            <SelectItem value="ACTIVE">Đang hoạt động</SelectItem>
-            <SelectItem value="SUSPENDED">Đã tạm khóa</SelectItem>
+            <SelectItem value="ALL">{t('admin.workspaces.allStatuses')}</SelectItem>
+            <SelectItem value="ACTIVE">{t('admin.workspaces.active')}</SelectItem>
+            <SelectItem value="SUSPENDED">{t('admin.workspaces.suspended')}</SelectItem>
           </SelectContent>
         </Select>
 
@@ -82,7 +88,7 @@ export function WorkspaceFilterToolbar({
             className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground gap-1.5"
           >
             <RotateCcw className="size-3.5" />
-            <span>Đặt lại</span>
+            <span>{t('admin.workspaces.resetFilters')}</span>
           </Button>
         )}
       </div>

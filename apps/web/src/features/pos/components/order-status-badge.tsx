@@ -4,6 +4,7 @@ import * as React from 'react';
 import { OrderStatus, PaymentStatus } from '@sales-copilot/shared-contracts';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/lib/i18n';
 
 export function OrderStatusBadge({
   status,
@@ -12,11 +13,13 @@ export function OrderStatusBadge({
   status: OrderStatus;
   className?: string;
 }) {
+  const { t } = useI18n();
+
   switch (status) {
     case OrderStatus.DRAFT:
       return (
         <Badge variant="secondary" className={cn('text-[11px] font-medium px-2 py-0', className)}>
-          Bản nháp
+          {t('pos.status.draft')}
         </Badge>
       );
     case OrderStatus.CONFIRMED:
@@ -28,7 +31,7 @@ export function OrderStatusBadge({
             className,
           )}
         >
-          Đã xác nhận
+          {t('pos.status.confirmed')}
         </Badge>
       );
     case OrderStatus.PAID:
@@ -40,7 +43,7 @@ export function OrderStatusBadge({
             className,
           )}
         >
-          Đã thanh toán
+          {t('pos.status.paid')}
         </Badge>
       );
     case OrderStatus.SHIPPING:
@@ -52,7 +55,7 @@ export function OrderStatusBadge({
             className,
           )}
         >
-          Đang giao
+          {t('pos.status.shipping')}
         </Badge>
       );
     case OrderStatus.COMPLETED:
@@ -64,13 +67,13 @@ export function OrderStatusBadge({
             className,
           )}
         >
-          Hoàn thành
+          {t('pos.status.completed')}
         </Badge>
       );
     case OrderStatus.CANCELLED:
       return (
         <Badge variant="destructive" className={cn('text-[11px] font-medium px-2 py-0', className)}>
-          Đã hủy
+          {t('pos.status.cancelled')}
         </Badge>
       );
     default:
@@ -89,6 +92,8 @@ export function PaymentStatusBadge({
   status: PaymentStatus;
   className?: string;
 }) {
+  const { t } = useI18n();
+
   switch (status) {
     case PaymentStatus.UNPAID:
       return (
@@ -99,7 +104,7 @@ export function PaymentStatusBadge({
             className,
           )}
         >
-          Chưa trả
+          {t('pos.payment.unpaid')}
         </Badge>
       );
     case PaymentStatus.PARTIALLY_PAID:
@@ -111,7 +116,7 @@ export function PaymentStatusBadge({
             className,
           )}
         >
-          Đã cọc
+          {t('pos.payment.partial')}
         </Badge>
       );
     case PaymentStatus.PAID:
@@ -123,7 +128,7 @@ export function PaymentStatusBadge({
             className,
           )}
         >
-          Đủ tiền
+          {t('pos.payment.paid')}
         </Badge>
       );
     case PaymentStatus.REFUNDED:
@@ -135,7 +140,7 @@ export function PaymentStatusBadge({
             className,
           )}
         >
-          Hoàn trả
+          {t('pos.payment.refunded')}
         </Badge>
       );
     default:

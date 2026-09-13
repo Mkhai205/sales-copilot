@@ -175,7 +175,7 @@ export function DetailPanel({
               />
             ) : (
               <div className="py-8 text-center text-xs text-muted-foreground">
-                Đang xác định không gian làm việc...
+                {t('conversations.details.resolvingWorkspace')}
               </div>
             )}
           </TabsContent>

@@ -13,8 +13,10 @@ import type {
   BillingPlanType,
   PlatformWorkspaceListItemDto,
 } from '@sales-copilot/shared-contracts';
+import { useI18n } from '@/lib/i18n';
 
 export default function PlatformWorkspacesPage() {
+  const { t } = useI18n();
   const [search, setSearch] = React.useState('');
   const [debouncedSearch, setDebouncedSearch] = React.useState('');
   const [plan, setPlan] = React.useState<string>('ALL');
@@ -88,13 +90,10 @@ export default function PlatformWorkspacesPage() {
               <Building2 className="size-4" />
             </div>
             <h1 className="text-xl font-bold tracking-tight text-foreground">
-              Quản trị Workspaces (Tenants)
+              {t('admin.workspaces.pageTitle')}
             </h1>
           </div>
-          <p className="text-xs text-muted-foreground">
-            Tra cứu, kiểm soát hạn mức Quota, nâng/hạ gói cước và quản lý trạng thái tạm khóa của
-            tất cả gian hàng.
-          </p>
+          <p className="text-xs text-muted-foreground">{t('admin.workspaces.pageSubtitle')}</p>
         </div>
 
         <Button
@@ -105,7 +104,7 @@ export default function PlatformWorkspacesPage() {
           className="h-8 text-xs gap-1.5"
         >
           <RefreshCw className={`size-3.5 ${isRefetching ? 'animate-spin' : ''}`} />
-          <span>Làm mới</span>
+          <span>{t('common.refresh')}</span>
         </Button>
       </div>
 

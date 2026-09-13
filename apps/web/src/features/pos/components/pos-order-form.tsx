@@ -26,6 +26,7 @@ import { OrderFinancialSummary } from './order-financial-summary';
 import { ThermalPrintDialog } from './thermal-print-dialog';
 import type { FlatProductVariant } from '../hooks/use-pos-products';
 import { posApi } from '../api/pos-client';
+import { useI18n } from '@/lib/i18n';
 
 export interface PosOrderFormProps {
   workspaceId: string;
@@ -52,6 +53,7 @@ export function PosOrderForm({
   onCancel,
   onSuccess,
 }: PosOrderFormProps) {
+  const { t } = useI18n();
   const [items, setItems] = React.useState<PosLineItem[]>([]);
   const [shippingAddress, setShippingAddress] = React.useState<Partial<ShippingAddressInputDto>>(
     {},
@@ -175,12 +177,12 @@ export function PosOrderForm({
         });
       }
 
-      toast.success('Đã áp dụng thông tin khách hàng và sản phẩm từ AI gợi ý!');
+      toast.success(t('pos.form.toastAppliedAi'));
       if (onDismissSuggestion) {
         onDismissSuggestion();
       }
     },
-    [onDismissSuggestion],
+    [onDismissSuggestion, t],
   );
 
   // Handle adding variant from command palette
@@ -193,7 +195,7 @@ export function PosOrderForm({
         const maxStock = variant.availableStock ?? 9999;
         const currentQty = existing?.quantity || 1;
         if (currentQty >= maxStock) {
-          toast.warning('Đã đạt số lượng tồn kho khả dụng tối đa');
+          toast.warning(t('pos.form.maxStockReached'));
           return updated;
         }
         const newQty = currentQty + 1;
@@ -229,12 +231,12 @@ export function PosOrderForm({
   // Form submission: Create or Update Order
   const handleSaveOrder = async () => {
     if (!contactId) {
-      toast.error('Không tìm thấy thông tin khách hàng cho cuộc hội thoại này');
+      toast.error(t('pos.form.validationCustomerRequired'));
       return;
     }
 
     if (items.length === 0) {
-      toast.error('Vui lòng thêm ít nhất 1 sản phẩm vào đơn hàng');
+      toast.error(t('pos.form.validationItemsRequired'));
       return;
     }
 
@@ -299,10 +301,10 @@ export function PosOrderForm({
         if (paymentMethod === PaymentMethod.VIETQR && savedOrder?.id) {
           try {
             await posApi.generateVietQr(workspaceId, savedOrder.id, { sendToChat: true });
-            toast.success(`Đã sinh mã VietQR cho đơn #${savedOrder.displayId} và gửi vào chat!`);
+            toast.success(t('pos.form.qrSentSuccess', { id: savedOrder.displayId }));
           } catch (qrErr: any) {
             toast.warning(
-              `Đã tạo đơn #${savedOrder.displayId}, nhưng chưa thể gửi VietQR: ${qrErr.message}`,
+              t('pos.form.qrSentWarning', { id: savedOrder.displayId, error: qrErr.message }),
             );
           }
         }
@@ -348,7 +350,7 @@ export function PosOrderForm({
               size="icon-xs"
               onClick={onCancel}
               className="text-muted-foreground hover:text-foreground shrink-0 cursor-pointer"
-              title="Quay lại danh sách đơn"
+              title={t('pos.form.backToOrders')}
             >
               <ArrowLeft className="size-3.5" />
             </Button>
@@ -356,7 +358,9 @@ export function PosOrderForm({
           <h4 className="text-xs font-semibold text-foreground truncate flex items-center gap-1.5">
             <ShoppingBag className="size-3.5 text-primary shrink-0" />
             <span>
-              {initialOrder ? `Sửa đơn #${initialOrder.displayId}` : 'Lập đơn hàng nhanh'}
+              {initialOrder
+                ? t('pos.form.titleEdit', { id: initialOrder.displayId })
+                : t('pos.form.titleNew')}
             </span>
           </h4>
         </div>
@@ -371,11 +375,11 @@ export function PosOrderForm({
               onClick={() => setPrintDialogOpen(true)}
             >
               <Printer className="size-3" />
-              In
+              {t('pos.form.printBtn')}
             </Button>
           )}
           <kbd className="hidden sm:inline-flex items-center font-mono text-[9px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded border">
-            Ctrl+↵ lưu
+            {t('pos.form.shortcutSave')}
           </kbd>
         </div>
       </div>
@@ -401,7 +405,7 @@ export function PosOrderForm({
       {/* Product Command Search */}
       <div className="flex flex-col gap-1.5">
         <label className="text-[11px] font-semibold text-foreground uppercase tracking-wider text-muted-foreground">
-          Tìm kiếm sản phẩm
+          {t('pos.form.searchProduct')}
         </label>
         <ProductPickerCommand
           workspaceId={workspaceId}
@@ -414,7 +418,7 @@ export function PosOrderForm({
       <div className="flex flex-col gap-1.5">
         <div className="flex items-center justify-between">
           <label className="text-[11px] font-semibold text-foreground uppercase tracking-wider text-muted-foreground">
-            Sản phẩm đã chọn ({items.length})
+            {t('pos.items.selectedCount', { count: items.length })}
           </label>
           {items.length > 0 && (
             <Button
@@ -426,7 +430,7 @@ export function PosOrderForm({
               disabled={isLocked || isSaving}
             >
               <RotateCcw className="size-2.5" />
-              Xóa hết
+              {t('pos.items.clearAll')}
             </Button>
           )}
         </div>
@@ -436,7 +440,7 @@ export function PosOrderForm({
       {/* Recipient & Address Form */}
       <div className="flex flex-col gap-1.5 pt-2 border-t border-border/60">
         <label className="text-[11px] font-semibold text-foreground uppercase tracking-wider text-muted-foreground">
-          Người nhận & Địa chỉ giao hàng
+          {t('pos.form.recipientAndAddress')}
         </label>
         <RecipientInfoForm
           value={shippingAddress}
@@ -474,7 +478,7 @@ export function PosOrderForm({
             disabled={isSaving}
             className="text-xs h-8 cursor-pointer"
           >
-            Quay lại (Esc)
+            {t('pos.form.backEsc')}
           </Button>
         ) : (
           <div />
@@ -489,15 +493,15 @@ export function PosOrderForm({
           className="text-xs h-8 font-semibold gap-1.5 shadow-xs cursor-pointer ml-auto"
         >
           {isSaving ? (
-            'Đang lưu...'
+            t('pos.form.saving')
           ) : (
             <>
               <CheckCircle2 className="size-3.5" />
               {initialOrder
-                ? 'Lưu cập nhật'
+                ? t('pos.form.saveUpdate')
                 : paymentMethod === PaymentMethod.VIETQR
-                  ? '⚡ Tạo đơn & Gửi VietQR'
-                  : 'Tạo đơn hàng'}
+                  ? t('pos.form.createAndSendQr')
+                  : t('pos.form.createOrder')}
               <span className="text-[9px] opacity-75 font-normal ml-0.5">(Ctrl+↵)</span>
             </>
           )}

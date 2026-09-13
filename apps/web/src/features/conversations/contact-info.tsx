@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { ContactDto } from '@/lib/api/types';
+import { useI18n } from '@/lib/i18n';
 
 interface ContactInfoProps {
   contact?: ContactDto | null;
@@ -15,9 +16,10 @@ interface ContactInfoProps {
 }
 
 export function ContactInfo({ contact }: ContactInfoProps) {
+  const { t } = useI18n();
   const [copiedField, setCopiedField] = React.useState<string | null>(null);
 
-  const contactName = contact?.name || 'Anonymous Visitor';
+  const contactName = contact?.name || t('contact.anonymousVisitor');
   const initials = contactName
     .split(' ')
     .map(n => n[0])
@@ -28,7 +30,7 @@ export function ContactInfo({ contact }: ContactInfoProps) {
   const handleCopy = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
     setCopiedField(label);
-    toast.success(`${label} copied to clipboard`);
+    toast.success(t('contact.copiedSuccess', { label }));
     setTimeout(() => setCopiedField(null), 2000);
   };
 
@@ -54,7 +56,7 @@ export function ContactInfo({ contact }: ContactInfoProps) {
         <div className="min-w-0 max-w-full">
           <h4 className="truncate text-sm font-semibold text-foreground">{contactName}</h4>
           <p className="truncate text-xs text-muted-foreground">
-            {contact?.email || contact?.phoneNumber || 'Customer Profile'}
+            {contact?.email || contact?.phoneNumber || t('contact.customerProfile')}
           </p>
         </div>
       </div>
@@ -62,7 +64,7 @@ export function ContactInfo({ contact }: ContactInfoProps) {
       {/* Contact Details List */}
       <div className="flex flex-col gap-2.5">
         <h5 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-          Contact Details
+          {t('contact.contactDetails')}
         </h5>
 
         {/* Email */}
@@ -91,17 +93,17 @@ export function ContactInfo({ contact }: ContactInfoProps) {
                     ) : (
                       <Copy className="size-3" />
                     )}
-                    <span className="sr-only">Copy email</span>
+                    <span className="sr-only">{t('contact.copyEmail')}</span>
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent side="left">Copy email</TooltipContent>
+                <TooltipContent side="left">{t('contact.copyEmail')}</TooltipContent>
               </Tooltip>
             </div>
           </div>
         ) : (
           <div className="flex items-center gap-2 text-xs text-muted-foreground/70 px-1.5">
             <Mail className="size-3.5 text-muted-foreground/50 shrink-0" />
-            <span className="italic">No email provided</span>
+            <span className="italic">{t('contact.noDetails')}</span>
           </div>
         )}
 
@@ -131,17 +133,17 @@ export function ContactInfo({ contact }: ContactInfoProps) {
                     ) : (
                       <Copy className="size-3" />
                     )}
-                    <span className="sr-only">Copy phone</span>
+                    <span className="sr-only">{t('contact.copyPhone')}</span>
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent side="left">Copy phone</TooltipContent>
+                <TooltipContent side="left">{t('contact.copyPhone')}</TooltipContent>
               </Tooltip>
             </div>
           </div>
         ) : (
           <div className="flex items-center gap-2 text-xs text-muted-foreground/70 px-1.5">
             <Phone className="size-3.5 text-muted-foreground/50 shrink-0" />
-            <span className="italic">No phone provided</span>
+            <span className="italic">{t('contact.noDetails')}</span>
           </div>
         )}
       </div>
@@ -150,7 +152,7 @@ export function ContactInfo({ contact }: ContactInfoProps) {
       {customAttrs.length > 0 && (
         <div className="flex flex-col gap-2 pt-1">
           <h5 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Custom Attributes
+            {t('contact.customAttributes')}
           </h5>
           <div className="rounded-md border border-border/50 bg-card/50 divide-y divide-border/40 text-xs">
             {customAttrs.map(([key, val]) => (

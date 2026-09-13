@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/lib/i18n';
 
 interface StockStatusBadgeProps {
   availableStock: number;
@@ -15,13 +16,15 @@ export function StockStatusBadge({
   className,
   showCount = true,
 }: StockStatusBadgeProps) {
+  const { t } = useI18n();
+
   if (availableStock <= 0) {
     return (
       <Badge
         variant="destructive"
         className={cn('text-[10px] font-medium px-1.5 py-0 h-4 shrink-0', className)}
       >
-        Hết hàng
+        {t('pos.stock.outOfStock')}
       </Badge>
     );
   }
@@ -35,7 +38,7 @@ export function StockStatusBadge({
           className,
         )}
       >
-        {showCount ? `Sắp hết (${availableStock})` : 'Sắp hết'}
+        {showCount ? `${t('pos.stock.lowStock')} (${availableStock})` : t('pos.stock.lowStock')}
       </Badge>
     );
   }
@@ -48,7 +51,7 @@ export function StockStatusBadge({
         className,
       )}
     >
-      {showCount ? `Còn hàng (${availableStock})` : 'Còn hàng'}
+      {showCount ? `${t('pos.stock.inStock')} (${availableStock})` : t('pos.stock.inStock')}
     </Badge>
   );
 }

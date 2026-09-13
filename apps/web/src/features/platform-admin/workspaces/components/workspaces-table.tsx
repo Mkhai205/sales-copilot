@@ -39,6 +39,7 @@ import {
   getPlanBadgeConfig,
   getStatusBadgeConfig,
 } from '../utils/workspace-helpers';
+import { useI18n } from '@/lib/i18n';
 
 export interface WorkspacesTableProps {
   workspaces: PlatformWorkspaceListItemDto[];
@@ -61,6 +62,7 @@ export function WorkspacesTable({
   onUpdatePlan,
   onToggleStatus,
 }: WorkspacesTableProps) {
+  const { t } = useI18n();
   const [copiedSlug, setCopiedSlug] = React.useState<string | null>(null);
 
   const handleCopySlug = (slug: string, e: React.MouseEvent) => {
@@ -79,14 +81,30 @@ export function WorkspacesTable({
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent bg-muted/40">
-              <TableHead className="text-xs font-semibold">Shop & Slug</TableHead>
-              <TableHead className="text-xs font-semibold">Chủ sở hữu</TableHead>
-              <TableHead className="text-xs font-semibold">Gói cước</TableHead>
-              <TableHead className="text-xs font-semibold text-center">Nhân sự</TableHead>
-              <TableHead className="text-xs font-semibold text-center">Kênh</TableHead>
-              <TableHead className="text-xs font-semibold">Trạng thái</TableHead>
-              <TableHead className="text-xs font-semibold">Ngày đăng ký</TableHead>
-              <TableHead className="text-xs font-semibold text-right pr-4">Thao tác</TableHead>
+              <TableHead className="text-xs font-semibold">
+                {t('admin.workspaces.colShopSlug')}
+              </TableHead>
+              <TableHead className="text-xs font-semibold">
+                {t('admin.workspaces.colOwner')}
+              </TableHead>
+              <TableHead className="text-xs font-semibold">
+                {t('admin.workspaces.colPlan')}
+              </TableHead>
+              <TableHead className="text-xs font-semibold text-center">
+                {t('admin.workspaces.colStaff')}
+              </TableHead>
+              <TableHead className="text-xs font-semibold text-center">
+                {t('admin.workspaces.colChannels')}
+              </TableHead>
+              <TableHead className="text-xs font-semibold">
+                {t('admin.workspaces.colStatus')}
+              </TableHead>
+              <TableHead className="text-xs font-semibold">
+                {t('admin.workspaces.colRegisteredDate')}
+              </TableHead>
+              <TableHead className="text-xs font-semibold text-right pr-4">
+                {t('admin.workspaces.colActions')}
+              </TableHead>
             </TableRow>
           </TableHeader>
 
@@ -134,11 +152,9 @@ export function WorkspacesTable({
                   <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground">
                     <Store className="size-8 stroke-[1.5]" />
                     <span className="text-xs font-medium text-foreground">
-                      Không tìm thấy Workspace nào
+                      {t('admin.workspaces.emptyTitle')}
                     </span>
-                    <span className="text-[11px]">
-                      Thử thay đổi từ khóa tìm kiếm hoặc điều chỉnh bộ lọc gói/trạng thái.
-                    </span>
+                    <span className="text-[11px]">{t('admin.workspaces.emptyDesc')}</span>
                   </div>
                 </TableCell>
               </TableRow>
@@ -170,7 +186,7 @@ export function WorkspacesTable({
                               type="button"
                               onClick={e => handleCopySlug(ws.slug, e)}
                               className="text-muted-foreground hover:text-foreground"
-                              title="Sao chép slug"
+                              title={t('admin.workspaces.copySlug')}
                             >
                               {copiedSlug === ws.slug ? (
                                 <Check className="size-2.5 text-emerald-600" />
@@ -193,7 +209,9 @@ export function WorkspacesTable({
                           </span>
                         </div>
                       ) : (
-                        <span className="text-muted-foreground italic">Chưa có</span>
+                        <span className="text-muted-foreground italic">
+                          {t('admin.workspaces.noOwner')}
+                        </span>
                       )}
                     </TableCell>
 
@@ -217,7 +235,9 @@ export function WorkspacesTable({
                     {/* Status */}
                     <TableCell className="py-2.5">
                       <Badge variant={statusBadge.variant} className={statusBadge.className}>
-                        {statusBadge.label}
+                        {ws.isSuspended
+                          ? t('admin.workspaces.suspended')
+                          : t('admin.workspaces.active')}
                       </Badge>
                     </TableCell>
 
@@ -239,25 +259,25 @@ export function WorkspacesTable({
                             className="size-7 text-muted-foreground hover:text-foreground"
                           >
                             <MoreHorizontal className="size-4" />
-                            <span className="sr-only">Hành động</span>
+                            <span className="sr-only">{t('admin.workspaces.colActions')}</span>
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-44 text-xs">
                           <DropdownMenuItem onClick={() => onViewDetail(ws)} className="gap-2">
                             <Eye className="size-3.5" />
-                            <span>Xem chi tiết</span>
+                            <span>{t('admin.workspaces.viewDetail')}</span>
                           </DropdownMenuItem>
 
                           <DropdownMenuItem asChild className="gap-2">
                             <Link href={`/admin/workspaces/${ws.id}`}>
                               <ExternalLink className="size-3.5" />
-                              <span>Mở trang riêng</span>
+                              <span>{t('admin.workspaces.openDedicatedPage')}</span>
                             </Link>
                           </DropdownMenuItem>
 
                           <DropdownMenuItem onClick={() => onUpdatePlan(ws)} className="gap-2">
                             <Sliders className="size-3.5" />
-                            <span>Đổi gói & Quotas</span>
+                            <span>{t('admin.workspaces.changePlanQuotas')}</span>
                           </DropdownMenuItem>
 
                           <DropdownMenuSeparator />
@@ -270,12 +290,12 @@ export function WorkspacesTable({
                             {ws.isSuspended ? (
                               <>
                                 <ShieldCheck className="size-3.5 text-emerald-600" />
-                                <span>Kích hoạt lại</span>
+                                <span>{t('admin.workspaces.reactivateShop')}</span>
                               </>
                             ) : (
                               <>
                                 <ShieldBan className="size-3.5 text-destructive" />
-                                <span>Tạm khóa</span>
+                                <span>{t('admin.workspaces.suspendShop')}</span>
                               </>
                             )}
                           </DropdownMenuItem>
@@ -292,11 +312,7 @@ export function WorkspacesTable({
 
       {/* Pagination bar */}
       <div className="flex items-center justify-between px-1 text-xs text-muted-foreground">
-        <div>
-          Trang <span className="font-semibold text-foreground">{page}</span> /{' '}
-          <span className="font-semibold text-foreground">{totalPages}</span> — Tổng{' '}
-          <span className="font-semibold text-foreground">{totalItems}</span> shops
-        </div>
+        <div>{t('admin.workspaces.pagination', { page, totalPages, total: totalItems })}</div>
 
         <div className="flex items-center gap-1.5">
           <Button
@@ -307,7 +323,7 @@ export function WorkspacesTable({
             className="h-7 px-2.5 text-xs gap-1"
           >
             <ChevronLeft className="size-3.5" />
-            <span>Trước</span>
+            <span>{t('admin.workspaces.prevPage')}</span>
           </Button>
           <Button
             variant="outline"
@@ -316,7 +332,7 @@ export function WorkspacesTable({
             disabled={page >= totalPages || isLoading}
             className="h-7 px-2.5 text-xs gap-1"
           >
-            <span>Sau</span>
+            <span>{t('admin.workspaces.nextPage')}</span>
             <ChevronRight className="size-3.5" />
           </Button>
         </div>

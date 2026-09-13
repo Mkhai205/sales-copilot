@@ -18,11 +18,14 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { getAdminBreadcrumbs } from './navigation-helpers';
+import { LanguageSwitcher } from '@/components/language-switcher';
+import { useI18n } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 
 export function AdminHeader() {
   const pathname = usePathname();
   const { theme, setTheme, resolvedTheme } = useTheme();
+  const { t } = useI18n();
   const breadcrumbs = getAdminBreadcrumbs(pathname);
 
   return (
@@ -54,12 +57,14 @@ export function AdminHeader() {
       </div>
 
       <div className="flex items-center gap-2.5">
+        <LanguageSwitcher variant="button" />
+
         <Badge
           variant="outline"
           className="hidden sm:inline-flex items-center gap-1.5 border-primary/30 bg-primary/5 text-primary text-xs font-semibold py-1 px-2.5"
         >
           <Shield className="size-3.5" />
-          <span>Super Administrator</span>
+          <span>{t('admin.superAdminBadge')}</span>
         </Badge>
 
         <Button
@@ -67,7 +72,7 @@ export function AdminHeader() {
           size="icon"
           onClick={() => setTheme((resolvedTheme || theme) === 'dark' ? 'light' : 'dark')}
           className="size-8 text-muted-foreground hover:text-foreground"
-          title="Chuyển đổi giao diện sáng/tối"
+          title={t('admin.toggleTheme')}
         >
           <Sun className="size-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
           <Moon className="absolute size-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
@@ -82,7 +87,7 @@ export function AdminHeader() {
           )}
         >
           <ArrowLeft className="size-3.5" />
-          <span>Quay lại Workspace</span>
+          <span>{t('admin.backToWorkspace')}</span>
         </Link>
       </div>
     </header>

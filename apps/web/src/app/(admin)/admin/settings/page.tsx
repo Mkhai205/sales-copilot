@@ -11,8 +11,10 @@ import { AnnouncementsTab } from '@/features/platform-admin/settings/components/
 import { Flag, Sparkles, Scale, Megaphone, RefreshCw, Zap } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { useI18n } from '@/lib/i18n';
 
 export default function AdminSettingsPage() {
+  const { t } = useI18n();
   const queryClient = useQueryClient();
   const [isRefreshing, setIsRefreshing] = React.useState(false);
 
@@ -23,7 +25,7 @@ export default function AdminSettingsPage() {
     });
     setTimeout(() => {
       setIsRefreshing(false);
-      toast.success('Đã đồng bộ lại dữ liệu cấu hình từ hệ thống');
+      toast.success(t('admin.settings.cacheRefreshed'));
     }, 400);
   };
 
@@ -34,20 +36,17 @@ export default function AdminSettingsPage() {
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-bold tracking-tight text-foreground">
-              Cấu hình Hệ thống Động
+              {t('admin.settings.systemDynamicTitle')}
             </h1>
             <Badge
               variant="outline"
               className="gap-1 border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs"
             >
               <Zap className="size-3" />
-              <span>2-Tier Active</span>
+              <span>{t('admin.settings.badgeTier')}</span>
             </Badge>
           </div>
-          <p className="text-xs text-muted-foreground">
-            Hot-reloading tham số vận hành, Feature Flags, LLM Gateway và hạn mức Quotas mà không
-            cần khởi động lại dịch vụ.
-          </p>
+          <p className="text-xs text-muted-foreground">{t('admin.settings.hotReloading')}</p>
         </div>
 
         <div className="flex items-center gap-2">
@@ -59,7 +58,7 @@ export default function AdminSettingsPage() {
             className="gap-1.5 text-xs text-muted-foreground hover:text-foreground"
           >
             <RefreshCw className={`size-3.5 ${isRefreshing ? 'animate-spin text-primary' : ''}`} />
-            <span>Làm mới Cache</span>
+            <span>{t('admin.settings.refreshCache')}</span>
           </Button>
         </div>
       </div>
@@ -69,19 +68,19 @@ export default function AdminSettingsPage() {
         <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:w-auto lg:inline-flex">
           <TabsTrigger value="feature-flags" className="gap-2">
             <Flag className="size-3.5" />
-            <span>Feature Flags</span>
+            <span>{t('admin.settings.tabFeatureFlags')}</span>
           </TabsTrigger>
           <TabsTrigger value="ai-defaults" className="gap-2">
             <Sparkles className="size-3.5" />
-            <span>AI & LLM Defaults</span>
+            <span>{t('admin.settings.tabAiDefaults')}</span>
           </TabsTrigger>
           <TabsTrigger value="quotas" className="gap-2">
             <Scale className="size-3.5" />
-            <span>Hạn mức Quota</span>
+            <span>{t('admin.settings.tabQuotas')}</span>
           </TabsTrigger>
           <TabsTrigger value="announcements" className="gap-2">
             <Megaphone className="size-3.5" />
-            <span>Thông báo & Bảo trì</span>
+            <span>{t('admin.settings.tabAnnouncements')}</span>
           </TabsTrigger>
         </TabsList>
 

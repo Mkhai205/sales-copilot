@@ -19,8 +19,10 @@ import { WorkspaceDetailView } from '@/features/platform-admin/workspaces/compon
 import { UpdatePlanDialog } from '@/features/platform-admin/workspaces/components/update-plan-dialog';
 import { SuspendWorkspaceDialog } from '@/features/platform-admin/workspaces/components/suspend-workspace-dialog';
 import type { PlatformWorkspaceListItemDto } from '@sales-copilot/shared-contracts';
+import { useI18n } from '@/lib/i18n';
 
 export default function WorkspaceDetailPage() {
+  const { t } = useI18n();
   const params = useParams();
   const router = useRouter();
   const id = params?.id as string;
@@ -61,25 +63,27 @@ export default function WorkspaceDetailPage() {
 
   return (
     <div className="flex flex-1 flex-col overflow-y-auto p-6 gap-6">
-      {/* Breadcrumb & Top Bar */}
+      {/* Top Header with Breadcrumbs & Actions */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex flex-col gap-2">
           <Breadcrumb>
-            <BreadcrumbList className="text-xs">
+            <BreadcrumbList>
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
-                  <Link href="/admin">Super Admin</Link>
+                  <Link href="/admin">{t('auth.superAdmin')}</Link>
                 </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
-                  <Link href="/admin/workspaces">Workspaces</Link>
+                  <Link href="/admin/workspaces">{t('admin.nav.workspaces')}</Link>
                 </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <BreadcrumbPage>{isLoading ? 'Đang tải...' : workspace?.name || id}</BreadcrumbPage>
+                <BreadcrumbPage>
+                  {isLoading ? t('common.loading') : workspace?.name || id}
+                </BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
@@ -92,7 +96,7 @@ export default function WorkspaceDetailPage() {
               className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground gap-1.5"
             >
               <ArrowLeft className="size-3.5" />
-              <span>Quay lại danh sách</span>
+              <span>{t('admin.workspaces.backToList')}</span>
             </Button>
           </div>
         </div>
@@ -108,7 +112,7 @@ export default function WorkspaceDetailPage() {
               className="h-8 text-xs gap-1.5"
             >
               <RefreshCw className={`size-3.5 ${isRefetching ? 'animate-spin' : ''}`} />
-              <span>Làm mới</span>
+              <span>{t('common.refresh')}</span>
             </Button>
 
             <Button
@@ -118,7 +122,7 @@ export default function WorkspaceDetailPage() {
               className="h-8 text-xs gap-1.5"
             >
               <Sliders className="size-3.5 text-primary" />
-              <span>Đổi gói & Quotas</span>
+              <span>{t('admin.workspaces.changePlanQuotas')}</span>
             </Button>
 
             <Button
@@ -130,12 +134,12 @@ export default function WorkspaceDetailPage() {
               {workspace.isSuspended ? (
                 <>
                   <ShieldCheck className="size-3.5 text-emerald-600" />
-                  <span>Kích hoạt lại</span>
+                  <span>{t('admin.workspaces.reactivateShop')}</span>
                 </>
               ) : (
                 <>
                   <ShieldBan className="size-3.5" />
-                  <span>Tạm khóa</span>
+                  <span>{t('admin.workspaces.suspendShop')}</span>
                 </>
               )}
             </Button>
@@ -157,7 +161,9 @@ export default function WorkspaceDetailPage() {
         </div>
       ) : isError ? (
         <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-6 text-center text-xs text-destructive">
-          Không thể tải thông tin workspace: {error?.message || 'Không tìm thấy'}
+          {t('admin.workspaces.cannotLoadWorkspace', {
+            error: error?.message || t('common.notFound'),
+          })}
         </div>
       ) : workspace ? (
         <WorkspaceDetailView workspace={workspace} />

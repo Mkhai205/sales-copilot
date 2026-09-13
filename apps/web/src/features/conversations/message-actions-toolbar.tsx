@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { MessageResponseDto } from '@/lib/api/types';
 import { isImageAttachment } from './message-image-grid';
+import { useI18n } from '@/lib/i18n';
 
 interface MessageActionsToolbarProps {
   message: MessageResponseDto;
@@ -21,6 +22,7 @@ export function MessageActionsToolbar({
   onOpenLightbox,
   className,
 }: MessageActionsToolbarProps) {
+  const { t } = useI18n();
   const images = (message.attachments || []).filter(att => isImageAttachment(att) && att.fileUrl);
   const files = message.attachments || [];
   const hasText = Boolean(message.content && message.content.trim().length > 0);
@@ -33,10 +35,10 @@ export function MessageActionsToolbar({
     if (hasText && message.content) {
       try {
         await navigator.clipboard.writeText(message.content);
-        toast.success('Đã sao chép tin nhắn');
+        toast.success(t('conversations.toolbar.copyMessageSuccess'));
         return;
       } catch {
-        toast.error('Không thể sao chép tin nhắn');
+        toast.error(t('conversations.toolbar.copyMessageError'));
         return;
       }
     }
@@ -52,13 +54,13 @@ export function MessageActionsToolbar({
             [pngBlob.type]: pngBlob,
           }),
         ]);
-        toast.success('Đã sao chép ảnh vào bộ nhớ tạm');
+        toast.success(t('conversations.toolbar.copyImageSuccess'));
       } catch {
         try {
           await navigator.clipboard.writeText(images[0].fileUrl);
-          toast.success('Đã sao chép liên kết ảnh');
+          toast.success(t('conversations.toolbar.copyLinkSuccess'));
         } catch {
-          toast.error('Không thể sao chép ảnh');
+          toast.error(t('conversations.toolbar.copyImageError'));
         }
       }
     }
@@ -102,13 +104,13 @@ export function MessageActionsToolbar({
               type="button"
               onClick={handleCopy}
               className="flex size-6 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
-              title="Sao chép"
+              title={t('conversations.toolbar.copy')}
             >
               <Copy className="size-3.5" />
             </button>
           </TooltipTrigger>
           <TooltipContent side="top" className="text-[11px] py-1 px-2">
-            {hasText ? 'Sao chép văn bản' : 'Sao chép ảnh'}
+            {hasText ? t('conversations.toolbar.copyText') : t('conversations.toolbar.copyImage')}
           </TooltipContent>
         </Tooltip>
       )}
@@ -121,13 +123,15 @@ export function MessageActionsToolbar({
               type="button"
               onClick={handleDownload}
               className="flex size-6 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
-              title="Tải xuống"
+              title={t('conversations.toolbar.download')}
             >
               <Download className="size-3.5" />
             </button>
           </TooltipTrigger>
           <TooltipContent side="top" className="text-[11px] py-1 px-2">
-            Tải xuống {hasImages ? 'ảnh' : 'tệp'}
+            {hasImages
+              ? t('conversations.toolbar.downloadImage')
+              : t('conversations.toolbar.downloadFile')}
           </TooltipContent>
         </Tooltip>
       )}
@@ -140,13 +144,13 @@ export function MessageActionsToolbar({
               type="button"
               onClick={handleOpenLightbox}
               className="flex size-6 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
-              title="Xem to"
+              title={t('conversations.toolbar.viewFullscreen')}
             >
               <Maximize2 className="size-3.5" />
             </button>
           </TooltipTrigger>
           <TooltipContent side="top" className="text-[11px] py-1 px-2">
-            Xem toàn màn hình
+            {t('conversations.toolbar.viewFullscreen')}
           </TooltipContent>
         </Tooltip>
       )}

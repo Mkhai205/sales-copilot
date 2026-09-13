@@ -5,9 +5,10 @@
 - [x] migrate middleware-to-proxy
 - [x] thêm thư viện để hỗ trợ emoji
 - [x] xây dựng bộ lọc fillter
+- thiết kế chuyển đổi ngôn ngữ
+- tính năng ghim (pin) tin nhắn
 - tạo trang supper admin để quản lý hệ thống.
 - xây dựng chat widget plugin hoàn chỉnh với tùy chỉnh hiển thị, biểu mẫu, câu hởi thường gặp, chức năng,...
-- thiết kế chuyển đổi ngôn ngữ
 - tạo mảng ma trận phân quyền người dùng
 - thiết kế trang danh bạ hồ sơ khách hàng
 - làm rõ luồng hoạt động của bot ai tự động trả lời. Khi nào thì ngừng trả qua nhân viên, hoặc khi có nhân viên tiếp nhận đoạn hội thoại đó.

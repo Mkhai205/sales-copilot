@@ -18,8 +18,10 @@ import type {
   PlatformAuditLogDto,
   PlatformAuditTargetType,
 } from '@sales-copilot/shared-contracts';
+import { useI18n } from '@/lib/i18n';
 
 function AuditLogsPageContent() {
+  const { t } = useI18n();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -149,13 +151,10 @@ function AuditLogsPageContent() {
               <ScrollText className="size-4" />
             </div>
             <h1 className="text-xl font-bold tracking-tight text-foreground">
-              Nhật ký kiểm toán nền tảng (Platform Audit Logs)
+              {t('admin.auditLogs.titleHeader')}
             </h1>
           </div>
-          <p className="text-xs text-muted-foreground">
-            Lưu vết bất biến mọi hành vi can thiệp hệ thống, thay đổi gói cước, quota và cấu hình
-            nền tảng của Super Admin.
-          </p>
+          <p className="text-xs text-muted-foreground">{t('admin.auditLogs.descriptionHeader')}</p>
         </div>
 
         <Button
@@ -166,7 +165,7 @@ function AuditLogsPageContent() {
           className="h-8 text-xs gap-1.5"
         >
           <RefreshCw className={`size-3.5 ${isRefetching ? 'animate-spin' : ''}`} />
-          <span>Làm mới</span>
+          <span>{t('common.refresh')}</span>
         </Button>
       </div>
 

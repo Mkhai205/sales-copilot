@@ -63,6 +63,7 @@ import { ImageLightboxDialog } from './image-lightbox-dialog';
 import { MessageImageGrid, isImageAttachment } from './message-image-grid';
 import { MessageActionsToolbar } from './message-actions-toolbar';
 import { VietQrChatCard } from '@/features/pos/components/vietqr-chat-card';
+import { useI18n } from '@/lib/i18n';
 import type { VietQrResponseDto } from '@sales-copilot/shared-contracts';
 
 interface MessageThreadProps {
@@ -680,6 +681,7 @@ export function MessageThread({
   onOpenPosDrawer,
 }: MessageThreadProps) {
   useConversationRoom(conversationId);
+  const { t } = useI18n();
 
   const { data: conversation, isLoading: isConversationLoading } = useConversation(conversationId, {
     workspaceSlug,
@@ -818,7 +820,7 @@ export function MessageThread({
               {newUnreadCount > 0 ? (
                 <div className="flex items-center gap-1.5 text-xs font-medium">
                   <ArrowDown className="size-3.5 animate-bounce" />
-                  <span>Tin nhắn mới</span>
+                  <span>{t('conversations.thread.newMessages')}</span>
                   <span className="flex size-4 items-center justify-center rounded-full bg-primary-foreground text-primary text-[10px] font-bold">
                     {newUnreadCount > 9 ? '9+' : newUnreadCount}
                   </span>

@@ -55,16 +55,16 @@ export function WorkspaceSettingsForm({ workspace }: WorkspaceSettingsFormProps)
   const trimmedName = name.trim();
   const nameError = React.useMemo(() => {
     if (trimmedName.length === 0) {
-      return 'Workspace name is required';
+      return t('settings.workspace.nameRequired');
     }
     if (trimmedName.length < 2) {
-      return 'Workspace name must be at least 2 characters';
+      return t('settings.workspace.nameMinLength');
     }
     if (trimmedName.length > 100) {
-      return 'Workspace name must not exceed 100 characters';
+      return t('settings.workspace.nameMaxLength');
     }
     return null;
-  }, [trimmedName]);
+  }, [trimmedName, t]);
 
   const isValid = !nameError;
 
@@ -111,9 +111,11 @@ export function WorkspaceSettingsForm({ workspace }: WorkspaceSettingsFormProps)
     <form onSubmit={handleSubmit} className="flex flex-col gap-8">
       {/* Page Header */}
       <div>
-        <h1 className="text-xl font-semibold tracking-tight text-foreground">General Settings</h1>
+        <h1 className="text-xl font-semibold tracking-tight text-foreground">
+          {t('settings.workspace.title')}
+        </h1>
         <p className="text-xs text-muted-foreground mt-0.5">
-          Configure your workspace profile, regional defaults, and view subscription details.
+          {t('settings.workspace.description')}
         </p>
       </div>
 
@@ -122,17 +124,19 @@ export function WorkspaceSettingsForm({ workspace }: WorkspaceSettingsFormProps)
         <CardHeader className="pb-4">
           <div className="flex items-center gap-2">
             <Building2 className="size-4 text-primary" />
-            <CardTitle className="text-sm font-semibold">Workspace Profile</CardTitle>
+            <CardTitle className="text-sm font-semibold">
+              {t('settings.workspace.profileTitle')}
+            </CardTitle>
           </div>
           <CardDescription className="text-xs">
-            Basic information about your organization and dashboard appearance.
+            {t('settings.workspace.profileDesc')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <FieldGroup className="gap-5">
             {/* Workspace Name */}
             <Field data-invalid={!!nameError}>
-              <FieldLabel htmlFor="workspace-name">Workspace Name</FieldLabel>
+              <FieldLabel htmlFor="workspace-name">{t('settings.workspace.nameLabel')}</FieldLabel>
               <Input
                 id="workspace-name"
                 value={name}
@@ -142,15 +146,13 @@ export function WorkspaceSettingsForm({ workspace }: WorkspaceSettingsFormProps)
                 aria-invalid={!!nameError}
                 className="max-w-md text-xs"
               />
-              <FieldDescription>
-                The display name of your workspace shown to agents and on outbound communications.
-              </FieldDescription>
+              <FieldDescription>{t('settings.workspace.nameHelp')}</FieldDescription>
               {nameError && <FieldError errors={[{ message: nameError }]} />}
             </Field>
 
             {/* Workspace Slug (Readonly) */}
             <Field>
-              <FieldLabel htmlFor="workspace-slug">Workspace Slug</FieldLabel>
+              <FieldLabel htmlFor="workspace-slug">{t('settings.workspace.slugLabel')}</FieldLabel>
               <div className="flex max-w-md items-center gap-2">
                 <Input
                   id="workspace-slug"
@@ -160,10 +162,7 @@ export function WorkspaceSettingsForm({ workspace }: WorkspaceSettingsFormProps)
                   className="text-xs font-mono bg-muted/50 cursor-not-allowed"
                 />
               </div>
-              <FieldDescription>
-                The unique URL identifier for accessing your workspace dashboard (
-                <code className="text-xs">/{workspace.slug}</code>).
-              </FieldDescription>
+              <FieldDescription>{t('settings.workspace.slugHelp')}</FieldDescription>
             </Field>
           </FieldGroup>
         </CardContent>
@@ -174,20 +173,24 @@ export function WorkspaceSettingsForm({ workspace }: WorkspaceSettingsFormProps)
         <CardHeader className="pb-4">
           <div className="flex items-center gap-2">
             <Globe className="size-4 text-primary" />
-            <CardTitle className="text-sm font-semibold">Regional & Language</CardTitle>
+            <CardTitle className="text-sm font-semibold">
+              {t('settings.workspace.regionalTitle')}
+            </CardTitle>
           </div>
           <CardDescription className="text-xs">
-            Set default timezone for timestamps, scheduling rules, and UI language preferences.
+            {t('settings.workspace.regionalDesc')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <FieldGroup className="gap-5">
             {/* Timezone */}
             <Field>
-              <FieldLabel htmlFor="workspace-timezone">Default Timezone</FieldLabel>
+              <FieldLabel htmlFor="workspace-timezone">
+                {t('settings.workspace.timezoneLabel')}
+              </FieldLabel>
               <Select value={timezone} onValueChange={setTimezone}>
                 <SelectTrigger id="workspace-timezone" className="w-full max-w-md text-xs">
-                  <SelectValue placeholder="Select timezone" />
+                  <SelectValue placeholder={t('settings.workspace.selectTimezone')} />
                 </SelectTrigger>
                 <SelectContent position="popper" className="max-h-72">
                   {TIMEZONE_OPTIONS.map(group => (
@@ -204,9 +207,7 @@ export function WorkspaceSettingsForm({ workspace }: WorkspaceSettingsFormProps)
                   ))}
                 </SelectContent>
               </Select>
-              <FieldDescription>
-                Used for scheduling automation rules, business hours, and analytics timestamps.
-              </FieldDescription>
+              <FieldDescription>{t('settings.workspace.timezoneHelp')}</FieldDescription>
             </Field>
 
             {/* Default Language */}
@@ -216,7 +217,7 @@ export function WorkspaceSettingsForm({ workspace }: WorkspaceSettingsFormProps)
               </FieldLabel>
               <Select value={defaultLanguage} onValueChange={setDefaultLanguage}>
                 <SelectTrigger id="workspace-language" className="w-full max-w-md text-xs">
-                  <SelectValue placeholder="Select language" />
+                  <SelectValue placeholder={t('settings.workspace.selectLanguage')} />
                 </SelectTrigger>
                 <SelectContent position="popper" className="max-h-72">
                   <SelectGroup>
@@ -241,7 +242,7 @@ export function WorkspaceSettingsForm({ workspace }: WorkspaceSettingsFormProps)
             <div className="flex items-center gap-2">
               <Sparkles className="size-4 text-amber-500" />
               <CardTitle className="text-sm font-semibold">
-                Subscription & Workspace Details
+                {t('settings.workspace.subscriptionTitle')}
               </CardTitle>
             </div>
             <Badge variant="outline" className="px-2 py-0.5 text-xs font-semibold uppercase">
@@ -249,13 +250,15 @@ export function WorkspaceSettingsForm({ workspace }: WorkspaceSettingsFormProps)
             </Badge>
           </div>
           <CardDescription className="text-xs">
-            System identifiers and metadata associated with this tenant.
+            {t('settings.workspace.subscriptionDesc')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 text-xs">
             <div className="flex flex-col gap-1 rounded-lg border border-border/50 bg-background/50 p-3">
-              <span className="text-[11px] font-medium text-muted-foreground">Workspace ID</span>
+              <span className="text-[11px] font-medium text-muted-foreground">
+                {t('settings.workspace.workspaceId')}
+              </span>
               <div className="flex items-center justify-between gap-2">
                 <code className="truncate font-mono text-[11px] text-foreground">
                   {workspace.id}
@@ -266,7 +269,7 @@ export function WorkspaceSettingsForm({ workspace }: WorkspaceSettingsFormProps)
                   size="sm"
                   onClick={handleCopyId}
                   className="size-6 p-0 hover:bg-muted"
-                  title="Copy Workspace ID"
+                  title={t('settings.workspace.copyWorkspaceId')}
                 >
                   {copiedId ? (
                     <Check className="size-3 text-green-500" />
@@ -278,7 +281,9 @@ export function WorkspaceSettingsForm({ workspace }: WorkspaceSettingsFormProps)
             </div>
 
             <div className="flex flex-col gap-1 rounded-lg border border-border/50 bg-background/50 p-3">
-              <span className="text-[11px] font-medium text-muted-foreground">Created On</span>
+              <span className="text-[11px] font-medium text-muted-foreground">
+                {t('settings.workspace.createdOn')}
+              </span>
               <div className="flex items-center gap-2 text-foreground font-medium">
                 <Calendar className="size-3.5 text-muted-foreground" />
                 <span>{formattedCreatedAt}</span>

@@ -31,6 +31,7 @@ import {
   getActionBadgeConfig,
   getTargetTypeBadgeConfig,
 } from '../utils/audit-log-helpers';
+import { useI18n } from '@/lib/i18n';
 
 export interface AuditLogsTableProps {
   logs: PlatformAuditLogDto[];
@@ -51,6 +52,7 @@ export function AuditLogsTable({
   onViewDetail,
   onResetFilters,
 }: AuditLogsTableProps) {
+  const { t } = useI18n();
   const [copiedId, setCopiedId] = React.useState<string | null>(null);
 
   const handleCopyId = (id: string, e: React.MouseEvent) => {
@@ -73,12 +75,24 @@ export function AuditLogsTable({
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent bg-muted/40">
-              <TableHead className="text-xs font-semibold w-[170px]">Thời điểm</TableHead>
-              <TableHead className="text-xs font-semibold">Quản trị viên</TableHead>
-              <TableHead className="text-xs font-semibold">Hành động</TableHead>
-              <TableHead className="text-xs font-semibold">Đối tượng tác động</TableHead>
-              <TableHead className="text-xs font-semibold">IP & Client</TableHead>
-              <TableHead className="text-xs font-semibold text-right pr-4">Thao tác</TableHead>
+              <TableHead className="text-xs font-semibold w-[170px]">
+                {t('admin.auditLogs.colTimestamp')}
+              </TableHead>
+              <TableHead className="text-xs font-semibold">
+                {t('admin.auditLogs.colActor')}
+              </TableHead>
+              <TableHead className="text-xs font-semibold">
+                {t('admin.auditLogs.colAction')}
+              </TableHead>
+              <TableHead className="text-xs font-semibold">
+                {t('admin.auditLogs.colTarget')}
+              </TableHead>
+              <TableHead className="text-xs font-semibold">
+                {t('admin.auditLogs.colClient')}
+              </TableHead>
+              <TableHead className="text-xs font-semibold text-right pr-4">
+                {t('admin.workspaces.colActions')}
+              </TableHead>
             </TableRow>
           </TableHeader>
 
@@ -116,8 +130,8 @@ export function AuditLogsTable({
                 <TableCell colSpan={6} className="h-48 text-center">
                   <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground">
                     <Shield className="size-8 stroke-1 text-muted-foreground/50" />
-                    <p className="text-sm font-medium">Không tìm thấy nhật ký kiểm toán nào</p>
-                    <p className="text-xs">Hãy thử thay đổi điều kiện lọc hoặc từ khóa tìm kiếm.</p>
+                    <p className="text-sm font-medium">{t('admin.auditLogs.emptyLogsTitle')}</p>
+                    <p className="text-xs">{t('admin.auditLogs.emptyLogsDesc')}</p>
                     {onResetFilters && (
                       <Button
                         variant="outline"
@@ -125,7 +139,7 @@ export function AuditLogsTable({
                         onClick={onResetFilters}
                         className="mt-2 h-7 text-xs"
                       >
-                        Đặt lại bộ lọc
+                        {t('admin.workspaces.resetFilters')}
                       </Button>
                     )}
                   </div>
@@ -135,6 +149,28 @@ export function AuditLogsTable({
               logs.map(log => {
                 const actionBadge = getActionBadgeConfig(log.action);
                 const targetBadge = getTargetTypeBadgeConfig(log.targetType);
+
+                const actionLabel =
+                  log.action === 'WORKSPACE_SUSPENDED'
+                    ? t('admin.auditLogs.actionSuspended')
+                    : log.action === 'WORKSPACE_ACTIVATED'
+                      ? t('admin.auditLogs.actionActivated')
+                      : log.action === 'PLAN_CHANGED'
+                        ? t('admin.auditLogs.actionPlanChanged')
+                        : log.action === 'QUOTA_UPDATED'
+                          ? t('admin.auditLogs.actionQuotaUpdated')
+                          : log.action === 'SYSTEM_SETTING_UPDATED'
+                            ? t('admin.auditLogs.actionSettingUpdated')
+                            : actionBadge.label;
+
+                const targetLabel =
+                  log.targetType === 'WORKSPACE'
+                    ? t('admin.auditLogs.targetWorkspace')
+                    : log.targetType === 'SYSTEM_SETTING'
+                      ? t('admin.auditLogs.targetSetting')
+                      : log.targetType === 'USER'
+                        ? t('admin.auditLogs.targetUser')
+                        : targetBadge.label;
 
                 return (
                   <TableRow
@@ -168,7 +204,7 @@ export function AuditLogsTable({
                         variant={actionBadge.variant}
                         className={`text-xs font-medium px-2 py-0.5 ${actionBadge.className}`}
                       >
-                        {actionBadge.label}
+                        {actionLabel}
                       </Badge>
                     </TableCell>
 
@@ -179,7 +215,7 @@ export function AuditLogsTable({
                           variant={targetBadge.variant}
                           className={`text-[10px] px-1.5 py-0 font-medium ${targetBadge.className}`}
                         >
-                          {targetBadge.label}
+                          {targetLabel}
                         </Badge>
 
                         {log.targetId ? (
@@ -194,7 +230,7 @@ export function AuditLogsTable({
                               type="button"
                               onClick={e => handleCopyId(log.targetId!, e)}
                               className="text-muted-foreground hover:text-foreground transition-colors p-0.5"
-                              title="Sao chép ID"
+                              title={t('admin.workspaces.copyId')}
                             >
                               {copiedId === log.targetId ? (
                                 <Check className="size-3 text-emerald-600" />
@@ -209,7 +245,7 @@ export function AuditLogsTable({
                                 href={`/admin/workspaces/${log.targetId}`}
                                 onClick={e => e.stopPropagation()}
                                 className="text-primary hover:text-primary/80 transition-colors p-0.5"
-                                title="Mở trang quản trị workspace"
+                                title="Workspace"
                               >
                                 <ExternalLink className="size-3" />
                               </Link>
@@ -219,7 +255,7 @@ export function AuditLogsTable({
                                 href="/admin/settings"
                                 onClick={e => e.stopPropagation()}
                                 className="text-primary hover:text-primary/80 transition-colors p-0.5"
-                                title="Mở cấu hình hệ thống"
+                                title="Settings"
                               >
                                 <ExternalLink className="size-3" />
                               </Link>
@@ -261,7 +297,7 @@ export function AuditLogsTable({
                         className="h-7 px-2 text-xs gap-1.5 text-muted-foreground hover:text-foreground"
                       >
                         <Eye className="size-3.5" />
-                        <span>Chi tiết</span>
+                        <span>{t('admin.auditLogs.details')}</span>
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -274,11 +310,7 @@ export function AuditLogsTable({
 
       {/* Pagination Bar */}
       <div className="flex items-center justify-between px-1 text-xs text-muted-foreground">
-        <div>
-          Trang <span className="font-semibold text-foreground">{page}</span> /{' '}
-          <span className="font-semibold text-foreground">{totalPages}</span> — Tổng{' '}
-          <span className="font-semibold text-foreground">{totalItems}</span> bản ghi
-        </div>
+        <div>{t('admin.auditLogs.pagination', { page, totalPages, total: totalItems })}</div>
 
         <div className="flex items-center gap-1.5">
           <Button
@@ -289,7 +321,7 @@ export function AuditLogsTable({
             className="h-7 px-2.5 text-xs gap-1"
           >
             <ChevronLeft className="size-3.5" />
-            <span>Trước</span>
+            <span>{t('admin.workspaces.prevPage')}</span>
           </Button>
           <Button
             variant="outline"
@@ -298,7 +330,7 @@ export function AuditLogsTable({
             disabled={page >= totalPages || isLoading}
             className="h-7 px-2.5 text-xs gap-1"
           >
-            <span>Sau</span>
+            <span>{t('admin.workspaces.nextPage')}</span>
             <ChevronRight className="size-3.5" />
           </Button>
         </div>

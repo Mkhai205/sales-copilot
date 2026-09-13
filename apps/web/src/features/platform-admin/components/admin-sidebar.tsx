@@ -30,6 +30,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useCurrentUser } from '@/features/auth/use-current-user';
+import { useI18n } from '@/lib/i18n';
 import { isNavItemActive } from './navigation-helpers';
 
 export interface AdminNavItem {
@@ -39,16 +40,24 @@ export interface AdminNavItem {
 }
 
 export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
-  { label: 'Tổng quan', href: '/admin', icon: LayoutDashboard },
-  { label: 'Quản trị Workspaces', href: '/admin/workspaces', icon: Building2 },
-  { label: 'Cấu hình Hệ thống', href: '/admin/settings', icon: Sliders },
-  { label: 'Nhật ký Kiểm toán', href: '/admin/audit-logs', icon: ScrollText },
+  { label: 'Overview', href: '/admin', icon: LayoutDashboard },
+  { label: 'Workspaces', href: '/admin/workspaces', icon: Building2 },
+  { label: 'Settings', href: '/admin/settings', icon: Sliders },
+  { label: 'Audit Logs', href: '/admin/audit-logs', icon: ScrollText },
 ];
 
 export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname();
   const { data: currentUser } = useCurrentUser();
   const { theme, setTheme, resolvedTheme } = useTheme();
+  const { t } = useI18n();
+
+  const navItems = [
+    { label: t('admin.nav.overview'), href: '/admin', icon: LayoutDashboard },
+    { label: t('admin.nav.workspaces'), href: '/admin/workspaces', icon: Building2 },
+    { label: t('admin.nav.settings'), href: '/admin/settings', icon: Sliders },
+    { label: t('admin.nav.auditLogs'), href: '/admin/audit-logs', icon: ScrollText },
+  ];
 
   return (
     <Sidebar collapsible="icon" variant="inset" {...props}>
@@ -69,7 +78,9 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
                 Admin
               </Badge>
             </div>
-            <span className="text-[11px] text-muted-foreground truncate">Platform Control</span>
+            <span className="text-[11px] text-muted-foreground truncate">
+              {t('admin.platformControl')}
+            </span>
           </div>
         </div>
       </SidebarHeader>
@@ -77,11 +88,11 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden">
-            Quản trị Nền tảng
+            {t('admin.title')}
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {ADMIN_NAV_ITEMS.map(item => {
+              {navItems.map(item => {
                 const Icon = item.icon;
                 const isActive = isNavItemActive(item.href, pathname);
 
@@ -104,10 +115,10 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
       <SidebarFooter className="border-t border-sidebar-border p-2">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild tooltip="Quay lại Workspace">
+            <SidebarMenuButton asChild tooltip={t('admin.backToWorkspace')}>
               <Link href="/">
                 <ArrowLeft />
-                <span>Quay lại Workspace</span>
+                <span>{t('admin.backToWorkspace')}</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -127,7 +138,7 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
             size="icon"
             onClick={() => setTheme((resolvedTheme || theme) === 'dark' ? 'light' : 'dark')}
             className="size-7 text-muted-foreground hover:text-foreground shrink-0"
-            title="Chuyển đổi giao diện sáng/tối"
+            title={t('admin.toggleTheme')}
           >
             <Sun className="size-3.5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
             <Moon className="absolute size-3.5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />

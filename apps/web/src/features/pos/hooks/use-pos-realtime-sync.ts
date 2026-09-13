@@ -13,6 +13,7 @@ import {
 } from '@sales-copilot/shared-contracts';
 import { toast } from 'sonner';
 import { useSocketEvent } from '@/lib/socket/use-socket';
+import { useI18n } from '@/lib/i18n';
 
 interface UsePosRealtimeSyncOptions {
   workspaceId?: string;
@@ -30,6 +31,7 @@ export function usePosRealtimeSync({
   conversationId,
   onDraftSuggested,
 }: UsePosRealtimeSyncOptions): void {
+  const { t } = useI18n();
   const queryClient = useQueryClient();
 
   const invalidatePosQueries = React.useCallback(
@@ -66,7 +68,7 @@ export function usePosRealtimeSync({
     ) {
       const orderRef = data.displayId ? `#${data.displayId}` : data.orderNumber || '';
       const method = data.paymentMethod || 'VietQR';
-      toast.success(`Đơn hàng ${orderRef} đã thanh toán thành công qua ${method}!`, {
+      toast.success(t('pos.toasts.orderPaidSuccess', { ref: orderRef, method }), {
         description: data.paidAmount
           ? `Số tiền: ${new Intl.NumberFormat('vi-VN').format(data.paidAmount)}đ`
           : undefined,
@@ -85,7 +87,7 @@ export function usePosRealtimeSync({
       (!conversationId || !data.conversationId || data.conversationId === conversationId)
     ) {
       const orderRef = data.displayId ? `#${data.displayId}` : data.orderNumber || '';
-      toast.info(`Đơn hàng ${orderRef} đã nhận đặt cọc / thanh toán một phần`, {
+      toast.info(t('pos.toasts.orderPartiallyPaid', { ref: orderRef }), {
         description: data.paidAmount
           ? `Đã nhận: ${new Intl.NumberFormat('vi-VN').format(data.paidAmount)}đ / Còn lại: ${new Intl.NumberFormat(
               'vi-VN',
@@ -117,9 +119,12 @@ export function usePosRealtimeSync({
       (!conversationId || !data.conversationId || data.conversationId === conversationId)
     ) {
       const orderRef = data.displayId ? `#${data.displayId}` : data.orderNumber;
-      toast.success(`Đơn hàng ${orderRef} đã xuất kho giao cho ${data.shippingCarrier}!`, {
-        description: `Mã vận đơn: ${data.trackingCode}`,
-      });
+      toast.success(
+        t('pos.toasts.orderShipped', { ref: orderRef, carrier: data.shippingCarrier }),
+        {
+          description: `Mã vận đơn: ${data.trackingCode}`,
+        },
+      );
     }
   });
 
@@ -134,7 +139,7 @@ export function usePosRealtimeSync({
       if (onDraftSuggested) {
         onDraftSuggested(data);
       }
-      toast.info(`✨ AI phát hiện đơn hàng (${data.confidenceScore}% tin cậy)`, {
+      toast.info(t('pos.toasts.aiDraftDetected', { confidence: data.confidenceScore }), {
         description: `${data.suggestedCustomer?.recipientName || 'Khách hàng'} - ${data.suggestedCustomer?.phoneNumber || ''}`,
       });
     }

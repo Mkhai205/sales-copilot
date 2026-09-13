@@ -13,6 +13,7 @@ import {
 import { usePosProducts, type FlatProductVariant } from '../hooks/use-pos-products';
 import { StockStatusBadge } from './stock-status-badge';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/lib/i18n';
 
 interface ProductPickerCommandProps {
   workspaceId?: string;
@@ -25,6 +26,7 @@ export function ProductPickerCommand({
   onSelectVariant,
   disabled = false,
 }: ProductPickerCommandProps) {
+  const { t } = useI18n();
   const [search, setSearch] = React.useState('');
   const [isOpen, setIsOpen] = React.useState(false);
   const inputRef = React.useRef<HTMLInputElement>(null);
@@ -79,7 +81,7 @@ export function ProductPickerCommand({
         <div className="relative">
           <CommandInput
             ref={inputRef}
-            placeholder="Tìm sản phẩm theo tên, SKU, mã vạch... (Ctrl+K)"
+            placeholder={t('pos.productPicker.placeholder')}
             className="text-xs"
             value={search}
             onValueChange={val => {
@@ -99,14 +101,16 @@ export function ProductPickerCommand({
             <CommandList>
               {isLoading ? (
                 <div className="py-6 text-center text-xs text-muted-foreground">
-                  Đang tải danh mục sản phẩm...
+                  {t('pos.productPicker.loading')}
                 </div>
               ) : filteredVariants.length === 0 ? (
                 <CommandEmpty className="py-6 text-center text-xs text-muted-foreground">
-                  Không tìm thấy sản phẩm nào phù hợp
+                  {t('pos.productPicker.empty')}
                 </CommandEmpty>
               ) : (
-                <CommandGroup heading={`Tìm thấy ${filteredVariants.length} phân loại`}>
+                <CommandGroup
+                  heading={t('pos.productPicker.resultsCount', { count: filteredVariants.length })}
+                >
                   {filteredVariants.map(v => {
                     const isOutOfStock = v.availableStock <= 0;
                     return (

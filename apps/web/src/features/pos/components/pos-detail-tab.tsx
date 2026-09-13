@@ -29,6 +29,7 @@ import { PosOrderForm } from './pos-order-form';
 import { useActiveConversationOrder } from '../hooks/use-active-conversation-order';
 import { usePosOrders } from '../hooks/use-pos-orders';
 import { posApi } from '../api/pos-client';
+import { useI18n } from '@/lib/i18n';
 
 export interface PosDetailTabProps {
   workspaceId: string;
@@ -53,6 +54,7 @@ export function PosDetailTab({
   newOrderTrigger,
   onOpenDrawer,
 }: PosDetailTabProps) {
+  const { t } = useI18n();
   const [mode, setMode] = React.useState<'view' | 'form'>('view');
   const [editingOrder, setEditingOrder] = React.useState<OrderResponseDto | null>(null);
 
@@ -96,9 +98,9 @@ export function PosDetailTab({
     setIsSendingQr(true);
     try {
       await posApi.generateVietQr(workspaceId, activeOrder.id, { sendToChat: true });
-      toast.success(`Đã gửi mã VietQR cho đơn #${activeOrder.displayId} vào chat!`);
+      toast.success(t('pos.vietQrSentSuccess', { displayId: activeOrder.displayId }));
     } catch (err: any) {
-      toast.error(`Không thể gửi VietQR: ${err.message || 'Lỗi hệ thống'}`);
+      toast.error(t('pos.vietQrSentError', { error: err.message || 'Error' }));
     } finally {
       setIsSendingQr(false);
     }
@@ -117,14 +119,14 @@ export function PosDetailTab({
       dto: {
         paymentMethod: PaymentMethod.CASH,
         amount: remaining || Number(activeOrder.totalAmount),
-        notes: 'Thanh toán trực tiếp',
+        notes: t('pos.cashPayment'),
       },
     });
   };
 
   const handleCancel = async () => {
     if (!activeOrder) return;
-    const reason = window.prompt('Nhập lý do hủy đơn hàng:');
+    const reason = window.prompt(t('pos.cancelPrompt'));
     if (!reason || reason.trim().length < 3) return;
     await cancelOrder({
       orderId: activeOrder.id,
@@ -134,9 +136,7 @@ export function PosDetailTab({
 
   if (isLoading) {
     return (
-      <div className="py-8 text-center text-xs text-muted-foreground">
-        Đang tải thông tin đơn hàng...
-      </div>
+      <div className="py-8 text-center text-xs text-muted-foreground">{t('pos.loadingOrder')}</div>
     );
   }
 
@@ -159,7 +159,7 @@ export function PosDetailTab({
         onSuccess={savedOrder => {
           setMode('view');
           setEditingOrder(null);
-          toast.success(`Đơn hàng #${savedOrder.displayId} đã được lưu thành công!`);
+          toast.success(t('pos.toasts.orderSavedSuccess', { displayId: savedOrder.displayId }));
         }}
       />
     );
@@ -173,7 +173,7 @@ export function PosDetailTab({
         <div className="flex items-center justify-between">
           <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
             <ShoppingBag className="size-3.5 text-primary" />
-            Đơn hàng hiện tại
+            {t('pos.currentOrder')}
           </h4>
 
           <Button
@@ -188,7 +188,7 @@ export function PosDetailTab({
             }}
           >
             <Plus className="size-3" />
-            Tạo đơn mới (F4)
+            {t('pos.createOrderShortcut')}
           </Button>
         </div>
 
@@ -246,7 +246,7 @@ export function PosDetailTab({
 
             {/* Financials */}
             <div className="flex items-center justify-between pt-2 border-t border-border/60">
-              <span className="text-muted-foreground">Tổng thanh toán:</span>
+              <span className="text-muted-foreground">{t('pos.summary.grandTotal')}:</span>
               <span className="font-bold text-sm text-primary">
                 {formatCurrency(activeOrder.totalAmount)}
               </span>
@@ -265,7 +265,7 @@ export function PosDetailTab({
                     disabled={isCancelling}
                   >
                     <XCircle className="size-3.5 mr-1" />
-                    Hủy
+                    {t('pos.cancelOrder')}
                   </Button>
                   <Button
                     type="button"
@@ -276,7 +276,7 @@ export function PosDetailTab({
                     disabled={isSendingQr}
                   >
                     <QrCode className="size-3.5" />
-                    {isSendingQr ? 'Đang gửi...' : 'Gửi VietQR'}
+                    {isSendingQr ? t('common.saving') : t('pos.sendVietQr')}
                   </Button>
                   <Button
                     type="button"
@@ -289,7 +289,7 @@ export function PosDetailTab({
                     }}
                   >
                     <Edit className="size-3.5" />
-                    Sửa đơn (F4)
+                    {t('pos.editOrder')} (F4)
                   </Button>
                   <Button
                     type="button"
@@ -300,7 +300,7 @@ export function PosDetailTab({
                     disabled={isConfirming}
                   >
                     <CheckCircle className="size-3.5" />
-                    Xác nhận
+                    {t('pos.confirmOrder')}
                   </Button>
                 </>
               )}
@@ -316,7 +316,7 @@ export function PosDetailTab({
                     disabled={isCancelling}
                   >
                     <XCircle className="size-3.5 mr-1" />
-                    Hủy
+                    {t('pos.cancelOrder')}
                   </Button>
                   <Button
                     type="button"
@@ -327,7 +327,7 @@ export function PosDetailTab({
                     disabled={isSendingQr}
                   >
                     <QrCode className="size-3.5" />
-                    {isSendingQr ? 'Đang gửi...' : 'Gửi VietQR'}
+                    {isSendingQr ? t('common.saving') : t('pos.sendVietQr')}
                   </Button>
                   <Button
                     type="button"
@@ -351,7 +351,7 @@ export function PosDetailTab({
                     disabled={isPaying}
                   >
                     <CreditCard className="size-3.5" />
-                    Thanh toán
+                    {t('pos.payOrder')}
                   </Button>
                 </>
               )}
@@ -362,8 +362,8 @@ export function PosDetailTab({
                   <div className="flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
                     <CheckCircle className="size-3.5" />
                     {activeOrder.status === OrderStatus.SHIPPING
-                      ? 'Đang vận chuyển'
-                      : 'Đã thanh toán'}
+                      ? t('pos.status.shipping')
+                      : t('pos.payment.paid')}
                   </div>
                   <Button
                     type="button"
@@ -376,7 +376,7 @@ export function PosDetailTab({
                     }}
                   >
                     <Printer className="size-3.5" />
-                    In phiếu K80
+                    {t('pos.print.k80Button')}
                   </Button>
                   <Button
                     type="button"
@@ -389,7 +389,7 @@ export function PosDetailTab({
                     }}
                   >
                     <Printer className="size-3.5" />
-                    In K58
+                    {t('pos.print.k58Button')}
                   </Button>
                 </div>
               )}
@@ -398,10 +398,8 @@ export function PosDetailTab({
         ) : (
           <div className="flex flex-col items-center justify-center p-6 rounded-lg border border-dashed border-border/80 bg-muted/20 text-center">
             <Package className="size-7 text-muted-foreground/60 mb-1.5" />
-            <p className="text-xs font-medium text-foreground">Chưa có đơn hàng cho hội thoại</p>
-            <p className="text-[11px] text-muted-foreground mt-0.5 mb-3">
-              Tạo đơn hàng nhanh để giữ kho và gửi xác nhận cho khách
-            </p>
+            <p className="text-xs font-medium text-foreground">{t('pos.noOrderTitle')}</p>
+            <p className="text-[11px] text-muted-foreground mt-0.5 mb-3">{t('pos.noOrderDesc')}</p>
             <Button
               type="button"
               variant="default"
@@ -413,7 +411,7 @@ export function PosDetailTab({
               }}
             >
               <Plus className="size-3.5" />
-              Tạo đơn ngay (F4)
+              {t('pos.createOrderShortcut')}
             </Button>
           </div>
         )}
@@ -423,8 +421,9 @@ export function PosDetailTab({
       {orders.length > 0 && (
         <div className="flex flex-col gap-1.5 pt-2 border-t border-border/60">
           <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider text-muted-foreground">
-            Lịch sử đơn của khách ({orders.length})
+            {t('pos.orderHistory')} ({orders.length})
           </h4>
+
           <div className="rounded-lg border border-border bg-card overflow-hidden">
             <OrderHistoryList
               orders={orders}
