@@ -1,17 +1,17 @@
 - [x] định nghĩa làm rõ sản phẩm đang làm về cái gì, hướng đến đối tượng nào, giải quyết vấn đề gì (pain point của người dùng phải giải thích được tại sao dùng sản phẩm của chúng ta như 1 phần mềm trung gian thay vì sử dụng trực tiếp các nền tảng xã hội)
 - [x] mô hình hiện tại 1 tài khoản có nhiều workspace và nhiều team trong 1 workspace có thừa hoặc phức tạp không.
 - [x] kiểm tra và chuẩn hóa lại database schema
-- tạo mảng ma trận phân quyền người dùng
+- [x] bỏ phần thẻ nhanh
+- [x] migrate middleware-to-proxy
+- [x] thêm thư viện để hỗ trợ emoji
+- xây dựng bộ lọc fillter
 - tạo trang supper admin để quản lý hệ thống.
 - xây dựng chat widget plugin hoàn chỉnh với tùy chỉnh hiển thị, biểu mẫu, câu hởi thường gặp, chức năng,...
+- thiết kế chuyển đổi ngôn ngữ
+- tạo mảng ma trận phân quyền người dùng
 - thiết kế trang danh bạ hồ sơ khách hàng
-- xây dựng bộ lọc fillter
 - làm rõ luồng hoạt động của bot ai tự động trả lời. Khi nào thì ngừng trả qua nhân viên, hoặc khi có nhân viên tiếp nhận đoạn hội thoại đó.
 - thiết kế lại giao diện phần ai copilot
-- thêm thư viện để hỗ trợ emoji
-- bỏ phần thẻ nhanh
 - thiết kế trang thống kê
 - phần quản lý fanpage đối với facebook, bài đăng, bình luận, hình ảnh, video (làm sau)
-- thiết kế chuyển đổi ngôn ngữ
 - thiết kế hệ thống POS (quản lý kho, bán hàng) hoàn chỉnh (ưu tiên sau)
-- 

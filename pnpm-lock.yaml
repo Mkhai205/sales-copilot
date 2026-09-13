@@ -273,6 +273,9 @@ importers:
       date-fns:
         specifier: ^4.4.0
         version: 4.4.0
+      emoji-picker-react:
+        specifier: ^4.22.2
+        version: 4.22.2(react@19.2.8)
       lucide-react:
         specifier: ^1.37.0
         version: 1.37.0(react@19.2.8)
@@ -5633,6 +5636,12 @@ packages:
     resolution: {integrity: sha512-DeWwawk6r5yR9jFgnDKYt4sLS0LmHJJi3ZOnb5/JdbYwj3nW+FxQnHIjhBKz8YLC7oRNPVM9NQ47I3CVx34eqQ==}
     engines: {node: '>=12'}
 
+  emoji-picker-react@4.22.2:
+    resolution: {integrity: sha512-xd0YRbuqkdfVYLAMEiDhM/xx98OQZ4FWu3KQJjVBkQO956EpMTJY0wW4jtF1VGqYBYK4E1KDXyDa2e8M4PQFkw==}
+    engines: {node: '>=10'}
+    peerDependencies:
+      react: '>=16.8'
+
   emoji-regex@10.6.0:
     resolution: {integrity: sha512-toUI84YS5YmxW219erniWD0CIVOo46xGKColeNQRgOzDorgBi1v4D71/OFzgD9GO2UGKIv1C3Sp8DAn0+j5w7A==}
 
@@ -8738,6 +8747,9 @@ packages:
 
   shell-exec@1.0.2:
     resolution: {integrity: sha512-jyVd+kU2X+mWKMmGhx4fpWbPsjvD53k9ivqetutVW/BQ+WIZoDoP4d8vUMGezV6saZsiNoW2f9GIhg9Dondohg==}
+
+  shipstyles@1.0.0:
+    resolution: {integrity: sha512-1AcihfXo/mSxqeOdoKqq/5TNv+vSH0dBYPFq88PUX5FBkK5pRmY5TP9SuMNio85PQ+euUI67+KpSVk1cUVDCgA==}
 
   side-channel-list@1.0.1:
     resolution: {integrity: sha512-mjn/0bi/oUURjc5Xl7IaWi/OJJJumuoJFQJfDDyO46+hBWsfaVM65TBHq2eoZBhzl9EchxOijpkbRC8SVBQU0w==}
@@ -15751,6 +15763,11 @@ snapshots:
 
   emittery@0.13.1: {}
 
+  emoji-picker-react@4.22.2(react@19.2.8):
+    dependencies:
+      react: 19.2.8
+      shipstyles: 1.0.0
+
   emoji-regex@10.6.0: {}
 
   emoji-regex@8.0.0: {}
@@ -19552,6 +19569,8 @@ snapshots:
   shebang-regex@3.0.0: {}
 
   shell-exec@1.0.2: {}
+
+  shipstyles@1.0.0: {}
 
   side-channel-list@1.0.1:
     dependencies:

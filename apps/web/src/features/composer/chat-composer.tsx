@@ -3,7 +3,6 @@
 import * as React from 'react';
 import {
   Paperclip,
-  Smile,
   Send,
   Lock,
   MessageSquare,
@@ -21,6 +20,7 @@ import { useSendMessage } from './hooks/use-send-message';
 import { useTypingIndicator } from './hooks/use-typing-indicator';
 import { CannedResponsePicker, type CannedResponsePickerHandle } from './canned-response-picker';
 import { AttachmentPreviewBar } from './attachment-preview-bar';
+import { EmojiPickerPopover } from './emoji-picker-popover';
 import { COPILOT_INSERT_EVENT, type InsertComposerPayload } from './composer-bridge';
 
 export type ComposerMode = 'reply' | 'note';
@@ -310,6 +310,27 @@ export function ChatComposer({
     }, 0);
   };
 
+  const handleInsertEmoji = (emoji: string) => {
+    const textarea = textareaRef.current;
+    const currentContent = content;
+    const cursorPos = textarea?.selectionStart ?? currentContent.length;
+    const prefix = currentContent.slice(0, cursorPos);
+    const suffix = currentContent.slice(cursorPos);
+    const newContent = `${prefix}${emoji}${suffix}`;
+    const newCursorPos = cursorPos + emoji.length;
+
+    setContent(newContent);
+
+    setTimeout(() => {
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+        textareaRef.current.setSelectionRange(newCursorPos, newCursorPos);
+        textareaRef.current.style.height = 'auto';
+        textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 160)}px`;
+      }
+    }, 0);
+  };
+
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newText = e.target.value;
     setContent(newText);
@@ -568,23 +589,10 @@ export function ChatComposer({
               </TooltipContent>
             </Tooltip>
 
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-xs"
-                  disabled={disabled || isPending}
-                  className="text-muted-foreground hover:text-foreground"
-                  aria-label="Insert emoji"
-                >
-                  <Smile className="size-3.5" data-icon="inline-start" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="top">
-                <span className="text-xs">Insert emoji (Coming soon)</span>
-              </TooltipContent>
-            </Tooltip>
+            <EmojiPickerPopover
+              onEmojiSelect={handleInsertEmoji}
+              disabled={disabled || isPending}
+            />
           </div>
 
           <div className="flex items-center gap-2">
