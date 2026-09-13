@@ -676,7 +676,7 @@ describe('MessagesService (Task T-1.5.6: Message Threading & Polymorphic Senders
       assert.strictEqual(updatedConv.snoozedUntil, null);
     });
 
-    it('should reset unread count, set firstReplyCreatedAt, and transition OPEN -> PENDING on USER reply', async () => {
+    it('should reset unread count, set firstReplyCreatedAt, and keep status OPEN on USER reply (Option A)', async () => {
       conversationsDb.set('conv_1', {
         ...conversationsDb.get('conv_1'),
         status: ConversationStatus.OPEN,
@@ -691,13 +691,50 @@ describe('MessagesService (Task T-1.5.6: Message Threading & Polymorphic Senders
       });
 
       const updatedConv = conversationsDb.get('conv_1');
-      assert.strictEqual(updatedConv.status, ConversationStatus.PENDING);
+      assert.strictEqual(updatedConv.status, ConversationStatus.OPEN);
       assert.strictEqual(updatedConv.unreadMessagesCount, 0);
       assert.ok(updatedConv.firstReplyCreatedAt instanceof Date);
+    });
 
-      const statusEvent = emittedEvents.find(e => e.event === 'conversation.status_updated');
+    it('should transition PENDING conversation to OPEN when CONTACT messages', async () => {
+      conversationsDb.set('conv_1', {
+        ...conversationsDb.get('conv_1'),
+        status: ConversationStatus.PENDING,
+        unreadMessagesCount: 0,
+      });
+
+      await service.create('ws_1', 'conv_1', {
+        senderType: SenderType.CONTACT,
+        content: 'Customer is replying to pending chat',
+      });
+
+      const updatedConv = conversationsDb.get('conv_1');
+      assert.strictEqual(updatedConv.status, ConversationStatus.OPEN);
+      assert.strictEqual(updatedConv.unreadMessagesCount, 1);
+
+      const statusEvent = emittedEvents.find(
+        e =>
+          e.event === 'conversation.status_updated' &&
+          e.payload.currentStatus === ConversationStatus.OPEN,
+      );
       assert.ok(statusEvent);
-      assert.strictEqual(statusEvent.payload.currentStatus, ConversationStatus.PENDING);
+    });
+
+    it('should transition PENDING conversation to OPEN when USER sends an outgoing reply', async () => {
+      conversationsDb.set('conv_1', {
+        ...conversationsDb.get('conv_1'),
+        status: ConversationStatus.PENDING,
+        unreadMessagesCount: 0,
+      });
+
+      await service.create('ws_1', 'conv_1', {
+        senderType: SenderType.USER,
+        senderId: 'usr_agent_1',
+        content: 'Agent checking in on customer',
+      });
+
+      const updatedConv = conversationsDb.get('conv_1');
+      assert.strictEqual(updatedConv.status, ConversationStatus.OPEN);
     });
 
     it('should NOT alter conversation status or firstReplyCreatedAt on private note (isPrivate = true)', async () => {

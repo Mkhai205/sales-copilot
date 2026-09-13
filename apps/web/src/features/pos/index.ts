@@ -15,7 +15,7 @@ export * from './components/order-status-badge';
 export * from './components/order-history-list';
 export * from './components/agent-collision-banner';
 export * from './components/pos-detail-tab';
-export * from './components/pos-drawer';
+export * from './components/pos-order-form';
 export * from './components/vietqr-chat-card';
 export * from './components/vietqr-dialog';
 export * from './components/thermal-waybill-k80';

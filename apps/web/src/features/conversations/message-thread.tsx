@@ -62,7 +62,6 @@ import { RichLinkCard } from './rich-link-card';
 import { ImageLightboxDialog } from './image-lightbox-dialog';
 import { MessageImageGrid, isImageAttachment } from './message-image-grid';
 import { MessageActionsToolbar } from './message-actions-toolbar';
-import { QuickTagActionBar } from './quick-tag-action-bar';
 import { VietQrChatCard } from '@/features/pos/components/vietqr-chat-card';
 import type { VietQrResponseDto } from '@sales-copilot/shared-contracts';
 
@@ -738,6 +737,7 @@ export function MessageThread({
       {/* Thread Header */}
       <MessageThreadHeader
         conversation={conversation}
+        workspaceSlug={workspaceSlug}
         isLoading={isConversationLoading}
         isDetailOpen={Boolean(isDetailOpen)}
         onToggleDetail={() => onToggleDetail?.()}
@@ -836,13 +836,6 @@ export function MessageThread({
 
       {/* Typing Status Indicator */}
       <TypingIndicator conversationId={conversationId} />
-
-      {/* Ergonomic Quick Tag Action Bar */}
-      <QuickTagActionBar
-        workspaceId={activeWorkspaceId}
-        conversationId={conversationId}
-        conversation={conversation}
-      />
 
       {/* Live Message Composer */}
       <ChatComposer

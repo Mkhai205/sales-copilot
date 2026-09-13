@@ -2,12 +2,9 @@
 
 import * as React from 'react';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
-import { PosDrawer, usePosRealtimeSync, AiAutofillBanner } from '@/features/pos';
+import { usePosRealtimeSync, AiAutofillBanner } from '@/features/pos';
 import { useWorkspaces } from '@/features/workspaces/use-workspaces';
-import type {
-  OrderResponseDto,
-  PosDraftSuggestedEventPayload,
-} from '@sales-copilot/shared-contracts';
+import type { PosDraftSuggestedEventPayload } from '@sales-copilot/shared-contracts';
 import { ConversationEmptyState } from './conversation-empty-state';
 import { ConversationList } from './conversation-list';
 import { MessageThread } from './message-thread';
@@ -21,8 +18,8 @@ interface ConversationLayoutProps {
 
 export function ConversationLayout({ workspaceSlug, conversationId }: ConversationLayoutProps) {
   const [isDetailOpen, setIsDetailOpen] = React.useState(true);
-  const [isPosDrawerOpen, setIsPosDrawerOpen] = React.useState(false);
-  const [orderToEdit, setOrderToEdit] = React.useState<OrderResponseDto | null>(null);
+  const [detailTab, setDetailTab] = React.useState<'contact' | 'pos'>('contact');
+  const [newOrderTrigger, setNewOrderTrigger] = React.useState<number>(0);
   const [posDraftSuggestion, setPosDraftSuggestion] =
     React.useState<PosDraftSuggestedEventPayload | null>(null);
 
@@ -51,30 +48,25 @@ export function ConversationLayout({ workspaceSlug, conversationId }: Conversati
     },
   });
 
-  const handleOpenPosDrawer = React.useCallback((order?: OrderResponseDto | null) => {
-    setOrderToEdit(order || null);
-    setIsPosDrawerOpen(true);
+  const handleStartNewOrder = React.useCallback(() => {
+    setIsDetailOpen(true);
+    setDetailTab('pos');
+    setNewOrderTrigger(prev => prev + 1);
   }, []);
 
-  // Global F4 shortcut to toggle POS Drawer
+  // Global F4 shortcut to open/switch to POS order creation
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'F4') {
         e.preventDefault();
         if (!conversationId) return;
-        setIsPosDrawerOpen(prev => {
-          if (prev) {
-            setOrderToEdit(null);
-            return false;
-          }
-          return true;
-        });
+        handleStartNewOrder();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [conversationId]);
+  }, [conversationId, handleStartNewOrder]);
 
   return (
     <div className="flex h-full w-full min-h-0 flex-1 overflow-hidden">
@@ -88,7 +80,7 @@ export function ConversationLayout({ workspaceSlug, conversationId }: Conversati
           id="conversation-list-panel"
           defaultSize="25%"
           minSize="20%"
-          maxSize="35%"
+          maxSize="30%"
           className="min-h-0 overflow-hidden"
         >
           <ConversationList workspaceSlug={workspaceSlug} activeConversationId={conversationId} />
@@ -99,18 +91,19 @@ export function ConversationLayout({ workspaceSlug, conversationId }: Conversati
         {/* Center Column: Message Thread or Empty State */}
         <ResizablePanel
           id="message-thread-panel"
-          defaultSize={isDetailOpen && conversationId ? '50%' : '75%'}
+          defaultSize={isDetailOpen && conversationId ? '45%' : '75%'}
           minSize="30%"
           className="min-h-0 overflow-hidden"
         >
           {conversationId ? (
             <div className="flex flex-col h-full w-full min-h-0">
-              {posDraftSuggestion && !isPosDrawerOpen && (
+              {posDraftSuggestion && (
                 <div className="p-2 border-b bg-background shrink-0">
                   <AiAutofillBanner
                     suggestion={posDraftSuggestion}
                     onApply={() => {
-                      setIsPosDrawerOpen(true);
+                      setIsDetailOpen(true);
+                      setDetailTab('pos');
                     }}
                     onDismiss={() => setPosDraftSuggestion(null)}
                   />
@@ -123,7 +116,7 @@ export function ConversationLayout({ workspaceSlug, conversationId }: Conversati
                   workspaceId={resolvedWorkspaceId}
                   isDetailOpen={isDetailOpen}
                   onToggleDetail={() => setIsDetailOpen(prev => !prev)}
-                  onOpenPosDrawer={() => handleOpenPosDrawer(null)}
+                  onOpenPosDrawer={handleStartNewOrder}
                 />
               </div>
             </div>
@@ -138,43 +131,27 @@ export function ConversationLayout({ workspaceSlug, conversationId }: Conversati
             <ResizableHandle withHandle className="hover:bg-primary/50 transition-colors" />
             <ResizablePanel
               id="detail-panel"
-              defaultSize="25%"
-              minSize="20%"
-              maxSize="35%"
+              defaultSize="30%"
+              minSize="22%"
+              maxSize="45%"
               className="min-h-0 overflow-hidden"
             >
               <DetailPanel
                 conversationId={conversationId}
                 workspaceSlug={workspaceSlug}
                 workspaceId={resolvedWorkspaceId}
+                activeTab={detailTab}
+                onTabChange={setDetailTab}
+                newOrderTrigger={newOrderTrigger}
+                draftSuggestion={posDraftSuggestion}
+                onDismissSuggestion={() => setPosDraftSuggestion(null)}
                 onClose={() => setIsDetailOpen(false)}
-                onOpenPosDrawer={handleOpenPosDrawer}
+                onOpenPosDrawer={handleStartNewOrder}
               />
             </ResizablePanel>
           </>
         )}
       </ResizablePanelGroup>
-
-      {/* Slide-over POS Drawer */}
-      {resolvedWorkspaceId && (
-        <PosDrawer
-          isOpen={isPosDrawerOpen}
-          onOpenChange={open => {
-            setIsPosDrawerOpen(open);
-            if (!open) {
-              setOrderToEdit(null);
-            }
-          }}
-          workspaceId={resolvedWorkspaceId}
-          conversationId={conversationId}
-          contactId={conversation?.contactId}
-          initialOrder={orderToEdit}
-          contactName={conversation?.contact?.name}
-          contactPhone={conversation?.contact?.phoneNumber}
-          draftSuggestion={posDraftSuggestion}
-          onDismissSuggestion={() => setPosDraftSuggestion(null)}
-        />
-      )}
     </div>
   );
 }

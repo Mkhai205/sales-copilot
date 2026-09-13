@@ -1,7 +1,12 @@
 'use client';
 
 import * as React from 'react';
-import { OrderStatus, PaymentMethod, type OrderResponseDto } from '@sales-copilot/shared-contracts';
+import {
+  OrderStatus,
+  PaymentMethod,
+  type OrderResponseDto,
+  type PosDraftSuggestedEventPayload,
+} from '@sales-copilot/shared-contracts';
 import {
   ShoppingBag,
   Plus,
@@ -20,23 +25,37 @@ import { OrderStatusBadge, PaymentStatusBadge } from './order-status-badge';
 import { CarrierBadge } from './carrier-badge';
 import { OrderHistoryList } from './order-history-list';
 import { ThermalPrintDialog } from './thermal-print-dialog';
+import { PosOrderForm } from './pos-order-form';
 import { useActiveConversationOrder } from '../hooks/use-active-conversation-order';
 import { usePosOrders } from '../hooks/use-pos-orders';
 import { posApi } from '../api/pos-client';
 
-interface PosDetailTabProps {
+export interface PosDetailTabProps {
   workspaceId: string;
   conversationId?: string;
   contactId?: string;
-  onOpenDrawer: (orderToEdit?: OrderResponseDto | null) => void;
+  contactName?: string | null;
+  contactPhone?: string | null;
+  draftSuggestion?: PosDraftSuggestedEventPayload | null;
+  onDismissSuggestion?: () => void;
+  newOrderTrigger?: number;
+  onOpenDrawer?: (orderToEdit?: OrderResponseDto | null) => void;
 }
 
 export function PosDetailTab({
   workspaceId,
   conversationId,
   contactId,
+  contactName,
+  contactPhone,
+  draftSuggestion,
+  onDismissSuggestion,
+  newOrderTrigger,
   onOpenDrawer,
 }: PosDetailTabProps) {
+  const [mode, setMode] = React.useState<'view' | 'form'>('view');
+  const [editingOrder, setEditingOrder] = React.useState<OrderResponseDto | null>(null);
+
   const { activeOrder, orders, isLoading } = useActiveConversationOrder({
     workspaceId,
     conversationId,
@@ -48,6 +67,21 @@ export function PosDetailTab({
   const [isSendingQr, setIsSendingQr] = React.useState(false);
   const [printDialogOpen, setPrintDialogOpen] = React.useState(false);
   const [printFormat, setPrintFormat] = React.useState<'K80' | 'K58'>('K80');
+
+  // React to external newOrderTrigger (F4 hotkey)
+  React.useEffect(() => {
+    if (newOrderTrigger && newOrderTrigger > 0) {
+      setEditingOrder(null);
+      setMode('form');
+    }
+  }, [newOrderTrigger]);
+
+  // React to AI draft suggestion with high confidence
+  React.useEffect(() => {
+    if (draftSuggestion && draftSuggestion.confidenceScore >= 80) {
+      setMode('form');
+    }
+  }, [draftSuggestion]);
 
   const formatCurrency = (val: number | string) => {
     return new Intl.NumberFormat('vi-VN', {
@@ -106,9 +140,35 @@ export function PosDetailTab({
     );
   }
 
+  // 1. Inline Order Creation / Editing Mode
+  if (mode === 'form') {
+    return (
+      <PosOrderForm
+        workspaceId={workspaceId}
+        conversationId={conversationId}
+        contactId={contactId}
+        contactName={contactName}
+        contactPhone={contactPhone}
+        initialOrder={editingOrder}
+        draftSuggestion={draftSuggestion}
+        onDismissSuggestion={onDismissSuggestion}
+        onCancel={() => {
+          setMode('view');
+          setEditingOrder(null);
+        }}
+        onSuccess={savedOrder => {
+          setMode('view');
+          setEditingOrder(null);
+          toast.success(`Đơn hàng #${savedOrder.displayId} đã được lưu thành công!`);
+        }}
+      />
+    );
+  }
+
+  // 2. Standard View Mode: Active Order & Order History
   return (
     <div className="flex flex-col gap-4">
-      {/* 1. Active Order Section */}
+      {/* Active Order Section */}
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
           <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
@@ -120,8 +180,12 @@ export function PosDetailTab({
             type="button"
             variant="outline"
             size="sm"
-            className="h-6 px-2 text-[11px] gap-1 font-medium text-primary"
-            onClick={() => onOpenDrawer(null)}
+            className="h-6 px-2 text-[11px] gap-1 font-medium text-primary cursor-pointer"
+            onClick={() => {
+              setEditingOrder(null);
+              setMode('form');
+              onOpenDrawer?.(null);
+            }}
           >
             <Plus className="size-3" />
             Tạo đơn mới (F4)
@@ -189,14 +253,14 @@ export function PosDetailTab({
             </div>
 
             {/* Action Buttons based on status */}
-            <div className="flex items-center justify-end gap-1.5 pt-2 border-t border-border/60">
+            <div className="flex items-center justify-end gap-1.5 pt-2 border-t border-border/60 flex-wrap">
               {activeOrder.status === OrderStatus.DRAFT && (
                 <>
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="h-7 text-xs text-destructive hover:text-destructive px-2"
+                    className="h-7 text-xs text-destructive hover:text-destructive px-2 cursor-pointer"
                     onClick={handleCancel}
                     disabled={isCancelling}
                   >
@@ -207,7 +271,7 @@ export function PosDetailTab({
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="h-7 text-xs px-2 gap-1 text-primary"
+                    className="h-7 text-xs px-2 gap-1 text-primary cursor-pointer"
                     onClick={handleSendVietQr}
                     disabled={isSendingQr}
                   >
@@ -218,8 +282,11 @@ export function PosDetailTab({
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="h-7 text-xs px-2 gap-1"
-                    onClick={() => onOpenDrawer(activeOrder)}
+                    className="h-7 text-xs px-2 gap-1 cursor-pointer"
+                    onClick={() => {
+                      setEditingOrder(activeOrder);
+                      setMode('form');
+                    }}
                   >
                     <Edit className="size-3.5" />
                     Sửa đơn (F4)
@@ -228,7 +295,7 @@ export function PosDetailTab({
                     type="button"
                     variant="default"
                     size="sm"
-                    className="h-7 text-xs px-2.5 gap-1 font-semibold"
+                    className="h-7 text-xs px-2.5 gap-1 font-semibold cursor-pointer"
                     onClick={handleConfirm}
                     disabled={isConfirming}
                   >
@@ -244,7 +311,7 @@ export function PosDetailTab({
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="h-7 text-xs text-destructive hover:text-destructive px-2"
+                    className="h-7 text-xs text-destructive hover:text-destructive px-2 cursor-pointer"
                     onClick={handleCancel}
                     disabled={isCancelling}
                   >
@@ -255,7 +322,7 @@ export function PosDetailTab({
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="h-7 text-xs px-2 gap-1 text-primary"
+                    className="h-7 text-xs px-2 gap-1 text-primary cursor-pointer"
                     onClick={handleSendVietQr}
                     disabled={isSendingQr}
                   >
@@ -266,7 +333,7 @@ export function PosDetailTab({
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="h-7 text-xs px-2 gap-1"
+                    className="h-7 text-xs px-2 gap-1 cursor-pointer"
                     onClick={() => {
                       setPrintFormat('K80');
                       setPrintDialogOpen(true);
@@ -279,7 +346,7 @@ export function PosDetailTab({
                     type="button"
                     variant="default"
                     size="sm"
-                    className="h-7 text-xs px-2.5 gap-1 font-semibold"
+                    className="h-7 text-xs px-2.5 gap-1 font-semibold cursor-pointer"
                     onClick={handlePay}
                     disabled={isPaying}
                   >
@@ -302,7 +369,7 @@ export function PosDetailTab({
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="h-7 text-xs px-2 gap-1"
+                    className="h-7 text-xs px-2 gap-1 cursor-pointer"
                     onClick={() => {
                       setPrintFormat('K80');
                       setPrintDialogOpen(true);
@@ -315,7 +382,7 @@ export function PosDetailTab({
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="h-7 text-xs px-2 gap-1"
+                    className="h-7 text-xs px-2 gap-1 cursor-pointer"
                     onClick={() => {
                       setPrintFormat('K58');
                       setPrintDialogOpen(true);
@@ -339,8 +406,11 @@ export function PosDetailTab({
               type="button"
               variant="default"
               size="sm"
-              className="h-7 text-xs gap-1 font-medium"
-              onClick={() => onOpenDrawer(null)}
+              className="h-7 text-xs gap-1 font-medium cursor-pointer"
+              onClick={() => {
+                setEditingOrder(null);
+                setMode('form');
+              }}
             >
               <Plus className="size-3.5" />
               Tạo đơn ngay (F4)
@@ -349,7 +419,7 @@ export function PosDetailTab({
         )}
       </div>
 
-      {/* 2. Contact Order History Section */}
+      {/* Contact Order History Section */}
       {orders.length > 0 && (
         <div className="flex flex-col gap-1.5 pt-2 border-t border-border/60">
           <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider text-muted-foreground">
@@ -359,7 +429,10 @@ export function PosDetailTab({
             <OrderHistoryList
               orders={orders}
               activeOrderId={activeOrder?.id}
-              onSelectOrder={order => onOpenDrawer(order)}
+              onSelectOrder={order => {
+                setEditingOrder(order);
+                setMode('form');
+              }}
             />
           </div>
         </div>

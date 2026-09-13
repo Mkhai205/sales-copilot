@@ -1,14 +1,16 @@
 'use client';
 
 import * as React from 'react';
-import { X, User, ShoppingBag } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { User, ShoppingBag } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useWorkspaces } from '@/features/workspaces/use-workspaces';
 import { PosDetailTab } from '@/features/pos';
-import type { OrderResponseDto } from '@sales-copilot/shared-contracts';
+import type {
+  OrderResponseDto,
+  PosDraftSuggestedEventPayload,
+} from '@sales-copilot/shared-contracts';
 import { useI18n } from '@/lib/i18n';
 import { useConversation } from './hooks/use-conversation';
 import { ContactInfo } from './contact-info';
@@ -20,7 +22,12 @@ interface DetailPanelProps {
   conversationId?: string;
   workspaceSlug?: string;
   workspaceId?: string;
-  onClose: () => void;
+  activeTab?: 'contact' | 'pos';
+  onTabChange?: (tab: 'contact' | 'pos') => void;
+  newOrderTrigger?: number;
+  draftSuggestion?: PosDraftSuggestedEventPayload | null;
+  onDismissSuggestion?: () => void;
+  onClose?: () => void;
   onOpenPosDrawer?: (orderToEdit?: OrderResponseDto | null) => void;
 }
 
@@ -54,10 +61,28 @@ export function DetailPanel({
   conversationId,
   workspaceSlug,
   workspaceId,
-  onClose,
+  activeTab,
+  onTabChange,
+  newOrderTrigger,
+  draftSuggestion,
+  onDismissSuggestion,
   onOpenPosDrawer,
 }: DetailPanelProps) {
   const { t } = useI18n();
+  const [internalTab, setInternalTab] = React.useState<'contact' | 'pos'>(activeTab || 'contact');
+
+  React.useEffect(() => {
+    if (activeTab) {
+      setInternalTab(activeTab);
+    }
+  }, [activeTab]);
+
+  const handleTabChange = (val: string) => {
+    const nextTab = val as 'contact' | 'pos';
+    setInternalTab(nextTab);
+    onTabChange?.(nextTab);
+  };
+
   const { conversation, isLoading } = useConversation(conversationId, {
     workspaceSlug,
     workspaceId,
@@ -71,21 +96,26 @@ export function DetailPanel({
     workspaces?.[0]?.id;
 
   return (
-    <div className="flex h-full w-full min-h-0 flex-1 flex-col overflow-hidden bg-card/40 border-l border-border/70">
-      {/* Detail Header */}
-      <div className="flex h-14 shrink-0 items-center justify-between border-b border-border/80 px-4 bg-background/95 backdrop-blur-xs">
-        <h3 className="text-xs font-semibold tracking-tight text-foreground">
-          {t('conversations.details.title')}
-        </h3>
-        <Button
-          variant="ghost"
-          size="icon-xs"
-          onClick={onClose}
-          className="text-muted-foreground hover:text-foreground"
-        >
-          <X className="size-3.5" />
-          <span className="sr-only">Close detail panel</span>
-        </Button>
+    <Tabs
+      value={internalTab}
+      onValueChange={handleTabChange}
+      className="flex h-full w-full min-h-0 flex-1 flex-col overflow-hidden bg-card/40 border-l border-border/70 gap-0"
+    >
+      {/* Detail Header: Top Tabs [Khách hàng | Đơn POS] */}
+      <div className="flex h-14 shrink-0 items-center border-b border-border/80 px-3 bg-background/95 backdrop-blur-xs">
+        <TabsList className="grid w-full grid-cols-2 h-8 p-0.5">
+          <TabsTrigger
+            value="contact"
+            className="text-[11px] gap-1.5 px-2 font-medium cursor-pointer"
+          >
+            <User className="size-3.5 shrink-0" />
+            <span className="truncate">{t('conversations.details.tabContact')}</span>
+          </TabsTrigger>
+          <TabsTrigger value="pos" className="text-[11px] gap-1.5 px-2 font-medium cursor-pointer">
+            <ShoppingBag className="size-3.5 shrink-0" />
+            <span className="truncate">{t('conversations.details.tabPos')}</span>
+          </TabsTrigger>
+        </TabsList>
       </div>
 
       {isLoading || !conversation ? (
@@ -93,21 +123,7 @@ export function DetailPanel({
           <DetailPanelLoading />
         </div>
       ) : (
-        /* 2-Tab Ergonomics Navigation: Contact & POS */
-        <Tabs defaultValue="contact" className="flex flex-1 flex-col overflow-hidden min-h-0 gap-0">
-          <div className="px-2 pt-2.5 pb-2 border-b border-border/60 bg-muted/20 shrink-0">
-            <TabsList className="grid w-full grid-cols-2 h-8 p-0.5">
-              <TabsTrigger value="contact" className="text-[11px] gap-1.5 px-2 font-medium">
-                <User className="size-3.5 shrink-0" />
-                <span className="truncate">{t('conversations.details.tabContact')}</span>
-              </TabsTrigger>
-              <TabsTrigger value="pos" className="text-[11px] gap-1.5 px-2 font-medium">
-                <ShoppingBag className="size-3.5 shrink-0" />
-                <span className="truncate">{t('conversations.details.tabPos')}</span>
-              </TabsTrigger>
-            </TabsList>
-          </div>
-
+        <>
           {/* Tab 1: Khách hàng */}
           <TabsContent
             value="contact"
@@ -150,6 +166,11 @@ export function DetailPanel({
                 workspaceId={resolvedWorkspaceId}
                 conversationId={conversation.id}
                 contactId={conversation.contactId}
+                contactName={conversation.contact?.name}
+                contactPhone={conversation.contact?.phoneNumber}
+                draftSuggestion={draftSuggestion}
+                onDismissSuggestion={onDismissSuggestion}
+                newOrderTrigger={newOrderTrigger}
                 onOpenDrawer={onOpenPosDrawer || (() => {})}
               />
             ) : (
@@ -158,8 +179,8 @@ export function DetailPanel({
               </div>
             )}
           </TabsContent>
-        </Tabs>
+        </>
       )}
-    </div>
+    </Tabs>
   );
 }

@@ -13,15 +13,7 @@ import {
   type PosDraftSuggestedEventPayload,
 } from '@sales-copilot/shared-contracts';
 import { toast } from 'sonner';
-import { ShoppingBag, CheckCircle2, Printer } from 'lucide-react';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-  SheetFooter,
-} from '@/components/ui/sheet';
+import { ShoppingBag, CheckCircle2, ArrowLeft, Printer, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePosOrders } from '../hooks/use-pos-orders';
 import { usePosCollision } from '../hooks/use-pos-collision';
@@ -35,31 +27,31 @@ import { ThermalPrintDialog } from './thermal-print-dialog';
 import type { FlatProductVariant } from '../hooks/use-pos-products';
 import { posApi } from '../api/pos-client';
 
-interface PosDrawerProps {
-  isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
+export interface PosOrderFormProps {
   workspaceId: string;
   conversationId?: string;
   contactId?: string;
-  initialOrder?: OrderResponseDto | null;
   contactName?: string | null;
   contactPhone?: string | null;
+  initialOrder?: OrderResponseDto | null;
   draftSuggestion?: PosDraftSuggestedEventPayload | null;
   onDismissSuggestion?: () => void;
+  onCancel?: () => void;
+  onSuccess?: (order: OrderResponseDto) => void;
 }
 
-export function PosDrawer({
-  isOpen,
-  onOpenChange,
+export function PosOrderForm({
   workspaceId,
   conversationId,
   contactId,
-  initialOrder,
   contactName,
   contactPhone,
+  initialOrder,
   draftSuggestion,
   onDismissSuggestion,
-}: PosDrawerProps) {
+  onCancel,
+  onSuccess,
+}: PosOrderFormProps) {
   const [items, setItems] = React.useState<PosLineItem[]>([]);
   const [shippingAddress, setShippingAddress] = React.useState<Partial<ShippingAddressInputDto>>(
     {},
@@ -76,13 +68,11 @@ export function PosDrawer({
   const { isLocked, lockedBy, remainingTtlSeconds, takeover } = usePosCollision({
     workspaceId,
     conversationId,
-    isOpen,
+    isOpen: true,
   });
 
-  // Populate form state when drawer opens or initialOrder changes
+  // Populate form state when initialOrder or contact details change
   React.useEffect(() => {
-    if (!isOpen) return;
-
     if (initialOrder) {
       setItems(
         (initialOrder.items || []).map(it => ({
@@ -139,7 +129,7 @@ export function PosDrawer({
       setPaymentMethod(PaymentMethod.COD);
       setCustomerNotes('');
     }
-  }, [isOpen, initialOrder, contactName, contactPhone]);
+  }, [initialOrder, contactName, contactPhone]);
 
   // Handle applying AI extracted draft suggestion
   const handleApplySuggestion = React.useCallback(
@@ -165,8 +155,8 @@ export function PosDrawer({
 
             if (existingIdx !== -1) {
               newItems[existingIdx] = {
-                ...newItems[existingIdx],
-                quantity: newItems[existingIdx].quantity + sItem.quantity,
+                ...newItems[existingIdx]!,
+                quantity: newItems[existingIdx]!.quantity + sItem.quantity,
               };
             } else {
               newItems.push({
@@ -271,9 +261,9 @@ export function PosDrawer({
         : undefined;
 
     try {
+      let savedOrder: OrderResponseDto | null = null;
       if (initialOrder && initialOrder.status === OrderStatus.DRAFT) {
-        // Update existing draft order
-        await updateOrder({
+        savedOrder = await updateOrder({
           orderId: initialOrder.id,
           dto: {
             items: formattedItems,
@@ -290,8 +280,7 @@ export function PosDrawer({
           },
         });
       } else {
-        // Create new order draft
-        const createdOrder = await createOrder({
+        savedOrder = await createOrder({
           contactId,
           conversationId: conversationId || null,
           items: formattedItems,
@@ -307,32 +296,37 @@ export function PosDrawer({
           },
         });
 
-        if (paymentMethod === PaymentMethod.VIETQR && createdOrder?.id) {
+        if (paymentMethod === PaymentMethod.VIETQR && savedOrder?.id) {
           try {
-            await posApi.generateVietQr(workspaceId, createdOrder.id, { sendToChat: true });
-            toast.success(`Đã sinh mã VietQR cho đơn #${createdOrder.displayId} và gửi vào chat!`);
+            await posApi.generateVietQr(workspaceId, savedOrder.id, { sendToChat: true });
+            toast.success(`Đã sinh mã VietQR cho đơn #${savedOrder.displayId} và gửi vào chat!`);
           } catch (qrErr: any) {
             toast.warning(
-              `Đã tạo đơn #${createdOrder.displayId}, nhưng chưa thể gửi VietQR: ${qrErr.message}`,
+              `Đã tạo đơn #${savedOrder.displayId}, nhưng chưa thể gửi VietQR: ${qrErr.message}`,
             );
           }
         }
       }
 
-      onOpenChange(false);
+      if (savedOrder && onSuccess) {
+        onSuccess(savedOrder);
+      }
     } catch {
       // Error handled in hook toast
     }
   };
 
-  // Keyboard shortcut Ctrl+Enter to save
+  // Keyboard shortcut Ctrl+Enter to save, Esc to cancel
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (isOpen && (e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
         e.preventDefault();
         if (!isLocked) {
           handleSaveOrder();
         }
+      } else if (e.key === 'Escape' && onCancel) {
+        e.preventDefault();
+        onCancel();
       }
     };
 
@@ -343,168 +337,181 @@ export function PosDrawer({
   const isSaving = isCreating || isUpdating;
 
   return (
-    <Sheet open={isOpen} onOpenChange={onOpenChange}>
-      <SheetContent
-        side="right"
-        className="w-full sm:max-w-xl md:max-w-2xl p-0 flex flex-col gap-0 border-l border-border bg-background"
-      >
-        {/* Header */}
-        <SheetHeader className="p-4 border-b border-border/80 bg-muted/20 shrink-0">
-          <div className="flex items-center justify-between">
-            <SheetTitle className="text-base font-bold flex items-center gap-2">
-              <ShoppingBag className="size-5 text-primary" />
-              {initialOrder
-                ? `Chỉnh sửa đơn #${initialOrder.displayId}`
-                : 'Tạo đơn hàng nhanh (POS)'}
-            </SheetTitle>
-            <div className="flex items-center gap-2">
-              {initialOrder && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="h-7 text-xs px-2 gap-1"
-                  onClick={() => setPrintDialogOpen(true)}
-                >
-                  <Printer className="size-3.5" />
-                  In phiếu
-                </Button>
-              )}
-              <kbd className="hidden sm:inline-flex items-center gap-1 font-mono text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded border">
-                F4 đóng/mở
-              </kbd>
-            </div>
-          </div>
-          <SheetDescription className="text-xs text-muted-foreground mt-0.5">
-            Tìm sản phẩm, phân tích địa chỉ khách hàng và lập đơn ngay trong phiên chat
-          </SheetDescription>
-        </SheetHeader>
-
-        {/* Body Content */}
-        <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
-          {/* Multi-Agent Collision Banner */}
-          <AgentCollisionBanner
-            isLocked={isLocked}
-            lockedBy={lockedBy}
-            remainingTtlSeconds={remainingTtlSeconds}
-            onTakeover={takeover}
-            disabled={isSaving}
-          />
-
-          {/* AI Autofill Banner inside POS Drawer */}
-          {draftSuggestion && draftSuggestion.confidenceScore >= 80 && (
-            <AiAutofillBanner
-              suggestion={draftSuggestion}
-              onApply={handleApplySuggestion}
-              onDismiss={onDismissSuggestion || (() => {})}
-            />
+    <div className="flex flex-col gap-4">
+      {/* Inline Form Header */}
+      <div className="flex items-center justify-between pb-2 border-b border-border/70">
+        <div className="flex items-center gap-1.5 min-w-0">
+          {onCancel && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-xs"
+              onClick={onCancel}
+              className="text-muted-foreground hover:text-foreground shrink-0 cursor-pointer"
+              title="Quay lại danh sách đơn"
+            >
+              <ArrowLeft className="size-3.5" />
+            </Button>
           )}
-
-          {/* Product Command Search */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-foreground uppercase tracking-wider text-muted-foreground">
-              Tìm kiếm sản phẩm
-            </label>
-            <ProductPickerCommand
-              workspaceId={workspaceId}
-              onSelectVariant={handleSelectVariant}
-              disabled={isLocked || isSaving}
-            />
-          </div>
-
-          {/* Line Items Table */}
-          <div className="flex flex-col gap-1.5">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-semibold text-foreground uppercase tracking-wider text-muted-foreground">
-                Danh sách sản phẩm ({items.length})
-              </label>
-            </div>
-            <LineItemsTable
-              items={items}
-              onChangeItems={setItems}
-              disabled={isLocked || isSaving}
-            />
-          </div>
-
-          {/* Recipient & Address Form */}
-          <div className="flex flex-col gap-1.5 pt-2 border-t border-border/60">
-            <label className="text-xs font-semibold text-foreground uppercase tracking-wider text-muted-foreground">
-              Thông tin người nhận & Địa chỉ giao hàng
-            </label>
-            <RecipientInfoForm
-              value={shippingAddress}
-              onChange={setShippingAddress}
-              disabled={isLocked || isSaving}
-            />
-          </div>
-
-          {/* Financial Summary */}
-          <OrderFinancialSummary
-            subtotal={subtotal}
-            discountAmount={discountAmount}
-            discountType={discountType}
-            discountReason={discountReason}
-            shippingFee={shippingFee}
-            paymentMethod={paymentMethod}
-            onChange={updates => {
-              if (updates.discountAmount !== undefined) setDiscountAmount(updates.discountAmount);
-              if (updates.discountType !== undefined) setDiscountType(updates.discountType);
-              if (updates.discountReason !== undefined) setDiscountReason(updates.discountReason);
-              if (updates.shippingFee !== undefined) setShippingFee(updates.shippingFee);
-              if (updates.paymentMethod !== undefined) setPaymentMethod(updates.paymentMethod);
-            }}
-            disabled={isLocked || isSaving}
-          />
+          <h4 className="text-xs font-semibold text-foreground truncate flex items-center gap-1.5">
+            <ShoppingBag className="size-3.5 text-primary shrink-0" />
+            <span>
+              {initialOrder ? `Sửa đơn #${initialOrder.displayId}` : 'Lập đơn hàng nhanh'}
+            </span>
+          </h4>
         </div>
 
-        {/* Sticky Footer Actions */}
-        <SheetFooter className="p-3 border-t border-border bg-muted/30 shrink-0 flex flex-row items-center justify-between sm:justify-between gap-2">
+        <div className="flex items-center gap-1.5 shrink-0">
+          {initialOrder && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-6 px-1.5 text-[11px] gap-1 cursor-pointer"
+              onClick={() => setPrintDialogOpen(true)}
+            >
+              <Printer className="size-3" />
+              In
+            </Button>
+          )}
+          <kbd className="hidden sm:inline-flex items-center font-mono text-[9px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded border">
+            Ctrl+↵ lưu
+          </kbd>
+        </div>
+      </div>
+
+      {/* Multi-Agent Collision Banner */}
+      <AgentCollisionBanner
+        isLocked={isLocked}
+        lockedBy={lockedBy}
+        remainingTtlSeconds={remainingTtlSeconds}
+        onTakeover={takeover}
+        disabled={isSaving}
+      />
+
+      {/* AI Autofill Banner inside POS form */}
+      {draftSuggestion && draftSuggestion.confidenceScore >= 80 && (
+        <AiAutofillBanner
+          suggestion={draftSuggestion}
+          onApply={handleApplySuggestion}
+          onDismiss={onDismissSuggestion || (() => {})}
+        />
+      )}
+
+      {/* Product Command Search */}
+      <div className="flex flex-col gap-1.5">
+        <label className="text-[11px] font-semibold text-foreground uppercase tracking-wider text-muted-foreground">
+          Tìm kiếm sản phẩm
+        </label>
+        <ProductPickerCommand
+          workspaceId={workspaceId}
+          onSelectVariant={handleSelectVariant}
+          disabled={isLocked || isSaving}
+        />
+      </div>
+
+      {/* Line Items Table */}
+      <div className="flex flex-col gap-1.5">
+        <div className="flex items-center justify-between">
+          <label className="text-[11px] font-semibold text-foreground uppercase tracking-wider text-muted-foreground">
+            Sản phẩm đã chọn ({items.length})
+          </label>
+          {items.length > 0 && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-5 px-1.5 text-[10px] text-muted-foreground hover:text-destructive cursor-pointer gap-1"
+              onClick={() => setItems([])}
+              disabled={isLocked || isSaving}
+            >
+              <RotateCcw className="size-2.5" />
+              Xóa hết
+            </Button>
+          )}
+        </div>
+        <LineItemsTable items={items} onChangeItems={setItems} disabled={isLocked || isSaving} />
+      </div>
+
+      {/* Recipient & Address Form */}
+      <div className="flex flex-col gap-1.5 pt-2 border-t border-border/60">
+        <label className="text-[11px] font-semibold text-foreground uppercase tracking-wider text-muted-foreground">
+          Người nhận & Địa chỉ giao hàng
+        </label>
+        <RecipientInfoForm
+          value={shippingAddress}
+          onChange={setShippingAddress}
+          disabled={isLocked || isSaving}
+        />
+      </div>
+
+      {/* Financial Summary */}
+      <OrderFinancialSummary
+        subtotal={subtotal}
+        discountAmount={discountAmount}
+        discountType={discountType}
+        discountReason={discountReason}
+        shippingFee={shippingFee}
+        paymentMethod={paymentMethod}
+        onChange={updates => {
+          if (updates.discountAmount !== undefined) setDiscountAmount(updates.discountAmount);
+          if (updates.discountType !== undefined) setDiscountType(updates.discountType);
+          if (updates.discountReason !== undefined) setDiscountReason(updates.discountReason);
+          if (updates.shippingFee !== undefined) setShippingFee(updates.shippingFee);
+          if (updates.paymentMethod !== undefined) setPaymentMethod(updates.paymentMethod);
+        }}
+        disabled={isLocked || isSaving}
+      />
+
+      {/* Form Action Buttons */}
+      <div className="flex items-center justify-between gap-2 pt-2 border-t border-border/70 sticky bottom-0 bg-background/95 backdrop-blur-xs py-2">
+        {onCancel ? (
           <Button
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => onOpenChange(false)}
+            onClick={onCancel}
             disabled={isSaving}
-            className="text-xs h-9"
+            className="text-xs h-8 cursor-pointer"
           >
-            Đóng (Esc)
+            Quay lại (Esc)
           </Button>
-
-          <div className="flex items-center gap-2">
-            <Button
-              type="button"
-              variant="default"
-              size="sm"
-              onClick={handleSaveOrder}
-              disabled={isLocked || isSaving || items.length === 0}
-              className="text-xs h-9 font-semibold gap-1.5 shadow-sm"
-            >
-              {isSaving ? (
-                'Đang lưu...'
-              ) : (
-                <>
-                  <CheckCircle2 className="size-4" />
-                  {initialOrder
-                    ? 'Lưu cập nhật'
-                    : paymentMethod === PaymentMethod.VIETQR
-                      ? '⚡ Tạo đơn & Gửi VietQR'
-                      : 'Tạo đơn hàng'}
-                  <span className="text-[10px] opacity-75 font-normal ml-1">(Ctrl+Enter)</span>
-                </>
-              )}
-            </Button>
-          </div>
-        </SheetFooter>
-
-        {initialOrder && (
-          <ThermalPrintDialog
-            open={printDialogOpen}
-            onOpenChange={setPrintDialogOpen}
-            workspaceId={workspaceId}
-            orderId={initialOrder.id}
-          />
+        ) : (
+          <div />
         )}
-      </SheetContent>
-    </Sheet>
+
+        <Button
+          type="button"
+          variant="default"
+          size="sm"
+          onClick={handleSaveOrder}
+          disabled={isLocked || isSaving || items.length === 0}
+          className="text-xs h-8 font-semibold gap-1.5 shadow-xs cursor-pointer ml-auto"
+        >
+          {isSaving ? (
+            'Đang lưu...'
+          ) : (
+            <>
+              <CheckCircle2 className="size-3.5" />
+              {initialOrder
+                ? 'Lưu cập nhật'
+                : paymentMethod === PaymentMethod.VIETQR
+                  ? '⚡ Tạo đơn & Gửi VietQR'
+                  : 'Tạo đơn hàng'}
+              <span className="text-[9px] opacity-75 font-normal ml-0.5">(Ctrl+↵)</span>
+            </>
+          )}
+        </Button>
+      </div>
+
+      {initialOrder && (
+        <ThermalPrintDialog
+          open={printDialogOpen}
+          onOpenChange={setPrintDialogOpen}
+          workspaceId={workspaceId}
+          orderId={initialOrder.id}
+        />
+      )}
+    </div>
   );
 }

@@ -268,10 +268,11 @@ export class MessagesService {
       if (senderType === SenderType.CONTACT) {
         conversationUpdate.unreadMessagesCount = { increment: 1 };
 
-        // Auto-reopen if RESOLVED or SNOOZED
+        // Auto-reopen if RESOLVED, SNOOZED, or PENDING on inbound customer reply
         if (
           conversation.status === ConversationStatus.RESOLVED ||
-          conversation.status === ConversationStatus.SNOOZED
+          conversation.status === ConversationStatus.SNOOZED ||
+          conversation.status === ConversationStatus.PENDING
         ) {
           conversationUpdate.status = ConversationStatus.OPEN;
           conversationUpdate.snoozedUntil = null;
@@ -286,9 +287,14 @@ export class MessagesService {
             conversationUpdate.firstReplyCreatedAt = now;
           }
 
-          // Transition from OPEN to PENDING on agent reply
-          if (conversation.status === ConversationStatus.OPEN) {
-            conversationUpdate.status = ConversationStatus.PENDING;
+          // Social commerce invariant (Option A): Outgoing agent reply keeps conversation in OPEN.
+          // If conversation was previously PENDING or SNOOZED, transition it back to OPEN.
+          if (
+            conversation.status === ConversationStatus.PENDING ||
+            conversation.status === ConversationStatus.SNOOZED
+          ) {
+            conversationUpdate.status = ConversationStatus.OPEN;
+            conversationUpdate.snoozedUntil = null;
           }
         }
       }

@@ -49,16 +49,17 @@ stateDiagram-v2
 ```
 
 ### State Semantics:
-- **`OPEN`**: Active conversation requiring agent action or currently in discussion.
-- **`PENDING`**: Agent has replied and is waiting for customer response.
+- **`OPEN`**: Active conversation requiring agent action or currently in ongoing consultation (Agent outgoing messages keep conversation in `OPEN`).
+- **`PENDING`**: Agent explicitly sets waiting for customer response (e.g. waiting for customer to check size/payment).
 - **`SNOOZED`**: Temporarily hidden from active queue until `snoozedUntil` timestamp or until customer replies.
 - **`RESOLVED`**: Conversation completed. If the customer messages again, the conversation is automatically reopened to `OPEN`.
 
 ### State Transition Triggers:
-- `OPEN` ──► `PENDING`: Khi Agent gửi tin nhắn phản hồi ra ngoài.
+- `PENDING` / `SNOOZED` ──► `OPEN`: Khi Agent gửi tin nhắn phản hồi mới ra ngoài (tiếp tục tư vấn).
+- `PENDING` / `SNOOZED` / `RESOLVED` ──► `OPEN`: **Tự động 100% khi khách hàng gửi tin nhắn mới** (`Customer Replies / Inbound Message`).
+- `OPEN` ──► `PENDING`: Khi Agent chủ động chuyển sang "Chờ khách" từ Action Menu trên Header.
 - `OPEN` ──► `SNOOZED`: Khi Agent đặt lịch tạm ẩn (`snoozedUntil`).
-- `OPEN` / `PENDING` / `SNOOZED` ──► `RESOLVED`: Khi Agent hoặc Automation Rule đánh dấu hoàn thành.
-- `RESOLVED` / `SNOOZED` ──► `OPEN`: Tự động kích hoạt khi khách hàng gửi tin nhắn mới.
+- `OPEN` / `PENDING` / `SNOOZED` ──► `RESOLVED`: Khi Agent hoặc Automation Rule đánh dấu hoàn thành (chốt xong đơn).
 
 ### Unread Messages Counter:
 - Khi có tin nhắn mới từ `CONTACT`, tăng `unreadMessagesCount` lên 1.

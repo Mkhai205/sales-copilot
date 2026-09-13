@@ -2,15 +2,7 @@
 
 import * as React from 'react';
 import Image from 'next/image';
-import {
-  PanelRightClose,
-  PanelRightOpen,
-  CheckCircle2,
-  RotateCcw,
-  UserPlus,
-  AlertTriangle,
-  ShoppingBag,
-} from 'lucide-react';
+import { PanelRightClose, PanelRightOpen, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -22,6 +14,7 @@ import { useI18n } from '@/lib/i18n';
 
 interface MessageThreadHeaderProps {
   conversation?: ConversationResponseDto;
+  workspaceSlug?: string;
   isLoading?: boolean;
   isDetailOpen: boolean;
   onToggleDetail: () => void;
@@ -31,11 +24,8 @@ interface MessageThreadHeaderProps {
 
 export function MessageThreadHeader({
   conversation,
-  isLoading = false,
   isDetailOpen,
   onToggleDetail,
-  onResolve,
-  onOpenPosDrawer,
 }: MessageThreadHeaderProps) {
   const { t } = useI18n();
 
@@ -121,7 +111,6 @@ export function MessageThreadHeader({
   };
   const contact = conversation?.contact;
   const channelMeta = getChannelMeta(conversation?.inbox?.channelType);
-  const isResolved = conversation?.status === ConversationStatus.RESOLVED;
 
   const contactInitials = contact?.name
     ? contact.name
@@ -184,66 +173,13 @@ export function MessageThreadHeader({
 
       {/* Header Action Buttons */}
       <div className="flex items-center gap-1.5">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onResolve}
-          disabled={isLoading || !conversation}
-          className="h-7 text-xs gap-1.5 font-normal"
-        >
-          {isResolved ? (
-            <>
-              <RotateCcw className="size-3.5 text-muted-foreground" />
-              {t('conversations.actions.reopen')}
-            </>
-          ) : (
-            <>
-              <CheckCircle2 className="size-3.5 text-emerald-500" />
-              {t('conversations.actions.resolve')}
-            </>
-          )}
-        </Button>
-
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={isLoading || !conversation}
-          className="h-7 text-xs gap-1.5 font-normal"
-        >
-          <UserPlus className="size-3.5 text-muted-foreground" />
-          {t('conversations.actions.assignee')}
-        </Button>
-
-        {onOpenPosDrawer && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onOpenPosDrawer}
-                disabled={isLoading || !conversation}
-                className="h-7 text-xs gap-1.5 font-medium border-primary/40 text-primary hover:bg-primary/10 hover:text-primary transition-colors"
-              >
-                <ShoppingBag className="size-3.5" />
-                <span>Tạo đơn</span>
-                <kbd className="hidden lg:inline-flex text-[9px] font-mono bg-primary/10 text-primary px-1 rounded">
-                  F4
-                </kbd>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom">Mở POS lập đơn hàng nhanh (F4)</TooltipContent>
-          </Tooltip>
-        )}
-
-        <div className="h-4 w-px bg-border mx-0.5" />
-
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
               variant="ghost"
               size="icon-sm"
               onClick={onToggleDetail}
-              className="text-muted-foreground hover:text-foreground"
+              className="text-muted-foreground hover:text-foreground cursor-pointer"
             >
               {isDetailOpen ? (
                 <PanelRightClose className="size-4" />
@@ -254,7 +190,7 @@ export function MessageThreadHeader({
             </Button>
           </TooltipTrigger>
           <TooltipContent side="bottom">
-            {isDetailOpen ? 'Hide contact details' : 'Show contact details'}
+            {isDetailOpen ? 'Ẩn thông tin liên hệ' : 'Hiện thông tin liên hệ'}
           </TooltipContent>
         </Tooltip>
       </div>
