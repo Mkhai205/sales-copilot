@@ -4,6 +4,7 @@ import {
   ConversationPriority,
   ConversationResponseDto,
   ConversationStatus,
+  DomainEvent,
   CreateConversationDto,
   AssignConversationDto,
   UpdateConversationPriorityDto,
@@ -469,7 +470,15 @@ export class ConversationsService {
       include: CONVERSATION_STANDARD_INCLUDE,
     });
 
-    return mapConversationToDto(updated);
+    const dto = mapConversationToDto(updated);
+
+    this.eventEmitter.emit(DomainEvent.CONVERSATION_UPDATED, {
+      workspaceId,
+      conversationId: id,
+      conversation: dto,
+    });
+
+    return dto;
   }
 
   /**

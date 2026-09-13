@@ -8,6 +8,7 @@ import {
   MessageDeletedEvent,
   MessageDeliveryStatusUpdatedEvent,
   ConversationCreatedEvent,
+  ConversationUpdatedEvent,
   ConversationStatusUpdatedEvent,
   ConversationAssignedEvent,
   ConversationPriorityUpdatedEvent,
@@ -57,68 +58,59 @@ export class RealtimeEventDispatcher {
   // ==========================================================================
 
   @OnEvent(DomainEvent.MESSAGE_CREATED)
-  @OnEvent('message.created')
   handleMessageCreated(payload: MessageCreatedEvent): void {
     if (!payload?.workspaceId) return;
 
     const { workspaceId, conversationId, message } = payload;
     const data = message || payload;
 
-    // Broadcast to conversation room and workspace room
+    const rooms: string[] = [`workspace_${workspaceId}`];
     if (conversationId) {
-      this.broadcastSafe(`conversation_${conversationId}`, WsServerEvent.MESSAGE_CREATED, data);
+      rooms.push(`conversation_${conversationId}`);
     }
-    this.broadcastSafe(`workspace_${workspaceId}`, WsServerEvent.MESSAGE_CREATED, data);
+    this.broadcastSafe(rooms, WsServerEvent.MESSAGE_CREATED, data);
   }
 
   @OnEvent(DomainEvent.MESSAGE_UPDATED)
-  @OnEvent('message.updated')
   handleMessageUpdated(payload: MessageUpdatedEvent): void {
     if (!payload?.workspaceId) return;
 
     const { workspaceId, conversationId, message } = payload;
     const data = message || payload;
 
+    const rooms: string[] = [`workspace_${workspaceId}`];
     if (conversationId) {
-      this.broadcastSafe(`conversation_${conversationId}`, WsServerEvent.MESSAGE_UPDATED, data);
+      rooms.push(`conversation_${conversationId}`);
     }
-    this.broadcastSafe(`workspace_${workspaceId}`, WsServerEvent.MESSAGE_UPDATED, data);
+    this.broadcastSafe(rooms, WsServerEvent.MESSAGE_UPDATED, data);
   }
 
   @OnEvent(DomainEvent.MESSAGE_DELETED)
-  @OnEvent('message.deleted')
   handleMessageDeleted(payload: MessageDeletedEvent): void {
     if (!payload?.workspaceId) return;
 
     const { workspaceId, conversationId, messageId } = payload;
     const data = { conversationId, messageId };
 
+    const rooms: string[] = [`workspace_${workspaceId}`];
     if (conversationId) {
-      this.broadcastSafe(`conversation_${conversationId}`, WsServerEvent.MESSAGE_DELETED, data);
+      rooms.push(`conversation_${conversationId}`);
     }
-    this.broadcastSafe(`workspace_${workspaceId}`, WsServerEvent.MESSAGE_DELETED, data);
+    this.broadcastSafe(rooms, WsServerEvent.MESSAGE_DELETED, data);
   }
 
   @OnEvent(DomainEvent.MESSAGE_DELIVERY_STATUS_UPDATED)
-  @OnEvent('message.delivery_status_updated')
   handleMessageDeliveryStatusUpdated(payload: MessageDeliveryStatusUpdatedEvent): void {
     if (!payload?.workspaceId) return;
 
     const { workspaceId, conversationId, message } = payload;
     const data = message || payload;
 
+    const rooms: string[] = [`workspace_${workspaceId}`];
     if (conversationId) {
-      this.broadcastSafe(
-        `conversation_${conversationId}`,
-        WsServerEvent.MESSAGE_DELIVERY_STATUS_UPDATED,
-        data,
-      );
+      rooms.push(`conversation_${conversationId}`);
     }
-    this.broadcastSafe(
-      `workspace_${workspaceId}`,
-      WsServerEvent.MESSAGE_DELIVERY_STATUS_UPDATED,
-      data,
-    );
+    this.broadcastSafe(rooms, WsServerEvent.MESSAGE_DELIVERY_STATUS_UPDATED, data);
   }
 
   // ==========================================================================
@@ -126,7 +118,6 @@ export class RealtimeEventDispatcher {
   // ==========================================================================
 
   @OnEvent(DomainEvent.CONVERSATION_CREATED)
-  @OnEvent('conversation.created')
   handleConversationCreated(payload: ConversationCreatedEvent): void {
     if (!payload?.workspaceId) return;
 
@@ -137,112 +128,91 @@ export class RealtimeEventDispatcher {
     this.broadcastSafe(`workspace_${workspaceId}`, WsServerEvent.CONVERSATION_CREATED, data);
   }
 
+  @OnEvent(DomainEvent.CONVERSATION_UPDATED)
+  handleConversationUpdated(payload: ConversationUpdatedEvent): void {
+    if (!payload?.workspaceId) return;
+
+    const { workspaceId, conversationId, conversation } = payload;
+    const data = conversation || payload;
+
+    const rooms: string[] = [`workspace_${workspaceId}`];
+    if (conversationId) {
+      rooms.push(`conversation_${conversationId}`);
+    }
+    this.broadcastSafe(rooms, WsServerEvent.CONVERSATION_UPDATED, data);
+  }
+
   @OnEvent(DomainEvent.CONVERSATION_STATUS_UPDATED)
-  @OnEvent('conversation.status_updated')
   handleConversationStatusUpdated(payload: ConversationStatusUpdatedEvent): void {
     if (!payload?.workspaceId) return;
 
     const { workspaceId, conversationId, conversation } = payload;
     const data = conversation || payload;
 
+    const rooms: string[] = [`workspace_${workspaceId}`];
     if (conversationId) {
-      this.broadcastSafe(
-        `conversation_${conversationId}`,
-        WsServerEvent.CONVERSATION_STATUS_UPDATED,
-        data,
-      );
+      rooms.push(`conversation_${conversationId}`);
     }
-    this.broadcastSafe(`workspace_${workspaceId}`, WsServerEvent.CONVERSATION_STATUS_UPDATED, data);
+    this.broadcastSafe(rooms, WsServerEvent.CONVERSATION_STATUS_UPDATED, data);
   }
 
   @OnEvent(DomainEvent.CONVERSATION_REOPENED)
-  @OnEvent('conversation.reopened')
   handleConversationReopened(payload: ConversationReopenedEvent): void {
     if (!payload?.workspaceId) return;
 
     const { workspaceId, conversationId, conversation } = payload;
     const data = conversation || payload;
 
+    const rooms: string[] = [`workspace_${workspaceId}`];
     if (conversationId) {
-      this.broadcastSafe(
-        `conversation_${conversationId}`,
-        WsServerEvent.CONVERSATION_REOPENED,
-        data,
-      );
+      rooms.push(`conversation_${conversationId}`);
     }
-    this.broadcastSafe(`workspace_${workspaceId}`, WsServerEvent.CONVERSATION_REOPENED, data);
+    this.broadcastSafe(rooms, WsServerEvent.CONVERSATION_REOPENED, data);
   }
 
   @OnEvent(DomainEvent.CONVERSATION_ASSIGNED)
-  @OnEvent('conversation.assigned')
   handleConversationAssigned(payload: ConversationAssignedEvent): void {
     const { workspaceId, conversationId, previousAssigneeId, newAssigneeId, conversation } =
       payload;
     const data = conversation || payload;
 
-    // 1. Broadcast to workspace room
-    if (workspaceId) {
-      this.broadcastSafe(`workspace_${workspaceId}`, WsServerEvent.CONVERSATION_ASSIGNED, data);
-    }
-
-    // 2. Broadcast to specific conversation room
-    if (conversationId) {
-      this.broadcastSafe(
-        `conversation_${conversationId}`,
-        WsServerEvent.CONVERSATION_ASSIGNED,
-        data,
-      );
-    }
-
-    // 3. Direct notification room for newly assigned agent
-    if (newAssigneeId) {
-      this.broadcastSafe(`user_${newAssigneeId}`, WsServerEvent.CONVERSATION_ASSIGNED, data);
-    }
-
-    // 4. Direct notification room for previous assignee if reassigned
+    const rooms: string[] = [];
+    if (workspaceId) rooms.push(`workspace_${workspaceId}`);
+    if (conversationId) rooms.push(`conversation_${conversationId}`);
+    if (newAssigneeId) rooms.push(`user_${newAssigneeId}`);
     if (previousAssigneeId && previousAssigneeId !== newAssigneeId) {
-      this.broadcastSafe(`user_${previousAssigneeId}`, WsServerEvent.CONVERSATION_ASSIGNED, data);
+      rooms.push(`user_${previousAssigneeId}`);
     }
+
+    this.broadcastSafe(rooms, WsServerEvent.CONVERSATION_ASSIGNED, data);
   }
 
   @OnEvent(DomainEvent.CONVERSATION_PRIORITY_UPDATED)
-  @OnEvent('conversation.priority_updated')
   handleConversationPriorityUpdated(payload: ConversationPriorityUpdatedEvent): void {
     if (!payload?.workspaceId) return;
 
     const { workspaceId, conversationId, conversation } = payload;
     const data = conversation || payload;
 
+    const rooms: string[] = [`workspace_${workspaceId}`];
     if (conversationId) {
-      this.broadcastSafe(
-        `conversation_${conversationId}`,
-        WsServerEvent.CONVERSATION_PRIORITY_UPDATED,
-        data,
-      );
+      rooms.push(`conversation_${conversationId}`);
     }
-    this.broadcastSafe(
-      `workspace_${workspaceId}`,
-      WsServerEvent.CONVERSATION_PRIORITY_UPDATED,
-      data,
-    );
+    this.broadcastSafe(rooms, WsServerEvent.CONVERSATION_PRIORITY_UPDATED, data);
   }
 
   @OnEvent(DomainEvent.CONVERSATION_LABELS_UPDATED)
-  @OnEvent('conversation.labels_updated')
   handleConversationLabelsUpdated(payload: ConversationLabelsUpdatedEvent): void {
     if (!payload?.workspaceId) return;
 
     const { workspaceId, conversationId, conversation } = payload;
     const data = conversation || payload;
 
+    const rooms: string[] = [`workspace_${workspaceId}`];
     if (conversationId) {
-      this.broadcastSafe(
-        `conversation_${conversationId}`,
-        WsServerEvent.CONVERSATION_LABELS_UPDATED,
-        data,
-      );
+      rooms.push(`conversation_${conversationId}`);
     }
-    this.broadcastSafe(`workspace_${workspaceId}`, WsServerEvent.CONVERSATION_LABELS_UPDATED, data);
+    this.broadcastSafe(rooms, WsServerEvent.CONVERSATION_LABELS_UPDATED, data);
   }
 
   // ==========================================================================
@@ -277,7 +247,6 @@ export class RealtimeEventDispatcher {
   }
 
   @OnEvent(DomainEvent.CONTACT_MERGED)
-  @OnEvent('contact.merged')
   handleContactMerged(payload: ContactMergedEvent): void {
     if (!payload?.workspaceId) return;
     const data = {
@@ -294,7 +263,6 @@ export class RealtimeEventDispatcher {
   // ==========================================================================
 
   @OnEvent(DomainEvent.CHANNEL_IDENTITY_CREATED)
-  @OnEvent('channel_identity.created')
   handleChannelIdentityCreated(payload: ChannelIdentityCreatedEvent): void {
     if (!payload?.workspaceId) return;
     const data = payload.identity || payload;
@@ -306,7 +274,6 @@ export class RealtimeEventDispatcher {
   }
 
   @OnEvent(DomainEvent.CHANNEL_IDENTITY_DELETED)
-  @OnEvent('channel_identity.deleted')
   handleChannelIdentityDeleted(payload: ChannelIdentityDeletedEvent): void {
     if (!payload?.workspaceId) return;
     const data = {
@@ -326,7 +293,6 @@ export class RealtimeEventDispatcher {
   // ==========================================================================
 
   @OnEvent(DomainEvent.LABEL_CREATED)
-  @OnEvent('label.created')
   handleLabelCreated(payload: LabelCreatedEvent): void {
     if (!payload?.workspaceId) return;
     const data = payload.label || payload;
@@ -334,7 +300,6 @@ export class RealtimeEventDispatcher {
   }
 
   @OnEvent(DomainEvent.LABEL_UPDATED)
-  @OnEvent('label.updated')
   handleLabelUpdated(payload: LabelUpdatedEvent): void {
     if (!payload?.workspaceId) return;
     const data = payload.label || payload;
@@ -342,7 +307,6 @@ export class RealtimeEventDispatcher {
   }
 
   @OnEvent(DomainEvent.LABEL_DELETED)
-  @OnEvent('label.deleted')
   handleLabelDeleted(payload: LabelDeletedEvent): void {
     if (!payload?.workspaceId) return;
     const data = {
@@ -357,21 +321,18 @@ export class RealtimeEventDispatcher {
   // ==========================================================================
 
   @OnEvent(DomainEvent.CHANNEL_CREATED)
-  @OnEvent('channel.created')
   handleChannelCreated(payload: ChannelCreatedEvent): void {
     if (!payload?.workspaceId) return;
     this.broadcastSafe(`workspace_${payload.workspaceId}`, WsServerEvent.CHANNEL_CREATED, payload);
   }
 
   @OnEvent(DomainEvent.CHANNEL_UPDATED)
-  @OnEvent('channel.updated')
   handleChannelUpdated(payload: ChannelUpdatedEvent): void {
     if (!payload?.workspaceId) return;
     this.broadcastSafe(`workspace_${payload.workspaceId}`, WsServerEvent.CHANNEL_UPDATED, payload);
   }
 
   @OnEvent(DomainEvent.CHANNEL_DELETED)
-  @OnEvent('channel.deleted')
   handleChannelDeleted(payload: ChannelDeletedEvent): void {
     if (!payload?.workspaceId) return;
     this.broadcastSafe(`workspace_${payload.workspaceId}`, WsServerEvent.CHANNEL_DELETED, payload);
@@ -382,25 +343,23 @@ export class RealtimeEventDispatcher {
   // ==========================================================================
 
   @OnEvent(DomainEvent.TYPING_START)
-  @OnEvent('typing.start')
   handleTypingStart(payload: TypingEventPayload): void {
     if (!payload?.conversationId) return;
     const event = WsServerEvent.TYPING_START;
-    this.broadcastSafe(`conversation_${payload.conversationId}`, event, payload);
-    if (payload.workspaceId) {
-      this.broadcastSafe(`workspace_${payload.workspaceId}`, event, payload);
-    }
+    const rooms = payload.workspaceId
+      ? [`conversation_${payload.conversationId}`, `workspace_${payload.workspaceId}`]
+      : `conversation_${payload.conversationId}`;
+    this.broadcastSafe(rooms, event, payload);
   }
 
   @OnEvent(DomainEvent.TYPING_STOP)
-  @OnEvent('typing.stop')
   handleTypingStop(payload: TypingEventPayload): void {
     if (!payload?.conversationId) return;
     const event = WsServerEvent.TYPING_STOP;
-    this.broadcastSafe(`conversation_${payload.conversationId}`, event, payload);
-    if (payload.workspaceId) {
-      this.broadcastSafe(`workspace_${payload.workspaceId}`, event, payload);
-    }
+    const rooms = payload.workspaceId
+      ? [`conversation_${payload.conversationId}`, `workspace_${payload.workspaceId}`]
+      : `conversation_${payload.conversationId}`;
+    this.broadcastSafe(rooms, event, payload);
   }
 
   // ==========================================================================
@@ -408,7 +367,6 @@ export class RealtimeEventDispatcher {
   // ==========================================================================
 
   @OnEvent(DomainEvent.PRESENCE_UPDATED)
-  @OnEvent('presence.updated')
   handlePresenceUpdated(payload: PresenceUpdatedEvent): void {
     if (!payload?.workspaceId) return;
     const data = {
@@ -424,107 +382,72 @@ export class RealtimeEventDispatcher {
   // ==========================================================================
 
   @OnEvent(DomainEvent.ORDER_CREATED)
-  @OnEvent('order.created')
   handleOrderCreated(payload: OrderCreatedEventPayload): void {
     if (!payload?.workspaceId) return;
 
-    if (payload.conversationId) {
-      this.broadcastSafe(
-        `conversation_${payload.conversationId}`,
-        WsServerEvent.ORDER_CREATED,
-        payload,
-      );
-    }
+    const rooms = payload.conversationId
+      ? [`workspace_${payload.workspaceId}`, `conversation_${payload.conversationId}`]
+      : `workspace_${payload.workspaceId}`;
 
-    this.broadcastSafe(`workspace_${payload.workspaceId}`, WsServerEvent.ORDER_CREATED, payload);
+    this.broadcastSafe(rooms, WsServerEvent.ORDER_CREATED, payload);
   }
 
   @OnEvent(DomainEvent.ORDER_UPDATED)
-  @OnEvent('order.updated')
   handleOrderUpdated(payload: OrderUpdatedEventPayload): void {
     if (!payload?.workspaceId) return;
 
-    if (payload.conversationId) {
-      this.broadcastSafe(
-        `conversation_${payload.conversationId}`,
-        WsServerEvent.ORDER_UPDATED,
-        payload,
-      );
-    }
+    const rooms = payload.conversationId
+      ? [`workspace_${payload.workspaceId}`, `conversation_${payload.conversationId}`]
+      : `workspace_${payload.workspaceId}`;
 
-    this.broadcastSafe(`workspace_${payload.workspaceId}`, WsServerEvent.ORDER_UPDATED, payload);
+    this.broadcastSafe(rooms, WsServerEvent.ORDER_UPDATED, payload);
   }
 
   @OnEvent(DomainEvent.ORDER_CONFIRMED)
-  @OnEvent('order.confirmed')
   handleOrderConfirmed(payload: OrderConfirmedEventPayload): void {
     if (!payload?.workspaceId) return;
 
-    if (payload.conversationId) {
-      this.broadcastSafe(
-        `conversation_${payload.conversationId}`,
-        WsServerEvent.ORDER_CONFIRMED,
-        payload,
-      );
-    }
+    const rooms = payload.conversationId
+      ? [`workspace_${payload.workspaceId}`, `conversation_${payload.conversationId}`]
+      : `workspace_${payload.workspaceId}`;
 
-    this.broadcastSafe(`workspace_${payload.workspaceId}`, WsServerEvent.ORDER_CONFIRMED, payload);
+    this.broadcastSafe(rooms, WsServerEvent.ORDER_CONFIRMED, payload);
   }
 
   @OnEvent(DomainEvent.ORDER_PAID)
-  @OnEvent('order.paid')
   handleOrderPaid(payload: OrderPaidEventPayload): void {
     if (!payload?.workspaceId) return;
 
-    if (payload.conversationId) {
-      this.broadcastSafe(
-        `conversation_${payload.conversationId}`,
-        WsServerEvent.ORDER_PAID,
-        payload,
-      );
-    }
+    const rooms = payload.conversationId
+      ? [`workspace_${payload.workspaceId}`, `conversation_${payload.conversationId}`]
+      : `workspace_${payload.workspaceId}`;
 
-    this.broadcastSafe(`workspace_${payload.workspaceId}`, WsServerEvent.ORDER_PAID, payload);
+    this.broadcastSafe(rooms, WsServerEvent.ORDER_PAID, payload);
   }
 
   @OnEvent(DomainEvent.ORDER_PARTIALLY_PAID)
-  @OnEvent('order.partially_paid')
   handleOrderPartiallyPaid(payload: OrderPartiallyPaidEventPayload): void {
     if (!payload?.workspaceId) return;
 
-    if (payload.conversationId) {
-      this.broadcastSafe(
-        `conversation_${payload.conversationId}`,
-        WsServerEvent.ORDER_PARTIALLY_PAID,
-        payload,
-      );
-    }
+    const rooms = payload.conversationId
+      ? [`workspace_${payload.workspaceId}`, `conversation_${payload.conversationId}`]
+      : `workspace_${payload.workspaceId}`;
 
-    this.broadcastSafe(
-      `workspace_${payload.workspaceId}`,
-      WsServerEvent.ORDER_PARTIALLY_PAID,
-      payload,
-    );
+    this.broadcastSafe(rooms, WsServerEvent.ORDER_PARTIALLY_PAID, payload);
   }
 
   @OnEvent(DomainEvent.ORDER_CANCELLED)
-  @OnEvent('order.cancelled')
   handleOrderCancelled(payload: OrderCancelledEventPayload): void {
     if (!payload?.workspaceId) return;
 
-    if (payload.conversationId) {
-      this.broadcastSafe(
-        `conversation_${payload.conversationId}`,
-        WsServerEvent.ORDER_CANCELLED,
-        payload,
-      );
-    }
+    const rooms = payload.conversationId
+      ? [`workspace_${payload.workspaceId}`, `conversation_${payload.conversationId}`]
+      : `workspace_${payload.workspaceId}`;
 
-    this.broadcastSafe(`workspace_${payload.workspaceId}`, WsServerEvent.ORDER_CANCELLED, payload);
+    this.broadcastSafe(rooms, WsServerEvent.ORDER_CANCELLED, payload);
   }
 
   @OnEvent(DomainEvent.INVENTORY_UPDATED)
-  @OnEvent('inventory.updated')
   handleInventoryUpdated(payload: InventoryUpdatedEventPayload): void {
     if (!payload?.workspaceId) return;
 
@@ -536,39 +459,25 @@ export class RealtimeEventDispatcher {
   }
 
   @OnEvent(DomainEvent.ORDER_SHIPPED)
-  @OnEvent('order.shipped')
   handleOrderShipped(payload: OrderShippedEventPayload): void {
     if (!payload?.workspaceId) return;
 
-    if (payload.conversationId) {
-      this.broadcastSafe(
-        `conversation_${payload.conversationId}`,
-        WsServerEvent.ORDER_SHIPPED,
-        payload,
-      );
-    }
+    const rooms = payload.conversationId
+      ? [`workspace_${payload.workspaceId}`, `conversation_${payload.conversationId}`]
+      : `workspace_${payload.workspaceId}`;
 
-    this.broadcastSafe(`workspace_${payload.workspaceId}`, WsServerEvent.ORDER_SHIPPED, payload);
+    this.broadcastSafe(rooms, WsServerEvent.ORDER_SHIPPED, payload);
   }
 
   @OnEvent(DomainEvent.POS_DRAFT_SUGGESTED)
-  @OnEvent('pos.draft_suggested')
   handlePosDraftSuggested(payload: PosDraftSuggestedEventPayload): void {
     if (!payload?.workspaceId) return;
 
-    if (payload.conversationId) {
-      this.broadcastSafe(
-        `conversation_${payload.conversationId}`,
-        WsServerEvent.POS_DRAFT_SUGGESTED,
-        payload,
-      );
-    }
+    const rooms = payload.conversationId
+      ? [`workspace_${payload.workspaceId}`, `conversation_${payload.conversationId}`]
+      : `workspace_${payload.workspaceId}`;
 
-    this.broadcastSafe(
-      `workspace_${payload.workspaceId}`,
-      WsServerEvent.POS_DRAFT_SUGGESTED,
-      payload,
-    );
+    this.broadcastSafe(rooms, WsServerEvent.POS_DRAFT_SUGGESTED, payload);
   }
 
   // ==========================================================================
@@ -576,12 +485,21 @@ export class RealtimeEventDispatcher {
   // ==========================================================================
 
   /**
-   * Broadcasts a typed event envelope to a specific Socket.io room.
+   * Broadcasts a typed event envelope to a specific Socket.io room or multiple rooms with socket deduplication.
    * Catches all exceptions to ensure downstream domain workflows are not interrupted.
    */
-  private broadcastSafe(room: string, event: WsServerEvent | string, data: unknown): void {
+  private broadcastSafe(
+    room: string | string[],
+    event: WsServerEvent | string,
+    data: unknown,
+  ): void {
     try {
       if (!this.gateway?.server) {
+        return;
+      }
+
+      const rooms = Array.isArray(room) ? room.filter(Boolean) : [room];
+      if (rooms.length === 0) {
         return;
       }
 
@@ -591,15 +509,16 @@ export class RealtimeEventDispatcher {
       };
 
       // Emit on typed event channel (e.g. client listening to socket.on('message.created', ...))
-      this.gateway.server.to(room).emit(event, payload);
+      // Passing an array to .to() performs a union and dedupes sockets in Socket.io
+      this.gateway.server.to(rooms).emit(event, payload);
 
       // Also emit on generic 'event' channel for unified event stream listeners
-      this.gateway.server.to(room).emit('event', payload);
+      this.gateway.server.to(rooms).emit('event', payload);
 
-      this.logger.debug(`Broadcasted '${event}' to room '${room}'`);
+      this.logger.debug(`Broadcasted '${event}' to room(s) '${rooms.join(', ')}'`);
     } catch (err) {
       this.logger.error(
-        `Failed to broadcast '${event}' to room '${room}': ${(err as Error).message}`,
+        `Failed to broadcast '${event}' to room(s) '${Array.isArray(room) ? room.join(', ') : room}': ${(err as Error).message}`,
         (err as Error).stack,
       );
     }

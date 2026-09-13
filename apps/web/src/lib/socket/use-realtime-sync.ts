@@ -3,8 +3,8 @@
 import { useParams, useRouter } from 'next/navigation';
 import { useQueryClient, type InfiniteData } from '@tanstack/react-query';
 import { WsServerEvent } from '@sales-copilot/shared-contracts';
-import { toast } from 'sonner';
 import type { ApiResponse } from '@/lib/api/client';
+import { conversationsApi } from '@/lib/api/conversations';
 import {
   MessageType,
   SenderType,
@@ -29,8 +29,9 @@ import { useSocketEvent } from './use-socket';
 export function useRealtimeSync(): void {
   const queryClient = useQueryClient();
   const router = useRouter();
-  const params = useParams<{ workspaceSlug?: string }>();
+  const params = useParams<{ workspaceSlug?: string; conversationId?: string }>();
   const workspaceSlug = params?.workspaceSlug;
+  const currentActiveConversationId = params?.conversationId;
   const { notify } = useBrowserNotifications();
 
   // ==========================================================================
@@ -57,6 +58,15 @@ export function useRealtimeSync(): void {
         old => reconcileOrAppendMessage(old, message),
       );
 
+      const isCurrentActive = currentActiveConversationId === message.conversationId;
+      const isIncoming = message.messageType === MessageType.INCOMING;
+
+      // If incoming message belongs to active conversation currently viewed on screen,
+      // silently call resetUnread in backend to ensure DB unreadMessagesCount stays 0.
+      if (isCurrentActive && isIncoming && message.workspaceId) {
+        conversationsApi.resetUnread(message.workspaceId, message.conversationId).catch(() => {});
+      }
+
       // 2. Update and bubble conversation to top in conversation lists
       let foundInList = false;
       queryClient.setQueriesData<InfiniteData<ApiResponse<ConversationResponseDto[]>>>(
@@ -66,15 +76,24 @@ export function useRealtimeSync(): void {
           const { updatedData, found } = bubbleConversationToTop(
             old,
             message.conversationId,
-            prev => ({
-              ...prev,
-              lastMessage: message,
-              lastActivityAt: message.createdAt,
-              unreadMessagesCount:
-                message.messageType === MessageType.INCOMING
-                  ? (prev.unreadMessagesCount ?? 0) + 1
-                  : prev.unreadMessagesCount,
-            }),
+            prev => {
+              const isDuplicate = prev.lastMessage?.id === message.id;
+              let nextUnreadCount = prev.unreadMessagesCount ?? 0;
+              if (!isDuplicate) {
+                if (isCurrentActive) {
+                  nextUnreadCount = 0;
+                } else if (isIncoming) {
+                  nextUnreadCount = (prev.unreadMessagesCount ?? 0) + 1;
+                }
+              }
+
+              return {
+                ...prev,
+                lastMessage: message,
+                lastActivityAt: message.createdAt,
+                unreadMessagesCount: nextUnreadCount,
+              };
+            },
           );
           if (found) foundInList = true;
           return updatedData;
@@ -94,14 +113,21 @@ export function useRealtimeSync(): void {
         },
         old => {
           if (!old) return old;
+          const isDuplicate = old.lastMessage?.id === message.id;
+          let nextUnreadCount = old.unreadMessagesCount ?? 0;
+          if (!isDuplicate) {
+            if (isCurrentActive) {
+              nextUnreadCount = 0;
+            } else if (isIncoming) {
+              nextUnreadCount = (old.unreadMessagesCount ?? 0) + 1;
+            }
+          }
+
           return {
             ...old,
             lastMessage: message,
             lastActivityAt: message.createdAt,
-            unreadMessagesCount:
-              message.messageType === MessageType.INCOMING
-                ? (old.unreadMessagesCount ?? 0) + 1
-                : old.unreadMessagesCount,
+            unreadMessagesCount: nextUnreadCount,
           };
         },
       );
@@ -213,6 +239,37 @@ export function useRealtimeSync(): void {
     WsServerEvent.CONVERSATION_CREATED,
     () => {
       queryClient.invalidateQueries({ queryKey: ['conversations'] });
+    },
+  );
+
+  // conversation.updated
+  useSocketEvent<ConversationResponseDto | { conversation: ConversationResponseDto }>(
+    WsServerEvent.CONVERSATION_UPDATED,
+    payload => {
+      const conv =
+        payload && typeof payload === 'object' && 'conversation' in payload
+          ? payload.conversation
+          : (payload as ConversationResponseDto);
+
+      const conversationId = conv?.id;
+      if (!conversationId) return;
+
+      queryClient.setQueriesData<ConversationResponseDto>(
+        {
+          predicate: query =>
+            query.queryKey[0] === 'conversation' && query.queryKey.includes(conversationId),
+        },
+        old => (old ? { ...old, ...conv } : old),
+      );
+
+      queryClient.setQueriesData<InfiniteData<ApiResponse<ConversationResponseDto[]>>>(
+        { queryKey: ['conversations'] },
+        old =>
+          updateConversationInList(old, conversationId, prev => ({
+            ...prev,
+            ...conv,
+          })),
+      );
     },
   );
 

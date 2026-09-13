@@ -42,15 +42,19 @@ import {
   AttachmentActions,
   AttachmentAction,
 } from '@/components/ui/attachment';
+import { useQueryClient, type InfiniteData } from '@tanstack/react-query';
 import {
   DeliveryStatus,
   MessageType,
   SenderType,
   type AttachmentDto,
+  type ConversationResponseDto,
   type LinkPreviewData,
   type MessageResponseDto,
 } from '@/lib/api/types';
-import { fetchApi, workspaceHeaders } from '@/lib/api/client';
+import { fetchApi, workspaceHeaders, type ApiResponse } from '@/lib/api/client';
+import { conversationsApi } from '@/lib/api/conversations';
+import { updateConversationInList } from '@/lib/socket/cache-helpers';
 import { useConversation } from './hooks/use-conversation';
 import { useMessages } from './hooks/use-messages';
 import { useWorkspaces } from '@/features/workspaces/use-workspaces';
@@ -730,6 +734,39 @@ export function MessageThread({
     conversation?.workspaceId ||
     (workspaceSlug ? workspaces?.find(w => w.slug === workspaceSlug)?.id : undefined) ||
     workspaces?.[0]?.id;
+
+  const queryClient = useQueryClient();
+  const unreadCount = conversation?.unreadMessagesCount ?? 0;
+
+  // Mark conversation as read on view/open (BR-4.3)
+  React.useEffect(() => {
+    if (!conversationId || !activeWorkspaceId || unreadCount <= 0) {
+      return;
+    }
+
+    // Optimistically zero unread count in both detail and list caches
+    queryClient.setQueriesData<ConversationResponseDto>(
+      {
+        predicate: query =>
+          query.queryKey[0] === 'conversation' && query.queryKey.includes(conversationId),
+      },
+      old => (old ? { ...old, unreadMessagesCount: 0 } : old),
+    );
+
+    queryClient.setQueriesData<InfiniteData<ApiResponse<ConversationResponseDto[]>>>(
+      { queryKey: ['conversations'] },
+      old =>
+        updateConversationInList(old, conversationId, prev => ({
+          ...prev,
+          unreadMessagesCount: 0,
+        })),
+    );
+
+    // Call backend API to persist resetUnread in database
+    conversationsApi.resetUnread(activeWorkspaceId, conversationId).catch(err => {
+      console.error('Failed to reset unread count on view:', err);
+    });
+  }, [conversationId, activeWorkspaceId, unreadCount, queryClient]);
 
   const isLoading = isConversationLoading || isMessagesLoading;
   const contact = conversation?.contact;

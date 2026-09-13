@@ -17,6 +17,8 @@ export interface SocketProviderProps {
   children: React.ReactNode;
 }
 
+let disconnectTimeout: ReturnType<typeof setTimeout> | null = null;
+
 export function SocketProvider({ children }: SocketProviderProps) {
   const [socket, setSocket] = React.useState<Socket | null>(null);
   const [status, setStatus] = React.useState<SocketConnectionStatus>('idle');
@@ -33,6 +35,11 @@ export function SocketProvider({ children }: SocketProviderProps) {
   }, [socket]);
 
   React.useEffect(() => {
+    if (disconnectTimeout) {
+      clearTimeout(disconnectTimeout);
+      disconnectTimeout = null;
+    }
+
     const s = getSocketClient();
     setSocket(s);
     setStatus('connecting');
@@ -109,9 +116,11 @@ export function SocketProvider({ children }: SocketProviderProps) {
       s.off('connect_error', handleConnectError);
       s.off('error', handleRealtimeError);
       s.off('connected', handleConnectedAck);
-      disconnectSocketClient();
-      setSocket(null);
-      setStatus('disconnected');
+      disconnectTimeout = setTimeout(() => {
+        disconnectSocketClient();
+        setSocket(null);
+        setStatus('disconnected');
+      }, 200);
     };
   }, []);
 

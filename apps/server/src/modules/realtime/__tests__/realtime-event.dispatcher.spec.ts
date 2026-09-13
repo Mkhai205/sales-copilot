@@ -57,9 +57,15 @@ describe('RealtimeEventDispatcher — Event Routing & Error Isolation (Task 12)'
 
     mockGateway = {
       server: {
-        to: (room: string) => ({
+        to: (room: string | string[]) => ({
           emit: (event: string, payload: unknown) => {
-            emittedBroadcasts.push({ room, event, payload });
+            if (Array.isArray(room)) {
+              for (const r of room) {
+                emittedBroadcasts.push({ room: r, event, payload });
+              }
+            } else {
+              emittedBroadcasts.push({ room, event, payload });
+            }
           },
         }),
       },

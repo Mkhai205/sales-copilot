@@ -22,7 +22,6 @@ export class AutoAssignmentListener {
    * If conversation has no assigneeId, initiates auto-assignment.
    */
   @OnEvent(DomainEvent.CONVERSATION_CREATED)
-  @OnEvent('conversation.created')
   async handleConversationCreated(payload: ConversationCreatedEvent): Promise<void> {
     if (!payload?.workspaceId || !payload?.conversation?.id) {
       return;
@@ -53,7 +52,6 @@ export class AutoAssignmentListener {
    * If conversation is unassigned, attempts auto-assignment.
    */
   @OnEvent(DomainEvent.CONVERSATION_REOPENED)
-  @OnEvent('conversation.reopened')
   async handleConversationReopened(payload: ConversationReopenedEvent): Promise<void> {
     if (!payload?.workspaceId) {
       return;

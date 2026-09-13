@@ -32,7 +32,6 @@ export class PosOrderAutomationListener {
   ) {}
 
   @OnEvent(DomainEvent.MESSAGE_CREATED, { async: true })
-  @OnEvent('message.created', { async: true })
   async handleMessageCreated(payload: any): Promise<void> {
     try {
       const workspaceId = payload?.workspaceId;
@@ -63,7 +62,7 @@ export class PosOrderAutomationListener {
         scheduledAt: now,
       };
 
-      const jobId = `pos-extract:${workspaceId}:${conversationId}:${now}`;
+      const jobId = `pos-extract_${workspaceId}_${conversationId}_${now}`;
 
       await this.automationQueue.add(POS_AUTOMATION_JOB, jobData, {
         delay: DEBOUNCE_MS,

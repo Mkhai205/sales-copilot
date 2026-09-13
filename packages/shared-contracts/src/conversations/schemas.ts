@@ -141,6 +141,12 @@ export interface ConversationCreatedEvent {
   conversation: ConversationResponseDto;
 }
 
+export interface ConversationUpdatedEvent {
+  workspaceId: string;
+  conversationId: string;
+  conversation: ConversationResponseDto;
+}
+
 export interface ConversationStatusUpdatedEvent {
   workspaceId: string;
   conversationId: string;
