@@ -1,6 +1,6 @@
 import { describe, it, beforeEach } from 'node:test';
 import * as assert from 'node:assert';
-import { ConflictException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
 import { ChannelType } from '@sales-copilot/shared-contracts';
 import { InboxesService } from '../inboxes.service';
 import { ChannelCredentialService } from '../channel-credential.service';
@@ -600,6 +600,97 @@ describe('InboxesService (Inbox & Channel 1:1 CRUD & Security)', () => {
       assert.strictEqual(emittedEvents.length, 1);
       assert.strictEqual(emittedEvents[0].event, 'channel.deleted');
       assert.strictEqual(emittedEvents[0].payload.channelId, 'chan_del_1');
+    });
+  });
+
+  describe('uploadAvatar (MinIO Avatar Upload)', () => {
+    it('should upload a valid avatar image and return the public URL', async () => {
+      let uploadedKey = '';
+      const mockStorageService: any = {
+        upload: async (_buffer: Buffer, _mimetype: string, key: string) => {
+          uploadedKey = key;
+        },
+        getPublicUrl: (key: string) => `http://minio:9000/bucket/${key}`,
+      };
+
+      const serviceWithStorage = new InboxesService(
+        {} as any,
+        credentialService,
+        undefined,
+        mockStorageService,
+      );
+
+      const file = {
+        originalname: 'shop_logo.png',
+        mimetype: 'image/png',
+        size: 1024,
+        buffer: Buffer.from('fake-image-data'),
+      };
+
+      const result = await serviceWithStorage.uploadAvatar(wsAlpha, file);
+      assert.ok(result.avatarUrl.includes('http://minio:9000/bucket/avatars/inboxes/ws_alpha_1/'));
+      assert.ok(result.avatarUrl.endsWith('.png'));
+      assert.ok(uploadedKey.startsWith('avatars/inboxes/ws_alpha_1/'));
+    });
+
+    it('should reject non-image file uploads', async () => {
+      const mockStorageService: any = {
+        upload: async () => {},
+        getPublicUrl: () => '',
+      };
+
+      const serviceWithStorage = new InboxesService(
+        {} as any,
+        credentialService,
+        undefined,
+        mockStorageService,
+      );
+
+      const file = {
+        originalname: 'script.exe',
+        mimetype: 'application/octet-stream',
+        size: 1024,
+        buffer: Buffer.from('binary-data'),
+      };
+
+      await assert.rejects(
+        () => serviceWithStorage.uploadAvatar(wsAlpha, file),
+        (err: any) => {
+          assert.ok(err instanceof BadRequestException);
+          assert.strictEqual((err.getResponse() as any).code, 'INVALID_IMAGE_TYPE');
+          return true;
+        },
+      );
+    });
+
+    it('should reject image files larger than 5MB', async () => {
+      const mockStorageService: any = {
+        upload: async () => {},
+        getPublicUrl: () => '',
+      };
+
+      const serviceWithStorage = new InboxesService(
+        {} as any,
+        credentialService,
+        undefined,
+        mockStorageService,
+      );
+
+      const file = {
+        originalname: 'huge_banner.png',
+        mimetype: 'image/png',
+        size: 6 * 1024 * 1024,
+        buffer: Buffer.from('huge-data'),
+      };
+
+      await assert.rejects(
+        () => serviceWithStorage.uploadAvatar(wsAlpha, file),
+        (err: any) => {
+          assert.ok(err instanceof BadRequestException);
+          assert.strictEqual((err.getResponse() as any).code, 'FILE_TOO_LARGE');
+          return true;
+        },
+      );
     });
   });
 });

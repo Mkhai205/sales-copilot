@@ -132,7 +132,7 @@ export function ConversationLayout({ workspaceSlug, conversationId }: Conversati
             <ResizablePanel
               id="detail-panel"
               defaultSize="30%"
-              minSize="22%"
+              minSize="25%"
               maxSize="45%"
               className="min-h-0 overflow-hidden"
             >

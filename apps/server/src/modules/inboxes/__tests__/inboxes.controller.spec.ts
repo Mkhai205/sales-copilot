@@ -110,6 +110,9 @@ describe('InboxesController (Presentation Layer Endpoints)', () => {
         success: true,
         message: 'Inbox deleted successfully',
       }),
+      uploadAvatar: async (workspaceId: string, file: any) => ({
+        avatarUrl: `https://storage.example.com/avatars/${workspaceId}/${file.originalname}`,
+      }),
     };
 
     controller = new InboxesController(mockService as InboxesService);
@@ -150,5 +153,19 @@ describe('InboxesController (Presentation Layer Endpoints)', () => {
   it('should handle delete inbox request', async () => {
     const result = await controller.deleteInbox(mockContext, 'ib_1');
     assert.strictEqual(result.success, true);
+  });
+
+  it('should handle upload avatar request', async () => {
+    const file = {
+      originalname: 'avatar.png',
+      mimetype: 'image/png',
+      size: 100,
+      buffer: Buffer.from(''),
+    };
+    const result = await controller.uploadAvatar(mockContext, file as any);
+    assert.strictEqual(
+      result.avatarUrl,
+      'https://storage.example.com/avatars/ws_alpha_1/avatar.png',
+    );
   });
 });

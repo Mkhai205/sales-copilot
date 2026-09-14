@@ -7,6 +7,7 @@ import {
   Optional,
 } from '@nestjs/common';
 import * as crypto from 'crypto';
+import * as path from 'path';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import {
   ChannelDetailDto,
@@ -21,6 +22,7 @@ import {
   WorkspaceRole,
 } from '@sales-copilot/shared-contracts';
 import { PrismaService } from '../../infrastructure/database';
+import { StorageService } from '../../infrastructure/storage/storage.service';
 import { ChannelCredentialService } from './channel-credential.service';
 
 @Injectable()
@@ -31,6 +33,7 @@ export class InboxesService {
     private readonly prisma: PrismaService,
     private readonly credentialService: ChannelCredentialService,
     @Optional() private readonly eventEmitter?: EventEmitter2,
+    @Optional() private readonly storageService?: StorageService,
   ) {}
 
   /**
@@ -642,5 +645,60 @@ export class InboxesService {
       `Removed user '${userId}' from inbox '${inboxId}' in workspace '${workspaceId}'`,
     );
     return { success: true, message: 'Member removed from inbox successfully' };
+  }
+
+  /**
+   * Upload an inbox avatar image to MinIO and return the public access URL.
+   */
+  async uploadAvatar(
+    workspaceId: string,
+    file: { originalname: string; mimetype: string; size: number; buffer: Buffer },
+  ): Promise<{ avatarUrl: string }> {
+    if (!file || !file.buffer) {
+      throw new BadRequestException({
+        code: 'FILE_REQUIRED',
+        message: 'Tệp hình ảnh là bắt buộc',
+      });
+    }
+
+    const allowedMimeTypes = [
+      'image/jpeg',
+      'image/png',
+      'image/webp',
+      'image/gif',
+      'image/svg+xml',
+    ];
+    const maxSizeBytes = 5 * 1024 * 1024; // 5MB
+
+    if (!allowedMimeTypes.includes(file.mimetype)) {
+      throw new BadRequestException({
+        code: 'INVALID_IMAGE_TYPE',
+        message: 'Định dạng hình ảnh không được hỗ trợ. Vui lòng tải lên PNG, JPEG, WebP hoặc SVG',
+        details: { allowed: allowedMimeTypes, received: file.mimetype },
+      });
+    }
+
+    if (file.size > maxSizeBytes) {
+      throw new BadRequestException({
+        code: 'FILE_TOO_LARGE',
+        message: 'Kích thước tệp vượt quá giới hạn cho phép (tối đa 5MB)',
+        details: { maxSize: maxSizeBytes, receivedSize: file.size },
+      });
+    }
+
+    if (!this.storageService) {
+      throw new BadRequestException({
+        code: 'STORAGE_UNAVAILABLE',
+        message: 'Dịch vụ lưu trữ tệp hiện chưa sẵn sàng',
+      });
+    }
+
+    const ext = path.extname(file.originalname).toLowerCase() || '.png';
+    const key = `avatars/inboxes/${workspaceId}/${crypto.randomUUID()}${ext}`;
+
+    await this.storageService.upload(file.buffer, file.mimetype, key);
+    const avatarUrl = this.storageService.getPublicUrl(key);
+
+    return { avatarUrl };
   }
 }

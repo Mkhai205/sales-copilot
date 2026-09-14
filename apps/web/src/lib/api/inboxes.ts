@@ -56,4 +56,14 @@ export const inboxesApi = {
       method: 'DELETE',
       headers: workspaceHeaders(workspaceId),
     }),
+
+  uploadAvatar: (workspaceId: string, file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return fetchApi<{ avatarUrl: string }>('/inboxes/upload-avatar', {
+      method: 'POST',
+      headers: workspaceHeaders(workspaceId),
+      body: formData,
+    });
+  },
 };

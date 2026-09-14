@@ -7,9 +7,19 @@ import {
   Param,
   Patch,
   Post,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiHeader, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import {
+  ApiBearerAuth,
+  ApiConsumes,
+  ApiHeader,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import {
   CreateInboxDto,
   createInboxSchema,
@@ -47,6 +57,23 @@ export class InboxesController {
   @ApiResponse({ status: 403, description: 'Forbidden' })
   async listInboxes(@CurrentWorkspace() context: WorkspaceContext): Promise<InboxDto[]> {
     return this.inboxesService.listInboxes(context.workspaceId);
+  }
+
+  @Post('upload-avatar')
+  @HttpCode(HttpStatus.OK)
+  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN)
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({ summary: 'Upload an inbox avatar image to MinIO storage' })
+  @ApiResponse({ status: 200, description: 'Avatar uploaded successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid file or format' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  async uploadAvatar(
+    @CurrentWorkspace() context: WorkspaceContext,
+    @UploadedFile() file: any,
+  ): Promise<{ avatarUrl: string }> {
+    return this.inboxesService.uploadAvatar(context.workspaceId, file);
   }
 
   @Post()

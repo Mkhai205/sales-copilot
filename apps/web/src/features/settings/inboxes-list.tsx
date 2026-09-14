@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { Plus, Search, Pencil, Trash2, AlertTriangle, X, Users } from 'lucide-react';
 import { type InboxDto, ChannelType, WorkspaceRole } from '@sales-copilot/shared-contracts';
 import { getChannelMeta } from '@/lib/channels';
+import { InboxAvatar } from '@/components/inbox-avatar';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Select,
@@ -225,29 +226,33 @@ export function InboxesList({ workspaceId, currentUserRole, workspaceSlug }: Inb
             const isConnected = inbox.channel?.isConnected ?? true;
             const meta = getChannelMeta(inbox.channelType);
 
+            const handleCardClick = () => {
+              if (workspaceSlug) {
+                router.push(`/${workspaceSlug}/settings/inboxes/${inbox.id}`);
+              } else {
+                setInboxToEdit(inbox);
+              }
+            };
+
             return (
               <Card
                 key={inbox.id}
-                className="group relative flex flex-col justify-between border-border bg-card/40 hover:bg-card/70 transition-all shadow-2xs hover:shadow-sm"
+                onClick={handleCardClick}
+                className="group relative flex flex-col justify-between border-border bg-card/40 hover:bg-card/70 transition-all shadow-2xs hover:shadow-sm cursor-pointer hover:border-primary/40"
               >
                 <CardHeader className="pb-3 pt-4 px-4">
                   <div className="flex items-start justify-between gap-3 min-w-0">
                     {/* Left: Channel Icon + Inbox Name & Meta */}
                     <div className="flex items-start gap-3 min-w-0 flex-1">
-                      <div className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-border/80 bg-muted/40 p-2 shadow-2xs">
-                        <Image
-                          src={meta.iconSrc}
-                          alt={meta.label}
-                          width={24}
-                          height={24}
-                          unoptimized
-                          style={{ width: '24px', height: '24px' }}
-                          className="size-6 object-contain"
-                        />
-                      </div>
+                      <InboxAvatar
+                        avatarUrl={inbox.avatarUrl}
+                        channelType={inbox.channelType}
+                        name={inbox.name}
+                        size="md"
+                      />
                       <div className="flex flex-col min-w-0 flex-1 pt-0.5">
                         <CardTitle
-                          className="truncate text-sm font-semibold text-foreground leading-tight"
+                          className="truncate text-sm font-semibold text-foreground leading-tight group-hover:text-primary transition-colors"
                           title={inbox.name}
                         >
                           {inbox.name}
@@ -260,27 +265,36 @@ export function InboxesList({ workspaceId, currentUserRole, workspaceSlug }: Inb
                             {meta.label}
                           </Badge>
                           {isConnected ? (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-500">
-                              <span className="size-1.5 rounded-full bg-emerald-500" />
+                            <Badge
+                              variant="outline"
+                              className="px-1.5 py-0 text-[10px] font-medium border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 gap-1"
+                            >
+                              <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
                               {t('settings.inboxes.activeStatus')}
-                            </span>
+                            </Badge>
                           ) : (
-                            <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
+                            <Badge
+                              variant="outline"
+                              className="px-1.5 py-0 text-[10px] font-medium border-border text-muted-foreground gap-1"
+                            >
                               <span className="size-1.5 rounded-full bg-muted-foreground/50" />
                               {t('settings.inboxes.draftStatus')}
-                            </span>
+                            </Badge>
                           )}
                         </div>
                       </div>
                     </div>
 
-                    {/* Right: Quick Action Buttons (Never pushed off-screen) */}
+                    {/* Right: Quick Action Buttons */}
                     {canManage && (
                       <div className="flex items-center gap-1 shrink-0 -mr-1">
                         <Button
                           variant="ghost"
                           size="icon-xs"
-                          onClick={() => setInboxToEdit(inbox)}
+                          onClick={e => {
+                            e.stopPropagation();
+                            handleCardClick();
+                          }}
                           className="size-7 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted"
                           title={t('settings.inboxes.editInboxSettings')}
                         >
@@ -290,7 +304,10 @@ export function InboxesList({ workspaceId, currentUserRole, workspaceSlug }: Inb
                         <Button
                           variant="ghost"
                           size="icon-xs"
-                          onClick={() => setInboxToDelete(inbox)}
+                          onClick={e => {
+                            e.stopPropagation();
+                            setInboxToDelete(inbox);
+                          }}
                           className="size-7 rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
                           title={t('settings.inboxes.deleteInbox')}
                         >

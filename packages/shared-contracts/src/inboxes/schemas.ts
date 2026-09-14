@@ -2,6 +2,75 @@ import { z } from 'zod';
 import { ChannelType } from './enums';
 import { WorkspaceRole } from '../auth/enums';
 
+export const dayScheduleSchema = z.object({
+  dayOfWeek: z.number().int().min(0).max(6),
+  open: z.boolean(),
+  openTime: z.string().optional(),
+  closeTime: z.string().optional(),
+});
+export type DaySchedule = z.infer<typeof dayScheduleSchema>;
+
+export const inboxWorkingHoursConfigSchema = z.object({
+  enabled: z.boolean(),
+  timezone: z.string(),
+  schedule: z.array(dayScheduleSchema),
+  awayMessage: z.string().optional(),
+});
+export type InboxWorkingHoursConfig = z.infer<typeof inboxWorkingHoursConfigSchema>;
+
+export const inboxAutoAssignmentConfigSchema = z.object({
+  enabled: z.boolean(),
+  strategy: z.literal('ROUND_ROBIN'),
+  maxConcurrentChats: z.number().int().positive().optional(),
+});
+export type InboxAutoAssignmentConfig = z.infer<typeof inboxAutoAssignmentConfigSchema>;
+
+export const preChatFormConfigSchema = z.object({
+  enabled: z.boolean().optional(),
+  requireName: z.boolean().optional(),
+  requireEmail: z.boolean().optional(),
+  requirePhone: z.boolean().optional(),
+});
+export type PreChatFormConfig = z.infer<typeof preChatFormConfigSchema>;
+
+export const inboxWebWidgetConfigSchema = z.object({
+  widgetColor: z.string().optional(),
+  allowedDomains: z.array(z.string()).optional(),
+  hmacMandatory: z.boolean().optional(),
+  hmacSecret: z.string().optional(),
+  preChatForm: preChatFormConfigSchema.optional(),
+});
+export type InboxWebWidgetConfig = z.infer<typeof inboxWebWidgetConfigSchema>;
+
+export const aiCommerceOperatingModeSchema = z.enum([
+  'COPILOT_ASSIST',
+  'AUTOPILOT_24_7',
+  'HYBRID_OFF_HOURS',
+]);
+export type AiCommerceOperatingMode = z.infer<typeof aiCommerceOperatingModeSchema>;
+
+export const inboxAiCommercePolicyConfigSchema = z.object({
+  mode: aiCommerceOperatingModeSchema,
+  maxDiscountPercent: z.number().min(0).max(100).optional(),
+  maxDiscountVnd: z.number().min(0).optional(),
+  personaTone: z.string().optional(),
+  defaultWarehouseId: z.string().optional(),
+  defaultBankAccountId: z.string().optional(),
+});
+export type InboxAiCommercePolicyConfig = z.infer<typeof inboxAiCommercePolicyConfigSchema>;
+
+export const inboxSettingsSchema = z
+  .object({
+    greetingMessage: z.string().optional(),
+    allowMessagesAfterResolved: z.boolean().optional(),
+    workingHours: inboxWorkingHoursConfigSchema.optional(),
+    autoAssignment: inboxAutoAssignmentConfigSchema.optional(),
+    webWidget: inboxWebWidgetConfigSchema.optional(),
+    aiCommercePolicy: inboxAiCommercePolicyConfigSchema.optional(),
+  })
+  .passthrough();
+export type InboxSettings = z.infer<typeof inboxSettingsSchema> & { [key: string]: unknown };
+
 export const createInboxSchema = z.object({
   name: z.string().min(1, 'Inbox name is required').max(100),
   channelType: z.nativeEnum(ChannelType),
@@ -70,7 +139,7 @@ export interface InboxDto {
   avatarUrl?: string | null;
   channelType: ChannelType;
   greetingMessage?: string;
-  settings: Record<string, unknown>;
+  settings: InboxSettings;
   isAutoAssignmentEnabled: boolean;
   memberCount: number;
   channel?: ChannelSummaryDto | null;
