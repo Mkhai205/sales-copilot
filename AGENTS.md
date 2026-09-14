@@ -18,11 +18,14 @@ Sales Copilot is an omnichannel conversational commerce & AI sales platform for 
 - **Phase 1 (FROZEN BASELINE)**: Omnichannel core (Conversations, Inboxes, Channels, Contacts, Identity Resolution).
   - ⛔ **NON-BREAKING INVARIANT**: Phase 1 APIs, schemas, and event contracts are stable and MUST NOT be broken or refactored arbitrarily.
 - **Phase 2 (CURRENT ACTIVE SCOPE)**: Conversational Commerce & AI Auto-pilot POS for D2C & Retail:
-  - Built-in In-Chat POS & Inventory Management (Variants, SKUs, Atomic Stock Reservation).
-  - Dynamic VietQR (NAPAS 247) & Instant Bank Webhook Reconciliation (< 1s).
-  - AI NER 3-Tier Administrative Address Extraction & 1-Click Order Generation.
-  - 24/7 AI Auto-pilot & Guarded Discount Policy Engine (Midnight Checkout).
-  - Anti-theft Realtime Comment Masking (< 1s) & Comment-to-Inbox Pipeline.
+  - **Milestone 2A (Commerce Core - PRIORITY)**:
+    - Built-in In-Chat POS Drawer & Inventory Management (Variants, SKUs, Atomic Stock Reservation).
+    - Dynamic VietQR (NAPAS 247) & Instant Bank Webhook Reconciliation (< 1s via SePay/Cassie).
+    - ESC/POS K80 Thermal Receipt Printing.
+  - **Milestone 2B (AI Automation - SECONDARY)**:
+    - AI NER 3-Tier Administrative Address Extraction & 1-Click Order Generation.
+    - 24/7 AI Auto-pilot & Guarded Discount Policy Engine (Midnight Checkout).
+    - Anti-theft Realtime Comment Masking (< 1s) & Comment-to-Inbox Pipeline.
   - ⛔ **PROHIBITED & DEPRECATED**: Do NOT build B2B CRM, Voice/SIP, or external CRM sync (HubSpot/Salesforce).
 - 📖 **Documentation References** (inspect when needed via `view_file`):
   - Hub: [`docs/README.md`](./docs/README.md) | Guidelines: [`docs/engineering/coding-guidelines.md`](./docs/engineering/coding-guidelines.md)
@@ -41,6 +44,21 @@ Sales Copilot is an omnichannel conversational commerce & AI sales platform for 
 3. **No DTO & Mapper Pipeline Explosion**: ❌ DO NOT chain `Entity ➔ DomainModel ➔ ApplicationDTO ➔ Presenter ➔ ViewModel`. Use a single Zod schema for input validation/DTO and return Prisma models or typed response objects directly.
 4. **Rule of Three**: Duplicate code twice before creating a shared helper. Do not abstract on first or second use.
 5. **Co-location over Folder Sprawl**: Keep related code together (`*.module.ts`, `*.controller.ts`, `*.service.ts`, `*.dto.ts`, `*.spec.ts`). Avoid creating deep micro-folders (`entities`, `value-objects`, `commands`, `queries`, `ports`).
+6. **Essential Complexity vs. Accidental Boilerplate**:
+   - KISS & YAGNI apply to architectural indirection (no speculative abstractions, no bloated folder sprawl, no fake single-implementation interfaces).
+   - For non-trivial domain algorithms and industry-standard protocols (e.g., VietQR EMVCo/CRC-16, ESC/POS thermal printing, Redis distributed locks, crypto), **ALWAYS prefer battle-tested, lightweight npm packages over rolling fragile custom implementations**.
+   - Any newly proposed dependency MUST be explicitly declared and justified in the implementation plan before installation.
+
+---
+
+## 2.1. Agent Interaction & Planning Protocol (Human-in-the-Loop)
+
+1. **Plan Before Code**: For any non-trivial task, refactoring, or new feature:
+   - The agent MUST create or update `implementation_plan.md` first.
+   - Detail impacted files, data flow, proposed new dependencies, and potential edge-case risks.
+   - STOP and request explicit user review and approval before touching source code.
+2. **Verification & Proof**: After execution, the agent MUST run automated verification (`typecheck`, `test`, `lint`) and provide a concise summary in `walkthrough.md`.
+3. **No Silent Changes**: Never modify files, database schemas, or packages outside the agreed scope.
 
 ---
 
@@ -55,6 +73,10 @@ Sales Copilot is an omnichannel conversational commerce & AI sales platform for 
    - Read/write access MUST always pass through `ChannelCredentialService`. Never log or expose plaintext credentials/tokens.
 3. **Webhook Verification**: All external inbound webhooks must verify HMAC signatures/tokens before processing.
 4. **Backend Authorization**: Never trust client-side claims. Enforce workspace membership, roles (`ADMIN`, `AGENT`), and inbox permissions in backend Guards/Services.
+5. **Database & Migration Safety (Strict)**:
+   - ⛔ **NEVER execute destructive database commands**: Do NOT run `prisma migrate reset`, `prisma db push --force-reset`, or drop columns without explicit user confirmation.
+   - Always use safe migrations: `pnpm db:migrate:dev --name <descriptive_name>`.
+   - Ensure seed data integrity in `apps/server/prisma/seed.ts` is preserved.
 
 ---
 
@@ -100,9 +122,18 @@ Sales Copilot is an omnichannel conversational commerce & AI sales platform for 
 ## 7. Testing & Definition of Done
 
 - **High-Value Tests**: Focus tests on business rules, state machines, tenant isolation, and identity deduplication. Avoid brittle mock boilerplate for simple CRUD getters.
+- **Verification CLI Runbook**:
+  - **Typecheck (All Projects)**: `pnpm typecheck`
+  - **Backend Unit Tests**: `pnpm nx run server:test`
+  - **Frontend Unit Tests**: `pnpm nx run web:test`
+  - **Linting**: `pnpm lint`
+  - **Database Migration (Safe)**: `pnpm db:migrate:dev`
+  - **Database Seed**: `pnpm db:seed`
 - **Task Definition of Done**:
-  1. Multi-tenancy (`workspaceId`) and security invariants verified.
-  2. Code follows anti-overengineering principles (KISS, YAGNI, no unnecessary layers).
-  3. Tests pass: `pnpm nx run <project>:test` or `pnpm nx affected -t test`.
-  4. Linter & build pass: `pnpm nx run <project>:lint` and `pnpm nx run <project>:build`.
-  5. Documentation updated in `docs/` if architecture or API contracts changed.
+  1. Planning approval obtained via `implementation_plan.md` before code modification.
+  2. Multi-tenancy (`workspaceId`) and security invariants strictly verified.
+  3. Code follows anti-overengineering principles (KISS, YAGNI, essential vs. accidental complexity).
+  4. Tests pass: `pnpm nx run <project>:test` or `pnpm nx affected -t test`.
+  5. Linter & typecheck pass: `pnpm typecheck` and `pnpm lint`.
+  6. Documentation updated in `docs/` if architecture or API contracts changed.
+  7. Final walkthrough summary provided in `walkthrough.md`.
