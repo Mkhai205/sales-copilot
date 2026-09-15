@@ -17,21 +17,20 @@ Sales Copilot is an omnichannel conversational commerce & AI sales platform for 
 
 - **Phase 1 (FROZEN BASELINE)**: Omnichannel core (Conversations, Inboxes, Channels, Contacts, Identity Resolution).
   - ⛔ **NON-BREAKING INVARIANT**: Phase 1 APIs, schemas, and event contracts are stable and MUST NOT be broken or refactored arbitrarily.
-- **Phase 2 (CURRENT ACTIVE SCOPE)**: Conversational Commerce & AI Auto-pilot POS for D2C & Retail:
+- **Phase 2 (CURRENT ACTIVE SCOPE)**: D2C Conversational Commerce, Inventory & AI Auto-pilot:
   - **Milestone 2A (Commerce Core - PRIORITY)**:
-    - Built-in In-Chat POS Drawer & Inventory Management (Variants, SKUs, Atomic Stock Reservation).
-    - Dynamic VietQR (NAPAS 247) & Instant Bank Webhook Reconciliation (< 1s via SePay/Cassie).
-    - ESC/POS K80 Thermal Receipt Printing.
+    - In-Chat Quick Order, Catalog & Mini-Inventory Management (Variants, SKUs, Atomic Stock Reservation, Orders OMS).
+    - Dynamic VietQR (NAPAS 247) & Instant Bank Webhook Reconciliation (< 1s via SePay/Casso).
   - **Milestone 2B (AI Automation - SECONDARY)**:
     - AI NER 3-Tier Administrative Address Extraction & 1-Click Order Generation.
-    - 24/7 AI Auto-pilot & Guarded Discount Policy Engine (Midnight Checkout).
+    - Configurable AI Auto-pilot & Guarded Discount Policy Engine (24/7, Off-hours, Overflow).
     - Anti-theft Realtime Comment Masking (< 1s) & Comment-to-Inbox Pipeline.
-  - ⛔ **PROHIBITED & DEPRECATED**: Do NOT build B2B CRM, Voice/SIP, or external CRM sync (HubSpot/Salesforce).
+  - ⛔ **PROHIBITED & DEPRECATED**: Do NOT build B2B CRM, Voice/SIP, external CRM sync (HubSpot/Salesforce), or retail counter cashiers.
 - 📖 **Documentation References** (inspect when needed via `view_file`):
-  - Hub: [`docs/README.md`](./docs/README.md) | Guidelines: [`docs/engineering/coding-guidelines.md`](./docs/engineering/coding-guidelines.md)
-  - In-Chat POS PRD: [`docs/product/in-chat-pos-prd.md`](./docs/product/in-chat-pos-prd.md) | RFC: [`docs/architecture/in-chat-pos-technical-rfc.md`](./docs/architecture/in-chat-pos-technical-rfc.md)
-  - Product Vision: [`docs/product/vision.md`](./docs/product/vision.md) | Scope: [`docs/product/scope.md`](./docs/product/scope.md)
-  - Backlog: [`docs/backlog/phase-2-backlog.md`](./docs/backlog/phase-2-backlog.md)
+  - Hub: [`docs/README.md`](./docs/README.md) | Architecture: [`docs/architecture/01-system-architecture.md`](./docs/architecture/01-system-architecture.md)
+  - Commerce PRD: [`docs/product/prd-commerce-and-orders.md`](./docs/product/prd-commerce-and-orders.md) | RFC: [`docs/architecture/rfc-commerce-and-orders.md`](./docs/architecture/rfc-commerce-and-orders.md)
+  - Product Vision: [`docs/product/01-vision.md`](./docs/product/01-vision.md) | Scope & Requirements: [`docs/product/02-scope-and-requirements.md`](./docs/product/02-scope-and-requirements.md)
+  - Backlog: [`docs/backlog/README.md`](./docs/backlog/README.md)
 
 ---
 
@@ -46,7 +45,7 @@ Sales Copilot is an omnichannel conversational commerce & AI sales platform for 
 5. **Co-location over Folder Sprawl**: Keep related code together (`*.module.ts`, `*.controller.ts`, `*.service.ts`, `*.dto.ts`, `*.spec.ts`). Avoid creating deep micro-folders (`entities`, `value-objects`, `commands`, `queries`, `ports`).
 6. **Essential Complexity vs. Accidental Boilerplate**:
    - KISS & YAGNI apply to architectural indirection (no speculative abstractions, no bloated folder sprawl, no fake single-implementation interfaces).
-   - For non-trivial domain algorithms and industry-standard protocols (e.g., VietQR EMVCo/CRC-16, ESC/POS thermal printing, Redis distributed locks, crypto), **ALWAYS prefer battle-tested, lightweight npm packages over rolling fragile custom implementations**.
+   - For non-trivial domain algorithms and industry-standard protocols (e.g., VietQR EMVCo/CRC-16, Redis distributed locks, crypto), **ALWAYS prefer battle-tested, lightweight npm packages over rolling fragile custom implementations**.
    - Any newly proposed dependency MUST be explicitly declared and justified in the implementation plan before installation.
 
 ---

@@ -5,6 +5,11 @@
 - [x] migrate middleware-to-proxy
 - [x] thêm thư viện để hỗ trợ emoji
 - [x] xây dựng bộ lọc fillter
+- kiểm tra clean backend
+- kiểm tra clean frontend, chỗ nào vẫn còn mock data, code giao diện thừa, giao diện nào chưa có logic hoặc placeholder cần note lại
+- bỏ outbound webhooks
+- Automation Rules để làm gì
+- kiểm tra Danh tính kênh (3NF), Hợp nhất Contact	là cái gì
 - thiết kế chuyển đổi ngôn ngữ
 - tính năng ghim (pin) tin nhắn
 - tạo trang supper admin để quản lý hệ thống.

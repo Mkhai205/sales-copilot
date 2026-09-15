@@ -82,8 +82,6 @@ Thumbs.db
 
 # Multi-agent scratchpads & artifacts
 .agents/*
-!.agents/skills/
-ORIGINAL_REQUEST.md
 
 # Apps Web
 apps/web/public/widget/

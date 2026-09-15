@@ -9,8 +9,7 @@ Hiện thực hệ thống phát tán sự kiện thời gian thực: typed doma
 - **Dependencies**: `EPIC-1.5` (Conversation & Messaging Core), `EPIC-1.1` (Identity & Auth)
 - **References**:
   - `docs/references/chatwoot/source/app/dispatchers/`
-  - `docs/references/chatwoot/source/app/listeners/`
-  - `docs/api/websocket-contract.md`
+  - `docs/architecture/01-system-architecture.md` (Mục 6: Chuẩn Realtime WebSocket)
 
 ---
 
@@ -165,14 +164,14 @@ Kết nối domain events (từ `EventEmitter2`) với WebSocket broadcasting �
   - `conversation.assigned` → broadcast to `user_{assigneeId}` + `workspace_{id}`
   - `contact.created/updated/deleted` → broadcast to `workspace_{id}`
   - `presence.updated` → broadcast to `workspace_{id}`
-- Event payload transformation: domain event → WebSocket payload (theo `docs/api/websocket-contract.md`)
+- Event payload transformation: domain event → WebSocket payload (theo `docs/architecture/01-system-architecture.md`)
 
 #### Acceptance Criteria
 
 - [x] Mỗi domain event type có dedicated listener
 - [x] Events broadcast đúng rooms (conversation-specific vs workspace-wide)
 - [x] Assignment events notify cả old và new assignee qua `user_{id}` room
-- [x] WebSocket payload format match contract trong `websocket-contract.md`
+- [x] WebSocket payload format match contract trong `01-system-architecture.md`
 - [x] Failed broadcasts không crash event processing pipeline (error isolation)
 
 #### Dependencies

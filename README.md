@@ -34,12 +34,12 @@ sales-copilot/
 │   └── shared-contracts/     # Isomorphic TypeScript types, Zod DTO schemas & events
 │
 ├── docs/                     # Comprehensive System Documentation Hub
-│   ├── architecture/         # System, module, and data architecture specifications
-│   ├── domain/               # Domain models, business rules, and state machines
-│   ├── api/                  # REST API and WebSocket realtime contracts
-│   ├── backlog/              # Master backlog and active Phase 2 epics
-│   ├── engineering/          # Coding guidelines and testing strategy
-│   └── audit/                # Phase 1 completion sign-off and remediation plan
+│   ├── architecture/         # System architecture, data, commerce RFC, super admin
+│   ├── product/              # Product vision, scope, commerce PRD, super admin PRD
+│   ├── backlog/              # Active Phase 2 epics and master backlog
+│   ├── guides/               # Local environment setup and testing guides
+│   ├── test/                 # Manual testing scenarios and bug logs
+│   └── audit/                # Phase 1 completion sign-off and audit plans
 │
 ├── AGENTS.md                 # AI Agent operational directives & anti-overengineering rules
 └── README.md                 # Repository entrypoint (this file)
@@ -159,8 +159,7 @@ pnpm lint
 ## 📚 Key Documentation Links
 
 - 🗺️ **[System Documentation Hub](./docs/README.md)** — Central documentation index
-- 📐 **[System Architecture](./docs/architecture/system-architecture.md)** — Architectural overview and pipeline
-- 🏛️ **[Domain Model & Rules](./docs/domain/business-rules.md)** — Business logic, state machines, and invariants
-- 🔌 **[API Contracts](./docs/api/api-contract.md)** | **[WebSocket Contracts](./docs/api/websocket-contract.md)**
-- 📋 **[Phase 2 Backlog](./docs/backlog/phase-2-backlog.md)** — Active development epics
+- 📐 **[System Architecture & Blueprint](./docs/architecture/01-system-architecture.md)** — Architectural overview, pipeline, REST/WebSocket standards, and conversation lifecycle
+- 🛍️ **[Commerce & Orders RFC](./docs/architecture/rfc-commerce-and-orders.md)** — In-Chat POS, inventory reservation, and VietQR reconciliation
+- 📋 **[Backlog & AI Playbook](./docs/backlog/README.md)** — Active development epics, roadmaps, and AI orchestration guide
 - 🤖 **[AGENTS.md](./AGENTS.md)** — Non-negotiable architectural rules, multi-tenancy invariants, and anti-overengineering principles

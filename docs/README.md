@@ -6,40 +6,18 @@ Chào mừng bạn đến với trung tâm tài liệu kỹ thuật, kiến trú
 
 ## 📌 1. Lộ trình phân kỳ & Phạm vi (Project Phasing & Scope Guardrail)
 
-Sales Copilot Platform được thiết kế và thực thi theo lộ trình phân kỳ 3 giai đoạn nghiêm ngặt:
-
-```text
-                    Sales Copilot Platform
-                           │
-              ┌────────────┴────────────┐
-              │                         │
-       Conversation Core      Conversational Commerce     Autonomous Extensions
-     (PHASE 1 - COMPLETED)      (PHASE 2 - ACTIVE)          (PHASE 3 - FUTURE)
-              │                         │                             │
-       ┌──────┴──────┐          ┌───────┴────────┐            ┌───────┴────────┐
-       │             │          │                │            │                │
-   Channels      Messaging   In-Chat POS     VietQR        Autonomous       Voice/SIP
-   Contacts      Inbox       Products/SKUs   Reconciliation Sales Agents    Marketplace
-   Conversation  Teams       AI 3-Tier NER   Auto-pilot    Tool Registry    Sync (Shopee/
-   Assignment    Labels      Comment Masking Print K80     ...              TikTok)
-   Webhooks      Automation  Discount Engine ...           ...
-```
-
 ### 🟢 Phase 1: Omnichannel Conversation Platform Core (COMPLETED BASELINE)
 - **Trạng thái**: **100% Hoàn thành & Nghiệm thu** ([Biên bản nghiệm thu](./audit/phase-1-completion-signoff.md) — 1.277 automated tests passing).
 - **Phạm vi**: Multi-tenancy, Omnichannel Ingestion, 3NF Contact & Channel Identity resolution, Vòng đời Conversation & Message đa hình, Auto-assignment Round-Robin, Canned Responses, Automation Rules, Outbound Webhooks, Realtime WebSocket (Socket.io + Redis Pub/Sub), và Next.js Dashboard.
 - ⛔ **QUY TẮC BẤT BIẾN**: Phase 1 APIs, schemas và contracts đã ổn định, **tuyệt đối không refactor làm vỡ Phase 1 baseline**.
 
 ### 🟡 Phase 2: D2C Conversational Commerce & AI Auto-pilot POS (CURRENT ACTIVE SCOPE)
-- **Trạng thái**: **Đang triển khai tích cực** ([Master Backlog](./backlog/phase-2-backlog.md)).
+- **Trạng thái**: **Đang triển khai tích cực** ([Master Backlog Hub](./backlog/README.md)).
 - **Phạm vi**:
-  - **Milestone 2A (Commerce Core)**: Epic 2.1 (Built-in In-Chat POS & Inventory), Epic 2.2 (Dynamic VietQR & Instant Webhook Reconciliation).
-  - **Milestone 2B (AI Automation)**: Epic 2.3 (AI NER 3-Tier Address Extraction), Epic 2.4 (24/7 AI Auto-pilot & Guarded Discount Policy Engine).
+  - **Milestone 2A (Commerce Core)**: Epic 2.1 (Built-in Inventory & Catalog), Epic 2.2 (In-Chat POS & Orders OMS), Epic 2.3 (Dynamic VietQR & Instant Bank Reconciliation).
+  - **Milestone 2B (Super Admin Portal)**: Epic 2.4 (Super Admin Portal, Quota & Dynamic Settings).
+  - **Milestone 2C (AI Automation)**: Epic 2.5 (AI NER 3-Tier Address Extraction), Epic 2.6 (24/7 AI Auto-pilot & Discount Engine), Epic 2.7 (Anti-theft Comment Auto-masking).
 - ⛔ **QUY TẮC BẢO VỆ**: Tuyệt đối không tạo models cho B2B CRM hoặc Phase 3 khi đang làm Phase 2. Toàn bộ trọng tâm dành riêng cho Bán lẻ & D2C Conversational Commerce.
-
-### ❄️ Phase 3: Autonomous Sales Extensions (FUTURE EXTENSIONS - FROZEN)
-- **Trạng thái**: **Đóng băng quy hoạch**.
-- **Phạm vi**: Autonomous Sales Agent Execution Loop, Tool Registry & Guardrails, Tích hợp đàm thoại Voice/SIP (WebRTC), và Đồng bộ CRM 2 chiều (HubSpot, Salesforce).
 
 ---
 
@@ -48,58 +26,46 @@ Sales Copilot Platform được thiết kế và thực thi theo lộ trình ph�
 ### 📐 Kiến trúc hệ thống (`architecture/`)
 | Tài liệu | Mô tả chi tiết |
 | :--- | :--- |
-| **[System Architecture](./architecture/system-architecture.md)** | Tổng quan kiến trúc Pragmatic Modular Monolith, Technology Stack (NestJS, Next.js, Prisma, Redis, MinIO), Ingestion Pipeline và Multi-Tenancy. |
-| **[Super Admin Technical RFC](./architecture/super-admin-technical-rfc.md)** | Đặc tả kiến trúc Super Admin Portal: Models SystemSetting, PlatformAuditLog, Redis 2-tier Caching, PlatformRolesGuard, và Layout /admin. |
-| **[Module Architecture](./architecture/module-architecture.md)** | Ranh giới Bounded Contexts, quyền sở hữu model, chuẩn co-location và quy tắc giao tiếp liên module. |
-| **[In-Chat POS Technical RFC](./architecture/in-chat-pos-technical-rfc.md)** | Đặc tả kiến trúc kỹ thuật toàn diện cho In-Chat POS: Database models (Products, Orders, Payments), Redis Anti-Collision Lock, Dynamic VietQR và In bill K80. |
-| **[Channel Adapters](./architecture/channel-adapters.md)** | Kiến trúc adapter kênh (Web Chat, Facebook Messenger, Zalo OA, Telegram), chuẩn hóa webhook và mã hóa AES-256-GCM credentials. |
-| **[Operations & Security](./architecture/operations-and-security.md)** | Động cơ Automation Rules, Outbound Webhooks với BullMQ retry, RBAC Matrix và Audit Logging. |
-| **[Data Architecture](./architecture/data-architecture.md)** | Thiết kế lưu trữ PostgreSQL 16, Redis 7 (Cache + Locks + Pub/Sub), MinIO S3. |
+| **[System Architecture](./architecture/01-system-architecture.md)** | Bản đặc tả tổng quan kiến trúc Modular Monolith, Technology Stack, 7 Bounded Contexts, Ingestion Pipeline (<100ms), 4 chế độ AI Automation, RBAC 2 tầng, Chuẩn REST Envelope/Swagger, Realtime WebSocket và Quy tắc Vòng đời Hội thoại/Round-Robin. |
+| **[Data & Integrations](./architecture/02-data-and-integrations.md)** | Kiến trúc lưu trữ CSDL PostgreSQL 16 (Multi-tenancy isolation & indexes), Redis 7 (locks, pub/sub), MinIO S3, Channel Adapters đa kênh và Outbound Webhooks. |
+| **[Commerce & Orders RFC](./architecture/rfc-commerce-and-orders.md)** | Đặc tả kỹ thuật lõi Thương Mại D2C: Models, Thuật toán khóa kho nguyên tử 2 tầng ($transaction), chuẩn Dynamic VietQR NAPAS 247 và Đối soát ngân hàng tự động. |
+| **[Super Admin RFC](./architecture/rfc-super-admin.md)** | Đặc tả kỹ thuật Cổng Super Admin Portal: Models SystemSetting, PlatformAuditLog, Redis 2-tier Caching, PlatformRolesGuard và Layout /admin. |
 
----
-
-### 🏛️ Domain Model & Quy tắc nghiệp vụ (`domain/`)
-| Tài liệu | Mô tả chi tiết |
-| :--- | :--- |
-| **[Domain Model](./domain/domain-model.md)** | Ubiquitous Language và cấu trúc Aggregate 21 models của Phase 1 Core. |
-| **[Business Rules & State Machine](./domain/business-rules.md)** | Quy tắc nghiệp vụ, Invariants, State Machine hội thoại (`OPEN`, `PENDING`, `RESOLVED`, `SNOOZED`) và thuật toán Round-Robin. |
+> 💡 **Tài liệu API tương tác (Swagger UI)**: Toàn bộ REST Endpoints được tự động sinh tại `http://localhost:8000/docs`. Chuẩn Envelope và Realtime WebSocket được quy định trong [`01-system-architecture.md`](./architecture/01-system-architecture.md).
 
 ---
 
 ### 📦 Product & Yêu cầu sản phẩm (`product/`)
 | Tài liệu | Mô tả chi tiết |
 | :--- | :--- |
-| **[Product Vision](./product/vision.md)** | Tầm nhìn "The Chat IS the Point of Sale", triết lý thiết kế và lộ trình chuyển đổi D2C. |
-| **[Product Scope](./product/scope.md)** | Phạm vi chi tiết Phase 1 (Baseline), Phase 2 (D2C Active), và Phase 3 (Future). |
-| **[Product Requirements](./product/requirements.md)** | Đặc tả toàn bộ yêu cầu chức năng (FR) và phi chức năng (NFR, Ingestion non-blocking < 100ms). |
-| **[Super Admin PRD](./product/super-admin-prd.md)** | Đặc tả yêu cầu sản phẩm Super Admin Portal & Cấu hình Động: Quản lý Workspaces, Hạn mức Quota, Feature Flags và Platform Audit Logs. |
-| **[In-Chat POS PRD](./product/in-chat-pos-prd.md)** | Bản đặc tả yêu cầu sản phẩm chi tiết cho In-Chat POS: Benchmark Pancake.vn, 4 Personas, 8-Stage Customer Journey, UX Wireframes. |
-
----
-
-### 🔌 API & Realtime Contracts (`api/`)
-| Tài liệu | Mô tả chi tiết |
-| :--- | :--- |
-| **[REST API Contract](./api/api-contract.md)** | Chuẩn REST API, Header `X-Workspace-Id`, Response Envelope `{ success, data, meta }`, Error codes và danh sách Endpoints. |
-| **[WebSocket Contract](./api/websocket-contract.md)** | Chuẩn Socket.io Realtime, cấu trúc Room (`workspace_*`, `conversation_*`, `user_*`), Typed Event Payloads và Internal Domain Events. |
+| **[Product Vision](./product/01-vision.md)** | Tầm nhìn "The Chat IS the Point of Sale", triết lý thiết kế D2C, so sánh Pancake.vn và sơ đồ luồng tổng thể. |
+| **[Scope & Requirements Matrix](./product/02-scope-and-requirements.md)** | Nguồn chân lý duy nhất về phân kỳ 3 Phase, hàng rào cấm B2B CRM, ma trận FR (chức năng) và NFR (phi chức năng). |
+| **[Commerce & Orders PRD](./product/prd-commerce-and-orders.md)** | Bản đặc tả sản phẩm Thương Mại D2C (Milestone 2A): Khung lên đơn nhanh trong Chat, Quản lý Kho (SKU, Stock In, Adjustment), Quản trị Đơn hàng (OMS), Dynamic VietQR và đối soát Webhook. |
+| **[Super Admin PRD](./product/prd-super-admin.md)** | Đặc tả yêu cầu sản phẩm Super Admin Portal & Cấu hình Động: Quản lý Workspaces, Hạn mức Quota, Feature Flags và Platform Audit Logs. |
 
 ---
 
 ### 📋 Backlog & Kế hoạch thực thi (`backlog/`)
 | Tài liệu | Mô tả chi tiết |
 | :--- | :--- |
-| **[Epic Super Admin](./backlog/epic-super-admin.md)** | Kế hoạch chi tiết 5 Features của Super Admin Portal: Foundation/Guard, Settings Engine, Workspaces, Audit Logs, Dashboard Shell. |
-| **[Phase 2 Master Backlog](./backlog/phase-2-backlog.md)** | Master Backlog hoạt động chính: 6 Epics D2C (POS, VietQR, AI NER, Auto-pilot 24/7, Ẩn comment, In bill K80). |
-| **[Phase 1 Master Backlog](./backlog/backlog.md)** | Kế hoạch lịch sử 12 Epics Phase 1 (`epic-1.0` đến `epic-1.11`) đã hoàn thành 100%. |
+| **[Backlog Master Hub & AI Playbook](./backlog/README.md)** | Trung tâm quản lý lộ trình Phase 2, Ma trận tiến độ 7 Epics và Cẩm nang quy trình điều phối AI Coding Agent. |
+| **[Epic 2.1: Kho & SKU Biến Thể](./backlog/epic-2.1-inventory-and-catalog.md)** | Quản lý sản phẩm, biến thể SKU, tồn kho 3 trạng thái, điều chỉnh kho và sổ cái `InventoryTransaction`. |
+| **[Epic 2.2: Lên Đơn & OMS](./backlog/epic-2.2-in-chat-pos-and-orders.md)** | Khung lên đơn nhanh trong Chat, Order State Machine, khóa kho 2 tầng và Redis 30s lock. |
+| **[Epic 2.3: Dynamic VietQR & Gạch Nợ](./backlog/epic-2.3-vietqr-and-reconciliation.md)** | Dynamic VietQR NAPAS 247, Webhook SePay/Casso gạch nợ tự động < 1s và bắn realtime `order.paid`. |
+| **[Epic 2.4: Super Admin Portal](./backlog/epic-2.4-super-admin-portal.md)** | Cổng quản trị nền tảng `/admin`, Quản lý Workspaces, Hạn mức Quota, Feature Flags và Platform Audit. |
+| **[Epic 2.5: AI Bóc Tách Địa Chỉ](./backlog/epic-2.5-ai-address-ner.md)** | Regex bóc tách SĐT 10 số và chuẩn hóa địa chỉ 3 cấp Tỉnh - Huyện - Xã 1-click. |
+| **[Epic 2.6: AI Auto-pilot & Giảm Giá](./backlog/epic-2.6-ai-autopilot-discount.md)** | 4 chế độ AI Automation, Đàm phán giảm giá có kiểm soát và Chốt đơn nửa đêm (Midnight Checkout). |
+| **[Epic 2.7: Ẩn Bình Luận Chống Cướp](./backlog/epic-2.7-comment-guard.md)** | Quét SĐT bình luận < 1s, tự động ẩn bài viết công khai và gửi Private Message kéo khách vào inbox. |
+| **[Archive Phase 1](./backlog/archive/phase-1/backlog.md)** | Lưu trữ lịch sử 12 Epics Phase 1 đã hoàn thành 100%. |
 
 ---
 
-### 🛠️ Kỹ thuật & Kiểm thử (`engineering/` & `guides/`)
+### 🛠️ Kỹ thuật & Kiểm thử (`guides/` & `test/`)
 | Tài liệu | Mô tả chi tiết |
 | :--- | :--- |
-| **[Coding Guidelines](./engineering/coding-guidelines.md)** | Tiêu chuẩn viết code Pragmatic Modular Monolith, YAGNI, KISS, quy tắc co-location, Zod pipes và cấm abstraction thừa. |
-| **[Testing Strategy](./engineering/testing-strategy.md)** | Chiến lược kiểm thử tự động: Unit Tests, Integration Tests, E2E Vertical Slices. |
+| **[AGENTS.md](../AGENTS.md)** | Nguồn chân lý duy nhất (Single Source of Truth) về tiêu chuẩn viết code Pragmatic Modular Monolith, YAGNI, KISS, quy tắc co-location, Zod pipes, Shadcn UI và Testing CLI Runbook. |
 | **[Local Testing Guide](./guides/local-testing-guide.md)** | Hướng dẫn chạy môi trường dev và kiểm thử cục bộ với Docker Compose. |
+| **[Environment Setup Guide](./guides/environment-setup-guide.md)** | Hướng dẫn thiết lập biến môi trường, cơ sở dữ liệu và các dịch vụ phụ trợ. |
 | **[Manual Testing & Features Guide](./test/manual-testing-guide.md)** | Hướng dẫn manual test chi tiết 8 kịch bản thực tế, tổng hợp tính năng, use cases và bug radar. |
 
 ---
