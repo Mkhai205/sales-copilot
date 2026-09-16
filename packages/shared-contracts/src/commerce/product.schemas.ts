@@ -1,5 +1,23 @@
 import { z } from 'zod';
 
+/**
+ * Normalizes SKU strings: uppercase, removes accents/diacritics, replaces spaces/symbols with hyphens.
+ * e.g. "Áo Thun Đen L" -> "AO-THUN-DEN-L"
+ */
+export function normalizeSku(sku: string): string {
+  if (!sku) return '';
+  return sku
+    .trim()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'D')
+    .toUpperCase()
+    .replace(/[^A-Z0-9_-]/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
 // ============================================================================
 // Product Variant Schemas
 // ============================================================================
@@ -72,7 +90,7 @@ export const createProductSchema = z.object({
   images: z.array(z.string().url()).default([]),
   trackInventory: z.boolean().default(true),
   metadata: z.record(z.any()).default({}),
-  variants: z.array(createProductVariantSchema).min(1, 'Sản phẩm phải có ít nhất 1 biến thể'),
+  variants: z.array(createProductVariantSchema).default([]),
 });
 
 export type CreateProductDto = z.input<typeof createProductSchema>;

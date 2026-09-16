@@ -406,6 +406,43 @@ describe('ProductsService (Catalog & Inventory Management)', () => {
         },
       );
     });
+
+    it('should automatically create default variant for simple product when variants array is empty', async () => {
+      const product = await service.createProduct(ws1, {
+        name: 'Serum Dưỡng Trắng Simple',
+        sku: 'serum trắng da',
+        basePrice: 350000,
+        costPrice: 180000,
+        variants: [],
+      });
+
+      assert.strictEqual(product.sku, 'SERUM-TRANG-DA');
+      assert.strictEqual(product.variants?.length, 1);
+      const defaultVar = product.variants![0];
+      assert.strictEqual(defaultVar.name, 'Tiêu chuẩn');
+      assert.strictEqual(defaultVar.sku, 'SERUM-TRANG-DA');
+      assert.strictEqual(defaultVar.price, 350000);
+      assert.strictEqual(defaultVar.costPrice, 180000);
+      assert.strictEqual(defaultVar.stockQuantity, 0);
+    });
+
+    it('should normalize SKU with diacritics and spaces into uppercase hyphenated SKU', async () => {
+      const product = await service.createProduct(ws1, {
+        name: 'Áo Polo Đen Nam',
+        sku: 'Áo polo đen nam',
+        basePrice: 200000,
+        variants: [
+          {
+            name: 'Size XL',
+            sku: 'áo polo đen nam xl',
+            price: 200000,
+          },
+        ],
+      });
+
+      assert.strictEqual(product.sku, 'AO-POLO-DEN-NAM');
+      assert.strictEqual(product.variants![0].sku, 'AO-POLO-DEN-NAM-XL');
+    });
   });
 
   describe('listProducts', () => {

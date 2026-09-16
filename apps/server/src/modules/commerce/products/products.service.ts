@@ -9,9 +9,11 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import {
   DomainEvent,
   InventoryTransactionType,
+  normalizeSku,
   type AdjustInventoryDto,
   type CreateProductDto,
   type InventoryTransactionResponseDto,
+  type ListInventoryTransactionsQueryOutput,
   type ListProductsQueryOutput,
   type PaginationMeta,
   type ProductResponseDto,
@@ -149,20 +151,43 @@ export class ProductsService {
     return this.prisma.runInTransaction(async ctx => {
       const tx = ctx.tx;
 
+      // Normalize product SKU
+      const productSku = normalizeSku(dto.sku);
+
       // 1. Check product and variant SKU uniqueness in workspace
       const existingSku = await tx.product.findFirst({
-        where: { workspaceId, sku: dto.sku },
+        where: { workspaceId, sku: productSku },
       });
 
       if (existingSku) {
         throw new ConflictException({
           code: 'SKU_ALREADY_EXISTS',
-          message: `Product with SKU '${dto.sku}' already exists in this workspace`,
-          details: { sku: dto.sku },
+          message: `Product with SKU '${productSku}' already exists in this workspace`,
+          details: { sku: productSku },
         });
       }
 
-      const variantSkus = dto.variants.map(v => v.sku);
+      // If no variants provided, create default variant for simple products
+      const variantsList =
+        dto.variants && dto.variants.length > 0
+          ? dto.variants.map(v => ({
+              ...v,
+              sku: normalizeSku(v.sku),
+            }))
+          : [
+              {
+                name: 'Tiêu chuẩn',
+                sku: productSku,
+                barcode: dto.barcode || null,
+                price: dto.basePrice,
+                costPrice: dto.costPrice || 0,
+                stockQuantity: 0,
+                attributes: {},
+                imageUrl: dto.imageUrl || null,
+              },
+            ];
+
+      const variantSkus = variantsList.map(v => v.sku);
       if (new Set(variantSkus).size !== variantSkus.length) {
         throw new BadRequestException({
           code: 'DUPLICATE_VARIANT_SKUS',
@@ -170,7 +195,7 @@ export class ProductsService {
         });
       }
 
-      for (const v of dto.variants) {
+      for (const v of variantsList) {
         const existingVar = await tx.productVariant.findFirst({
           where: { workspaceId, sku: v.sku },
         });
@@ -201,7 +226,7 @@ export class ProductsService {
           category: dto.category || null,
           basePrice: dto.basePrice,
           costPrice: dto.costPrice || 0,
-          sku: dto.sku,
+          sku: productSku,
           barcode: dto.barcode || null,
           imageUrl: dto.imageUrl || null,
           images: dto.images || [],
@@ -209,7 +234,7 @@ export class ProductsService {
           trackInventory: dto.trackInventory ?? true,
           metadata: dto.metadata || {},
           variants: {
-            create: dto.variants.map(v => ({
+            create: variantsList.map(v => ({
               workspaceId,
               name: v.name,
               sku: v.sku,
@@ -298,15 +323,16 @@ export class ProductsService {
         });
       }
 
-      if (dto.sku && dto.sku !== existing.sku) {
+      const normalizedUpdateSku = dto.sku ? normalizeSku(dto.sku) : undefined;
+      if (normalizedUpdateSku && normalizedUpdateSku !== existing.sku) {
         const skuConflict = await tx.product.findFirst({
-          where: { workspaceId, sku: dto.sku, id: { not: id } },
+          where: { workspaceId, sku: normalizedUpdateSku, id: { not: id } },
         });
         if (skuConflict) {
           throw new ConflictException({
             code: 'SKU_ALREADY_EXISTS',
-            message: `Product with SKU '${dto.sku}' already exists in this workspace`,
-            details: { sku: dto.sku },
+            message: `Product with SKU '${normalizedUpdateSku}' already exists in this workspace`,
+            details: { sku: normalizedUpdateSku },
           });
         }
       }
@@ -318,7 +344,7 @@ export class ProductsService {
       if (dto.category !== undefined) updateData.category = dto.category;
       if (dto.basePrice !== undefined) updateData.basePrice = dto.basePrice;
       if (dto.costPrice !== undefined) updateData.costPrice = dto.costPrice;
-      if (dto.sku !== undefined) updateData.sku = dto.sku;
+      if (normalizedUpdateSku !== undefined) updateData.sku = normalizedUpdateSku;
       if (dto.barcode !== undefined) updateData.barcode = dto.barcode;
       if (dto.imageUrl !== undefined) updateData.imageUrl = dto.imageUrl;
       if (dto.images !== undefined) updateData.images = dto.images;
@@ -331,16 +357,17 @@ export class ProductsService {
       // Handle variant updates if present
       if (dto.variants && dto.variants.length > 0) {
         for (const vDto of dto.variants) {
+          const varSku = vDto.sku ? normalizeSku(vDto.sku) : undefined;
           if (vDto.id) {
-            if (vDto.sku) {
+            if (varSku) {
               const conflict = await tx.productVariant.findFirst({
-                where: { workspaceId, sku: vDto.sku, id: { not: vDto.id } },
+                where: { workspaceId, sku: varSku, id: { not: vDto.id } },
               });
               if (conflict) {
                 throw new ConflictException({
                   code: 'VARIANT_SKU_ALREADY_EXISTS',
-                  message: `Biến thể với SKU '${vDto.sku}' đã tồn tại trong workspace này`,
-                  details: { sku: vDto.sku },
+                  message: `Biến thể với SKU '${varSku}' đã tồn tại trong workspace này`,
+                  details: { sku: varSku },
                 });
               }
             }
@@ -349,7 +376,7 @@ export class ProductsService {
               where: { id: vDto.id, productId: id, workspaceId },
               data: {
                 name: vDto.name,
-                sku: vDto.sku,
+                sku: varSku,
                 barcode: vDto.barcode,
                 price: vDto.price,
                 costPrice: vDto.costPrice,
@@ -358,15 +385,15 @@ export class ProductsService {
                 isActive: vDto.isActive,
               },
             });
-          } else if (vDto.name && vDto.sku && vDto.price !== undefined) {
+          } else if (vDto.name && varSku && vDto.price !== undefined) {
             const conflict = await tx.productVariant.findFirst({
-              where: { workspaceId, sku: vDto.sku },
+              where: { workspaceId, sku: varSku },
             });
             if (conflict) {
               throw new ConflictException({
                 code: 'VARIANT_SKU_ALREADY_EXISTS',
-                message: `Biến thể với SKU '${vDto.sku}' đã tồn tại trong workspace này`,
-                details: { sku: vDto.sku },
+                message: `Biến thể với SKU '${varSku}' đã tồn tại trong workspace này`,
+                details: { sku: varSku },
               });
             }
 
@@ -375,7 +402,7 @@ export class ProductsService {
                 workspaceId,
                 productId: id,
                 name: vDto.name,
-                sku: vDto.sku,
+                sku: varSku,
                 barcode: vDto.barcode || null,
                 price: vDto.price,
                 costPrice: vDto.costPrice || 0,
@@ -489,6 +516,35 @@ export class ProductsService {
       variantId,
       dto,
       userId,
+    });
+  }
+
+  /**
+   * Get inventory transaction history for a specific variant.
+   */
+  async getVariantTransactions(
+    workspaceId: string,
+    productId: string,
+    variantId: string,
+    query: ListInventoryTransactionsQueryOutput,
+  ): Promise<{ items: InventoryTransactionResponseDto[]; meta: PaginationMeta }> {
+    const client = this.prisma.getClient();
+    const variant = await client.productVariant.findFirst({
+      where: { id: variantId, productId, workspaceId },
+    });
+
+    if (!variant) {
+      throw new NotFoundException({
+        code: 'VARIANT_NOT_FOUND',
+        message: 'Product variant not found in this workspace',
+        details: { productId, variantId, workspaceId },
+      });
+    }
+
+    return this.inventoryLedgerService.listTransactions(workspaceId, {
+      ...query,
+      variantId,
+      productId,
     });
   }
 

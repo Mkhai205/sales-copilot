@@ -1,26 +1,33 @@
 import { buildQueryString, fetchApi, workspaceHeaders } from '@/lib/api/client';
 import type {
+  AdjustInventoryDto,
   CancelOrderDto,
   CarrierQuoteResultDto,
   CarrierRateQuoteDto,
   CreateOrderDto,
+  CreateProductDto,
   DispatchOrderDto,
   GenerateVietQrDto,
+  InventoryTransactionResponseDto,
+  InventoryVariantItemDto,
+  ListInventoryTransactionsQueryDto,
+  ListInventoryVariantsQueryDto,
   ListOrdersQueryOutput,
-  ListProductsQueryOutput,
+  ListProductsQueryDto,
   ManualPayOrderDto,
   OrderResponseDto,
   ProductResponseDto,
   ShippingLabelDataDto,
   TrackingStatusDto,
   UpdateOrderDto,
+  UpdateProductDto,
   PaginationMeta,
   VietQrResponseDto,
 } from '@sales-copilot/shared-contracts';
 
 export const commerceApi = {
   // Products
-  listProducts: (workspaceId: string, query?: ListProductsQueryOutput) =>
+  listProducts: (workspaceId: string, query?: ListProductsQueryDto) =>
     fetchApi<{ items: ProductResponseDto[]; meta: PaginationMeta }>(
       `/workspaces/${workspaceId}/products${buildQueryString(query)}`,
       {
@@ -32,6 +39,93 @@ export const commerceApi = {
     fetchApi<ProductResponseDto>(`/workspaces/${workspaceId}/products/${id}`, {
       headers: workspaceHeaders(workspaceId),
     }),
+
+  createProduct: (workspaceId: string, dto: CreateProductDto) =>
+    fetchApi<ProductResponseDto>(`/workspaces/${workspaceId}/products`, {
+      method: 'POST',
+      headers: workspaceHeaders(workspaceId),
+      body: JSON.stringify(dto),
+    }),
+
+  updateProduct: (workspaceId: string, id: string, dto: UpdateProductDto) =>
+    fetchApi<ProductResponseDto>(`/workspaces/${workspaceId}/products/${id}`, {
+      method: 'PUT',
+      headers: workspaceHeaders(workspaceId),
+      body: JSON.stringify(dto),
+    }),
+
+  deleteProduct: (workspaceId: string, id: string) =>
+    fetchApi<{ success: boolean }>(`/workspaces/${workspaceId}/products/${id}`, {
+      method: 'DELETE',
+      headers: workspaceHeaders(workspaceId),
+    }),
+
+  adjustVariantInventory: (
+    workspaceId: string,
+    productId: string,
+    variantId: string,
+    dto: AdjustInventoryDto,
+  ) =>
+    fetchApi<InventoryTransactionResponseDto>(
+      `/workspaces/${workspaceId}/products/${productId}/variants/${variantId}/inventory`,
+      {
+        method: 'POST',
+        headers: workspaceHeaders(workspaceId),
+        body: JSON.stringify(dto),
+      },
+    ),
+
+  getVariantTransactions: (
+    workspaceId: string,
+    productId: string,
+    variantId: string,
+    query?: ListInventoryTransactionsQueryDto,
+  ) =>
+    fetchApi<{ items: InventoryTransactionResponseDto[]; meta: PaginationMeta }>(
+      `/workspaces/${workspaceId}/products/${productId}/variants/${variantId}/inventory/transactions${buildQueryString(query)}`,
+      {
+        headers: workspaceHeaders(workspaceId),
+      },
+    ),
+
+  // Inventory Subsystem
+  listInventoryTransactions: (workspaceId: string, query?: ListInventoryTransactionsQueryDto) =>
+    fetchApi<{ items: InventoryTransactionResponseDto[]; meta: PaginationMeta }>(
+      `/workspaces/${workspaceId}/inventory/transactions${buildQueryString(query)}`,
+      {
+        headers: workspaceHeaders(workspaceId),
+      },
+    ),
+
+  listInventoryVariants: (workspaceId: string, query?: ListInventoryVariantsQueryDto) =>
+    fetchApi<{ items: InventoryVariantItemDto[]; meta: PaginationMeta }>(
+      `/workspaces/${workspaceId}/inventory/variants${buildQueryString(query)}`,
+      {
+        headers: workspaceHeaders(workspaceId),
+      },
+    ),
+
+  getInventorySummary: (workspaceId: string) =>
+    fetchApi<{
+      totalSkus: number;
+      totalPhysicalStock: number;
+      totalReservedStock: number;
+      totalAvailableStock: number;
+      lowStockSkus: number;
+      outOfStockSkus: number;
+    }>(`/workspaces/${workspaceId}/inventory/summary`, {
+      headers: workspaceHeaders(workspaceId),
+    }),
+
+  adjustStockDirect: (workspaceId: string, variantId: string, dto: AdjustInventoryDto) =>
+    fetchApi<InventoryTransactionResponseDto>(
+      `/workspaces/${workspaceId}/inventory/variants/${variantId}/adjust`,
+      {
+        method: 'POST',
+        headers: workspaceHeaders(workspaceId),
+        body: JSON.stringify(dto),
+      },
+    ),
 
   // Orders
   listOrders: (workspaceId: string, query?: ListOrdersQueryOutput) =>

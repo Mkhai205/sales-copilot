@@ -1,4 +1,4 @@
-﻿import {
+import {
   Controller,
   Delete,
   Get,
@@ -14,11 +14,13 @@ import {
   WorkspaceRole,
   adjustInventorySchema,
   createProductSchema,
+  listInventoryTransactionsQuerySchema,
   listProductsQuerySchema,
   updateProductSchema,
   type AdjustInventoryDto,
   type CreateProductDto,
   type InventoryTransactionResponseDto,
+  type ListInventoryTransactionsQueryOutput,
   type ListProductsQueryOutput,
   type PaginationMeta,
   type ProductResponseDto,
@@ -131,5 +133,19 @@ export class ProductsController {
       dto,
       user?.userId,
     );
+  }
+
+  @Get(':id/variants/:variantId/inventory/transactions')
+  @HttpCode(HttpStatus.OK)
+  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.AGENT, WorkspaceRole.VIEWER)
+  @ApiOperation({ summary: 'Get inventory transaction history for a specific variant' })
+  @ApiResponse({ status: 200, description: 'Inventory transactions retrieved successfully' })
+  async getVariantTransactions(
+    @CurrentWorkspace() context: WorkspaceContext,
+    @Param('id') id: string,
+    @Param('variantId') variantId: string,
+    @ZodQuery(listInventoryTransactionsQuerySchema) query: ListInventoryTransactionsQueryOutput,
+  ): Promise<{ items: InventoryTransactionResponseDto[]; meta: PaginationMeta }> {
+    return this.productsService.getVariantTransactions(context.workspaceId, id, variantId, query);
   }
 }
