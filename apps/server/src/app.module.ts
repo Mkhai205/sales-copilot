@@ -18,9 +18,8 @@ import { AutomationModule } from './modules/automation';
 import { IntelligenceModule } from './modules/intelligence';
 import { PlatformAdminModule } from './modules/platform-admin';
 import { RealtimeModule } from './modules/realtime';
+import { HealthModule } from './modules/health';
 import { EventEmitterModule } from '@nestjs/event-emitter';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { validateEnv } from './config';
 import { RequestIdMiddleware } from './common/middlewares';
 import { pinoRedactConfig } from './common/logging';
@@ -125,10 +124,10 @@ import { pinoRedactConfig } from './common/logging';
     IntelligenceModule,
     PlatformAdminModule,
     RealtimeModule,
+    HealthModule,
   ],
-  controllers: [AppController],
+  controllers: [],
   providers: [
-    AppService,
     {
       provide: APP_GUARD,
       useClass: ThrottlerBehindProxyGuard,

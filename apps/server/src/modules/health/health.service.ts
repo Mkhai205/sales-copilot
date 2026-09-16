@@ -1,13 +1,21 @@
 import { Injectable } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
-import { PrismaService } from './infrastructure/database';
-import { RedisService } from './infrastructure/redis';
-import { StorageService } from './infrastructure/storage';
-import { CHANNEL_INGESTION_QUEUE, WEBHOOK_DELIVERY_QUEUE } from './infrastructure/queue';
+import { PrismaService } from '../../infrastructure/database';
+import { RedisService } from '../../infrastructure/redis';
+import { StorageService } from '../../infrastructure/storage';
+import { CHANNEL_INGESTION_QUEUE, WEBHOOK_DELIVERY_QUEUE } from '../../infrastructure/queue';
+import {
+  DependencyCheckResult,
+  HealthCheckResponse,
+  HealthStatus,
+  LivenessResponse,
+  QueueCheckResult,
+  ReadinessResponse,
+} from './health.types';
 
 @Injectable()
-export class AppService {
+export class HealthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly redis: RedisService,
@@ -18,12 +26,7 @@ export class AppService {
     private readonly webhookDeliveryQueue: Queue,
   ) {}
 
-  private async checkQueueHealth(queue: Queue): Promise<{
-    status: 'ok' | 'down';
-    latencyMs: number;
-    jobCounts?: Record<string, number>;
-    error?: string;
-  }> {
+  private async checkQueueHealth(queue: Queue): Promise<QueueCheckResult> {
     const start = Date.now();
     try {
       if (!queue) {
@@ -49,7 +52,7 @@ export class AppService {
     }
   }
 
-  async getHealth() {
+  async getHealth(): Promise<HealthCheckResponse> {
     const [dbResult, redisResult, storageResult, channelQueueResult, webhookQueueResult] =
       await Promise.allSettled([
         this.prisma.ping(),
@@ -59,47 +62,47 @@ export class AppService {
         this.checkQueueHealth(this.webhookDeliveryQueue),
       ]);
 
-    const database =
+    const database: DependencyCheckResult =
       dbResult.status === 'fulfilled'
         ? dbResult.value
         : {
-            status: 'down' as const,
+            status: 'down',
             latencyMs: 0,
             error: (dbResult.reason as Error)?.message || 'Database error',
           };
 
-    const redis =
+    const redis: DependencyCheckResult =
       redisResult.status === 'fulfilled'
         ? redisResult.value
         : {
-            status: 'down' as const,
+            status: 'down',
             latencyMs: 0,
             error: (redisResult.reason as Error)?.message || 'Redis error',
           };
 
-    const storage =
+    const storage: DependencyCheckResult =
       storageResult.status === 'fulfilled'
         ? storageResult.value
         : {
-            status: 'down' as const,
+            status: 'down',
             latencyMs: 0,
             error: (storageResult.reason as Error)?.message || 'Storage error',
           };
 
-    const channelIngestion =
+    const channelIngestion: QueueCheckResult =
       channelQueueResult.status === 'fulfilled'
         ? channelQueueResult.value
         : {
-            status: 'down' as const,
+            status: 'down',
             latencyMs: 0,
             error: (channelQueueResult.reason as Error)?.message || 'Channel ingestion queue error',
           };
 
-    const webhookDelivery =
+    const webhookDelivery: QueueCheckResult =
       webhookQueueResult.status === 'fulfilled'
         ? webhookQueueResult.value
         : {
-            status: 'down' as const,
+            status: 'down',
             latencyMs: 0,
             error: (webhookQueueResult.reason as Error)?.message || 'Webhook delivery queue error',
           };
@@ -112,7 +115,7 @@ export class AppService {
       storage.status === 'up' &&
       areQueuesHealthy;
 
-    let overallStatus: 'ok' | 'degraded' | 'down' = 'ok';
+    let overallStatus: HealthStatus = 'ok';
     if (database.status === 'down') {
       overallStatus = 'down';
     } else if (!isHealthy) {
@@ -137,16 +140,16 @@ export class AppService {
     };
   }
 
-  getLiveness() {
+  getLiveness(): LivenessResponse {
     return {
-      status: 'ok' as const,
+      status: 'ok',
       service: 'sales-copilot-api',
       uptime: process.uptime(),
       timestamp: new Date().toISOString(),
     };
   }
 
-  async getReadiness() {
+  async getReadiness(): Promise<ReadinessResponse> {
     const [
       dbResult,
       migrationsResult,
@@ -163,11 +166,11 @@ export class AppService {
       this.checkQueueHealth(this.webhookDeliveryQueue),
     ]);
 
-    const database =
+    const database: DependencyCheckResult =
       dbResult.status === 'fulfilled'
         ? dbResult.value
         : {
-            status: 'down' as const,
+            status: 'down',
             latencyMs: 0,
             error: (dbResult.reason as Error)?.message || 'Database error',
           };
@@ -180,38 +183,38 @@ export class AppService {
             error: (migrationsResult.reason as Error)?.message || 'Migrations error',
           };
 
-    const redis =
+    const redis: DependencyCheckResult =
       redisResult.status === 'fulfilled'
         ? redisResult.value
         : {
-            status: 'down' as const,
+            status: 'down',
             latencyMs: 0,
             error: (redisResult.reason as Error)?.message || 'Redis error',
           };
 
-    const storage =
+    const storage: DependencyCheckResult =
       storageResult.status === 'fulfilled'
         ? storageResult.value
         : {
-            status: 'down' as const,
+            status: 'down',
             latencyMs: 0,
             error: (storageResult.reason as Error)?.message || 'Storage error',
           };
 
-    const channelIngestion =
+    const channelIngestion: QueueCheckResult =
       channelQueueResult.status === 'fulfilled'
         ? channelQueueResult.value
         : {
-            status: 'down' as const,
+            status: 'down',
             latencyMs: 0,
             error: (channelQueueResult.reason as Error)?.message || 'Channel ingestion queue error',
           };
 
-    const webhookDelivery =
+    const webhookDelivery: QueueCheckResult =
       webhookQueueResult.status === 'fulfilled'
         ? webhookQueueResult.value
         : {
-            status: 'down' as const,
+            status: 'down',
             latencyMs: 0,
             error: (webhookQueueResult.reason as Error)?.message || 'Webhook delivery queue error',
           };
@@ -223,7 +226,7 @@ export class AppService {
 
     const isReady = isDatabaseReady && isRedisReady && isStorageReady && areQueuesReady;
 
-    let overallStatus: 'ok' | 'degraded' | 'down' = 'ok';
+    let overallStatus: HealthStatus = 'ok';
     if (!isDatabaseReady) {
       overallStatus = 'down';
     } else if (!isRedisReady || !isStorageReady || !areQueuesReady) {
@@ -231,7 +234,7 @@ export class AppService {
     }
 
     return {
-      status: isReady ? ('ok' as const) : overallStatus,
+      status: isReady ? 'ok' : overallStatus,
       service: 'sales-copilot-api',
       version: '0.1.0',
       uptime: process.uptime(),

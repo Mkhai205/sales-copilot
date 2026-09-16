@@ -1,13 +1,13 @@
 import { Controller, Get, HttpStatus, Res } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
-import { AppService } from './app.service';
-import { Public } from './modules/identity';
+import { HealthService } from './health.service';
+import { Public } from '../identity';
 
 @ApiTags('Health')
 @Controller('health')
-export class AppController {
-  constructor(private readonly appService: AppService) {}
+export class HealthController {
+  constructor(private readonly healthService: HealthService) {}
 
   @Public()
   @Get()
@@ -15,7 +15,7 @@ export class AppController {
   @ApiResponse({ status: 200, description: 'Service is healthy' })
   @ApiResponse({ status: 503, description: 'Service is degraded or down' })
   async getHealth(@Res({ passthrough: true }) res: Response) {
-    const health = await this.appService.getHealth();
+    const health = await this.healthService.getHealth();
     if (health.status !== 'ok') {
       res.status(HttpStatus.SERVICE_UNAVAILABLE);
     }
@@ -27,7 +27,7 @@ export class AppController {
   @ApiOperation({ summary: 'Liveness probe endpoint' })
   @ApiResponse({ status: 200, description: 'Process is alive' })
   getLiveness() {
-    return this.appService.getLiveness();
+    return this.healthService.getLiveness();
   }
 
   @Public()
@@ -39,7 +39,7 @@ export class AppController {
     description: 'Service is not ready (dependencies down or migrations pending)',
   })
   async getReadiness(@Res({ passthrough: true }) res: Response) {
-    const readiness = await this.appService.getReadiness();
+    const readiness = await this.healthService.getReadiness();
     if (readiness.status !== 'ok') {
       res.status(HttpStatus.SERVICE_UNAVAILABLE);
     }

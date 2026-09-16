@@ -1,10 +1,10 @@
 import { describe, it } from 'node:test';
 import * as assert from 'node:assert';
 import { Queue } from 'bullmq';
-import { AppService } from '../app.service';
-import { PrismaService } from '../infrastructure/database';
-import { RedisService } from '../infrastructure/redis';
-import { StorageService } from '../infrastructure/storage';
+import { HealthService } from '../health.service';
+import { PrismaService } from '../../../infrastructure/database';
+import { RedisService } from '../../../infrastructure/redis';
+import { StorageService } from '../../../infrastructure/storage';
 
 const createMockQueue = (isHealthy = true, errorMsg = 'Queue connection failed') =>
   ({
@@ -17,7 +17,7 @@ const createMockQueue = (isHealthy = true, errorMsg = 'Queue connection failed')
     },
   }) as unknown as Queue;
 
-describe('AppService (Healthcheck Aggregator)', () => {
+describe('HealthService (Healthcheck Aggregator)', () => {
   it('should return status ok when all dependencies and queues are up', async () => {
     const mockPrisma = {
       ping: async () => ({ status: 'up' as const, latencyMs: 2 }),
@@ -34,14 +34,14 @@ describe('AppService (Healthcheck Aggregator)', () => {
     const mockChannelQueue = createMockQueue(true);
     const mockWebhookQueue = createMockQueue(true);
 
-    const appService = new AppService(
+    const healthService = new HealthService(
       mockPrisma,
       mockRedis,
       mockStorage,
       mockChannelQueue,
       mockWebhookQueue,
     );
-    const health = await appService.getHealth();
+    const health = await healthService.getHealth();
 
     assert.strictEqual(health.status, 'ok');
     assert.strictEqual(health.dependencies.database.status, 'up');
@@ -67,14 +67,14 @@ describe('AppService (Healthcheck Aggregator)', () => {
     const mockChannelQueue = createMockQueue(true);
     const mockWebhookQueue = createMockQueue(true);
 
-    const appService = new AppService(
+    const healthService = new HealthService(
       mockPrisma,
       mockRedis,
       mockStorage,
       mockChannelQueue,
       mockWebhookQueue,
     );
-    const health = await appService.getHealth();
+    const health = await healthService.getHealth();
 
     assert.strictEqual(health.status, 'degraded');
     assert.strictEqual(health.dependencies.database.status, 'up');
@@ -99,14 +99,14 @@ describe('AppService (Healthcheck Aggregator)', () => {
     const mockChannelQueue = createMockQueue(true);
     const mockWebhookQueue = createMockQueue(true);
 
-    const appService = new AppService(
+    const healthService = new HealthService(
       mockPrisma,
       mockRedis,
       mockStorage,
       mockChannelQueue,
       mockWebhookQueue,
     );
-    const health = await appService.getHealth();
+    const health = await healthService.getHealth();
 
     assert.strictEqual(health.status, 'degraded');
     assert.strictEqual(health.dependencies.storage.status, 'down');
@@ -129,14 +129,14 @@ describe('AppService (Healthcheck Aggregator)', () => {
     const mockChannelQueue = createMockQueue(true);
     const mockWebhookQueue = createMockQueue(true);
 
-    const appService = new AppService(
+    const healthService = new HealthService(
       mockPrisma,
       mockRedis,
       mockStorage,
       mockChannelQueue,
       mockWebhookQueue,
     );
-    const health = await appService.getHealth();
+    const health = await healthService.getHealth();
 
     assert.strictEqual(health.status, 'down');
     assert.strictEqual(health.dependencies.database.status, 'down');
@@ -159,14 +159,14 @@ describe('AppService (Healthcheck Aggregator)', () => {
     const mockChannelQueue = createMockQueue(true);
     const mockWebhookQueue = createMockQueue(false, 'Webhook delivery queue timeout');
 
-    const appService = new AppService(
+    const healthService = new HealthService(
       mockPrisma,
       mockRedis,
       mockStorage,
       mockChannelQueue,
       mockWebhookQueue,
     );
-    const health = await appService.getHealth();
+    const health = await healthService.getHealth();
 
     assert.strictEqual(health.status, 'degraded');
     assert.strictEqual(health.dependencies.queues.webhookDelivery.status, 'down');
@@ -194,14 +194,14 @@ describe('AppService (Healthcheck Aggregator)', () => {
     const mockChannelQueue = createMockQueue(true);
     const mockWebhookQueue = createMockQueue(true);
 
-    const appService = new AppService(
+    const healthService = new HealthService(
       mockPrisma,
       mockRedis,
       mockStorage,
       mockChannelQueue,
       mockWebhookQueue,
     );
-    const health = await appService.getHealth();
+    const health = await healthService.getHealth();
 
     assert.strictEqual(health.status, 'down');
     assert.strictEqual(health.dependencies.database.status, 'down');
@@ -224,14 +224,14 @@ describe('AppService (Healthcheck Aggregator)', () => {
     const mockChannelQueue = createMockQueue(false, 'Channel queue Redis connection error');
     const mockWebhookQueue = createMockQueue(true);
 
-    const appService = new AppService(
+    const healthService = new HealthService(
       mockPrisma,
       mockRedis,
       mockStorage,
       mockChannelQueue,
       mockWebhookQueue,
     );
-    const health = await appService.getHealth();
+    const health = await healthService.getHealth();
 
     assert.strictEqual(health.status, 'degraded');
     assert.strictEqual(health.dependencies.queues.channelIngestion.status, 'down');
@@ -250,14 +250,14 @@ describe('AppService (Healthcheck Aggregator)', () => {
       const mockChannelQueue = createMockQueue(true);
       const mockWebhookQueue = createMockQueue(true);
 
-      const appService = new AppService(
+      const healthService = new HealthService(
         mockPrisma,
         mockRedis,
         mockStorage,
         mockChannelQueue,
         mockWebhookQueue,
       );
-      const liveness = appService.getLiveness();
+      const liveness = healthService.getLiveness();
 
       assert.strictEqual(liveness.status, 'ok');
       assert.strictEqual(liveness.service, 'sales-copilot-api');
@@ -284,14 +284,14 @@ describe('AppService (Healthcheck Aggregator)', () => {
       const mockChannelQueue = createMockQueue(true);
       const mockWebhookQueue = createMockQueue(true);
 
-      const appService = new AppService(
+      const healthService = new HealthService(
         mockPrisma,
         mockRedis,
         mockStorage,
         mockChannelQueue,
         mockWebhookQueue,
       );
-      const readiness = await appService.getReadiness();
+      const readiness = await healthService.getReadiness();
 
       assert.strictEqual(readiness.status, 'ok');
       assert.strictEqual(readiness.checks.database.status, 'up');
@@ -320,14 +320,14 @@ describe('AppService (Healthcheck Aggregator)', () => {
       const mockChannelQueue = createMockQueue(true);
       const mockWebhookQueue = createMockQueue(true);
 
-      const appService = new AppService(
+      const healthService = new HealthService(
         mockPrisma,
         mockRedis,
         mockStorage,
         mockChannelQueue,
         mockWebhookQueue,
       );
-      const readiness = await appService.getReadiness();
+      const readiness = await healthService.getReadiness();
 
       assert.strictEqual(readiness.status, 'down');
       assert.strictEqual(readiness.checks.database.status, 'down');
@@ -351,14 +351,14 @@ describe('AppService (Healthcheck Aggregator)', () => {
       const mockChannelQueue = createMockQueue(true);
       const mockWebhookQueue = createMockQueue(true);
 
-      const appService = new AppService(
+      const healthService = new HealthService(
         mockPrisma,
         mockRedis,
         mockStorage,
         mockChannelQueue,
         mockWebhookQueue,
       );
-      const readiness = await appService.getReadiness();
+      const readiness = await healthService.getReadiness();
 
       assert.strictEqual(readiness.status, 'down');
       assert.strictEqual(readiness.checks.database.status, 'up');
@@ -384,14 +384,14 @@ describe('AppService (Healthcheck Aggregator)', () => {
       const mockChannelQueue = createMockQueue(true);
       const mockWebhookQueue = createMockQueue(true);
 
-      const appService = new AppService(
+      const healthService = new HealthService(
         mockPrisma,
         mockRedis,
         mockStorage,
         mockChannelQueue,
         mockWebhookQueue,
       );
-      const readiness = await appService.getReadiness();
+      const readiness = await healthService.getReadiness();
 
       assert.strictEqual(readiness.status, 'down');
       assert.strictEqual(readiness.checks.database.status, 'up');
@@ -416,14 +416,14 @@ describe('AppService (Healthcheck Aggregator)', () => {
       const mockChannelQueue = createMockQueue(true);
       const mockWebhookQueue = createMockQueue(true);
 
-      const appService = new AppService(
+      const healthService = new HealthService(
         mockPrisma,
         mockRedis,
         mockStorage,
         mockChannelQueue,
         mockWebhookQueue,
       );
-      const readiness = await appService.getReadiness();
+      const readiness = await healthService.getReadiness();
 
       assert.strictEqual(readiness.status, 'degraded');
       assert.strictEqual(readiness.checks.redis.status, 'down');
@@ -446,14 +446,14 @@ describe('AppService (Healthcheck Aggregator)', () => {
       const mockChannelQueue = createMockQueue(true);
       const mockWebhookQueue = createMockQueue(true);
 
-      const appService = new AppService(
+      const healthService = new HealthService(
         mockPrisma,
         mockRedis,
         mockStorage,
         mockChannelQueue,
         mockWebhookQueue,
       );
-      const readiness = await appService.getReadiness();
+      const readiness = await healthService.getReadiness();
 
       assert.strictEqual(readiness.status, 'degraded');
       assert.strictEqual(readiness.checks.storage.status, 'down');
@@ -476,14 +476,14 @@ describe('AppService (Healthcheck Aggregator)', () => {
       const mockChannelQueue = createMockQueue(false, 'Channel ingestion queue not ready');
       const mockWebhookQueue = createMockQueue(true);
 
-      const appService = new AppService(
+      const healthService = new HealthService(
         mockPrisma,
         mockRedis,
         mockStorage,
         mockChannelQueue,
         mockWebhookQueue,
       );
-      const readiness = await appService.getReadiness();
+      const readiness = await healthService.getReadiness();
 
       assert.strictEqual(readiness.status, 'degraded');
       assert.strictEqual(readiness.checks.queues.channelIngestion.status, 'down');
@@ -510,14 +510,14 @@ describe('AppService (Healthcheck Aggregator)', () => {
       const mockChannelQueue = createMockQueue(true);
       const mockWebhookQueue = createMockQueue(false, 'Webhook queue not ready');
 
-      const appService = new AppService(
+      const healthService = new HealthService(
         mockPrisma,
         mockRedis,
         mockStorage,
         mockChannelQueue,
         mockWebhookQueue,
       );
-      const readiness = await appService.getReadiness();
+      const readiness = await healthService.getReadiness();
 
       assert.strictEqual(readiness.status, 'degraded');
       assert.strictEqual(readiness.checks.queues.webhookDelivery.status, 'down');

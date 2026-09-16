@@ -1,12 +1,12 @@
 import { describe, it, beforeEach } from 'node:test';
 import * as assert from 'node:assert';
 import { HttpStatus } from '@nestjs/common';
-import { AppController } from '../app.controller';
-import { AppService } from '../app.service';
+import { HealthController } from '../health.controller';
+import { HealthService } from '../health.service';
 
-describe('AppController (Health Check Endpoint)', () => {
-  let controller: AppController;
-  let mockAppService: any;
+describe('HealthController (Health Check Endpoint)', () => {
+  let controller: HealthController;
+  let mockHealthService: any;
   let mockResponse: any;
   let statusCodeSet: number | null;
 
@@ -22,7 +22,7 @@ describe('AppController (Health Check Endpoint)', () => {
   });
 
   it('should return health status and keep 200 when all dependencies are ok', async () => {
-    mockAppService = {
+    mockHealthService = {
       getHealth: async () => ({
         status: 'ok' as const,
         service: 'sales-copilot-api',
@@ -37,7 +37,7 @@ describe('AppController (Health Check Endpoint)', () => {
       }),
     };
 
-    controller = new AppController(mockAppService as AppService);
+    controller = new HealthController(mockHealthService as HealthService);
     const result = await controller.getHealth(mockResponse);
 
     assert.strictEqual(result.status, 'ok');
@@ -45,7 +45,7 @@ describe('AppController (Health Check Endpoint)', () => {
   });
 
   it('should set HTTP 503 SERVICE_UNAVAILABLE when dependencies are degraded (FINDING-P8-03)', async () => {
-    mockAppService = {
+    mockHealthService = {
       getHealth: async () => ({
         status: 'degraded' as const,
         service: 'sales-copilot-api',
@@ -64,7 +64,7 @@ describe('AppController (Health Check Endpoint)', () => {
       }),
     };
 
-    controller = new AppController(mockAppService as AppService);
+    controller = new HealthController(mockHealthService as HealthService);
     const result = await controller.getHealth(mockResponse);
 
     assert.strictEqual(result.status, 'degraded');
@@ -72,7 +72,7 @@ describe('AppController (Health Check Endpoint)', () => {
   });
 
   it('should set HTTP 503 SERVICE_UNAVAILABLE when dependencies are down', async () => {
-    mockAppService = {
+    mockHealthService = {
       getHealth: async () => ({
         status: 'down' as const,
         service: 'sales-copilot-api',
@@ -91,7 +91,7 @@ describe('AppController (Health Check Endpoint)', () => {
       }),
     };
 
-    controller = new AppController(mockAppService as AppService);
+    controller = new HealthController(mockHealthService as HealthService);
     const result = await controller.getHealth(mockResponse);
 
     assert.strictEqual(result.status, 'down');
@@ -99,7 +99,7 @@ describe('AppController (Health Check Endpoint)', () => {
   });
 
   it('should return liveness status ok with uptime and timestamp', () => {
-    mockAppService = {
+    mockHealthService = {
       getLiveness: () => ({
         status: 'ok' as const,
         service: 'sales-copilot-api',
@@ -108,7 +108,7 @@ describe('AppController (Health Check Endpoint)', () => {
       }),
     };
 
-    controller = new AppController(mockAppService as AppService);
+    controller = new HealthController(mockHealthService as HealthService);
     const result = controller.getLiveness();
 
     assert.strictEqual(result.status, 'ok');
@@ -117,7 +117,7 @@ describe('AppController (Health Check Endpoint)', () => {
   });
 
   it('should return readiness status and 200 when all dependencies and migrations are ready', async () => {
-    mockAppService = {
+    mockHealthService = {
       getReadiness: async () => ({
         status: 'ok' as const,
         service: 'sales-copilot-api',
@@ -136,7 +136,7 @@ describe('AppController (Health Check Endpoint)', () => {
       }),
     };
 
-    controller = new AppController(mockAppService as AppService);
+    controller = new HealthController(mockHealthService as HealthService);
     const result = await controller.getReadiness(mockResponse);
 
     assert.strictEqual(result.status, 'ok');
@@ -144,7 +144,7 @@ describe('AppController (Health Check Endpoint)', () => {
   });
 
   it('should set HTTP 503 SERVICE_UNAVAILABLE when readiness is down', async () => {
-    mockAppService = {
+    mockHealthService = {
       getReadiness: async () => ({
         status: 'down' as const,
         service: 'sales-copilot-api',
@@ -163,7 +163,7 @@ describe('AppController (Health Check Endpoint)', () => {
       }),
     };
 
-    controller = new AppController(mockAppService as AppService);
+    controller = new HealthController(mockHealthService as HealthService);
     const result = await controller.getReadiness(mockResponse);
 
     assert.strictEqual(result.status, 'down');
@@ -171,7 +171,7 @@ describe('AppController (Health Check Endpoint)', () => {
   });
 
   it('should set HTTP 503 SERVICE_UNAVAILABLE when readiness is degraded', async () => {
-    mockAppService = {
+    mockHealthService = {
       getReadiness: async () => ({
         status: 'degraded' as const,
         service: 'sales-copilot-api',
@@ -190,7 +190,7 @@ describe('AppController (Health Check Endpoint)', () => {
       }),
     };
 
-    controller = new AppController(mockAppService as AppService);
+    controller = new HealthController(mockHealthService as HealthService);
     const result = await controller.getReadiness(mockResponse);
 
     assert.strictEqual(result.status, 'degraded');
