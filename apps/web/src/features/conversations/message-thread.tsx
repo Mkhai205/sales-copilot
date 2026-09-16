@@ -66,8 +66,9 @@ import { RichLinkCard } from './rich-link-card';
 import { ImageLightboxDialog } from './image-lightbox-dialog';
 import { MessageImageGrid, isImageAttachment } from './message-image-grid';
 import { MessageActionsToolbar } from './message-actions-toolbar';
-import { VietQrChatCard } from '@/features/pos/components/vietqr-chat-card';
+import { VietQrChatCard } from '@/features/commerce/components/vietqr-chat-card';
 import { useI18n } from '@/lib/i18n';
+
 import type { VietQrResponseDto } from '@sales-copilot/shared-contracts';
 
 interface MessageThreadProps {

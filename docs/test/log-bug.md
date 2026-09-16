@@ -20,4 +20,4 @@
 - thiết kế lại giao diện phần ai copilot
 - thiết kế trang thống kê
 - phần quản lý fanpage đối với facebook, bài đăng, bình luận, hình ảnh, video (làm sau)
-- thiết kế hệ thống POS (quản lý kho, bán hàng) hoàn chỉnh (ưu tiên sau)
+- thiết kế hệ thống Commerce (quản lý kho, bán hàng) hoàn chỉnh (ưu tiên sau)

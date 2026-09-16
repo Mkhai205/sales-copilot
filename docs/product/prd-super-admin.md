@@ -21,7 +21,7 @@ Sales Copilot hoạt động theo mô hình **SaaS Đa người thuê (Multi-Ten
    - Đội ngũ quản trị hệ sinh thái (Platform Owner / DevOps) không có giao diện trực quan để xem tổng số workspace đang hoạt động, tỷ lệ kích hoạt, phân bổ gói cước (`FREE`, `STANDARD`, `ENTERPRISE`), và mức tiêu thụ tài nguyên.
    - Khi một tenant vi phạm điều khoản dịch vụ (spam tin nhắn, quá tải đơn ảo, chậm thanh toán), quản trị viên phải can thiệp thủ công bằng SQL script trực tiếp vào database production để khóa tài khoản hoặc hạ gói cước — tiềm ẩn rủi ro sai sót dữ liệu cực lớn.
 2. **Cấu hình hệ thống tĩnh & Phụ thuộc Redeploy (Static Configuration Bottleneck)**:
-   - Các tham số vận hành như: Hạn mức quota mặc định, danh sách Model LLM kích hoạt (Gemini, OpenAI, DeepSeek), các Feature Flags (bật/tắt thử nghiệm POS VietQR, AI Midnight Checkout, Realtime Comment Masking) đang bị gắn cứng (hardcoded) hoặc lưu trong biến môi trường `.env`.
+   - Các tham số vận hành như: Hạn mức quota mặc định, danh sách Model LLM kích hoạt (Gemini, OpenAI, DeepSeek), các Feature Flags (bật/tắt thử nghiệm Commerce VietQR, AI Midnight Checkout, Realtime Comment Masking) đang bị gắn cứng (hardcoded) hoặc lưu trong biến môi trường `.env`.
    - Mỗi lần muốn bật một tính năng mới cho hệ thống hoặc điều chỉnh quota, đội ngũ kỹ thuật phải cập nhật file cấu hình và khởi động lại dịch vụ (pod redeploy), gây gián đoạn kết nối WebSocket của hàng ngàn nhân viên bán hàng.
 3. **Thiếu cơ chế kiểm toán hành động quản trị (No Platform Audit Trail)**:
    - Các thao tác can thiệp trực tiếp từ cấp nền tảng (nâng cấp gói cước, điều chỉnh quota, khóa shop) chưa có bảng ghi nhận vết (audit log) độc lập, không thể đối soát khi xảy ra tranh chấp hoặc sự cố vận hành.
@@ -170,4 +170,4 @@ Xây dựng phân hệ **Super Admin Portal** và **Dynamic System Settings Engi
 
 - ❌ **Không triển khai Impersonation ("Login as Tenant")**: Không cho phép Super Admin đăng nhập mạo danh vào khung chat của shop khách hàng.
 - ❌ **Không triển khai Cổng Thanh toán Gói cước Tự động**: Xử lý nâng cấp gói cước tự động bằng thẻ tín dụng quốc tế được dành cho phân kỳ sau.
-- ❌ **Không can thiệp Logic Nghiệp vụ Tenant Core**: Không sửa đổi contracts và state machines của Phase 1 và Phase 2 POS.
+- ❌ **Không can thiệp Logic Nghiệp vụ Tenant Core**: Không sửa đổi contracts và state machines của Phase 1 và Phase 2 Commerce.

@@ -49,7 +49,7 @@ export enum WsServerEvent {
   TYPING_START = 'typing.start',
   TYPING_STOP = 'typing.stop',
 
-  // POS & Order events (Milestone M1 & M2)
+  // Commerce & Order events (Milestone M1 & M2)
   ORDER_CREATED = 'order.created',
   ORDER_UPDATED = 'order.updated',
   ORDER_CONFIRMED = 'order.confirmed',
@@ -57,9 +57,13 @@ export enum WsServerEvent {
   ORDER_PARTIALLY_PAID = 'order.partially_paid',
   ORDER_CANCELLED = 'order.cancelled',
   INVENTORY_UPDATED = 'inventory.updated',
-  POS_COLLISION_STATUS = 'pos.collision_status',
+  COMMERCE_COLLISION_STATUS = 'commerce.collision_status',
+  // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
+  POS_COLLISION_STATUS = 'commerce.collision_status',
   ORDER_SHIPPED = 'order.shipped',
-  POS_DRAFT_SUGGESTED = 'pos.draft_suggested',
+  COMMERCE_DRAFT_SUGGESTED = 'commerce.draft_suggested',
+  // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
+  POS_DRAFT_SUGGESTED = 'commerce.draft_suggested',
 }
 
 // ============================================================================
@@ -75,11 +79,21 @@ export enum WsClientEvent {
   STOP_TYPING = 'stop_typing',
   HEARTBEAT = 'heartbeat',
 
-  // POS Collision events (Milestone M2)
-  POS_EDITING_START = 'pos.editing_start',
-  POS_EDITING_HEARTBEAT = 'pos.editing_heartbeat',
-  POS_EDITING_STOP = 'pos.editing_stop',
-  POS_EDITING_TAKEOVER = 'pos.editing_takeover',
+  // Commerce Collision events (Milestone M2)
+  COMMERCE_EDITING_START = 'commerce.editing_start',
+  COMMERCE_EDITING_HEARTBEAT = 'commerce.editing_heartbeat',
+  COMMERCE_EDITING_STOP = 'commerce.editing_stop',
+  COMMERCE_EDITING_TAKEOVER = 'commerce.editing_takeover',
+
+  // Backward-compat aliases
+  // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
+  POS_EDITING_START = 'commerce.editing_start',
+  // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
+  POS_EDITING_HEARTBEAT = 'commerce.editing_heartbeat',
+  // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
+  POS_EDITING_STOP = 'commerce.editing_stop',
+  // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
+  POS_EDITING_TAKEOVER = 'commerce.editing_takeover',
 }
 
 // ============================================================================
@@ -123,11 +137,13 @@ export const typingIndicatorSchema = z.object({
 });
 export type TypingIndicatorDto = z.infer<typeof typingIndicatorSchema>;
 
-export const posEditingActionSchema = z.object({
+export const commerceEditingActionSchema = z.object({
   workspaceId: z.string().uuid('Invalid workspace ID format (UUID expected)'),
   conversationId: z.string().uuid('Invalid conversation ID format (UUID expected)'),
 });
-export type PosEditingActionDto = z.infer<typeof posEditingActionSchema>;
+export type CommerceEditingActionDto = z.infer<typeof commerceEditingActionSchema>;
+export const posEditingActionSchema = commerceEditingActionSchema;
+export type PosEditingActionDto = CommerceEditingActionDto;
 
 export const orderShippedEventPayloadSchema = z.object({
   workspaceId: z.string().uuid(),
@@ -142,7 +158,7 @@ export const orderShippedEventPayloadSchema = z.object({
 });
 export type OrderShippedEventPayloadDto = z.infer<typeof orderShippedEventPayloadSchema>;
 
-export const posDraftSuggestedEventPayloadSchema = z.object({
+export const commerceDraftSuggestedEventPayloadSchema = z.object({
   workspaceId: z.string().uuid(),
   conversationId: z.string().uuid(),
   contactId: z.string().uuid().optional().nullable(),
@@ -174,4 +190,8 @@ export const posDraftSuggestedEventPayloadSchema = z.object({
   confidenceScore: z.number(),
   messageId: z.string().optional(),
 });
-export type PosDraftSuggestedEventPayloadDto = z.infer<typeof posDraftSuggestedEventPayloadSchema>;
+export type CommerceDraftSuggestedEventPayloadDto = z.infer<
+  typeof commerceDraftSuggestedEventPayloadSchema
+>;
+export const posDraftSuggestedEventPayloadSchema = commerceDraftSuggestedEventPayloadSchema;
+export type PosDraftSuggestedEventPayloadDto = CommerceDraftSuggestedEventPayloadDto;

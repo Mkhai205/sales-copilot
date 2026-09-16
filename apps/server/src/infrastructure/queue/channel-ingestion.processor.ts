@@ -1,4 +1,4 @@
-import { Processor, WorkerHost } from '@nestjs/bullmq';
+﻿import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Injectable, Logger, Optional } from '@nestjs/common';
 import { Job } from 'bullmq';
 import { randomUUID } from 'node:crypto';
@@ -12,12 +12,12 @@ import {
 } from '@sales-copilot/shared-contracts';
 import { PrismaService } from '../database';
 import { StorageService } from '../storage/storage.service';
-import { ContactResolutionService } from '../../modules/contacts/contact-resolution.service';
-import { ConversationsService } from '../../modules/conversations/conversations.service';
-import { MessagesService } from '../../modules/messages/messages.service';
-import { ChannelCredentialService } from '../../modules/inboxes/channel-credential.service';
-import { ChannelAdapterRegistry } from '../../integrations/channel-adapter.registry';
-import type { InboundMessagePayload } from '../../integrations/channel-adapter.types';
+import { ContactResolutionService } from '../../modules/omnichannel/contacts/contact-resolution.service';
+import { ConversationsService } from '../../modules/omnichannel/conversations/conversations.service';
+import { MessagesService } from '../../modules/omnichannel/messages/messages.service';
+import { ChannelCredentialService } from '../../modules/omnichannel/inboxes/channel-credential.service';
+import { ChannelAdapterRegistry } from '../../modules/omnichannel/integrations/channel-adapter.registry';
+import type { InboundMessagePayload } from '../../modules/omnichannel/integrations/channel-adapter.types';
 
 export interface ChannelIngestionJobData {
   channelId: string;

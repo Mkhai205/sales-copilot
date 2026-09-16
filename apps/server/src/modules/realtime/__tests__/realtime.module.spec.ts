@@ -6,7 +6,7 @@ import { RealtimeGateway } from '../realtime.gateway';
 import { RealtimeEventDispatcher } from '../realtime-event.dispatcher';
 import { PresenceService } from '../presence.service';
 import { PresenceController } from '../presence.controller';
-import { AuthModule } from '../../auth';
+import { AuthModule } from '../../identity/auth';
 import { DatabaseModule } from '../../../infrastructure/database';
 import { RedisModule } from '../../../infrastructure/redis';
 

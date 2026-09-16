@@ -21,12 +21,12 @@
   - Phân công tự động Round-Robin, Tin nhắn mẫu (`Canned Responses`), Động cơ tự động hóa (`Automation Rules`), Webhook bắn ra ngoài và Socket.io Realtime.
 - ⛔ **QUY TẮC BẤT BIẾN**: Phase 1 APIs, schemas và contracts là nền tảng đóng băng, **tuyệt đối không refactor hoặc thay đổi làm phá vỡ baseline**.
 
-### 1.2. Phase 2: D2C Conversational Commerce & AI Auto-pilot POS (CURRENT ACTIVE SCOPE)
+### 1.2. Phase 2: D2C Conversational Commerce & AI Auto-pilot Commerce (CURRENT ACTIVE SCOPE)
 
 - **Trạng thái**: **Đang triển khai tích cực** ([Master Backlog](../backlog/README.md)).
 - **Phân rã thực thi**:
   - **Milestone 2A (Commerce Core - Ưu tiên số 1)**:
-    - Ngăn kéo bán hàng In-Chat POS & Quản lý tồn kho biến thể SKU (&lt;50ms).
+    - Ngăn kéo bán hàng In-Chat Commerce & Quản lý tồn kho biến thể SKU (&lt;50ms).
     - Quản lý Danh mục & Kho hàng: Biến thể SKU, Nhập hàng (`Stock In`), Kiểm kê cân bằng kho và Sổ cái biến động kho.
     - Quản trị Bán hàng & Đơn hàng: Danh sách đơn toàn workspace, lọc trạng thái, xử lý giao vận và tự động hoàn tồn khi hủy đơn.
     - Khóa tạm tồn kho nguyên tử (`Atomic Stock Reservation`) chống bán vượt (Anti-Overselling).
@@ -85,11 +85,11 @@
 
 | Mã FR | Tên yêu cầu | Chi tiết kỹ thuật & Tiêu chí chấp nhận |
 | --- | --- | --- |
-| **FR-6.1** | In-Chat POS | POS bên phải trong. Tìm kiếm sản phẩm theo SKU/tên trong. Quản lý biến thể (Size, Màu). |
+| **FR-6.1** | In-Chat Commerce | Commerce bên phải trong. Tìm kiếm sản phẩm theo SKU/tên trong. Quản lý biến thể (Size, Màu). |
 | **FR-6.2** | Khóa Tồn kho Nguyên tử | Công thức: $\\text{Khả dụng} = \\text{Tồn kho vật lý} - \\text{Tồn kho tạm giữ}$. Khi tạo đơn hàng nháp, hệ thống lập tức khóa số lượng tương ứng trong DB Transaction chống bán vượt. |
 | **FR-6.3** | Quản lý Kho & Danh mục | CRUD Sản phẩm & Biến thể SKU. Nghiệp vụ Nhập hàng (`Stock In`), Kiểm kê cân bằng kho (`Stock Adjustment`), Sổ cái biến động kho (`InventoryTransaction`) và cảnh báo an toàn tồn kho. |
 | **FR-6.4** | Quản trị Đơn hàng (OMS) | Màn hình quản lý danh sách đơn hàng toàn workspace, lọc theo trạng thái thanh toán và giao vận, cập nhật mã vận đơn, hủy đơn tự động hoàn kho và báo cáo doanh thu cơ bản. |
-| **FR-6.5** | Chống va chạm nhân viên | Redis Sliding Lock 30 giây khi có nhân viên mở POS. Hiển thị cảnh báo đỏ và nút "Cướp quyền" (Takeover) cho các nhân viên khác. |
+| **FR-6.5** | Chống va chạm nhân viên | Redis Sliding Lock 30 giây khi có nhân viên mở Commerce. Hiển thị cảnh báo đỏ và nút "Cướp quyền" (Takeover) cho các nhân viên khác. |
 | **FR-6.6** | Dynamic VietQR & Gạch nợ | Tự sinh mã QR chuẩn NAPAS 247 có kèm số tiền và mã `DH{code}`. Webhook ngân hàng SePay/Casso tự động đối soát và chuyển đơn sang `PAID` trong `< 1s`. |
 | **FR-6.7** | AI NER Địa chỉ 3 cấp | Tự động bóc tách SĐT và chuẩn hóa Tỉnh/Huyện/Xã từ tin nhắn chat, điền vào form đơn hàng với 1 click (`Tab`). |
 | **FR-6.8** | Cấu hình AI Auto-pilot & Policy Engine | Cung cấp 4 chế độ vận hành linh hoạt (`ALWAYS_ON` 24/7, `OFF_HOURS` ngoài giờ, `OVERFLOW` cứu cánh quá tải, `MANUAL` thủ công); tự động tư vấn size, đàm phán giá trong giới hạn an toàn `DiscountPolicyEngine` và tự động chốt đơn. |

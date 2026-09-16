@@ -38,7 +38,7 @@ Redis được sử dụng chuyên trách cho 4 mục đích hiệu năng cao:
 ├──────────────────────────────────────┬──────────────────────────────────────┤
 │ 1. Distributed Locks (Khóa Phân Tán) │ 2. Presence & Online State           │
 │    • lock:order:{wsId}:{convId}      │    • presence:workspace_{wsId}       │
-│      (TTL = 30s, chống va chạm POS)  │      (Set các Agent đang online)     │
+│      (TTL = 30s, chống va chạm Commerce)  │      (Set các Agent đang online)     │
 ├──────────────────────────────────────┼──────────────────────────────────────┤
 │ 3. 2-Tier Cache (Bộ Đệm Cấu Hình)    │ 4. Message Queues (Hàng Đợi BullMQ)  │
 │    • system:settings:{key}           │    • bull:ai-autopilot:*             │

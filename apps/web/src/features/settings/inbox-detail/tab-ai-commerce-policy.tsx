@@ -122,7 +122,7 @@ export function TabAiCommercePolicy({ inbox, workspaceId }: TabAiCommercePolicyP
               </Badge>
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Đây là kiến trúc cốt lõi của Sales Copilot Phase 2 (In-Chat POS & AI Auto-pilot
+              Đây là kiến trúc cốt lõi của Sales Copilot Phase 2 (In-Chat Commerce & AI Auto-pilot
               Midnight Checkout). Bạn có thể cấu hình trước các tham số và chính sách bảo vệ dưới
               đây. Engine xử lý backend sẽ tự động áp dụng khi module hoàn tất triển khai.
             </p>

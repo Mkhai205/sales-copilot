@@ -3,7 +3,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Job } from 'bullmq';
 import { WebhookDeliveryStatus } from '@sales-copilot/shared-contracts';
 import { PrismaService } from '../database';
-import { computeWebhookSignature } from '../../modules/webhooks/webhook-signer';
+import { computeWebhookSignature } from '../../modules/automation/webhooks/webhook-signer';
 
 export const WEBHOOK_DELIVERY_QUEUE = 'webhook-delivery';
 
@@ -60,16 +60,7 @@ export class WebhookDeliveryProcessor extends WorkerHost {
   }
 
   async process(job: Job<WebhookDeliveryJobData, void, string>): Promise<void> {
-    const {
-      deliveryId,
-      subscriptionId,
-      workspaceId,
-      url,
-      secretKey,
-      eventType,
-      payload,
-      requestId,
-    } = job.data;
+    const { deliveryId, url, secretKey, eventType, payload, requestId } = job.data;
     const tracePrefix = requestId ? `[${requestId}] ` : '';
     const currentAttempt = (job.attemptsMade ?? 0) + 1;
     const maxAttempts = job.opts?.attempts || 3;

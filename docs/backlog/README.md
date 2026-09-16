@@ -11,7 +11,7 @@ Toàn bộ các yêu cầu của **Phase 2: D2C Conversational Commerce, Invento
 | Milestone | Epic ID | Tên Epic (Tài liệu chi tiết) | Phạm vi & Trọng tâm kỹ thuật | Độ phức tạp | Trạng thái |
 | :--- | :--- | :--- | :--- | :---: | :---: |
 | **Milestone 2A**<br>*(Commerce Core - Ưu tiên 1)* | **[Epic 2.1](./epic-2.1-inventory-and-catalog.md)** | **Quản Lý Kho & Biến Thể SKU** | CRUD Sản phẩm, Biến thể SKU (Màu/Size), Tồn kho 3 trạng thái (`Available = Physical - Reserved`), Phiếu nhập/kiểm kho, Sổ cái `InventoryTransaction`. | 🔴 High | ⏳ Sẵn sàng |
-| | **[Epic 2.2](./epic-2.2-in-chat-pos-and-orders.md)** | **Khung Lên Đơn & Quản Trị OMS** | Tạo đơn, Tìm kiếm SKU < 50ms, Order State Machine, Khóa kho nguyên tử 2 tầng (`$transaction`), Redis 30s lock chống va chạm nhân viên. | 🔴 High | ⏳ Sẵn sàng |
+| | **[Epic 2.2](./epic-2.2-commerce-and-orders.md)** | **Khung Lên Đơn & Quản Trị OMS** | Tạo đơn, Tìm kiếm SKU < 50ms, Order State Machine, Khóa kho nguyên tử 2 tầng (`$transaction`), Redis 30s lock chống va chạm nhân viên. | 🔴 High | ⏳ Sẵn sàng |
 | | **[Epic 2.3](./epic-2.3-vietqr-and-reconciliation.md)** | **Dynamic VietQR & Gạch Nợ Tự Động** | Dynamic VietQR NAPAS 247 (EMVCo Tag 00-63 CRC-16, memo `DH{code}`), Webhook Casso/SePay xử lý idempotency, gạch nợ `PAID` < 1s, Bắn realtime `order.paid`. | 🔴 High | ⏳ Sẵn sàng |
 | **Milestone 2B**<br>*(Super Admin - Ưu tiên 2)* | **[Epic 2.4](./epic-2.4-super-admin-portal.md)** | **Cổng Super Admin & Cấu Hình Động** | Layout `/admin`, `PlatformRolesGuard`, Quản lý Workspaces, Hạn mức Quota, Feature Flags, 2-tier Cache Redis, Platform Audit Log. | 🟡 Medium | ⏳ Sẵn sàng |
 | **Milestone 2C**<br>*(AI Automation - Ưu tiên 3)* | **[Epic 2.5](./epic-2.5-ai-address-ner.md)** | **AI NER Bóc Tách Địa Chỉ 3 Cấp** | Regex bóc tách SĐT 10 số, Chuẩn hóa Tỉnh - Huyện - Xã theo CSDL Tổng cục Thống kê kết hợp Trie cache, Điền đơn hàng. | 🟡 Medium | ⏳ Chờ M2A |
@@ -113,7 +113,7 @@ Mỗi Feature trong Backlog được chuẩn hóa thành 5 đề mục sắc bé
 > - Lập `implementation_plan.md` chi tiết (bao gồm Target Files, Schema, DTO, Test Plan) và dừng lại chờ tôi phê duyệt trước khi sửa code."*
 
 #### 2. Mẫu Kết Hợp Lệnh `/boost` (Lập Kế Hoạch Đa Chiều & Phân Tích Sâu):
-> *"/boost Hãy phân tích và lập kế hoạch triển khai cho **Feature 2.2.1: Khung Lên Đơn Nhanh & Khóa Kho Nguyên Tử** trong `docs/backlog/epic-2.2-in-chat-pos-and-orders.md`. Hãy đánh giá kỹ lưỡng các góc nhìn: kiến trúc CSDL & transaction, tính toàn vẹn đa luồng (race condition/deadlock), trải nghiệm phím tắt UX của nhân viên chat, và các ca kiểm thử biên. Xuất kết quả vào `implementation_plan.md` để tôi duyệt."*
+> *"/boost Hãy phân tích và lập kế hoạch triển khai cho **Feature 2.2.1: Khung Lên Đơn Nhanh & Khóa Kho Nguyên Tử** trong `docs/backlog/epic-2.2-commerce-and-orders.md`. Hãy đánh giá kỹ lưỡng các góc nhìn: kiến trúc CSDL & transaction, tính toàn vẹn đa luồng (race condition/deadlock), trải nghiệm phím tắt UX của nhân viên chat, và các ca kiểm thử biên. Xuất kết quả vào `implementation_plan.md` để tôi duyệt."*
 
 #### 3. Mẫu Kết Hợp Lệnh `/teamwork-preview` (Phân Công Nhiều Subagents Chạy Song Song):
 > *"/teamwork-preview Tôi muốn triển khai đồng thời **Feature 2.1.1** (Quản lý Danh mục & Biến thể) và **Feature 2.4.1** (Quản trị Workspaces Super Admin). Đây là 2 lát cắt dọc độc lập. Hãy lên kế hoạch phân chia cho 2 subagents phụ trách độc lập và preview cách điều phối."*
@@ -132,7 +132,7 @@ Mỗi Feature trong Backlog được chuẩn hóa thành 5 đề mục sắc bé
 docs/backlog/
 ├── README.md                              # Master Hub & AI Playbook này
 ├── epic-2.1-inventory-and-catalog.md      # Epic Quản lý Kho & SKU
-├── epic-2.2-in-chat-pos-and-orders.md     # Epic Lên đơn & Quản trị OMS
+├── epic-2.2-commerce-and-orders.md     # Epic Lên đơn & Quản trị OMS
 ├── epic-2.3-vietqr-and-reconciliation.md  # Epic VietQR & Đối soát ngân hàng
 ├── epic-2.4-super-admin-portal.md         # Epic Super Admin & Dynamic Settings
 ├── epic-2.5-ai-address-ner.md             # Epic AI bóc tách địa chỉ 3 cấp

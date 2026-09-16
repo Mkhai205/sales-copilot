@@ -3,14 +3,7 @@
 import * as React from 'react';
 import { Building2, Calendar, Check, Copy, Globe, Save, RotateCcw, Sparkles } from 'lucide-react';
 import type { WorkspaceDto } from '@sales-copilot/shared-contracts';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import {

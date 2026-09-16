@@ -11,14 +11,12 @@ import {
   X,
   Copy,
   Check,
-  KeyRound,
   Activity,
   MoreVertical,
   ShieldCheck,
-  ShieldAlert,
 } from 'lucide-react';
 import { type WebhookSubscriptionDto, WorkspaceRole } from '@sales-copilot/shared-contracts';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardHeader } from '@/components/ui/card';
 import {
   Select,
   SelectContent,

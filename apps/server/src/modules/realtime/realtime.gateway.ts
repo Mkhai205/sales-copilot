@@ -18,13 +18,14 @@ import {
   joinConversationSchema,
   leaveConversationSchema,
   typingIndicatorSchema,
-  posEditingActionSchema,
+  commerceEditingActionSchema,
 } from '@sales-copilot/shared-contracts';
 import { PrismaService } from '../../infrastructure/database';
-import { WorkspacesService } from '../workspaces/workspaces.service';
-import { TokenService } from '../auth/token.service';
+import { WorkspacesService } from '../identity/workspaces/workspaces.service';
+import { TokenService } from '../identity/auth/token.service';
 import { PresenceService } from './presence.service';
-import { PosPresenceService } from '../pos/presence/pos-presence.service';
+import { CommercePresenceService } from '../commerce/presence/commerce-presence.service';
+
 import {
   RealtimeConnectedPayload,
   RealtimeErrorPayload,
@@ -63,7 +64,7 @@ export class RealtimeGateway
     @Optional() private readonly eventEmitter?: EventEmitter2,
     @Optional() private readonly presenceService?: PresenceService,
     @Optional() private readonly workspacesService?: WorkspacesService,
-    @Optional() private readonly posPresenceService?: PosPresenceService,
+    @Optional() private readonly commercePresenceService?: CommercePresenceService,
   ) {}
 
   async onModuleDestroy(): Promise<void> {
@@ -208,14 +209,14 @@ export class RealtimeGateway
         `Realtime client disconnected (socket: ${client.id}, userId: ${data.userId}, email: ${data.email}, durationMs: ${durationMs}ms, joinedWorkspaces: [${data.joinedWorkspaceIds.join(', ')}])`,
       );
 
-      if (this.posPresenceService) {
-        this.posPresenceService
+      if (this.commercePresenceService) {
+        this.commercePresenceService
           .cleanupUserLocks(data.userId)
           .then(unlockedList => {
             for (const item of unlockedList) {
               const room = `conversation_${item.conversationId}`;
               const envelope = {
-                event: WsServerEvent.POS_COLLISION_STATUS,
+                event: WsServerEvent.COMMERCE_COLLISION_STATUS,
                 workspaceId: item.workspaceId,
                 timestamp: new Date().toISOString(),
                 data: {
@@ -225,6 +226,7 @@ export class RealtimeGateway
                   remainingTtlSeconds: 0,
                 },
               };
+              this.server.to(room).emit(WsServerEvent.COMMERCE_COLLISION_STATUS, envelope);
               this.server.to(room).emit(WsServerEvent.POS_COLLISION_STATUS, envelope);
               this.server.to(room).emit('event', envelope);
             }
@@ -844,12 +846,14 @@ export class RealtimeGateway
   }
 
   // ==========================================================================
-  // POS Collision Locking Handlers (Milestone M2)
+  // Commerce Collision Locking Handlers (Milestone M2)
   // ==========================================================================
 
+  @SubscribeMessage(WsClientEvent.COMMERCE_EDITING_START)
   @SubscribeMessage(WsClientEvent.POS_EDITING_START)
-  @SubscribeMessage('pos.editing_start')
-  async handlePosEditingStart(
+  @SubscribeMessage('commerce.editing_start')
+  @SubscribeMessage('commerce.editing_start')
+  async handleCommerceEditingStart(
     client: Socket,
     payload: unknown,
   ): Promise<{
@@ -869,7 +873,7 @@ export class RealtimeGateway
         };
       }
 
-      const parseResult = posEditingActionSchema.safeParse(payload);
+      const parseResult = commerceEditingActionSchema.safeParse(payload);
       if (!parseResult.success) {
         return {
           success: false,
@@ -879,7 +883,7 @@ export class RealtimeGateway
       }
 
       const { workspaceId, conversationId } = parseResult.data;
-      if (!this.posPresenceService) {
+      if (!this.commercePresenceService) {
         return { success: true, isLocked: false, remainingTtlSeconds: 30 };
       }
 
@@ -889,13 +893,20 @@ export class RealtimeGateway
         userEmail: socketData.email,
       };
 
-      const result = await this.posPresenceService.startEditing(workspaceId, conversationId, user);
+      const result = await this.commercePresenceService.startEditing(
+        workspaceId,
+        conversationId,
+        user,
+      );
 
       // Broadcast updated collision status to the conversation room
-      const status = await this.posPresenceService.getEditingStatus(workspaceId, conversationId);
+      const status = await this.commercePresenceService.getEditingStatus(
+        workspaceId,
+        conversationId,
+      );
       const room = `conversation_${conversationId}`;
       const envelope = {
-        event: WsServerEvent.POS_COLLISION_STATUS,
+        event: WsServerEvent.COMMERCE_COLLISION_STATUS,
         workspaceId,
         timestamp: new Date().toISOString(),
         data: {
@@ -903,12 +914,13 @@ export class RealtimeGateway
           ...status,
         },
       };
+      client.to(room).emit(WsServerEvent.COMMERCE_COLLISION_STATUS, envelope);
       client.to(room).emit(WsServerEvent.POS_COLLISION_STATUS, envelope);
       client.to(room).emit('event', envelope);
 
       return result;
     } catch (err) {
-      this.logger.error(`Error in handlePosEditingStart: ${(err as Error).message}`);
+      this.logger.error(`Error in handleCommerceEditingStart: ${(err as Error).message}`);
       return {
         success: false,
         isLocked: false,
@@ -917,51 +929,59 @@ export class RealtimeGateway
     }
   }
 
+  @SubscribeMessage(WsClientEvent.COMMERCE_EDITING_HEARTBEAT)
   @SubscribeMessage(WsClientEvent.POS_EDITING_HEARTBEAT)
-  @SubscribeMessage('pos.editing_heartbeat')
-  async handlePosEditingHeartbeat(
+  @SubscribeMessage('commerce.editing_heartbeat')
+  @SubscribeMessage('commerce.editing_heartbeat')
+  async handleCommerceEditingHeartbeat(
     client: Socket,
     payload: unknown,
   ): Promise<{ success: boolean; remainingTtlSeconds: number }> {
     const socketData = client.data as RealtimeSocketData | undefined;
-    if (!socketData?.userId || !this.posPresenceService) {
+    if (!socketData?.userId || !this.commercePresenceService) {
       return { success: false, remainingTtlSeconds: 0 };
     }
 
-    const parseResult = posEditingActionSchema.safeParse(payload);
+    const parseResult = commerceEditingActionSchema.safeParse(payload);
     if (!parseResult.success) {
       return { success: false, remainingTtlSeconds: 0 };
     }
 
     const { workspaceId, conversationId } = parseResult.data;
-    return this.posPresenceService.refreshHeartbeat(workspaceId, conversationId, socketData.userId);
+    return this.commercePresenceService.refreshHeartbeat(
+      workspaceId,
+      conversationId,
+      socketData.userId,
+    );
   }
 
+  @SubscribeMessage(WsClientEvent.COMMERCE_EDITING_STOP)
   @SubscribeMessage(WsClientEvent.POS_EDITING_STOP)
-  @SubscribeMessage('pos.editing_stop')
-  async handlePosEditingStop(client: Socket, payload: unknown): Promise<{ success: boolean }> {
+  @SubscribeMessage('commerce.editing_stop')
+  @SubscribeMessage('commerce.editing_stop')
+  async handleCommerceEditingStop(client: Socket, payload: unknown): Promise<{ success: boolean }> {
     const socketData = client.data as RealtimeSocketData | undefined;
-    if (!socketData?.userId || !this.posPresenceService) {
+    if (!socketData?.userId || !this.commercePresenceService) {
       return { success: false };
     }
 
-    const parseResult = posEditingActionSchema.safeParse(payload);
+    const parseResult = commerceEditingActionSchema.safeParse(payload);
     if (!parseResult.success) {
       return { success: false };
     }
 
     const { workspaceId, conversationId } = parseResult.data;
-    const released = await this.posPresenceService.stopEditing(
+    const released = await this.commercePresenceService.stopEditing(
       workspaceId,
       conversationId,
       socketData.userId,
     );
 
     // Broadcast unlocked status
-    const status = await this.posPresenceService.getEditingStatus(workspaceId, conversationId);
+    const status = await this.commercePresenceService.getEditingStatus(workspaceId, conversationId);
     const room = `conversation_${conversationId}`;
     const envelope = {
-      event: WsServerEvent.POS_COLLISION_STATUS,
+      event: WsServerEvent.COMMERCE_COLLISION_STATUS,
       workspaceId,
       timestamp: new Date().toISOString(),
       data: {
@@ -969,24 +989,27 @@ export class RealtimeGateway
         ...status,
       },
     };
+    client.to(room).emit(WsServerEvent.COMMERCE_COLLISION_STATUS, envelope);
     client.to(room).emit(WsServerEvent.POS_COLLISION_STATUS, envelope);
     client.to(room).emit('event', envelope);
 
     return { success: released };
   }
 
+  @SubscribeMessage(WsClientEvent.COMMERCE_EDITING_TAKEOVER)
   @SubscribeMessage(WsClientEvent.POS_EDITING_TAKEOVER)
-  @SubscribeMessage('pos.editing_takeover')
-  async handlePosEditingTakeover(
+  @SubscribeMessage('commerce.editing_takeover')
+  @SubscribeMessage('commerce.editing_takeover')
+  async handleCommerceEditingTakeover(
     client: Socket,
     payload: unknown,
   ): Promise<{ success: boolean; previousLockedBy?: any; remainingTtlSeconds: number }> {
     const socketData = client.data as RealtimeSocketData | undefined;
-    if (!socketData?.userId || !this.posPresenceService) {
+    if (!socketData?.userId || !this.commercePresenceService) {
       return { success: false, remainingTtlSeconds: 0 };
     }
 
-    const parseResult = posEditingActionSchema.safeParse(payload);
+    const parseResult = commerceEditingActionSchema.safeParse(payload);
     if (!parseResult.success) {
       return { success: false, remainingTtlSeconds: 0 };
     }
@@ -998,12 +1021,16 @@ export class RealtimeGateway
       userEmail: socketData.email,
     };
 
-    const res = await this.posPresenceService.takeoverEditing(workspaceId, conversationId, user);
+    const res = await this.commercePresenceService.takeoverEditing(
+      workspaceId,
+      conversationId,
+      user,
+    );
 
-    const status = await this.posPresenceService.getEditingStatus(workspaceId, conversationId);
+    const status = await this.commercePresenceService.getEditingStatus(workspaceId, conversationId);
     const room = `conversation_${conversationId}`;
     const envelope = {
-      event: WsServerEvent.POS_COLLISION_STATUS,
+      event: WsServerEvent.COMMERCE_COLLISION_STATUS,
       workspaceId,
       timestamp: new Date().toISOString(),
       data: {
@@ -1011,6 +1038,7 @@ export class RealtimeGateway
         ...status,
       },
     };
+    this.server.to(room).emit(WsServerEvent.COMMERCE_COLLISION_STATUS, envelope);
     this.server.to(room).emit(WsServerEvent.POS_COLLISION_STATUS, envelope);
     this.server.to(room).emit('event', envelope);
 

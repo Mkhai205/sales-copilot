@@ -17,12 +17,11 @@ import {
 } from 'lucide-react';
 import {
   type AutomationRuleDto,
-  AutomationEventTrigger,
   WorkspaceRole,
   AutomationActionType,
   AutomationAttribute,
 } from '@sales-copilot/shared-contracts';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import {
   Select,
   SelectContent,
@@ -58,7 +57,6 @@ import {
   TRIGGER_OPTIONS,
   ATTRIBUTE_OPTIONS,
   OPERATOR_OPTIONS,
-  ACTION_TYPE_OPTIONS,
 } from './constants/automation-rule-options';
 import {
   useAutomationRules,

@@ -11,23 +11,13 @@ import { DatabaseModule } from './infrastructure/database/database.module';
 import { QueueModule } from './infrastructure/queue';
 import { RedisModule } from './infrastructure/redis';
 import { StorageModule } from './infrastructure/storage/storage.module';
-import { AuthModule, JwtAuthGuard } from './modules/auth';
-import { WorkspacesModule } from './modules/workspaces';
-import { TeamsModule } from './modules/teams';
-import { ContactsModule } from './modules/contacts';
-import { InboxesModule } from './modules/inboxes';
-import { WebhooksModule } from './modules/webhooks';
-import { LabelsModule } from './modules/labels';
-import { CannedResponsesModule } from './modules/canned-responses';
-import { AutomationRulesModule } from './modules/automation-rules';
-import { AuditLogsModule } from './modules/audit-logs';
-import { ConversationsModule } from './modules/conversations';
-import { MessagesModule } from './modules/messages';
-import { IntegrationsModule } from './integrations';
-import { RealtimeModule } from './modules/realtime';
-import { LlmGatewayModule } from './modules/llm-gateway';
-import { PosModule } from './modules/pos/pos.module';
+import { IdentityModule, JwtAuthGuard } from './modules/identity';
+import { OmnichannelModule } from './modules/omnichannel';
+import { CommerceModule } from './modules/commerce';
+import { AutomationModule } from './modules/automation';
+import { IntelligenceModule } from './modules/intelligence';
 import { PlatformAdminModule } from './modules/platform-admin';
+import { RealtimeModule } from './modules/realtime';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -128,23 +118,13 @@ import { pinoRedactConfig } from './common/logging';
     QueueModule,
     RedisModule,
     StorageModule,
-    AuthModule,
-    WorkspacesModule,
-    TeamsModule,
-    ContactsModule,
-    InboxesModule,
-    WebhooksModule,
-    LabelsModule,
-    CannedResponsesModule,
-    AutomationRulesModule,
-    AuditLogsModule,
-    ConversationsModule,
-    MessagesModule,
-    IntegrationsModule,
-    RealtimeModule,
-    LlmGatewayModule,
-    PosModule,
+    IdentityModule,
+    OmnichannelModule,
+    CommerceModule,
+    AutomationModule,
+    IntelligenceModule,
     PlatformAdminModule,
+    RealtimeModule,
   ],
   controllers: [AppController],
   providers: [

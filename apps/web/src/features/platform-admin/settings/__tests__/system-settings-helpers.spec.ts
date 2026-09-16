@@ -20,7 +20,7 @@ describe('System Settings Helpers & Schema Validation (Feature 2)', () => {
       key: 'feature.pos_vietqr_enabled',
       value: true,
       category: SystemSettingCategory.FEATURE_FLAGS,
-      description: 'VietQR pos',
+      description: 'VietQR commerce',
       isEncrypted: false,
       updatedBy: null,
       createdAt: new Date(),

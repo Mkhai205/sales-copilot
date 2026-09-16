@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { FileText, Plus, Search, Pencil, Trash2, AlertTriangle, X, Sparkles } from 'lucide-react';
+import { FileText, Plus, Search, Pencil, Trash2, AlertTriangle, X } from 'lucide-react';
 import { type CannedResponseDto, WorkspaceRole } from '@sales-copilot/shared-contracts';
 import {
   Table,

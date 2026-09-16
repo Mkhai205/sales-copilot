@@ -86,7 +86,7 @@ Sales Copilot is an omnichannel conversational commerce & AI sales platform for 
    - In-process: `EventEmitter2` for non-blocking side effects (`@OnEvent(...)`).
    - High-latency / retries: BullMQ (Redis queues) for background jobs (`sales-intelligence`, webhooks, media).
 3. **⚡ Asynchronous AI Ingestion Directive**: Inbound chat and message delivery MUST NOT block on LLM inference. Ingestion acknowledges in `< 100ms`; AI address extraction, auto-pilot draft generation, and courier dispatch execute asynchronously via BullMQ.
-4. **🛡️ Traceable In-Chat POS & Pricing Directive**: AI Auto-pilot discounts must strictly respect the Workspace `DiscountPolicyEngine` limits; every order creation must atomically reserve stock. Multi-agent collision is strictly prevented via 30s Redis sliding locks.
+4. **🛡️ Traceable In-Chat Commerce & Pricing Directive**: AI Auto-pilot discounts must strictly respect the Workspace `DiscountPolicyEngine` limits; every order creation must atomically reserve stock. Multi-agent collision is strictly prevented via 30s Redis sliding locks.
 
 ---
 

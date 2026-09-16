@@ -5,7 +5,7 @@ import { NestFactory } from '@nestjs/core';
 import helmet from 'helmet';
 import { HELMET_CONFIG } from '../config/helmet.config';
 import { envSchema } from '../config/env.schema';
-import { TokenService } from '../modules/auth/token.service';
+import { TokenService } from '../modules/identity/auth/token.service';
 import { PlatformRole } from '@sales-copilot/shared-contracts';
 
 @Controller('security-test')
@@ -63,7 +63,7 @@ describe('JWT Policy & Security Headers Verification (Task 12 — Feature F-1.11
       };
 
       const mockConfigService: any = {
-        getOrThrow: (key: string) => 'test_jwt_secret_32bytes_minimum_length_ok',
+        getOrThrow: (_key: string) => 'test_jwt_secret_32bytes_minimum_length_ok',
         get: (key: string, defaultVal: any) => {
           if (key === 'JWT_ACCESS_TOKEN_EXPIRES_IN_SECONDS') return 900;
           if (key === 'REFRESH_TOKEN_EXPIRES_IN_SECONDS') return 604800;

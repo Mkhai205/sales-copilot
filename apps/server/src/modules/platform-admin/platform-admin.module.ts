@@ -1,15 +1,15 @@
 import { Module } from '@nestjs/common';
 import { DatabaseModule } from '../../infrastructure/database';
 import { RedisModule } from '../../infrastructure/redis';
-import { PlatformAuditLogsController } from './controllers/platform-audit-logs.controller';
-import { PlatformMetricsController } from './controllers/platform-metrics.controller';
-import { PlatformWorkspacesController } from './controllers/platform-workspaces.controller';
-import { SystemSettingsController } from './controllers/system-settings.controller';
+import { PlatformAuditLogsController } from './audit-logs/platform-audit-logs.controller';
+import { PlatformMetricsController } from './metrics/platform-metrics.controller';
+import { PlatformWorkspacesController } from './workspaces/platform-workspaces.controller';
+import { SystemSettingsController } from './settings/system-settings.controller';
 import { PlatformRolesGuard } from './guards/platform-roles.guard';
-import { PlatformAuditLogsService } from './services/platform-audit-logs.service';
-import { PlatformMetricsService } from './services/platform-metrics.service';
-import { PlatformWorkspacesService } from './services/platform-workspaces.service';
-import { SystemSettingsService } from './services/system-settings.service';
+import { PlatformAuditLogsService } from './audit-logs/platform-audit-logs.service';
+import { PlatformMetricsService } from './metrics/platform-metrics.service';
+import { PlatformWorkspacesService } from './workspaces/platform-workspaces.service';
+import { SystemSettingsService } from './settings/system-settings.service';
 
 @Module({
   imports: [DatabaseModule, RedisModule],

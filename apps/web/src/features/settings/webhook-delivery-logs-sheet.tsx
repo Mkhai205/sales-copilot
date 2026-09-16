@@ -1,19 +1,9 @@
 'use client';
 
 import * as React from 'react';
-import {
-  Activity,
-  ChevronLeft,
-  ChevronRight,
-  Eye,
-  RefreshCw,
-  Send,
-  AlertTriangle,
-  X,
-} from 'lucide-react';
+import { Activity, ChevronLeft, ChevronRight, Eye, RefreshCw, Send } from 'lucide-react';
 import {
   WebhookDeliveryStatus,
-  type WebhookDeliveryDto,
   type WebhookSubscriptionDto,
 } from '@sales-copilot/shared-contracts';
 import {
@@ -42,7 +32,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Spinner } from '@/components/ui/spinner';
 import { DELIVERY_STATUS_META } from './constants/webhook-options';
 import { useWebhookDeliveries } from './hooks/use-webhooks';
 import { WebhookDeliveryDetailDialog } from './webhook-delivery-detail-dialog';

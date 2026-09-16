@@ -12,12 +12,12 @@
 
 ## 📖 Overview
 
-**Sales Copilot** is an omnichannel conversational commerce & AI sales platform for D2C & Retail, designed with a **Conversation-First** philosophy. It unites multiple messaging channels (Live Web Chat, Facebook Messenger, Zalo OA, Telegram) into a centralized, real-time agent dashboard, enhanced by built-in In-Chat POS, instant VietQR payment reconciliation, and AI Auto-pilot.
+**Sales Copilot** is an omnichannel conversational commerce & AI sales platform for D2C & Retail, designed with a **Conversation-First** philosophy. It unites multiple messaging channels (Live Web Chat, Facebook Messenger, Zalo OA, Telegram) into a centralized, real-time agent dashboard, enhanced by built-in In-Chat Commerce, instant VietQR payment reconciliation, and AI Auto-pilot.
 
 ### Project Roadmap & Phasing:
 
 - 🟢 **Phase 1 (COMPLETED BASELINE)**: Omnichannel conversation core, contact identity deduplication, round-robin auto-assignment, automation rules, canned responses, outbound webhooks, and realtime WebSocket streaming.
-- 🟡 **Phase 2 (CURRENT ACTIVE SCOPE)**: Conversational Commerce & AI Auto-pilot POS for D2C & Retail — Built-in In-Chat POS & Inventory (Variants, SKUs), Dynamic VietQR & instant bank webhook reconciliation (< 1s), AI NER 3-tier address extraction & 1-click order generation, 24/7 AI Auto-pilot & guarded discount policy engine, and anti-theft realtime comment masking.
+- 🟡 **Phase 2 (CURRENT ACTIVE SCOPE)**: Conversational Commerce & AI Auto-pilot Commerce for D2C & Retail — Built-in In-Chat Commerce & Inventory (Variants, SKUs), Dynamic VietQR & instant bank webhook reconciliation (< 1s), AI NER 3-tier address extraction & 1-click order generation, 24/7 AI Auto-pilot & guarded discount policy engine, and anti-theft realtime comment masking.
 - ⛔ **PROHIBITED & DEPRECATED**: Do NOT build B2B CRM, Voice/SIP, or external CRM sync (HubSpot/Salesforce).
 
 ---
@@ -160,6 +160,6 @@ pnpm lint
 
 - 🗺️ **[System Documentation Hub](./docs/README.md)** — Central documentation index
 - 📐 **[System Architecture & Blueprint](./docs/architecture/01-system-architecture.md)** — Architectural overview, pipeline, REST/WebSocket standards, and conversation lifecycle
-- 🛍️ **[Commerce & Orders RFC](./docs/architecture/rfc-commerce-and-orders.md)** — In-Chat POS, inventory reservation, and VietQR reconciliation
+- 🛍️ **[Commerce & Orders RFC](./docs/architecture/rfc-commerce-and-orders.md)** — In-Chat Commerce, inventory reservation, and VietQR reconciliation
 - 📋 **[Backlog & AI Playbook](./docs/backlog/README.md)** — Active development epics, roadmaps, and AI orchestration guide
 - 🤖 **[AGENTS.md](./AGENTS.md)** — Non-negotiable architectural rules, multi-tenancy invariants, and anti-overengineering principles

@@ -6,7 +6,8 @@ import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useWorkspaces } from '@/features/workspaces/use-workspaces';
-import { PosDetailTab } from '@/features/pos';
+import { CommerceDetailTab } from '@/features/commerce';
+
 import type {
   OrderResponseDto,
   PosDraftSuggestedEventPayload,
@@ -22,8 +23,8 @@ interface DetailPanelProps {
   conversationId?: string;
   workspaceSlug?: string;
   workspaceId?: string;
-  activeTab?: 'contact' | 'pos';
-  onTabChange?: (tab: 'contact' | 'pos') => void;
+  activeTab?: 'contact' | 'commerce';
+  onTabChange?: (tab: 'contact' | 'commerce') => void;
   newOrderTrigger?: number;
   draftSuggestion?: PosDraftSuggestedEventPayload | null;
   onDismissSuggestion?: () => void;
@@ -69,7 +70,9 @@ export function DetailPanel({
   onOpenPosDrawer,
 }: DetailPanelProps) {
   const { t } = useI18n();
-  const [internalTab, setInternalTab] = React.useState<'contact' | 'pos'>(activeTab || 'contact');
+  const [internalTab, setInternalTab] = React.useState<'contact' | 'commerce'>(
+    activeTab || 'contact',
+  );
 
   React.useEffect(() => {
     if (activeTab) {
@@ -78,7 +81,7 @@ export function DetailPanel({
   }, [activeTab]);
 
   const handleTabChange = (val: string) => {
-    const nextTab = val as 'contact' | 'pos';
+    const nextTab = val as 'contact' | 'commerce';
     setInternalTab(nextTab);
     onTabChange?.(nextTab);
   };
@@ -101,7 +104,7 @@ export function DetailPanel({
       onValueChange={handleTabChange}
       className="flex h-full w-full min-h-0 flex-1 flex-col overflow-hidden bg-card/40 border-l border-border/70 gap-0"
     >
-      {/* Detail Header: Top Tabs [Khách hàng | Đơn POS] */}
+      {/* Detail Header: Top Tabs [Khách hàng | Đơn Commerce] */}
       <div className="flex h-14 shrink-0 items-center border-b border-border/80 px-3 bg-background/95 backdrop-blur-xs">
         <TabsList className="grid w-full grid-cols-2 h-8 p-0.5">
           <TabsTrigger
@@ -111,7 +114,10 @@ export function DetailPanel({
             <User className="size-3.5 shrink-0" />
             <span className="truncate">{t('conversations.details.tabContact')}</span>
           </TabsTrigger>
-          <TabsTrigger value="pos" className="text-[11px] gap-1.5 px-2 font-medium cursor-pointer">
+          <TabsTrigger
+            value="commerce"
+            className="text-[11px] gap-1.5 px-2 font-medium cursor-pointer"
+          >
             <ShoppingBag className="size-3.5 shrink-0" />
             <span className="truncate">{t('conversations.details.tabPos')}</span>
           </TabsTrigger>
@@ -156,13 +162,13 @@ export function DetailPanel({
             />
           </TabsContent>
 
-          {/* Tab 2: Đơn POS */}
+          {/* Tab 2: Đơn Commerce */}
           <TabsContent
-            value="pos"
+            value="commerce"
             className="min-h-0 flex-1 overflow-y-auto p-4 flex flex-col gap-4 m-0"
           >
             {resolvedWorkspaceId ? (
-              <PosDetailTab
+              <CommerceDetailTab
                 workspaceId={resolvedWorkspaceId}
                 conversationId={conversation.id}
                 contactId={conversation.contactId}

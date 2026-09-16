@@ -3,7 +3,6 @@ import assert from 'node:assert/strict';
 import { updateWorkspaceSchema } from '@sales-copilot/shared-contracts';
 import {
   TIMEZONE_OPTIONS,
-  LANGUAGE_OPTIONS,
   getTimezoneLabel,
   getLanguageLabel,
 } from '../constants/workspace-settings-options';

@@ -36,6 +36,7 @@ import {
   OrderCancelledEventPayload,
   InventoryUpdatedEventPayload,
   OrderShippedEventPayload,
+  CommerceDraftSuggestedEventPayload,
   PosDraftSuggestedEventPayload,
 } from '@sales-copilot/shared-contracts';
 import { RealtimeGateway } from './realtime.gateway';
@@ -378,7 +379,7 @@ export class RealtimeEventDispatcher {
   }
 
   // ==========================================================================
-  // 9. POS & Order Domain Event Handlers (Milestone M1 & M2)
+  // 9. Commerce & Order Domain Event Handlers (Milestone M1 & M2)
   // ==========================================================================
 
   @OnEvent(DomainEvent.ORDER_CREATED)
@@ -469,15 +470,20 @@ export class RealtimeEventDispatcher {
     this.broadcastSafe(rooms, WsServerEvent.ORDER_SHIPPED, payload);
   }
 
+  @OnEvent(DomainEvent.COMMERCE_DRAFT_SUGGESTED)
   @OnEvent(DomainEvent.POS_DRAFT_SUGGESTED)
-  handlePosDraftSuggested(payload: PosDraftSuggestedEventPayload): void {
+  handleCommerceDraftSuggested(payload: CommerceDraftSuggestedEventPayload): void {
     if (!payload?.workspaceId) return;
 
     const rooms = payload.conversationId
       ? [`workspace_${payload.workspaceId}`, `conversation_${payload.conversationId}`]
       : `workspace_${payload.workspaceId}`;
 
-    this.broadcastSafe(rooms, WsServerEvent.POS_DRAFT_SUGGESTED, payload);
+    this.broadcastSafe(rooms, WsServerEvent.COMMERCE_DRAFT_SUGGESTED, payload);
+  }
+
+  handlePosDraftSuggested(payload: PosDraftSuggestedEventPayload): void {
+    this.handleCommerceDraftSuggested(payload);
   }
 
   // ==========================================================================

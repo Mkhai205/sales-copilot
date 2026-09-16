@@ -9,7 +9,7 @@ import {
   PrismaService,
 } from '../../../src/infrastructure/database';
 
-import { ChannelCredentialService } from '../../../src/modules/inboxes/channel-credential.service';
+import { ChannelCredentialService } from '../../../src/modules/omnichannel/inboxes/channel-credential.service';
 
 export interface SeedTestContext {
   testRunId: string;
@@ -215,7 +215,7 @@ export async function cleanupTestData(
       where: { workspaceId },
     });
 
-    // 3.5 Delete POS records (orders reference contacts with Restrict)
+    // 3.5 Delete Commerce records (orders reference contacts with Restrict)
     await client.inventoryTransaction.deleteMany({ where: { workspaceId } }).catch(() => {});
     await client.paymentTransaction.deleteMany({ where: { workspaceId } }).catch(() => {});
     await client.orderItem.deleteMany({ where: { workspaceId } }).catch(() => {});

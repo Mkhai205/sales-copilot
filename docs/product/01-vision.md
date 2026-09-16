@@ -24,7 +24,7 @@ Khác với mô hình thương mại điện tử phương Tây (nơi người m
 
 Trong môi trường này: **"The Chat Conversation IS the Point of Sale"**.
 
-Mỗi giây trễ nải khi phản hồi, mỗi thao tác chuyển đổi qua lại giữa màn hình chat và phần mềm POS/ERP bên ngoài đều làm giảm trực tiếp tỷ lệ chốt đơn và doanh thu:
+Mỗi giây trễ nải khi phản hồi, mỗi thao tác chuyển đổi qua lại giữa màn hình chat và phần mềm Commerce/ERP bên ngoài đều làm giảm trực tiếp tỷ lệ chốt đơn và doanh thu:
 
 1. **Độ trễ chuyển đổi màn hình (Context Switching Friction)**: Nhân viên phải nhảy giữa ứng dụng chat và phần mềm quản lý bán hàng (KiotViet, Sapo, Excel), mất 1.5 - 3 phút cho mỗi đơn hàng.
 2. **Sai lệch địa chỉ & Bom hàng**: Khách nhập địa chỉ viết tắt, không dấu (*"15 ngõ 45 phố Vọng, ĐT, HBT, HN"*). Nhân viên gõ lại thủ công dẫn đến sai sót Phường/Xã, khiến tỷ lệ giao hàng thất bại hoặc hoàn hàng lên tới **15% - 25%**.
@@ -78,10 +78,10 @@ flowchart TD
     %% Động cơ Quyết định Điều phối AI Automation
     UnifiedInbox --> AIStrategy{Cấu hình AI Automation của Inbox / Shop?}
 
-    %% NHÁNH 1: NHÂN VIÊN TRỰC TIẾP (HUMAN-DRIVEN POS)
+    %% NHÁNH 1: NHÂN VIÊN TRỰC TIẾP (HUMAN-DRIVEN Commerce)
     AIStrategy -->|Thủ công / Trong ca trực có nhân viên| HumanOps[Ca trực Nhân viên: Phân công Round-Robin]
     HumanOps --> AgentChat[Agent tư vấn trực tiếp: Dùng phím tắt / chèn Canned Responses]
-    AgentChat --> OpenPOS[Agent mở In-Chat POS < 50ms]
+    AgentChat --> OpenPOS[Agent mở In-Chat Commerce < 50ms]
     OpenPOS --> FastSearch[Tìm kiếm SKU < 20ms & Khóa chống va chạm Redis 30s]
     FastSearch --> ManualForm[Agent chọn biến thể, combobox địa chỉ 3 cấp & bấm Tạo đơn]
 
@@ -123,7 +123,7 @@ Chủ doanh nghiệp có thể cấu hình linh hoạt chế độ tự động 
 2. 🌙 **Chế độ 2: Tự động Ngoài giờ & Khi Vắng mặt (Off-Hours & Offline Auto-pilot)**:
    - **Bối cảnh phù hợp**: Các shop có đội ngũ tư vấn viên chuyên nghiệp trực giờ hành chính (ví dụ 08:00 – 22:00).
    - **Cơ chế**:
-     - *Trong giờ làm việc (khi có nhân viên Online)*: 100% cuộc hội thoại được phân công cho nhân viên xử lý trực tiếp bằng công thái học bàn phím cao tốc (POS, `/` canned responses, combobox địa chỉ GSO). **Zero chi phí token AI, triệt tiêu hoàn toàn độ trễ LLM**.
+     - *Trong giờ làm việc (khi có nhân viên Online)*: 100% cuộc hội thoại được phân công cho nhân viên xử lý trực tiếp bằng công thái học bàn phím cao tốc (Commerce, `/` canned responses, combobox địa chỉ GSO). **Zero chi phí token AI, triệt tiêu hoàn toàn độ trễ LLM**.
      - *Ngoài giờ làm việc (hoặc toàn bộ nhân viên Offline)*: AI Auto-pilot tự động thức giấc tiếp quản (Midnight Checkout), đảm bảo không bỏ lỡ bất kỳ khách hàng nào nhắn tin lúc nửa đêm hay rạng sáng.
 
 3. 🛟 **Chế độ 3: Hỗ trợ Khi Quá Tải (Overflow / Fallback Auto-pilot)**:
@@ -131,7 +131,7 @@ Chủ doanh nghiệp có thể cấu hình linh hoạt chế độ tự động 
    - **Cơ chế**: Nhân viên vẫn là ưu tiên xử lý hàng đầu. Nếu một tin nhắn của khách chờ quá thời gian ngưỡng $N$ phút (ví dụ: > 3 phút) mà chưa có nhân viên nào nhận hoặc trả lời, AI Auto-pilot sẽ tự động nhảy vào tiếp quản để phục vụ khách ngay tức khắc, không để khách rời sang đối thủ.
 
 4. 🚫 **Chế độ 4: Tắt Tự Động Hóa (Manual Only / Off)**:
-   - 100% quy trình tư vấn và chốt đơn do nhân viên thực hiện thủ công qua In-Chat POS. AI Auto-pilot bị vô hiệu hóa hoàn toàn.
+   - 100% quy trình tư vấn và chốt đơn do nhân viên thực hiện thủ công qua In-Chat Commerce. AI Auto-pilot bị vô hiệu hóa hoàn toàn.
 
 ---
 

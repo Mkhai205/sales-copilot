@@ -69,7 +69,7 @@ export const en: TranslationSchema = {
     switchWorkspace: 'Switch workspace',
     conversationsGroup: 'Conversations',
     inbox: 'Inbox',
-    posGroup: 'Commerce & POS',
+    posGroup: 'Commerce & Commerce',
     orders: 'Orders',
     products: 'Products',
     inventory: 'Inventory',
@@ -141,7 +141,7 @@ export const en: TranslationSchema = {
     details: {
       title: 'Contact Information',
       tabContact: 'Contact',
-      tabPos: 'POS Orders',
+      tabPos: 'Commerce Orders',
       tabSales: 'Sales & BANT',
       tabAi: 'Sales AI',
       name: 'Full name',
@@ -214,7 +214,7 @@ export const en: TranslationSchema = {
       yesterday: 'Yesterday',
     },
   },
-  pos: {
+  commerce: {
     createOrder: 'Create Order',
     createOrderShortcut: 'Create Order (F4)',
     editOrder: 'Edit Order',
@@ -452,7 +452,7 @@ export const en: TranslationSchema = {
     aiAutofill: {
       detectedTitle: 'AI detected order information',
       confidence: '{score}% confidence',
-      applyPos: 'Apply to POS (F4)',
+      applyPos: 'Apply to Commerce (F4)',
       dismissTitle: 'Dismiss suggestion',
     },
   },

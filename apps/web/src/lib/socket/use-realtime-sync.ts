@@ -448,7 +448,7 @@ export function useRealtimeSync(): void {
   });
 
   // ==========================================================================
-  // 4. POS & Orders Events (Milestone M2)
+  // 4. Commerce & Orders Events (Milestone M2)
   // ==========================================================================
 
   const handleOrderEvent = (payload: any) => {
@@ -456,7 +456,8 @@ export function useRealtimeSync(): void {
     const conversationId = order?.conversationId;
     const contactId = order?.contactId;
 
-    queryClient.invalidateQueries({ queryKey: ['pos-orders'] });
+    queryClient.invalidateQueries({ queryKey: ['commerce-orders'] });
+    queryClient.invalidateQueries({ queryKey: ['commerce-orders'] });
     queryClient.invalidateQueries({ queryKey: ['active-conversation-order'] });
     if (conversationId) {
       queryClient.invalidateQueries({
@@ -478,6 +479,7 @@ export function useRealtimeSync(): void {
   useSocketEvent(WsServerEvent.ORDER_CANCELLED, handleOrderEvent);
 
   useSocketEvent(WsServerEvent.INVENTORY_UPDATED, () => {
-    queryClient.invalidateQueries({ queryKey: ['pos-products'] });
+    queryClient.invalidateQueries({ queryKey: ['commerce-products'] });
+    queryClient.invalidateQueries({ queryKey: ['commerce-products'] });
   });
 }

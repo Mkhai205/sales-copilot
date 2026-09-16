@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { Plus, Sparkles, Zap, Filter, Play, CheckCircle2 } from 'lucide-react';
+import { Plus, Zap, Filter, Play, CheckCircle2 } from 'lucide-react';
 import {
   AutomationActionType,
   AutomationAttribute,
@@ -22,9 +22,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
+import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';

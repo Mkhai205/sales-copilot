@@ -67,7 +67,7 @@ export const vi = {
     switchWorkspace: 'Chuyển không gian làm việc',
     conversationsGroup: 'Hội thoại',
     inbox: 'Hộp thư đến',
-    posGroup: 'Bán hàng & POS',
+    posGroup: 'Bán hàng & Commerce',
     orders: 'Đơn hàng',
     products: 'Sản phẩm',
     inventory: 'Tồn kho',
@@ -139,7 +139,7 @@ export const vi = {
     details: {
       title: 'Thông tin liên hệ',
       tabContact: 'Khách hàng',
-      tabPos: 'Đơn POS',
+      tabPos: 'Đơn Commerce',
       tabSales: 'Bán hàng & BANT',
       tabAi: 'Sales AI',
       name: 'Họ và tên',
@@ -212,7 +212,7 @@ export const vi = {
       yesterday: 'Hôm qua',
     },
   },
-  pos: {
+  commerce: {
     createOrder: 'Tạo đơn hàng',
     createOrderShortcut: 'Tạo đơn (F4)',
     editOrder: 'Chỉnh sửa đơn',
@@ -449,7 +449,7 @@ export const vi = {
     aiAutofill: {
       detectedTitle: 'AI phát hiện thông tin đơn hàng',
       confidence: '{score}% tin cậy',
-      applyPos: 'Áp dụng vào POS (F4)',
+      applyPos: 'Áp dụng vào Commerce (F4)',
       dismissTitle: 'Bỏ qua gợi ý',
     },
   },
@@ -658,7 +658,7 @@ export const vi = {
         'Quét nội dung bình luận Facebook/Zalo theo thời gian thực và ẩn ngay lập tức các bình luận chứa số điện thoại chống cướp khách.',
       flagPrintTitle: 'In Phiếu gửi Nhiệt K80/K58',
       flagPrintDesc:
-        'Kích hoạt nút in nhanh mẫu phiếu đóng gói và tem giao nhận tương thích máy in nhiệt cầm tay và POS cố định.',
+        'Kích hoạt nút in nhanh mẫu phiếu đóng gói và tem giao nhận tương thích máy in nhiệt cầm tay và Commerce cố định.',
       featureFlagsCardTitle: 'Cờ Tính năng Toàn Hệ thống (Feature Flags)',
       featureFlagsCount: '{count} Cờ Khả dụng',
       featureFlagsDesc:

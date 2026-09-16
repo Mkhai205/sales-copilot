@@ -168,7 +168,7 @@ export function NavMain({ workspaceSlug }: NavMainProps) {
           </SidebarMenuItem>
         </Collapsible>
 
-        {/* 2. BÁN HÀNG & POS GROUP */}
+        {/* 2. BÁN HÀNG & Commerce GROUP */}
         <Collapsible asChild defaultOpen={isPosGroupActive} className="group/collapsible">
           <SidebarMenuItem>
             <CollapsibleTrigger asChild>

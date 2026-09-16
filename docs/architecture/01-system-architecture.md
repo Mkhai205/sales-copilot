@@ -55,19 +55,19 @@ Sales Copilot Platform được kiến trúc theo mô hình **Pragmatic Modular 
 
 ---
 
-## 3. Ranh Giới 7 Bounded Contexts & Quy Tắc Module
+## 3. Ranh Giới 7 Bounded Contexts & Cấu Trúc Module (NestJS 11)
 
-Hệ thống được tổ chức thành **7 phân hệ chức năng độc lập** có ranh giới rõ ràng:
+Hệ thống backend (`apps/server/src/modules/`) được quy hoạch chặt chẽ thành **7 Bounded Contexts** chuẩn Domain-Driven Design:
 
-| Phân hệ (Context) | Modules phụ trách | Trách nhiệm chính | Public Services Export |
-| --- | --- | --- | --- |
-| **1. Định danh & Thuê bao** | `auth`, `workspaces`, `users`, `teams` | Đăng nhập/JWT, quản lý Workspace, thành viên và cấu hình đội nhóm. | `AuthService`, `WorkspacesService`, `UsersService`, `TeamsService` |
-| **2. Tiếp nhận Đa kênh** | `channels`, `inboxes`, `contacts` | Kết nối Facebook, Zalo, Webchat, Telegram; phân giải danh tính khách hàng 3NF. | `InboxesService`, `ContactsService`, `ChannelCredentialService` |
-| **3. Hội thoại & Nhắn tin** | `conversations`, `messages`, `labels` | Vòng đời chat (`OPEN`, `RESOLVED`), gửi/nhận tin nhắn, ghi chú nội bộ (`isPrivate`). | `ConversationsService`, `MessagesService`, `AutoAssignmentService` |
-| **4. Thương mại & Đơn hàng** | `commerce` (`products`, `orders`, `payments`) | Danh mục SKU, Quản lý tồn kho 3 trạng thái, Khung lên đơn, VietQR & Gạch nợ. | `ProductsService`, `OrdersService`, `VietQrService`, `ReconciliationService` |
-| **5. Vận hành & Tự động** | `canned-responses`, `automation-rules`, `webhooks` | Tin nhắn mẫu `/`, Động cơ quy tắc tự động hóa, Outbound Webhooks retry. | `CannedResponsesService`, `AutomationRulesService`, `WebhooksService` |
-| **6. Realtime Gateway** | `realtime` | Đồng bộ tin nhắn, sự kiện, thông báo nổi qua Socket.io và Redis Pub/Sub. | `RealtimeGateway`, `RealtimeService` |
-| **7. Quản trị Nền tảng** | `platform-admin` | Cổng Super Admin Portal: Quản lý tenant, cấu hình Feature Flags, hạn mức Quota. | `PlatformSettingsService`, `PlatformWorkspacesService`, `PlatformAuditService` |
+| Phân hệ (Bounded Context) | Thư mục & Submodules | Module Khởi Tạo | Trách nhiệm chính | Public Services Export |
+| :--- | :--- | :--- | :--- | :--- |
+| **1. Identity (`identity`)** | `auth/`, `workspaces/`, `teams/`, `audit-logs/` | `IdentityModule` | Đăng nhập/JWT, quản lý Workspace, thành viên, phân quyền RBAC và ghi nhật ký kiểm toán workspace. | `AuthService`, `WorkspacesService`, `TeamsService`, `AuditLogService`, `TokenService` |
+| **2. Omnichannel (`omnichannel`)** | `conversations/`, `messages/`, `contacts/`, `inboxes/`, `labels/`, `canned-responses/`, `integrations/` | `OmnichannelModule` | Kết nối Facebook, Telegram, Webchat; vòng đời hội thoại (`OPEN`, `RESOLVED`), gửi/nhận tin nhắn, phân giải danh tính khách hàng 3NF, tin nhắn mẫu `/`. | `ConversationsService`, `MessagesService`, `ContactsService`, `InboxesService`, `ChannelCredentialService`, `AutoAssignmentService`, `LabelsService`, `CannedResponsesService`, `ChannelAdapterRegistry` |
+| **3. Commerce (`commerce`)** | `products/`, `orders/`, `payments/`, `shipping/`, `inventory/`, `automation/`, `presence/`, `reconciliation/`, `listeners/`, `webhooks/` | `CommerceModule` | Khung lên đơn trong chat, quản lý danh mục & biến thể SKU, khóa giữ tồn kho nguyên tử (3 trạng thái), VietQR động & gạch nợ tự động SePay/Casso, khóa chống đè sửa đơn 30s. | `ProductsService`, `OrdersService`, `VietQrService`, `ShippingService`, `CommercePresenceService`, `CommerceReconciliationProcessor`, `OrderExtractorService` |
+| **4. Automation (`automation`)** | `automation-rules/`, `webhooks/` | `AutomationModule` | Động cơ quy tắc tự động hóa IF-THEN (phân loại nhãn, phân bổ) và Outbound Webhooks dispatch kèm retry cơ chế BullMQ. | `AutomationRulesService`, `AutomationExecutorService`, `WebhooksService`, `WebhookSubscriptionsService` |
+| **5. Intelligence (`intelligence`)** | `llm-gateway/` | `IntelligenceModule` | Cổng LLM Gateway đa mô hình (Gemini, OpenAI), trích xuất thực thể NER địa chỉ 3 cấp hành chính Việt Nam, Circuit Breaker & Rate Limiter. | `LlmGatewayService`, `StructuredOutputService`, `CircuitBreakerService`, `RateLimiterService` |
+| **6. Realtime (`realtime`)** | `realtime/` | `RealtimeModule` | WebSocket Gateway (`/realtime`), đồng bộ trạng thái hội thoại thời gian thực, Presence trực tuyến của nhân viên, Redis Pub/Sub đa node. | `RealtimeGateway`, `RealtimeEventDispatcher`, `PresenceService` |
+| **7. Platform Admin (`platform-admin`)** | `workspaces/`, `settings/`, `audit-logs/`, `metrics/`, `guards/`, `decorators/` | `PlatformAdminModule` | Cổng Super Admin Portal: Quản lý tenant toàn sàn, cấu hình Feature Flags, hạn mức Quota và Platform Audit Trail. | `SystemSettingsService`, `PlatformWorkspacesService`, `PlatformAuditLogsService`, `PlatformMetricsService`, `PlatformRolesGuard` |
 
 ### ⛔ Quy Tắc Giao Tiếp Liên Module Bất Biến:
 

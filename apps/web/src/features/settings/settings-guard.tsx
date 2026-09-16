@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { Lock, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useSettingsRbac } from './hooks/use-settings-rbac';
 
 interface SettingsGuardProps {

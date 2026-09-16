@@ -1,11 +1,8 @@
 'use client';
 
 import * as React from 'react';
-import { Copy, Check, RefreshCw, Send, ShieldAlert, CheckCircle2, Clock } from 'lucide-react';
-import {
-  WebhookDeliveryStatus,
-  type WebhookDeliveryDetailDto,
-} from '@sales-copilot/shared-contracts';
+import { Copy, Check, RefreshCw, Send } from 'lucide-react';
+import { WebhookDeliveryStatus } from '@sales-copilot/shared-contracts';
 import {
   Dialog,
   DialogContent,

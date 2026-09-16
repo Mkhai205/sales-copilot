@@ -3,14 +3,7 @@
 import * as React from 'react';
 import { Users2, UserPlus, Search, Pencil, Trash2, AlertTriangle, X, Users } from 'lucide-react';
 import { type TeamDto, WorkspaceRole } from '@sales-copilot/shared-contracts';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';

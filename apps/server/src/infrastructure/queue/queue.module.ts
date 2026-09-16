@@ -3,10 +3,10 @@ import { ConfigService } from '@nestjs/config';
 import { BullModule } from '@nestjs/bullmq';
 import { ChannelIngestionProcessor } from './channel-ingestion.processor';
 import { DatabaseModule } from '../database';
-import { ContactsModule } from '../../modules/contacts';
-import { ConversationsModule } from '../../modules/conversations';
-import { MessagesModule } from '../../modules/messages';
-import { InboxesModule } from '../../modules/inboxes';
+import { ContactsModule } from '../../modules/omnichannel/contacts';
+import { ConversationsModule } from '../../modules/omnichannel/conversations';
+import { MessagesModule } from '../../modules/omnichannel/messages';
+import { InboxesModule } from '../../modules/omnichannel/inboxes';
 
 import { WebhookDeliveryProcessor, WEBHOOK_DELIVERY_QUEUE } from './webhook-delivery.processor';
 

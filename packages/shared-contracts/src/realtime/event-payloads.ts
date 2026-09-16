@@ -52,7 +52,7 @@ export enum DomainEvent {
   TYPING_START = 'typing.start',
   TYPING_STOP = 'typing.stop',
 
-  // POS & Order Automation events (Milestone M1 & M2)
+  // Commerce & Order Automation events (Milestone M1 & M2)
   ORDER_CREATED = 'order.created',
   ORDER_UPDATED = 'order.updated',
   ORDER_CONFIRMED = 'order.confirmed',
@@ -60,9 +60,13 @@ export enum DomainEvent {
   ORDER_PARTIALLY_PAID = 'order.partially_paid',
   ORDER_CANCELLED = 'order.cancelled',
   INVENTORY_UPDATED = 'inventory.updated',
-  POS_COLLISION_STATUS = 'pos.collision_status',
+  COMMERCE_COLLISION_STATUS = 'commerce.collision_status',
+  // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
+  POS_COLLISION_STATUS = 'commerce.collision_status',
   ORDER_SHIPPED = 'order.shipped',
-  POS_DRAFT_SUGGESTED = 'pos.draft_suggested',
+  COMMERCE_DRAFT_SUGGESTED = 'commerce.draft_suggested',
+  // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
+  POS_DRAFT_SUGGESTED = 'commerce.draft_suggested',
 }
 
 // ============================================================================
@@ -149,7 +153,7 @@ export interface ChannelDeletedEvent extends BaseDomainEventPayload {
 }
 
 // ============================================================================
-// 7. POS & Order Automation Event Payloads (Milestone M1)
+// 7. Commerce & Order Automation Event Payloads (Milestone M1)
 // ============================================================================
 
 export interface OrderCreatedEventPayload extends BaseDomainEventPayload {
@@ -223,7 +227,7 @@ export interface InventoryUpdatedEventPayload extends BaseDomainEventPayload {
   reason?: string | null;
 }
 
-export interface PosCollisionStatusPayload extends BaseDomainEventPayload {
+export interface CommerceCollisionStatusPayload extends BaseDomainEventPayload {
   conversationId: string;
   isLocked: boolean;
   lockedBy?: {
@@ -236,6 +240,7 @@ export interface PosCollisionStatusPayload extends BaseDomainEventPayload {
   } | null;
   remainingTtlSeconds?: number;
 }
+export type PosCollisionStatusPayload = CommerceCollisionStatusPayload;
 
 export interface OrderShippedEventPayload extends BaseDomainEventPayload {
   orderId: string;
@@ -248,7 +253,7 @@ export interface OrderShippedEventPayload extends BaseDomainEventPayload {
   order: Record<string, unknown>;
 }
 
-export interface PosDraftSuggestedEventPayload extends BaseDomainEventPayload {
+export interface CommerceDraftSuggestedEventPayload extends BaseDomainEventPayload {
   conversationId: string;
   contactId?: string | null;
   suggestedCustomer?: {
@@ -273,3 +278,4 @@ export interface PosDraftSuggestedEventPayload extends BaseDomainEventPayload {
   confidenceScore: number;
   messageId?: string;
 }
+export type PosDraftSuggestedEventPayload = CommerceDraftSuggestedEventPayload;

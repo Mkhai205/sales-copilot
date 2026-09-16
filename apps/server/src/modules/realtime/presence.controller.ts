@@ -1,4 +1,4 @@
-import {
+﻿import {
   Controller,
   ForbiddenException,
   Get,
@@ -17,9 +17,9 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { PresenceEntry } from '@sales-copilot/shared-contracts';
-import { WorkspacesService } from '../workspaces/workspaces.service';
-import { CurrentUser } from '../auth';
-import type { JwtUserPayload } from '../auth/types/jwt-payload.type';
+import { WorkspacesService } from '../identity/workspaces/workspaces.service';
+import { CurrentUser } from '../identity/auth';
+import type { JwtUserPayload } from '../identity/auth/types/jwt-payload.type';
 import { PresenceService } from './presence.service';
 
 /**

@@ -1,9 +1,9 @@
-import { describe, it, beforeEach } from 'node:test';
+﻿import { describe, it, beforeEach } from 'node:test';
 import * as assert from 'node:assert';
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { PlatformRole, PresenceEntry, PresenceStatus } from '@sales-copilot/shared-contracts';
 import { PresenceController } from '../presence.controller';
-import type { JwtUserPayload } from '../../auth/types/jwt-payload.type';
+import type { JwtUserPayload } from '../../identity/auth/types/jwt-payload.type';
 
 describe('PresenceController (REST API Endpoints — Task 9)', () => {
   let controller: PresenceController;

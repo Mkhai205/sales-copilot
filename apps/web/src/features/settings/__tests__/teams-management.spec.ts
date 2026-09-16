@@ -4,7 +4,6 @@ import {
   createTeamSchema,
   updateTeamSchema,
   addTeamMembersSchema,
-  removeTeamMembersSchema,
   type TeamDto,
 } from '@sales-copilot/shared-contracts';
 

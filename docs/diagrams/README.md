@@ -13,7 +13,7 @@ docs/diagrams/
 │   ├── sales-copilot.architecture.json   # [Source] File cấu hình JSON IR
 │   ├── sales-copilot.architecture.html   # [Viewer] File HTML tự chứa mở trên trình duyệt
 │   └── assets/                           # Ảnh preview (Dark & Light)
-├── workflows/                # Quy trình nghiệp vụ (In-Chat POS, Anti-theft masking...)
+├── workflows/                # Quy trình nghiệp vụ (In-Chat Commerce, Anti-theft masking...)
 ├── sequences/                # Luồng API & Webhook (VietQR Instant Reconciliation, Ingestion...)
 └── lifecycles/               # Vòng đời trạng thái (Order status, Conversation lifecycle...)
 ```

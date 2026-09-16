@@ -1,18 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import {
-  Building2,
-  Users,
-  Radio,
-  HardDrive,
-  Cpu,
-  Clock,
-  Globe,
-  Copy,
-  Check,
-  ShieldAlert,
-} from 'lucide-react';
+import { Users, Radio, HardDrive, Cpu, Clock, Globe, Copy, Check, ShieldAlert } from 'lucide-react';
 import type { PlatformWorkspaceDetailDto } from '@sales-copilot/shared-contracts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';

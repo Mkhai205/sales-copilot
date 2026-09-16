@@ -2,8 +2,9 @@
 
 import * as React from 'react';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
-import { usePosRealtimeSync, AiAutofillBanner } from '@/features/pos';
+import { useCommerceRealtimeSync, AiAutofillBanner } from '@/features/commerce';
 import { useWorkspaces } from '@/features/workspaces/use-workspaces';
+
 import type { PosDraftSuggestedEventPayload } from '@sales-copilot/shared-contracts';
 import { ConversationEmptyState } from './conversation-empty-state';
 import { ConversationList } from './conversation-list';
@@ -18,7 +19,7 @@ interface ConversationLayoutProps {
 
 export function ConversationLayout({ workspaceSlug, conversationId }: ConversationLayoutProps) {
   const [isDetailOpen, setIsDetailOpen] = React.useState(true);
-  const [detailTab, setDetailTab] = React.useState<'contact' | 'pos'>('contact');
+  const [detailTab, setDetailTab] = React.useState<'contact' | 'commerce'>('contact');
   const [newOrderTrigger, setNewOrderTrigger] = React.useState<number>(0);
   const [posDraftSuggestion, setPosDraftSuggestion] =
     React.useState<PosDraftSuggestedEventPayload | null>(null);
@@ -39,8 +40,8 @@ export function ConversationLayout({ workspaceSlug, conversationId }: Conversati
     setPosDraftSuggestion(null);
   }, [conversationId]);
 
-  // Real-time synchronization for POS order changes, bank reconciliation, and chat receipts
-  usePosRealtimeSync({
+  // Real-time synchronization for Commerce order changes, bank reconciliation, and chat receipts
+  useCommerceRealtimeSync({
     workspaceId: resolvedWorkspaceId,
     conversationId,
     onDraftSuggested: payload => {
@@ -50,11 +51,11 @@ export function ConversationLayout({ workspaceSlug, conversationId }: Conversati
 
   const handleStartNewOrder = React.useCallback(() => {
     setIsDetailOpen(true);
-    setDetailTab('pos');
+    setDetailTab('commerce');
     setNewOrderTrigger(prev => prev + 1);
   }, []);
 
-  // Global F4 shortcut to open/switch to POS order creation
+  // Global F4 shortcut to open/switch to Commerce order creation
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'F4') {
@@ -103,7 +104,7 @@ export function ConversationLayout({ workspaceSlug, conversationId }: Conversati
                     suggestion={posDraftSuggestion}
                     onApply={() => {
                       setIsDetailOpen(true);
-                      setDetailTab('pos');
+                      setDetailTab('commerce');
                     }}
                     onDismiss={() => setPosDraftSuggestion(null)}
                   />

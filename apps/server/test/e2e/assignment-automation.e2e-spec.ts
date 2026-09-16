@@ -19,9 +19,9 @@ import {
   WsServerEvent,
 } from '@sales-copilot/shared-contracts';
 import { PresenceService } from '../../src/modules/realtime/presence.service';
-import { ConversationsService } from '../../src/modules/conversations/conversations.service';
-import { AutomationRulesService } from '../../src/modules/automation-rules/automation-rules.service';
-import { MessagesService } from '../../src/modules/messages/messages.service';
+import { ConversationsService } from '../../src/modules/omnichannel/conversations/conversations.service';
+import { AutomationRulesService } from '../../src/modules/automation/automation-rules/automation-rules.service';
+import { MessagesService } from '../../src/modules/omnichannel/messages/messages.service';
 
 describe('E2E Scenario 3 & 4 — Auto-Assignment & Automation Rule Flow (Task 17 — Feature F-1.11.1)', () => {
   let ctx: TestAppContext;

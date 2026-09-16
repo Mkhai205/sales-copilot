@@ -10,7 +10,7 @@ import {
   SenderType,
 } from '@sales-copilot/shared-contracts';
 import { ChannelIngestionProcessor } from '../channel-ingestion.processor';
-import { ChannelAdapterRegistry } from '../../../integrations/channel-adapter.registry';
+import { ChannelAdapterRegistry } from '../../../modules/omnichannel/integrations/channel-adapter.registry';
 
 describe('ChannelIngestionProcessor (Task T-1.5.7: Inbound Ingestion Pipeline Integration & E2E Validation)', () => {
   let processor: ChannelIngestionProcessor;
@@ -626,7 +626,7 @@ describe('ChannelIngestionProcessor (Task T-1.5.7: Inbound Ingestion Pipeline In
       // Mock globalThis.fetch for this test
       const originalFetch = globalThis.fetch;
       const fakeImageBytes = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10]);
-      globalThis.fetch = async (url: any) => {
+      globalThis.fetch = async (_url: any) => {
         return {
           ok: true,
           status: 200,

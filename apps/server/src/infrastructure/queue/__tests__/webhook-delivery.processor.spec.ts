@@ -1,8 +1,8 @@
-import { describe, it, beforeEach, afterEach } from 'node:test';
+﻿import { describe, it, beforeEach, afterEach } from 'node:test';
 import * as assert from 'node:assert';
 import { WebhookDeliveryProcessor, WebhookDeliveryJobData } from '../webhook-delivery.processor';
 import { WebhookDeliveryStatus } from '@sales-copilot/shared-contracts';
-import { verifyWebhookSignature } from '../../../modules/webhooks/webhook-signer';
+import { verifyWebhookSignature } from '../../../modules/automation/webhooks/webhook-signer';
 
 describe('WebhookDeliveryProcessor (BullMQ Worker — Feature F-1.9.4)', () => {
   let processor: WebhookDeliveryProcessor;

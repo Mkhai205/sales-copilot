@@ -15,5 +15,5 @@ export * from './webhooks';
 export * from './realtime';
 export * from './widget';
 export * from './llm';
-export * from './pos';
+export * from './commerce';
 export * from './platform-admin';

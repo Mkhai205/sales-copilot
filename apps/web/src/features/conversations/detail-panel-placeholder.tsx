@@ -1,7 +1,6 @@
 'use client';
 
-import * as React from 'react';
-import { X, Mail, Phone, Tag, User, Shield, MessageSquare } from 'lucide-react';
+import { X, Mail, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';

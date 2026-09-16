@@ -71,7 +71,7 @@
 
 4. **Tài liệu tham chiếu (References)**:
    - PRD: [`docs/product/prd-commerce-and-orders.md#36-ai-address-ner--1-click-order`](file:///d:/workspace/Sales%20Copilot/docs/product/prd-commerce-and-orders.md)
-   - Thiết kế UX: [`docs/backlog/epic-2.2-in-chat-pos-and-orders.md#feature-221`](file:///d:/workspace/Sales%20Copilot/docs/backlog/epic-2.2-in-chat-pos-and-orders.md)
+   - Thiết kế UX: [`docs/backlog/epic-2.2-commerce-and-orders.md#feature-221`](file:///d:/workspace/Sales%20Copilot/docs/backlog/epic-2.2-commerce-and-orders.md)
 
 5. **Tiêu chí nghiệm thu (Acceptance Criteria & Definition of Done)**:
    - [ ] Thẻ gợi ý xuất hiện tự nhiên, thanh thoát phía trên khung chat khi có thông tin giao hàng.

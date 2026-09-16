@@ -543,7 +543,7 @@ async function seed() {
     });
   }
 
-  // 10. Seed POS Products and Variants
+  // 10. Seed Commerce Products and Variants
   const sampleProducts = [
     {
       name: 'Gói Bản Quyền Sales Copilot Enterprise (1 Năm)',
@@ -733,7 +733,7 @@ async function seed() {
     }
   }
 
-  console.log(`📦 POS Products initialized: 3 sample catalog items with variants and stock`);
+  console.log(`📦 Commerce Products initialized: 3 sample catalog items with variants and stock`);
 
   console.log(`⚙️ Operations initialized: Canned Responses, Automation Rules, Webhook Deliveries`);
   console.log('✨ Database seeding completed successfully!');

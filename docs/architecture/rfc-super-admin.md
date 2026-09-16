@@ -73,7 +73,7 @@ enum PlatformRole {
 }
 
 enum SettingCategory {
-  FEATURE_FLAGS // Cờ bật tắt module (pos, ai, comment_masking)
+  FEATURE_FLAGS // Cờ bật tắt module (commerce, ai, comment_masking)
   AI            // Cấu hình LLM mặc định (provider, model, temperature)
   BILLING       // Hạn mức quota mặc định theo gói
   SYSTEM        // Cấu hình bảo trì, thông báo toàn hệ thống

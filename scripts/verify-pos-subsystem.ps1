@@ -1,7 +1,7 @@
 $ErrorActionPreference = "Stop"
 
 Write-Host "==========================================================" -ForegroundColor Cyan
-Write-Host "  Sales Copilot - In-Chat POS Subsystem Verification Suite" -ForegroundColor Cyan
+Write-Host "  Sales Copilot - In-Chat Commerce Subsystem Verification Suite" -ForegroundColor Cyan
 Write-Host "==========================================================" -ForegroundColor Cyan
 
 function Run-Step {
@@ -32,34 +32,34 @@ Run-Step "Shared Contracts Unit Tests" {
     pnpm nx test shared-contracts
 }
 
-# 2. Server POS Unit & Stress Tests
-Run-Step "POS Shipping Carrier Service Unit Tests" {
-    node -r @swc-node/register --test apps/server/src/modules/pos/shipping/__tests__/shipping.service.spec.ts
+# 2. Server Commerce Unit & Stress Tests
+Run-Step "Commerce Shipping Carrier Service Unit Tests" {
+    node -r @swc-node/register --test apps/server/src/modules/commerce/shipping/__tests__/shipping.service.spec.ts
 }
 
-Run-Step "POS 3PL Carrier Adapters (GHTK/GHN/Custom) Tests" {
-    node -r @swc-node/register --test apps/server/src/modules/pos/shipping/__tests__/carrier-adapters.spec.ts
+Run-Step "Commerce 3PL Carrier Adapters (GHTK/GHN/Custom) Tests" {
+    node -r @swc-node/register --test apps/server/src/modules/commerce/shipping/__tests__/carrier-adapters.spec.ts
 }
 
-Run-Step "POS Realtime Chat Receipt & Status Event Listener Tests" {
-    node -r @swc-node/register --test apps/server/src/modules/pos/listeners/__tests__/pos-event.listener.spec.ts
+Run-Step "Commerce Realtime Chat Receipt & Status Event Listener Tests" {
+    node -r @swc-node/register --test apps/server/src/modules/commerce/listeners/__tests__/commerce-event.listener.spec.ts
 }
 
-Run-Step "POS AI Order Extractor Tests" {
-    node -r @swc-node/register --test apps/server/src/modules/pos/automation/__tests__/order-extractor.service.spec.ts
+Run-Step "Commerce AI Order Extractor Tests" {
+    node -r @swc-node/register --test apps/server/src/modules/commerce/automation/__tests__/order-extractor.service.spec.ts
 }
 
-Run-Step "POS Concurrency Stress Tests (20 Parallel Threads)" {
-    node -r @swc-node/register --test apps/server/src/modules/pos/orders/__tests__/pos-concurrency.spec.ts
+Run-Step "Commerce Concurrency Stress Tests (20 Parallel Threads)" {
+    node -r @swc-node/register --test apps/server/src/modules/commerce/orders/__tests__/commerce-concurrency.spec.ts
 }
 
-Run-Step "POS Multi-Tenancy Data Isolation Tests" {
-    node -r @swc-node/register --test apps/server/src/modules/pos/orders/__tests__/pos-multitenancy.spec.ts
+Run-Step "Commerce Multi-Tenancy Data Isolation Tests" {
+    node -r @swc-node/register --test apps/server/src/modules/commerce/orders/__tests__/commerce-multitenancy.spec.ts
 }
 
 # 3. Web Vector & Thermal Engine Tests
 Run-Step "Web Code128 Barcode Vector Engine Tests" {
-    node -r @swc-node/register -r tsconfig-paths/register --test apps/web/src/features/pos/lib/__tests__/code128-svg.spec.ts
+    node -r @swc-node/register -r tsconfig-paths/register --test apps/web/src/features/commerce/lib/__tests__/code128-svg.spec.ts
 }
 
 # 3. Static Type Verification
@@ -72,5 +72,5 @@ Run-Step "Web Frontend TypeScript Typecheck" {
 }
 
 Write-Host "`n==========================================================" -ForegroundColor Green
-Write-Host "  All POS Subsystem Verification Checks PASSED (100%)" -ForegroundColor Green
+Write-Host "  All Commerce Subsystem Verification Checks PASSED (100%)" -ForegroundColor Green
 Write-Host "==========================================================" -ForegroundColor Green

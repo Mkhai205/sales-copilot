@@ -611,7 +611,7 @@ describe('RealtimeGateway (Agent Realtime WebSocket Namespace /realtime — Task
             emittedEvent = { room, event, payload };
           },
         }),
-        in: (room: string) => ({
+        in: (_room: string) => ({
           socketsLeave: (r: string) => {
             socketsLeftRoom = r;
           },

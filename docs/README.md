@@ -11,10 +11,10 @@ Chào mừng bạn đến với trung tâm tài liệu kỹ thuật, kiến trú
 - **Phạm vi**: Multi-tenancy, Omnichannel Ingestion, 3NF Contact & Channel Identity resolution, Vòng đời Conversation & Message đa hình, Auto-assignment Round-Robin, Canned Responses, Automation Rules, Outbound Webhooks, Realtime WebSocket (Socket.io + Redis Pub/Sub), và Next.js Dashboard.
 - ⛔ **QUY TẮC BẤT BIẾN**: Phase 1 APIs, schemas và contracts đã ổn định, **tuyệt đối không refactor làm vỡ Phase 1 baseline**.
 
-### 🟡 Phase 2: D2C Conversational Commerce & AI Auto-pilot POS (CURRENT ACTIVE SCOPE)
+### 🟡 Phase 2: D2C Conversational Commerce & AI Auto-pilot Commerce (CURRENT ACTIVE SCOPE)
 - **Trạng thái**: **Đang triển khai tích cực** ([Master Backlog Hub](./backlog/README.md)).
 - **Phạm vi**:
-  - **Milestone 2A (Commerce Core)**: Epic 2.1 (Built-in Inventory & Catalog), Epic 2.2 (In-Chat POS & Orders OMS), Epic 2.3 (Dynamic VietQR & Instant Bank Reconciliation).
+  - **Milestone 2A (Commerce Core)**: Epic 2.1 (Built-in Inventory & Catalog), Epic 2.2 (In-Chat Commerce & Orders OMS), Epic 2.3 (Dynamic VietQR & Instant Bank Reconciliation).
   - **Milestone 2B (Super Admin Portal)**: Epic 2.4 (Super Admin Portal, Quota & Dynamic Settings).
   - **Milestone 2C (AI Automation)**: Epic 2.5 (AI NER 3-Tier Address Extraction), Epic 2.6 (24/7 AI Auto-pilot & Discount Engine), Epic 2.7 (Anti-theft Comment Auto-masking).
 - ⛔ **QUY TẮC BẢO VỆ**: Tuyệt đối không tạo models cho B2B CRM hoặc Phase 3 khi đang làm Phase 2. Toàn bộ trọng tâm dành riêng cho Bán lẻ & D2C Conversational Commerce.
@@ -50,7 +50,7 @@ Chào mừng bạn đến với trung tâm tài liệu kỹ thuật, kiến trú
 | :--- | :--- |
 | **[Backlog Master Hub & AI Playbook](./backlog/README.md)** | Trung tâm quản lý lộ trình Phase 2, Ma trận tiến độ 7 Epics và Cẩm nang quy trình điều phối AI Coding Agent. |
 | **[Epic 2.1: Kho & SKU Biến Thể](./backlog/epic-2.1-inventory-and-catalog.md)** | Quản lý sản phẩm, biến thể SKU, tồn kho 3 trạng thái, điều chỉnh kho và sổ cái `InventoryTransaction`. |
-| **[Epic 2.2: Lên Đơn & OMS](./backlog/epic-2.2-in-chat-pos-and-orders.md)** | Khung lên đơn nhanh trong Chat, Order State Machine, khóa kho 2 tầng và Redis 30s lock. |
+| **[Epic 2.2: Lên Đơn & OMS](./backlog/epic-2.2-commerce-and-orders.md)** | Khung lên đơn nhanh trong Chat, Order State Machine, khóa kho 2 tầng và Redis 30s lock. |
 | **[Epic 2.3: Dynamic VietQR & Gạch Nợ](./backlog/epic-2.3-vietqr-and-reconciliation.md)** | Dynamic VietQR NAPAS 247, Webhook SePay/Casso gạch nợ tự động < 1s và bắn realtime `order.paid`. |
 | **[Epic 2.4: Super Admin Portal](./backlog/epic-2.4-super-admin-portal.md)** | Cổng quản trị nền tảng `/admin`, Quản lý Workspaces, Hạn mức Quota, Feature Flags và Platform Audit. |
 | **[Epic 2.5: AI Bóc Tách Địa Chỉ](./backlog/epic-2.5-ai-address-ner.md)** | Regex bóc tách SĐT 10 số và chuẩn hóa địa chỉ 3 cấp Tỉnh - Huyện - Xã 1-click. |

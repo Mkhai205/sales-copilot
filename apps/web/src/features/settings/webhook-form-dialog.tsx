@@ -1,17 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import {
-  Webhook,
-  KeyRound,
-  Eye,
-  EyeOff,
-  Sparkles,
-  Check,
-  Search,
-  CheckCircle2,
-  X,
-} from 'lucide-react';
+import { Webhook, Eye, EyeOff, Sparkles, Check, Search, X } from 'lucide-react';
 import {
   WebhookEventType,
   type CreateWebhookSubscriptionDto,
