@@ -51,6 +51,8 @@ export const createOrderSchema = z.object({
   contactId: z.string().uuid('Contact ID không hợp lệ'),
   // Status defaults strictly to DRAFT. Advanced statuses cannot be injected by client
   status: z.literal(OrderStatus.DRAFT).default(OrderStatus.DRAFT),
+  confirmImmediately: z.boolean().optional().default(false),
+  paymentMethod: z.nativeEnum(PaymentMethod).default(PaymentMethod.COD),
   discountAmount: z.coerce.number().min(0, 'Chiết khấu không được âm').default(0),
   discountType: z.nativeEnum(DiscountType).default(DiscountType.FIXED_AMOUNT),
   discountReason: z.string().optional().nullable(),
@@ -65,6 +67,7 @@ export const createOrderSchema = z.object({
 export type CreateOrderDto = z.input<typeof createOrderSchema>;
 
 export const updateOrderSchema = z.object({
+  paymentMethod: z.nativeEnum(PaymentMethod).optional(),
   discountAmount: z.coerce.number().min(0).optional(),
   discountType: z.nativeEnum(DiscountType).optional(),
   discountReason: z.string().optional().nullable(),
@@ -83,6 +86,15 @@ export const cancelOrderSchema = z.object({
 });
 
 export type CancelOrderDto = z.input<typeof cancelOrderSchema>;
+
+export const completeOrderSchema = z
+  .object({
+    notes: z.string().optional().nullable(),
+  })
+  .nullish()
+  .default({});
+
+export type CompleteOrderDto = z.input<typeof completeOrderSchema>;
 
 export const manualPayOrderSchema = z.object({
   paymentMethod: z.nativeEnum(PaymentMethod).default(PaymentMethod.CASH),
@@ -119,6 +131,7 @@ export interface OrderResponseDto {
   createdById: string | null;
   status: OrderStatus;
   paymentStatus: PaymentStatus;
+  paymentMethod: PaymentMethod;
   fulfillmentStatus: FulfillmentStatus;
   subtotal: number | string;
   discountAmount: number | string;

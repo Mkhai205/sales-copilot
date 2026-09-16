@@ -34,6 +34,7 @@ import {
   OrderPaidEventPayload,
   OrderPartiallyPaidEventPayload,
   OrderCancelledEventPayload,
+  OrderCompletedEventPayload,
   InventoryUpdatedEventPayload,
   OrderShippedEventPayload,
   CommerceDraftSuggestedEventPayload,
@@ -446,6 +447,17 @@ export class RealtimeEventDispatcher {
       : `workspace_${payload.workspaceId}`;
 
     this.broadcastSafe(rooms, WsServerEvent.ORDER_CANCELLED, payload);
+  }
+
+  @OnEvent(DomainEvent.ORDER_COMPLETED)
+  handleOrderCompleted(payload: OrderCompletedEventPayload): void {
+    if (!payload?.workspaceId) return;
+
+    const rooms = payload.conversationId
+      ? [`workspace_${payload.workspaceId}`, `conversation_${payload.conversationId}`]
+      : `workspace_${payload.workspaceId}`;
+
+    this.broadcastSafe(rooms, WsServerEvent.ORDER_COMPLETED, payload);
   }
 
   @OnEvent(DomainEvent.INVENTORY_UPDATED)

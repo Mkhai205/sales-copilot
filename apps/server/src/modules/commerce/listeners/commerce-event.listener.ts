@@ -1,4 +1,4 @@
-﻿import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { DomainEvent, MessageType, SenderType } from '@sales-copilot/shared-contracts';
 import { MessagesService } from '../../omnichannel/messages/messages.service';
@@ -188,6 +188,158 @@ export class CommerceEventListener {
       } catch (msgErr: any) {
         this.logger.error(
           `Failed to post order shipped message for Order #${payload.displayId}: ${msgErr.message}`,
+          msgErr.stack,
+        );
+      }
+    }
+  }
+
+  @OnEvent(DomainEvent.ORDER_CONFIRMED)
+  @OnEvent('order.confirmed')
+  async handleOrderConfirmed(payload: {
+    workspaceId: string;
+    orderId: string;
+    orderNumber?: string;
+    displayId: number;
+    conversationId?: string | null;
+    order?: Record<string, any>;
+    confirmedAt?: string | Date;
+  }): Promise<void> {
+    if (!payload?.workspaceId || !payload?.orderId) {
+      return;
+    }
+
+    this.logger.log(
+      `Handling ORDER_CONFIRMED post-commit side-effects for Order #${payload.displayId} (ID: ${payload.orderId})`,
+    );
+
+    if (payload.conversationId) {
+      try {
+        const total = payload.order?.totalAmount
+          ? new Intl.NumberFormat('vi-VN').format(Number(payload.order.totalAmount)) + 'đ'
+          : '';
+        const totalSnippet = total ? ` (Tổng tiền: ${total})` : '';
+        const content = `📦 [Hệ thống] Đơn hàng #${payload.displayId} đã được chốt và xác nhận${totalSnippet}.`;
+
+        await this.messagesService.create(payload.workspaceId, payload.conversationId, {
+          content,
+          senderType: SenderType.SYSTEM,
+          senderId: undefined,
+          messageType: MessageType.ACTIVITY,
+          metadata: {
+            type: 'ORDER_SUMMARY',
+            orderId: payload.orderId,
+            displayId: payload.displayId,
+            orderNumber: payload.orderNumber,
+            totalAmount: payload.order?.totalAmount,
+            itemsCount: Array.isArray(payload.order?.items)
+              ? payload.order.items.length
+              : undefined,
+          },
+        });
+
+        this.logger.log(
+          `Posted order confirmed summary message to conversation ${payload.conversationId} for Order #${payload.displayId}`,
+        );
+      } catch (msgErr: any) {
+        this.logger.error(
+          `Failed to post order confirmed message for Order #${payload.displayId}: ${msgErr.message}`,
+          msgErr.stack,
+        );
+      }
+    }
+  }
+
+  @OnEvent(DomainEvent.ORDER_COMPLETED)
+  @OnEvent('order.completed')
+  async handleOrderCompleted(payload: {
+    workspaceId: string;
+    orderId: string;
+    orderNumber?: string;
+    displayId: number;
+    conversationId?: string | null;
+    completedAt?: string | Date;
+  }): Promise<void> {
+    if (!payload?.workspaceId || !payload?.orderId) {
+      return;
+    }
+
+    this.logger.log(
+      `Handling ORDER_COMPLETED post-commit side-effects for Order #${payload.displayId} (ID: ${payload.orderId})`,
+    );
+
+    if (payload.conversationId) {
+      try {
+        const content = `🎉 [Hệ thống] Đơn hàng #${payload.displayId} đã giao thành công và hoàn tất.`;
+
+        await this.messagesService.create(payload.workspaceId, payload.conversationId, {
+          content,
+          senderType: SenderType.SYSTEM,
+          senderId: undefined,
+          messageType: MessageType.ACTIVITY,
+          metadata: {
+            type: 'ORDER_COMPLETED',
+            orderId: payload.orderId,
+            displayId: payload.displayId,
+            orderNumber: payload.orderNumber,
+          },
+        });
+
+        this.logger.log(
+          `Posted order completed message to conversation ${payload.conversationId} for Order #${payload.displayId}`,
+        );
+      } catch (msgErr: any) {
+        this.logger.error(
+          `Failed to post order completed message for Order #${payload.displayId}: ${msgErr.message}`,
+          msgErr.stack,
+        );
+      }
+    }
+  }
+
+  @OnEvent(DomainEvent.ORDER_CANCELLED)
+  @OnEvent('order.cancelled')
+  async handleOrderCancelled(payload: {
+    workspaceId: string;
+    orderId: string;
+    orderNumber?: string;
+    displayId: number;
+    conversationId?: string | null;
+    cancelReason?: string | null;
+  }): Promise<void> {
+    if (!payload?.workspaceId || !payload?.orderId) {
+      return;
+    }
+
+    this.logger.log(
+      `Handling ORDER_CANCELLED post-commit side-effects for Order #${payload.displayId} (ID: ${payload.orderId})`,
+    );
+
+    if (payload.conversationId) {
+      try {
+        const reasonSnippet = payload.cancelReason ? ` Lý do: ${payload.cancelReason}.` : '';
+        const content = `❌ [Hệ thống] Đơn hàng #${payload.displayId} đã bị hủy.${reasonSnippet}`;
+
+        await this.messagesService.create(payload.workspaceId, payload.conversationId, {
+          content,
+          senderType: SenderType.SYSTEM,
+          senderId: undefined,
+          messageType: MessageType.ACTIVITY,
+          metadata: {
+            type: 'ORDER_CANCELLED',
+            orderId: payload.orderId,
+            displayId: payload.displayId,
+            orderNumber: payload.orderNumber,
+            cancelReason: payload.cancelReason || null,
+          },
+        });
+
+        this.logger.log(
+          `Posted order cancelled message to conversation ${payload.conversationId} for Order #${payload.displayId}`,
+        );
+      } catch (msgErr: any) {
+        this.logger.error(
+          `Failed to post order cancelled message for Order #${payload.displayId}: ${msgErr.message}`,
           msgErr.stack,
         );
       }

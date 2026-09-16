@@ -14,6 +14,7 @@ import {
   listProductsQuerySchema,
   createOrderSchema,
   cancelOrderSchema,
+  completeOrderSchema,
   manualPayOrderSchema,
   listOrdersQuerySchema,
   adjustInventorySchema,
@@ -32,6 +33,7 @@ import {
   POS_RECONCILIATION_QUEUE,
   POS_ORDER_AUTOMATION_QUEUE,
   POS_AUTOMATION_JOB,
+  DomainEvent,
   WsServerEvent,
   WsClientEvent,
 } from '../index';
@@ -52,6 +54,8 @@ describe('Commerce Shared Contracts & Schemas', () => {
       assert.strictEqual(WsServerEvent.POS_COLLISION_STATUS, 'commerce.collision_status');
       assert.strictEqual(WsServerEvent.COMMERCE_DRAFT_SUGGESTED, 'commerce.draft_suggested');
       assert.strictEqual(WsServerEvent.POS_DRAFT_SUGGESTED, 'commerce.draft_suggested');
+      assert.strictEqual(WsServerEvent.ORDER_COMPLETED, 'order.completed');
+      assert.strictEqual(DomainEvent.ORDER_COMPLETED, 'order.completed');
 
       assert.strictEqual(WsClientEvent.COMMERCE_EDITING_START, 'commerce.editing_start');
       assert.strictEqual(WsClientEvent.POS_EDITING_START, 'commerce.editing_start');
@@ -127,16 +131,18 @@ describe('Commerce Shared Contracts & Schemas', () => {
       }
     });
 
-    it('should reject product creation without any variants', () => {
+    it('should default variants to empty array when omitted', () => {
       const payload = {
         name: 'Áo Thun Cotton',
         sku: 'TEE-COTTON-01',
         basePrice: 199000,
-        variants: [],
       };
 
       const result = createProductSchema.safeParse(payload);
-      assert.strictEqual(result.success, false);
+      assert.strictEqual(result.success, true);
+      if (result.success) {
+        assert.deepStrictEqual(result.data.variants, []);
+      }
     });
 
     it('should reject negative prices or negative stock quantities', () => {
@@ -255,6 +261,37 @@ describe('Commerce Shared Contracts & Schemas', () => {
         cancelOrderSchema.safeParse({ cancelReason: 'Khách đổi ý muốn lấy mẫu khác' }).success,
         true,
       );
+    });
+
+    it('should validate createOrderSchema with confirmImmediately flag', () => {
+      const payload = {
+        contactId: validContactId,
+        confirmImmediately: true,
+        items: [
+          {
+            productId: validProductId,
+            variantId: validVariantId,
+            quantity: 1,
+            unitPrice: 150000,
+          },
+        ],
+      };
+
+      const result = createOrderSchema.safeParse(payload);
+      assert.strictEqual(result.success, true);
+      if (result.success) {
+        assert.strictEqual(result.data.confirmImmediately, true);
+        assert.strictEqual(result.data.status, OrderStatus.DRAFT);
+      }
+    });
+
+    it('should validate completeOrderSchema with optional notes', () => {
+      assert.strictEqual(completeOrderSchema.safeParse({}).success, true);
+      const result = completeOrderSchema.safeParse({ notes: 'Khách đã nhận hàng và ký tên' });
+      assert.strictEqual(result.success, true);
+      if (result.success && result.data) {
+        assert.strictEqual(result.data.notes, 'Khách đã nhận hàng và ký tên');
+      }
     });
 
     it('should validate manualPayOrderSchema', () => {

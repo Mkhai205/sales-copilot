@@ -67,7 +67,8 @@ export function CommerceOrderForm({
   const [customerNotes, setCustomerNotes] = React.useState<string>('');
   const [printDialogOpen, setPrintDialogOpen] = React.useState<boolean>(false);
 
-  const { createOrder, updateOrder, isCreating, isUpdating } = useCommerceOrders(workspaceId);
+  const { createOrder, updateOrder, confirmOrder, isCreating, isUpdating, isConfirming } =
+    useCommerceOrders(workspaceId);
   const { isLocked, lockedBy, remainingTtlSeconds, takeover } = useCommerceCollision({
     workspaceId,
     conversationId,
@@ -229,8 +230,8 @@ export function CommerceOrderForm({
     return items.reduce((acc, it) => acc + it.unitPrice * it.quantity, 0);
   }, [items]);
 
-  // Form submission: Create or Update Order
-  const handleSaveOrder = async () => {
+  // Form submission: Create or Update Order (with immediate confirmation option)
+  const handleSaveOrder = async (confirmImmediately = false) => {
     if (!contactId) {
       toast.error(t('commerce.form.validationCustomerRequired'));
       return;
@@ -282,11 +283,32 @@ export function CommerceOrderForm({
             },
           },
         });
+
+        if (confirmImmediately && savedOrder?.id) {
+          savedOrder = await confirmOrder(savedOrder.id);
+        }
+      } else if (initialOrder && initialOrder.status !== OrderStatus.DRAFT) {
+        savedOrder = await updateOrder({
+          orderId: initialOrder.id,
+          dto: {
+            discountAmount,
+            discountType,
+            discountReason: discountReason || null,
+            shippingFee,
+            customerNotes: customerNotes || null,
+            shippingAddress: validAddress,
+            metadata: {
+              ...(initialOrder.metadata || {}),
+              paymentMethod,
+            },
+          },
+        });
       } else {
         savedOrder = await createOrder({
           contactId,
           conversationId: conversationId || null,
           items: formattedItems,
+          confirmImmediately,
           discountAmount,
           discountType,
           discountReason: discountReason || null,
@@ -319,13 +341,13 @@ export function CommerceOrderForm({
     }
   };
 
-  // Keyboard shortcut Ctrl+Enter to save, Esc to cancel
+  // Keyboard shortcut Ctrl+Enter to save (or confirm), Esc to cancel
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
         e.preventDefault();
         if (!isLocked) {
-          handleSaveOrder();
+          handleSaveOrder(true);
         }
       } else if (e.key === 'Escape' && onCancel) {
         e.preventDefault();
@@ -337,7 +359,7 @@ export function CommerceOrderForm({
     return () => window.removeEventListener('keydown', handleKeyDown);
   });
 
-  const isSaving = isCreating || isUpdating;
+  const isSaving = isCreating || isUpdating || isConfirming;
 
   return (
     <div className="flex flex-col gap-4">
@@ -485,28 +507,61 @@ export function CommerceOrderForm({
           <div />
         )}
 
-        <Button
-          type="button"
-          variant="default"
-          size="sm"
-          onClick={handleSaveOrder}
-          disabled={isLocked || isSaving || items.length === 0}
-          className="text-xs h-8 font-semibold gap-1.5 shadow-xs cursor-pointer ml-auto"
-        >
-          {isSaving ? (
-            t('commerce.form.saving')
+        <div className="flex items-center gap-2">
+          {initialOrder && initialOrder.status !== OrderStatus.DRAFT ? (
+            <Button
+              type="button"
+              variant="default"
+              size="sm"
+              onClick={() => handleSaveOrder(false)}
+              disabled={isLocked || isSaving || items.length === 0}
+              className="text-xs h-8 font-semibold gap-1.5 shadow-xs cursor-pointer"
+            >
+              {isSaving ? (
+                t('commerce.form.saving')
+              ) : (
+                <>
+                  <CheckCircle2 className="size-3.5" />
+                  {t('commerce.form.saveUpdate')}
+                </>
+              )}
+            </Button>
           ) : (
             <>
-              <CheckCircle2 className="size-3.5" />
-              {initialOrder
-                ? t('commerce.form.saveUpdate')
-                : paymentMethod === PaymentMethod.VIETQR
-                  ? t('commerce.form.createAndSendQr')
-                  : t('commerce.form.createOrder')}
-              <span className="text-[9px] opacity-75 font-normal ml-0.5">(Ctrl+↵)</span>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => handleSaveOrder(false)}
+                disabled={isLocked || isSaving || items.length === 0}
+                className="text-xs h-8 cursor-pointer"
+              >
+                {isSaving ? t('commerce.form.saving') : t('commerce.form.saveDraft')}
+              </Button>
+
+              <Button
+                type="button"
+                variant="default"
+                size="sm"
+                onClick={() => handleSaveOrder(true)}
+                disabled={isLocked || isSaving || items.length === 0}
+                className="text-xs h-8 font-semibold gap-1.5 shadow-xs cursor-pointer"
+              >
+                {isSaving ? (
+                  t('commerce.form.confirming')
+                ) : (
+                  <>
+                    <CheckCircle2 className="size-3.5" />
+                    {paymentMethod === PaymentMethod.VIETQR
+                      ? t('commerce.form.createAndSendQr')
+                      : t('commerce.form.confirmAndReserve')}
+                    <span className="text-[9px] opacity-75 font-normal ml-0.5">(Ctrl+↵)</span>
+                  </>
+                )}
+              </Button>
             </>
           )}
-        </Button>
+        </div>
       </div>
 
       {initialOrder && (

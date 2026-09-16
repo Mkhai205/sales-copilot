@@ -1,4 +1,4 @@
-﻿import {
+import {
   Controller,
   Get,
   HttpCode,
@@ -12,11 +12,13 @@ import { ApiBearerAuth, ApiHeader, ApiOperation, ApiResponse, ApiTags } from '@n
 import {
   WorkspaceRole,
   cancelOrderSchema,
+  completeOrderSchema,
   createOrderSchema,
   updateOrderSchema,
   listOrdersQuerySchema,
   manualPayOrderSchema,
   type CancelOrderDto,
+  type CompleteOrderDto,
   type CreateOrderDto,
   type UpdateOrderDto,
   type ListOrdersQueryOutput,
@@ -161,5 +163,22 @@ export class OrdersController {
     @ZodBody(cancelOrderSchema) dto: CancelOrderDto,
   ): Promise<OrderResponseDto> {
     return this.ordersService.cancelOrder(context.workspaceId, id, dto, user?.userId);
+  }
+
+  @Post(':id/complete')
+  @HttpCode(HttpStatus.OK)
+  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.AGENT)
+  @ApiOperation({ summary: 'Complete order, mark delivered, and reconcile COD' })
+  @ApiResponse({ status: 200, description: 'Order completed successfully' })
+  @ApiResponse({ status: 400, description: 'Order not in completable status' })
+  @ApiResponse({ status: 404, description: 'Order not found' })
+  @ApiResponse({ status: 409, description: 'Order already completed' })
+  async completeOrder(
+    @CurrentWorkspace() context: WorkspaceContext,
+    @CurrentUser() user: JwtUserPayload,
+    @Param('id') id: string,
+    @ZodBody(completeOrderSchema) dto: CompleteOrderDto,
+  ): Promise<OrderResponseDto> {
+    return this.ordersService.completeOrder(context.workspaceId, id, dto, user?.userId);
   }
 }

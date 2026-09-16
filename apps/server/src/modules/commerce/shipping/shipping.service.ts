@@ -1,4 +1,4 @@
-﻿import {
+import {
   BadRequestException,
   ConflictException,
   Injectable,
@@ -12,6 +12,7 @@ import {
   FulfillmentStatus,
   InventoryTransactionType,
   OrderStatus,
+  PaymentMethod,
   PaymentStatus,
   type CarrierQuoteResultDto,
   type CarrierRateQuoteDto,
@@ -479,6 +480,10 @@ export class ShippingService {
       createdById: order.createdById,
       status: order.status,
       paymentStatus: order.paymentStatus,
+      paymentMethod:
+        ((order.metadata as Record<string, any>)?.paymentMethod as PaymentMethod) ||
+        (order.paymentTransactions?.[0]?.paymentMethod as PaymentMethod) ||
+        PaymentMethod.COD,
       fulfillmentStatus: order.fulfillmentStatus,
       subtotal: Number(order.subtotal),
       discountAmount: Number(order.discountAmount),

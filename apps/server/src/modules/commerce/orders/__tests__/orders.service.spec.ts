@@ -381,6 +381,13 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
             return 1;
           }
           return 0;
+        } else if (queryText.includes('"stockQuantity" = "stockQuantity" +')) {
+          const [qty, varId, wsId] = values;
+          const variant = variantsDb.get(varId);
+          if (!variant || variant.workspaceId !== wsId) return 0;
+          variant.stockQuantity += qty;
+          variantsDb.set(varId, variant);
+          return 1;
         } else if (queryText.includes('GREATEST(0, "reservedQuantity" -')) {
           const [qty, varId, wsId] = values;
           const variant = variantsDb.get(varId);
@@ -465,6 +472,38 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
       // Verify domain event emitted
       assert.strictEqual(emittedEvents.length, 1);
       assert.strictEqual(emittedEvents[0].event, DomainEvent.ORDER_CREATED);
+    });
+
+    it('should create order and confirm immediately with atomic stock reservation (1-click confirm)', async () => {
+      const order = await service.createOrder(
+        ws1,
+        {
+          contactId: contact1,
+          conversationId: conversation1,
+          confirmImmediately: true,
+          items: [
+            {
+              productId: prod1,
+              variantId: varA,
+              quantity: 3,
+              unitPrice: 350000,
+            },
+          ],
+        },
+        userId,
+      );
+
+      assert.strictEqual(order.status, OrderStatus.CONFIRMED);
+      assert.ok(order.confirmedAt);
+
+      // Verify reserved quantity increased to 3
+      const v = variantsDb.get(varA);
+      assert.strictEqual(v.stockQuantity, 10);
+      assert.strictEqual(v.reservedQuantity, 3);
+
+      // Verify domain events: both ORDER_CREATED and ORDER_CONFIRMED emitted
+      assert.ok(emittedEvents.some(e => e.event === DomainEvent.ORDER_CREATED));
+      assert.ok(emittedEvents.some(e => e.event === DomainEvent.ORDER_CONFIRMED));
     });
 
     it('should reject order creation with invalid contact in workspace', async () => {
@@ -642,6 +681,185 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
         },
         (err: any) => {
           assert.strictEqual(err.response?.code, 'ORDER_NOT_CANCELLABLE');
+          return true;
+        },
+      );
+    });
+
+    it('should restock physical inventory and record RETURN_RESTOCK ledger when cancelling a PAID order', async () => {
+      const order = await service.createOrder(ws1, {
+        contactId: contact1,
+        items: [{ productId: prod1, variantId: varA, quantity: 2, unitPrice: 350000 }],
+      });
+
+      await service.confirmOrder(ws1, order.id, userId);
+      await service.payOrder(
+        ws1,
+        order.id,
+        {
+          paymentMethod: PaymentMethod.CASH,
+          amount: 700000,
+        },
+        userId,
+      );
+
+      // Stock was decremented from 10 to 8 upon payment commit
+      assert.strictEqual(variantsDb.get(varA).stockQuantity, 8);
+      assert.strictEqual(variantsDb.get(varA).reservedQuantity, 0);
+
+      emittedEvents = [];
+
+      // Cancel PAID order (Customer returns goods / refund)
+      const cancelled = await service.cancelOrder(
+        ws1,
+        order.id,
+        { cancelReason: 'Khách đổi ý trả hàng hoàn tiền' },
+        userId,
+      );
+
+      assert.strictEqual(cancelled.status, OrderStatus.CANCELLED);
+
+      // Physical stock must be restored to 10
+      assert.strictEqual(variantsDb.get(varA).stockQuantity, 10);
+      assert.strictEqual(variantsDb.get(varA).reservedQuantity, 0);
+
+      // Sổ cái kho ghi nhận RETURN_RESTOCK
+      const restockTx = Array.from(inventoryTransactionsDb.values()).find(
+        tx => tx.type === InventoryTransactionType.RETURN_RESTOCK,
+      );
+      assert.ok(restockTx);
+      assert.strictEqual(restockTx.quantity, 2);
+      assert.strictEqual(restockTx.previousStock, 8);
+      assert.strictEqual(restockTx.newStock, 10);
+
+      // Events: INVENTORY_UPDATED & ORDER_CANCELLED
+      assert.ok(emittedEvents.some(e => e.event === DomainEvent.INVENTORY_UPDATED));
+      assert.ok(emittedEvents.some(e => e.event === DomainEvent.ORDER_CANCELLED));
+    });
+
+    it('should reject cancelling a COMPLETED order with ORDER_ALREADY_COMPLETED', async () => {
+      const order = await service.createOrder(ws1, {
+        contactId: contact1,
+        items: [{ productId: prod1, variantId: varA, quantity: 1, unitPrice: 350000 }],
+      });
+      await service.confirmOrder(ws1, order.id, userId);
+      await service.completeOrder(ws1, order.id, { notes: 'Delivered' }, userId);
+
+      await assert.rejects(
+        async () => {
+          await service.cancelOrder(ws1, order.id, { cancelReason: 'Want to cancel completed' });
+        },
+        (err: any) => {
+          assert.strictEqual(err.response?.code, 'ORDER_ALREADY_COMPLETED');
+          return true;
+        },
+      );
+    });
+  });
+
+  describe('completeOrder', () => {
+    it('should complete a PAID order and mark fulfillmentStatus DELIVERED', async () => {
+      const order = await service.createOrder(ws1, {
+        contactId: contact1,
+        items: [{ productId: prod1, variantId: varA, quantity: 1, unitPrice: 350000 }],
+      });
+      await service.confirmOrder(ws1, order.id, userId);
+      await service.payOrder(
+        ws1,
+        order.id,
+        { paymentMethod: PaymentMethod.CASH, amount: 350000 },
+        userId,
+      );
+
+      emittedEvents = [];
+
+      const completed = await service.completeOrder(
+        ws1,
+        order.id,
+        { notes: 'Giao hàng thành công' },
+        userId,
+      );
+
+      assert.strictEqual(completed.status, OrderStatus.COMPLETED);
+      assert.strictEqual(completed.fulfillmentStatus, 'DELIVERED');
+      assert.ok(completed.completedAt);
+
+      const event = emittedEvents.find(e => e.event === DomainEvent.ORDER_COMPLETED);
+      assert.ok(event);
+      assert.strictEqual(event.payload.orderId, order.id);
+    });
+
+    it('should auto-reconcile COD and commit stock when completing a CONFIRMED unpaid order', async () => {
+      const order = await service.createOrder(ws1, {
+        contactId: contact1,
+        items: [{ productId: prod1, variantId: varA, quantity: 2, unitPrice: 350000 }],
+      });
+      await service.confirmOrder(ws1, order.id, userId);
+
+      // Reserved stock is 2, physical stock is 10, paidAmount is 0
+      assert.strictEqual(variantsDb.get(varA).reservedQuantity, 2);
+      assert.strictEqual(order.paidAmount, 0);
+
+      emittedEvents = [];
+
+      const completed = await service.completeOrder(
+        ws1,
+        order.id,
+        { notes: 'COD thu đủ tiền' },
+        userId,
+      );
+
+      assert.strictEqual(completed.status, OrderStatus.COMPLETED);
+      assert.strictEqual(completed.fulfillmentStatus, 'DELIVERED');
+      assert.strictEqual(completed.paymentStatus, PaymentStatus.PAID);
+      assert.strictEqual(completed.paidAmount, 700000);
+
+      // Stock was committed: physical stock reduced to 8, reserved reduced to 0
+      assert.strictEqual(variantsDb.get(varA).stockQuantity, 8);
+      assert.strictEqual(variantsDb.get(varA).reservedQuantity, 0);
+
+      // Payment transaction created with COD method
+      const codTx = Array.from(paymentTransactionsDb.values()).find(
+        tx => tx.orderId === order.id && tx.paymentMethod === PaymentMethod.COD,
+      );
+      assert.ok(codTx);
+      assert.strictEqual(codTx.amount, 700000);
+
+      const event = emittedEvents.find(e => e.event === DomainEvent.ORDER_COMPLETED);
+      assert.ok(event);
+    });
+
+    it('should reject completing a DRAFT order', async () => {
+      const order = await service.createOrder(ws1, {
+        contactId: contact1,
+        items: [{ productId: prod1, variantId: varA, quantity: 1, unitPrice: 350000 }],
+      });
+
+      await assert.rejects(
+        async () => {
+          await service.completeOrder(ws1, order.id);
+        },
+        (err: any) => {
+          assert.strictEqual(err.response?.code, 'INVALID_STATUS_FOR_COMPLETION');
+          return true;
+        },
+      );
+    });
+
+    it('should reject completing an already COMPLETED order', async () => {
+      const order = await service.createOrder(ws1, {
+        contactId: contact1,
+        items: [{ productId: prod1, variantId: varA, quantity: 1, unitPrice: 350000 }],
+      });
+      await service.confirmOrder(ws1, order.id, userId);
+      await service.completeOrder(ws1, order.id, undefined, userId);
+
+      await assert.rejects(
+        async () => {
+          await service.completeOrder(ws1, order.id, undefined, userId);
+        },
+        (err: any) => {
+          assert.strictEqual(err.response?.code, 'ORDER_ALREADY_COMPLETED');
           return true;
         },
       );

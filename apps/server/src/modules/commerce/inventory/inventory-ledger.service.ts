@@ -75,6 +75,25 @@ export interface ReleaseStockParams {
   tx?: Prisma.TransactionClient;
 }
 
+export interface RestockStockItem {
+  variantId: string;
+  quantity: number;
+  productName?: string;
+  variantName?: string;
+  sku?: string;
+}
+
+export interface RestockStockParams {
+  workspaceId: string;
+  items: RestockStockItem[];
+  orderId?: string;
+  orderDisplayId?: number;
+  orderNumber?: string;
+  userId?: string;
+  reason?: string;
+  tx?: Prisma.TransactionClient;
+}
+
 export interface AdjustStockParams {
   workspaceId: string;
   variantId: string;
@@ -518,6 +537,111 @@ export class InventoryLedgerService {
           previousReserved,
           newReserved,
           availableStock: variantBefore.stockQuantity - newReserved,
+          reason: txReason,
+        });
+      }
+
+      this.dispatchInventoryEvents(events);
+      return transactions;
+    };
+
+    if (params.tx) {
+      return execute(params.tx);
+    }
+    return this.prisma.runInTransaction(async ctx => execute(ctx.tx));
+  }
+
+  /**
+   * Atomically restocks physical inventory upon order cancellation (for PAID / SHIPPING orders).
+   * - Increments stockQuantity safely.
+   * - Writes immutable InventoryTransaction (RETURN_RESTOCK) ledger records.
+   */
+  async restockStock(params: {
+    workspaceId: string;
+    items: RestockStockItem[];
+    orderId?: string;
+    orderDisplayId?: number;
+    orderNumber?: string;
+    userId?: string;
+    reason?: string;
+    tx?: Prisma.TransactionClient;
+  }): Promise<InventoryTransactionResponseDto[]> {
+    const execute = async (
+      client: Prisma.TransactionClient,
+    ): Promise<InventoryTransactionResponseDto[]> => {
+      const { workspaceId, items, orderId, orderDisplayId, orderNumber, userId, reason } = params;
+
+      if (!items || items.length === 0) {
+        return [];
+      }
+
+      // 1. Deterministic Variant Sorting (Deadlock Prevention 40P01)
+      const sortedItems = [...items].sort((a, b) => a.variantId.localeCompare(b.variantId));
+      const transactions: InventoryTransactionResponseDto[] = [];
+      const events: any[] = [];
+
+      for (const item of sortedItems) {
+        if (item.quantity <= 0) continue;
+
+        const variantBefore = await client.productVariant.findFirst({
+          where: { id: item.variantId, workspaceId },
+        });
+
+        if (!variantBefore) {
+          throw new NotFoundException({
+            code: 'VARIANT_NOT_FOUND',
+            message: `Product variant '${item.variantId}' not found in workspace`,
+            details: { variantId: item.variantId, workspaceId },
+          });
+        }
+
+        // Atomically increment stockQuantity
+        await client.$executeRaw`
+          UPDATE "product_variants"
+          SET 
+            "stockQuantity" = "stockQuantity" + ${item.quantity},
+            "updatedAt" = NOW()
+          WHERE "id" = ${item.variantId}
+            AND "workspaceId" = ${workspaceId}
+        `;
+
+        const previousStock = variantBefore.stockQuantity;
+        const newStock = previousStock + item.quantity;
+
+        const txReason =
+          reason ||
+          (orderDisplayId
+            ? `Restocked physical inventory for cancelled Order #${orderDisplayId} (${orderNumber || ''})`
+            : 'Restock physical inventory');
+
+        const invTx = await client.inventoryTransaction.create({
+          data: {
+            workspaceId,
+            variantId: item.variantId,
+            orderId: orderId || null,
+            type: InventoryTransactionType.RETURN_RESTOCK,
+            quantity: item.quantity,
+            previousStock,
+            newStock,
+            previousReserved: variantBefore.reservedQuantity,
+            newReserved: variantBefore.reservedQuantity,
+            reason: txReason,
+            performedByUserId: userId || null,
+          },
+        });
+
+        transactions.push(this.formatTransaction(invTx));
+
+        events.push({
+          workspaceId,
+          variantId: item.variantId,
+          sku: variantBefore.sku,
+          previousStock,
+          newStock,
+          stockQuantity: newStock,
+          previousReserved: variantBefore.reservedQuantity,
+          newReserved: variantBefore.reservedQuantity,
+          availableStock: newStock - variantBefore.reservedQuantity,
           reason: txReason,
         });
       }

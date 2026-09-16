@@ -18,6 +18,7 @@ import {
   PaymentStatus,
   PaymentTransactionStatus,
   type CancelOrderDto,
+  type CompleteOrderDto,
   type CreateOrderDto,
   type ListOrdersQueryOutput,
   type ManualPayOrderDto,
@@ -158,6 +159,7 @@ export class OrdersService {
           createdById: userId || null,
           status: OrderStatus.DRAFT,
           paymentStatus: PaymentStatus.UNPAID,
+          paymentMethod: dto.paymentMethod || PaymentMethod.COD,
           fulfillmentStatus: FulfillmentStatus.UNFULFILLED,
           subtotal,
           discountAmount,
@@ -197,7 +199,37 @@ export class OrdersService {
         data: { orderNumber: finalOrderNumber },
       });
 
-      // 7. Create ShippingAddress if provided
+      // 7. If confirmImmediately is requested, atomically reserve stock and set status to CONFIRMED
+      if (dto.confirmImmediately) {
+        const reserveItems = lineItemSnapshots.map(li => ({
+          variantId: li.variantId,
+          quantity: li.quantity,
+          productName: li.productName,
+          variantName: li.variantName,
+          sku: li.sku,
+        }));
+
+        await this.inventoryLedgerService.reserveStock({
+          workspaceId,
+          items: reserveItems,
+          orderId: createdOrder.id,
+          orderDisplayId: createdOrder.displayId,
+          orderNumber: finalOrderNumber,
+          userId,
+          reason: `Atomic reservation on 1-click order #${createdOrder.displayId} (${finalOrderNumber})`,
+          tx,
+        });
+
+        await tx.order.updateMany({
+          where: { id: createdOrder.id, workspaceId },
+          data: {
+            status: OrderStatus.CONFIRMED,
+            confirmedAt: new Date(),
+          },
+        });
+      }
+
+      // 8. Create ShippingAddress if provided
       if (dto.shippingAddress) {
         await tx.shippingAddress.create({
           data: {
@@ -221,7 +253,7 @@ export class OrdersService {
         });
       }
 
-      // 8. Fetch complete order with relations
+      // 9. Fetch complete order with relations
       const order = await tx.order.findFirstOrThrow({
         where: { id: createdOrder.id, workspaceId },
         include: {
@@ -233,7 +265,7 @@ export class OrdersService {
 
       const formatted = this.formatOrder(order);
 
-      // 9. Post-commit hook: Realtime broadcast
+      // 10. Post-commit hook: Realtime broadcast
       ctx.addPostCommitHook(() => {
         this.eventEmitter.emit(DomainEvent.ORDER_CREATED, {
           workspaceId,
@@ -243,6 +275,19 @@ export class OrdersService {
           conversationId: order.conversationId,
           order: formatted,
         });
+
+        if (dto.confirmImmediately) {
+          this.eventEmitter.emit(DomainEvent.ORDER_CONFIRMED, {
+            workspaceId,
+            orderId: order.id,
+            orderNumber: order.orderNumber,
+            displayId: order.displayId,
+            conversationId: order.conversationId,
+            confirmedAt: order.confirmedAt || new Date(),
+            reservedItems: dto.items.map(i => ({ variantId: i.variantId, quantity: i.quantity })),
+            order: formatted,
+          });
+        }
       });
 
       return formatted;
@@ -434,6 +479,7 @@ export class OrdersService {
       if (dto.discountReason !== undefined) updateData.discountReason = dto.discountReason;
       if (dto.customerNotes !== undefined) updateData.customerNotes = dto.customerNotes;
       if (dto.internalNotes !== undefined) updateData.internalNotes = dto.internalNotes;
+      if (dto.paymentMethod !== undefined) updateData.paymentMethod = dto.paymentMethod;
       if (dto.metadata !== undefined) updateData.metadata = dto.metadata;
 
       await tx.order.updateMany({
@@ -768,14 +814,30 @@ export class OrdersService {
         });
       }
 
-      if (order.status !== OrderStatus.DRAFT && order.status !== OrderStatus.CONFIRMED) {
+      if (order.status === OrderStatus.COMPLETED) {
+        throw new ConflictException({
+          code: 'ORDER_ALREADY_COMPLETED',
+          message: 'Không thể hủy đơn hàng đã hoàn tất (COMPLETED).',
+          details: { orderId, status: order.status },
+        });
+      }
+
+      if (
+        order.status !== OrderStatus.DRAFT &&
+        order.status !== OrderStatus.CONFIRMED &&
+        order.status !== OrderStatus.PAID &&
+        order.status !== OrderStatus.SHIPPING
+      ) {
         throw new ConflictException({
           code: 'ORDER_NOT_CANCELLABLE',
-          message: `Cannot cancel order in status '${order.status}'. Only DRAFT and CONFIRMED orders can be cancelled.`,
+          message: `Cannot cancel order in status '${order.status}'. Only DRAFT, CONFIRMED, PAID, and SHIPPING orders can be cancelled.`,
+          details: { orderId, status: order.status },
         });
       }
 
       const wasConfirmed = order.status === OrderStatus.CONFIRMED;
+      const wasPaidOrShipped =
+        order.status === OrderStatus.PAID || order.status === OrderStatus.SHIPPING;
 
       // 2. Transition order status to CANCELLED
       await tx.order.updateMany({
@@ -787,7 +849,7 @@ export class OrdersService {
         },
       });
 
-      // 3. If order was CONFIRMED, release reserved inventory via InventoryLedgerService
+      // 3. Release or restock inventory
       if (wasConfirmed && order.items && order.items.length > 0) {
         const releaseItems = order.items.map(item => ({
           variantId: item.variantId,
@@ -803,6 +865,25 @@ export class OrdersService {
           orderNumber: order.orderNumber,
           userId,
           reason: `Released reservation on order cancellation #${order.displayId}: ${dto.cancelReason}`,
+          tx,
+        });
+      } else if (wasPaidOrShipped && order.items && order.items.length > 0) {
+        const restockItems = order.items.map(item => ({
+          variantId: item.variantId,
+          quantity: item.quantity,
+          productName: item.productName,
+          variantName: item.variantName,
+          sku: item.sku,
+        }));
+
+        await this.inventoryLedgerService.restockStock({
+          workspaceId,
+          items: restockItems,
+          orderId: order.id,
+          orderDisplayId: order.displayId,
+          orderNumber: order.orderNumber,
+          userId,
+          reason: `Restocked physical inventory on cancellation of ${order.status} order #${order.displayId}: ${dto.cancelReason}`,
           tx,
         });
       }
@@ -823,7 +904,166 @@ export class OrdersService {
           displayId: updated.displayId,
           conversationId: updated.conversationId,
           cancelReason: dto.cancelReason,
-          releasedStock: wasConfirmed,
+          releasedStock: wasConfirmed || wasPaidOrShipped,
+          order: formatted,
+        });
+      });
+
+      return formatted;
+    });
+  }
+
+  /**
+   * Completes an order (transitions from PAID, SHIPPING, or CONFIRMED to COMPLETED).
+   * Automatically marks fulfillmentStatus as DELIVERED.
+   * If the order is COD and not fully paid, automatically creates a MANUAL payment transaction,
+   * setting paymentStatus to PAID and paidAmount to totalAmount.
+   */
+  async completeOrder(
+    workspaceId: string,
+    orderId: string,
+    dto?: CompleteOrderDto,
+    userId?: string,
+  ): Promise<OrderResponseDto> {
+    return this.prisma.runInTransaction(async ctx => {
+      const tx = ctx.tx;
+
+      const order = await tx.order.findFirst({
+        where: { id: orderId, workspaceId },
+        include: { items: true, shippingAddress: true, paymentTransactions: true },
+      });
+
+      if (!order) {
+        throw new NotFoundException({
+          code: 'ORDER_NOT_FOUND',
+          message: 'Order not found in this workspace',
+          details: { orderId, workspaceId },
+        });
+      }
+
+      if (order.status === OrderStatus.COMPLETED) {
+        throw new ConflictException({
+          code: 'ORDER_ALREADY_COMPLETED',
+          message: 'Đơn hàng đã được hoàn tất trước đó.',
+          details: { orderId, status: order.status },
+        });
+      }
+
+      if (
+        order.status !== OrderStatus.SHIPPING &&
+        order.status !== OrderStatus.PAID &&
+        order.status !== OrderStatus.CONFIRMED
+      ) {
+        throw new BadRequestException({
+          code: 'INVALID_STATUS_FOR_COMPLETION',
+          message: `Cannot complete order in status '${order.status}'. Only SHIPPING, PAID, or CONFIRMED orders can be completed.`,
+          details: { currentStatus: order.status },
+        });
+      }
+
+      const orderTotal = Number(order.totalAmount);
+      const paidAmount = Number(order.paidAmount);
+      const isFullyPaid = paidAmount >= orderTotal;
+
+      // If order was CONFIRMED (not yet committed stock), commit stock now
+      if (order.status === OrderStatus.CONFIRMED) {
+        const commitItems = (order.items || []).map(item => ({
+          variantId: item.variantId,
+          quantity: item.quantity,
+          productName: item.productName,
+          variantName: item.variantName,
+          sku: item.sku,
+        }));
+
+        await this.inventoryLedgerService.commitStock({
+          workspaceId,
+          items: commitItems,
+          orderId: order.id,
+          orderDisplayId: order.displayId,
+          orderNumber: order.orderNumber,
+          isPreviouslyReserved: true,
+          userId,
+          reason: `Commit stock upon order completion #${order.displayId}`,
+          tx,
+        });
+      }
+
+      let finalPaidAmount = paidAmount;
+      let finalPaymentStatus = order.paymentStatus;
+      let finalPaidAt = order.paidAt;
+
+      // Auto-reconcile COD if not fully paid
+      if (!isFullyPaid) {
+        const remaining = Math.max(0, orderTotal - paidAmount);
+        const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+        const autoMethod =
+          ((order.metadata as Record<string, any>)?.paymentMethod as PaymentMethod) ||
+          (order.paymentTransactions?.[0]?.paymentMethod as PaymentMethod) ||
+          PaymentMethod.COD;
+        const prefix = autoMethod === PaymentMethod.COD ? 'COD' : autoMethod;
+        const idempotencyKey = `cod:${order.id}:${Date.now()}:${Math.random().toString(36).slice(2, 7)}`;
+
+        await tx.paymentTransaction.create({
+          data: {
+            workspaceId,
+            orderId: order.id,
+            paymentMethod: autoMethod,
+            gateway: PaymentGateway.MANUAL,
+            amount: remaining,
+            currency: 'VND',
+            status: PaymentTransactionStatus.SUCCESS,
+            transactionCode: `${prefix}-${dateStr}`,
+            transferContent:
+              dto?.notes || `Thu hộ ${prefix} khi giao thành công đơn #${order.displayId}`,
+            idempotencyKey,
+            paidAt: new Date(),
+          },
+        });
+
+        finalPaidAmount = orderTotal;
+        finalPaymentStatus = PaymentStatus.PAID;
+        finalPaidAt = new Date();
+      }
+
+      const completedAt = new Date();
+
+      await tx.order.updateMany({
+        where: { id: order.id, workspaceId },
+        data: {
+          status: OrderStatus.COMPLETED,
+          fulfillmentStatus: FulfillmentStatus.DELIVERED,
+          completedAt,
+          paidAmount: finalPaidAmount,
+          paymentStatus: finalPaymentStatus,
+          paidAt: finalPaidAt,
+          internalNotes: dto?.notes
+            ? order.internalNotes
+              ? `${order.internalNotes}\n${dto.notes}`
+              : dto.notes
+            : order.internalNotes,
+        },
+      });
+
+      const updated = await tx.order.findFirstOrThrow({
+        where: { id: order.id, workspaceId },
+        include: {
+          items: true,
+          shippingAddress: true,
+          paymentTransactions: true,
+          inventoryTransactions: true,
+        },
+      });
+
+      const formatted = this.formatOrder(updated);
+
+      ctx.addPostCommitHook(() => {
+        this.eventEmitter.emit(DomainEvent.ORDER_COMPLETED, {
+          workspaceId,
+          orderId: updated.id,
+          orderNumber: updated.orderNumber,
+          displayId: updated.displayId,
+          conversationId: updated.conversationId,
+          completedAt,
           order: formatted,
         });
       });
@@ -1066,6 +1306,10 @@ export class OrdersService {
       createdById: order.createdById,
       status: order.status,
       paymentStatus: order.paymentStatus,
+      paymentMethod:
+        ((order.metadata as Record<string, any>)?.paymentMethod as PaymentMethod) ||
+        (order.paymentTransactions?.[0]?.paymentMethod as PaymentMethod) ||
+        PaymentMethod.COD,
       fulfillmentStatus: order.fulfillmentStatus,
       subtotal: Number(order.subtotal),
       discountAmount: Number(order.discountAmount),

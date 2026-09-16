@@ -8,6 +8,7 @@ import {
   type OrderPartiallyPaidEventPayload,
   type OrderConfirmedEventPayload,
   type OrderCancelledEventPayload,
+  type OrderCompletedEventPayload,
   type OrderShippedEventPayload,
   type CommerceDraftSuggestedEventPayload,
 } from '@sales-copilot/shared-contracts';
@@ -151,6 +152,20 @@ export function useCommerceRealtimeSync({
       }
     },
   );
+
+  // 7. Order Completed
+  useSocketEvent<OrderCompletedEventPayload>(WsServerEvent.ORDER_COMPLETED, data => {
+    if (!data) return;
+    invalidateCommerceQueries(data.orderId);
+
+    if (
+      (!workspaceId || data.workspaceId === workspaceId) &&
+      (!conversationId || !data.conversationId || data.conversationId === conversationId)
+    ) {
+      const orderRef = data.displayId ? `#${data.displayId}` : data.orderNumber;
+      toast.success(t('commerce.toasts.orderCompletedSuccess', { ref: orderRef }));
+    }
+  });
 }
 
 export const usePosRealtimeSync = useCommerceRealtimeSync;

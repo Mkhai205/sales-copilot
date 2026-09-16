@@ -1,10 +1,12 @@
 'use client';
 
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import type {
   CancelOrderDto,
+  CompleteOrderDto,
   CreateOrderDto,
+  ListOrdersQueryDto,
   ManualPayOrderDto,
   UpdateOrderDto,
 } from '@sales-copilot/shared-contracts';
@@ -117,6 +119,23 @@ export function useCommerceOrders(workspaceId?: string) {
     },
   });
 
+  const completeOrderMutation = useMutation({
+    mutationFn: async ({ orderId, dto }: { orderId: string; dto?: CompleteOrderDto }) => {
+      if (!workspaceId) throw new Error('Workspace ID is required');
+      const res = await commerceApi.completeOrder(workspaceId, orderId, dto);
+      return res.data;
+    },
+    onSuccess: data => {
+      toast.success(t('commerce.toasts.orderCompletedSuccess', { ref: data.displayId }));
+      invalidateOrderQueries(data.id);
+    },
+    onError: (err: any) => {
+      toast.error(t('commerce.toasts.orderCompletedError'), {
+        description: err?.error?.message || err?.message || t('commerce.toasts.pleaseRetry'),
+      });
+    },
+  });
+
   return {
     createOrder: createOrderMutation.mutateAsync,
     isCreating: createOrderMutation.isPending,
@@ -132,7 +151,36 @@ export function useCommerceOrders(workspaceId?: string) {
 
     cancelOrder: cancelOrderMutation.mutateAsync,
     isCancelling: cancelOrderMutation.isPending,
+
+    completeOrder: completeOrderMutation.mutateAsync,
+    isCompleting: completeOrderMutation.isPending,
   };
 }
 
 export const usePosOrders = useCommerceOrders;
+
+export function useCommerceOrdersList(workspaceId?: string, query?: ListOrdersQueryDto) {
+  return useQuery({
+    queryKey: ['commerce-orders', workspaceId, query],
+    queryFn: async () => {
+      if (!workspaceId) throw new Error('Workspace ID is required');
+      const res = await commerceApi.listOrders(workspaceId, query);
+      return res.data;
+    },
+    enabled: Boolean(workspaceId),
+    staleTime: 30 * 1000,
+  });
+}
+
+export function useCommerceOrder(workspaceId?: string, orderId?: string) {
+  return useQuery({
+    queryKey: ['commerce-order', workspaceId, orderId],
+    queryFn: async () => {
+      if (!workspaceId || !orderId) throw new Error('Workspace ID and Order ID are required');
+      const res = await commerceApi.getOrder(workspaceId, orderId);
+      return res.data;
+    },
+    enabled: Boolean(workspaceId && orderId),
+    staleTime: 30 * 1000,
+  });
+}

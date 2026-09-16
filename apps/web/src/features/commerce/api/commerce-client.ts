@@ -4,6 +4,7 @@ import type {
   CancelOrderDto,
   CarrierQuoteResultDto,
   CarrierRateQuoteDto,
+  CompleteOrderDto,
   CreateOrderDto,
   CreateProductDto,
   DispatchOrderDto,
@@ -12,7 +13,7 @@ import type {
   InventoryVariantItemDto,
   ListInventoryTransactionsQueryDto,
   ListInventoryVariantsQueryDto,
-  ListOrdersQueryOutput,
+  ListOrdersQueryDto,
   ListProductsQueryDto,
   ManualPayOrderDto,
   OrderResponseDto,
@@ -128,7 +129,7 @@ export const commerceApi = {
     ),
 
   // Orders
-  listOrders: (workspaceId: string, query?: ListOrdersQueryOutput) =>
+  listOrders: (workspaceId: string, query?: ListOrdersQueryDto) =>
     fetchApi<{ items: OrderResponseDto[]; meta: PaginationMeta }>(
       `/workspaces/${workspaceId}/orders${buildQueryString(query)}`,
       {
@@ -173,6 +174,13 @@ export const commerceApi = {
       method: 'POST',
       headers: workspaceHeaders(workspaceId),
       body: JSON.stringify(dto),
+    }),
+
+  completeOrder: (workspaceId: string, id: string, dto?: CompleteOrderDto) =>
+    fetchApi<OrderResponseDto>(`/workspaces/${workspaceId}/orders/${id}/complete`, {
+      method: 'POST',
+      headers: workspaceHeaders(workspaceId),
+      body: dto ? JSON.stringify(dto) : undefined,
     }),
 
   generateVietQr: (workspaceId: string, orderId: string, dto?: GenerateVietQrDto) =>
