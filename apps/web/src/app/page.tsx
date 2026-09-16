@@ -1,7 +1,7 @@
-import { cookies } from 'next/headers';
+﻿import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { API_BASE } from '@/lib/api/client';
-import type { UserWorkspaceDto } from '@/lib/api/types';
+import type { UserWorkspaceDto } from '@sales-copilot/shared-contracts';
 
 export const dynamic = 'force-dynamic';
 

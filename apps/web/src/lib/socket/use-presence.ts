@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import * as React from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -9,8 +9,8 @@ import {
   type PresenceEntry,
   type PresenceUpdatedEvent,
 } from '@sales-copilot/shared-contracts';
-import { presenceApi } from '@/lib/api/presence';
-import { useWorkspaces } from '@/features/workspaces/use-workspaces';
+import { presenceApi } from '@/features/conversations';
+import { useWorkspaces } from '@/features/identity';
 import { useSocket, useSocketEvent } from './use-socket';
 
 export interface UseWorkspacePresenceOptions {

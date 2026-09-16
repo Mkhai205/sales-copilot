@@ -1,9 +1,9 @@
-'use client';
+﻿'use client';
 
 import * as React from 'react';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { useCommerceRealtimeSync, AiAutofillBanner } from '@/features/commerce';
-import { useWorkspaces } from '@/features/workspaces/use-workspaces';
+import { useWorkspaces } from '@/features/identity';
 
 import type { PosDraftSuggestedEventPayload } from '@sales-copilot/shared-contracts';
 import { ConversationEmptyState } from './conversation-empty-state';

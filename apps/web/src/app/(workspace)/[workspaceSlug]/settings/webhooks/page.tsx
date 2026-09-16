@@ -3,7 +3,8 @@
 import * as React from 'react';
 import { useParams } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
-import { SettingsGuard, WebhooksList, useSettingsRbac } from '@/features/settings';
+import { WebhooksList } from '@/features/automation';
+import { SettingsGuard, useSettingsRbac } from '@/features/identity';
 
 export default function WebhooksSettingsPage() {
   const params = useParams();

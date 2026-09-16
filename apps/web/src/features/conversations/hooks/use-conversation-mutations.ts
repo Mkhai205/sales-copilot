@@ -1,18 +1,16 @@
-'use client';
+﻿'use client';
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { conversationsApi } from '@/lib/api/conversations';
-import { contactsApi } from '@/lib/api/contacts';
-import { useWorkspaces } from '@/features/workspaces/use-workspaces';
+import { conversationsApi } from '../api/conversations';
+import { useWorkspaces } from '@/features/identity';
 import type {
   AssignConversationDto,
   AssignLabelsDto,
   ConversationResponseDto,
-  UpdateContactDto,
   UpdateConversationPriorityDto,
   UpdateConversationStatusDto,
-} from '@/lib/api/types';
+} from '@sales-copilot/shared-contracts';
 
 interface MutationHookOptions {
   workspaceSlug?: string;
@@ -199,40 +197,4 @@ export function useRemoveConversationLabel(
   });
 }
 
-export function useUpdateContact(
-  contactId: string,
-  options: MutationHookOptions & { conversationId?: string } = {},
-) {
-  const queryClient = useQueryClient();
-  const { data: workspaces } = useWorkspaces();
-  const resolvedWorkspaceId =
-    options.workspaceId ||
-    (options.workspaceSlug
-      ? workspaces?.find(w => w.slug === options.workspaceSlug)?.id
-      : undefined) ||
-    workspaces?.[0]?.id;
-
-  return useMutation({
-    mutationFn: async (dto: UpdateContactDto) => {
-      if (!resolvedWorkspaceId) {
-        throw new Error('Workspace ID is required');
-      }
-      const res = await contactsApi.update(resolvedWorkspaceId, contactId, dto);
-      return res.data;
-    },
-    onSuccess: () => {
-      if (options.conversationId) {
-        queryClient.invalidateQueries({
-          queryKey: ['conversation', resolvedWorkspaceId, options.conversationId],
-        });
-      }
-      queryClient.invalidateQueries({
-        queryKey: ['conversations', resolvedWorkspaceId],
-      });
-      toast.success('Contact info updated');
-    },
-    onError: (err: Error) => {
-      toast.error(err.message || 'Failed to update contact info');
-    },
-  });
-}
+export { useUpdateContact } from '@/features/contacts';

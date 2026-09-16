@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import type { Socket } from 'socket.io-client';
-import { refreshSessionAction } from '@/features/auth/actions';
+import { refreshSessionAction } from '@/features/auth';
 import { disconnectSocketClient, getSocketClient } from './socket-client';
 import type {
   RealtimeConnectedData,

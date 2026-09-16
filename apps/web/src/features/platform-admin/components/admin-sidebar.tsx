@@ -29,7 +29,7 @@ import {
 } from '@/components/ui/sidebar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { useCurrentUser } from '@/features/auth/use-current-user';
+import { useCurrentUser } from '@/features/auth';
 import { useI18n } from '@/lib/i18n';
 import { isNavItemActive } from './navigation-helpers';
 

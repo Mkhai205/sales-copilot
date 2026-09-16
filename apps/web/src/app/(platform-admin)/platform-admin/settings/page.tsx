@@ -4,10 +4,12 @@ import * as React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { FeatureFlagsTab } from '@/features/platform-admin/settings/components/feature-flags-tab';
-import { AiDefaultsTab } from '@/features/platform-admin/settings/components/ai-defaults-tab';
-import { QuotasTab } from '@/features/platform-admin/settings/components/quotas-tab';
-import { AnnouncementsTab } from '@/features/platform-admin/settings/components/announcements-tab';
+import {
+  FeatureFlagsTab,
+  AiDefaultsTab,
+  QuotasTab,
+  AnnouncementsTab,
+} from '@/features/platform-admin';
 import { Flag, Sparkles, Scale, Megaphone, RefreshCw, Zap } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';

@@ -10,7 +10,7 @@ import type {
   ToggleWorkspaceStatusDto,
   UpdateWorkspacePlanDto,
 } from '@sales-copilot/shared-contracts';
-import { platformAdminApi } from '@/lib/api/platform-admin';
+import { platformAdminApi } from '../../api/platform-admin';
 
 export interface UsePlatformWorkspacesResult {
   items: PlatformWorkspaceListItemDto[];

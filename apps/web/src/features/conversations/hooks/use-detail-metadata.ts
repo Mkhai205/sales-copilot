@@ -1,12 +1,10 @@
-'use client';
+﻿'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { workspacesApi } from '@/lib/api/workspaces';
-import { teamsApi } from '@/lib/api/teams';
-import { labelsApi } from '@/lib/api/labels';
-import { contactsApi } from '@/lib/api/contacts';
-import { useWorkspaces } from '@/features/workspaces/use-workspaces';
-import type { ChannelIdentityDto, LabelDto, TeamDto, WorkspaceMemberDto } from '@/lib/api/types';
+import { workspacesApi, teamsApi } from '@/features/identity';
+import { labelsApi } from '@/features/omnichannel';
+import { useWorkspaces } from '@/features/identity';
+import type { LabelDto, TeamDto, WorkspaceMemberDto } from '@sales-copilot/shared-contracts';
 
 interface MetadataOptions {
   workspaceSlug?: string;
@@ -98,31 +96,4 @@ export function useWorkspaceLabels(options: MetadataOptions = {}) {
   };
 }
 
-export function useContactIdentities(contactId?: string | null, options: MetadataOptions = {}) {
-  const { data: workspaces } = useWorkspaces();
-  const resolvedWorkspaceId =
-    options.workspaceId ||
-    (options.workspaceSlug
-      ? workspaces?.find(w => w.slug === options.workspaceSlug)?.id
-      : undefined) ||
-    workspaces?.[0]?.id;
-
-  const isEnabled = Boolean((options.enabled ?? true) && resolvedWorkspaceId && contactId);
-
-  const query = useQuery({
-    queryKey: ['contact-identities', resolvedWorkspaceId, contactId],
-    queryFn: async () => {
-      if (!resolvedWorkspaceId || !contactId)
-        throw new Error('Workspace ID and Contact ID are required');
-      const res = await contactsApi.listIdentities(resolvedWorkspaceId, contactId);
-      return res.data;
-    },
-    enabled: isEnabled,
-    staleTime: 30_000,
-  });
-
-  return {
-    ...query,
-    identities: (query.data || []) as ChannelIdentityDto[],
-  };
-}
+export { useContactIdentities, type UseContactIdentitiesOptions } from '@/features/contacts';

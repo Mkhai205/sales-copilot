@@ -1,10 +1,10 @@
-import type { InfiniteData } from '@tanstack/react-query';
+﻿import type { InfiniteData } from '@tanstack/react-query';
 import type { ApiResponse } from '../api/client';
 import {
   DeliveryStatus,
   type ConversationResponseDto,
   type MessageResponseDto,
-} from '../api/types';
+} from '@sales-copilot/shared-contracts';
 
 /**
  * Appends a new message to the paginated message query cache.

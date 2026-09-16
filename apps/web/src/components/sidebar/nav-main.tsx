@@ -26,7 +26,7 @@ import {
 } from 'lucide-react';
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { useSettingsRbac } from '@/features/settings';
+import { useSettingsRbac } from '@/features/identity';
 import {
   SidebarGroup,
   SidebarGroupLabel,

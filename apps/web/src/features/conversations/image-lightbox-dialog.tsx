@@ -1,11 +1,11 @@
-'use client';
+﻿'use client';
 
 import * as React from 'react';
 import { Dialog as DialogPrimitive } from 'radix-ui';
 import { X, ChevronLeft, ChevronRight, Download, Copy, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import type { AttachmentDto } from '@/lib/api/types';
+import type { AttachmentDto } from '@sales-copilot/shared-contracts';
 import { useI18n } from '@/lib/i18n';
 
 interface ImageLightboxDialogProps {

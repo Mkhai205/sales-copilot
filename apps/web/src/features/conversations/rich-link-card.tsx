@@ -1,9 +1,9 @@
-'use client';
+﻿'use client';
 
 import * as React from 'react';
 import { ExternalLink, Globe } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { LinkPreviewData } from '@/lib/api/types';
+import type { LinkPreviewData } from '@sales-copilot/shared-contracts';
 
 interface RichLinkCardProps {
   preview: LinkPreviewData;

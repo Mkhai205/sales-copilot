@@ -26,7 +26,13 @@ import {
 import { toast } from 'sonner';
 import { ChannelType } from '@sales-copilot/shared-contracts';
 
-import { InboxVerticalStepper, SettingsGuard, useSettingsRbac } from '@/features/settings';
+import {
+  InboxVerticalStepper,
+  facebookApi,
+  inboxesApi,
+  type FacebookPageInfo,
+} from '@/features/omnichannel';
+import { SettingsGuard, useSettingsRbac, useWorkspaceMembers } from '@/features/identity';
 import { InboxAvatar } from '@/components/inbox-avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -38,9 +44,6 @@ import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { facebookApi, type FacebookPageInfo } from '@/lib/api/facebook';
-import { inboxesApi } from '@/lib/api/inboxes';
-import { useWorkspaceMembers } from '@/features/settings/hooks/use-workspace-members';
 
 export default function NewInboxPage() {
   return (

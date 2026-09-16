@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { WsServerEvent, type TypingEventPayload } from '@sales-copilot/shared-contracts';
-import { useCurrentUser } from '@/features/auth/use-current-user';
+import { useCurrentUser } from '@/features/auth';
 import { useSocketEvent } from '@/lib/socket';
 
 export interface TypingUserEntry {

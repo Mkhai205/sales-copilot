@@ -1,17 +1,17 @@
-'use client';
+﻿'use client';
 
 import { useParams, useRouter } from 'next/navigation';
 import { useQueryClient, type InfiniteData } from '@tanstack/react-query';
 import { WsServerEvent } from '@sales-copilot/shared-contracts';
 import type { ApiResponse } from '@/lib/api/client';
-import { conversationsApi } from '@/lib/api/conversations';
+import { conversationsApi } from '@/features/conversations';
 import {
   MessageType,
   SenderType,
   type ContactDto,
   type ConversationResponseDto,
   type MessageResponseDto,
-} from '@/lib/api/types';
+} from '@sales-copilot/shared-contracts';
 import { useBrowserNotifications } from '@/lib/hooks';
 import {
   bubbleConversationToTop,

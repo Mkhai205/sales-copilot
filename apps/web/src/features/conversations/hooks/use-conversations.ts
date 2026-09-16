@@ -1,10 +1,13 @@
-'use client';
+﻿'use client';
 
 import * as React from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { conversationsApi } from '@/lib/api/conversations';
-import type { ConversationListQueryDto, ConversationResponseDto } from '@/lib/api/types';
-import { useWorkspaces } from '@/features/workspaces/use-workspaces';
+import { conversationsApi } from '../api/conversations';
+import type {
+  ConversationListQueryDto,
+  ConversationResponseDto,
+} from '@sales-copilot/shared-contracts';
+import { useWorkspaces } from '@/features/identity';
 
 interface UseConversationsOptions {
   workspaceSlug?: string;

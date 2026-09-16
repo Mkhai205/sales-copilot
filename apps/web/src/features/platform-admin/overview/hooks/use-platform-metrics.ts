@@ -2,7 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import type { PlatformMetricsOverviewDto } from '@sales-copilot/shared-contracts';
-import { platformAdminApi } from '@/lib/api/platform-admin';
+import { platformAdminApi } from '../../api/platform-admin';
 
 export function usePlatformMetricsOverview() {
   return useQuery<PlatformMetricsOverviewDto>({

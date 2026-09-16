@@ -1,11 +1,11 @@
-'use client';
+﻿'use client';
 
 import * as React from 'react';
 import { User, ShoppingBag } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { useWorkspaces } from '@/features/workspaces/use-workspaces';
+import { useWorkspaces } from '@/features/identity';
 import { CommerceDetailTab } from '@/features/commerce';
 
 import type {
@@ -14,10 +14,9 @@ import type {
 } from '@sales-copilot/shared-contracts';
 import { useI18n } from '@/lib/i18n';
 import { useConversation } from './hooks/use-conversation';
-import { ContactInfo } from './contact-info';
+import { ContactInfo, ContactIdentities } from '@/features/contacts';
 import { ConversationActions } from './conversation-actions';
 import { LabelManager } from './label-manager';
-import { ContactIdentities } from './contact-identities';
 
 interface DetailPanelProps {
   conversationId?: string;

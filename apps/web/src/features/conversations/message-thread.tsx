@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import * as React from 'react';
 import { format, parseISO, isValid } from 'date-fns';
@@ -51,22 +51,22 @@ import {
   type ConversationResponseDto,
   type LinkPreviewData,
   type MessageResponseDto,
-} from '@/lib/api/types';
+} from '@sales-copilot/shared-contracts';
 import { fetchApi, workspaceHeaders, type ApiResponse } from '@/lib/api/client';
-import { conversationsApi } from '@/lib/api/conversations';
+import { conversationsApi } from './api/conversations';
 import { updateConversationInList } from '@/lib/socket/cache-helpers';
 import { useConversation } from './hooks/use-conversation';
 import { useMessages } from './hooks/use-messages';
-import { useWorkspaces } from '@/features/workspaces/use-workspaces';
+import { useWorkspaces } from '@/features/identity';
 import { MessageThreadHeader } from './message-thread-header';
 import { TypingIndicator } from './typing-indicator';
-import { ChatComposer } from '@/features/composer';
+import { ChatComposer } from './composer';
 import { useConversationRoom } from '@/lib/socket';
 import { RichLinkCard } from './rich-link-card';
 import { ImageLightboxDialog } from './image-lightbox-dialog';
 import { MessageImageGrid, isImageAttachment } from './message-image-grid';
 import { MessageActionsToolbar } from './message-actions-toolbar';
-import { VietQrChatCard } from '@/features/commerce/components/vietqr-chat-card';
+import { VietQrChatCard } from '@/features/commerce';
 import { useI18n } from '@/lib/i18n';
 
 import type { VietQrResponseDto } from '@sales-copilot/shared-contracts';

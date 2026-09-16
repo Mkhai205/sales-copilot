@@ -67,7 +67,7 @@ export const vi = {
     switchWorkspace: 'Chuyển không gian làm việc',
     conversationsGroup: 'Hội thoại',
     inbox: 'Hộp thư đến',
-    posGroup: 'Bán hàng & Commerce',
+    posGroup: 'Quản lý bán hàng',
     orders: 'Đơn hàng',
     products: 'Sản phẩm',
     inventory: 'Tồn kho',

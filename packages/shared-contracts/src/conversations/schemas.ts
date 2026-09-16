@@ -190,3 +190,11 @@ export interface ConversationLabelsUpdatedEvent {
   labels: LabelDto[];
   conversation: ConversationResponseDto;
 }
+
+export interface LinkPreviewData {
+  url: string;
+  title?: string;
+  description?: string;
+  image?: string;
+  siteName?: string;
+}

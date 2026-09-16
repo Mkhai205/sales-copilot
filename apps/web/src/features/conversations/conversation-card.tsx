@@ -1,11 +1,15 @@
-'use client';
+﻿'use client';
 
 import * as React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
 import { CornerUpLeft, Lock, Flame, Flag, UserX, ImageIcon } from 'lucide-react';
-import { type ConversationResponseDto, Priority, SenderType } from '@/lib/api/types';
+import {
+  type ConversationResponseDto,
+  Priority,
+  SenderType,
+} from '@sales-copilot/shared-contracts';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { getChannelMeta } from '@/lib/channels';

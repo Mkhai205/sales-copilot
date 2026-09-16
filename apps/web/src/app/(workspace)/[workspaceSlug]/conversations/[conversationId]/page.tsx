@@ -1,4 +1,4 @@
-import { ConversationLayout } from '@/features/conversations/conversation-layout';
+import { ConversationLayout } from '@/features/conversations';
 
 interface ConversationDetailPageProps {
   params: Promise<{

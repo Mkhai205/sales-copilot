@@ -5,14 +5,14 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { ScrollText, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { usePlatformAuditLogs } from '@/features/platform-admin/audit-logs/hooks/use-platform-audit-logs';
-import { AuditLogFilterToolbar } from '@/features/platform-admin/audit-logs/components/audit-log-filter-toolbar';
-import { AuditLogsTable } from '@/features/platform-admin/audit-logs/components/audit-logs-table';
-import { AuditLogDiffDialog } from '@/features/platform-admin/audit-logs/components/audit-log-diff-dialog';
 import {
+  usePlatformAuditLogs,
+  AuditLogFilterToolbar,
+  AuditLogsTable,
+  AuditLogDiffDialog,
   isValidDateFilterRange,
   normalizeDateFilterRange,
-} from '@/features/platform-admin/audit-logs/utils/audit-log-helpers';
+} from '@/features/platform-admin';
 import type {
   PlatformAuditAction,
   PlatformAuditLogDto,

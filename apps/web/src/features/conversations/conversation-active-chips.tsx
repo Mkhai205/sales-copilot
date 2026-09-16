@@ -1,12 +1,11 @@
-'use client';
+﻿'use client';
 
 import * as React from 'react';
 import { X, RotateCcw } from 'lucide-react';
-import { ConversationStatus, Priority } from '@/lib/api/types';
+import { ConversationStatus, Priority } from '@sales-copilot/shared-contracts';
 import type { ConversationFilters, StatusFilter } from './hooks/use-conversation-filters';
-import { useInboxes } from '@/features/settings/hooks/use-inboxes';
-import { useLabels } from '@/features/settings/hooks/use-labels';
-import { useWorkspaceMembers } from '@/features/settings/hooks/use-workspace-members';
+import { useInboxes, useLabels } from '@/features/omnichannel';
+import { useWorkspaceMembers } from '@/features/identity';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/lib/i18n';

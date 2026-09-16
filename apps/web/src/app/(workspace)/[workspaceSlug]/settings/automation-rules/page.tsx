@@ -3,7 +3,8 @@
 import * as React from 'react';
 import { useParams } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
-import { SettingsGuard, AutomationRulesList, useSettingsRbac } from '@/features/settings';
+import { AutomationRulesList } from '@/features/automation';
+import { SettingsGuard, useSettingsRbac } from '@/features/identity';
 
 export default function AutomationRulesSettingsPage() {
   const params = useParams();

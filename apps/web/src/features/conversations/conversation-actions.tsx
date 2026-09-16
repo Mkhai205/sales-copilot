@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import * as React from 'react';
 import {
@@ -10,7 +10,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { PresenceIndicator } from '@/components/ui/presence-indicator';
-import { ConversationStatus, Priority, type ConversationResponseDto } from '@/lib/api/types';
+import {
+  ConversationStatus,
+  Priority,
+  type ConversationResponseDto,
+} from '@sales-copilot/shared-contracts';
 import {
   useAssignConversation,
   useUpdateConversationPriority,

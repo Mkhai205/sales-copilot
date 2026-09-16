@@ -3,12 +3,14 @@
 import * as React from 'react';
 import { Building2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { usePlatformWorkspaces } from '@/features/platform-admin/workspaces/hooks/use-platform-workspaces';
-import { WorkspaceFilterToolbar } from '@/features/platform-admin/workspaces/components/workspace-filter-toolbar';
-import { WorkspacesTable } from '@/features/platform-admin/workspaces/components/workspaces-table';
-import { WorkspaceDetailModal } from '@/features/platform-admin/workspaces/components/workspace-detail-modal';
-import { UpdatePlanDialog } from '@/features/platform-admin/workspaces/components/update-plan-dialog';
-import { SuspendWorkspaceDialog } from '@/features/platform-admin/workspaces/components/suspend-workspace-dialog';
+import {
+  usePlatformWorkspaces,
+  WorkspaceFilterToolbar,
+  WorkspacesTable,
+  WorkspaceDetailModal,
+  UpdatePlanDialog,
+  SuspendWorkspaceDialog,
+} from '@/features/platform-admin';
 import type {
   BillingPlanType,
   PlatformWorkspaceListItemDto,

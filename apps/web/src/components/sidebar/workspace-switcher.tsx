@@ -1,11 +1,11 @@
-'use client';
+﻿'use client';
 
 import * as React from 'react';
 import Image from 'next/image';
 import { Check, ChevronsUpDown, Plus, Settings } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useWorkspaces, CreateWorkspaceDialog } from '@/features/workspaces';
+import { useWorkspaces, CreateWorkspaceDialog } from '@/features/identity';
 
 import {
   DropdownMenu,

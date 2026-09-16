@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import * as React from 'react';
 import { Plus, X, Tag } from 'lucide-react';
@@ -13,7 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import type { ConversationResponseDto } from '@/lib/api/types';
+import type { ConversationResponseDto } from '@sales-copilot/shared-contracts';
 import {
   useAssignConversationLabels,
   useRemoveConversationLabel,

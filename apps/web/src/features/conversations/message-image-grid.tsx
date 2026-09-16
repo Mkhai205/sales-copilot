@@ -1,8 +1,8 @@
-'use client';
+﻿'use client';
 
 import * as React from 'react';
 import { cn } from '@/lib/utils';
-import { FileType, type AttachmentDto } from '@/lib/api/types';
+import { FileType, type AttachmentDto } from '@sales-copilot/shared-contracts';
 
 interface MessageImageGridProps {
   attachments: AttachmentDto[];

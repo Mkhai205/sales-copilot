@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import * as React from 'react';
 import Image from 'next/image';
@@ -7,7 +7,11 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { ConversationStatus, Priority, type ConversationResponseDto } from '@/lib/api/types';
+import {
+  ConversationStatus,
+  Priority,
+  type ConversationResponseDto,
+} from '@sales-copilot/shared-contracts';
 import { getChannelMeta } from '@/lib/channels';
 
 import { useI18n } from '@/lib/i18n';

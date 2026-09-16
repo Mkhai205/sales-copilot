@@ -1,11 +1,11 @@
-'use client';
+﻿'use client';
 
 import * as React from 'react';
 import { Copy, Download, Maximize2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import type { MessageResponseDto } from '@/lib/api/types';
+import type { MessageResponseDto } from '@sales-copilot/shared-contracts';
 import { isImageAttachment } from './message-image-grid';
 import { useI18n } from '@/lib/i18n';
 

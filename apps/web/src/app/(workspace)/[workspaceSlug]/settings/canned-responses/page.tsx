@@ -3,7 +3,8 @@
 import * as React from 'react';
 import { useParams } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
-import { SettingsGuard, CannedResponsesList, useSettingsRbac } from '@/features/settings';
+import { CannedResponsesList } from '@/features/omnichannel';
+import { SettingsGuard, useSettingsRbac } from '@/features/identity';
 
 export default function CannedResponsesSettingsPage() {
   const params = useParams();

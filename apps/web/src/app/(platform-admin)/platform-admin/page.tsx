@@ -5,9 +5,11 @@ import { RefreshCw, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { usePlatformMetricsOverview } from '@/features/platform-admin/overview/hooks/use-platform-metrics';
-import { KpiMetricCards } from '@/features/platform-admin/overview/components/kpi-metric-cards';
-import { QuickShortcuts } from '@/features/platform-admin/overview/components/quick-shortcuts';
+import {
+  usePlatformMetricsOverview,
+  KpiMetricCards,
+  QuickShortcuts,
+} from '@/features/platform-admin';
 import { useI18n } from '@/lib/i18n';
 
 export default function AdminOverviewPage() {

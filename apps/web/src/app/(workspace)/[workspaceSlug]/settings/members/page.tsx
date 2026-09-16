@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { useParams } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
-import { SettingsGuard, MembersTable, useSettingsRbac } from '@/features/settings';
+import { SettingsGuard, MembersTable, useSettingsRbac } from '@/features/identity';
 
 export default function MembersSettingsPage() {
   const params = useParams();

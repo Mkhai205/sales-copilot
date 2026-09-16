@@ -8,7 +8,7 @@ import {
   WorkspaceSettingsForm,
   useSettingsRbac,
   useCurrentWorkspaceDetails,
-} from '@/features/settings';
+} from '@/features/identity';
 
 export default function GeneralSettingsPage() {
   const params = useParams();

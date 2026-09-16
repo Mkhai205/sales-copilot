@@ -3,7 +3,8 @@
 import * as React from 'react';
 import { useParams } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
-import { SettingsGuard, LabelsList, useSettingsRbac } from '@/features/settings';
+import { LabelsList } from '@/features/omnichannel';
+import { SettingsGuard, useSettingsRbac } from '@/features/identity';
 
 export default function LabelsSettingsPage() {
   const params = useParams();

@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useSettingsRbac } from '@/features/settings';
+import { useSettingsRbac } from '@/features/identity';
 
 export default function SettingsIndexPage() {
   const params = useParams();

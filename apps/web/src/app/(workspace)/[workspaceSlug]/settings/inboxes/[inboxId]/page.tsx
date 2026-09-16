@@ -3,13 +3,8 @@
 import * as React from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, ShieldAlert } from 'lucide-react';
-import {
-  InboxDetailLayout,
-  SettingsGuard,
-  useInbox,
-  useInboxes,
-  useSettingsRbac,
-} from '@/features/settings';
+import { InboxDetailLayout, useInbox, useInboxes } from '@/features/omnichannel';
+import { SettingsGuard, useSettingsRbac } from '@/features/identity';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';

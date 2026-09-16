@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import * as React from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
@@ -7,8 +7,8 @@ import {
   Priority,
   type ConversationListQueryDto,
   type ConversationSortBy,
-} from '@/lib/api/types';
-import { useCurrentUser } from '@/features/auth/use-current-user';
+} from '@sales-copilot/shared-contracts';
+import { useCurrentUser } from '@/features/auth';
 
 export type AssignmentFilter = 'mine' | 'unassigned' | 'all';
 export type StatusFilter = ConversationStatus | 'ALL';

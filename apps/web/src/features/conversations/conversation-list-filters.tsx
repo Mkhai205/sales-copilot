@@ -1,10 +1,10 @@
-'use client';
+﻿'use client';
 
 import * as React from 'react';
 import { useConversationFilters, type AssignmentFilter } from './hooks/use-conversation-filters';
 import { useConversationCounts } from './hooks/use-conversation-counts';
 import { cn } from '@/lib/utils';
-import { ConversationStatus } from '@/lib/api/types';
+import { ConversationStatus } from '@sales-copilot/shared-contracts';
 
 import { useI18n } from '@/lib/i18n';
 

@@ -14,10 +14,12 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
-import { usePlatformWorkspaceDetail } from '@/features/platform-admin/workspaces/hooks/use-platform-workspaces';
-import { WorkspaceDetailView } from '@/features/platform-admin/workspaces/components/workspace-detail-view';
-import { UpdatePlanDialog } from '@/features/platform-admin/workspaces/components/update-plan-dialog';
-import { SuspendWorkspaceDialog } from '@/features/platform-admin/workspaces/components/suspend-workspace-dialog';
+import {
+  usePlatformWorkspaceDetail,
+  WorkspaceDetailView,
+  UpdatePlanDialog,
+  SuspendWorkspaceDialog,
+} from '@/features/platform-admin';
 import type { PlatformWorkspaceListItemDto } from '@sales-copilot/shared-contracts';
 import { useI18n } from '@/lib/i18n';
 

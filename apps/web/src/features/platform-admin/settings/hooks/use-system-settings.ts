@@ -7,7 +7,7 @@ import type {
   SystemSettingItemDto,
   UpdateSystemSettingDto,
 } from '@sales-copilot/shared-contracts';
-import { platformAdminApi } from '@/lib/api/platform-admin';
+import { platformAdminApi } from '../../api/platform-admin';
 
 export function useSystemSettings(category?: SystemSettingCategory | string) {
   return useQuery<SystemSettingItemDto[]>({
