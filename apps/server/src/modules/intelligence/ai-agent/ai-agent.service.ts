@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { generateText, stepCountIs } from 'ai';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
@@ -7,6 +7,7 @@ import { PrismaService } from '../../../infrastructure/database';
 import { AI_AGENT_CONSTANTS, HumanTakeoverAbortError } from './ai-agent.constants';
 import { AiContextBuilder } from './ai-context.builder';
 import { buildAgentTools } from './tools';
+import { CommerceToolRegistry } from './tools/commerce-tool.registry';
 
 @Injectable()
 export class AiAgentService {
@@ -16,6 +17,7 @@ export class AiAgentService {
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
     private readonly contextBuilder: AiContextBuilder,
+    @Optional() private readonly toolRegistry?: CommerceToolRegistry,
   ) {}
 
   /**
@@ -66,16 +68,25 @@ export class AiAgentService {
       inboxId,
     );
 
-    // 3. Build tools scoped by workspaceId closure (never expose workspaceId to LLM params)
-    const tools = buildAgentTools({
-      workspaceId,
-      conversationId,
-      policy: aiPolicy as unknown as Record<string, unknown>,
-    });
-
-    // 4. Initialize Google provider with resolved key
+    // 3. Initialize Google provider with resolved key
     const google = createGoogleGenerativeAI({ apiKey });
     const model = google(AI_AGENT_CONSTANTS.DEFAULT_MODEL);
+
+    // 4. Build tools scoped by workspaceId closure (never expose workspaceId to LLM params)
+    const tools = this.toolRegistry
+      ? this.toolRegistry.buildTools(
+          {
+            workspaceId,
+            conversationId,
+            policy: aiPolicy,
+          },
+          model,
+        )
+      : buildAgentTools({
+          workspaceId,
+          conversationId,
+          policy: aiPolicy,
+        });
 
     this.logger.debug(
       `Executing AI agent loop for conversation '${conversationId}' in workspace '${workspaceId}'`,
@@ -110,34 +121,16 @@ export class AiAgentService {
       },
     });
 
-    let textResponse = result.text?.trim();
-
-    // 6. Handle edge case: Max steps reached without textual answer
-    if (!textResponse && result.steps.length >= AI_AGENT_CONSTANTS.DEFAULT_MAX_STEPS) {
-      this.logger.warn(
-        `Agent loop reached maxSteps (${AI_AGENT_CONSTANTS.DEFAULT_MAX_STEPS}) for conversation '${conversationId}'. Auto-pausing AI and sending fallback.`,
-      );
-
-      // Auto-pause conversation so human staff can step in
-      await this.prisma.getClient().conversation.updateMany({
-        where: { id: conversationId, workspaceId },
-        data: { isAiPaused: true },
-      });
-
-      textResponse = AI_AGENT_CONSTANTS.FALLBACK_MESSAGE;
-    }
-
-    const usage = {
-      promptTokens: (result.usage as any)?.inputTokens ?? (result.usage as any)?.promptTokens ?? 0,
-      completionTokens:
-        (result.usage as any)?.outputTokens ?? (result.usage as any)?.completionTokens ?? 0,
-      totalTokens: result.usage?.totalTokens ?? 0,
-    };
+    const rawUsage = result.usage as any;
 
     return {
-      text: textResponse || AI_AGENT_CONSTANTS.FALLBACK_MESSAGE,
+      text: result.text,
       stepsCount: result.steps.length,
-      usage,
+      usage: {
+        promptTokens: rawUsage?.inputTokens ?? rawUsage?.promptTokens ?? 0,
+        completionTokens: rawUsage?.outputTokens ?? rawUsage?.completionTokens ?? 0,
+        totalTokens: rawUsage?.totalTokens ?? 0,
+      },
     };
   }
 }
