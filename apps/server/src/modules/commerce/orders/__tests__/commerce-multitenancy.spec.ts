@@ -136,6 +136,7 @@ describe('In-Chat Commerce Multi-Tenancy Isolation Suite', () => {
       mockPrismaService,
       mockEventEmitter as any,
       inventoryLedgerService,
+      {} as any,
     );
 
     shippingService = new ShippingService(

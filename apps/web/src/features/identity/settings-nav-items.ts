@@ -1,5 +1,15 @@
 import type { LucideIcon } from 'lucide-react';
-import { FileText, Inbox, Settings, Tag, UserCheck, Users2, Webhook, Zap } from 'lucide-react';
+import {
+  FileText,
+  Inbox,
+  Settings,
+  Tag,
+  UserCheck,
+  Users2,
+  Webhook,
+  Zap,
+  Landmark,
+} from 'lucide-react';
 import { WorkspaceRole } from '@sales-copilot/shared-contracts';
 
 export type SettingsCategory = 'workspace' | 'operations';
@@ -111,6 +121,16 @@ export const SETTINGS_NAV_ITEMS: SettingsNavItem[] = [
     description: 'Outbound HTTP event webhooks and delivery attempt audit logs',
     icon: Webhook,
     segment: 'webhooks',
+    category: 'operations',
+    allowedRoles: [WorkspaceRole.OWNER, WorkspaceRole.ADMIN],
+    adminOnly: true,
+  },
+  {
+    id: 'bank',
+    title: 'Bank & Payment',
+    description: 'Configure bank account for VietQR and SePay webhook',
+    icon: Landmark,
+    segment: 'bank',
     category: 'operations',
     allowedRoles: [WorkspaceRole.OWNER, WorkspaceRole.ADMIN],
     adminOnly: true,

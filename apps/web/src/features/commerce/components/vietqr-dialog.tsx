@@ -3,6 +3,7 @@
 import * as React from 'react';
 import type { VietQrResponseDto } from '@sales-copilot/shared-contracts';
 import { toast } from 'sonner';
+import { QRCodeCanvas } from 'qrcode.react';
 import {
   Copy,
   Check,
@@ -65,11 +66,21 @@ export function VietQrDialog({ open, onOpenChange, qrData }: VietQrDialogProps) 
 
         {/* QR Code Container */}
         <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-white border border-border/80 shadow-inner max-w-[260px] mx-auto w-full">
-          <img
-            src={qrData.qrUrl}
-            alt={t('commerce.vietQr.orderQrAlt', { id: qrData.displayId })}
-            className="w-full h-auto aspect-square object-contain rounded-lg"
-          />
+          {qrData.qrPayload ? (
+            <QRCodeCanvas
+              value={qrData.qrPayload}
+              size={220}
+              level="M"
+              includeMargin={false}
+              className="w-full h-auto aspect-square object-contain rounded-lg"
+            />
+          ) : (
+            <img
+              src={qrData.qrUrl}
+              alt={t('commerce.vietQr.orderQrAlt', { id: qrData.displayId })}
+              className="w-full h-auto aspect-square object-contain rounded-lg"
+            />
+          )}
           <span className="text-[10px] text-gray-500 font-medium mt-1">NAPAS 247 • VIETQR</span>
         </div>
 

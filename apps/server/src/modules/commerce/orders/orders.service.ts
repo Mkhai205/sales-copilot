@@ -6,6 +6,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { VietQR } = require('vietqr');
 import {
   CarrierProvider,
   DiscountType,
@@ -27,9 +29,13 @@ import {
   type ShippingAddressResponseDto,
   type ShippingLabelDataDto,
   type UpdateOrderDto,
+  type VietQrResponseDto,
 } from '@sales-copilot/shared-contracts';
 import { PrismaService } from '../../../infrastructure/database/prisma.service';
 import { InventoryLedgerService } from '../inventory/inventory-ledger.service';
+
+import { MessagesService } from '../../omnichannel/messages/messages.service';
+import { SenderType, MessageType, MessageContentType } from '@sales-copilot/shared-contracts';
 
 @Injectable()
 export class OrdersService {
@@ -39,6 +45,7 @@ export class OrdersService {
     private readonly prisma: PrismaService,
     private readonly eventEmitter: EventEmitter2,
     private readonly inventoryLedgerService: InventoryLedgerService,
+    private readonly messagesService: MessagesService,
   ) {}
 
   /**
@@ -1331,6 +1338,125 @@ export class OrdersService {
       inventoryTransactions: order.inventoryTransactions || [],
       createdAt: order.createdAt,
       updatedAt: order.updatedAt,
+    };
+  }
+
+  /**
+   * Generates VietQR code for the order using workspace's bank configuration.
+   */
+  async getVietQr(
+    workspaceId: string,
+    orderId: string,
+    sendToChat: boolean = false,
+    userId?: string,
+  ): Promise<VietQrResponseDto> {
+    const client = this.prisma.getClient();
+    const order = await client.order.findFirst({
+      where: { id: orderId, workspaceId },
+    });
+
+    if (!order) {
+      throw new NotFoundException({
+        code: 'ORDER_NOT_FOUND',
+        message: 'Order not found in this workspace',
+      });
+    }
+
+    const workspace = await client.workspace.findUnique({
+      where: { id: workspaceId },
+    });
+
+    const settings = workspace?.settings as Record<string, any> | null;
+    const bankConfig = settings?.bankConfig;
+
+    if (
+      !bankConfig ||
+      (!bankConfig.bankId && !bankConfig.bankBin) ||
+      (!bankConfig.accountNo && !bankConfig.accountNumber) ||
+      !bankConfig.accountName
+    ) {
+      throw new NotFoundException({
+        code: 'BANK_CONFIG_NOT_FOUND',
+        message: 'Bank configuration has not been set up for this workspace',
+      });
+    }
+
+    const amountToPay = Math.max(0, Number(order.totalAmount) - Number(order.paidAmount));
+
+    if (amountToPay <= 0) {
+      throw new BadRequestException({
+        code: 'ORDER_FULLY_PAID',
+        message: 'Order is already fully paid',
+      });
+    }
+
+    const content = `DH${order.displayId}`;
+
+    const v = new VietQR({ clientID: 'dummy', apiKey: 'dummy' });
+    const bankId = bankConfig.bankId || bankConfig.bankBin;
+    const accountNo = bankConfig.accountNo || bankConfig.accountNumber;
+
+    const response = await v.genQRCodeBase64({
+      bank: bankId,
+      accountName: bankConfig.accountName,
+      accountNumber: accountNo,
+      amount: amountToPay.toString(),
+      memo: content,
+      template: 'compact',
+    });
+
+    if (response?.code !== '00') {
+      throw new BadRequestException({
+        code: 'VIETQR_GENERATION_FAILED',
+        message: 'Failed to generate VietQR: ' + response?.desc,
+      });
+    }
+
+    if (sendToChat && order.conversationId) {
+      try {
+        const qrDataURL = response.data.qrDataURL;
+        const base64Data = qrDataURL.replace(/^data:image\/png;base64,/, '');
+        const buffer = Buffer.from(base64Data, 'base64');
+        const file = {
+          originalname: `vietqr-DH${order.displayId}.png`,
+          mimetype: 'image/png',
+          size: buffer.length,
+          buffer,
+        };
+
+        await this.messagesService.create(
+          workspaceId,
+          order.conversationId,
+          {
+            content: `Mã thanh toán VietQR cho đơn hàng DH${order.displayId}`,
+            senderType: userId ? SenderType.USER : SenderType.SYSTEM,
+            senderId: userId || null,
+            messageType: MessageType.OUTGOING,
+            contentType: MessageContentType.FILE,
+          },
+          [file],
+          undefined,
+          userId,
+        );
+      } catch (error) {
+        this.logger.error(`Failed to send VietQR to chat for order ${order.id}:`, error);
+      }
+    }
+
+    return {
+      qrPayload: response.data.qrCode || response.data.qrDataURL,
+      qrUrl: response.data.qrDataURL,
+      bankBin: bankId,
+      bankCode: bankConfig.bankCode || bankId,
+      bankName: bankConfig.bankName || 'Ngân hàng',
+      accountNumber: accountNo,
+      accountName: bankConfig.accountName,
+      amount: amountToPay,
+      memo: content,
+      displayId: order.displayId,
+      orderId: order.id,
+      orderNumber: order.orderNumber,
+      transferContent: content,
     };
   }
 }

@@ -54,4 +54,16 @@ export const workspacesApi = {
       method: 'DELETE',
       headers: workspaceHeaders(workspaceId),
     }),
+
+  getBankConfig: (workspaceId: string) =>
+    fetchApi<any>('/workspaces/current/bank', {
+      headers: workspaceHeaders(workspaceId),
+    }),
+
+  updateBankConfig: (workspaceId: string, dto: any) =>
+    fetchApi<any>('/workspaces/current/bank', {
+      method: 'PATCH',
+      headers: workspaceHeaders(workspaceId),
+      body: JSON.stringify(dto),
+    }),
 };

@@ -419,7 +419,12 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
     };
 
     const inventoryLedgerService = new InventoryLedgerService(mockPrismaService, mockEventEmitter);
-    service = new OrdersService(mockPrismaService, mockEventEmitter, inventoryLedgerService);
+    service = new OrdersService(
+      mockPrismaService,
+      mockEventEmitter,
+      inventoryLedgerService,
+      {} as any,
+    );
   });
 
   describe('createOrder', () => {

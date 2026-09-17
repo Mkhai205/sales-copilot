@@ -1,4 +1,5 @@
 import {
+  Body,
   Controller,
   Get,
   HttpCode,
@@ -23,9 +24,11 @@ import {
   type UpdateOrderDto,
   type ListOrdersQueryOutput,
   type ManualPayOrderDto,
+  type GenerateVietQrDto,
   type OrderResponseDto,
   type PaginationMeta,
   type ShippingLabelDataDto,
+  type VietQrResponseDto,
 } from '@sales-copilot/shared-contracts';
 import { ZodBody, ZodQuery } from '../../../common/pipes';
 import { CurrentUser, type JwtUserPayload } from '../../identity/auth';
@@ -180,5 +183,20 @@ export class OrdersController {
     @ZodBody(completeOrderSchema) dto: CompleteOrderDto,
   ): Promise<OrderResponseDto> {
     return this.ordersService.completeOrder(context.workspaceId, id, dto, user?.userId);
+  }
+
+  @Post(':id/vietqr')
+  @HttpCode(HttpStatus.OK)
+  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.AGENT, WorkspaceRole.VIEWER)
+  @ApiOperation({ summary: 'Generate VietQR code for the order' })
+  @ApiResponse({ status: 200, description: 'VietQR data generated successfully' })
+  @ApiResponse({ status: 404, description: 'Order or Bank config not found' })
+  async generateVietQr(
+    @CurrentWorkspace() context: WorkspaceContext,
+    @CurrentUser() user: JwtUserPayload,
+    @Param('id') id: string,
+    @Body() dto?: GenerateVietQrDto,
+  ): Promise<VietQrResponseDto> {
+    return this.ordersService.getVietQr(context.workspaceId, id, dto?.sendToChat, user?.userId);
   }
 }

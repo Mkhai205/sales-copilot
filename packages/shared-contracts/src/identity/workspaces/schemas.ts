@@ -85,3 +85,11 @@ export interface WorkspaceMemberDto {
   createdAt: string | Date;
   updatedAt?: string | Date;
 }
+
+export const bankConfigSchema = z.object({
+  bankId: z.string().trim().min(1, 'Bank ID is required'),
+  accountNo: z.string().trim().min(1, 'Account number is required'),
+  accountName: z.string().trim().min(1, 'Account name is required'),
+  sepayWebhookSecret: z.string().trim().optional(),
+});
+export type BankConfigDto = z.infer<typeof bankConfigSchema>;

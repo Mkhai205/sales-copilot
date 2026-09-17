@@ -42,6 +42,8 @@ export function SettingsNav({ workspaceSlug }: SettingsNavProps) {
           return t('settings.nav.webhooks');
         case 'audit-logs':
           return t('settings.nav.auditLogs');
+        case 'bank':
+          return 'Bank & Payment';
         default:
           return fallback;
       }

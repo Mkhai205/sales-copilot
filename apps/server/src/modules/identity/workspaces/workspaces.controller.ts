@@ -8,6 +8,8 @@ import {
   type UserWorkspaceDto,
   type WorkspaceDto,
   WorkspaceRole,
+  type BankConfigDto,
+  bankConfigSchema,
 } from '@sales-copilot/shared-contracts';
 import { ZodBody } from '../../../common/pipes';
 import { CurrentUser } from '../auth';
@@ -88,5 +90,43 @@ export class WorkspacesController {
     @ZodBody(updateWorkspaceSchema) dto: UpdateWorkspaceDto,
   ): Promise<WorkspaceDto> {
     return this.workspacesService.updateWorkspace(context.workspaceId, dto);
+  }
+
+  @Get('current/bank')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(WorkspaceGuard, RolesGuard)
+  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN)
+  @ApiBearerAuth()
+  @ApiHeader({
+    name: 'X-Workspace-Id',
+    required: true,
+  })
+  @ApiOperation({
+    summary: 'Get bank configuration for current workspace (requires OWNER or ADMIN role)',
+  })
+  @ApiResponse({ status: 200, description: 'Bank configuration retrieved successfully' })
+  @ApiResponse({ status: 404, description: 'Bank configuration not found' })
+  async getBankConfig(@CurrentWorkspace() context: WorkspaceContext): Promise<BankConfigDto> {
+    return this.workspacesService.getBankConfig(context.workspaceId);
+  }
+
+  @Patch('current/bank')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(WorkspaceGuard, RolesGuard)
+  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN)
+  @ApiBearerAuth()
+  @ApiHeader({
+    name: 'X-Workspace-Id',
+    required: true,
+  })
+  @ApiOperation({
+    summary: 'Update bank configuration for current workspace (requires OWNER or ADMIN role)',
+  })
+  @ApiResponse({ status: 200, description: 'Bank configuration updated successfully' })
+  async updateBankConfig(
+    @CurrentWorkspace() context: WorkspaceContext,
+    @ZodBody(bankConfigSchema) dto: BankConfigDto,
+  ): Promise<BankConfigDto> {
+    return this.workspacesService.updateBankConfig(context.workspaceId, dto);
   }
 }

@@ -19,6 +19,7 @@ import {
   WorkspaceDto,
   WorkspaceMemberDto,
   WorkspaceRole,
+  BankConfigDto,
 } from '@sales-copilot/shared-contracts';
 import { PrismaService } from '../../../infrastructure/database';
 import { generateSlug } from './utils/slug.util';
@@ -159,6 +160,60 @@ export class WorkspacesService {
     });
 
     return this.mapToDto(updated);
+  }
+
+  /**
+   * Retrieves bank configuration from workspace settings
+   */
+  async getBankConfig(workspaceId: string): Promise<BankConfigDto> {
+    const client = this.prisma.getClient();
+    const workspace = await client.workspace.findUnique({ where: { id: workspaceId } });
+
+    if (!workspace) {
+      throw new NotFoundException({
+        code: 'WORKSPACE_NOT_FOUND',
+        message: `Workspace with id '${workspaceId}' not found`,
+      });
+    }
+
+    const settings = workspace.settings as Record<string, any> | null;
+    const bankConfig = settings?.bankConfig;
+    if (!bankConfig) {
+      throw new NotFoundException({
+        code: 'BANK_CONFIG_NOT_FOUND',
+        message: 'Bank configuration has not been set for this workspace',
+      });
+    }
+
+    return bankConfig as BankConfigDto;
+  }
+
+  /**
+   * Updates bank configuration in workspace settings
+   */
+  async updateBankConfig(workspaceId: string, dto: BankConfigDto): Promise<BankConfigDto> {
+    const client = this.prisma.getClient();
+    const existing = await client.workspace.findUnique({ where: { id: workspaceId } });
+
+    if (!existing) {
+      throw new NotFoundException({
+        code: 'WORKSPACE_NOT_FOUND',
+        message: `Workspace with id '${workspaceId}' not found`,
+      });
+    }
+
+    const currentSettings = (existing.settings as Record<string, any>) || {};
+    const updatedSettings = {
+      ...currentSettings,
+      bankConfig: dto,
+    };
+
+    await client.workspace.update({
+      where: { id: workspaceId },
+      data: { settings: updatedSettings as any },
+    });
+
+    return dto;
   }
 
   /**

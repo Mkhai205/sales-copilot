@@ -185,7 +185,12 @@ describe('OrdersService Concurrency Stress Test (20 Parallel Reservation Threads
       mockPrismaService,
       mockEventEmitter as any,
     );
-    service = new OrdersService(mockPrismaService, mockEventEmitter as any, inventoryLedgerService);
+    service = new OrdersService(
+      mockPrismaService,
+      mockEventEmitter as any,
+      inventoryLedgerService,
+      {} as any,
+    );
   });
 
   it('should allow exactly 2 out of 20 concurrent confirmation threads when stock is 2', async () => {
