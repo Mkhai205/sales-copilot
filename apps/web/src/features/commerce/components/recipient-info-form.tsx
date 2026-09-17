@@ -2,8 +2,8 @@
 
 import * as React from 'react';
 import {
-  parseAddressHierarchy,
   normalizeVietnamesePhone,
+  VIETNAMESE_PHONE_REGEX,
   type ShippingAddressInputDto,
 } from '@sales-copilot/shared-contracts';
 import { toast } from 'sonner';
@@ -11,8 +11,8 @@ import { Sparkles, MapPin } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
-import { CarrierBadge } from './carrier-badge';
 import { AddressCascader } from './address-cascader';
+import { parseAddressText } from '../lib/vietnam-address';
 import { useI18n } from '@/lib/i18n';
 
 interface RecipientInfoFormProps {
@@ -32,15 +32,14 @@ export function RecipientInfoForm({ value, onChange, disabled = false }: Recipie
     });
   };
 
-  const handleParseAddress = () => {
+  const handleParseAddress = async () => {
     if (!rawAddressInput.trim()) {
       toast.info(t('commerce.recipient.toastEmpty'));
       return;
     }
 
     // 1. Extract phone number if present in raw text
-    const phoneRegex = /(?:\+84|0)(3[2-9]|5[25689]|7[06-9]|8[1-9]|9[0-9])[0-9]{7}\b/;
-    const phoneMatch = rawAddressInput.match(phoneRegex);
+    const phoneMatch = rawAddressInput.match(VIETNAMESE_PHONE_REGEX);
     let extractedPhone = value.phoneNumber;
     let cleanAddressText = rawAddressInput;
 
@@ -50,7 +49,7 @@ export function RecipientInfoForm({ value, onChange, disabled = false }: Recipie
       cleanAddressText = cleanAddressText.replace(/(?:sđt|sdt|tel|phone|đt|dt)[:\s-]*/gi, ' ');
     }
 
-    const parsed = parseAddressHierarchy(cleanAddressText);
+    const parsed = await parseAddressText(cleanAddressText);
 
     if (!parsed.province && !parsed.district && !parsed.ward && !phoneMatch) {
       toast.warning(t('commerce.recipient.toastNotFound'));
@@ -95,10 +94,7 @@ export function RecipientInfoForm({ value, onChange, disabled = false }: Recipie
         </Field>
 
         <Field>
-          <div className="flex items-center justify-between">
-            <FieldLabel className="text-xs">{t('commerce.recipient.phone')}</FieldLabel>
-            <CarrierBadge phone={value.phoneNumber} />
-          </div>
+          <FieldLabel className="text-xs">{t('commerce.recipient.phone')}</FieldLabel>
           <Input
             placeholder={t('commerce.recipient.phonePlaceholder')}
             className="h-8 text-xs"

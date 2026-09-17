@@ -1,13 +1,13 @@
 'use client';
 
 import * as React from 'react';
+import { normalizeVietnameseText } from '@sales-copilot/shared-contracts';
 import {
-  ADMINISTRATIVE_UNITS,
-  normalizeVietnameseText,
-  type AdministrativeProvince,
-  type AdministrativeDistrict,
-  type AdministrativeWard,
-} from '@sales-copilot/shared-contracts';
+  fetchProvinces,
+  fetchDistricts,
+  fetchWards,
+  type DivisionItem,
+} from '../lib/vietnam-address';
 import {
   Select,
   SelectContent,
@@ -34,7 +34,7 @@ function matchUnit(name1?: string, name2?: string): boolean {
   if (n1 === n2) return true;
   const s1 = n1.replace(/^(thanh pho|tinh|quan|huyen|thi xa|phuong|xa|thi tran)\s+/, '');
   const s2 = n2.replace(/^(thanh pho|tinh|quan|huyen|thi xa|phuong|xa|thi tran)\s+/, '');
-  return s1.length >= 2 && s1 === s2;
+  return (s1.length >= 2 || /^\d+$/.test(s1)) && s1 === s2;
 }
 
 export function AddressCascader({
@@ -45,32 +45,67 @@ export function AddressCascader({
   disabled = false,
 }: AddressCascaderProps) {
   const { t } = useI18n();
+  const [provinces, setProvinces] = React.useState<DivisionItem[]>([]);
+  const [districts, setDistricts] = React.useState<DivisionItem[]>([]);
+  const [wards, setWards] = React.useState<DivisionItem[]>([]);
+
+  // Load provinces on mount
+  React.useEffect(() => {
+    let active = true;
+    fetchProvinces().then(res => {
+      if (active) setProvinces(res);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   // 1. Resolve active Province object
-  const currentProvince = React.useMemo<AdministrativeProvince | undefined>(() => {
+  const currentProvince = React.useMemo<DivisionItem | undefined>(() => {
     if (!province) return undefined;
-    return ADMINISTRATIVE_UNITS.find(
+    return provinces.find(
       p => p.name === province || p.code === province || matchUnit(p.name, province),
     );
-  }, [province]);
+  }, [province, provinces]);
 
-  // 2. Resolve available districts
-  const districts = React.useMemo<AdministrativeDistrict[]>(() => {
-    return currentProvince?.districts || [];
+  // Load districts when active province changes
+  React.useEffect(() => {
+    let active = true;
+    if (currentProvince?.name) {
+      fetchDistricts(currentProvince.name).then(res => {
+        if (active) setDistricts(res);
+      });
+    } else {
+      setDistricts([]);
+    }
+    return () => {
+      active = false;
+    };
   }, [currentProvince]);
 
-  // 3. Resolve active District object
-  const currentDistrict = React.useMemo<AdministrativeDistrict | undefined>(() => {
+  // 2. Resolve active District object
+  const currentDistrict = React.useMemo<DivisionItem | undefined>(() => {
     if (!district || !currentProvince) return undefined;
     return districts.find(d => d.name === district || matchUnit(d.name, district));
   }, [district, districts, currentProvince]);
 
-  // 4. Resolve available wards
-  const wards = React.useMemo<AdministrativeWard[]>(() => {
-    return currentDistrict?.wards || [];
+  // Load wards when active district changes
+  React.useEffect(() => {
+    let active = true;
+    if (currentDistrict?.name) {
+      fetchWards(currentDistrict.name).then(res => {
+        if (active) setWards(res);
+      });
+    } else {
+      setWards([]);
+    }
+    return () => {
+      active = false;
+    };
   }, [currentDistrict]);
 
-  const currentWard = React.useMemo<AdministrativeWard | undefined>(() => {
+  // 3. Resolve active Ward object
+  const currentWard = React.useMemo<DivisionItem | undefined>(() => {
     if (!ward || !currentDistrict) return undefined;
     return wards.find(w => w.name === ward || matchUnit(w.name, ward));
   }, [ward, wards, currentDistrict]);
@@ -109,13 +144,13 @@ export function AddressCascader({
         <Select
           value={currentProvince?.name || province || ''}
           onValueChange={handleProvinceChange}
-          disabled={disabled}
+          disabled={disabled || provinces.length === 0}
         >
           <SelectTrigger className="w-full h-8 text-xs">
             <SelectValue placeholder={t('commerce.cascader.selectProvince')} />
           </SelectTrigger>
           <SelectContent position="popper" className="max-h-60">
-            {ADMINISTRATIVE_UNITS.map(p => (
+            {provinces.map(p => (
               <SelectItem key={p.id} value={p.name} className="text-xs">
                 {p.name}
               </SelectItem>

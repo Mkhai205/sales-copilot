@@ -1,1 +1,1 @@
-export * from './address-trie';
+export * from './address.types';

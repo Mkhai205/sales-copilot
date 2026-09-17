@@ -1,21 +1,21 @@
-﻿import { Injectable, Logger, Optional } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import {
   DomainEvent,
-  detectCarrierNetwork,
   normalizeVietnamesePhone,
-  parseAddressHierarchy,
+  VIETNAMESE_PHONE_EXTRACT_REGEX,
+  VIETNAMESE_PHONE_REGEX,
   type PosDraftSuggestedEventPayload,
 } from '@sales-copilot/shared-contracts';
 import { PrismaService } from '../../../infrastructure/database/prisma.service';
 import { LlmGatewayService } from '../../intelligence/llm-gateway/llm-gateway.service';
+import { ensureDivisionsLoaded, parseAddressHierarchyWithDivisions } from './address-parser.util';
 
 export interface ExtractedOrderData {
   confidenceScore: number;
   suggestedCustomer?: {
     recipientName?: string;
     phoneNumber?: string;
-    carrierNetwork?: string;
     streetAddress?: string;
     ward?: string;
     district?: string;
@@ -33,8 +33,7 @@ export interface ExtractedOrderData {
   rawExtractedData?: Record<string, any>;
 }
 
-export const VIETNAMESE_PHONE_REGEX =
-  /(?:\+84|0)(3[2-9]|5[25689]|7[06-9]|8[1-9]|9[0-9])[0-9]{7}\b/g;
+export { VIETNAMESE_PHONE_EXTRACT_REGEX, VIETNAMESE_PHONE_REGEX };
 
 @Injectable()
 export class OrderExtractorService {
@@ -67,21 +66,25 @@ export class OrderExtractorService {
     // ------------------------------------------------------------------------
     // Tier 1: Deterministic Extraction (<15ms)
     // ------------------------------------------------------------------------
-    // 1a. Phone Number Extraction & Telco Detection
-    const phoneMatches = text.match(VIETNAMESE_PHONE_REGEX);
+    // 1a. Phone Number Extraction
+    const phoneMatches = text.match(VIETNAMESE_PHONE_EXTRACT_REGEX);
     let rawPhone: string | undefined;
     let phoneNumber: string | undefined;
-    let carrierNetwork: string | undefined;
 
     if (phoneMatches && phoneMatches.length > 0) {
       rawPhone = phoneMatches[0];
       phoneNumber = normalizeVietnamesePhone(rawPhone);
-      carrierNetwork = detectCarrierNetwork(phoneNumber);
       score += 35; // +35% for valid phone
     }
 
     // 1b. GSO 3-Level Administrative Unit Hierarchy Parsing
-    const parsedAddress = parseAddressHierarchy(text);
+    const divisions = await ensureDivisionsLoaded();
+    const parsedAddress = parseAddressHierarchyWithDivisions(
+      text,
+      divisions.provinces,
+      divisions.districts,
+      divisions.communes,
+    );
     const hasDetailedAddress = Boolean(
       parsedAddress.province && (parsedAddress.district || parsedAddress.ward),
     );
@@ -112,7 +115,6 @@ export class OrderExtractorService {
       }
       if (!phoneNumber && contact?.phoneNumber) {
         phoneNumber = normalizeVietnamesePhone(contact.phoneNumber);
-        carrierNetwork = detectCarrierNetwork(phoneNumber);
         score += 20;
       }
     }
@@ -199,7 +201,6 @@ export class OrderExtractorService {
       suggestedCustomer: {
         recipientName: recipientName || 'Khách hàng',
         phoneNumber,
-        carrierNetwork,
         streetAddress: parsedAddress.streetAddress || undefined,
         ward: parsedAddress.ward,
         district: parsedAddress.district,

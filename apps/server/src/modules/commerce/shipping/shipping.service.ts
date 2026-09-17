@@ -454,7 +454,6 @@ export class ShippingService {
         contactId: sa.contactId,
         recipientName: sa.recipientName,
         phoneNumber: sa.phoneNumber,
-        carrierNetwork: sa.carrierNetwork,
         streetAddress: sa.streetAddress,
         ward: sa.ward,
         district: sa.district,

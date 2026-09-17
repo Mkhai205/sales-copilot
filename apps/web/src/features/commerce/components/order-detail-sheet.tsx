@@ -19,7 +19,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { OrderStatusBadge, PaymentStatusBadge } from './order-status-badge';
-import { CarrierBadge } from './carrier-badge';
 import { ThermalPrintDialog } from './thermal-print-dialog';
 import { useCommerceOrders } from '../hooks/use-commerce-orders';
 import { formatVND } from '@/features/commerce/lib/currency';
@@ -237,9 +236,6 @@ export function OrderDetailSheet({
                   <span className="font-mono font-medium">
                     {order.shippingAddress?.phoneNumber || '—'}
                   </span>
-                  {order.shippingAddress?.phoneNumber && (
-                    <CarrierBadge phone={order.shippingAddress.phoneNumber} />
-                  )}
                 </div>
               </div>
 

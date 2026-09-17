@@ -5,7 +5,6 @@ import {
   DiscountType,
   PaymentMethod,
   OrderStatus,
-  detectCarrierNetwork,
   normalizeVietnamesePhone,
   type OrderResponseDto,
   type ShippingAddressInputDto,
@@ -255,7 +254,6 @@ export function CommerceOrderForm({
         ? {
             recipientName: shippingAddress.recipientName,
             phoneNumber: normalizeVietnamesePhone(shippingAddress.phoneNumber),
-            carrierNetwork: detectCarrierNetwork(shippingAddress.phoneNumber),
             streetAddress: shippingAddress.streetAddress || 'Chưa cập nhật',
             ward: shippingAddress.ward || 'Chưa cập nhật',
             district: shippingAddress.district || 'Chưa cập nhật',

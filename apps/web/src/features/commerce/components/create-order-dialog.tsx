@@ -9,7 +9,6 @@ import { useContacts } from '@/features/contacts/hooks/use-contacts';
 import { contactsApi } from '@/features/contacts/api/contacts';
 import { useI18n } from '@/lib/i18n';
 import type { ContactDto, OrderResponseDto } from '@sales-copilot/shared-contracts';
-import { CarrierBadge } from './carrier-badge';
 import { User, Search, Plus, ArrowLeft, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -168,7 +167,6 @@ export function CreateOrderDialog({
                               )}
                             </div>
                           </div>
-                          {contact.phoneNumber && <CarrierBadge phone={contact.phoneNumber} />}
                         </div>
                       ))
                     )}

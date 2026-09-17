@@ -18,7 +18,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { OrderStatusBadge, PaymentStatusBadge } from './order-status-badge';
-import { CarrierBadge } from './carrier-badge';
 import { OrderStatus, type OrderResponseDto } from '@sales-copilot/shared-contracts';
 import { formatVND } from '@/features/commerce/lib/currency';
 import { useI18n } from '@/lib/i18n';
@@ -185,10 +184,7 @@ export function OrdersTable({
                 {/* Phone & Telco */}
                 <TableCell className="py-2.5">
                   {phoneNumber ? (
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="font-mono text-xs">{phoneNumber}</span>
-                      <CarrierBadge phone={phoneNumber} />
-                    </div>
+                    <span className="font-mono text-xs">{phoneNumber}</span>
                   ) : (
                     <span className="text-muted-foreground">—</span>
                   )}

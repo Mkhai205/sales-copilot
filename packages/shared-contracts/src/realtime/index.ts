@@ -1,2 +1,2 @@
-export * from './schemas';
-export * from './event-payloads';
+export * from './events';
+export * from './presence';

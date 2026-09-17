@@ -166,17 +166,6 @@ enum CarrierProvider {
   CUSTOM
 }
 
-enum CarrierNetwork {
-  VIETTEL
-  VINAPHONE
-  MOBIFONE
-  VIETNAMOBILE
-  GMOBILE
-  ITEL
-  WINTEL
-  OTHER
-}
-
 enum InventoryTransactionType {
   STOCK_IN
   STOCK_OUT
@@ -781,7 +770,6 @@ model ShippingAddress {
   contactId       String?
   recipientName   String
   phoneNumber     String
-  carrierNetwork  CarrierNetwork  @default(OTHER)
   streetAddress   String // e.g., "Số 45 ngõ 120 Trường Chinh"
   ward            String // Phường / Xã
   district        String // Quận / Huyện

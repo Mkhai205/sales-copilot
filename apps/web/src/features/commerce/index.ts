@@ -4,7 +4,6 @@ export * from './hooks/use-commerce-orders';
 export * from './hooks/use-active-conversation-order';
 export * from './hooks/use-commerce-collision';
 export * from './hooks/use-commerce-realtime-sync';
-export * from './components/carrier-badge';
 export * from './components/address-cascader';
 export * from './components/recipient-info-form';
 export * from './components/stock-status-badge';

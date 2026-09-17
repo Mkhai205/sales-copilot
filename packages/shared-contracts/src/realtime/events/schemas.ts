@@ -1,0 +1,197 @@
+import { z } from 'zod';
+
+// ============================================================================
+// 1. WebSocket Server Event Enums
+// ============================================================================
+
+export enum WsServerEvent {
+  // Conversation events
+  CONVERSATION_CREATED = 'conversation.created',
+  CONVERSATION_UPDATED = 'conversation.updated',
+  CONVERSATION_STATUS_CHANGED = 'conversation.status_changed',
+  CONVERSATION_STATUS_UPDATED = 'conversation.status_updated',
+  CONVERSATION_ASSIGNED = 'conversation.assigned',
+  CONVERSATION_REOPENED = 'conversation.reopened',
+  CONVERSATION_PRIORITY_UPDATED = 'conversation.priority_updated',
+  CONVERSATION_LABELS_UPDATED = 'conversation.labels_updated',
+
+  // Message events
+  MESSAGE_CREATED = 'message.created',
+  MESSAGE_UPDATED = 'message.updated',
+  MESSAGE_DELETED = 'message.deleted',
+  MESSAGE_DELIVERY_STATUS_UPDATED = 'message.delivery_status_updated',
+
+  // Contact events
+  CONTACT_CREATED = 'contact.created',
+  CONTACT_UPDATED = 'contact.updated',
+  CONTACT_DELETED = 'contact.deleted',
+  CONTACT_MERGED = 'contact.merged',
+
+  // Channel Identity events
+  CHANNEL_IDENTITY_CREATED = 'channel_identity.created',
+  CHANNEL_IDENTITY_DELETED = 'channel_identity.deleted',
+
+  // Label events
+  LABEL_CREATED = 'label.created',
+  LABEL_UPDATED = 'label.updated',
+  LABEL_DELETED = 'label.deleted',
+
+  // Channel events
+  CHANNEL_CREATED = 'channel.created',
+  CHANNEL_UPDATED = 'channel.updated',
+  CHANNEL_DELETED = 'channel.deleted',
+
+  // Presence events
+  PRESENCE_UPDATE = 'presence.update',
+  PRESENCE_UPDATED = 'presence.updated',
+
+  // Typing events
+  TYPING_START = 'typing.start',
+  TYPING_STOP = 'typing.stop',
+
+  // Commerce & Order events (Milestone M1 & M2)
+  ORDER_CREATED = 'order.created',
+  ORDER_UPDATED = 'order.updated',
+  ORDER_CONFIRMED = 'order.confirmed',
+  ORDER_PAID = 'order.paid',
+  ORDER_PARTIALLY_PAID = 'order.partially_paid',
+  ORDER_CANCELLED = 'order.cancelled',
+  ORDER_COMPLETED = 'order.completed',
+  INVENTORY_UPDATED = 'inventory.updated',
+  COMMERCE_COLLISION_STATUS = 'commerce.collision_status',
+  // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
+  POS_COLLISION_STATUS = 'commerce.collision_status',
+  ORDER_SHIPPED = 'order.shipped',
+  COMMERCE_DRAFT_SUGGESTED = 'commerce.draft_suggested',
+  // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
+  POS_DRAFT_SUGGESTED = 'commerce.draft_suggested',
+}
+
+// ============================================================================
+// 2. WebSocket Client Event Enums
+// ============================================================================
+
+export enum WsClientEvent {
+  JOIN_WORKSPACE = 'join_workspace',
+  LEAVE_WORKSPACE = 'leave_workspace',
+  JOIN_CONVERSATION = 'join_conversation',
+  LEAVE_CONVERSATION = 'leave_conversation',
+  START_TYPING = 'start_typing',
+  STOP_TYPING = 'stop_typing',
+  HEARTBEAT = 'heartbeat',
+
+  // Commerce Collision events (Milestone M2)
+  COMMERCE_EDITING_START = 'commerce.editing_start',
+  COMMERCE_EDITING_HEARTBEAT = 'commerce.editing_heartbeat',
+  COMMERCE_EDITING_STOP = 'commerce.editing_stop',
+  COMMERCE_EDITING_TAKEOVER = 'commerce.editing_takeover',
+
+  // Backward-compat aliases
+  // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
+  POS_EDITING_START = 'commerce.editing_start',
+  // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
+  POS_EDITING_HEARTBEAT = 'commerce.editing_heartbeat',
+  // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
+  POS_EDITING_STOP = 'commerce.editing_stop',
+  // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
+  POS_EDITING_TAKEOVER = 'commerce.editing_takeover',
+}
+
+// ============================================================================
+// 3. WebSocket Generic Event Envelope
+// ============================================================================
+
+export interface WsEventPayload<T = unknown> {
+  event: WsServerEvent | string;
+  workspaceId: string;
+  timestamp?: string;
+  data: T;
+}
+
+// ============================================================================
+// 4. WebSocket Client Request Validation Schemas
+// ============================================================================
+
+export const joinWorkspaceSchema = z.object({
+  workspaceId: z.string().uuid('Invalid workspace ID format (UUID expected)'),
+});
+export type JoinWorkspaceDto = z.infer<typeof joinWorkspaceSchema>;
+
+export const leaveWorkspaceSchema = z.object({
+  workspaceId: z.string().uuid('Invalid workspace ID format (UUID expected)'),
+});
+export type LeaveWorkspaceDto = z.infer<typeof leaveWorkspaceSchema>;
+
+export const joinConversationSchema = z.object({
+  conversationId: z.string().uuid('Invalid conversation ID format (UUID expected)'),
+});
+export type JoinConversationDto = z.infer<typeof joinConversationSchema>;
+
+export const leaveConversationSchema = z.object({
+  conversationId: z.string().uuid('Invalid conversation ID format (UUID expected)'),
+});
+export type LeaveConversationDto = z.infer<typeof leaveConversationSchema>;
+
+export const typingIndicatorSchema = z.object({
+  conversationId: z.string().uuid('Invalid conversation ID format (UUID expected)'),
+  isTyping: z.boolean(),
+});
+export type TypingIndicatorDto = z.infer<typeof typingIndicatorSchema>;
+
+export const commerceEditingActionSchema = z.object({
+  workspaceId: z.string().uuid('Invalid workspace ID format (UUID expected)'),
+  conversationId: z.string().uuid('Invalid conversation ID format (UUID expected)'),
+});
+export type CommerceEditingActionDto = z.infer<typeof commerceEditingActionSchema>;
+export const posEditingActionSchema = commerceEditingActionSchema;
+export type PosEditingActionDto = CommerceEditingActionDto;
+
+export const orderShippedEventPayloadSchema = z.object({
+  workspaceId: z.string().uuid(),
+  orderId: z.string().uuid(),
+  orderNumber: z.string(),
+  displayId: z.number(),
+  conversationId: z.string().uuid().optional().nullable(),
+  trackingCode: z.string(),
+  shippingCarrier: z.string(),
+  shippedAt: z.union([z.string(), z.date()]),
+  order: z.record(z.unknown()),
+});
+export type OrderShippedEventPayloadDto = z.infer<typeof orderShippedEventPayloadSchema>;
+
+export const commerceDraftSuggestedEventPayloadSchema = z.object({
+  workspaceId: z.string().uuid(),
+  conversationId: z.string().uuid(),
+  contactId: z.string().uuid().optional().nullable(),
+  suggestedCustomer: z
+    .object({
+      recipientName: z.string().optional(),
+      phoneNumber: z.string().optional(),
+      streetAddress: z.string().optional(),
+      ward: z.string().optional(),
+      district: z.string().optional(),
+      province: z.string().optional(),
+    })
+    .optional(),
+  suggestedItems: z
+    .array(
+      z.object({
+        productId: z.string().optional(),
+        variantId: z.string().optional(),
+        productName: z.string(),
+        variantName: z.string().optional().nullable(),
+        sku: z.string().optional().nullable(),
+        quantity: z.number(),
+        unitPrice: z.number().optional(),
+      }),
+    )
+    .optional(),
+  rawExtractedData: z.record(z.unknown()).optional(),
+  confidenceScore: z.number(),
+  messageId: z.string().optional(),
+});
+export type CommerceDraftSuggestedEventPayloadDto = z.infer<
+  typeof commerceDraftSuggestedEventPayloadSchema
+>;
+export const posDraftSuggestedEventPayloadSchema = commerceDraftSuggestedEventPayloadSchema;
+export type PosDraftSuggestedEventPayloadDto = CommerceDraftSuggestedEventPayloadDto;

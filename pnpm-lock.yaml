@@ -188,6 +188,9 @@ importers:
       swagger-ui-express:
         specifier: ^5.0.1
         version: 5.0.1(express@5.2.1)
+      vietnam-divisions-js:
+        specifier: ^3.0.0
+        version: 3.0.0
       zod:
         specifier: ^3.25.76
         version: 3.25.76
@@ -318,6 +321,9 @@ importers:
       vaul:
         specifier: ^1.1.2
         version: 1.1.2(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      vietnam-divisions-js:
+        specifier: ^3.0.0
+        version: 3.0.0
     devDependencies:
       '@tailwindcss/postcss':
         specifier: ^4
@@ -6942,6 +6948,10 @@ packages:
     resolution: {integrity: sha512-qsda+H8jTaUaN/x5vzW2rzc+8Rw4TAQ/4KjB46IwK5VH+IlVeeeje/EoZRpiXvIqjFgK84QffqPztGI3VBLG1A==}
     engines: {node: '>=6'}
 
+  levenshtein-edit-distance@2.0.5:
+    resolution: {integrity: sha512-Yuraz7QnMX/JENJU1HA6UtdsbhRzoSFnGpVGVryjQgHtl2s/YmVgmNYkVs5yzVZ9aAvQR9wPBUH3lG755ylxGA==}
+    hasBin: true
+
   levn@0.4.1:
     resolution: {integrity: sha512-+bT2uH4E5LGE7h/n3evcS/sQlJXCpIp6ym8OWJ5eV6+67Dsql/LaaT7qJBAt2rzfoa/5QBGBhxDix1dMt2kQKQ==}
     engines: {node: '>= 0.8.0'}
@@ -8387,6 +8397,9 @@ packages:
   remeda@2.33.4:
     resolution: {integrity: sha512-ygHswjlc/opg2VrtiYvUOPLjxjtdKvjGz1/plDhkG66hjNjFr1xmfrs2ClNFo/E6TyUFiwYNh53bKV26oBoMGQ==}
 
+  remove-accents@0.5.0:
+    resolution: {integrity: sha512-8g3/Otx1eJaVD12e31UbJj1YzdtVvzH85HV7t+9MJYk/u3XmkOUJ5Ys9wQrf9PCPK8+xn4ymzqYCiZl6QWKn+A==}
+
   require-directory@2.1.1:
     resolution: {integrity: sha512-fGxEI7+wsG9xrvdjsrlmL22OMTTiHRwAMroiEeMgq8gzoLC/PQr7RsRDSTLUg/bZAZtF+TVIkHc6/4RIKrui+Q==}
     engines: {node: '>=0.10.0'}
@@ -8773,6 +8786,10 @@ packages:
   signal-exit@4.1.0:
     resolution: {integrity: sha512-bzyZ1e88w9O1iNJbKnOlvYTrWPDl46O1bG0D3XInv+9tkPrxrN8jUUTiFlDkkmKWgn1M6CfIA13SuGqOa9Korw==}
     engines: {node: '>=14'}
+
+  similarity@1.2.1:
+    resolution: {integrity: sha512-lMOpWVaWrTnyL+tkvDs8oGV/KAUBQ3wfbZtdiwDcC+KYGlwO8kgtiyag1B6akAjALDMwn5rN5YHHei1hr4X7nw==}
+    hasBin: true
 
   sisteransi@1.0.5:
     resolution: {integrity: sha512-bLGGlR1QxBcynn2d5YmDX4MGjlZvy2MRBDRNHLJ8VI6l6+9FUiyTFNJ0IveOSP0bcXgVDPRcfGqA0pjaqUpfVg==}
@@ -9446,6 +9463,9 @@ packages:
     peerDependencies:
       react: ^16.8 || ^17.0 || ^18.0 || ^19.0.0 || ^19.0.0-rc
       react-dom: ^16.8 || ^17.0 || ^18.0 || ^19.0.0 || ^19.0.0-rc
+
+  vietnam-divisions-js@3.0.0:
+    resolution: {integrity: sha512-Pue9PYdLlJXWpo1UefiChk5p3SbFqfFSvq5+2LqBcgmuvx04KLCrJeqkmfqYQF9PeWJPIDuzwPlbeuMulipcZw==}
 
   vite@8.2.1:
     resolution: {integrity: sha512-EU/eS7BH3XROHh2YnBefjM6DBKA6ZeMZEYQbj7NLWg5wHYlhB8B/Mayd5XsgWq+NFYccDOTemRpdETWR6Ka/lw==}
@@ -17631,6 +17651,8 @@ snapshots:
 
   leven@3.1.0: {}
 
+  levenshtein-edit-distance@2.0.5: {}
+
   levn@0.4.1:
     dependencies:
       prelude-ls: 1.2.1
@@ -19159,6 +19181,8 @@ snapshots:
 
   remeda@2.33.4: {}
 
+  remove-accents@0.5.0: {}
+
   require-directory@2.1.1: {}
 
   require-from-string@2.0.2: {}
@@ -19603,6 +19627,10 @@ snapshots:
   signal-exit@3.0.7: {}
 
   signal-exit@4.1.0: {}
+
+  similarity@1.2.1:
+    dependencies:
+      levenshtein-edit-distance: 2.0.5
 
   sisteransi@1.0.5: {}
 
@@ -20313,6 +20341,12 @@ snapshots:
     transitivePeerDependencies:
       - '@types/react'
       - '@types/react-dom'
+
+  vietnam-divisions-js@3.0.0:
+    dependencies:
+      natural-compare: 1.4.0
+      remove-accents: 0.5.0
+      similarity: 1.2.1
 
   vite@8.2.1(@types/node@24.13.3)(jiti@2.7.0)(less@4.5.1)(sass-embedded@1.102.0)(sass@1.102.0)(terser@5.50.0)(yaml@2.9.0):
     dependencies:

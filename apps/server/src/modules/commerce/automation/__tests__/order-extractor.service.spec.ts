@@ -63,7 +63,6 @@ describe('OrderExtractorService (Graceful Deterministic & AI Order Extractor)', 
 
     assert.strictEqual(result.confidenceScore >= 80, true);
     assert.strictEqual(result.suggestedCustomer?.phoneNumber, '0988123456');
-    assert.strictEqual(result.suggestedCustomer?.carrierNetwork, 'VIETTEL');
     assert.strictEqual(result.suggestedCustomer?.province, 'Thành phố Hà Nội');
     assert.strictEqual(result.suggestedCustomer?.district, 'Quận Hoàng Mai');
     assert.strictEqual(result.suggestedCustomer?.recipientName, 'Nguyễn Văn An');

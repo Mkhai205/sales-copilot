@@ -7,7 +7,6 @@ import {
 } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import {
-  CarrierNetwork,
   CarrierProvider,
   DiscountType,
   DomainEvent,
@@ -238,7 +237,6 @@ export class OrdersService {
             contactId: dto.contactId,
             recipientName: dto.shippingAddress.recipientName,
             phoneNumber: dto.shippingAddress.phoneNumber,
-            carrierNetwork: dto.shippingAddress.carrierNetwork || CarrierNetwork.OTHER,
             streetAddress: dto.shippingAddress.streetAddress,
             ward: dto.shippingAddress.ward,
             district: dto.shippingAddress.district,
@@ -450,7 +448,6 @@ export class OrdersService {
               contactId: order.contactId,
               recipientName: dto.shippingAddress.recipientName,
               phoneNumber: dto.shippingAddress.phoneNumber,
-              carrierNetwork: dto.shippingAddress.carrierNetwork || CarrierNetwork.OTHER,
               streetAddress: dto.shippingAddress.streetAddress,
               ward: dto.shippingAddress.ward,
               district: dto.shippingAddress.district,
@@ -1280,7 +1277,6 @@ export class OrdersService {
         contactId: sa.contactId,
         recipientName: sa.recipientName,
         phoneNumber: sa.phoneNumber,
-        carrierNetwork: sa.carrierNetwork,
         streetAddress: sa.streetAddress,
         ward: sa.ward,
         district: sa.district,

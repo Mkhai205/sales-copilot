@@ -22,7 +22,6 @@ import {
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { OrderStatusBadge, PaymentStatusBadge } from './order-status-badge';
-import { CarrierBadge } from './carrier-badge';
 import { OrderHistoryList } from './order-history-list';
 import { ThermalPrintDialog } from './thermal-print-dialog';
 import { CommerceOrderForm } from './commerce-order-form';
@@ -234,10 +233,7 @@ export function CommerceDetailTab({
                   <span className="font-medium text-foreground">
                     {activeOrder.shippingAddress.recipientName}
                   </span>
-                  <div className="flex items-center gap-1">
-                    <span className="font-mono">{activeOrder.shippingAddress.phoneNumber}</span>
-                    <CarrierBadge phone={activeOrder.shippingAddress.phoneNumber} />
-                  </div>
+                  <span className="font-mono">{activeOrder.shippingAddress.phoneNumber}</span>
                 </div>
                 <div className="flex items-start gap-1">
                   <MapPin className="size-3 text-muted-foreground shrink-0 mt-0.5" />
