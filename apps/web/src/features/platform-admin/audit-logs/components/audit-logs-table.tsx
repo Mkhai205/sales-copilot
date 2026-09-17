@@ -242,7 +242,7 @@ export function AuditLogsTable({
                             {/* Quick Navigation link if applicable */}
                             {log.targetType === 'WORKSPACE' && (
                               <Link
-                                href={`/admin/workspaces/${log.targetId}`}
+                                href={`/platform-admin/workspaces/${log.targetId}`}
                                 onClick={e => e.stopPropagation()}
                                 className="text-primary hover:text-primary/80 transition-colors p-0.5"
                                 title="Workspace"
@@ -252,7 +252,7 @@ export function AuditLogsTable({
                             )}
                             {log.targetType === 'SYSTEM_SETTING' && (
                               <Link
-                                href="/admin/settings"
+                                href="/platform-admin/settings"
                                 onClick={e => e.stopPropagation()}
                                 className="text-primary hover:text-primary/80 transition-colors p-0.5"
                                 title="Settings"

@@ -269,7 +269,7 @@ export function WorkspacesTable({
                           </DropdownMenuItem>
 
                           <DropdownMenuItem asChild className="gap-2">
-                            <Link href={`/admin/workspaces/${ws.id}`}>
+                            <Link href={`/platform-admin/workspaces/${ws.id}`}>
                               <ExternalLink className="size-3.5" />
                               <span>{t('admin.workspaces.openDedicatedPage')}</span>
                             </Link>

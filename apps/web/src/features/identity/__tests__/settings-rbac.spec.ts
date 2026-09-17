@@ -9,8 +9,8 @@ import {
 } from '../settings-nav-items';
 
 describe('Settings Navigation & RBAC (Task 27)', () => {
-  it('should define all 8 settings items with correct categories and segments', () => {
-    assert.strictEqual(SETTINGS_NAV_ITEMS.length, 8);
+  it('should define all 9 settings items with correct categories and segments', () => {
+    assert.strictEqual(SETTINGS_NAV_ITEMS.length, 9);
 
     const segments = SETTINGS_NAV_ITEMS.map(item => item.segment);
     assert.deepStrictEqual(segments, [
@@ -22,13 +22,14 @@ describe('Settings Navigation & RBAC (Task 27)', () => {
       'canned-responses',
       'automation-rules',
       'webhooks',
+      'bank',
     ]);
 
     const workspaceItems = SETTINGS_NAV_ITEMS.filter(item => item.category === 'workspace');
     assert.strictEqual(workspaceItems.length, 4);
 
     const operationsItems = SETTINGS_NAV_ITEMS.filter(item => item.category === 'operations');
-    assert.strictEqual(operationsItems.length, 4);
+    assert.strictEqual(operationsItems.length, 5);
   });
 
   describe('getPermittedSettingsNavItems', () => {
@@ -37,14 +38,14 @@ describe('Settings Navigation & RBAC (Task 27)', () => {
       assert.deepStrictEqual(getPermittedSettingsNavItems(undefined), []);
     });
 
-    it('should return all 8 items for OWNER', () => {
+    it('should return all 9 items for OWNER', () => {
       const permitted = getPermittedSettingsNavItems(WorkspaceRole.OWNER);
-      assert.strictEqual(permitted.length, 8);
+      assert.strictEqual(permitted.length, 9);
     });
 
-    it('should return all 8 items for ADMIN', () => {
+    it('should return all 9 items for ADMIN', () => {
       const permitted = getPermittedSettingsNavItems(WorkspaceRole.ADMIN);
-      assert.strictEqual(permitted.length, 8);
+      assert.strictEqual(permitted.length, 9);
     });
 
     it('should return 4 operational items for AGENT (excluding admin-only)', () => {
@@ -59,6 +60,7 @@ describe('Settings Navigation & RBAC (Task 27)', () => {
       assert.strictEqual(segments.includes('members'), false);
       assert.strictEqual(segments.includes('automation-rules'), false);
       assert.strictEqual(segments.includes('webhooks'), false);
+      assert.strictEqual(segments.includes('bank'), false);
     });
 
     it('should return 4 items for VIEWER', () => {
@@ -94,6 +96,12 @@ describe('Settings Navigation & RBAC (Task 27)', () => {
       // Webhooks is admin-only
       assert.strictEqual(isSettingsSectionAllowed('webhooks', WorkspaceRole.ADMIN), true);
       assert.strictEqual(isSettingsSectionAllowed('webhooks', WorkspaceRole.AGENT), false);
+
+      // Bank is admin-only
+      assert.strictEqual(isSettingsSectionAllowed('bank', WorkspaceRole.OWNER), true);
+      assert.strictEqual(isSettingsSectionAllowed('bank', WorkspaceRole.ADMIN), true);
+      assert.strictEqual(isSettingsSectionAllowed('bank', WorkspaceRole.AGENT), false);
+      assert.strictEqual(isSettingsSectionAllowed('bank', WorkspaceRole.VIEWER), false);
 
       // Invalid segment or null role
       assert.strictEqual(isSettingsSectionAllowed('non-existent', WorkspaceRole.ADMIN), false);

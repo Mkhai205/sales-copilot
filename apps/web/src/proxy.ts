@@ -131,9 +131,10 @@ export async function proxy(request: NextRequest) {
   let accessToken = request.cookies.get('access_token')?.value;
   const refreshToken = request.cookies.get('refresh_token')?.value;
 
-  // 2. Super Admin Gate (/admin or /admin/*)
-  const isAdminRoute = pathname === '/admin' || pathname.startsWith('/admin/');
-  if (isAdminRoute) {
+  // 2. Super Admin Gate (/platform-admin or /platform-admin/*)
+  const isPlatformAdminRoute =
+    pathname === '/platform-admin' || pathname.startsWith('/platform-admin/');
+  if (isPlatformAdminRoute) {
     let payload = accessToken ? decodeJwtPayload(accessToken) : null;
     let refreshedTokens: RefreshedTokens | null = null;
 

@@ -24,7 +24,7 @@ export function QuickShortcuts() {
         </CardHeader>
         <CardContent className="pt-0">
           <Link
-            href="/admin/workspaces"
+            href="/platform-admin/workspaces"
             className={cn(buttonVariants({ variant: 'default', size: 'sm' }), 'w-full gap-2')}
           >
             <span>{t('admin.overview.manageShop')}</span>
@@ -44,7 +44,7 @@ export function QuickShortcuts() {
         </CardHeader>
         <CardContent className="pt-0">
           <Link
-            href="/admin/settings"
+            href="/platform-admin/settings"
             className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'w-full gap-2')}
           >
             <span>{t('admin.overview.accessSettings')}</span>
@@ -64,7 +64,7 @@ export function QuickShortcuts() {
         </CardHeader>
         <CardContent className="pt-0">
           <Link
-            href="/admin/audit-logs"
+            href="/platform-admin/audit-logs"
             className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'w-full gap-2')}
           >
             <span>{t('admin.overview.viewAuditLogs')}</span>

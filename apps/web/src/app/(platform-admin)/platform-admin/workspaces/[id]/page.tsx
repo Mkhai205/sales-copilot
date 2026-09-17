@@ -72,13 +72,13 @@ export default function WorkspaceDetailPage() {
             <BreadcrumbList>
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
-                  <Link href="/admin">{t('auth.superAdmin')}</Link>
+                  <Link href="/platform-admin">{t('auth.superAdmin')}</Link>
                 </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
-                  <Link href="/admin/workspaces">{t('admin.nav.workspaces')}</Link>
+                  <Link href="/platform-admin/workspaces">{t('admin.nav.workspaces')}</Link>
                 </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
@@ -94,7 +94,7 @@ export default function WorkspaceDetailPage() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => router.push('/admin/workspaces')}
+              onClick={() => router.push('/platform-admin/workspaces')}
               className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground gap-1.5"
             >
               <ArrowLeft className="size-3.5" />

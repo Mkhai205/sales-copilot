@@ -40,10 +40,10 @@ export interface AdminNavItem {
 }
 
 export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
-  { label: 'Overview', href: '/admin', icon: LayoutDashboard },
-  { label: 'Workspaces', href: '/admin/workspaces', icon: Building2 },
-  { label: 'Settings', href: '/admin/settings', icon: Sliders },
-  { label: 'Audit Logs', href: '/admin/audit-logs', icon: ScrollText },
+  { label: 'Overview', href: '/platform-admin', icon: LayoutDashboard },
+  { label: 'Workspaces', href: '/platform-admin/workspaces', icon: Building2 },
+  { label: 'Settings', href: '/platform-admin/settings', icon: Sliders },
+  { label: 'Audit Logs', href: '/platform-admin/audit-logs', icon: ScrollText },
 ];
 
 export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -53,10 +53,10 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
   const { t } = useI18n();
 
   const navItems = [
-    { label: t('admin.nav.overview'), href: '/admin', icon: LayoutDashboard },
-    { label: t('admin.nav.workspaces'), href: '/admin/workspaces', icon: Building2 },
-    { label: t('admin.nav.settings'), href: '/admin/settings', icon: Sliders },
-    { label: t('admin.nav.auditLogs'), href: '/admin/audit-logs', icon: ScrollText },
+    { label: t('admin.nav.overview'), href: '/platform-admin', icon: LayoutDashboard },
+    { label: t('admin.nav.workspaces'), href: '/platform-admin/workspaces', icon: Building2 },
+    { label: t('admin.nav.settings'), href: '/platform-admin/settings', icon: Sliders },
+    { label: t('admin.nav.auditLogs'), href: '/platform-admin/audit-logs', icon: ScrollText },
   ];
 
   return (

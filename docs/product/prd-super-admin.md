@@ -28,7 +28,7 @@ Sales Copilot hoạt động theo mô hình **SaaS Đa người thuê (Multi-Ten
 
 ### 1.3. Mục tiêu giải pháp (Proposed Solution)
 
-Xây dựng phân hệ **Super Admin Portal** và **Dynamic System Settings Engine** được tích hợp sẵn (co-located) trong `apps/web` dưới route `/admin` và backend `apps/server` dưới module `PlatformAdminModule`:
+Xây dựng phân hệ **Super Admin Portal** và **Dynamic System Settings Engine** được tích hợp sẵn (co-located) trong `apps/web` dưới route `/platform-admin` và backend `apps/server` dưới module `PlatformAdminModule`:
 
 - Cung cấp bảng điều khiển trung tâm giúp quản lý toàn diện vòng đời Workspaces và phân bổ tài nguyên.
 - Cho phép quản trị viên điều chỉnh cấu hình hệ thống và bật/tắt Feature Flags động với độ trễ phản hồi `< 1s` nhờ kiến trúc bộ nhớ đệm 2 tầng (PostgreSQL + Redis Cache).
@@ -55,7 +55,7 @@ Xây dựng phân hệ **Super Admin Portal** và **Dynamic System Settings Engi
    - Mọi thay đổi về cấu hình hệ thống, Feature Flags, Quota mặc định lưu vào PostgreSQL và đồng bộ ngay lập tức vào Redis cache (`system:settings:*`).
    - Các worker, chat engine và LLM gateway đọc trực tiếp từ cache trong RAM, nhận diện giá trị mới ngay lập tức mà không cần restart server hay drop WebSocket connection.
 3. 🔒 **Phân lập Quyền hạn Nghiêm ngặt (Strict Platform Roles Separation)**:
-   - Chỉ tài khoản có `PlatformRole === SUPER_ADMIN` mới được phép truy cập route `/admin` và gọi các API `/platform-admin/*`.
+   - Chỉ tài khoản có `PlatformRole === SUPER_ADMIN` mới được phép truy cập route `/platform-admin` và gọi các API `/platform-admin/*`.
    - Các API Super Admin là **Platform-level (Cross-tenant)**, tách biệt hoàn toàn với `WorkspaceGuard` (vốn đòi hỏi `x-workspace-id`).
 4. 📝 **Bất biến Kiểm toán (100% Auditability)**:
    - Mọi thao tác ghi/sửa/xóa từ Super Admin (thay đổi gói cước, chỉnh quota, khóa workspace, sửa cấu hình hệ thống) bắt buộc phải tạo một bản ghi bất biến trong `PlatformAuditLog` lưu kèm ID người thực hiện, địa chỉ IP và giá trị thay đổi (diff).
@@ -160,7 +160,7 @@ Xây dựng phân hệ **Super Admin Portal** và **Dynamic System Settings Engi
 ## 5. Yêu Cầu Phi Chức Năng (Non-Functional Requirements)
 
 1. **NFR-SA-1 (Hiệu năng)**: Đọc cấu hình hệ thống qua cache Redis đạt độ trễ `< 2ms`. Truy vấn danh sách Workspaces và Audit Logs trả về trong `< 200ms`.
-2. **NFR-SA-2 (Bảo mật Đa tầng)**: Bảo vệ route `/admin/*` ở tầng Next.js Middleware và backend Guards bằng `JwtAuthGuard` + `PlatformRolesGuard(SUPER_ADMIN)`.
+2. **NFR-SA-2 (Bảo mật Đa tầng)**: Bảo vệ route `/platform-admin/*` ở tầng Next.js Middleware và backend Guards bằng `JwtAuthGuard` + `PlatformRolesGuard(SUPER_ADMIN)`.
 3. **NFR-SA-3 (Bất biến Kiểm toán)**: Bảng `platform_audit_logs` là Append-Only, không cung cấp API `UPDATE` hoặc `DELETE`.
 4. **NFR-SA-4 (Tái sử dụng UI)**: 100% giao diện sử dụng các primitives có sẵn trong `apps/web/src/components/ui/` (Table, Card, Button, Badge, Switch, Dialog, Tabs, Input).
 

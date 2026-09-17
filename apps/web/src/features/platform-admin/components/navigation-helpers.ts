@@ -7,7 +7,7 @@ export interface AdminBreadcrumbItem {
  * Maps current pathname to hierarchical breadcrumb items for the Super Admin portal.
  */
 export function getAdminBreadcrumbs(pathname: string): AdminBreadcrumbItem[] {
-  const rootItem: AdminBreadcrumbItem = { label: 'Platform Admin', href: '/admin' };
+  const rootItem: AdminBreadcrumbItem = { label: 'Platform Admin', href: '/platform-admin' };
 
   if (!pathname || typeof pathname !== 'string') {
     return [rootItem, { label: 'Tổng quan' }];
@@ -17,49 +17,49 @@ export function getAdminBreadcrumbs(pathname: string): AdminBreadcrumbItem[] {
   const normalized =
     pathname.length > 1 && pathname.endsWith('/') ? pathname.slice(0, -1) : pathname;
 
-  if (normalized === '/admin') {
+  if (normalized === '/platform-admin') {
     return [rootItem, { label: 'Tổng quan' }];
   }
 
-  if (normalized === '/admin/workspaces') {
+  if (normalized === '/platform-admin/workspaces') {
     return [rootItem, { label: 'Quản trị Workspaces' }];
   }
 
-  if (normalized.startsWith('/admin/workspaces/')) {
+  if (normalized.startsWith('/platform-admin/workspaces/')) {
     return [
       rootItem,
-      { label: 'Quản trị Workspaces', href: '/admin/workspaces' },
+      { label: 'Quản trị Workspaces', href: '/platform-admin/workspaces' },
       { label: 'Chi tiết Workspace' },
     ];
   }
 
-  if (normalized === '/admin/settings') {
+  if (normalized === '/platform-admin/settings') {
     return [rootItem, { label: 'Cấu hình Hệ thống' }];
   }
 
-  if (normalized.startsWith('/admin/settings/')) {
+  if (normalized.startsWith('/platform-admin/settings/')) {
     return [
       rootItem,
-      { label: 'Cấu hình Hệ thống', href: '/admin/settings' },
+      { label: 'Cấu hình Hệ thống', href: '/platform-admin/settings' },
       { label: 'Chi tiết Cấu hình' },
     ];
   }
 
-  if (normalized === '/admin/audit-logs') {
+  if (normalized === '/platform-admin/audit-logs') {
     return [rootItem, { label: 'Nhật ký Kiểm toán' }];
   }
 
-  if (normalized.startsWith('/admin/audit-logs/')) {
+  if (normalized.startsWith('/platform-admin/audit-logs/')) {
     return [
       rootItem,
-      { label: 'Nhật ký Kiểm toán', href: '/admin/audit-logs' },
+      { label: 'Nhật ký Kiểm toán', href: '/platform-admin/audit-logs' },
       { label: 'Chi tiết Kiểm toán' },
     ];
   }
 
-  // Fallback for any other admin sub-routes: /admin/xyz
+  // Fallback for any other admin sub-routes: /platform-admin/xyz
   const segments = normalized
-    .replace(/^\/admin\/?/, '')
+    .replace(/^\/platform-admin\/?/, '')
     .split('/')
     .filter(Boolean);
   if (segments.length === 0) {
@@ -67,7 +67,7 @@ export function getAdminBreadcrumbs(pathname: string): AdminBreadcrumbItem[] {
   }
 
   const items: AdminBreadcrumbItem[] = [rootItem];
-  let accumulatedPath = '/admin';
+  let accumulatedPath = '/platform-admin';
   for (let i = 0; i < segments.length; i++) {
     const seg = segments[i];
     accumulatedPath += `/${seg}`;
@@ -93,8 +93,8 @@ export function isNavItemActive(itemHref: string, currentPathname?: string | nul
       ? currentPathname.slice(0, -1)
       : currentPathname;
 
-  if (itemHref === '/admin') {
-    return normalized === '/admin';
+  if (itemHref === '/platform-admin') {
+    return normalized === '/platform-admin';
   }
 
   return normalized === itemHref || normalized.startsWith(`${itemHref}/`);

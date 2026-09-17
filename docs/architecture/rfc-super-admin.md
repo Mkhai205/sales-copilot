@@ -4,7 +4,7 @@
 | --- | --- |
 | **Tiêu đề** | Cổng Super Admin Portal & Động Cơ Cấu Hình Động Toàn Sàn |
 | **Trạng thái** | ĐÃ PHÊ DUYỆT (APPROVED BASELINE) |
-| **Phân hệ phụ trách** | `apps/server` (`PlatformAdminModule`), `apps/web` (`(admin)/admin`), `packages/shared-contracts` |
+| **Phân hệ phụ trách** | `apps/server` (`PlatformAdminModule`), `apps/web` (`(platform-admin)/platform-admin`), `packages/shared-contracts` |
 | **Tài liệu liên quan** | [Super Admin PRD](../product/prd-super-admin.md), [Kiến Trúc Hệ Thống](./01-system-architecture.md), [AGENTS.md](../../AGENTS.md) |
 
 ---
@@ -22,7 +22,7 @@ graph TD
     classDef module fill:#14532d,stroke:#4ade80,stroke-width:2px,color:#f8fafc;
     classDef storage fill:#3b0764,stroke:#c084fc,stroke-width:2px,color:#f8fafc;
 
-    Browser["Browser / Next.js Admin (/admin/*)"]:::client
+    Browser["Browser / Next.js Admin (/platform-admin/*)"]:::client
     EdgeMW["Next.js Middleware (Edge Auth Check)"]:::guard
 
     NestApp["NestJS Server (apps/server)"]:::module
@@ -44,7 +44,7 @@ graph TD
     PostgresDB[("PostgreSQL 16 (system_settings, platform_audit_logs, workspaces)")]:::storage
 
     Browser -->|HTTP Cookie: access_token| EdgeMW
-    EdgeMW -->|Allowed /admin| NestApp
+    EdgeMW -->|Allowed /platform-admin| NestApp
     NestApp --> JwtGuard
     JwtGuard --> PlatGuard
     PlatGuard --> CtrlWS & CtrlCfg & CtrlLog & CtrlMet
@@ -159,17 +159,17 @@ Request kiểm tra cờ (isFeatureEnabled)
 
 ---
 
-## 5. Kiến Trúc Frontend (`apps/web/(admin)/admin`)
+## 5. Kiến Trúc Frontend (`apps/web/(platform-admin)/platform-admin`)
 
 - **Cấu trúc Thư mục**:
 
   ```text
-  apps/web/src/app/(admin)/admin/
+  apps/web/src/app/(platform-admin)/platform-admin/
   ├── layout.tsx              # Admin Master Layout (Sidebar + Header + Breadcrumb)
   ├── page.tsx                # Dashboard Metrics & Tổng quan
   ├── workspaces/page.tsx     # Bảng quản trị Workspaces
   ├── settings/page.tsx       # Bảng cấu hình động (Tabs: Feature Flags, AI, Quotas)
   └── audit-logs/page.tsx     # Bảng nhật ký kiểm toán nền tảng
   ```
-- **Bảo vệ tại Edge (Next.js Middleware)**: Kiểm tra cookie `access_token` ở `/admin/*`. Nếu không có hoặc `payload.role !== 'SUPER_ADMIN'`, chuyển hướng lập tức về trang chủ `/`.
+- **Bảo vệ tại Edge (Next.js Middleware)**: Kiểm tra cookie `access_token` ở `/platform-admin/*`. Nếu không có hoặc `payload.role !== 'SUPER_ADMIN'`, chuyển hướng lập tức về trang chủ `/`.
 - **Tái Sử Dụng Giao Diện**: 100% tái sử dụng 50+ Shadcn UI primitives.

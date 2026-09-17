@@ -9,7 +9,7 @@ function makeJwt(payload: Record<string, unknown>): string {
   return `${header}.${body}.mockSignature`;
 }
 
-describe('Next.js Edge Proxy — /admin Protection & Security (apps/web/src/proxy.ts)', () => {
+describe('Next.js Edge Proxy — /platform-admin Protection & Security (apps/web/src/proxy.ts)', () => {
   const originalFetch = global.fetch;
 
   beforeEach(() => {
@@ -28,31 +28,35 @@ describe('Next.js Edge Proxy — /admin Protection & Security (apps/web/src/prox
     assert.strictEqual(res.headers.get('location'), null);
   });
 
-  it('should redirect unauthenticated user from /admin to /login with redirect parameter', async () => {
-    const req = new NextRequest('http://localhost:3000/admin');
+  it('should redirect unauthenticated user from /platform-admin to /login with redirect parameter', async () => {
+    const req = new NextRequest('http://localhost:3000/platform-admin');
     const res = await proxy(req);
     assert.strictEqual(res.status, 307);
     const location = res.headers.get('location');
-    assert.ok(location?.includes('/login?redirect=%2Fadmin'));
+    assert.ok(location?.includes('/login?redirect=%2Fplatform-admin'));
   });
 
-  it('should preserve query parameters in redirect when accessing /admin/workspaces?page=2', async () => {
-    const req = new NextRequest('http://localhost:3000/admin/workspaces?page=2&status=ACTIVE');
+  it('should preserve query parameters in redirect when accessing /platform-admin/workspaces?page=2', async () => {
+    const req = new NextRequest(
+      'http://localhost:3000/platform-admin/workspaces?page=2&status=ACTIVE',
+    );
     const res = await proxy(req);
     assert.strictEqual(res.status, 307);
     const location = res.headers.get('location');
     assert.ok(
-      location?.includes('/login?redirect=%2Fadmin%2Fworkspaces%3Fpage%3D2%26status%3DACTIVE'),
+      location?.includes(
+        '/login?redirect=%2Fplatform-admin%2Fworkspaces%3Fpage%3D2%26status%3DACTIVE',
+      ),
     );
   });
 
-  it('should allow SUPER_ADMIN with valid non-expired token to access /admin', async () => {
+  it('should allow SUPER_ADMIN with valid non-expired token to access /platform-admin', async () => {
     const token = makeJwt({
       sub: 'usr-super',
       role: 'SUPER_ADMIN',
       exp: Math.floor(Date.now() / 1000) + 3600,
     });
-    const req = new NextRequest('http://localhost:3000/admin/workspaces', {
+    const req = new NextRequest('http://localhost:3000/platform-admin/workspaces', {
       headers: {
         cookie: `access_token=${token}`,
       },
@@ -68,7 +72,7 @@ describe('Next.js Edge Proxy — /admin Protection & Security (apps/web/src/prox
       role: 'USER',
       exp: Math.floor(Date.now() / 1000) + 3600,
     });
-    const req = new NextRequest('http://localhost:3000/admin', {
+    const req = new NextRequest('http://localhost:3000/platform-admin', {
       headers: {
         cookie: `access_token=${token}`,
       },
@@ -80,24 +84,24 @@ describe('Next.js Edge Proxy — /admin Protection & Security (apps/web/src/prox
     assert.ok(!location?.includes('/login'));
   });
 
-  it('should NOT treat /administrators or other prefix routes as /admin', async () => {
+  it('should NOT treat /platform-administrators or other prefix routes as /platform-admin', async () => {
     const token = makeJwt({
       sub: 'usr-regular',
       role: 'USER',
       exp: Math.floor(Date.now() / 1000) + 3600,
     });
-    const req = new NextRequest('http://localhost:3000/administrators', {
+    const req = new NextRequest('http://localhost:3000/platform-administrators', {
       headers: {
         cookie: `access_token=${token}`,
       },
     });
     const res = await proxy(req);
-    // Should proceed because it's a regular protected route with valid token, not the /admin gate
+    // Should proceed because it's a regular protected route with valid token, not the /platform-admin gate
     assert.strictEqual(res.status, 200);
     assert.strictEqual(res.headers.get('location'), null);
   });
 
-  it('should transparently refresh expired token on /admin for SUPER_ADMIN', async () => {
+  it('should transparently refresh expired token on /platform-admin for SUPER_ADMIN', async () => {
     const expiredToken = makeJwt({
       sub: 'usr-super',
       role: 'SUPER_ADMIN',
@@ -121,7 +125,7 @@ describe('Next.js Edge Proxy — /admin Protection & Security (apps/web/src/prox
       }),
     })) as any;
 
-    const req = new NextRequest('http://localhost:3000/admin/settings', {
+    const req = new NextRequest('http://localhost:3000/platform-admin/settings', {
       headers: {
         cookie: `access_token=${expiredToken}; refresh_token=old-refresh-token`,
       },
@@ -135,7 +139,7 @@ describe('Next.js Edge Proxy — /admin Protection & Security (apps/web/src/prox
     assert.ok(setCookie?.includes('access_token='));
   });
 
-  it('should redirect to /login and clear cookies when refresh fails on /admin', async () => {
+  it('should redirect to /login and clear cookies when refresh fails on /platform-admin', async () => {
     const expiredToken = makeJwt({
       sub: 'usr-super',
       role: 'SUPER_ADMIN',
@@ -147,7 +151,7 @@ describe('Next.js Edge Proxy — /admin Protection & Security (apps/web/src/prox
       json: async () => ({ success: false }),
     })) as any;
 
-    const req = new NextRequest('http://localhost:3000/admin/audit-logs', {
+    const req = new NextRequest('http://localhost:3000/platform-admin/audit-logs', {
       headers: {
         cookie: `access_token=${expiredToken}; refresh_token=revoked-refresh-token`,
       },
@@ -156,7 +160,7 @@ describe('Next.js Edge Proxy — /admin Protection & Security (apps/web/src/prox
     const res = await proxy(req);
     assert.strictEqual(res.status, 307);
     const location = res.headers.get('location');
-    assert.ok(location?.includes('/login?redirect=%2Fadmin%2Faudit-logs'));
+    assert.ok(location?.includes('/login?redirect=%2Fplatform-admin%2Faudit-logs'));
     const setCookie = res.headers.get('set-cookie');
     assert.ok(setCookie?.includes('Max-Age=0') || setCookie?.includes('access_token=;'));
   });
