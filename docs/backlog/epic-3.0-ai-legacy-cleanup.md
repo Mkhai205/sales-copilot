@@ -69,11 +69,11 @@ Codebase hiện tại chứa nhiều module AI/chatbot được viết trước 
 
 ## Tiêu Chí Nghiệm Thu (Acceptance Criteria)
 
-- [ ] Build thành công (`pnpm build`) sau khi xóa tất cả code cũ
-- [ ] Typecheck pass (`pnpm typecheck`) — không còn import broken
-- [ ] Không còn reference đến `LlmGatewayService`, `GeminiAdapter`, `OrderExtractorService` trong codebase (trừ docs)
-- [ ] Dependencies `@google/genai` và `openai` đã gỡ khỏi `package.json`
-- [ ] Dependencies `ai` và `@ai-sdk/google` đã cài
-- [ ] `address-parser.util.ts` vẫn hoạt động, test pass
-- [ ] Các module Commerce (Orders, Products, Inventory, VietQR) vẫn hoạt động bình thường — không bị ảnh hưởng bởi cleanup
-- [ ] Frontend build thành công, không còn reference đến components AI cũ
+- [x] Build thành công (`pnpm build`) sau khi xóa tất cả code cũ
+- [x] Typecheck pass (`pnpm typecheck`) — không còn import broken
+- [x] Không còn reference đến `LlmGatewayService`, `GeminiAdapter`, `OrderExtractorService` trong codebase (trừ docs)
+- [x] Dependencies `@google/genai` và `openai` đã gỡ khỏi `package.json`
+- [x] Dependencies `ai` và `@ai-sdk/google` đã cài
+- [x] `address-parser.util.ts` vẫn hoạt động, test pass
+- [x] Các module Commerce (Orders, Products, Inventory, VietQR) vẫn hoạt động bình thường — không bị ảnh hưởng bởi cleanup
+- [x] Frontend build thành công, không còn reference đến components AI cũ

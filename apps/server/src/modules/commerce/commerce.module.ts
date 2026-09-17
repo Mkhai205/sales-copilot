@@ -8,7 +8,6 @@ import { PaymentWebhooksModule } from './webhooks/payment-webhooks.module';
 import { CommerceReconciliationModule } from './reconciliation/commerce-reconciliation.module';
 import { CommerceListenersModule } from './listeners/commerce-listeners.module';
 import { ShippingModule } from './shipping/shipping.module';
-import { CommerceAutomationModule } from './automation/commerce-automation.module';
 
 @Module({
   imports: [
@@ -21,7 +20,6 @@ import { CommerceAutomationModule } from './automation/commerce-automation.modul
     CommerceReconciliationModule,
     CommerceListenersModule,
     ShippingModule,
-    CommerceAutomationModule,
   ],
   exports: [
     InventoryModule,
@@ -33,7 +31,6 @@ import { CommerceAutomationModule } from './automation/commerce-automation.modul
     CommerceReconciliationModule,
     CommerceListenersModule,
     ShippingModule,
-    CommerceAutomationModule,
   ],
 })
 export class CommerceModule {}

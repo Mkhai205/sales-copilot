@@ -10,7 +10,6 @@ import {
   type OrderCancelledEventPayload,
   type OrderCompletedEventPayload,
   type OrderShippedEventPayload,
-  type CommerceDraftSuggestedEventPayload,
 } from '@sales-copilot/shared-contracts';
 import { toast } from 'sonner';
 import { useSocketEvent } from '@/lib/socket/use-socket';
@@ -19,7 +18,6 @@ import { useI18n } from '@/lib/i18n';
 export interface UseCommerceRealtimeSyncOptions {
   workspaceId?: string;
   conversationId?: string;
-  onDraftSuggested?: (payload: CommerceDraftSuggestedEventPayload) => void;
 }
 export type UsePosRealtimeSyncOptions = UseCommerceRealtimeSyncOptions;
 
@@ -31,7 +29,6 @@ export type UsePosRealtimeSyncOptions = UseCommerceRealtimeSyncOptions;
 export function useCommerceRealtimeSync({
   workspaceId,
   conversationId,
-  onDraftSuggested,
 }: UseCommerceRealtimeSyncOptions): void {
   const { t } = useI18n();
   const queryClient = useQueryClient();
@@ -133,27 +130,7 @@ export function useCommerceRealtimeSync({
     }
   });
 
-  // 6. Commerce Draft Suggested (AI In-Chat Order Extractor)
-  useSocketEvent<CommerceDraftSuggestedEventPayload>(
-    WsServerEvent.COMMERCE_DRAFT_SUGGESTED,
-    data => {
-      if (!data) return;
-
-      if (
-        (!workspaceId || data.workspaceId === workspaceId) &&
-        (!conversationId || data.conversationId === conversationId)
-      ) {
-        if (onDraftSuggested) {
-          onDraftSuggested(data);
-        }
-        toast.info(t('commerce.toasts.aiDraftDetected', { confidence: data.confidenceScore }), {
-          description: `${data.suggestedCustomer?.recipientName || 'Khách hàng'} - ${data.suggestedCustomer?.phoneNumber || ''}`,
-        });
-      }
-    },
-  );
-
-  // 7. Order Completed
+  // 6. Order Completed
   useSocketEvent<OrderCompletedEventPayload>(WsServerEvent.ORDER_COMPLETED, data => {
     if (!data) return;
     invalidateCommerceQueries(data.orderId);

@@ -646,7 +646,6 @@ describe('RealtimeEventDispatcher — Event Routing & Error Isolation (Task 12)'
         dispatcher.handleContactCreated({} as any);
         dispatcher.handlePresenceUpdated(null as any);
         dispatcher.handleOrderShipped(null as any);
-        dispatcher.handlePosDraftSuggested(null as any);
       });
       assert.strictEqual(emittedBroadcasts.length, 0);
     });
@@ -671,30 +670,6 @@ describe('RealtimeEventDispatcher — Event Routing & Error Isolation (Task 12)'
 
       const convBroadcast = emittedBroadcasts.find(
         b => b.room === `conversation_${conversationId}` && b.event === WsServerEvent.ORDER_SHIPPED,
-      );
-      assert.ok(convBroadcast);
-    });
-
-    it('should broadcast POS_DRAFT_SUGGESTED to conversation and workspace rooms', () => {
-      dispatcher.handlePosDraftSuggested({
-        workspaceId,
-        conversationId,
-        confidenceScore: 90,
-        suggestedCustomer: {
-          recipientName: 'Nguyễn Văn A',
-          phoneNumber: '0988123456',
-        },
-      });
-
-      const wsBroadcast = emittedBroadcasts.find(
-        b => b.room === `workspace_${workspaceId}` && b.event === WsServerEvent.POS_DRAFT_SUGGESTED,
-      );
-      assert.ok(wsBroadcast);
-
-      const convBroadcast = emittedBroadcasts.find(
-        b =>
-          b.room === `conversation_${conversationId}` &&
-          b.event === WsServerEvent.POS_DRAFT_SUGGESTED,
       );
       assert.ok(convBroadcast);
     });

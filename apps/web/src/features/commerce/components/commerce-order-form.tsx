@@ -9,7 +9,6 @@ import {
   type OrderResponseDto,
   type ShippingAddressInputDto,
   type CreateOrderItemDto,
-  type PosDraftSuggestedEventPayload,
 } from '@sales-copilot/shared-contracts';
 import { toast } from 'sonner';
 import { ShoppingBag, CheckCircle2, ArrowLeft, Printer, RotateCcw } from 'lucide-react';
@@ -17,7 +16,6 @@ import { Button } from '@/components/ui/button';
 import { useCommerceOrders } from '../hooks/use-commerce-orders';
 import { useCommerceCollision } from '../hooks/use-commerce-collision';
 import { AgentCollisionBanner } from './agent-collision-banner';
-import { AiAutofillBanner } from './ai-autofill-banner';
 import { ProductPickerCommand } from './product-picker-command';
 import type { FlatProductVariant } from '../hooks/use-commerce-products';
 import { LineItemsTable, type PosLineItem } from './line-items-table';
@@ -34,8 +32,6 @@ export interface CommerceOrderFormProps {
   contactName?: string | null;
   contactPhone?: string | null;
   initialOrder?: OrderResponseDto | null;
-  draftSuggestion?: PosDraftSuggestedEventPayload | null;
-  onDismissSuggestion?: () => void;
   onCancel?: () => void;
   onSuccess?: (order: OrderResponseDto) => void;
 }
@@ -48,8 +44,6 @@ export function CommerceOrderForm({
   contactName,
   contactPhone,
   initialOrder,
-  draftSuggestion,
-  onDismissSuggestion,
   onCancel,
   onSuccess,
 }: PosOrderFormProps) {
@@ -133,58 +127,6 @@ export function CommerceOrderForm({
       setCustomerNotes('');
     }
   }, [initialOrder, contactName, contactPhone]);
-
-  // Handle applying AI extracted draft suggestion
-  const handleApplySuggestion = React.useCallback(
-    (suggestion: PosDraftSuggestedEventPayload) => {
-      const cust = suggestion.suggestedCustomer;
-      setShippingAddress(prev => ({
-        ...prev,
-        recipientName: cust?.recipientName || prev.recipientName,
-        phoneNumber: cust?.phoneNumber || prev.phoneNumber,
-        streetAddress: cust?.streetAddress || prev.streetAddress,
-        ward: cust?.ward || prev.ward,
-        district: cust?.district || prev.district,
-        province: cust?.province || prev.province,
-      }));
-
-      if (suggestion.suggestedItems && suggestion.suggestedItems.length > 0) {
-        setItems(prev => {
-          const newItems = [...prev];
-          for (const sItem of suggestion.suggestedItems || []) {
-            const existingIdx = sItem.variantId
-              ? newItems.findIndex(i => i.variantId === sItem.variantId)
-              : newItems.findIndex(i => i.productName === sItem.productName);
-
-            if (existingIdx !== -1) {
-              newItems[existingIdx] = {
-                ...newItems[existingIdx]!,
-                quantity: newItems[existingIdx]!.quantity + sItem.quantity,
-              };
-            } else {
-              newItems.push({
-                productId: sItem.productId || `ai-prod-${Date.now()}`,
-                variantId: sItem.variantId || `ai-var-${Date.now()}`,
-                productName: sItem.productName,
-                variantName: sItem.variantName || 'Tiêu chuẩn',
-                sku: sItem.sku || 'SKU-AI',
-                unitPrice: sItem.unitPrice || 0,
-                quantity: sItem.quantity,
-                discountAmount: 0,
-              });
-            }
-          }
-          return newItems;
-        });
-      }
-
-      toast.success(t('commerce.form.toastAppliedAi'));
-      if (onDismissSuggestion) {
-        onDismissSuggestion();
-      }
-    },
-    [onDismissSuggestion, t],
-  );
 
   // Handle adding variant from command palette
   const handleSelectVariant = (variant: FlatProductVariant) => {
@@ -413,15 +355,6 @@ export function CommerceOrderForm({
         onTakeover={takeover}
         disabled={isSaving}
       />
-
-      {/* AI Autofill Banner inside Commerce form */}
-      {draftSuggestion && draftSuggestion.confidenceScore >= 80 && (
-        <AiAutofillBanner
-          suggestion={draftSuggestion}
-          onApply={handleApplySuggestion}
-          onDismiss={onDismissSuggestion || (() => {})}
-        />
-      )}
 
       {/* Product Command Search */}
       <div className="flex flex-col gap-1.5">

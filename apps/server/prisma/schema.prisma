@@ -92,13 +92,6 @@ enum FileType {
   FILE
 }
 
-enum LlmProvider {
-  GEMINI
-  OPENAI
-  ANTHROPIC
-  DEEPSEEK
-}
-
 // =============================================================================
 // ENUMS: IN-CHAT Commerce & ORDER CLOSING AUTOMATION
 // =============================================================================

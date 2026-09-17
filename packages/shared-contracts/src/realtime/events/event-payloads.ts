@@ -65,9 +65,6 @@ export enum DomainEvent {
   // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
   POS_COLLISION_STATUS = 'commerce.collision_status',
   ORDER_SHIPPED = 'order.shipped',
-  COMMERCE_DRAFT_SUGGESTED = 'commerce.draft_suggested',
-  // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
-  POS_DRAFT_SUGGESTED = 'commerce.draft_suggested',
 }
 
 // ============================================================================
@@ -262,29 +259,3 @@ export interface OrderCompletedEventPayload extends BaseDomainEventPayload {
   completedAt: string | Date;
   order: Record<string, unknown>;
 }
-
-export interface CommerceDraftSuggestedEventPayload extends BaseDomainEventPayload {
-  conversationId: string;
-  contactId?: string | null;
-  suggestedCustomer?: {
-    recipientName?: string;
-    phoneNumber?: string;
-    streetAddress?: string;
-    ward?: string;
-    district?: string;
-    province?: string;
-  };
-  suggestedItems?: Array<{
-    productId?: string;
-    variantId?: string;
-    productName: string;
-    variantName?: string;
-    sku?: string;
-    quantity: number;
-    unitPrice?: number;
-  }>;
-  rawExtractedData?: Record<string, unknown>;
-  confidenceScore: number;
-  messageId?: string;
-}
-export type PosDraftSuggestedEventPayload = CommerceDraftSuggestedEventPayload;

@@ -37,8 +37,6 @@ import {
   OrderCompletedEventPayload,
   InventoryUpdatedEventPayload,
   OrderShippedEventPayload,
-  CommerceDraftSuggestedEventPayload,
-  PosDraftSuggestedEventPayload,
 } from '@sales-copilot/shared-contracts';
 import { RealtimeGateway } from './realtime.gateway';
 
@@ -480,22 +478,6 @@ export class RealtimeEventDispatcher {
       : `workspace_${payload.workspaceId}`;
 
     this.broadcastSafe(rooms, WsServerEvent.ORDER_SHIPPED, payload);
-  }
-
-  @OnEvent(DomainEvent.COMMERCE_DRAFT_SUGGESTED)
-  @OnEvent(DomainEvent.POS_DRAFT_SUGGESTED)
-  handleCommerceDraftSuggested(payload: CommerceDraftSuggestedEventPayload): void {
-    if (!payload?.workspaceId) return;
-
-    const rooms = payload.conversationId
-      ? [`workspace_${payload.workspaceId}`, `conversation_${payload.conversationId}`]
-      : `workspace_${payload.workspaceId}`;
-
-    this.broadcastSafe(rooms, WsServerEvent.COMMERCE_DRAFT_SUGGESTED, payload);
-  }
-
-  handlePosDraftSuggested(payload: PosDraftSuggestedEventPayload): void {
-    this.handleCommerceDraftSuggested(payload);
   }
 
   // ==========================================================================

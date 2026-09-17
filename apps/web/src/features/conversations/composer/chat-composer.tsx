@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import * as React from 'react';
 import {
@@ -21,7 +21,6 @@ import { useTypingIndicator } from './hooks/use-typing-indicator';
 import { CannedResponsePicker, type CannedResponsePickerHandle } from './canned-response-picker';
 import { AttachmentPreviewBar } from './attachment-preview-bar';
 import { EmojiPickerPopover } from './emoji-picker-popover';
-import { COPILOT_INSERT_EVENT, type InsertComposerPayload } from './composer-bridge';
 
 export type ComposerMode = 'reply' | 'note';
 
@@ -118,43 +117,6 @@ export function ChatComposer({
   React.useEffect(() => {
     adjustHeight();
   }, [content, adjustHeight]);
-
-  // Copilot Bridge: inserts draft text into composer preserving attachments
-  React.useEffect(() => {
-    const handleInsert = (e: Event) => {
-      const customEvent = e as CustomEvent<InsertComposerPayload>;
-      if (
-        customEvent.detail?.conversationId &&
-        customEvent.detail.conversationId !== conversationId
-      ) {
-        return;
-      }
-
-      const textToInsert = customEvent.detail?.text;
-      if (typeof textToInsert === 'string') {
-        const insertMode = customEvent.detail?.mode || 'append';
-        setContent(prev => {
-          if (insertMode === 'replace' || !prev.trim()) {
-            return textToInsert;
-          }
-          return `${prev}\n${textToInsert}`;
-        });
-
-        requestAnimationFrame(() => {
-          if (textareaRef.current) {
-            textareaRef.current.focus();
-            const len = textareaRef.current.value.length;
-            textareaRef.current.setSelectionRange(len, len);
-          }
-        });
-      }
-    };
-
-    window.addEventListener(COPILOT_INSERT_EVENT, handleInsert);
-    return () => {
-      window.removeEventListener(COPILOT_INSERT_EVENT, handleInsert);
-    };
-  }, [conversationId]);
 
   const addFiles = React.useCallback((newFiles: FileList | File[]) => {
     const validFiles: File[] = [];

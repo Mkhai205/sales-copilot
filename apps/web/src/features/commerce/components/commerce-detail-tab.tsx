@@ -1,12 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import {
-  OrderStatus,
-  PaymentMethod,
-  type OrderResponseDto,
-  type PosDraftSuggestedEventPayload,
-} from '@sales-copilot/shared-contracts';
+import { OrderStatus, PaymentMethod, type OrderResponseDto } from '@sales-copilot/shared-contracts';
 import {
   ShoppingBag,
   Plus,
@@ -36,8 +31,6 @@ export interface CommerceDetailTabProps {
   contactId?: string;
   contactName?: string | null;
   contactPhone?: string | null;
-  draftSuggestion?: PosDraftSuggestedEventPayload | null;
-  onDismissSuggestion?: () => void;
   newOrderTrigger?: number;
   onOpenDrawer?: (orderToEdit?: OrderResponseDto | null) => void;
 }
@@ -49,8 +42,6 @@ export function CommerceDetailTab({
   contactId,
   contactName,
   contactPhone,
-  draftSuggestion,
-  onDismissSuggestion,
   newOrderTrigger,
   onOpenDrawer,
 }: CommerceDetailTabProps) {
@@ -77,13 +68,6 @@ export function CommerceDetailTab({
       setMode('form');
     }
   }, [newOrderTrigger]);
-
-  // React to AI draft suggestion with high confidence
-  React.useEffect(() => {
-    if (draftSuggestion && draftSuggestion.confidenceScore >= 80) {
-      setMode('form');
-    }
-  }, [draftSuggestion]);
 
   const formatCurrency = (val: number | string) => {
     return new Intl.NumberFormat('vi-VN', {
@@ -152,8 +136,6 @@ export function CommerceDetailTab({
         contactName={contactName}
         contactPhone={contactPhone}
         initialOrder={editingOrder}
-        draftSuggestion={draftSuggestion}
-        onDismissSuggestion={onDismissSuggestion}
         onCancel={() => {
           setMode('view');
           setEditingOrder(null);

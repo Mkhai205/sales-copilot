@@ -14,22 +14,14 @@ import {
   InventoryTransactionType,
   PaymentMethod,
   COMMERCE_RECONCILIATION_QUEUE,
-  COMMERCE_ORDER_AUTOMATION_QUEUE,
-  COMMERCE_AUTOMATION_JOB,
   POS_RECONCILIATION_QUEUE,
-  POS_ORDER_AUTOMATION_QUEUE,
-  POS_AUTOMATION_JOB,
 } from '../index';
 
 describe('Shared Contracts — Commerce Context Schemas', () => {
   describe('Queue & Job Contract Invariants', () => {
     it('should maintain queue and job names with backward compatibility', () => {
       assert.strictEqual(COMMERCE_RECONCILIATION_QUEUE, 'commerce-reconciliation');
-      assert.strictEqual(COMMERCE_ORDER_AUTOMATION_QUEUE, 'commerce-order-automation');
-      assert.strictEqual(COMMERCE_AUTOMATION_JOB, 'extract-order-from-message');
       assert.strictEqual(POS_RECONCILIATION_QUEUE, COMMERCE_RECONCILIATION_QUEUE);
-      assert.strictEqual(POS_ORDER_AUTOMATION_QUEUE, COMMERCE_ORDER_AUTOMATION_QUEUE);
-      assert.strictEqual(POS_AUTOMATION_JOB, COMMERCE_AUTOMATION_JOB);
     });
   });
 

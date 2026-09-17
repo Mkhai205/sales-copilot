@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Bot, Clock, Globe, Settings, Users } from 'lucide-react';
+import { ArrowLeft, Clock, Globe, Settings, Users } from 'lucide-react';
 import type { InboxDetailDto } from '@sales-copilot/shared-contracts';
 import { getChannelMeta } from '@/lib/channels';
 import { InboxAvatar } from '@/components/inbox-avatar';
@@ -13,7 +13,6 @@ import { TabGeneralSettings } from './tab-general-settings';
 import { TabCollaborators } from './tab-collaborators';
 import { TabConfiguration } from './tab-configuration';
 import { TabBusinessHours } from './tab-business-hours';
-import { TabAiCommercePolicy } from './tab-ai-commerce-policy';
 
 interface InboxDetailLayoutProps {
   inbox: InboxDetailDto;
@@ -22,13 +21,7 @@ interface InboxDetailLayoutProps {
   initialTab?: string;
 }
 
-const VALID_INBOX_TABS = [
-  'general',
-  'collaborators',
-  'configuration',
-  'business-hours',
-  'ai-commerce',
-] as const;
+const VALID_INBOX_TABS = ['general', 'collaborators', 'configuration', 'business-hours'] as const;
 type InboxTabKey = (typeof VALID_INBOX_TABS)[number];
 
 function sanitizeTab(tab?: string): InboxTabKey {
@@ -144,10 +137,6 @@ export function InboxDetailLayout({
             <Clock className="size-3.5" />
             Giờ làm việc
           </TabsTrigger>
-          <TabsTrigger value="ai-commerce" className="gap-2 text-xs py-2 px-3">
-            <Bot className="size-3.5" />
-            AI & Bán hàng
-          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="general" className="mt-0">
@@ -168,10 +157,6 @@ export function InboxDetailLayout({
 
         <TabsContent value="business-hours" className="mt-0">
           <TabBusinessHours inbox={inbox} workspaceId={workspaceId} />
-        </TabsContent>
-
-        <TabsContent value="ai-commerce" className="mt-0">
-          <TabAiCommercePolicy inbox={inbox} workspaceId={workspaceId} />
         </TabsContent>
       </Tabs>
     </div>

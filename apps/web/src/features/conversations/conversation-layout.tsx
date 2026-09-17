@@ -1,11 +1,10 @@
-﻿'use client';
+'use client';
 
 import * as React from 'react';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
-import { useCommerceRealtimeSync, AiAutofillBanner } from '@/features/commerce';
+import { useCommerceRealtimeSync } from '@/features/commerce';
 import { useWorkspaces } from '@/features/identity';
 
-import type { PosDraftSuggestedEventPayload } from '@sales-copilot/shared-contracts';
 import { ConversationEmptyState } from './conversation-empty-state';
 import { ConversationList } from './conversation-list';
 import { MessageThread } from './message-thread';
@@ -21,8 +20,6 @@ export function ConversationLayout({ workspaceSlug, conversationId }: Conversati
   const [isDetailOpen, setIsDetailOpen] = React.useState(true);
   const [detailTab, setDetailTab] = React.useState<'contact' | 'commerce'>('contact');
   const [newOrderTrigger, setNewOrderTrigger] = React.useState<number>(0);
-  const [posDraftSuggestion, setPosDraftSuggestion] =
-    React.useState<PosDraftSuggestedEventPayload | null>(null);
 
   const { data: workspaces } = useWorkspaces();
   const currentWorkspace = workspaces?.find(w => w.slug === workspaceSlug);
@@ -35,18 +32,10 @@ export function ConversationLayout({ workspaceSlug, conversationId }: Conversati
 
   const resolvedWorkspaceId = workspaceId || conversation?.workspaceId;
 
-  // Clear suggestion on conversation switch
-  React.useEffect(() => {
-    setPosDraftSuggestion(null);
-  }, [conversationId]);
-
   // Real-time synchronization for Commerce order changes, bank reconciliation, and chat receipts
   useCommerceRealtimeSync({
     workspaceId: resolvedWorkspaceId,
     conversationId,
-    onDraftSuggested: payload => {
-      setPosDraftSuggestion(payload);
-    },
   });
 
   const handleStartNewOrder = React.useCallback(() => {
@@ -98,18 +87,6 @@ export function ConversationLayout({ workspaceSlug, conversationId }: Conversati
         >
           {conversationId ? (
             <div className="flex flex-col h-full w-full min-h-0">
-              {posDraftSuggestion && (
-                <div className="p-2 border-b bg-background shrink-0">
-                  <AiAutofillBanner
-                    suggestion={posDraftSuggestion}
-                    onApply={() => {
-                      setIsDetailOpen(true);
-                      setDetailTab('commerce');
-                    }}
-                    onDismiss={() => setPosDraftSuggestion(null)}
-                  />
-                </div>
-              )}
               <div className="flex-1 min-h-0">
                 <MessageThread
                   conversationId={conversationId}
@@ -144,8 +121,6 @@ export function ConversationLayout({ workspaceSlug, conversationId }: Conversati
                 activeTab={detailTab}
                 onTabChange={setDetailTab}
                 newOrderTrigger={newOrderTrigger}
-                draftSuggestion={posDraftSuggestion}
-                onDismissSuggestion={() => setPosDraftSuggestion(null)}
                 onClose={() => setIsDetailOpen(false)}
                 onOpenPosDrawer={handleStartNewOrder}
               />

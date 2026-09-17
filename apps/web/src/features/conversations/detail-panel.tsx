@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import * as React from 'react';
 import { User, ShoppingBag } from 'lucide-react';
@@ -8,10 +8,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useWorkspaces } from '@/features/identity';
 import { CommerceDetailTab } from '@/features/commerce';
 
-import type {
-  OrderResponseDto,
-  PosDraftSuggestedEventPayload,
-} from '@sales-copilot/shared-contracts';
+import type { OrderResponseDto } from '@sales-copilot/shared-contracts';
 import { useI18n } from '@/lib/i18n';
 import { useConversation } from './hooks/use-conversation';
 import { ContactInfo, ContactIdentities } from '@/features/contacts';
@@ -25,8 +22,6 @@ interface DetailPanelProps {
   activeTab?: 'contact' | 'commerce';
   onTabChange?: (tab: 'contact' | 'commerce') => void;
   newOrderTrigger?: number;
-  draftSuggestion?: PosDraftSuggestedEventPayload | null;
-  onDismissSuggestion?: () => void;
   onClose?: () => void;
   onOpenPosDrawer?: (orderToEdit?: OrderResponseDto | null) => void;
 }
@@ -64,8 +59,6 @@ export function DetailPanel({
   activeTab,
   onTabChange,
   newOrderTrigger,
-  draftSuggestion,
-  onDismissSuggestion,
   onOpenPosDrawer,
 }: DetailPanelProps) {
   const { t } = useI18n();
@@ -173,8 +166,6 @@ export function DetailPanel({
                 contactId={conversation.contactId}
                 contactName={conversation.contact?.name}
                 contactPhone={conversation.contact?.phoneNumber}
-                draftSuggestion={draftSuggestion}
-                onDismissSuggestion={onDismissSuggestion}
                 newOrderTrigger={newOrderTrigger}
                 onOpenDrawer={onOpenPosDrawer || (() => {})}
               />

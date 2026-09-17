@@ -61,10 +61,8 @@ export enum WsServerEvent {
   COMMERCE_COLLISION_STATUS = 'commerce.collision_status',
   // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
   POS_COLLISION_STATUS = 'commerce.collision_status',
+   
   ORDER_SHIPPED = 'order.shipped',
-  COMMERCE_DRAFT_SUGGESTED = 'commerce.draft_suggested',
-  // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
-  POS_DRAFT_SUGGESTED = 'commerce.draft_suggested',
 }
 
 // ============================================================================
@@ -158,40 +156,3 @@ export const orderShippedEventPayloadSchema = z.object({
   order: z.record(z.unknown()),
 });
 export type OrderShippedEventPayloadDto = z.infer<typeof orderShippedEventPayloadSchema>;
-
-export const commerceDraftSuggestedEventPayloadSchema = z.object({
-  workspaceId: z.string().uuid(),
-  conversationId: z.string().uuid(),
-  contactId: z.string().uuid().optional().nullable(),
-  suggestedCustomer: z
-    .object({
-      recipientName: z.string().optional(),
-      phoneNumber: z.string().optional(),
-      streetAddress: z.string().optional(),
-      ward: z.string().optional(),
-      district: z.string().optional(),
-      province: z.string().optional(),
-    })
-    .optional(),
-  suggestedItems: z
-    .array(
-      z.object({
-        productId: z.string().optional(),
-        variantId: z.string().optional(),
-        productName: z.string(),
-        variantName: z.string().optional().nullable(),
-        sku: z.string().optional().nullable(),
-        quantity: z.number(),
-        unitPrice: z.number().optional(),
-      }),
-    )
-    .optional(),
-  rawExtractedData: z.record(z.unknown()).optional(),
-  confidenceScore: z.number(),
-  messageId: z.string().optional(),
-});
-export type CommerceDraftSuggestedEventPayloadDto = z.infer<
-  typeof commerceDraftSuggestedEventPayloadSchema
->;
-export const posDraftSuggestedEventPayloadSchema = commerceDraftSuggestedEventPayloadSchema;
-export type PosDraftSuggestedEventPayloadDto = CommerceDraftSuggestedEventPayloadDto;
