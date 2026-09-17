@@ -10,6 +10,7 @@ Mục tiêu trọng tâm hiện tại: **Phát triển tính năng mới cho Cor
 - **Tối giản cấu trúc (Backend):** Ưu tiên lối viết trực tiếp, idiomatic. NestJS Controller gọi đến Service, và Service gọi trực tiếp qua Prisma ORM.
 - **Không tạo Layer dư thừa:** Tuyệt đối KHÔNG áp dụng Clean Architecture rườm rà. KHÔNG tạo các interface thừa (ví dụ `IUserService`) hoặc mapping qua nhiều tầng DTO (Entity -> Domain -> DTO -> View). Dùng luôn Zod schema làm DTO và trả về Prisma model trực tiếp.
 - **Rule of Three:** Chỉ đóng gói (abstract) code thành helper dùng chung sau khi đoạn code đó đã bị duplicate ít nhất 2 lần. Không đoán trước tương lai.
+- **Don't Reinvent the Wheel:** Trước khi tự triển khai một logic phức tạp hay tính năng mới, PHẢI kiểm tra xem trong hệ thống đã có giải pháp/helper nào tồn tại chưa. Luôn ưu tiên tìm kiếm các thư viện (dependencies) uy tín, giải quyết đúng bài toán thay vì tự code từ đầu (Tuy nhiên, luôn hỏi ý kiến user trước khi cài thêm một dependency mới).
 
 ## 3. Mandatory Security & Data Isolation (Strict Multi-Tenancy)
 
