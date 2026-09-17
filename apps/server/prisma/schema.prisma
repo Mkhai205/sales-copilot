@@ -412,6 +412,8 @@ model Conversation {
   lastActivityAt      DateTime             @default(now())
   unreadMessagesCount Int                  @default(0)
   customAttributes    Json                 @default("{}")
+  isAiPaused          Boolean              @default(false)
+  lastAiMessageAt     DateTime?
   createdAt           DateTime             @default(now())
   updatedAt           DateTime             @updatedAt
 

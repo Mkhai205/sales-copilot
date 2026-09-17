@@ -35,6 +35,12 @@ export function mapConversationToDto(conv: any): ConversationResponseDto {
         : conv.firstReplyCreatedAt
       : null,
     customAttributes: conv.customAttributes ?? {},
+    isAiPaused: conv.isAiPaused ?? false,
+    lastAiMessageAt: conv.lastAiMessageAt
+      ? conv.lastAiMessageAt instanceof Date
+        ? conv.lastAiMessageAt.toISOString()
+        : conv.lastAiMessageAt
+      : null,
     createdAt: conv.createdAt instanceof Date ? conv.createdAt.toISOString() : conv.createdAt,
     updatedAt: conv.updatedAt instanceof Date ? conv.updatedAt.toISOString() : conv.updatedAt,
   };

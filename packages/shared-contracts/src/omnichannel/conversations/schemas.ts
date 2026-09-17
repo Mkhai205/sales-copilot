@@ -105,6 +105,8 @@ export interface ConversationResponseDto {
   snoozedUntil?: string | null;
   firstReplyCreatedAt?: string | null;
   customAttributes?: Record<string, unknown>;
+  isAiPaused?: boolean;
+  lastAiMessageAt?: string | null;
   labels?: {
     id: string;
     title: string;

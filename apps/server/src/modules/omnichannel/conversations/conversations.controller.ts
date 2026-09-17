@@ -1,4 +1,4 @@
-﻿import {
+import {
   Controller,
   Delete,
   Get,
@@ -227,5 +227,35 @@ export class ConversationsController {
     @Param('labelId') labelId: string,
   ): Promise<{ success: true }> {
     return this.conversationsService.removeLabel(context.workspaceId, id, labelId);
+  }
+
+  @Post(':id/takeover')
+  @HttpCode(HttpStatus.OK)
+  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.AGENT)
+  @ApiOperation({ summary: 'Pause AI handling and let human agent take over conversation' })
+  @ApiResponse({ status: 200, description: 'AI paused and takeover recorded successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiResponse({ status: 404, description: 'Conversation not found' })
+  async takeover(
+    @CurrentWorkspace() context: WorkspaceContext,
+    @Param('id') id: string,
+  ): Promise<ConversationResponseDto> {
+    return this.conversationsService.setAiPause(context.workspaceId, id, true);
+  }
+
+  @Post(':id/resume-ai')
+  @HttpCode(HttpStatus.OK)
+  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.AGENT)
+  @ApiOperation({ summary: 'Resume AI handling for conversation' })
+  @ApiResponse({ status: 200, description: 'AI resumed successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiResponse({ status: 404, description: 'Conversation not found' })
+  async resumeAi(
+    @CurrentWorkspace() context: WorkspaceContext,
+    @Param('id') id: string,
+  ): Promise<ConversationResponseDto> {
+    return this.conversationsService.setAiPause(context.workspaceId, id, false);
   }
 }

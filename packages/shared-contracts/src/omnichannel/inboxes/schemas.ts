@@ -42,18 +42,12 @@ export const inboxWebWidgetConfigSchema = z.object({
 });
 export type InboxWebWidgetConfig = z.infer<typeof inboxWebWidgetConfigSchema>;
 
-export const aiCommerceOperatingModeSchema = z.enum([
-  'COPILOT_ASSIST',
-  'AUTOPILOT_24_7',
-  'HYBRID_OFF_HOURS',
-]);
-export type AiCommerceOperatingMode = z.infer<typeof aiCommerceOperatingModeSchema>;
-
 export const inboxAiCommercePolicyConfigSchema = z.object({
-  mode: aiCommerceOperatingModeSchema,
+  enabled: z.boolean().default(false),
   maxDiscountPercent: z.number().min(0).max(100).optional(),
   maxDiscountVnd: z.number().min(0).optional(),
   personaTone: z.string().optional(),
+  customInstructions: z.string().max(2000).optional(),
   defaultWarehouseId: z.string().optional(),
   defaultBankAccountId: z.string().optional(),
 });

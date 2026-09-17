@@ -153,6 +153,10 @@ describe('ConversationsController (Presentation Layer Endpoints)', () => {
       removeLabel: async (_workspaceId: string, _id: string, _labelId: string) => ({
         success: true,
       }),
+      setAiPause: async (_workspaceId: string, id: string, isPaused: boolean) => ({
+        id,
+        isAiPaused: isPaused,
+      }),
     };
 
     controller = new ConversationsController(mockConversationsService as any);
@@ -249,5 +253,15 @@ describe('ConversationsController (Presentation Layer Endpoints)', () => {
     assert.strictEqual(counts.mine, 6);
     assert.strictEqual(counts.unassigned, 10);
     assert.strictEqual(counts.all, 16);
+  });
+
+  it('should pause AI on takeover', async () => {
+    const res = await controller.takeover(context, 'conv_1');
+    assert.strictEqual(res.isAiPaused, true);
+  });
+
+  it('should resume AI on resumeAi', async () => {
+    const res = await controller.resumeAi(context, 'conv_1');
+    assert.strictEqual(res.isAiPaused, false);
   });
 });

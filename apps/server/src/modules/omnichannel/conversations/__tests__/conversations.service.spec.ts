@@ -941,4 +941,32 @@ describe('ConversationsService (Core & State Machine)', () => {
       assert.ok(counts.all >= counts.unassigned);
     });
   });
+
+  describe('setAiPause', () => {
+    it('should toggle isAiPaused and emit conversation.updated', async () => {
+      const conv = await service.create('ws_1', {
+        contactId: 'cnt_1',
+        inboxId: 'ib_1',
+      });
+      assert.strictEqual(conv.isAiPaused, false);
+
+      emittedEvents = [];
+      const paused = await service.setAiPause('ws_1', conv.id, true);
+      assert.strictEqual(paused.isAiPaused, true);
+
+      const updateEvent = emittedEvents.find(e => e.event === 'conversation.updated');
+      assert.ok(updateEvent);
+      assert.strictEqual(updateEvent.payload.conversation.isAiPaused, true);
+
+      const resumed = await service.setAiPause('ws_1', conv.id, false);
+      assert.strictEqual(resumed.isAiPaused, false);
+    });
+
+    it('should throw NotFoundException if conversation not found in workspace', async () => {
+      await assert.rejects(
+        () => service.setAiPause('wrong_ws', 'non-existent', true),
+        (err: any) => err instanceof NotFoundException,
+      );
+    });
+  });
 });

@@ -152,7 +152,7 @@ describe('Inboxes & Channels Management (Task 33)', () => {
             },
           },
           aiCommercePolicy: {
-            mode: 'COPILOT_ASSIST',
+            enabled: true,
             maxDiscountPercent: 15,
             maxDiscountVnd: 150000,
             personaTone: 'shop_ban',
@@ -354,26 +354,28 @@ describe('Inboxes & Channels Management (Task 33)', () => {
 
     it('should validate inboxAiCommercePolicyConfigSchema', () => {
       const valid = inboxAiCommercePolicyConfigSchema.parse({
-        mode: 'COPILOT_ASSIST',
+        enabled: true,
         maxDiscountPercent: 20,
         maxDiscountVnd: 200000,
         personaTone: 'shop_ban',
+        customInstructions: 'Tư vấn nhiệt tình',
       });
-      assert.strictEqual(valid.mode, 'COPILOT_ASSIST');
+      assert.strictEqual(valid.enabled, true);
       assert.strictEqual(valid.maxDiscountPercent, 20);
+      assert.strictEqual(valid.customInstructions, 'Tư vấn nhiệt tình');
 
       // Rejects discount percentage > 100
       assert.throws(() =>
         inboxAiCommercePolicyConfigSchema.parse({
-          mode: 'COPILOT_ASSIST',
+          enabled: true,
           maxDiscountPercent: 120,
         }),
       );
 
-      // Rejects invalid mode
+      // Rejects customInstructions > 2000 characters
       assert.throws(() =>
         inboxAiCommercePolicyConfigSchema.parse({
-          mode: 'UNSUPPORTED_MODE',
+          customInstructions: 'a'.repeat(2001),
         }),
       );
     });
@@ -399,7 +401,7 @@ describe('Inboxes & Channels Management (Task 33)', () => {
           hmacSecret: 'sec_12345678',
         },
         aiCommercePolicy: {
-          mode: 'AUTOPILOT_24_7' as const,
+          enabled: true,
           maxDiscountPercent: 10,
           maxDiscountVnd: 50000,
         },

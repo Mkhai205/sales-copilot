@@ -1,4 +1,4 @@
-﻿import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import {
   ConversationPriority,
@@ -252,7 +252,9 @@ export class ConversationsService {
       data: {
         status: targetStatus,
         snoozedUntil: snoozedUntilDate,
-        ...(targetStatus === ConversationStatus.RESOLVED ? { unreadMessagesCount: 0 } : {}),
+        ...(targetStatus === ConversationStatus.RESOLVED
+          ? { unreadMessagesCount: 0, isAiPaused: false }
+          : {}),
       },
       include: CONVERSATION_STANDARD_INCLUDE,
     });
@@ -857,5 +859,52 @@ export class ConversationsService {
       unassigned,
       mine,
     };
+  }
+
+  /**
+   * Toggles isAiPaused on a conversation for human takeover / resume.
+   */
+  async setAiPause(
+    workspaceId: string,
+    id: string,
+    isPaused: boolean,
+  ): Promise<ConversationResponseDto> {
+    const client = this.prisma.getClient();
+
+    const existing = await client.conversation.findFirst({
+      where: { id, workspaceId },
+      include: CONVERSATION_STANDARD_INCLUDE,
+    });
+
+    if (!existing) {
+      throw new NotFoundException({
+        code: 'CONVERSATION_NOT_FOUND',
+        message: `Conversation with id '${id}' not found in this workspace`,
+      });
+    }
+
+    if (existing.isAiPaused === isPaused) {
+      return mapConversationToDto(existing);
+    }
+
+    const updated = await client.conversation.update({
+      where: { id },
+      data: { isAiPaused: isPaused },
+      include: CONVERSATION_STANDARD_INCLUDE,
+    });
+
+    const dto = mapConversationToDto(updated);
+
+    this.eventEmitter.emit('conversation.updated', {
+      workspaceId,
+      conversationId: id,
+      conversation: dto,
+    });
+
+    this.logger.log(
+      `Conversation #${dto.displayId} AI pause state set to ${isPaused} in workspace '${workspaceId}'`,
+    );
+
+    return dto;
   }
 }
