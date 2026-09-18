@@ -5,10 +5,8 @@ import { useSearchParams } from 'next/navigation';
 import { CheckCircle2, XCircle } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 import { Button } from '@/components/ui/button';
-import { useI18n } from '@/lib/i18n';
 
 function FacebookOAuthCallbackContent() {
-  const { t } = useI18n();
   const searchParams = useSearchParams();
   const sessionId = searchParams.get('sessionId');
   const error = searchParams.get('error');
@@ -92,7 +90,7 @@ function FacebookOAuthCallbackContent() {
       {error ? (
         <>
           <XCircle className="size-10 text-destructive" />
-          <h2 className="text-sm font-semibold">{t('channels.facebook.connectFailed')}</h2>
+          <h2 className="text-sm font-semibold">{'Kết nối thất bại'}</h2>
           <p className="text-xs text-muted-foreground">{error}</p>
           <Button
             size="sm"
@@ -100,27 +98,29 @@ function FacebookOAuthCallbackContent() {
             onClick={() => window.close()}
             className="mt-2 text-xs"
           >
-            {t('channels.facebook.closeWindow')}
+            {'Đóng cửa sổ'}
           </Button>
         </>
       ) : sessionId ? (
         <>
           <CheckCircle2 className="size-10 text-emerald-500 animate-in zoom-in-50" />
-          <h2 className="text-sm font-semibold">{t('channels.facebook.connectSuccess')}</h2>
-          <p className="text-xs text-muted-foreground">{t('channels.facebook.syncingFanpages')}</p>
+          <h2 className="text-sm font-semibold">{'Kết nối thành công!'}</h2>
+          <p className="text-xs text-muted-foreground">
+            {'Đang đồng bộ danh sách Fanpage của bạn, cửa sổ sẽ tự động đóng...'}
+          </p>
           <Button
             size="sm"
             variant="outline"
             onClick={() => window.close()}
             className="mt-2 text-xs"
           >
-            {t('channels.facebook.closeWindow')}
+            {'Đóng cửa sổ'}
           </Button>
         </>
       ) : (
         <>
           <Spinner className="size-6 text-primary" />
-          <p className="text-xs text-muted-foreground">{t('channels.facebook.processingAuth')}</p>
+          <p className="text-xs text-muted-foreground">{'Đang xử lý xác thực...'}</p>
         </>
       )}
     </div>
@@ -128,11 +128,10 @@ function FacebookOAuthCallbackContent() {
 }
 
 function FacebookOAuthLoadingFallback() {
-  const { t } = useI18n();
   return (
     <div className="flex flex-col items-center gap-3 text-center max-w-sm p-6 rounded-xl border border-border bg-card shadow-sm">
       <Spinner className="size-6 text-primary" />
-      <p className="text-xs text-muted-foreground">{t('common.loading')}</p>
+      <p className="text-xs text-muted-foreground">{'Đang tải...'}</p>
     </div>
   );
 }

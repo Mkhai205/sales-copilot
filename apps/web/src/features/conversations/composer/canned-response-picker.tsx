@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import * as React from 'react';
 import { MessageSquareQuote, Search, Sparkles } from 'lucide-react';
@@ -127,19 +127,19 @@ export const CannedResponsePicker = React.forwardRef<
         <div className="flex items-center justify-between border-b border-border/50 px-3 py-2 bg-muted/30">
           <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
             <MessageSquareQuote className="size-4 text-primary" />
-            <span>Canned Responses</span>
+            <span>{'Tin nhắn mẫu'}</span>
             {searchQuery && (
               <span className="text-[11px] font-normal text-muted-foreground ml-1">
-                matching &quot;/{searchQuery}&quot;
+                {`khớp với "/${searchQuery}"`}
               </span>
             )}
           </div>
           <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-            <span className="hidden sm:inline">Use</span>
+            <span className="hidden sm:inline">{'Dùng'}</span>
             <Kbd className="text-[9px] py-0 px-1">↑↓</Kbd>
-            <span className="hidden sm:inline">to navigate,</span>
+            <span className="hidden sm:inline">{'để di chuyển,'}</span>
             <Kbd className="text-[9px] py-0 px-1">↵</Kbd>
-            <span className="hidden sm:inline">to select,</span>
+            <span className="hidden sm:inline">{'để chọn,'}</span>
             <Kbd className="text-[9px] py-0 px-1">Esc</Kbd>
           </div>
         </div>
@@ -149,22 +149,24 @@ export const CannedResponsePicker = React.forwardRef<
           {isLoading ? (
             <div className="flex items-center justify-center gap-2 py-6 text-xs text-muted-foreground">
               <Spinner className="size-3.5 animate-spin" />
-              <span>Loading canned responses...</span>
+              <span>{'Đang tải tin nhắn mẫu...'}</span>
             </div>
           ) : filteredResponses.length === 0 ? (
             <CommandEmpty className="py-6 text-center text-xs text-muted-foreground">
               <div className="flex flex-col items-center gap-1">
                 <Search className="size-4 opacity-40 mb-1" />
-                <p className="font-medium text-foreground">No matching responses</p>
+                <p className="font-medium text-foreground">
+                  {'Không tìm thấy tin nhắn mẫu phù hợp'}
+                </p>
                 <p className="text-[11px]">
                   {searchQuery
-                    ? `No canned response found for "/${searchQuery}"`
-                    : 'No canned responses available in this workspace'}
+                    ? `Không tìm thấy tin nhắn mẫu cho "/${searchQuery}"`
+                    : 'Chưa có tin nhắn mẫu nào trong workspace này'}
                 </p>
               </div>
             </CommandEmpty>
           ) : (
-            <CommandGroup heading="Saved Responses">
+            <CommandGroup heading="Tin nhắn đã lưu">
               {filteredResponses.map((item, index) => {
                 const isSelected = index === selectedIndex;
                 return (

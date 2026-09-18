@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import * as React from 'react';
 import Image from 'next/image';
@@ -129,7 +129,7 @@ export function WorkspaceSwitcher({ currentSlug }: WorkspaceSwitcherProps) {
                 <div className="flex size-6 items-center justify-center rounded-md border bg-transparent">
                   <Plus className="size-4" />
                 </div>
-                <div className="font-medium text-muted-foreground">Create Workspace</div>
+                <div className="font-medium text-muted-foreground">Tạo Workspace mới</div>
               </DropdownMenuItem>
 
               {/* Workspace Settings shortcut */}
@@ -138,7 +138,7 @@ export function WorkspaceSwitcher({ currentSlug }: WorkspaceSwitcherProps) {
                   <div className="flex size-6 items-center justify-center rounded-md border bg-transparent">
                     <Settings className="size-3.5 text-muted-foreground" />
                   </div>
-                  <div className="font-medium text-muted-foreground">Workspace Settings</div>
+                  <div className="font-medium text-muted-foreground">Cài đặt Workspace</div>
                 </Link>
               </DropdownMenuItem>
             </DropdownMenuContent>

@@ -5,7 +5,6 @@ import { type OrderResponseDto } from '@sales-copilot/shared-contracts';
 import { Package, Calendar, ChevronRight } from 'lucide-react';
 import { OrderStatusBadge, PaymentStatusBadge } from './order-status-badge';
 import { Button } from '@/components/ui/button';
-import { useI18n } from '@/lib/i18n';
 
 interface OrderHistoryListProps {
   orders: OrderResponseDto[];
@@ -14,8 +13,6 @@ interface OrderHistoryListProps {
 }
 
 export function OrderHistoryList({ orders, activeOrderId, onSelectOrder }: OrderHistoryListProps) {
-  const { t } = useI18n();
-
   const formatCurrency = (val: number | string) => {
     return new Intl.NumberFormat('vi-VN', {
       style: 'currency',
@@ -39,7 +36,7 @@ export function OrderHistoryList({ orders, activeOrderId, onSelectOrder }: Order
   if (orders.length === 0) {
     return (
       <div className="py-6 text-center text-xs text-muted-foreground">
-        {t('commerce.history.empty')}
+        {'Chưa có lịch sử đơn hàng nào'}
       </div>
     );
   }
@@ -78,7 +75,7 @@ export function OrderHistoryList({ orders, activeOrderId, onSelectOrder }: Order
                 <Calendar className="size-3" />
                 {formatDate(order.createdAt)}
               </span>
-              <span>{t('commerce.history.itemsCount', { count: itemCount })}</span>
+              <span>{`${itemCount} sản phẩm`}</span>
               <span className="font-bold text-foreground">{formatCurrency(order.totalAmount)}</span>
             </div>
 
@@ -91,7 +88,7 @@ export function OrderHistoryList({ orders, activeOrderId, onSelectOrder }: Order
                   className="h-6 px-2 text-[11px] text-primary gap-1"
                   onClick={() => onSelectOrder(order)}
                 >
-                  {t('commerce.history.viewDetails')} <ChevronRight className="size-3" />
+                  {'Xem chi tiết'} <ChevronRight className="size-3" />
                 </Button>
               </div>
             )}

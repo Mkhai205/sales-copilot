@@ -31,7 +31,7 @@ export function ContactIdentities({
     return (
       <div className="flex flex-col gap-2">
         <h5 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-          Connected Channels
+          Kênh được kết nối
         </h5>
         <div className="flex items-center gap-2 text-xs text-muted-foreground/70 py-1">
           <Link2 className="size-3.5 text-muted-foreground/40 shrink-0" />
@@ -44,7 +44,7 @@ export function ContactIdentities({
   return (
     <div className="flex flex-col gap-2.5">
       <h5 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-        Connected Channels ({identities.length})
+        Kênh được kết nối ({identities.length})
       </h5>
 
       <div className="flex flex-col gap-1.5 text-xs">

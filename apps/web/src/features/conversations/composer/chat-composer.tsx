@@ -65,8 +65,6 @@ function findSlashCommand(
   return { slashIndex, query };
 }
 
-import { useI18n } from '@/lib/i18n';
-
 export function ChatComposer({
   conversationId,
   workspaceSlug,
@@ -77,7 +75,6 @@ export function ChatComposer({
   className,
   onSent,
 }: ChatComposerProps) {
-  const { t } = useI18n();
   const [content, setContent] = React.useState('');
   const [attachments, setAttachments] = React.useState<File[]>([]);
   const [mode, setMode] = React.useState<ComposerMode>(defaultMode);
@@ -123,8 +120,8 @@ export function ChatComposer({
 
     Array.from(newFiles).forEach(file => {
       if (file.size > MAX_FILE_SIZE_BYTES) {
-        toast.error(`File "${file.name}" exceeds 10MB limit`, {
-          description: 'Please select a file smaller than 10MB.',
+        toast.error(`Tệp "${file.name}" vượt quá giới hạn 10MB`, {
+          description: 'Vui lòng chọn tệp nhỏ hơn 10MB.',
         });
       } else {
         validFiles.push(file);
@@ -174,8 +171,8 @@ export function ChatComposer({
       addFiles(pastedFiles);
       toast.success(
         pastedFiles.length === 1
-          ? 'Image attached from clipboard'
-          : `${pastedFiles.length} images attached from clipboard`,
+          ? 'Đã đính kèm ảnh từ bộ nhớ tạm'
+          : `Đã đính kèm ${pastedFiles.length} ảnh từ bộ nhớ tạm`,
       );
     }
   };
@@ -367,8 +364,8 @@ export function ChatComposer({
   const dynamicPlaceholder =
     placeholder ||
     (isNote
-      ? t('conversations.composer.placeholderPrivateNote')
-      : t('conversations.composer.placeholderReply'));
+      ? 'Nhập ghi chú nội bộ (chỉ thành viên trong nhóm mới thấy)...'
+      : 'Nhập tin nhắn trả lời... (Shift + Enter để xuống dòng)');
 
   return (
     <div
@@ -396,7 +393,7 @@ export function ChatComposer({
         <div className="absolute inset-0 z-40 flex items-center justify-center rounded-lg bg-primary/10 backdrop-blur-xs border-2 border-dashed border-primary transition-all animate-in fade-in-0">
           <div className="flex items-center gap-2 text-primary font-medium text-xs bg-background/90 px-3 py-1.5 rounded-md shadow-md">
             <UploadCloud className="size-4 animate-bounce" />
-            <span>Drop files here to attach</span>
+            <span>{'Thả tệp vào đây để đính kèm'}</span>
           </div>
         </div>
       )}
@@ -440,7 +437,7 @@ export function ChatComposer({
               )}
             >
               <MessageSquare className="size-3.5" data-icon="inline-start" />
-              <span>{t('conversations.composer.replyTab')}</span>
+              <span>{'Trả lời'}</span>
             </button>
 
             <button
@@ -455,19 +452,19 @@ export function ChatComposer({
               )}
             >
               <Lock className="size-3.5" data-icon="inline-start" />
-              <span>{t('conversations.composer.privateNoteTab')}</span>
+              <span>{'Ghi chú nội bộ'}</span>
             </button>
           </div>
 
           <Tooltip>
             <TooltipTrigger asChild>
               <div className="hidden sm:flex items-center gap-1 text-[10px] text-muted-foreground/70 cursor-default select-none">
-                <span>Toggle:</span>
+                <span>{'Chuyển đổi:'}</span>
                 <Kbd className="text-[9px] py-0 px-1">Alt+N</Kbd>
               </div>
             </TooltipTrigger>
             <TooltipContent side="top">
-              <span className="text-xs">Switch between Reply and Private Note (Alt+N)</span>
+              <span className="text-xs">{'Chuyển đổi giữa Trả lời và Ghi chú nội bộ (Alt+N)'}</span>
             </TooltipContent>
           </Tooltip>
         </div>
@@ -493,7 +490,7 @@ export function ChatComposer({
             'w-full resize-none bg-transparent p-3 text-xs text-foreground placeholder:text-muted-foreground/70 focus:outline-none max-h-40 overflow-y-auto leading-relaxed',
             isNote && 'placeholder:text-amber-700/60 dark:placeholder:text-amber-300/50',
           )}
-          aria-label={isNote ? 'Private note input' : 'Message input'}
+          aria-label={isNote ? 'Ghi chú nội bộ' : 'Soạn tin nhắn'}
         />
 
         {/* Composer Action Toolbar */}
@@ -514,13 +511,15 @@ export function ChatComposer({
                   disabled={disabled || isPending}
                   onClick={() => fileInputRef.current?.click()}
                   className="text-muted-foreground hover:text-foreground"
-                  aria-label="Attach file"
+                  aria-label="Đính kèm tệp"
                 >
                   <Paperclip className="size-3.5" data-icon="inline-start" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="top">
-                <span className="text-xs">Attach files (Images, PDFs, Docs up to 10MB)</span>
+                <span className="text-xs">
+                  {'Đính kèm tệp (Hình ảnh, PDF, tài liệu tối đa 10MB)'}
+                </span>
               </TooltipContent>
             </Tooltip>
 
@@ -541,13 +540,13 @@ export function ChatComposer({
                     'text-muted-foreground hover:text-foreground',
                     isPickerOpen && 'bg-primary/10 text-primary',
                   )}
-                  aria-label="Canned responses"
+                  aria-label="Tin nhắn mẫu"
                 >
                   <MessageSquareQuote className="size-3.5" data-icon="inline-start" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="top">
-                <span className="text-xs">Canned responses (Type &apos;/&apos;)</span>
+                <span className="text-xs">{"Tin nhắn mẫu (Gõ '/')"}</span>
               </TooltipContent>
             </Tooltip>
 
@@ -574,23 +573,23 @@ export function ChatComposer({
                   {isPending ? (
                     <>
                       <Spinner className="size-3" data-icon="inline-start" />
-                      <span>{isNote ? t('common.saving') : t('conversations.composer.send')}</span>
+                      <span>{isNote ? 'Đang lưu...' : 'Gửi'}</span>
                     </>
                   ) : isNote ? (
                     <>
                       <Lock className="size-3" data-icon="inline-start" />
-                      <span>{t('conversations.composer.privateNoteTab')}</span>
+                      <span>{'Ghi chú nội bộ'}</span>
                     </>
                   ) : (
                     <>
-                      <span>{t('conversations.composer.send')}</span>
+                      <span>{'Gửi'}</span>
                       <Send className="size-3" data-icon="inline-end" />
                     </>
                   )}
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="top" className="flex items-center gap-1.5">
-                <span>{isNote ? 'Save private note' : 'Send message'}</span>
+                <span>{isNote ? 'Lưu ghi chú nội bộ' : 'Gửi tin nhắn'}</span>
                 <Kbd className="text-[10px] py-0 px-1 font-mono">↵ Enter</Kbd>
               </TooltipContent>
             </Tooltip>

@@ -10,7 +10,6 @@ import { useWorkspaces } from '@/features/identity';
 import { CommerceDetailTab } from '@/features/commerce';
 
 import type { OrderResponseDto } from '@sales-copilot/shared-contracts';
-import { useI18n } from '@/lib/i18n';
 import { useConversation } from './hooks/use-conversation';
 import { useMessages } from './hooks/use-messages';
 import { useInbox } from '@/features/omnichannel/hooks/use-inboxes';
@@ -64,7 +63,6 @@ export function DetailPanel({
   newOrderTrigger,
   onOpenPosDrawer,
 }: DetailPanelProps) {
-  const { t } = useI18n();
   const [internalTab, setInternalTab] = React.useState<'contact' | 'commerce'>(
     activeTab || 'contact',
   );
@@ -132,7 +130,7 @@ export function DetailPanel({
       onValueChange={handleTabChange}
       className="flex h-full w-full min-h-0 flex-1 flex-col overflow-hidden bg-card/40 border-l border-border/70 gap-0"
     >
-      {/* Detail Header: Top Tabs [Khách hàng | Đơn Commerce] */}
+      {/* Detail Header: Top Tabs [Khách hàng | Đơn hàng] */}
       <div className="flex h-14 shrink-0 items-center border-b border-border/80 px-3 bg-background/95 backdrop-blur-xs">
         <TabsList className="grid w-full grid-cols-2 h-8 p-0.5">
           <TabsTrigger
@@ -140,14 +138,14 @@ export function DetailPanel({
             className="text-[11px] gap-1.5 px-2 font-medium cursor-pointer"
           >
             <User className="size-3.5 shrink-0" />
-            <span className="truncate">{t('conversations.details.tabContact')}</span>
+            <span className="truncate">{'Khách hàng'}</span>
           </TabsTrigger>
           <TabsTrigger
             value="commerce"
             className="text-[11px] gap-1.5 px-2 font-medium cursor-pointer"
           >
             <ShoppingBag className="size-3.5 shrink-0" />
-            <span className="truncate">{t('conversations.details.tabPos')}</span>
+            <span className="truncate">Đơn hàng</span>
           </TabsTrigger>
         </TabsList>
       </div>
@@ -183,28 +181,26 @@ export function DetailPanel({
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
                       <Bot className="size-3.5 text-primary" />
-                      <span>{t('conversations.details.aiStats')}</span>
+                      <span>{'Hoạt động AI'}</span>
                     </div>
                     {conversation.isAiPaused ? (
                       <Badge
                         variant="outline"
                         className="text-[10px] text-amber-500 border-amber-500/30 bg-amber-500/10 py-0 px-1.5 font-normal"
                       >
-                        {t('conversations.details.aiStatusPaused')}
+                        {'Đã tiếp quản bởi nhân viên'}
                       </Badge>
                     ) : (
                       <Badge
                         variant="outline"
                         className="text-[10px] text-emerald-600 border-emerald-500/30 bg-emerald-500/10 py-0 px-1.5 font-normal"
                       >
-                        {t('conversations.details.aiStatusActive')}
+                        {'Đang hoạt động'}
                       </Badge>
                     )}
                   </div>
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span>
-                      {t('conversations.details.aiMessagesCount', { count: aiMessagesCount })}
-                    </span>
+                    <span>{`AI xử lý: ${aiMessagesCount} tin nhắn`}</span>
                   </div>
                 </div>
               </>
@@ -225,7 +221,7 @@ export function DetailPanel({
             />
           </TabsContent>
 
-          {/* Tab 2: Đơn Commerce */}
+          {/* Tab 2: Đơn hàng */}
           <TabsContent
             value="commerce"
             className="min-h-0 flex-1 overflow-y-auto p-4 flex flex-col gap-4 m-0"
@@ -242,7 +238,7 @@ export function DetailPanel({
               />
             ) : (
               <div className="py-8 text-center text-xs text-muted-foreground">
-                {t('conversations.details.resolvingWorkspace')}
+                {'Đang xác định không gian làm việc...'}
               </div>
             )}
           </TabsContent>

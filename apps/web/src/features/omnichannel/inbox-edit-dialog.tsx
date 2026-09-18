@@ -35,7 +35,6 @@ import {
   useUpdateInbox,
 } from './hooks/use-inboxes';
 import { useWorkspaceMembers } from '@/features/identity';
-import { useI18n } from '@/lib/i18n';
 
 interface InboxEditDialogProps {
   open: boolean;
@@ -50,7 +49,6 @@ export function InboxEditDialog({
   workspaceId,
   inboxToEdit,
 }: InboxEditDialogProps) {
-  const { t } = useI18n();
   const [name, setName] = React.useState('');
   const [greetingMessage, setGreetingMessage] = React.useState('');
   const [isAutoAssignmentEnabled, setIsAutoAssignmentEnabled] = React.useState(false);
@@ -96,7 +94,7 @@ export function InboxEditDialog({
     return workspaceMembers.filter(m => !currentMemberUserIds.has(m.userId));
   }, [workspaceMembers, inboxMembers]);
 
-  const nameError = touched && !name.trim() ? t('settings.inboxes.editDialog.nameRequired') : null;
+  const nameError = touched && !name.trim() ? 'Tên hộp thư là bắt buộc' : null;
 
   const handleSaveSettings = (e: React.FormEvent) => {
     e.preventDefault();
@@ -156,11 +154,11 @@ export function InboxEditDialog({
           <div className="flex items-center gap-2">
             <Inbox className="size-4 text-primary" />
             <DialogTitle className="text-sm font-semibold">
-              {t('settings.inboxes.editDialog.title', { name: inboxToEdit?.name || '' })}
+              {`Chỉnh sửa hộp thư: ${inboxToEdit?.name || ''}`}
             </DialogTitle>
           </div>
           <DialogDescription className="text-xs">
-            {t('settings.inboxes.editDialog.description')}
+            {'Quản lý cài đặt kênh, thông tin xác thực bảo mật và nhân viên phụ trách.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -168,13 +166,11 @@ export function InboxEditDialog({
           <TabsList className="grid w-full grid-cols-2 mb-3">
             <TabsTrigger value="settings" className="text-xs gap-1.5">
               <Settings className="size-3.5" />
-              {t('settings.inboxes.editDialog.tabSettings')}
+              {'Cài đặt chung & Xác thực'}
             </TabsTrigger>
             <TabsTrigger value="members" className="text-xs gap-1.5">
               <Users className="size-3.5" />
-              {t('settings.inboxes.editDialog.tabMembers', {
-                count: inboxMembers?.length || 0,
-              })}
+              {`Nhân viên (${inboxMembers?.length || 0})`}
             </TabsTrigger>
           </TabsList>
 
@@ -188,9 +184,7 @@ export function InboxEditDialog({
               <FieldGroup className="gap-4">
                 {/* Inbox Name */}
                 <Field data-invalid={!!nameError}>
-                  <FieldLabel htmlFor="edit-name">
-                    {t('settings.inboxes.editDialog.nameLabel')}
-                  </FieldLabel>
+                  <FieldLabel htmlFor="edit-name">{'Tên hộp thư'}</FieldLabel>
                   <Input
                     id="edit-name"
                     value={name}
@@ -204,9 +198,7 @@ export function InboxEditDialog({
 
                 {/* Greeting Message */}
                 <Field>
-                  <FieldLabel htmlFor="edit-greeting">
-                    {t('settings.inboxes.editDialog.greetingLabel')}
-                  </FieldLabel>
+                  <FieldLabel htmlFor="edit-greeting">{'Lời chào tự động'}</FieldLabel>
                   <Textarea
                     id="edit-greeting"
                     value={greetingMessage}
@@ -220,10 +212,10 @@ export function InboxEditDialog({
                 <div className="flex items-center justify-between rounded-lg border border-border/70 p-3 bg-muted/20">
                   <div className="flex flex-col gap-0.5">
                     <span className="text-xs font-medium text-foreground">
-                      {t('settings.inboxes.editDialog.autoAssignTitle')}
+                      {'Tự động phân bổ hội thoại'}
                     </span>
                     <span className="text-[11px] text-muted-foreground">
-                      {t('settings.inboxes.editDialog.autoAssignDesc')}
+                      {'Tự động phân bổ hội thoại mới xoay vòng cho các nhân viên phụ trách.'}
                     </span>
                   </div>
                   <Switch
@@ -236,18 +228,16 @@ export function InboxEditDialog({
                 <div className="flex flex-col gap-3 rounded-lg border border-border/70 p-3 bg-card/40">
                   <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
                     <Lock className="size-3.5 text-amber-500" />
-                    {t('settings.inboxes.editDialog.credentialsTitle')}
+                    {'Thông tin xác thực kênh (Đã mã hóa)'}
                   </div>
                   <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
                     <AlertCircle className="size-3 text-muted-foreground" />
-                    {t('settings.inboxes.editDialog.credentialsNote')}
+                    {'Để trống các ô xác thực nếu muốn giữ nguyên token đã lưu.'}
                   </div>
 
                   {channelType === ChannelType.TELEGRAM && (
                     <Field>
-                      <FieldLabel htmlFor="edit-tg-token">
-                        {t('settings.inboxes.editDialog.botTokenLabel')}
-                      </FieldLabel>
+                      <FieldLabel htmlFor="edit-tg-token">{'Bot Token'}</FieldLabel>
                       <Input
                         id="edit-tg-token"
                         type="password"
@@ -267,9 +257,7 @@ export function InboxEditDialog({
                   {channelType === ChannelType.FACEBOOK_MESSENGER && (
                     <>
                       <Field>
-                        <FieldLabel htmlFor="edit-fb-page">
-                          {t('settings.inboxes.editDialog.pageIdLabel')}
-                        </FieldLabel>
+                        <FieldLabel htmlFor="edit-fb-page">{'Page ID'}</FieldLabel>
                         <Input
                           id="edit-fb-page"
                           value={credentials.pageId || ''}
@@ -284,9 +272,7 @@ export function InboxEditDialog({
                         />
                       </Field>
                       <Field>
-                        <FieldLabel htmlFor="edit-fb-token">
-                          {t('settings.inboxes.editDialog.pageAccessTokenLabel')}
-                        </FieldLabel>
+                        <FieldLabel htmlFor="edit-fb-token">{'Page Access Token'}</FieldLabel>
                         <Input
                           id="edit-fb-token"
                           type="password"
@@ -307,9 +293,7 @@ export function InboxEditDialog({
                   {channelType === ChannelType.ZALO && (
                     <>
                       <Field>
-                        <FieldLabel htmlFor="edit-zalo-oa">
-                          {t('settings.inboxes.editDialog.zaloOaIdLabel')}
-                        </FieldLabel>
+                        <FieldLabel htmlFor="edit-zalo-oa">{'Zalo OA ID'}</FieldLabel>
                         <Input
                           id="edit-zalo-oa"
                           value={credentials.oaId || ''}
@@ -324,9 +308,7 @@ export function InboxEditDialog({
                         />
                       </Field>
                       <Field>
-                        <FieldLabel htmlFor="edit-zalo-token">
-                          {t('settings.inboxes.editDialog.accessTokenLabel')}
-                        </FieldLabel>
+                        <FieldLabel htmlFor="edit-zalo-token">{'Access Token'}</FieldLabel>
                         <Input
                           id="edit-zalo-token"
                           type="password"
@@ -354,9 +336,7 @@ export function InboxEditDialog({
             <div className="flex items-center gap-2">
               <Select value={selectedAddUserId} onValueChange={setSelectedAddUserId}>
                 <SelectTrigger className="flex-1 h-8 text-xs">
-                  <SelectValue
-                    placeholder={t('settings.inboxes.editDialog.selectAgentPlaceholder')}
-                  />
+                  <SelectValue placeholder={'Chọn nhân viên để thêm...'} />
                 </SelectTrigger>
                 <SelectContent position="popper">
                   {availableMembers.map(m => (
@@ -366,7 +346,7 @@ export function InboxEditDialog({
                   ))}
                   {availableMembers.length === 0 && (
                     <div className="p-2 text-center text-xs text-muted-foreground">
-                      {t('settings.inboxes.editDialog.allMembersAssigned')}
+                      {'Tất cả thành viên không gian làm việc đã được phân bổ.'}
                     </div>
                   )}
                 </SelectContent>
@@ -384,7 +364,7 @@ export function InboxEditDialog({
                 ) : (
                   <UserPlus className="size-3.5" data-icon="inline-start" />
                 )}
-                {t('settings.inboxes.editDialog.addAgentBtn')}
+                {'Thêm'}
               </Button>
             </div>
 
@@ -398,7 +378,7 @@ export function InboxEditDialog({
                   </div>
                 ) : !inboxMembers || inboxMembers.length === 0 ? (
                   <div className="flex h-36 items-center justify-center p-4 text-center text-xs text-muted-foreground">
-                    {t('settings.inboxes.editDialog.noAgents')}
+                    {'Chưa có nhân viên nào được phân bổ cho hộp thư này.'}
                   </div>
                 ) : (
                   <div className="flex flex-col gap-1">
@@ -437,7 +417,7 @@ export function InboxEditDialog({
                             onClick={() => removeMember(m.userId)}
                             disabled={isRemovingMember}
                             className="size-6 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                            title={t('settings.inboxes.editDialog.removeAgentTooltip')}
+                            title={'Xóa nhân viên khỏi hộp thư'}
                           >
                             <Trash2 className="size-3" />
                           </Button>
@@ -460,7 +440,7 @@ export function InboxEditDialog({
             disabled={isUpdating}
             className="text-xs"
           >
-            {t('settings.inboxes.editDialog.cancel')}
+            {'Hủy'}
           </Button>
           <Button
             type="submit"
@@ -473,10 +453,10 @@ export function InboxEditDialog({
             {isUpdating ? (
               <>
                 <Spinner className="size-3.5" data-icon="inline-start" />
-                {t('settings.inboxes.editDialog.saving')}
+                {'Đang lưu...'}
               </>
             ) : (
-              t('settings.inboxes.editDialog.save')
+              'Lưu thay đổi'
             )}
           </Button>
         </DialogFooter>

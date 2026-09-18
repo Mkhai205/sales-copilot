@@ -31,7 +31,6 @@ import {
   getActionBadgeConfig,
   getTargetTypeBadgeConfig,
 } from '../utils/audit-log-helpers';
-import { useI18n } from '@/lib/i18n';
 
 export interface AuditLogDiffDialogProps {
   log: PlatformAuditLogDto | null;
@@ -40,7 +39,6 @@ export interface AuditLogDiffDialogProps {
 }
 
 export function AuditLogDiffDialog({ log, open, onOpenChange }: AuditLogDiffDialogProps) {
-  const { t } = useI18n();
   const [copiedJson, setCopiedJson] = React.useState(false);
 
   if (!log) return null;
@@ -51,24 +49,24 @@ export function AuditLogDiffDialog({ log, open, onOpenChange }: AuditLogDiffDial
 
   const actionLabel =
     log.action === 'WORKSPACE_SUSPENDED'
-      ? t('admin.auditLogs.actionSuspended')
+      ? 'Tạm khóa Shop'
       : log.action === 'WORKSPACE_ACTIVATED'
-        ? t('admin.auditLogs.actionActivated')
+        ? 'Kích hoạt Shop'
         : log.action === 'PLAN_CHANGED'
-          ? t('admin.auditLogs.actionPlanChanged')
+          ? 'Đổi gói cước'
           : log.action === 'QUOTA_UPDATED'
-            ? t('admin.auditLogs.actionQuotaUpdated')
+            ? 'Cập nhật Quota'
             : log.action === 'SYSTEM_SETTING_UPDATED'
-              ? t('admin.auditLogs.actionSettingUpdated')
+              ? 'Sửa cấu hình'
               : actionBadge.label;
 
   const targetLabel =
     log.targetType === 'WORKSPACE'
-      ? t('admin.auditLogs.targetWorkspace')
+      ? 'Workspace'
       : log.targetType === 'SYSTEM_SETTING'
-        ? t('admin.auditLogs.targetSetting')
+        ? 'Cấu hình'
         : log.targetType === 'USER'
-          ? t('admin.auditLogs.targetUser')
+          ? 'Người dùng'
           : targetBadge.label;
 
   const handleCopyJson = () => {
@@ -101,19 +99,17 @@ export function AuditLogDiffDialog({ log, open, onOpenChange }: AuditLogDiffDial
             </Badge>
           </div>
           <DialogTitle className="text-base font-bold text-foreground">
-            {t('admin.auditLogs.diffDialogTitle')}
+            {'Chi tiết nhật ký kiểm toán & Thay đổi dữ liệu'}
           </DialogTitle>
           <DialogDescription className="text-xs text-muted-foreground">
-            {t('admin.auditLogs.diffDialogRecordId', { id: log.id })}
+            {`Mã định danh bản ghi: ${log.id}`}
           </DialogDescription>
         </DialogHeader>
 
         {/* Metadata summary bar */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 rounded-lg border border-border bg-muted/40 p-2.5 text-xs shrink-0">
           <div>
-            <span className="text-[11px] text-muted-foreground block">
-              {t('admin.auditLogs.diffDialogActor')}
-            </span>
+            <span className="text-[11px] text-muted-foreground block">{'Người thực hiện'}</span>
             <div
               className="flex items-center gap-1 font-medium text-foreground truncate mt-0.5"
               title={log.actorEmail}
@@ -123,32 +119,28 @@ export function AuditLogDiffDialog({ log, open, onOpenChange }: AuditLogDiffDial
             </div>
           </div>
           <div>
-            <span className="text-[11px] text-muted-foreground block">
-              {t('admin.auditLogs.diffDialogTimestamp')}
-            </span>
+            <span className="text-[11px] text-muted-foreground block">{'Thời điểm thực hiện'}</span>
             <div className="flex items-center gap-1 font-medium text-foreground mt-0.5">
               <Clock className="size-3 text-muted-foreground shrink-0" />
               <span>{formatDateTime(log.createdAt)}</span>
             </div>
           </div>
           <div>
-            <span className="text-[11px] text-muted-foreground block">
-              {t('admin.auditLogs.diffDialogIp')}
-            </span>
+            <span className="text-[11px] text-muted-foreground block">{'Địa chỉ IP'}</span>
             <div className="flex items-center gap-1 font-mono text-foreground mt-0.5">
               <Globe className="size-3 text-muted-foreground shrink-0" />
-              <span>{log.ipAddress || t('admin.auditLogs.unknown')}</span>
+              <span>{log.ipAddress || 'Không rõ'}</span>
             </div>
           </div>
           <div>
             <span className="text-[11px] text-muted-foreground block">
-              {t('admin.auditLogs.diffDialogClient')}
+              {'Trình duyệt / Client'}
             </span>
             <div
               className="text-muted-foreground truncate mt-0.5 text-[11px]"
-              title={log.userAgent || t('admin.auditLogs.unknown')}
+              title={log.userAgent || 'Không rõ'}
             >
-              {log.userAgent || t('admin.auditLogs.unknown')}
+              {log.userAgent || 'Không rõ'}
             </div>
           </div>
         </div>
@@ -159,11 +151,11 @@ export function AuditLogDiffDialog({ log, open, onOpenChange }: AuditLogDiffDial
             <TabsList className="h-8">
               <TabsTrigger value="diff" className="text-xs gap-1.5 px-3">
                 <Layers className="size-3.5" />
-                <span>{t('admin.auditLogs.diffTabVisual')}</span>
+                <span>{'So sánh thay đổi (Visual Diff)'}</span>
               </TabsTrigger>
               <TabsTrigger value="json" className="text-xs gap-1.5 px-3">
                 <FileCode className="size-3.5" />
-                <span>{t('admin.auditLogs.diffTabRaw')}</span>
+                <span>{'Dữ liệu thô (Raw JSON)'}</span>
               </TabsTrigger>
             </TabsList>
 
@@ -176,12 +168,12 @@ export function AuditLogDiffDialog({ log, open, onOpenChange }: AuditLogDiffDial
               {copiedJson ? (
                 <>
                   <Check className="size-3 text-emerald-600" />
-                  <span>{t('admin.auditLogs.copiedJson')}</span>
+                  <span>{'Đã sao chép'}</span>
                 </>
               ) : (
                 <>
                   <Copy className="size-3" />
-                  <span>{t('admin.auditLogs.copyJson')}</span>
+                  <span>{'Sao chép JSON'}</span>
                 </>
               )}
             </Button>
@@ -189,7 +181,7 @@ export function AuditLogDiffDialog({ log, open, onOpenChange }: AuditLogDiffDial
 
           {/* Visual Diff Content */}
           <TabsContent value="diff" className="flex-1 overflow-y-auto pt-3">
-            {renderVisualDiff(log.action, metadata, t)}
+            {renderVisualDiff(log.action, metadata)}
           </TabsContent>
 
           {/* Raw JSON Content */}
@@ -207,11 +199,7 @@ export function AuditLogDiffDialog({ log, open, onOpenChange }: AuditLogDiffDial
 /**
  * Renders domain-specific visual diff widgets based on audit action.
  */
-function renderVisualDiff(
-  action: string,
-  metadata: Record<string, any>,
-  t: (key: any, params?: any) => string,
-) {
+function renderVisualDiff(action: string, metadata: Record<string, any>) {
   switch (action) {
     case PlatformAuditAction.WORKSPACE_SUSPENDED:
       return (
@@ -219,18 +207,20 @@ function renderVisualDiff(
           <div className="flex items-start gap-2.5">
             <AlertTriangle className="size-5 shrink-0 mt-0.5 text-destructive" />
             <div className="flex flex-col gap-1">
-              <h4 className="font-semibold text-sm">{t('admin.auditLogs.diffSuspendedTitle')}</h4>
+              <h4 className="font-semibold text-sm">{'Gian hàng (Workspace) đã bị tạm khóa'}</h4>
               <p className="text-xs text-destructive/90">
-                {t('admin.auditLogs.diffSuspendedDesc')}
+                {
+                  'Toàn bộ các truy cập và thao tác kinh doanh của gian hàng này đã bị đình chỉ từ thời điểm trên.'
+                }
               </p>
             </div>
           </div>
           <div className="rounded-md border border-destructive/20 bg-background/80 p-3 text-foreground">
             <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">
-              {t('admin.auditLogs.diffSuspendedReasonLabel')}
+              {'Lý do tạm khóa được ghi nhận:'}
             </span>
             <p className="text-xs font-medium text-foreground whitespace-pre-wrap">
-              {metadata.reason || t('admin.auditLogs.diffSuspendedNoReason')}
+              {metadata.reason || 'Không có lý do chi tiết được cung cấp.'}
             </p>
           </div>
         </div>
@@ -242,16 +232,18 @@ function renderVisualDiff(
           <div className="flex items-start gap-2.5">
             <ShieldCheck className="size-5 shrink-0 mt-0.5 text-emerald-600 dark:text-emerald-400" />
             <div className="flex flex-col gap-1">
-              <h4 className="font-semibold text-sm">{t('admin.auditLogs.diffActivatedTitle')}</h4>
+              <h4 className="font-semibold text-sm">{'Gian hàng đã được kích hoạt lại'}</h4>
               <p className="text-xs text-emerald-700 dark:text-emerald-400">
-                {t('admin.auditLogs.diffActivatedDesc')}
+                {
+                  'Lệnh tạm khóa đã được gỡ bỏ. Chủ shop và nhân viên có thể đăng nhập và tiếp tục vận hành bình thường.'
+                }
               </p>
             </div>
           </div>
           {metadata.reason && (
             <div className="rounded-md border border-emerald-500/20 bg-background/80 p-3 text-foreground">
               <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">
-                {t('admin.auditLogs.diffActivatedReasonLabel')}
+                {'Ghi chú kích hoạt:'}
               </span>
               <p className="text-xs font-medium text-foreground whitespace-pre-wrap">
                 {metadata.reason}
@@ -265,13 +257,11 @@ function renderVisualDiff(
       return (
         <div className="flex flex-col gap-4 rounded-lg border border-border bg-card p-4">
           <h4 className="font-semibold text-xs text-muted-foreground uppercase tracking-wider">
-            {t('admin.auditLogs.diffPlanTitle')}
+            {'Thay đổi gói cước dịch vụ (Billing Plan)'}
           </h4>
           <div className="flex items-center justify-center gap-6 py-4">
             <div className="flex flex-col items-center gap-1.5">
-              <span className="text-xs text-muted-foreground">
-                {t('admin.auditLogs.diffPlanOld')}
-              </span>
+              <span className="text-xs text-muted-foreground">{'Gói cũ'}</span>
               <Badge variant="outline" className="text-sm font-semibold px-3 py-1">
                 {metadata.oldPlan || 'N/A'}
               </Badge>
@@ -280,9 +270,7 @@ function renderVisualDiff(
             <ArrowRight className="size-5 text-muted-foreground" />
 
             <div className="flex flex-col items-center gap-1.5">
-              <span className="text-xs text-muted-foreground">
-                {t('admin.auditLogs.diffPlanNew')}
-              </span>
+              <span className="text-xs text-muted-foreground">{'Gói mới'}</span>
               <Badge
                 variant="default"
                 className="text-sm font-semibold px-3 py-1 bg-primary text-primary-foreground"
@@ -300,10 +288,10 @@ function renderVisualDiff(
       const allKeys = Array.from(new Set([...Object.keys(oldQuotas), ...Object.keys(newQuotas)]));
 
       const quotaLabels: Record<string, string> = {
-        maxAgents: t('admin.workspaces.staffAgents'),
-        maxChannels: t('admin.workspaces.connectedChannels'),
-        storageLimitMb: t('admin.workspaces.storageMinio'),
-        aiMonthlyTokens: t('admin.workspaces.aiTokensMonthly'),
+        maxAgents: 'Nhân sự (Agents)',
+        maxChannels: 'Kênh kết nối',
+        storageLimitMb: 'Lưu trữ MinIO',
+        aiMonthlyTokens: 'Token AI / Tháng',
       };
 
       return (
@@ -311,7 +299,7 @@ function renderVisualDiff(
           <div className="flex items-center gap-2">
             <Sliders className="size-4 text-primary" />
             <h4 className="font-semibold text-xs text-muted-foreground uppercase tracking-wider">
-              {t('admin.auditLogs.diffQuotaTitle')}
+              {'So sánh hạn mức Quota đã thay đổi'}
             </h4>
           </div>
 
@@ -319,23 +307,17 @@ function renderVisualDiff(
             <table className="w-full text-xs text-left">
               <thead className="bg-muted/50 border-b border-border text-muted-foreground font-semibold">
                 <tr>
-                  <th className="py-2 px-3">{t('admin.auditLogs.diffQuotaHeaderLimit')}</th>
-                  <th className="py-2 px-3 text-center">
-                    {t('admin.auditLogs.diffQuotaHeaderBefore')}
-                  </th>
-                  <th className="py-2 px-3 text-center">
-                    {t('admin.auditLogs.diffQuotaHeaderAfter')}
-                  </th>
-                  <th className="py-2 px-3 text-center">
-                    {t('admin.auditLogs.diffQuotaHeaderDiff')}
-                  </th>
+                  <th className="py-2 px-3">{'Hạn mức (Quota)'}</th>
+                  <th className="py-2 px-3 text-center">{'Giá trị trước'}</th>
+                  <th className="py-2 px-3 text-center">{'Giá trị sau'}</th>
+                  <th className="py-2 px-3 text-center">{'Thay đổi'}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {allKeys.length === 0 ? (
                   <tr>
                     <td colSpan={4} className="py-3 text-center text-muted-foreground">
-                      {t('admin.auditLogs.diffQuotaEmpty')}
+                      {'Không có thông tin chi tiết về hạn mức.'}
                     </td>
                   </tr>
                 ) : (
@@ -386,7 +368,7 @@ function renderVisualDiff(
         <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4">
           <div className="flex items-center justify-between">
             <h4 className="font-semibold text-xs text-muted-foreground uppercase tracking-wider">
-              {t('admin.auditLogs.diffSettingKey', { key: metadata.key || '-' })}
+              {`Khóa cấu hình: ${metadata.key || '-'}`}
             </h4>
           </div>
 
@@ -394,13 +376,13 @@ function renderVisualDiff(
             {/* Old Value */}
             <div className="flex flex-col gap-1.5 rounded-md border border-border bg-muted/40 p-3">
               <span className="text-[11px] font-semibold text-muted-foreground uppercase">
-                {t('admin.auditLogs.diffSettingOld')}
+                {'Giá trị trước (Old Value)'}
               </span>
               <div className="rounded bg-background p-2 font-mono text-xs overflow-x-auto text-muted-foreground border border-border min-h-[50px]">
                 <pre>
                   {metadata.oldValue !== undefined
                     ? JSON.stringify(metadata.oldValue, null, 2)
-                    : t('admin.auditLogs.diffSettingNoVal')}
+                    : '(Chưa có giá trị)'}
                 </pre>
               </div>
             </div>
@@ -408,13 +390,13 @@ function renderVisualDiff(
             {/* New Value */}
             <div className="flex flex-col gap-1.5 rounded-md border border-border bg-muted/40 p-3">
               <span className="text-[11px] font-semibold text-primary uppercase">
-                {t('admin.auditLogs.diffSettingNew')}
+                {'Giá trị mới (New Value)'}
               </span>
               <div className="rounded bg-background p-2 font-mono text-xs overflow-x-auto text-foreground font-semibold border border-border min-h-[50px]">
                 <pre>
                   {metadata.newValue !== undefined
                     ? JSON.stringify(metadata.newValue, null, 2)
-                    : t('admin.auditLogs.diffSettingEmpty')}
+                    : '(Trống)'}
                 </pre>
               </div>
             </div>
@@ -426,7 +408,7 @@ function renderVisualDiff(
       return (
         <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4">
           <h4 className="font-semibold text-xs text-muted-foreground uppercase tracking-wider">
-            {t('admin.auditLogs.diffMetadataTitle')}
+            {'Dữ liệu thay đổi (Metadata)'}
           </h4>
           <div className="rounded-md border border-border bg-muted/40 p-3 font-mono text-xs overflow-x-auto">
             <pre>{JSON.stringify(metadata, null, 2)}</pre>

@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { ChevronsUpDown, LogOut, Moon, Sun } from 'lucide-react';
+import { LogOut, Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useCurrentUser, logoutAction } from '@/features/auth';
 
@@ -22,17 +22,14 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar';
-import { LanguageSwitcherSubMenu } from '@/components/language-switcher';
 import { useQueryClient } from '@tanstack/react-query';
 import { disconnectSocketClient } from '@/lib/socket/socket-client';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useI18n } from '@/lib/i18n';
 
 export function NavUser() {
   const { isMobile } = useSidebar();
   const { data: user, isLoading } = useCurrentUser();
   const { theme, setTheme } = useTheme();
-  const { t } = useI18n();
   const queryClient = useQueryClient();
   const [isLoggingOut, startTransition] = React.useTransition();
 
@@ -100,7 +97,6 @@ export function NavUser() {
                 <span className="truncate font-semibold">{displayName}</span>
                 <span className="truncate text-xs text-muted-foreground">{displayEmail}</span>
               </div>
-              <ChevronsUpDown className="ml-auto size-4 opacity-50" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
@@ -128,17 +124,12 @@ export function NavUser() {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <LanguageSwitcherSubMenu />
               <DropdownMenuItem
                 className="gap-2 cursor-pointer"
                 onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
               >
                 {theme === 'dark' ? <Sun className="size-4" /> : <Moon className="size-4" />}
-                <span>
-                  {t('common.toggleTheme', {
-                    mode: theme === 'dark' ? t('common.lightMode') : t('common.darkMode'),
-                  })}
-                </span>
+                <span>{`Đổi giao diện ${theme === 'dark' ? 'Sáng' : 'Tối'}`}</span>
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
@@ -149,7 +140,7 @@ export function NavUser() {
               variant="destructive"
             >
               <LogOut className="size-4" />
-              <span>{isLoggingOut ? t('common.loggingOut') : t('common.logout')}</span>
+              <span>{isLoggingOut ? 'Đang đăng xuất...' : 'Đăng xuất'}</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

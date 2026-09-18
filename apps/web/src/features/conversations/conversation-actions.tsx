@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import * as React from 'react';
 import {
@@ -58,45 +58,45 @@ export function ConversationActions({ conversation, workspaceSlug }: Conversatio
   return (
     <div className="flex flex-col gap-3">
       <h5 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-        Conversation Attributes
+        {'Thuộc tính Hội thoại'}
       </h5>
 
       <div className="flex flex-col gap-2.5 text-xs">
         {/* Status Dropdown */}
         <div className="flex items-center justify-between gap-2">
-          <span className="text-muted-foreground font-medium shrink-0">Status</span>
+          <span className="text-muted-foreground font-medium shrink-0">{'Trạng thái'}</span>
           <Select
             value={conversation.status}
             onValueChange={handleStatusChange}
             disabled={updateStatus.isPending}
           >
             <SelectTrigger className="w-36 h-7 text-xs">
-              <SelectValue placeholder="Select status" />
+              <SelectValue placeholder="Chọn trạng thái" />
             </SelectTrigger>
             <SelectContent position="popper">
               <SelectGroup>
                 <SelectItem value={ConversationStatus.OPEN}>
                   <span className="flex items-center gap-2">
                     <span className="size-2 rounded-full bg-emerald-500" />
-                    Open
+                    {'Đang mở'}
                   </span>
                 </SelectItem>
                 <SelectItem value={ConversationStatus.PENDING}>
                   <span className="flex items-center gap-2">
                     <span className="size-2 rounded-full bg-amber-500" />
-                    Pending
+                    {'Đang chờ'}
                   </span>
                 </SelectItem>
                 <SelectItem value={ConversationStatus.RESOLVED}>
                   <span className="flex items-center gap-2">
                     <span className="size-2 rounded-full bg-slate-400" />
-                    Resolved
+                    {'Đã giải quyết'}
                   </span>
                 </SelectItem>
                 <SelectItem value={ConversationStatus.SNOOZED}>
                   <span className="flex items-center gap-2">
                     <span className="size-2 rounded-full bg-purple-500" />
-                    Snoozed
+                    {'Tạm hoãn'}
                   </span>
                 </SelectItem>
               </SelectGroup>
@@ -106,39 +106,39 @@ export function ConversationActions({ conversation, workspaceSlug }: Conversatio
 
         {/* Priority Dropdown */}
         <div className="flex items-center justify-between gap-2">
-          <span className="text-muted-foreground font-medium shrink-0">Priority</span>
+          <span className="text-muted-foreground font-medium shrink-0">{'Độ ưu tiên'}</span>
           <Select
             value={conversation.priority || Priority.MEDIUM}
             onValueChange={handlePriorityChange}
             disabled={updatePriority.isPending}
           >
             <SelectTrigger className="w-36 h-7 text-xs">
-              <SelectValue placeholder="Select priority" />
+              <SelectValue placeholder="Chọn độ ưu tiên" />
             </SelectTrigger>
             <SelectContent position="popper">
               <SelectGroup>
                 <SelectItem value={Priority.URGENT}>
                   <span className="flex items-center gap-2 text-rose-500 font-medium">
                     <span className="size-2 rounded-full bg-rose-500" />
-                    Urgent
+                    {'Khẩn cấp'}
                   </span>
                 </SelectItem>
                 <SelectItem value={Priority.HIGH}>
                   <span className="flex items-center gap-2 text-orange-500 font-medium">
                     <span className="size-2 rounded-full bg-orange-500" />
-                    High
+                    {'Cao'}
                   </span>
                 </SelectItem>
                 <SelectItem value={Priority.MEDIUM}>
                   <span className="flex items-center gap-2">
                     <span className="size-2 rounded-full bg-yellow-500" />
-                    Medium
+                    {'Trung bình'}
                   </span>
                 </SelectItem>
                 <SelectItem value={Priority.LOW}>
                   <span className="flex items-center gap-2">
                     <span className="size-2 rounded-full bg-slate-400" />
-                    Low
+                    {'Thấp'}
                   </span>
                 </SelectItem>
               </SelectGroup>
@@ -148,19 +148,19 @@ export function ConversationActions({ conversation, workspaceSlug }: Conversatio
 
         {/* Assignee Dropdown */}
         <div className="flex items-center justify-between gap-2">
-          <span className="text-muted-foreground font-medium shrink-0">Assignee</span>
+          <span className="text-muted-foreground font-medium shrink-0">{'Người phụ trách'}</span>
           <Select
             value={conversation.assigneeId || 'unassigned'}
             onValueChange={handleAssigneeChange}
             disabled={assignConversation.isPending || isMembersLoading}
           >
             <SelectTrigger className="w-36 h-7 text-xs">
-              <SelectValue placeholder="Unassigned" />
+              <SelectValue placeholder="Chưa phân công" />
             </SelectTrigger>
             <SelectContent position="popper">
               <SelectGroup>
                 <SelectItem value="unassigned">
-                  <span className="text-muted-foreground italic">Unassigned</span>
+                  <span className="text-muted-foreground italic">{'Chưa phân công'}</span>
                 </SelectItem>
                 {members.map(member => (
                   <SelectItem key={member.id} value={member.userId}>
@@ -184,19 +184,19 @@ export function ConversationActions({ conversation, workspaceSlug }: Conversatio
 
         {/* Team Dropdown */}
         <div className="flex items-center justify-between gap-2">
-          <span className="text-muted-foreground font-medium shrink-0">Team</span>
+          <span className="text-muted-foreground font-medium shrink-0">{'Đội nhóm'}</span>
           <Select
             value={conversation.teamId || 'none'}
             onValueChange={handleTeamChange}
             disabled={assignConversation.isPending || isTeamsLoading}
           >
             <SelectTrigger className="w-36 h-7 text-xs">
-              <SelectValue placeholder="No team" />
+              <SelectValue placeholder="Chưa có nhóm" />
             </SelectTrigger>
             <SelectContent position="popper">
               <SelectGroup>
                 <SelectItem value="none">
-                  <span className="text-muted-foreground italic">No team</span>
+                  <span className="text-muted-foreground italic">{'Chưa có nhóm'}</span>
                 </SelectItem>
                 {teams.map(team => (
                   <SelectItem key={team.id} value={team.id}>

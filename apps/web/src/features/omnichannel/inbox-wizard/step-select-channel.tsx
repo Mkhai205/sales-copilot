@@ -7,7 +7,6 @@ import { ChannelType } from '@sales-copilot/shared-contracts';
 import { Card } from '@/components/ui/card';
 import { SUPPORTED_CHANNELS } from '../constants/inbox-channels';
 import { getChannelMeta } from '@/lib/channels';
-import { useI18n } from '@/lib/i18n';
 
 interface StepSelectChannelProps {
   selectedType: ChannelType;
@@ -15,22 +14,25 @@ interface StepSelectChannelProps {
 }
 
 export function StepSelectChannel({ selectedType, onSelectType }: StepSelectChannelProps) {
-  const { t } = useI18n();
-
   const channelTitleMap: Record<ChannelType, string> = {
-    [ChannelType.WEB_CHAT]: t('settings.inboxes.newPage.channels.webChatTitle'),
-    [ChannelType.FACEBOOK_MESSENGER]: t('settings.inboxes.newPage.channels.messengerTitle'),
-    [ChannelType.TELEGRAM]: t('settings.inboxes.newPage.channels.telegramTitle'),
-    [ChannelType.EMAIL]: t('settings.inboxes.newPage.channels.emailTitle'),
-    [ChannelType.ZALO]: t('settings.inboxes.newPage.channels.zaloTitle'),
+    [ChannelType.WEB_CHAT]: 'Website Live Chat',
+    [ChannelType.FACEBOOK_MESSENGER]: 'Facebook Messenger',
+    [ChannelType.TELEGRAM]: 'Telegram Bot',
+    [ChannelType.EMAIL]: 'Hỗ trợ qua Email',
+    [ChannelType.ZALO]: 'Zalo Official Account',
   };
 
   const channelDescMap: Record<ChannelType, string> = {
-    [ChannelType.WEB_CHAT]: t('settings.inboxes.newPage.channels.webChatDesc'),
-    [ChannelType.FACEBOOK_MESSENGER]: t('settings.inboxes.newPage.channels.messengerDesc'),
-    [ChannelType.TELEGRAM]: t('settings.inboxes.newPage.channels.telegramDesc'),
-    [ChannelType.EMAIL]: t('settings.inboxes.newPage.channels.emailDesc'),
-    [ChannelType.ZALO]: t('settings.inboxes.newPage.channels.zaloDesc'),
+    [ChannelType.WEB_CHAT]:
+      'Nhúng widget chat trực tiếp tương tác trên website hoặc gian hàng của bạn.',
+    [ChannelType.FACEBOOK_MESSENGER]:
+      'Kết nối Fanpage qua OAuth 1-click để tiếp nhận và trả lời tin nhắn khách hàng.',
+    [ChannelType.TELEGRAM]:
+      'Kết nối Telegram Bot Token để xử lý tin nhắn khách hàng trực tiếp từ Telegram.',
+    [ChannelType.EMAIL]:
+      'Kết nối hòm thư dùng chung qua SMTP / IMAP để xử lý email dưới dạng hội thoại.',
+    [ChannelType.ZALO]:
+      'Tiếp cận khách hàng Việt Nam qua tích hợp Zalo OA bằng OA ID và Secret Key.',
   };
 
   return (

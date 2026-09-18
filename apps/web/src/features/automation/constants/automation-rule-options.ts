@@ -18,20 +18,20 @@ export interface TriggerOption {
 export const TRIGGER_OPTIONS: TriggerOption[] = [
   {
     value: AutomationEventTrigger.CONVERSATION_CREATED,
-    label: 'Conversation Created',
-    description: 'Runs immediately when a new conversation is started by a contact or agent.',
+    label: 'Hội thoại mới được tạo',
+    description: 'Chạy ngay khi có cuộc hội thoại mới được bắt đầu bởi khách hàng hoặc nhân viên.',
     badgeColor: 'border-indigo-500/30 bg-indigo-500/10 text-indigo-400',
   },
   {
     value: AutomationEventTrigger.MESSAGE_CREATED,
-    label: 'Message Created',
-    description: 'Runs whenever an inbound or outbound message is posted in any conversation.',
+    label: 'Tin nhắn mới được tạo',
+    description: 'Chạy khi có tin nhắn đến hoặc tin nhắn gửi đi trong bất kỳ hội thoại nào.',
     badgeColor: 'border-violet-500/30 bg-violet-500/10 text-violet-400',
   },
   {
     value: AutomationEventTrigger.CONVERSATION_STATUS_CHANGED,
-    label: 'Conversation Status Changed',
-    description: 'Runs whenever a conversation status transitions (e.g. Open, Pending, Resolved).',
+    label: 'Trạng thái hội thoại thay đổi',
+    description: 'Chạy khi trạng thái cuộc hội thoại chuyển đổi (vd: Mở, Đang chờ, Đã giải quyết).',
     badgeColor: 'border-purple-500/30 bg-purple-500/10 text-purple-400',
   },
 ];
@@ -49,7 +49,7 @@ export interface AttributeOption {
 export const ATTRIBUTE_OPTIONS: AttributeOption[] = [
   {
     value: AutomationAttribute.CONTENT,
-    label: 'Message Content',
+    label: 'Nội dung tin nhắn',
     dataType: 'string',
     allowedOperators: [
       AutomationOperator.CONTAINS,
@@ -61,19 +61,19 @@ export const ATTRIBUTE_OPTIONS: AttributeOption[] = [
   },
   {
     value: AutomationAttribute.STATUS,
-    label: 'Conversation Status',
+    label: 'Trạng thái hội thoại',
     dataType: 'status',
     allowedOperators: [AutomationOperator.EQUAL, AutomationOperator.NOT_EQUAL],
   },
   {
     value: AutomationAttribute.PRIORITY,
-    label: 'Priority',
+    label: 'Độ ưu tiên',
     dataType: 'priority',
     allowedOperators: [AutomationOperator.EQUAL, AutomationOperator.NOT_EQUAL],
   },
   {
     value: AutomationAttribute.INBOX_ID,
-    label: 'Inbox',
+    label: 'Hộp thư',
     dataType: 'inbox',
     allowedOperators: [
       AutomationOperator.EQUAL,
@@ -84,7 +84,7 @@ export const ATTRIBUTE_OPTIONS: AttributeOption[] = [
   },
   {
     value: AutomationAttribute.TEAM_ID,
-    label: 'Assigned Team',
+    label: 'Nhóm phụ trách',
     dataType: 'team',
     allowedOperators: [
       AutomationOperator.EQUAL,
@@ -95,7 +95,7 @@ export const ATTRIBUTE_OPTIONS: AttributeOption[] = [
   },
   {
     value: AutomationAttribute.ASSIGNEE_ID,
-    label: 'Assigned Agent',
+    label: 'Nhân viên phụ trách',
     dataType: 'agent',
     allowedOperators: [
       AutomationOperator.EQUAL,
@@ -106,7 +106,7 @@ export const ATTRIBUTE_OPTIONS: AttributeOption[] = [
   },
   {
     value: AutomationAttribute.SENDER_TYPE,
-    label: 'Sender Type',
+    label: 'Loại người gửi',
     dataType: 'sender_type',
     allowedOperators: [AutomationOperator.EQUAL, AutomationOperator.NOT_EQUAL],
   },
@@ -121,32 +121,32 @@ export interface OperatorOption {
 export const OPERATOR_OPTIONS: Record<AutomationOperator, OperatorOption> = {
   [AutomationOperator.EQUAL]: {
     value: AutomationOperator.EQUAL,
-    label: 'is equal to',
+    label: 'bằng với',
     requiresValue: true,
   },
   [AutomationOperator.NOT_EQUAL]: {
     value: AutomationOperator.NOT_EQUAL,
-    label: 'is not equal to',
+    label: 'không bằng',
     requiresValue: true,
   },
   [AutomationOperator.CONTAINS]: {
     value: AutomationOperator.CONTAINS,
-    label: 'contains keyword',
+    label: 'chứa từ khóa',
     requiresValue: true,
   },
   [AutomationOperator.NOT_CONTAINS]: {
     value: AutomationOperator.NOT_CONTAINS,
-    label: 'does not contain',
+    label: 'không chứa từ khóa',
     requiresValue: true,
   },
   [AutomationOperator.IS_PRESENT]: {
     value: AutomationOperator.IS_PRESENT,
-    label: 'is set / not empty',
+    label: 'có giá trị / không trống',
     requiresValue: false,
   },
   [AutomationOperator.IS_NOT_PRESENT]: {
     value: AutomationOperator.IS_NOT_PRESENT,
-    label: 'is not set / empty',
+    label: 'chưa có / để trống',
     requiresValue: false,
   },
 };
@@ -160,57 +160,57 @@ export interface ActionTypeOption {
 export const ACTION_TYPE_OPTIONS: ActionTypeOption[] = [
   {
     value: AutomationActionType.ASSIGN_AGENT,
-    label: 'Assign to Agent',
-    description: 'Assigns the conversation to a specific workspace team member.',
+    label: 'Phân công nhân viên',
+    description: 'Phân công cuộc hội thoại cho một thành viên cụ thể trong không gian làm việc.',
   },
   {
     value: AutomationActionType.ASSIGN_TEAM,
-    label: 'Assign to Team',
-    description: 'Routes the conversation to a specific team inbox queue.',
+    label: 'Phân công nhóm',
+    description: 'Chuyển cuộc hội thoại vào hàng đợi của một nhóm cụ thể.',
   },
   {
     value: AutomationActionType.ADD_LABEL,
-    label: 'Add Label',
-    description: 'Tags the conversation with a label (creates label if not present).',
+    label: 'Gắn nhãn',
+    description: 'Gắn nhãn cho cuộc hội thoại (tự động tạo nhãn nếu chưa có).',
   },
   {
     value: AutomationActionType.REMOVE_LABEL,
-    label: 'Remove Label',
-    description: 'Removes an existing label tag from the conversation.',
+    label: 'Gỡ nhãn',
+    description: 'Gỡ bỏ nhãn khỏi cuộc hội thoại.',
   },
   {
     value: AutomationActionType.CHANGE_STATUS,
-    label: 'Change Status',
-    description: 'Updates conversation state to Open, Pending, Resolved, or Snoozed.',
+    label: 'Đổi trạng thái',
+    description: 'Cập nhật trạng thái hội thoại: Mở, Đang chờ, Đã giải quyết, hoặc Tạm hoãn.',
   },
   {
     value: AutomationActionType.CHANGE_PRIORITY,
-    label: 'Change Priority',
-    description: 'Sets urgency level: Urgent, High, Medium, Low, or None.',
+    label: 'Đổi độ ưu tiên',
+    description: 'Thiết lập mức độ khẩn cấp: Khẩn cấp, Cao, Trung bình, Thấp.',
   },
   {
     value: AutomationActionType.SEND_WEBHOOK,
-    label: 'Send Webhook',
-    description: 'Dispatches an instant HTTP POST webhook payload to an external endpoint.',
+    label: 'Gửi Webhook',
+    description: 'Gửi payload HTTP POST ngay lập tức đến một endpoint bên ngoài.',
   },
 ];
 
 export const STATUS_SELECT_OPTIONS = [
-  { value: ConversationStatus.OPEN, label: 'Open' },
-  { value: ConversationStatus.PENDING, label: 'Pending' },
-  { value: ConversationStatus.SNOOZED, label: 'Snoozed' },
-  { value: ConversationStatus.RESOLVED, label: 'Resolved' },
+  { value: ConversationStatus.OPEN, label: 'Đang mở' },
+  { value: ConversationStatus.PENDING, label: 'Đang chờ' },
+  { value: ConversationStatus.SNOOZED, label: 'Tạm hoãn' },
+  { value: ConversationStatus.RESOLVED, label: 'Đã giải quyết' },
 ];
 
 export const PRIORITY_SELECT_OPTIONS = [
-  { value: ConversationPriority.URGENT, label: 'Urgent' },
-  { value: ConversationPriority.HIGH, label: 'High' },
-  { value: ConversationPriority.MEDIUM, label: 'Medium' },
-  { value: ConversationPriority.LOW, label: 'Low' },
+  { value: ConversationPriority.URGENT, label: 'Khẩn cấp' },
+  { value: ConversationPriority.HIGH, label: 'Cao' },
+  { value: ConversationPriority.MEDIUM, label: 'Trung bình' },
+  { value: ConversationPriority.LOW, label: 'Thấp' },
 ];
 
 export const SENDER_TYPE_SELECT_OPTIONS = [
-  { value: SenderType.CONTACT, label: 'Customer / Contact' },
-  { value: SenderType.USER, label: 'Agent / Team Member' },
-  { value: SenderType.SYSTEM, label: 'System' },
+  { value: SenderType.CONTACT, label: 'Khách hàng' },
+  { value: SenderType.USER, label: 'Nhân viên / Thành viên' },
+  { value: SenderType.SYSTEM, label: 'Hệ thống' },
 ];

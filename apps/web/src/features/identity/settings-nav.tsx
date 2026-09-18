@@ -10,7 +10,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useSettingsRbac } from './hooks/use-settings-rbac';
-import { useI18n } from '@/lib/i18n';
 
 interface SettingsNavProps {
   workspaceSlug: string;
@@ -19,60 +18,44 @@ interface SettingsNavProps {
 export function SettingsNav({ workspaceSlug }: SettingsNavProps) {
   const pathname = usePathname();
   const { currentRole, isAdmin, isLoading, groupedNavItems } = useSettingsRbac(workspaceSlug);
-  const { t } = useI18n();
 
-  const getSubItemTitle = React.useCallback(
-    (segment: string, fallback: string) => {
-      switch (segment) {
-        case 'general':
-          return t('settings.nav.general');
-        case 'inboxes':
-          return t('settings.nav.inboxes');
-        case 'teams':
-          return t('settings.nav.teams');
-        case 'members':
-          return t('settings.nav.members');
-        case 'labels':
-          return t('settings.nav.labels');
-        case 'canned-responses':
-          return t('settings.nav.cannedResponses');
-        case 'automation-rules':
-          return t('settings.nav.automationRules');
-        case 'webhooks':
-          return t('settings.nav.webhooks');
-        case 'audit-logs':
-          return t('settings.nav.auditLogs');
-        case 'bank':
-          return 'Bank & Payment';
-        default:
-          return fallback;
-      }
-    },
-    [t],
-  );
+  const getSubItemTitle = React.useCallback((segment: string, fallback: string) => {
+    switch (segment) {
+      case 'general':
+        return 'Cài đặt chung';
+      case 'inboxes':
+        return 'Hộp thư';
+      case 'teams':
+        return 'Đội nhóm';
+      case 'members':
+        return 'Thành viên';
+      case 'labels':
+        return 'Nhãn hội thoại';
+      case 'canned-responses':
+        return 'Tin nhắn mẫu';
+      case 'automation-rules':
+        return 'Quy tắc tự động';
+      case 'webhooks':
+        return 'Webhooks';
+      case 'audit-logs':
+        return 'Nhật ký hoạt động';
+      case 'bank':
+        return 'Ngân hàng & Thanh toán';
+      default:
+        return fallback;
+    }
+  }, []);
 
   return (
     <div className="flex h-full w-full flex-col bg-card/40 backdrop-blur-xs">
       {/* Top Header / Back Button */}
       <div className="flex flex-col gap-3 p-4 pb-3">
-        <Button
-          variant="ghost"
-          size="sm"
-          asChild
-          className="w-fit gap-2 px-2 text-xs font-medium text-muted-foreground hover:text-foreground"
-        >
-          <Link href={`/${workspaceSlug}/conversations`}>
-            <ArrowLeft className="size-3.5" data-icon="inline-start" />
-            <span>{t('nav.conversations')}</span>
-          </Link>
-        </Button>
-
         <div className="flex items-center justify-between gap-2 px-1">
           <div>
-            <h2 className="text-base font-semibold tracking-tight text-foreground">
-              {t('settings.title')}
-            </h2>
-            <p className="text-xs text-muted-foreground">Manage workspace & workflows</p>
+            <h2 className="text-base font-semibold tracking-tight text-foreground">{'Cài đặt'}</h2>
+            <p className="text-xs text-muted-foreground">
+              {'Quản lý không gian làm việc & quy trình'}
+            </p>
           </div>
           {currentRole && (
             <Badge
@@ -108,7 +91,7 @@ export function SettingsNav({ workspaceSlug }: SettingsNavProps) {
             </div>
           </div>
         ) : (
-          <nav aria-label="Settings navigation" className="flex flex-col gap-5 pb-6">
+          <nav aria-label="Điều hướng cài đặt" className="flex flex-col gap-5 pb-6">
             {groupedNavItems.map(group => (
               <div key={group.id} className="flex flex-col gap-1.5">
                 <span className="px-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">

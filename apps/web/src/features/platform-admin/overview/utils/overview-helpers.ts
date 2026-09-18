@@ -27,13 +27,12 @@ export function calculateActiveRatio(active?: number | null, total?: number | nu
  */
 export function getHealthBadgeConfig(
   status?: SystemServiceHealthStatus | string | null,
-  t?: (key: any) => string,
 ): HealthBadgeConfig {
   switch (status) {
     case 'HEALTHY':
       return {
         variant: 'secondary',
-        label: t ? t('admin.overview.healthHealthy') : 'Hoạt động bình thường',
+        label: 'Hoạt động bình thường',
         dotClass: 'bg-emerald-500',
         pulse: true,
         className:
@@ -42,7 +41,7 @@ export function getHealthBadgeConfig(
     case 'DEGRADED':
       return {
         variant: 'secondary',
-        label: t ? t('admin.overview.healthDegraded') : 'Hiệu năng suy giảm',
+        label: 'Hiệu năng suy giảm',
         dotClass: 'bg-amber-500',
         pulse: true,
         className:
@@ -51,7 +50,7 @@ export function getHealthBadgeConfig(
     case 'DOWN':
       return {
         variant: 'destructive',
-        label: t ? t('admin.overview.healthDown') : 'Mất kết nối',
+        label: 'Mất kết nối',
         dotClass: 'bg-rose-500',
         pulse: false,
         className:
@@ -60,7 +59,7 @@ export function getHealthBadgeConfig(
     default:
       return {
         variant: 'outline',
-        label: t ? t('admin.overview.healthUnknown') : 'Không xác định',
+        label: 'Không xác định',
         dotClass: 'bg-muted-foreground',
         pulse: false,
         className: 'text-muted-foreground',

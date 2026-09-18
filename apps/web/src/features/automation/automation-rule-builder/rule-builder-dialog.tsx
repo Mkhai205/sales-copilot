@@ -111,8 +111,8 @@ export function RuleBuilderDialog({
   const trimmedName = name.trim();
   const nameError = React.useMemo(() => {
     if (!touched) return null;
-    if (!trimmedName) return 'Rule name is required';
-    if (trimmedName.length > 100) return 'Rule name cannot exceed 100 characters';
+    if (!trimmedName) return 'Tên quy tắc là bắt buộc';
+    if (trimmedName.length > 100) return 'Tên quy tắc không được vượt quá 100 ký tự';
     return null;
   }, [touched, trimmedName]);
 
@@ -121,11 +121,11 @@ export function RuleBuilderDialog({
     const errors: string[] = [];
 
     if (!trimmedName) {
-      errors.push('Rule name is required');
+      errors.push('Tên quy tắc là bắt buộc');
     }
 
     if (actions.length === 0) {
-      errors.push('At least one action is required');
+      errors.push('Cần có ít nhất một hành động');
     }
 
     // Validate conditions
@@ -134,7 +134,7 @@ export function RuleBuilderDialog({
       if (opMeta?.requiresValue) {
         const val = cond.values?.[0]?.trim();
         if (!val) {
-          errors.push(`Condition #${idx + 1} is missing a value.`);
+          errors.push(`Điều kiện #${idx + 1} đang thiếu giá trị.`);
         }
       }
     });
@@ -144,29 +144,29 @@ export function RuleBuilderDialog({
       switch (act.type) {
         case AutomationActionType.ASSIGN_AGENT:
           if (!act.params.agentId?.trim()) {
-            errors.push(`Action #${idx + 1}: Select an agent.`);
+            errors.push(`Hành động #${idx + 1}: Hãy chọn nhân viên.`);
           }
           break;
         case AutomationActionType.ASSIGN_TEAM:
           if (!act.params.teamId?.trim()) {
-            errors.push(`Action #${idx + 1}: Select a team.`);
+            errors.push(`Hành động #${idx + 1}: Hãy chọn nhóm.`);
           }
           break;
         case AutomationActionType.ADD_LABEL:
         case AutomationActionType.REMOVE_LABEL:
           if (!act.params.labelTitle?.trim()) {
-            errors.push(`Action #${idx + 1}: Enter a label title.`);
+            errors.push(`Hành động #${idx + 1}: Hãy nhập tên nhãn.`);
           }
           break;
         case AutomationActionType.SEND_WEBHOOK: {
           const url = act.params.url?.trim();
           if (!url) {
-            errors.push(`Action #${idx + 1}: Enter a webhook URL.`);
+            errors.push(`Hành động #${idx + 1}: Hãy nhập URL webhook.`);
           } else {
             try {
               new URL(url);
             } catch {
-              errors.push(`Action #${idx + 1}: Invalid webhook URL format.`);
+              errors.push(`Hành động #${idx + 1}: Định dạng URL webhook không hợp lệ.`);
             }
           }
           break;
@@ -272,16 +272,17 @@ export function RuleBuilderDialog({
                 </div>
                 <div>
                   <DialogTitle className="text-base font-semibold text-foreground">
-                    {isEditing ? 'Edit Automation Rule' : 'Create Automation Rule'}
+                    {isEditing ? 'Chỉnh sửa quy tắc tự động hóa' : 'Tạo quy tắc tự động hóa'}
                   </DialogTitle>
                   <DialogDescription className="text-xs text-muted-foreground">
-                    Define trigger events, condition filters, and automated routing actions.
+                    Định nghĩa sự kiện kích hoạt, bộ lọc điều kiện và các hành động điều hướng tự
+                    động.
                   </DialogDescription>
                 </div>
               </div>
 
               <div className="flex items-center gap-2 pr-6">
-                <span className="text-xs font-medium text-muted-foreground">Rule Active</span>
+                <span className="text-xs font-medium text-muted-foreground">Kích hoạt quy tắc</span>
                 <Switch checked={isActive} onCheckedChange={setIsActive} disabled={isPending} />
               </div>
             </div>
@@ -301,18 +302,18 @@ export function RuleBuilderDialog({
               {/* Section 1: Basic Information */}
               <FieldGroup className="rounded-xl border border-border/80 bg-card/40 p-4">
                 <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  1. Rule Overview
+                  1. Tổng quan quy tắc
                 </div>
 
                 <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <Field data-invalid={!!nameError}>
                     <FieldLabel className="text-xs">
-                      Rule Name <span className="text-destructive">*</span>
+                      Tên quy tắc <span className="text-destructive">*</span>
                     </FieldLabel>
                     <Input
                       value={name}
                       onChange={e => setName(e.target.value)}
-                      placeholder="e.g., Auto-assign VIP tickets, Tag billing inquiries"
+                      placeholder="vd: Tự động phân công khách VIP, Gắn nhãn yêu cầu thanh toán"
                       className="mt-1 h-8 text-xs"
                       aria-invalid={!!nameError}
                     />
@@ -320,11 +321,11 @@ export function RuleBuilderDialog({
                   </Field>
 
                   <Field>
-                    <FieldLabel className="text-xs">Description (Optional)</FieldLabel>
+                    <FieldLabel className="text-xs">Mô tả (Tùy chọn)</FieldLabel>
                     <Input
                       value={description}
                       onChange={e => setDescription(e.target.value)}
-                      placeholder="Explain when or why this rule executes..."
+                      placeholder="Giải thích khi nào hoặc tại sao quy tắc này chạy..."
                       className="mt-1 h-8 text-xs"
                     />
                   </Field>
@@ -337,7 +338,7 @@ export function RuleBuilderDialog({
                   <div className="flex items-center gap-2">
                     <Zap className="size-4 text-indigo-400" />
                     <span className="text-xs font-semibold uppercase tracking-wider text-foreground">
-                      2. When this event occurs (Trigger)
+                      2. Khi sự kiện này xảy ra (Kích hoạt)
                     </span>
                   </div>
                 </div>
@@ -375,7 +376,7 @@ export function RuleBuilderDialog({
                   <div className="flex items-center gap-2">
                     <Filter className="size-4 text-sky-400" />
                     <span className="text-xs font-semibold uppercase tracking-wider text-foreground">
-                      3. If following conditions are met (Filters)
+                      3. Nếu thỏa mãn các điều kiện sau (Bộ lọc)
                     </span>
                   </div>
                   <Button
@@ -386,7 +387,7 @@ export function RuleBuilderDialog({
                     className="h-7 gap-1.5 text-xs text-sky-400 border-sky-500/30 hover:bg-sky-500/10"
                   >
                     <Plus className="size-3" />
-                    Add Condition
+                    Thêm điều kiện
                   </Button>
                 </div>
 
@@ -394,10 +395,10 @@ export function RuleBuilderDialog({
                   {conditions.length === 0 ? (
                     <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border/80 p-5 text-center bg-card/20">
                       <p className="text-xs font-medium text-foreground">
-                        No condition filters added
+                        Chưa có bộ lọc điều kiện nào
                       </p>
                       <p className="mt-0.5 text-[11px] text-muted-foreground">
-                        This rule will automatically match all events that trigger it.
+                        Quy tắc này sẽ tự động áp dụng cho tất cả các sự kiện kích hoạt nó.
                       </p>
                     </div>
                   ) : (
@@ -421,7 +422,7 @@ export function RuleBuilderDialog({
                   <div className="flex items-center gap-2">
                     <Play className="size-4 text-emerald-400" />
                     <span className="text-xs font-semibold uppercase tracking-wider text-foreground">
-                      4. Then execute these actions
+                      4. Thì thực hiện các hành động này
                     </span>
                   </div>
                   <Button
@@ -432,7 +433,7 @@ export function RuleBuilderDialog({
                     className="h-7 gap-1.5 text-xs text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/10"
                   >
                     <Plus className="size-3" />
-                    Add Action
+                    Thêm hành động
                   </Button>
                 </div>
 
@@ -454,7 +455,7 @@ export function RuleBuilderDialog({
               {/* Validation error summaries if touched */}
               {touched && validationErrors.length > 0 && (
                 <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive">
-                  <span className="font-semibold">Please fix the following issues:</span>
+                  <span className="font-semibold">Vui lòng sửa các lỗi sau:</span>
                   <ul className="mt-1 list-inside list-disc space-y-0.5">
                     {validationErrors.map((err, i) => (
                       <li key={i}>{err}</li>
@@ -475,11 +476,11 @@ export function RuleBuilderDialog({
               disabled={isPending}
               className="text-xs"
             >
-              Cancel
+              Hủy
             </Button>
             <Button type="submit" size="sm" disabled={isPending} className="text-xs gap-1.5">
               {isPending && <Spinner className="size-3.5" data-icon="inline-start" />}
-              {isEditing ? 'Save Changes' : 'Create Rule'}
+              {isEditing ? 'Lưu thay đổi' : 'Tạo quy tắc'}
             </Button>
           </DialogFooter>
         </form>

@@ -46,12 +46,9 @@ const TEST_ACCOUNTS = [
   },
 ];
 
-import { useI18n } from '@/lib/i18n';
-
 import { useQueryClient } from '@tanstack/react-query';
 
 export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) {
-  const { t } = useI18n();
   const queryClient = useQueryClient();
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
@@ -93,7 +90,9 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
     try {
       const result = await loginAction(formData);
       if (result && !result.success && result.error) {
-        setApiError(result.error.message || 'Login failed. Please check your credentials.');
+        setApiError(
+          result.error.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin tài khoản.',
+        );
         setIsPending(false);
       }
     } catch (err: any) {
@@ -101,7 +100,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
       if (err?.digest?.startsWith('NEXT_REDIRECT') || err?.message === 'NEXT_REDIRECT') {
         return;
       }
-      setApiError(err?.message || 'An unexpected error occurred. Please try again.');
+      setApiError(err?.message || 'Đã xảy ra lỗi không mong muốn. Vui lòng thử lại.');
       setIsPending(false);
     }
   };
@@ -136,9 +135,9 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
                     className="hidden h-10 w-auto object-contain dark:block"
                   />
                 </div>
-                <h1 className="text-2xl font-bold tracking-tight">{t('auth.welcomeBack')}</h1>
+                <h1 className="text-2xl font-bold tracking-tight">{'Chào mừng bạn quay lại'}</h1>
                 <p className="text-xs text-muted-foreground text-center">
-                  {t('auth.signInDescription')}
+                  {'Đăng nhập để truy cập hộp thư đa kênh và trợ lý hội thoại của bạn'}
                 </p>
               </div>
 
@@ -151,13 +150,13 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
 
               <Field data-invalid={!!fieldErrors.email}>
                 <FieldLabel htmlFor="email" className="text-xs font-medium">
-                  {t('auth.emailLabel')}
+                  {'Email công việc'}
                 </FieldLabel>
                 <Input
                   id="email"
                   name="email"
                   type="email"
-                  placeholder={t('auth.emailPlaceholder')}
+                  placeholder={'ban@congty.vn'}
                   className="h-9"
                   autoComplete="email"
                   value={email}
@@ -171,13 +170,13 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
               <Field data-invalid={!!fieldErrors.password}>
                 <div className="flex items-center justify-between w-full">
                   <FieldLabel htmlFor="password" className="text-xs font-medium">
-                    {t('auth.passwordLabel')}
+                    {'Mật khẩu'}
                   </FieldLabel>
                   <a
                     href="#"
                     className="text-xs text-muted-foreground hover:text-primary transition-colors underline-offset-2 hover:underline"
                   >
-                    {t('auth.forgotPassword')}
+                    {'Quên mật khẩu?'}
                   </a>
                 </div>
                 <Input
@@ -205,10 +204,10 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
                   {isPending ? (
                     <>
                       <Spinner className="mr-2" />
-                      {t('auth.loggingIn')}
+                      {'Đang đăng nhập...'}
                     </>
                   ) : (
-                    t('auth.signIn')
+                    'Đăng nhập'
                   )}
                 </Button>
               </Field>
@@ -218,9 +217,9 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-1 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
                     <SparklesIcon className="size-3 text-primary" />
-                    <span>{t('auth.quickLoginAccounts')}</span>
+                    <span>{'Tài khoản thử nghiệm nhanh'}</span>
                   </div>
-                  <span className="text-[10px] text-muted-foreground font-mono">1-Click Fill</span>
+                  <span className="text-[10px] text-muted-foreground font-mono">Điền nhanh</span>
                 </div>
                 <div className="grid grid-cols-3 gap-1.5">
                   {TEST_ACCOUNTS.map(acc => {
@@ -228,10 +227,10 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
                     const isSelected = email === acc.email;
                     const roleName =
                       acc.role === 'Super Admin'
-                        ? t('auth.superAdmin')
+                        ? 'Quản trị cấp cao'
                         : acc.role === 'Admin'
-                          ? t('auth.admin')
-                          : t('auth.agent');
+                          ? 'Quản trị viên'
+                          : 'Chuyên viên CSKH';
                     return (
                       <button
                         key={acc.email}
@@ -270,9 +269,9 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
               </div>
 
               <FieldDescription className="text-center mt-1 text-xs">
-                Don&apos;t have an account?{' '}
+                {'Chưa có tài khoản? '}
                 <a href="#" className="font-medium text-primary hover:underline">
-                  Sign up
+                  {'Đăng ký'}
                 </a>
               </FieldDescription>
             </FieldGroup>
@@ -282,13 +281,15 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
           <div className="relative hidden md:flex flex-col justify-between p-8 bg-gradient-to-br from-primary/15 via-primary/5 to-muted border-l border-border/60">
             <div className="space-y-3">
               <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-primary/15 text-primary border border-primary/20">
-                Omnichannel Platform
+                {'Nền tảng Đa kênh'}
               </div>
               <h2 className="text-xl font-bold tracking-tight text-foreground">
-                Unified Customer Conversations & AI Sales Copilot
+                {'Hội thoại Khách hàng Thống nhất & AI Sales Copilot'}
               </h2>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                Connect Facebook, Zalo, Telegram, Email, and Web Chat in a single real-time inbox.
+                {
+                  'Kết nối Facebook, Zalo, Telegram, Email và Web Chat trong một hộp thư thời gian thực duy nhất.'
+                }
               </p>
             </div>
 
@@ -307,15 +308,15 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
             <div className="space-y-2.5 pt-4 border-t border-border/40">
               <div className="flex items-center gap-2.5 text-xs text-muted-foreground">
                 <div className="size-2 rounded-full bg-emerald-500 shrink-0" />
-                <span>Real-time WebSocket event streaming</span>
+                <span>{'Luồng sự kiện WebSocket thời gian thực'}</span>
               </div>
               <div className="flex items-center gap-2.5 text-xs text-muted-foreground">
                 <div className="size-2 rounded-full bg-blue-500 shrink-0" />
-                <span>Multi-tenant workspace isolation</span>
+                <span>{'Cô lập không gian làm việc đa người thuê (Multi-tenant)'}</span>
               </div>
               <div className="flex items-center gap-2.5 text-xs text-muted-foreground">
                 <div className="size-2 rounded-full bg-purple-500 shrink-0" />
-                <span>Smart agent auto-assignment & canned replies</span>
+                <span>{'Tự động phân bổ tư vấn viên & tin nhắn mẫu thông minh'}</span>
               </div>
             </div>
           </div>
@@ -323,15 +324,15 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
       </Card>
 
       <FieldDescription className="px-6 text-center text-xs text-muted-foreground">
-        By clicking continue, you agree to our{' '}
+        {'Bằng cách tiếp tục, bạn đồng ý với '}
         <a href="#" className="underline hover:text-primary">
-          Terms of Service
+          {'Điều khoản Dịch vụ'}
         </a>{' '}
-        and{' '}
+        {'và '}
         <a href="#" className="underline hover:text-primary">
-          Privacy Policy
+          {'Chính sách Quyền riêng tư'}
         </a>
-        .
+        {' của chúng tôi.'}
       </FieldDescription>
     </div>
   );

@@ -30,7 +30,6 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useCurrentUser } from '@/features/auth';
-import { useI18n } from '@/lib/i18n';
 import { isNavItemActive } from './navigation-helpers';
 
 export interface AdminNavItem {
@@ -40,23 +39,22 @@ export interface AdminNavItem {
 }
 
 export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
-  { label: 'Overview', href: '/platform-admin', icon: LayoutDashboard },
-  { label: 'Workspaces', href: '/platform-admin/workspaces', icon: Building2 },
-  { label: 'Settings', href: '/platform-admin/settings', icon: Sliders },
-  { label: 'Audit Logs', href: '/platform-admin/audit-logs', icon: ScrollText },
+  { label: 'Tổng quan', href: '/platform-admin', icon: LayoutDashboard },
+  { label: 'Quản trị Workspaces', href: '/platform-admin/workspaces', icon: Building2 },
+  { label: 'Cấu hình Hệ thống', href: '/platform-admin/settings', icon: Sliders },
+  { label: 'Nhật ký Kiểm toán', href: '/platform-admin/audit-logs', icon: ScrollText },
 ];
 
 export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname();
   const { data: currentUser } = useCurrentUser();
   const { theme, setTheme, resolvedTheme } = useTheme();
-  const { t } = useI18n();
 
   const navItems = [
-    { label: t('admin.nav.overview'), href: '/platform-admin', icon: LayoutDashboard },
-    { label: t('admin.nav.workspaces'), href: '/platform-admin/workspaces', icon: Building2 },
-    { label: t('admin.nav.settings'), href: '/platform-admin/settings', icon: Sliders },
-    { label: t('admin.nav.auditLogs'), href: '/platform-admin/audit-logs', icon: ScrollText },
+    { label: 'Tổng quan', href: '/platform-admin', icon: LayoutDashboard },
+    { label: 'Quản trị Workspaces', href: '/platform-admin/workspaces', icon: Building2 },
+    { label: 'Cấu hình Hệ thống', href: '/platform-admin/settings', icon: Sliders },
+    { label: 'Nhật ký Kiểm toán', href: '/platform-admin/audit-logs', icon: ScrollText },
   ];
 
   return (
@@ -79,7 +77,7 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
               </Badge>
             </div>
             <span className="text-[11px] text-muted-foreground truncate">
-              {t('admin.platformControl')}
+              {'Hệ thống Quản trị'}
             </span>
           </div>
         </div>
@@ -88,7 +86,7 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden">
-            {t('admin.title')}
+            {'Quản trị Nền tảng'}
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -115,10 +113,10 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
       <SidebarFooter className="border-t border-sidebar-border p-2">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild tooltip={t('admin.backToWorkspace')}>
+            <SidebarMenuButton asChild tooltip={'Quay lại Workspace'}>
               <Link href="/">
                 <ArrowLeft />
-                <span>{t('admin.backToWorkspace')}</span>
+                <span>{'Quay lại Workspace'}</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -138,11 +136,11 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
             size="icon"
             onClick={() => setTheme((resolvedTheme || theme) === 'dark' ? 'light' : 'dark')}
             className="size-7 text-muted-foreground hover:text-foreground shrink-0"
-            title={t('admin.toggleTheme')}
+            title={'Chuyển đổi giao diện sáng/tối'}
           >
             <Sun className="size-3.5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
             <Moon className="absolute size-3.5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-            <span className="sr-only">Toggle theme</span>
+            <span className="sr-only">Đổi giao diện</span>
           </Button>
         </div>
       </SidebarFooter>

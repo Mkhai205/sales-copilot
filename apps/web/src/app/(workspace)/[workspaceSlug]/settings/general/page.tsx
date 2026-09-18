@@ -25,7 +25,7 @@ export default function GeneralSettingsPage() {
   return (
     <SettingsGuard workspaceSlug={workspaceSlug} segment="general">
       {isLoading || !activeWorkspace ? (
-        <div className="flex flex-col gap-6 max-w-4xl">
+        <div className="flex flex-col gap-6 w-full">
           <div className="flex flex-col gap-2">
             <Skeleton className="h-7 w-48" />
             <Skeleton className="h-4 w-96" />
@@ -34,7 +34,7 @@ export default function GeneralSettingsPage() {
           <Skeleton className="h-48 w-full rounded-xl" />
         </div>
       ) : (
-        <div className="max-w-4xl">
+        <div className="flex flex-col gap-6 w-full">
           <WorkspaceSettingsForm workspace={activeWorkspace} />
         </div>
       )}

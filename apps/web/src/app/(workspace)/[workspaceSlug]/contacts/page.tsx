@@ -14,10 +14,13 @@ export default function ContactsPage() {
           className="max-h-44 w-auto object-contain drop-shadow-xs"
         />
       </div>
-      <h2 className="text-xl font-semibold tracking-tight">Contacts & Identities</h2>
-      <p className="mt-1 text-sm text-muted-foreground max-w-sm">
-        Manage resolved contacts, cross-channel identities, and customer profiles across all your
-        inboxes.
+      <h2 className="text-xl font-semibold tracking-tight text-foreground">
+        {'Danh bạ & Hồ sơ khách hàng'}
+      </h2>
+      <p className="mt-1 text-xs text-muted-foreground max-w-sm">
+        {
+          'Quản lý thông tin khách hàng, định danh đa kênh và lịch sử tương tác xuyên suốt các hộp thư.'
+        }
       </p>
     </div>
   );

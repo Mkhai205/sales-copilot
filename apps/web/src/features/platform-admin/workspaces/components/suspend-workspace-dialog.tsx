@@ -16,7 +16,6 @@ import { Field, FieldLabel } from '@/components/ui/field';
 import { Loader2 } from 'lucide-react';
 import type { PlatformWorkspaceListItemDto } from '@sales-copilot/shared-contracts';
 import { useToggleWorkspaceStatus } from '../hooks/use-platform-workspaces';
-import { useI18n } from '@/lib/i18n';
 
 export interface SuspendWorkspaceDialogProps {
   workspace: PlatformWorkspaceListItemDto | null;
@@ -29,7 +28,6 @@ export function SuspendWorkspaceDialog({
   open,
   onOpenChange,
 }: SuspendWorkspaceDialogProps) {
-  const { t } = useI18n();
   const [reason, setReason] = React.useState('');
   const toggleStatusMutation = useToggleWorkspaceStatus();
 
@@ -69,14 +67,12 @@ export function SuspendWorkspaceDialog({
       <AlertDialogContent className="max-w-md sm:max-w-md p-6">
         <AlertDialogHeader className="pb-1">
           <AlertDialogTitle className="text-base font-semibold">
-            {isSuspending
-              ? t('admin.workspaces.dialogSuspendTitle')
-              : t('admin.workspaces.dialogReactivateTitle')}
+            {isSuspending ? 'Tạm khóa Workspace' : 'Kích hoạt lại Workspace'}
           </AlertDialogTitle>
           <AlertDialogDescription className="text-xs text-muted-foreground">
             {isSuspending
-              ? t('admin.workspaces.dialogSuspendDesc', { name: workspace.name })
-              : t('admin.workspaces.dialogReactivateDesc', { name: workspace.name })}
+              ? `Bạn đang chuẩn bị tạm khóa shop ${workspace.name}. Khi bị tạm khóa, toàn bộ nhân sự của tenant này sẽ bị chặn thao tác (HTTP 403) và ngắt kết nối WebSocket.`
+              : `Bạn có chắc chắn muốn kích hoạt lại shop ${workspace.name}? Các nhân sự trong tenant sẽ có thể đăng nhập và tiếp tục xử lý bán hàng bình thường.`}
           </AlertDialogDescription>
         </AlertDialogHeader>
 
@@ -84,10 +80,12 @@ export function SuspendWorkspaceDialog({
           <div className="py-2">
             <Field className="gap-1.5">
               <FieldLabel className="text-xs font-medium text-foreground">
-                {t('admin.workspaces.reasonRequired')} <span className="text-destructive">*</span>
+                {'Lý do tạm khóa'} <span className="text-destructive">*</span>
               </FieldLabel>
               <Textarea
-                placeholder={t('admin.workspaces.reasonPlaceholder')}
+                placeholder={
+                  'Nhập lý do tạm khóa (bắt buộc, ví dụ: Quá hạn thanh toán, Vi phạm điều khoản dịch vụ...)'
+                }
                 value={reason}
                 onChange={e => setReason(e.target.value)}
                 className="text-xs min-h-[80px]"
@@ -99,7 +97,7 @@ export function SuspendWorkspaceDialog({
 
         <AlertDialogFooter className="pt-2 gap-2">
           <AlertDialogCancel disabled={toggleStatusMutation.isPending} className="text-xs h-8">
-            {t('common.cancel')}
+            {'Hủy'}
           </AlertDialogCancel>
           <AlertDialogAction
             onClick={handleConfirm}
@@ -111,11 +109,7 @@ export function SuspendWorkspaceDialog({
             }`}
           >
             {toggleStatusMutation.isPending && <Loader2 className="size-3.5 animate-spin" />}
-            <span>
-              {isSuspending
-                ? t('admin.workspaces.confirmSuspend')
-                : t('admin.workspaces.confirmReactivate')}
-            </span>
+            <span>{isSuspending ? 'Xác nhận khóa' : 'Kích hoạt lại'}</span>
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

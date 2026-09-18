@@ -9,12 +9,11 @@ import { useSystemSettings, useUpdateSystemSetting } from '../hooks/use-system-s
 import { getSettingValue, parseSettingBoolean } from '../utils/settings-helpers';
 import { QrCode, Bot, ShieldBan, Printer } from 'lucide-react';
 import { SystemSettingCategory } from '@sales-copilot/shared-contracts';
-import { useI18n, type TranslationKey } from '@/lib/i18n';
 
 interface FlagConfig {
   key: string;
-  titleKey: TranslationKey;
-  descriptionKey: TranslationKey;
+  title: string;
+  description: string;
   icon: React.ComponentType<{ className?: string }>;
   defaultVal: boolean;
 }
@@ -22,36 +21,39 @@ interface FlagConfig {
 const FLAGS: FlagConfig[] = [
   {
     key: 'feature.pos_vietqr_enabled',
-    titleKey: 'admin.settings.flagPosTitle',
-    descriptionKey: 'admin.settings.flagPosDesc',
+    title: 'Thanh toán VietQR & Webhook tự động',
+    description:
+      'Tự động tạo mã thanh toán VietQR động (NAPAS 247) và đối soát giao dịch ngân hàng thời gian thực qua Webhook < 1s.',
     icon: QrCode,
     defaultVal: true,
   },
   {
     key: 'feature.ai_autopilot_enabled',
-    titleKey: 'admin.settings.flagAiTitle',
-    descriptionKey: 'admin.settings.flagAiDesc',
+    title: 'AI Auto-pilot Chốt đơn 24/7',
+    description:
+      'Cho phép Copilot tự động tư vấn sản phẩm, gợi ý voucher và hoàn tất đơn hàng bán lẻ tự động ngoài giờ làm việc.',
     icon: Bot,
     defaultVal: true,
   },
   {
     key: 'feature.comment_masking_enabled',
-    titleKey: 'admin.settings.flagMaskingTitle',
-    descriptionKey: 'admin.settings.flagMaskingDesc',
+    title: 'Tự động Ẩn Bình luận chứa SĐT',
+    description:
+      'Quét nội dung bình luận Facebook/Zalo theo thời gian thực và ẩn ngay lập tức các bình luận chứa số điện thoại chống cướp khách.',
     icon: ShieldBan,
     defaultVal: true,
   },
   {
     key: 'feature.thermal_print_enabled',
-    titleKey: 'admin.settings.flagPrintTitle',
-    descriptionKey: 'admin.settings.flagPrintDesc',
+    title: 'In Phiếu gửi Nhiệt K80/K58',
+    description:
+      'Kích hoạt nút in nhanh mẫu phiếu đóng gói và tem giao nhận tương thích máy in nhiệt cầm tay và Commerce cố định.',
     icon: Printer,
     defaultVal: true,
   },
 ];
 
 export function FeatureFlagsTab() {
-  const { t } = useI18n();
   const { data: settings, isLoading } = useSystemSettings(SystemSettingCategory.FEATURE_FLAGS);
   const updateMutation = useUpdateSystemSetting();
 
@@ -89,14 +91,15 @@ export function FeatureFlagsTab() {
         <CardHeader className="gap-1 pb-4">
           <div className="flex items-center justify-between">
             <CardTitle className="text-base font-semibold">
-              {t('admin.settings.featureFlagsCardTitle')}
+              Cờ Tính năng Toàn Hệ thống (Feature Flags)
             </CardTitle>
             <Badge variant="outline" className="text-xs">
-              {t('admin.settings.featureFlagsCount', { count: FLAGS.length })}
+              {`${FLAGS.length} Cờ Khả dụng`}
             </Badge>
           </div>
           <CardDescription className="text-xs">
-            {t('admin.settings.featureFlagsDesc')}
+            Bật hoặc tắt các module cốt lõi trong thời gian thực. Các thay đổi được đồng bộ qua
+            Redis cache 2 tầng và có hiệu lực ngay lập tức.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col divide-y divide-border pt-0">
@@ -118,15 +121,13 @@ export function FeatureFlagsTab() {
                   </div>
                   <div className="flex flex-col gap-1">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-foreground">
-                        {t(flag.titleKey)}
-                      </span>
+                      <span className="text-sm font-medium text-foreground">{flag.title}</span>
                       <code className="rounded bg-muted px-1.5 py-0.5 text-[11px] font-mono text-muted-foreground">
                         {flag.key}
                       </code>
                     </div>
                     <p className="text-xs text-muted-foreground leading-relaxed">
-                      {t(flag.descriptionKey)}
+                      {flag.description}
                     </p>
                   </div>
                 </div>

@@ -14,13 +14,14 @@ export default function AutomationRulesSettingsPage() {
 
   return (
     <SettingsGuard workspaceSlug={workspaceSlug} segment="automation-rules">
-      <div className="flex flex-col gap-6 max-w-5xl">
+      <div className="flex flex-col gap-6 w-full">
         {/* Page Header */}
-        <div>
-          <h1 className="text-xl font-semibold tracking-tight text-foreground">Automation Rules</h1>
+        <div className="pb-3 border-b border-border/70">
+          <h1 className="text-xl font-bold tracking-tight text-foreground">{'Quy tắc tự động'}</h1>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Configure automated event triggers, condition filters, and conversation routing actions
-            to streamline customer engagement.
+            {
+              'Thiết lập quy trình tự động hóa kích hoạt theo sự kiện, điều kiện lọc và hành động phân bổ tin nhắn.'
+            }
           </p>
         </div>
 

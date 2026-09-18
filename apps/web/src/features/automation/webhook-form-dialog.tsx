@@ -90,19 +90,20 @@ export function WebhookFormDialog({
     const hex = Array.from(arr, b => b.toString(16).padStart(2, '0')).join('');
     setSecretKey(hex);
     setShowSecret(true);
-    toast.success('Random HMAC secret key generated');
+    toast.success('Đã tạo khóa bí mật HMAC ngẫu nhiên');
   };
 
   // URL Validation
   const trimmedUrl = url.trim();
   const urlError = React.useMemo(() => {
     if (!touched) return null;
-    if (!trimmedUrl) return 'Webhook URL is required';
-    if (!trimmedUrl.startsWith('https://')) return 'Webhook URL must use HTTPS protocol (https://)';
+    if (!trimmedUrl) return 'URL Webhook là bắt buộc';
+    if (!trimmedUrl.startsWith('https://'))
+      return 'URL Webhook phải dùng giao thức HTTPS (https://)';
     try {
       new URL(trimmedUrl);
     } catch {
-      return 'Invalid URL format';
+      return 'Định dạng URL không hợp lệ';
     }
     return null;
   }, [touched, trimmedUrl]);
@@ -112,7 +113,7 @@ export function WebhookFormDialog({
   const secretError = React.useMemo(() => {
     if (!touched) return null;
     if (trimmedSecret && trimmedSecret.length < 8) {
-      return 'Secret key must be at least 8 characters';
+      return 'Khóa bí mật phải có ít nhất 8 ký tự';
     }
     return null;
   }, [touched, trimmedSecret]);
@@ -121,7 +122,7 @@ export function WebhookFormDialog({
   const eventsError = React.useMemo(() => {
     if (!touched) return null;
     if (selectedEvents.length === 0) {
-      return 'Please select at least one event type to subscribe to';
+      return 'Vui lòng chọn ít nhất một sự kiện để nhận thông báo';
     }
     return null;
   }, [touched, selectedEvents]);
@@ -222,16 +223,16 @@ export function WebhookFormDialog({
                 </div>
                 <div>
                   <DialogTitle className="text-base font-semibold text-foreground">
-                    {isEditing ? 'Edit Webhook Subscription' : 'Create Webhook Subscription'}
+                    {isEditing ? 'Chỉnh sửa đăng ký Webhook' : 'Tạo đăng ký Webhook'}
                   </DialogTitle>
                   <DialogDescription className="text-xs text-muted-foreground">
-                    Configure your HTTPS webhook endpoint to receive real-time JSON event payloads.
+                    Cấu hình endpoint HTTPS để nhận dữ liệu sự kiện JSON theo thời gian thực.
                   </DialogDescription>
                 </div>
               </div>
 
               <div className="flex items-center gap-2 pr-6">
-                <span className="text-xs font-medium text-muted-foreground">Active</span>
+                <span className="text-xs font-medium text-muted-foreground">Hoạt động</span>
                 <Switch checked={isActive} onCheckedChange={setIsActive} disabled={isPending} />
               </div>
             </div>
@@ -243,14 +244,14 @@ export function WebhookFormDialog({
               {/* Endpoint Config Card */}
               <FieldGroup className="rounded-xl border border-border/80 bg-card/40 p-4">
                 <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Endpoint Configuration
+                  Cấu hình Endpoint
                 </div>
 
                 <div className="mt-3 flex flex-col gap-4">
                   {/* Webhook URL */}
                   <Field data-invalid={!!urlError}>
                     <FieldLabel className="text-xs">
-                      Payload URL (HTTPS) <span className="text-destructive">*</span>
+                      URL nhận dữ liệu (HTTPS) <span className="text-destructive">*</span>
                     </FieldLabel>
                     <Input
                       type="url"
@@ -261,8 +262,7 @@ export function WebhookFormDialog({
                       aria-invalid={!!urlError}
                     />
                     <FieldDescription className="text-[11px] text-muted-foreground">
-                      Target server endpoint that will receive HTTP POST requests with JSON
-                      payloads.
+                      Endpoint trên máy chủ của bạn sẽ nhận yêu cầu HTTP POST với payload JSON.
                     </FieldDescription>
                     {urlError && <FieldError className="text-xs">{urlError}</FieldError>}
                   </Field>
@@ -270,7 +270,7 @@ export function WebhookFormDialog({
                   {/* Secret Key for HMAC */}
                   <Field data-invalid={!!secretError}>
                     <div className="flex items-center justify-between">
-                      <FieldLabel className="text-xs">HMAC Secret Key (Optional)</FieldLabel>
+                      <FieldLabel className="text-xs">Khóa bí mật HMAC (Tùy chọn)</FieldLabel>
                       <Button
                         type="button"
                         variant="ghost"
@@ -279,7 +279,7 @@ export function WebhookFormDialog({
                         className="h-6 gap-1 px-2 text-[11px] text-primary hover:text-primary"
                       >
                         <Sparkles className="size-3" />
-                        Generate Secret
+                        Tạo khóa bí mật
                       </Button>
                     </div>
 
@@ -288,7 +288,7 @@ export function WebhookFormDialog({
                         type={showSecret ? 'text' : 'password'}
                         value={secretKey}
                         onChange={e => setSecretKey(e.target.value)}
-                        placeholder="Enter secret or click generate (min. 8 chars)..."
+                        placeholder="Nhập khóa bí mật hoặc nhấn tạo tự động (tối thiểu 8 ký tự)..."
                         className="h-8 pr-8 font-mono text-xs"
                         aria-invalid={!!secretError}
                       />
@@ -307,8 +307,7 @@ export function WebhookFormDialog({
                       </Button>
                     </div>
                     <FieldDescription className="text-[11px] text-muted-foreground">
-                      Used to compute SHA-256 HMAC signature passed in `X-SalesCopilot-Signature`
-                      header.
+                      Dùng để tính chữ ký SHA-256 HMAC gửi trong header `X-SalesCopilot-Signature`.
                     </FieldDescription>
                     {secretError && <FieldError className="text-xs">{secretError}</FieldError>}
                   </Field>
@@ -320,10 +319,10 @@ export function WebhookFormDialog({
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <span className="text-xs font-semibold uppercase tracking-wider text-foreground">
-                      Event Subscriptions ({selectedEvents.length} selected)
+                      Đăng ký sự kiện ({selectedEvents.length} đã chọn)
                     </span>
                     <p className="text-[11px] text-muted-foreground">
-                      Choose which events will trigger delivery to this endpoint.
+                      Chọn những sự kiện sẽ gửi thông báo đến endpoint này.
                     </p>
                   </div>
 
@@ -334,7 +333,7 @@ export function WebhookFormDialog({
                       <Input
                         value={eventSearch}
                         onChange={e => setEventSearch(e.target.value)}
-                        placeholder="Filter events..."
+                        placeholder="Lọc sự kiện..."
                         className="h-7 pl-7 pr-6 text-[11px] bg-background/50"
                       />
                       {eventSearch && (
@@ -358,8 +357,8 @@ export function WebhookFormDialog({
                       className="h-7 text-[11px]"
                     >
                       {selectedEvents.length === ALL_WEBHOOK_EVENT_TYPES.length
-                        ? 'Deselect All'
-                        : 'Select All'}
+                        ? 'Bỏ chọn tất cả'
+                        : 'Chọn tất cả'}
                     </Button>
                   </div>
                 </div>
@@ -400,7 +399,7 @@ export function WebhookFormDialog({
                             onClick={() => handleToggleCategory(categoryTypes)}
                             className="h-6 px-2 text-[10px] text-muted-foreground hover:text-foreground"
                           >
-                            {allCategorySelected ? 'Deselect category' : 'Select category'}
+                            {allCategorySelected ? 'Bỏ chọn nhóm' : 'Chọn nhóm'}
                           </Button>
                         </div>
 
@@ -458,11 +457,11 @@ export function WebhookFormDialog({
               disabled={isPending}
               className="text-xs"
             >
-              Cancel
+              Hủy
             </Button>
             <Button type="submit" size="sm" disabled={isPending} className="text-xs gap-1.5">
               {isPending && <Spinner className="size-3.5" data-icon="inline-start" />}
-              {isEditing ? 'Save Changes' : 'Create Webhook'}
+              {isEditing ? 'Lưu thay đổi' : 'Tạo Webhook'}
             </Button>
           </DialogFooter>
         </form>

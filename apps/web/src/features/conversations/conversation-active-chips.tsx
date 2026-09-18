@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import * as React from 'react';
 import { X, RotateCcw } from 'lucide-react';
@@ -8,7 +8,6 @@ import { useInboxes, useLabels } from '@/features/omnichannel';
 import { useWorkspaceMembers } from '@/features/identity';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { useI18n } from '@/lib/i18n';
 
 interface ConversationActiveChipsProps {
   workspaceId?: string;
@@ -35,7 +34,6 @@ export function ConversationActiveChips({
   resetAdvancedFilters,
   className,
 }: ConversationActiveChipsProps) {
-  const { t } = useI18n();
   const { data: inboxes } = useInboxes(workspaceId);
   const { data: labels } = useLabels(workspaceId);
   const { data: members } = useWorkspaceMembers(workspaceId);
@@ -58,15 +56,15 @@ export function ConversationActiveChips({
   const getStatusLabel = (status: StatusFilter) => {
     switch (status) {
       case ConversationStatus.OPEN:
-        return t('conversations.status.open');
+        return 'Đang mở';
       case ConversationStatus.PENDING:
-        return t('conversations.status.pending');
+        return 'Đang chờ';
       case ConversationStatus.SNOOZED:
-        return t('conversations.status.snoozed');
+        return 'Tạm hoãn';
       case ConversationStatus.RESOLVED:
-        return t('conversations.status.resolved');
+        return 'Đã giải quyết';
       case 'ALL':
-        return t('common.all');
+        return 'Tất cả';
       default:
         return status;
     }
@@ -75,13 +73,13 @@ export function ConversationActiveChips({
   const getPriorityLabel = (priority: Priority) => {
     switch (priority) {
       case Priority.URGENT:
-        return t('conversations.priority.urgent');
+        return 'Khẩn cấp';
       case Priority.HIGH:
-        return t('conversations.priority.high');
+        return 'Cao';
       case Priority.MEDIUM:
-        return t('conversations.priority.medium');
+        return 'Trung bình';
       case Priority.LOW:
-        return t('conversations.priority.low');
+        return 'Thấp';
       default:
         return priority;
     }
@@ -93,23 +91,23 @@ export function ConversationActiveChips({
         'flex items-center gap-1.5 px-3 py-1.5 bg-muted/20 border-b border-border/40 overflow-x-auto scrollbar-none text-[11px]',
         className,
       )}
-      aria-label="Active conversation filters"
+      aria-label="Bộ lọc hội thoại đang áp dụng"
     >
       <span className="text-muted-foreground shrink-0 font-medium text-[10px] uppercase tracking-wider">
-        {t('common.filter')}:
+        {'Bộ lọc'}:
       </span>
 
       <div className="flex items-center gap-1.5 flex-wrap">
         {/* Status Chip */}
         {filters.status !== ConversationStatus.OPEN && (
           <span className="inline-flex items-center gap-1 rounded-md bg-background px-2 py-0.5 font-medium text-foreground border border-border/60 shadow-2xs">
-            <span className="text-muted-foreground">{t('common.status')}:</span>
+            <span className="text-muted-foreground">{'Trạng thái'}:</span>
             <span className="font-semibold text-primary">{getStatusLabel(filters.status)}</span>
             <button
               type="button"
               onClick={() => setStatus(ConversationStatus.OPEN)}
               className="ml-0.5 rounded-xs p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer"
-              aria-label="Remove status filter"
+              aria-label="Xóa bộ lọc trạng thái"
             >
               <X className="size-3" />
             </button>
@@ -119,15 +117,15 @@ export function ConversationActiveChips({
         {/* Inbox / Channel Chip */}
         {filters.inboxId && (
           <span className="inline-flex items-center gap-1 rounded-md bg-background px-2 py-0.5 font-medium text-foreground border border-border/60 shadow-2xs">
-            <span className="text-muted-foreground">{t('conversations.chips.channel')}</span>
+            <span className="text-muted-foreground">{'Kênh:'}</span>
             <span className="font-semibold text-primary">
-              {activeInbox ? activeInbox.name : t('conversations.card.inboxFallback')}
+              {activeInbox ? activeInbox.name : 'Hộp thư'}
             </span>
             <button
               type="button"
               onClick={() => setInbox(undefined)}
               className="ml-0.5 rounded-xs p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer"
-              aria-label="Remove inbox filter"
+              aria-label="Xóa bộ lọc hộp thư"
             >
               <X className="size-3" />
             </button>
@@ -137,7 +135,7 @@ export function ConversationActiveChips({
         {/* Priority Chip */}
         {filters.priority && (
           <span className="inline-flex items-center gap-1 rounded-md bg-background px-2 py-0.5 font-medium text-foreground border border-border/60 shadow-2xs">
-            <span className="text-muted-foreground">{t('common.priority')}:</span>
+            <span className="text-muted-foreground">{'Độ ưu tiên'}:</span>
             <span
               className={cn(
                 'font-semibold',
@@ -153,7 +151,7 @@ export function ConversationActiveChips({
               type="button"
               onClick={() => setPriority(undefined)}
               className="ml-0.5 rounded-xs p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer"
-              aria-label="Remove priority filter"
+              aria-label="Xóa bộ lọc độ ưu tiên"
             >
               <X className="size-3" />
             </button>
@@ -163,7 +161,7 @@ export function ConversationActiveChips({
         {/* Label Chip */}
         {filters.labelId && (
           <span className="inline-flex items-center gap-1 rounded-md bg-background px-2 py-0.5 font-medium text-foreground border border-border/60 shadow-2xs">
-            <span className="text-muted-foreground">{t('conversations.chips.label')}</span>
+            <span className="text-muted-foreground">{'Nhãn:'}</span>
             {activeLabel && (
               <span
                 className="size-2 rounded-full shrink-0"
@@ -171,13 +169,13 @@ export function ConversationActiveChips({
               />
             )}
             <span className="font-semibold text-primary">
-              {activeLabel ? activeLabel.title : t('conversations.actions.labels')}
+              {activeLabel ? activeLabel.title : 'Nhãn'}
             </span>
             <button
               type="button"
               onClick={() => setLabel(undefined)}
               className="ml-0.5 rounded-xs p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer"
-              aria-label="Remove label filter"
+              aria-label="Xóa bộ lọc nhãn"
             >
               <X className="size-3" />
             </button>
@@ -187,17 +185,15 @@ export function ConversationActiveChips({
         {/* Assignee Chip */}
         {filters.assigneeId && (
           <span className="inline-flex items-center gap-1 rounded-md bg-background px-2 py-0.5 font-medium text-foreground border border-border/60 shadow-2xs">
-            <span className="text-muted-foreground">{t('conversations.chips.assignee')}</span>
+            <span className="text-muted-foreground">{'Phụ trách:'}</span>
             <span className="font-semibold text-primary">
-              {activeMember?.user?.name ||
-                activeMember?.user?.email ||
-                t('conversations.chips.member')}
+              {activeMember?.user?.name || activeMember?.user?.email || 'Thành viên'}
             </span>
             <button
               type="button"
               onClick={() => setAssignee(undefined)}
               className="ml-0.5 rounded-xs p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer"
-              aria-label="Remove assignee filter"
+              aria-label="Xóa bộ lọc người phụ trách"
             >
               <X className="size-3" />
             </button>
@@ -213,7 +209,7 @@ export function ConversationActiveChips({
           className="h-5 px-1.5 text-[10px] text-muted-foreground hover:text-destructive hover:bg-destructive/10 cursor-pointer gap-1"
         >
           <RotateCcw className="size-2.5" />
-          <span>{t('conversations.filter.clearFilters')}</span>
+          <span>{'Xóa bộ lọc'}</span>
         </Button>
       </div>
     </div>

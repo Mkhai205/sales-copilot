@@ -22,7 +22,6 @@ import {
 import { getChannelMeta } from '@/lib/channels';
 import { useInbox } from '@/features/omnichannel/hooks/use-inboxes';
 import { useTakeoverConversation } from './hooks/use-takeover-conversation';
-import { useI18n } from '@/lib/i18n';
 
 interface MessageThreadHeaderProps {
   conversation?: ConversationResponseDto;
@@ -40,8 +39,6 @@ export function MessageThreadHeader({
   isDetailOpen,
   onToggleDetail,
 }: MessageThreadHeaderProps) {
-  const { t } = useI18n();
-
   const takeoverMutation = useTakeoverConversation({
     workspaceId: conversation?.workspaceId,
     workspaceSlug,
@@ -64,7 +61,7 @@ export function MessageThreadHeader({
             variant="outline"
             className="text-[10px] text-emerald-500 border-emerald-500/30 bg-emerald-500/10 py-0 px-1.5 font-medium"
           >
-            {t('conversations.status.open')}
+            {'Đang mở'}
           </Badge>
         );
       case ConversationStatus.PENDING:
@@ -73,7 +70,7 @@ export function MessageThreadHeader({
             variant="outline"
             className="text-[10px] text-amber-500 border-amber-500/30 bg-amber-500/10 py-0 px-1.5 font-medium"
           >
-            {t('conversations.status.pending')}
+            {'Đang chờ'}
           </Badge>
         );
       case ConversationStatus.RESOLVED:
@@ -82,7 +79,7 @@ export function MessageThreadHeader({
             variant="outline"
             className="text-[10px] text-muted-foreground border-border bg-muted py-0 px-1.5 font-medium"
           >
-            {t('conversations.status.resolved')}
+            {'Đã giải quyết'}
           </Badge>
         );
       case ConversationStatus.SNOOZED:
@@ -91,7 +88,7 @@ export function MessageThreadHeader({
             variant="outline"
             className="text-[10px] text-purple-500 border-purple-500/30 bg-purple-500/10 py-0 px-1.5 font-medium"
           >
-            {t('conversations.status.snoozed')}
+            {'Tạm hoãn'}
           </Badge>
         );
       default:
@@ -109,7 +106,7 @@ export function MessageThreadHeader({
             className="text-[10px] text-rose-500 border-rose-500/30 bg-rose-500/10 py-0 px-1.5 font-medium gap-1"
           >
             <AlertTriangle className="size-2.5" />
-            {t('conversations.priority.urgent')}
+            {'Khẩn cấp'}
           </Badge>
         );
       case Priority.HIGH:
@@ -118,7 +115,7 @@ export function MessageThreadHeader({
             variant="outline"
             className="text-[10px] text-orange-500 border-orange-500/30 bg-orange-500/10 py-0 px-1.5 font-medium"
           >
-            {t('conversations.priority.high')}
+            {'Cao'}
           </Badge>
         );
       case Priority.MEDIUM:
@@ -129,7 +126,7 @@ export function MessageThreadHeader({
             variant="outline"
             className="text-[10px] text-slate-400 border-slate-500/30 bg-slate-500/10 py-0 px-1.5 font-medium"
           >
-            {t('conversations.priority.low')}
+            {'Thấp'}
           </Badge>
         );
       default:
@@ -186,7 +183,7 @@ export function MessageThreadHeader({
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <h2 className="truncate text-xs font-semibold text-foreground">
-              {contact?.name || 'Contact'}
+              {contact?.name || 'Khách vãng lai'}
             </h2>
             {getStatusBadge(conversation?.status)}
             {getPriorityBadge(conversation?.priority)}
@@ -196,7 +193,7 @@ export function MessageThreadHeader({
                 className="text-[10px] text-emerald-600 border-emerald-500/30 bg-emerald-500/10 py-0 px-1.5 font-medium flex items-center gap-1"
               >
                 <Bot className="size-2.5" />
-                <span>{t('conversations.aiAutopilotBadge')}</span>
+                <span>{'AI Autopilot'}</span>
               </Badge>
             )}
             {isStaffTakeover && (
@@ -205,14 +202,14 @@ export function MessageThreadHeader({
                 className="text-[10px] text-amber-500 border-amber-500/30 bg-amber-500/10 py-0 px-1.5 font-medium flex items-center gap-1"
               >
                 <UserRoundCheck className="size-2.5" />
-                <span>{t('conversations.humanBadge')}</span>
+                <span>{'Nhân viên'}</span>
               </Badge>
             )}
           </div>
           <p className="truncate text-[11px] text-muted-foreground flex items-center gap-1">
-            <span>via {channelMeta.label}</span>
+            <span>qua {channelMeta.label}</span>
             {displayId ? ` • ID ${displayId}` : ''}
-            {conversation?.assignee?.name ? ` • Assigned to ${conversation.assignee.name}` : ''}
+            {conversation?.assignee?.name ? ` • Phân công: ${conversation.assignee.name}` : ''}
           </p>
         </div>
       </div>
@@ -232,7 +229,7 @@ export function MessageThreadHeader({
             ) : (
               <UserRoundCheck className="size-3.5" />
             )}
-            <span>{t('conversations.takeoverAi')}</span>
+            <span>{'Tiếp quản từ AI'}</span>
           </Button>
         )}
 
@@ -249,13 +246,11 @@ export function MessageThreadHeader({
               ) : (
                 <PanelRightOpen className="size-4" />
               )}
-              <span className="sr-only">Toggle contact details</span>
+              <span className="sr-only">Ẩn/hiện thông tin liên hệ</span>
             </Button>
           </TooltipTrigger>
           <TooltipContent side="bottom">
-            {isDetailOpen
-              ? t('conversations.details.hideContactInfo')
-              : t('conversations.details.showContactInfo')}
+            {isDetailOpen ? 'Ẩn thông tin liên hệ' : 'Hiện thông tin liên hệ'}
           </TooltipContent>
         </Tooltip>
       </div>

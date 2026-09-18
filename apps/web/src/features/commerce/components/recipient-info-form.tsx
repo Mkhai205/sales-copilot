@@ -13,7 +13,6 @@ import { Button } from '@/components/ui/button';
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { AddressCascader } from './address-cascader';
 import { parseAddressText } from '../lib/vietnam-address';
-import { useI18n } from '@/lib/i18n';
 
 interface RecipientInfoFormProps {
   value: Partial<ShippingAddressInputDto>;
@@ -22,7 +21,6 @@ interface RecipientInfoFormProps {
 }
 
 export function RecipientInfoForm({ value, onChange, disabled = false }: RecipientInfoFormProps) {
-  const { t } = useI18n();
   const [rawAddressInput, setRawAddressInput] = React.useState('');
 
   const handleFieldChange = (field: keyof ShippingAddressInputDto, val: any) => {
@@ -34,7 +32,7 @@ export function RecipientInfoForm({ value, onChange, disabled = false }: Recipie
 
   const handleParseAddress = async () => {
     if (!rawAddressInput.trim()) {
-      toast.info(t('commerce.recipient.toastEmpty'));
+      toast.info('Vui lòng dán địa chỉ thô vào ô để phân tích');
       return;
     }
 
@@ -52,7 +50,7 @@ export function RecipientInfoForm({ value, onChange, disabled = false }: Recipie
     const parsed = await parseAddressText(cleanAddressText);
 
     if (!parsed.province && !parsed.district && !parsed.ward && !phoneMatch) {
-      toast.warning(t('commerce.recipient.toastNotFound'));
+      toast.warning('Không tìm thấy thông tin Tỉnh/Huyện/Xã hoặc SĐT phù hợp trong chuỗi địa chỉ');
       return;
     }
 
@@ -73,7 +71,7 @@ export function RecipientInfoForm({ value, onChange, disabled = false }: Recipie
       streetAddress: street || value.streetAddress,
     });
 
-    toast.success(t('commerce.recipient.toastSuccess'), {
+    toast.success('Đã phân tích địa chỉ thành công', {
       description: `${street || ''}, ${parsed.ward || ''}, ${parsed.district || ''}, ${parsed.province || ''}`,
     });
   };
@@ -83,9 +81,9 @@ export function RecipientInfoForm({ value, onChange, disabled = false }: Recipie
       {/* Người nhận & Số điện thoại */}
       <div className="grid grid-cols-2 gap-2">
         <Field>
-          <FieldLabel className="text-xs">{t('commerce.recipient.name')}</FieldLabel>
+          <FieldLabel className="text-xs">{'Tên người nhận'}</FieldLabel>
           <Input
-            placeholder={t('commerce.recipient.namePlaceholder')}
+            placeholder={'Họ và tên...'}
             className="h-8 text-xs"
             value={value.recipientName || ''}
             onChange={e => handleFieldChange('recipientName', e.target.value)}
@@ -94,9 +92,9 @@ export function RecipientInfoForm({ value, onChange, disabled = false }: Recipie
         </Field>
 
         <Field>
-          <FieldLabel className="text-xs">{t('commerce.recipient.phone')}</FieldLabel>
+          <FieldLabel className="text-xs">{'Số điện thoại'}</FieldLabel>
           <Input
-            placeholder={t('commerce.recipient.phonePlaceholder')}
+            placeholder={'0988xxxxxx...'}
             className="h-8 text-xs"
             value={value.phoneNumber || ''}
             onChange={e => handleFieldChange('phoneNumber', e.target.value)}
@@ -110,7 +108,7 @@ export function RecipientInfoForm({ value, onChange, disabled = false }: Recipie
         <div className="flex items-center justify-between text-xs font-medium text-muted-foreground">
           <span className="flex items-center gap-1">
             <MapPin className="size-3 text-primary" />
-            {t('commerce.recipient.fastParser')}
+            {'Nhận diện địa chỉ nhanh từ tin nhắn chat'}
           </span>
           <Button
             type="button"
@@ -121,11 +119,11 @@ export function RecipientInfoForm({ value, onChange, disabled = false }: Recipie
             disabled={disabled || !rawAddressInput.trim()}
           >
             <Sparkles className="size-3" />
-            {t('commerce.recipient.parseAddress')}
+            {'Phân tích địa chỉ'}
           </Button>
         </div>
         <Input
-          placeholder={t('commerce.recipient.parsePlaceholder')}
+          placeholder={"Dán địa chỉ: ví dụ '15 ngõ 45 Cầu Giấy, Quan Hoa, Cầu Giấy, Hà Nội'..."}
           className="h-7 text-xs bg-background"
           value={rawAddressInput}
           onChange={e => setRawAddressInput(e.target.value)}
@@ -157,9 +155,9 @@ export function RecipientInfoForm({ value, onChange, disabled = false }: Recipie
 
       {/* Địa chỉ chi tiết (Số nhà, ngõ, tên đường) */}
       <Field>
-        <FieldLabel className="text-xs">{t('commerce.recipient.streetAddress')}</FieldLabel>
+        <FieldLabel className="text-xs">{'Số nhà, ngõ, tên đường'}</FieldLabel>
         <Input
-          placeholder={t('commerce.recipient.streetPlaceholder')}
+          placeholder={'Số 123 đường Giải Phóng...'}
           className="h-8 text-xs"
           value={value.streetAddress || ''}
           onChange={e => handleFieldChange('streetAddress', e.target.value)}
@@ -169,9 +167,9 @@ export function RecipientInfoForm({ value, onChange, disabled = false }: Recipie
 
       {/* Ghi chú giao hàng */}
       <Field>
-        <FieldLabel className="text-xs">{t('commerce.recipient.shippingNotes')}</FieldLabel>
+        <FieldLabel className="text-xs">{'Ghi chú giao hàng'}</FieldLabel>
         <Input
-          placeholder={t('commerce.recipient.shippingNotesPlaceholder')}
+          placeholder={'Ví dụ: Giao giờ hành chính, gọi trước 15p...'}
           className="h-8 text-xs"
           value={value.shippingNotes || ''}
           onChange={e => handleFieldChange('shippingNotes', e.target.value)}

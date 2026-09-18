@@ -13,7 +13,6 @@ import {
 } from '@sales-copilot/shared-contracts';
 import { toast } from 'sonner';
 import { useSocketEvent } from '@/lib/socket/use-socket';
-import { useI18n } from '@/lib/i18n';
 
 export interface UseCommerceRealtimeSyncOptions {
   workspaceId?: string;
@@ -30,7 +29,6 @@ export function useCommerceRealtimeSync({
   workspaceId,
   conversationId,
 }: UseCommerceRealtimeSyncOptions): void {
-  const { t } = useI18n();
   const queryClient = useQueryClient();
 
   const invalidateCommerceQueries = React.useCallback(
@@ -70,7 +68,7 @@ export function useCommerceRealtimeSync({
     ) {
       const orderRef = data.displayId ? `#${data.displayId}` : data.orderNumber || '';
       const method = data.paymentMethod || 'VietQR';
-      toast.success(t('commerce.toasts.orderPaidSuccess', { ref: orderRef, method }), {
+      toast.success(`Đơn hàng ${orderRef} đã thanh toán thành công qua ${method}!`, {
         description: data.paidAmount
           ? `Số tiền: ${new Intl.NumberFormat('vi-VN').format(data.paidAmount)}đ`
           : undefined,
@@ -89,7 +87,7 @@ export function useCommerceRealtimeSync({
       (!conversationId || !data.conversationId || data.conversationId === conversationId)
     ) {
       const orderRef = data.displayId ? `#${data.displayId}` : data.orderNumber || '';
-      toast.info(t('commerce.toasts.orderPartiallyPaid', { ref: orderRef }), {
+      toast.info(`Đơn hàng ${orderRef} đã nhận đặt cọc / thanh toán một phần`, {
         description: data.paidAmount
           ? `Đã nhận: ${new Intl.NumberFormat('vi-VN').format(data.paidAmount)}đ / Còn lại: ${new Intl.NumberFormat(
               'vi-VN',
@@ -121,12 +119,9 @@ export function useCommerceRealtimeSync({
       (!conversationId || !data.conversationId || data.conversationId === conversationId)
     ) {
       const orderRef = data.displayId ? `#${data.displayId}` : data.orderNumber;
-      toast.success(
-        t('commerce.toasts.orderShipped', { ref: orderRef, carrier: data.shippingCarrier }),
-        {
-          description: `Mã vận đơn: ${data.trackingCode}`,
-        },
-      );
+      toast.success(`Đơn hàng ${orderRef} đã xuất kho giao cho ${data.shippingCarrier}!`, {
+        description: `Mã vận đơn: ${data.trackingCode}`,
+      });
     }
   });
 
@@ -140,7 +135,7 @@ export function useCommerceRealtimeSync({
       (!conversationId || !data.conversationId || data.conversationId === conversationId)
     ) {
       const orderRef = data.displayId ? `#${data.displayId}` : data.orderNumber;
-      toast.success(t('commerce.toasts.orderCompletedSuccess', { ref: orderRef }));
+      toast.success(`Đã hoàn tất đơn hàng #${orderRef}`);
     }
   });
 }

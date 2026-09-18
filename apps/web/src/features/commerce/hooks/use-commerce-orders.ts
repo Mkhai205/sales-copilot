@@ -11,10 +11,8 @@ import type {
   UpdateOrderDto,
 } from '@sales-copilot/shared-contracts';
 import { commerceApi } from '../api/commerce-client';
-import { useI18n } from '@/lib/i18n';
 
 export function useCommerceOrders(workspaceId?: string) {
-  const { t } = useI18n();
   const queryClient = useQueryClient();
 
   const invalidateOrderQueries = (orderId?: string) => {
@@ -37,14 +35,12 @@ export function useCommerceOrders(workspaceId?: string) {
       return res.data;
     },
     onSuccess: data => {
-      toast.success(
-        t('commerce.toasts.orderCreatedSuccess', { ref: data.displayId || data.orderNumber }),
-      );
+      toast.success(`Đã tạo đơn hàng #${data.displayId || data.orderNumber}`);
       invalidateOrderQueries(data.id);
     },
     onError: (err: any) => {
-      toast.error(t('commerce.toasts.orderCreatedError'), {
-        description: err?.error?.message || err?.message || t('commerce.toasts.pleaseRetry'),
+      toast.error('Lỗi khi tạo đơn hàng', {
+        description: err?.error?.message || err?.message || 'Vui lòng thử lại',
       });
     },
   });
@@ -56,14 +52,12 @@ export function useCommerceOrders(workspaceId?: string) {
       return res.data;
     },
     onSuccess: data => {
-      toast.success(
-        t('commerce.toasts.orderUpdatedSuccess', { ref: data.displayId || data.orderNumber }),
-      );
+      toast.success(`Đã cập nhật đơn hàng #${data.displayId || data.orderNumber}`);
       invalidateOrderQueries(data.id);
     },
     onError: (err: any) => {
-      toast.error(t('commerce.toasts.orderUpdatedError'), {
-        description: err?.error?.message || err?.message || t('commerce.toasts.pleaseRetry'),
+      toast.error('Lỗi khi cập nhật đơn hàng', {
+        description: err?.error?.message || err?.message || 'Vui lòng thử lại',
       });
     },
   });
@@ -75,12 +69,12 @@ export function useCommerceOrders(workspaceId?: string) {
       return res.data;
     },
     onSuccess: data => {
-      toast.success(t('commerce.toasts.orderConfirmedSuccess', { ref: data.displayId }));
+      toast.success(`Đã xác nhận đơn hàng #${data.displayId}`);
       invalidateOrderQueries(data.id);
     },
     onError: (err: any) => {
-      toast.error(t('commerce.toasts.orderConfirmedError'), {
-        description: err?.error?.message || err?.message || t('commerce.toasts.pleaseRetry'),
+      toast.error('Lỗi khi xác nhận đơn hàng', {
+        description: err?.error?.message || err?.message || 'Vui lòng thử lại',
       });
     },
   });
@@ -92,12 +86,12 @@ export function useCommerceOrders(workspaceId?: string) {
       return res.data;
     },
     onSuccess: data => {
-      toast.success(t('commerce.toasts.paymentRecordedSuccess', { ref: data.displayId }));
+      toast.success(`Đã ghi nhận thanh toán cho đơn #${data.displayId}`);
       invalidateOrderQueries(data.id);
     },
     onError: (err: any) => {
-      toast.error(t('commerce.toasts.paymentRecordedError'), {
-        description: err?.error?.message || err?.message || t('commerce.toasts.pleaseRetry'),
+      toast.error('Lỗi khi thanh toán đơn hàng', {
+        description: err?.error?.message || err?.message || 'Vui lòng thử lại',
       });
     },
   });
@@ -109,12 +103,12 @@ export function useCommerceOrders(workspaceId?: string) {
       return res.data;
     },
     onSuccess: data => {
-      toast.success(t('commerce.toasts.orderCancelledSuccess', { ref: data.displayId }));
+      toast.success(`Đã hủy đơn hàng #${data.displayId}`);
       invalidateOrderQueries(data.id);
     },
     onError: (err: any) => {
-      toast.error(t('commerce.toasts.orderCancelledError'), {
-        description: err?.error?.message || err?.message || t('commerce.toasts.pleaseRetry'),
+      toast.error('Lỗi khi hủy đơn hàng', {
+        description: err?.error?.message || err?.message || 'Vui lòng thử lại',
       });
     },
   });
@@ -126,12 +120,12 @@ export function useCommerceOrders(workspaceId?: string) {
       return res.data;
     },
     onSuccess: data => {
-      toast.success(t('commerce.toasts.orderCompletedSuccess', { ref: data.displayId }));
+      toast.success(`Đã hoàn tất đơn hàng #${data.displayId}`);
       invalidateOrderQueries(data.id);
     },
     onError: (err: any) => {
-      toast.error(t('commerce.toasts.orderCompletedError'), {
-        description: err?.error?.message || err?.message || t('commerce.toasts.pleaseRetry'),
+      toast.error('Lỗi khi hoàn tất đơn hàng', {
+        description: err?.error?.message || err?.message || 'Vui lòng thử lại',
       });
     },
   });

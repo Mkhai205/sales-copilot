@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { SettingsNav } from '@/features/identity';
+import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
+import { SettingsSidebar } from '@/features/identity';
 
 interface SettingsLayoutProps {
   children: React.ReactNode;
@@ -10,16 +11,11 @@ export default async function SettingsLayout({ children, params }: SettingsLayou
   const { workspaceSlug } = await params;
 
   return (
-    <div className="flex h-full min-h-0 w-full flex-1 overflow-hidden bg-background">
-      {/* Settings Navigation Sub-Sidebar */}
-      <aside className="h-full w-64 md:w-72 shrink-0 border-r border-border bg-card/20">
-        <SettingsNav workspaceSlug={workspaceSlug} />
-      </aside>
-
-      {/* Settings Main Content Area */}
-      <main className="flex-1 min-w-0 h-full overflow-y-auto">
-        <div className="mx-auto max-w-5xl p-6 md:p-8">{children}</div>
-      </main>
-    </div>
+    <SidebarProvider defaultOpen={true} className="h-full min-h-0 w-full overflow-hidden">
+      <SettingsSidebar workspaceSlug={workspaceSlug} />
+      <SidebarInset className="h-full min-h-0 min-w-0 flex-1 overflow-y-auto">
+        <div className="flex flex-col flex-1 w-full p-6">{children}</div>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }

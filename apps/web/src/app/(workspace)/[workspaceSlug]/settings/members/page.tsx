@@ -13,13 +13,16 @@ export default function MembersSettingsPage() {
 
   return (
     <SettingsGuard workspaceSlug={workspaceSlug} segment="members">
-      <div className="flex flex-col gap-6 max-w-5xl">
+      <div className="flex flex-col gap-6 w-full">
         {/* Page Header */}
-        <div>
-          <h1 className="text-xl font-semibold tracking-tight text-foreground">Members & Roles</h1>
+        <div className="pb-3 border-b border-border/70">
+          <h1 className="text-xl font-bold tracking-tight text-foreground">
+            {'Thành viên & Phân quyền'}
+          </h1>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Manage your workspace team members, invite new colleagues, and control access
-            permissions.
+            {
+              'Quản lý thành viên trong không gian làm việc, mời cộng sự mới và thiết lập vai trò truy cập.'
+            }
           </p>
         </div>
 

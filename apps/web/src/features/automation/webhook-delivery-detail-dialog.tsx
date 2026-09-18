@@ -54,7 +54,7 @@ export function WebhookDeliveryDetailDialog({
     const jsonStr = JSON.stringify(detail.payload, null, 2);
     navigator.clipboard.writeText(jsonStr);
     setCopied(true);
-    toast.success('Payload copied to clipboard');
+    toast.success('Đã sao chép payload vào bộ nhớ tạm');
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -89,7 +89,7 @@ export function WebhookDeliveryDetailDialog({
               </div>
               <div>
                 <DialogTitle className="text-base font-semibold text-foreground">
-                  Webhook Delivery Details
+                  Chi tiết lượt gửi Webhook
                 </DialogTitle>
                 <DialogDescription className="text-xs text-muted-foreground font-mono truncate max-w-md">
                   {targetUrl}
@@ -116,7 +116,7 @@ export function WebhookDeliveryDetailDialog({
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                 <div className="rounded-lg border border-border/70 bg-card/60 p-3">
                   <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    Event Type
+                    Loại sự kiện
                   </span>
                   <p className="mt-1 font-mono text-xs font-semibold text-foreground truncate">
                     {detail.eventType}
@@ -125,7 +125,7 @@ export function WebhookDeliveryDetailDialog({
 
                 <div className="rounded-lg border border-border/70 bg-card/60 p-3">
                   <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    HTTP Response
+                    Phản hồi HTTP
                   </span>
                   <p className="mt-1 font-mono text-xs font-semibold">
                     {detail.responseStatus ? (
@@ -139,23 +139,23 @@ export function WebhookDeliveryDetailDialog({
                         {detail.responseStatus}
                       </span>
                     ) : (
-                      <span className="text-muted-foreground">None</span>
+                      <span className="text-muted-foreground">Không có</span>
                     )}
                   </p>
                 </div>
 
                 <div className="rounded-lg border border-border/70 bg-card/60 p-3">
                   <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    Attempts
+                    Lần thử
                   </span>
                   <p className="mt-1 font-mono text-xs font-semibold text-foreground">
-                    {detail.attemptCount} attempt(s)
+                    {detail.attemptCount} lần
                   </p>
                 </div>
 
                 <div className="rounded-lg border border-border/70 bg-card/60 p-3">
                   <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    Delivery Time
+                    Thời gian gửi
                   </span>
                   <p className="mt-1 font-mono text-xs text-muted-foreground truncate">
                     {new Date(detail.createdAt).toLocaleTimeString()}
@@ -167,7 +167,7 @@ export function WebhookDeliveryDetailDialog({
               <div className="rounded-xl border border-border/80 bg-card/40 p-4">
                 <div className="mb-2 flex items-center justify-between">
                   <span className="text-xs font-semibold uppercase tracking-wider text-foreground">
-                    Event Request Payload (JSON)
+                    Dữ liệu yêu cầu sự kiện (JSON)
                   </span>
                   <Button
                     type="button"
@@ -181,7 +181,7 @@ export function WebhookDeliveryDetailDialog({
                     ) : (
                       <Copy className="size-3" />
                     )}
-                    {copied ? 'Copied' : 'Copy JSON'}
+                    {copied ? 'Đã chép' : 'Sao chép JSON'}
                   </Button>
                 </div>
 
@@ -194,7 +194,7 @@ export function WebhookDeliveryDetailDialog({
               <div className="rounded-xl border border-border/80 bg-card/40 p-4">
                 <div className="mb-2 flex items-center justify-between">
                   <span className="text-xs font-semibold uppercase tracking-wider text-foreground">
-                    Endpoint Response Body
+                    Nội dung phản hồi từ Endpoint
                   </span>
                 </div>
 
@@ -204,7 +204,7 @@ export function WebhookDeliveryDetailDialog({
                   </pre>
                 ) : (
                   <div className="flex h-16 items-center justify-center rounded-lg border border-dashed border-border/60 text-xs italic text-muted-foreground">
-                    No response body returned from endpoint
+                    Endpoint không trả về nội dung phản hồi
                   </div>
                 )}
               </div>
@@ -220,7 +220,7 @@ export function WebhookDeliveryDetailDialog({
             onClick={() => onOpenChange(false)}
             className="text-xs"
           >
-            Close
+            Đóng
           </Button>
 
           {detail && detail.status !== WebhookDeliveryStatus.DELIVERED && (
@@ -236,7 +236,7 @@ export function WebhookDeliveryDetailDialog({
               ) : (
                 <RefreshCw className="size-3.5" />
               )}
-              Retry Delivery
+              Thử gửi lại
             </Button>
           )}
         </DialogFooter>

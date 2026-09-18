@@ -18,10 +18,8 @@ import { getSettingValue, parseSettingNumber, parseSettingString } from '../util
 import { Sparkles, Save, Loader2 } from 'lucide-react';
 import { SystemSettingCategory } from '@sales-copilot/shared-contracts';
 import { toast } from 'sonner';
-import { useI18n } from '@/lib/i18n';
 
 export function AiDefaultsTab() {
-  const { t } = useI18n();
   const { data: settings, isLoading } = useSystemSettings(SystemSettingCategory.AI);
   const updateMutation = useUpdateSystemSetting();
 
@@ -59,14 +57,14 @@ export function AiDefaultsTab() {
     try {
       const tempNum = Number(temperature);
       if (Number.isNaN(tempNum) || tempNum < 0 || tempNum > 1) {
-        toast.error(t('admin.systemSettings.aiErrTemperature'));
+        toast.error('Nhiệt độ (temperature) phải là số từ 0.0 đến 1.0');
         setIsSaving(false);
         return;
       }
 
       const tokensNum = Number(maxTokens);
       if (Number.isNaN(tokensNum) || tokensNum < 128 || tokensNum > 16384) {
-        toast.error(t('admin.systemSettings.aiErrMaxTokens'));
+        toast.error('Giới hạn tokens tối đa phải từ 128 đến 16384');
         setIsSaving(false);
         return;
       }
@@ -93,7 +91,7 @@ export function AiDefaultsTab() {
           silent: true,
         }),
       ]);
-      toast.success(t('admin.systemSettings.saveAiSuccess'));
+      toast.success('Cập nhật cấu hình AI thành công');
     } catch {
       // Error handled by mutation hook toast
     } finally {
@@ -123,10 +121,12 @@ export function AiDefaultsTab() {
           </div>
           <div>
             <CardTitle className="text-base font-semibold">
-              {t('admin.systemSettings.aiTitle')}
+              {'Cấu hình Trí tuệ Nhân tạo & LLM Gateway'}
             </CardTitle>
             <CardDescription className="text-xs">
-              {t('admin.systemSettings.aiDesc')}
+              {
+                'Xác định nhà cung cấp AI mặc định, mô hình ngôn ngữ và các tham số sinh phản hồi cho Copilot bán hàng.'
+              }
             </CardDescription>
           </div>
         </div>
@@ -136,39 +136,45 @@ export function AiDefaultsTab() {
           <FieldGroup>
             {/* LLM Provider */}
             <Field>
-              <FieldLabel htmlFor="llm-provider">
-                {t('admin.systemSettings.aiProviderLabel')}
-              </FieldLabel>
+              <FieldLabel htmlFor="llm-provider">{'Nhà cung cấp LLM mặc định'}</FieldLabel>
               <Select value={provider} onValueChange={setProvider}>
                 <SelectTrigger id="llm-provider" className="w-full">
-                  <SelectValue placeholder={t('admin.systemSettings.aiProviderPlaceholder')} />
+                  <SelectValue placeholder={'Chọn nhà cung cấp LLM'} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="GEMINI">{t('admin.systemSettings.aiGeminiOption')}</SelectItem>
+                  <SelectItem value="GEMINI">{'Google Gemini (Khuyên dùng)'}</SelectItem>
                   <SelectItem value="OPENAI">OpenAI (GPT-4o)</SelectItem>
                   <SelectItem value="ANTHROPIC">Anthropic (Claude 3.5)</SelectItem>
                   <SelectItem value="DEEPSEEK">DeepSeek (DeepSeek V3 / R1)</SelectItem>
                 </SelectContent>
               </Select>
-              <FieldDescription>{t('admin.systemSettings.aiProviderHelp')}</FieldDescription>
+              <FieldDescription>
+                {
+                  'Cổng AI chính được sử dụng để điều hướng các tác vụ NER trích xuất địa chỉ và gợi ý kịch bản chat.'
+                }
+              </FieldDescription>
             </Field>
 
             {/* Model Name */}
             <Field>
-              <FieldLabel htmlFor="llm-model">{t('admin.systemSettings.aiModelLabel')}</FieldLabel>
+              <FieldLabel htmlFor="llm-model">
+                {'Tên mô hình mặc định (Model identifier)'}
+              </FieldLabel>
               <Input
                 id="llm-model"
                 value={model}
                 onChange={e => setModel(e.target.value)}
                 placeholder="VD: gemini-2.5-flash, gpt-4o-mini"
               />
-              <FieldDescription>{t('admin.systemSettings.aiModelHelp')}</FieldDescription>
+              <FieldDescription>
+                {'Mã định danh mô hình chính xác theo tài liệu SDK chính thức của nhà cung cấp.'}
+              </FieldDescription>
             </Field>
 
             {/* Temperature */}
             <Field>
               <FieldLabel htmlFor="llm-temperature">
-                {t('admin.systemSettings.aiTemperatureLabel', { temperature })}
+                {`Nhiệt độ đàm phán bán hàng (Temperature: ${temperature})`}
               </FieldLabel>
               <Input
                 id="llm-temperature"
@@ -179,13 +185,17 @@ export function AiDefaultsTab() {
                 value={temperature}
                 onChange={e => setTemperature(e.target.value)}
               />
-              <FieldDescription>{t('admin.systemSettings.aiTemperatureHelp')}</FieldDescription>
+              <FieldDescription>
+                {
+                  'Giá trị từ 0.0 (chính xác, nhất quán tuyệt đối) đến 1.0 (sáng tạo, linh hoạt). Khuyến nghị cho chốt đơn: 0.2 - 0.4.'
+                }
+              </FieldDescription>
             </Field>
 
             {/* Max Tokens */}
             <Field>
               <FieldLabel htmlFor="llm-tokens">
-                {t('admin.systemSettings.aiMaxTokensLabel')}
+                {'Giới hạn Tokens phản hồi tối đa (Max Tokens)'}
               </FieldLabel>
               <Input
                 id="llm-tokens"
@@ -196,14 +206,18 @@ export function AiDefaultsTab() {
                 value={maxTokens}
                 onChange={e => setMaxTokens(e.target.value)}
               />
-              <FieldDescription>{t('admin.systemSettings.aiMaxTokensHelp')}</FieldDescription>
+              <FieldDescription>
+                {
+                  'Ngưỡng chặn số lượng token tối đa trong một lượt phản hồi của trợ lý AI để tránh lãng phí chi phí API.'
+                }
+              </FieldDescription>
             </Field>
           </FieldGroup>
 
           <div className="flex justify-end pt-2">
             <Button type="submit" disabled={isSaving || updateMutation.isPending} className="gap-2">
               {isSaving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
-              <span>{t('admin.systemSettings.aiSaveButton')}</span>
+              <span>{'Lưu Cấu hình AI'}</span>
             </Button>
           </div>
         </form>

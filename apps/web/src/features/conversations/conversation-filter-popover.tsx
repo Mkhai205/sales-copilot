@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import * as React from 'react';
 import Image from 'next/image';
@@ -25,7 +25,6 @@ import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { getChannelMeta } from '@/lib/channels';
 import { cn } from '@/lib/utils';
-import { useI18n } from '@/lib/i18n';
 
 interface ConversationFilterPopoverProps {
   workspaceId?: string;
@@ -42,42 +41,42 @@ interface ConversationFilterPopoverProps {
 
 type FilterView = 'menu' | 'status' | 'inbox' | 'priority' | 'label' | 'assignee';
 
-const STATUS_ITEMS: Array<{ value: StatusFilter; labelKey: string }> = [
-  { value: ConversationStatus.OPEN, labelKey: 'conversations.status.open' },
-  { value: ConversationStatus.PENDING, labelKey: 'conversations.status.pending' },
-  { value: ConversationStatus.SNOOZED, labelKey: 'conversations.status.snoozed' },
-  { value: ConversationStatus.RESOLVED, labelKey: 'conversations.status.resolved' },
-  { value: 'ALL', labelKey: 'common.all' },
+const STATUS_ITEMS: Array<{ value: StatusFilter; label: string }> = [
+  { value: ConversationStatus.OPEN, label: 'Đang mở' },
+  { value: ConversationStatus.PENDING, label: 'Đang chờ' },
+  { value: ConversationStatus.SNOOZED, label: 'Tạm hoãn' },
+  { value: ConversationStatus.RESOLVED, label: 'Đã giải quyết' },
+  { value: 'ALL', label: 'Tất cả' },
 ];
 
 const PRIORITY_ITEMS: Array<{
   value?: Priority;
-  labelKey: string;
+  label: string;
   dotColor: string;
   textColor?: string;
 }> = [
-  { value: undefined, labelKey: 'common.all', dotColor: 'bg-muted-foreground/40' },
+  { value: undefined, label: 'Tất cả', dotColor: 'bg-muted-foreground/40' },
   {
     value: Priority.URGENT,
-    labelKey: 'conversations.priority.urgent',
+    label: 'Khẩn cấp',
     dotColor: 'bg-rose-500',
     textColor: 'text-rose-600 dark:text-rose-400',
   },
   {
     value: Priority.HIGH,
-    labelKey: 'conversations.priority.high',
+    label: 'Cao',
     dotColor: 'bg-amber-500',
     textColor: 'text-amber-600 dark:text-amber-400',
   },
   {
     value: Priority.MEDIUM,
-    labelKey: 'conversations.priority.medium',
+    label: 'Trung bình',
     dotColor: 'bg-blue-500',
     textColor: 'text-blue-600 dark:text-blue-400',
   },
   {
     value: Priority.LOW,
-    labelKey: 'conversations.priority.low',
+    label: 'Thấp',
     dotColor: 'bg-slate-400',
     textColor: 'text-slate-600 dark:text-slate-400',
   },
@@ -95,7 +94,6 @@ export function ConversationFilterPopover({
   resetAdvancedFilters,
   disabled = false,
 }: ConversationFilterPopoverProps) {
-  const { t } = useI18n();
   const [isOpen, setIsOpen] = React.useState(false);
   const [currentView, setCurrentView] = React.useState<FilterView>('menu');
   const [searchQuery, setSearchQuery] = React.useState('');
@@ -126,31 +124,31 @@ export function ConversationFilterPopover({
   const getStatusLabel = (status: StatusFilter) => {
     switch (status) {
       case ConversationStatus.OPEN:
-        return t('conversations.status.open');
+        return 'Đang mở';
       case ConversationStatus.PENDING:
-        return t('conversations.status.pending');
+        return 'Đang chờ';
       case ConversationStatus.SNOOZED:
-        return t('conversations.status.snoozed');
+        return 'Tạm hoãn';
       case ConversationStatus.RESOLVED:
-        return t('conversations.status.resolved');
+        return 'Đã giải quyết';
       case 'ALL':
-        return t('common.all');
+        return 'Tất cả';
       default:
         return status;
     }
   };
 
   const getPriorityLabel = (priority?: Priority) => {
-    if (!priority) return t('common.all');
+    if (!priority) return 'Tất cả';
     switch (priority) {
       case Priority.URGENT:
-        return t('conversations.priority.urgent');
+        return 'Khẩn cấp';
       case Priority.HIGH:
-        return t('conversations.priority.high');
+        return 'Cao';
       case Priority.MEDIUM:
-        return t('conversations.priority.medium');
+        return 'Trung bình';
       case Priority.LOW:
-        return t('conversations.priority.low');
+        return 'Thấp';
       default:
         return priority;
     }
@@ -198,7 +196,7 @@ export function ConversationFilterPopover({
                 activeFilterCount > 0 &&
                   'bg-primary/10 text-primary border border-primary/25 hover:bg-primary/15 hover:text-primary font-medium',
               )}
-              aria-label="Filter conversations"
+              aria-label="Lọc cuộc hội thoại"
             >
               <SlidersHorizontal className="size-3.5" />
               {activeFilterCount > 0 && (
@@ -212,7 +210,7 @@ export function ConversationFilterPopover({
         {!isOpen && (
           <TooltipContent side="bottom">
             <span className="text-xs">
-              {t('common.filter')}
+              {'Bộ lọc'}
               {activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
             </span>
           </TooltipContent>
@@ -234,7 +232,7 @@ export function ConversationFilterPopover({
             <div className="flex items-center justify-between border-b border-border/60 px-3.5 py-2.5 bg-muted/20">
               <div className="flex items-center gap-2">
                 <SlidersHorizontal className="size-3.5 text-primary" />
-                <span className="text-xs font-semibold text-foreground">{t('common.filter')}</span>
+                <span className="text-xs font-semibold text-foreground">{'Bộ lọc'}</span>
                 {activeFilterCount > 0 && (
                   <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold text-primary tabular-nums">
                     {activeFilterCount}
@@ -249,7 +247,7 @@ export function ConversationFilterPopover({
                   className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-destructive transition-colors cursor-pointer"
                 >
                   <RotateCcw className="size-3" />
-                  <span>{t('conversations.filter.clearFilters')}</span>
+                  <span>{'Xóa bộ lọc'}</span>
                 </button>
               )}
             </div>
@@ -264,7 +262,7 @@ export function ConversationFilterPopover({
               >
                 <div className="flex items-center gap-2.5 text-foreground/80 group-hover:text-foreground">
                   <Clock className="size-3.5 text-muted-foreground group-hover:text-foreground" />
-                  <span className="font-medium">{t('common.status')}</span>
+                  <span className="font-medium">{'Trạng thái'}</span>
                 </div>
                 <div className="flex items-center gap-1 min-w-0">
                   <span
@@ -289,7 +287,7 @@ export function ConversationFilterPopover({
               >
                 <div className="flex items-center gap-2.5 text-foreground/80 group-hover:text-foreground">
                   <InboxIcon className="size-3.5 text-muted-foreground group-hover:text-foreground" />
-                  <span className="font-medium">{t('conversations.filter.filterByInbox')}</span>
+                  <span className="font-medium">{'Lọc theo hộp thư'}</span>
                 </div>
                 <div className="flex items-center gap-1 min-w-0">
                   <span
@@ -298,7 +296,7 @@ export function ConversationFilterPopover({
                       filters.inboxId ? 'font-semibold text-primary' : 'text-muted-foreground',
                     )}
                   >
-                    {activeInbox ? activeInbox.name : t('common.all')}
+                    {activeInbox ? activeInbox.name : 'Tất cả'}
                   </span>
                   <ChevronRight className="size-3.5 text-muted-foreground/60 shrink-0" />
                 </div>
@@ -312,7 +310,7 @@ export function ConversationFilterPopover({
               >
                 <div className="flex items-center gap-2.5 text-foreground/80 group-hover:text-foreground">
                   <AlertCircle className="size-3.5 text-muted-foreground group-hover:text-foreground" />
-                  <span className="font-medium">{t('common.priority')}</span>
+                  <span className="font-medium">{'Độ ưu tiên'}</span>
                 </div>
                 <div className="flex items-center gap-1 min-w-0">
                   <span
@@ -335,7 +333,7 @@ export function ConversationFilterPopover({
               >
                 <div className="flex items-center gap-2.5 text-foreground/80 group-hover:text-foreground">
                   <Tag className="size-3.5 text-muted-foreground group-hover:text-foreground" />
-                  <span className="font-medium">{t('conversations.actions.labels')}</span>
+                  <span className="font-medium">{'Nhãn'}</span>
                 </div>
                 <div className="flex items-center gap-1 min-w-0">
                   <span
@@ -344,7 +342,7 @@ export function ConversationFilterPopover({
                       filters.labelId ? 'font-semibold text-primary' : 'text-muted-foreground',
                     )}
                   >
-                    {activeLabel ? activeLabel.title : t('common.all')}
+                    {activeLabel ? activeLabel.title : 'Tất cả'}
                   </span>
                   <ChevronRight className="size-3.5 text-muted-foreground/60 shrink-0" />
                 </div>
@@ -358,7 +356,7 @@ export function ConversationFilterPopover({
               >
                 <div className="flex items-center gap-2.5 text-foreground/80 group-hover:text-foreground">
                   <User className="size-3.5 text-muted-foreground group-hover:text-foreground" />
-                  <span className="font-medium">{t('conversations.actions.assignee')}</span>
+                  <span className="font-medium">{'Người xử lý'}</span>
                 </div>
                 <div className="flex items-center gap-1 min-w-0">
                   <span
@@ -367,7 +365,7 @@ export function ConversationFilterPopover({
                       filters.assigneeId ? 'font-semibold text-primary' : 'text-muted-foreground',
                     )}
                   >
-                    {activeMember?.user?.name || activeMember?.user?.email || t('common.all')}
+                    {activeMember?.user?.name || activeMember?.user?.email || 'Tất cả'}
                   </span>
                   <ChevronRight className="size-3.5 text-muted-foreground/60 shrink-0" />
                 </div>
@@ -388,7 +386,7 @@ export function ConversationFilterPopover({
                 className="flex items-center gap-1 rounded-md px-1.5 py-1 text-xs text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer transition-colors"
               >
                 <ChevronLeft className="size-3.5" />
-                <span className="font-semibold">{t('common.status')}</span>
+                <span className="font-semibold">{'Trạng thái'}</span>
               </button>
               {filters.status !== ConversationStatus.OPEN && (
                 <button
@@ -396,7 +394,7 @@ export function ConversationFilterPopover({
                   onClick={() => setStatus(ConversationStatus.OPEN)}
                   className="text-[11px] text-muted-foreground hover:text-destructive cursor-pointer px-1"
                 >
-                  {t('common.clear')}
+                  {'Xóa bộ lọc'}
                 </button>
               )}
             </div>
@@ -419,7 +417,7 @@ export function ConversationFilterPopover({
                         : 'text-foreground/80 hover:bg-muted/60',
                     )}
                   >
-                    <span>{t(item.labelKey)}</span>
+                    <span>{item.label}</span>
                     {isSelected && <Check className="size-3.5 text-primary shrink-0" />}
                   </button>
                 );
@@ -440,7 +438,7 @@ export function ConversationFilterPopover({
                 className="flex items-center gap-1 rounded-md px-1.5 py-1 text-xs text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer transition-colors"
               >
                 <ChevronLeft className="size-3.5" />
-                <span className="font-semibold">{t('conversations.filter.filterByInbox')}</span>
+                <span className="font-semibold">{'Lọc theo hộp thư'}</span>
               </button>
               {filters.inboxId && (
                 <button
@@ -448,7 +446,7 @@ export function ConversationFilterPopover({
                   onClick={() => setInbox(undefined)}
                   className="text-[11px] text-muted-foreground hover:text-destructive cursor-pointer px-1"
                 >
-                  {t('common.clear')}
+                  {'Xóa bộ lọc'}
                 </button>
               )}
             </div>
@@ -459,7 +457,7 @@ export function ConversationFilterPopover({
                 <Search className="size-3 text-muted-foreground shrink-0" />
                 <input
                   type="text"
-                  placeholder={t('conversations.popover.searchChannel')}
+                  placeholder={'Tìm theo tên kênh hoặc loại...'}
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
                   className="w-full bg-transparent text-xs text-foreground placeholder:text-muted-foreground/70 focus:outline-none"
@@ -492,7 +490,7 @@ export function ConversationFilterPopover({
                     : 'text-foreground/80 hover:bg-muted/60',
                 )}
               >
-                <span>{t('conversations.filter.allInboxes')}</span>
+                <span>{'Tất cả hộp thư'}</span>
                 {!filters.inboxId && <Check className="size-3.5 text-primary shrink-0" />}
               </button>
 
@@ -532,7 +530,7 @@ export function ConversationFilterPopover({
 
               {filteredInboxes.length === 0 && (
                 <div className="py-6 text-center text-xs text-muted-foreground">
-                  {t('common.noResults')}
+                  {'Không tìm thấy kết quả'}
                 </div>
               )}
             </div>
@@ -551,7 +549,7 @@ export function ConversationFilterPopover({
                 className="flex items-center gap-1 rounded-md px-1.5 py-1 text-xs text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer transition-colors"
               >
                 <ChevronLeft className="size-3.5" />
-                <span className="font-semibold">{t('common.priority')}</span>
+                <span className="font-semibold">{'Độ ưu tiên'}</span>
               </button>
               {filters.priority && (
                 <button
@@ -559,7 +557,7 @@ export function ConversationFilterPopover({
                   onClick={() => setPriority(undefined)}
                   className="text-[11px] text-muted-foreground hover:text-destructive cursor-pointer px-1"
                 >
-                  {t('common.clear')}
+                  {'Xóa bộ lọc'}
                 </button>
               )}
             </div>
@@ -569,7 +567,7 @@ export function ConversationFilterPopover({
                 const isSelected = filters.priority === item.value;
                 return (
                   <button
-                    key={item.labelKey}
+                    key={item.label}
                     type="button"
                     onClick={() => {
                       setPriority(item.value);
@@ -585,7 +583,7 @@ export function ConversationFilterPopover({
                     <div className="flex items-center gap-2">
                       <span className={cn('size-2 rounded-full shrink-0', item.dotColor)} />
                       <span className={cn(isSelected ? 'text-primary' : item.textColor)}>
-                        {t(item.labelKey)}
+                        {item.label}
                       </span>
                     </div>
                     {isSelected && <Check className="size-3.5 text-primary shrink-0" />}
@@ -608,7 +606,7 @@ export function ConversationFilterPopover({
                 className="flex items-center gap-1 rounded-md px-1.5 py-1 text-xs text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer transition-colors"
               >
                 <ChevronLeft className="size-3.5" />
-                <span className="font-semibold">{t('conversations.actions.labels')}</span>
+                <span className="font-semibold">{'Nhãn'}</span>
               </button>
               {filters.labelId && (
                 <button
@@ -616,7 +614,7 @@ export function ConversationFilterPopover({
                   onClick={() => setLabel(undefined)}
                   className="text-[11px] text-muted-foreground hover:text-destructive cursor-pointer px-1"
                 >
-                  {t('common.clear')}
+                  {'Xóa bộ lọc'}
                 </button>
               )}
             </div>
@@ -627,7 +625,7 @@ export function ConversationFilterPopover({
                 <Search className="size-3 text-muted-foreground shrink-0" />
                 <input
                   type="text"
-                  placeholder={t('conversations.popover.searchLabel')}
+                  placeholder={'Tìm kiếm nhãn...'}
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
                   className="w-full bg-transparent text-xs text-foreground placeholder:text-muted-foreground/70 focus:outline-none"
@@ -660,7 +658,7 @@ export function ConversationFilterPopover({
                     : 'text-foreground/80 hover:bg-muted/60',
                 )}
               >
-                <span>{t('common.all')}</span>
+                <span>{'Tất cả'}</span>
                 {!filters.labelId && <Check className="size-3.5 text-primary shrink-0" />}
               </button>
 
@@ -695,7 +693,7 @@ export function ConversationFilterPopover({
 
               {filteredLabels.length === 0 && (
                 <div className="py-6 text-center text-xs text-muted-foreground">
-                  {t('common.noResults')}
+                  {'Không tìm thấy kết quả'}
                 </div>
               )}
             </div>
@@ -714,7 +712,7 @@ export function ConversationFilterPopover({
                 className="flex items-center gap-1 rounded-md px-1.5 py-1 text-xs text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer transition-colors"
               >
                 <ChevronLeft className="size-3.5" />
-                <span className="font-semibold">{t('conversations.actions.assignee')}</span>
+                <span className="font-semibold">{'Người xử lý'}</span>
               </button>
               {filters.assigneeId && (
                 <button
@@ -722,7 +720,7 @@ export function ConversationFilterPopover({
                   onClick={() => setAssignee(undefined)}
                   className="text-[11px] text-muted-foreground hover:text-destructive cursor-pointer px-1"
                 >
-                  {t('common.clear')}
+                  {'Xóa bộ lọc'}
                 </button>
               )}
             </div>
@@ -733,7 +731,7 @@ export function ConversationFilterPopover({
                 <Search className="size-3 text-muted-foreground shrink-0" />
                 <input
                   type="text"
-                  placeholder={t('conversations.popover.searchAssignee')}
+                  placeholder={'Tìm nhân viên theo tên, email...'}
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
                   className="w-full bg-transparent text-xs text-foreground placeholder:text-muted-foreground/70 focus:outline-none"
@@ -766,14 +764,13 @@ export function ConversationFilterPopover({
                     : 'text-foreground/80 hover:bg-muted/60',
                 )}
               >
-                <span>{t('common.all')}</span>
+                <span>{'Tất cả'}</span>
                 {!filters.assigneeId && <Check className="size-3.5 text-primary shrink-0" />}
               </button>
 
               {filteredMembers.map(member => {
                 const isSelected = filters.assigneeId === member.user?.id;
-                const name =
-                  member.user?.name || member.user?.email || t('conversations.chips.member');
+                const name = member.user?.name || member.user?.email || 'Thành viên';
                 return (
                   <button
                     key={member.id}
@@ -809,7 +806,7 @@ export function ConversationFilterPopover({
 
               {filteredMembers.length === 0 && (
                 <div className="py-6 text-center text-xs text-muted-foreground">
-                  {t('common.noResults')}
+                  {'Không tìm thấy kết quả'}
                 </div>
               )}
             </div>

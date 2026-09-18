@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import * as React from 'react';
 import { Mail, Phone, Copy, Check } from 'lucide-react';
@@ -7,7 +7,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { ContactDto } from '@sales-copilot/shared-contracts';
-import { useI18n } from '@/lib/i18n';
 
 interface ContactInfoProps {
   contact?: ContactDto | null;
@@ -16,10 +15,9 @@ interface ContactInfoProps {
 }
 
 export function ContactInfo({ contact }: ContactInfoProps) {
-  const { t } = useI18n();
   const [copiedField, setCopiedField] = React.useState<string | null>(null);
 
-  const contactName = contact?.name || t('contact.anonymousVisitor');
+  const contactName = contact?.name || 'Khách vãng lai';
   const initials = contactName
     .split(' ')
     .map(n => n[0])
@@ -30,7 +28,7 @@ export function ContactInfo({ contact }: ContactInfoProps) {
   const handleCopy = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
     setCopiedField(label);
-    toast.success(t('contact.copiedSuccess', { label }));
+    toast.success(`Đã sao chép ${label} vào bộ nhớ tạm`);
     setTimeout(() => setCopiedField(null), 2000);
   };
 
@@ -56,7 +54,7 @@ export function ContactInfo({ contact }: ContactInfoProps) {
         <div className="min-w-0 max-w-full">
           <h4 className="truncate text-sm font-semibold text-foreground">{contactName}</h4>
           <p className="truncate text-xs text-muted-foreground">
-            {contact?.email || contact?.phoneNumber || t('contact.customerProfile')}
+            {contact?.email || contact?.phoneNumber || 'Hồ sơ khách hàng'}
           </p>
         </div>
       </div>
@@ -64,7 +62,7 @@ export function ContactInfo({ contact }: ContactInfoProps) {
       {/* Contact Details List */}
       <div className="flex flex-col gap-2.5">
         <h5 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-          {t('contact.contactDetails')}
+          {'Thông tin liên hệ'}
         </h5>
 
         {/* Email */}
@@ -93,17 +91,17 @@ export function ContactInfo({ contact }: ContactInfoProps) {
                     ) : (
                       <Copy className="size-3" />
                     )}
-                    <span className="sr-only">{t('contact.copyEmail')}</span>
+                    <span className="sr-only">{'Sao chép email'}</span>
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent side="left">{t('contact.copyEmail')}</TooltipContent>
+                <TooltipContent side="left">{'Sao chép email'}</TooltipContent>
               </Tooltip>
             </div>
           </div>
         ) : (
           <div className="flex items-center gap-2 text-xs text-muted-foreground/70 px-1.5">
             <Mail className="size-3.5 text-muted-foreground/50 shrink-0" />
-            <span className="italic">{t('contact.noDetails')}</span>
+            <span className="italic">{'Chưa có thông tin liên hệ'}</span>
           </div>
         )}
 
@@ -125,25 +123,25 @@ export function ContactInfo({ contact }: ContactInfoProps) {
                   <Button
                     variant="ghost"
                     size="icon-xs"
-                    onClick={() => handleCopy(contact.phoneNumber!, 'Phone')}
+                    onClick={() => handleCopy(contact.phoneNumber!, 'Số điện thoại')}
                     className="size-6 text-muted-foreground hover:text-foreground"
                   >
-                    {copiedField === 'Phone' ? (
+                    {copiedField === 'Số điện thoại' ? (
                       <Check className="size-3 text-emerald-500" />
                     ) : (
                       <Copy className="size-3" />
                     )}
-                    <span className="sr-only">{t('contact.copyPhone')}</span>
+                    <span className="sr-only">{'Sao chép số điện thoại'}</span>
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent side="left">{t('contact.copyPhone')}</TooltipContent>
+                <TooltipContent side="left">{'Sao chép số điện thoại'}</TooltipContent>
               </Tooltip>
             </div>
           </div>
         ) : (
           <div className="flex items-center gap-2 text-xs text-muted-foreground/70 px-1.5">
             <Phone className="size-3.5 text-muted-foreground/50 shrink-0" />
-            <span className="italic">{t('contact.noDetails')}</span>
+            <span className="italic">{'Chưa có thông tin liên hệ'}</span>
           </div>
         )}
       </div>
@@ -152,7 +150,7 @@ export function ContactInfo({ contact }: ContactInfoProps) {
       {customAttrs.length > 0 && (
         <div className="flex flex-col gap-2 pt-1">
           <h5 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-            {t('contact.customAttributes')}
+            {'Thuộc tính mở rộng'}
           </h5>
           <div className="rounded-md border border-border/50 bg-card/50 divide-y divide-border/40 text-xs">
             {customAttrs.map(([key, val]) => (

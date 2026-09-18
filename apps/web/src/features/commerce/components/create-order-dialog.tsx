@@ -7,7 +7,6 @@ import { Input } from '@/components/ui/input';
 import { CommerceOrderForm } from './commerce-order-form';
 import { useContacts } from '@/features/contacts/hooks/use-contacts';
 import { contactsApi } from '@/features/contacts/api/contacts';
-import { useI18n } from '@/lib/i18n';
 import type { ContactDto, OrderResponseDto } from '@sales-copilot/shared-contracts';
 import { User, Search, Plus, ArrowLeft, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -25,8 +24,6 @@ export function CreateOrderDialog({
   workspaceId,
   onOrderCreated,
 }: CreateOrderDialogProps) {
-  const { t } = useI18n();
-
   const [selectedContact, setSelectedContact] = React.useState<ContactDto | null>(null);
   const [searchTerm, setSearchTerm] = React.useState('');
   const [isCreatingContact, setIsCreatingContact] = React.useState(false);
@@ -55,7 +52,7 @@ export function CreateOrderDialog({
   const handleCreateContact = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newCustomerName.trim()) {
-      toast.error(t('commerce.form.validationCustomerRequired'));
+      toast.error('Không tìm thấy thông tin khách hàng cho cuộc hội thoại này');
       return;
     }
 
@@ -68,7 +65,7 @@ export function CreateOrderDialog({
       setSelectedContact(res.data);
       setIsNewCustomerMode(false);
     } catch (err: any) {
-      toast.error(err?.error?.message || err?.message || t('common.retry'));
+      toast.error(err?.error?.message || err?.message || 'Thử lại');
     } finally {
       setIsCreatingContact(false);
     }
@@ -80,7 +77,7 @@ export function CreateOrderDialog({
         <DialogHeader className="p-4 border-b border-border/70 shrink-0 bg-muted/20">
           <div className="flex items-center justify-between">
             <DialogTitle className="text-base font-bold text-foreground">
-              {t('commerce.orders.createDialog.title')}
+              {'Tạo đơn hàng mới'}
             </DialogTitle>
             {selectedContact && (
               <Button
@@ -91,7 +88,7 @@ export function CreateOrderDialog({
                 onClick={() => setSelectedContact(null)}
               >
                 <ArrowLeft className="size-3.5" />
-                <span>{t('commerce.cascader.selectProvinceFirst')}</span>
+                <span>{'Chọn Tỉnh trước'}</span>
               </Button>
             )}
           </div>
@@ -109,7 +106,7 @@ export function CreateOrderDialog({
                       <Input
                         value={searchTerm}
                         onChange={e => setSearchTerm(e.target.value)}
-                        placeholder={t('commerce.orders.createDialog.searchCustomer')}
+                        placeholder={'Tìm kiếm khách hàng theo tên hoặc SĐT...'}
                         className="pl-8 text-xs h-9"
                       />
                     </div>
@@ -121,7 +118,7 @@ export function CreateOrderDialog({
                       onClick={() => setIsNewCustomerMode(true)}
                     >
                       <Plus className="size-3.5" />
-                      <span>{t('commerce.orders.createDialog.quickFill')}</span>
+                      <span>{'Điền thông tin khách hàng'}</span>
                     </Button>
                   </div>
 
@@ -130,11 +127,11 @@ export function CreateOrderDialog({
                     {isContactsLoading ? (
                       <div className="p-6 flex items-center justify-center text-xs text-muted-foreground gap-2">
                         <Loader2 className="size-4 animate-spin" />
-                        <span>{t('common.loading')}</span>
+                        <span>{'Đang tải...'}</span>
                       </div>
                     ) : (contacts || []).length === 0 ? (
                       <div className="p-6 text-center text-xs text-muted-foreground">
-                        <p>{t('commerce.orders.createDialog.noCustomerFound')}</p>
+                        <p>{'Không tìm thấy khách hàng nào'}</p>
                         <Button
                           type="button"
                           variant="link"
@@ -142,7 +139,7 @@ export function CreateOrderDialog({
                           className="mt-1 text-xs cursor-pointer"
                           onClick={() => setIsNewCustomerMode(true)}
                         >
-                          {t('commerce.orders.createDialog.quickFill')}
+                          {'Điền thông tin khách hàng'}
                         </Button>
                       </div>
                     ) : (
@@ -177,30 +174,27 @@ export function CreateOrderDialog({
                 <form onSubmit={handleCreateContact} className="space-y-3 p-2">
                   <div className="text-xs font-semibold text-foreground flex items-center gap-1.5">
                     <User className="size-3.5 text-primary" />
-                    <span>{t('commerce.orders.createDialog.quickFill')}</span>
+                    <span>{'Điền thông tin khách hàng'}</span>
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-xs text-muted-foreground">
-                      {t('commerce.orders.createDialog.customerName')}{' '}
-                      <span className="text-destructive">*</span>
+                      {'Họ tên'} <span className="text-destructive">*</span>
                     </label>
                     <Input
                       value={newCustomerName}
                       onChange={e => setNewCustomerName(e.target.value)}
-                      placeholder={t('commerce.recipient.namePlaceholder')}
+                      placeholder={'Họ và tên...'}
                       className="text-xs"
                       required
                       autoFocus
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-xs text-muted-foreground">
-                      {t('commerce.orders.createDialog.customerPhone')}
-                    </label>
+                    <label className="text-xs text-muted-foreground">{'Số điện thoại'}</label>
                     <Input
                       value={newCustomerPhone}
                       onChange={e => setNewCustomerPhone(e.target.value)}
-                      placeholder={t('commerce.recipient.phonePlaceholder')}
+                      placeholder={'0988xxxxxx...'}
                       className="text-xs font-mono"
                     />
                   </div>
@@ -213,7 +207,7 @@ export function CreateOrderDialog({
                       disabled={isCreatingContact}
                       className="text-xs"
                     >
-                      {t('common.cancel')}
+                      {'Hủy'}
                     </Button>
                     <Button
                       type="submit"
@@ -225,7 +219,7 @@ export function CreateOrderDialog({
                       {isCreatingContact ? (
                         <Loader2 className="size-3.5 animate-spin" />
                       ) : (
-                        t('common.confirm')
+                        'Xác nhận'
                       )}
                     </Button>
                   </div>
@@ -254,7 +248,7 @@ export function CreateOrderDialog({
                   className="h-6 px-2 text-[11px] text-muted-foreground hover:text-foreground cursor-pointer"
                   onClick={() => setSelectedContact(null)}
                 >
-                  {t('common.edit')}
+                  {'Chỉnh sửa'}
                 </Button>
               </div>
 

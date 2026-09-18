@@ -140,9 +140,9 @@ export function ActionRow({
           variant="secondary"
           className="border-emerald-500/30 bg-emerald-500/15 px-2 py-0.5 text-[11px] font-semibold text-emerald-400"
         >
-          DO
+          THỰC HIỆN
         </Badge>
-        <span className="text-xs text-muted-foreground sm:hidden">Action #{index + 1}</span>
+        <span className="text-xs text-muted-foreground sm:hidden">Hành động #{index + 1}</span>
       </div>
 
       {/* Grid of Action Type & Parameter Input */}
@@ -152,7 +152,7 @@ export function ActionRow({
           <SelectTrigger className="h-8 w-full bg-background/50 text-xs">
             <div className="flex items-center gap-2">
               {getActionIcon(action.type)}
-              <SelectValue placeholder="Select action" />
+              <SelectValue placeholder="Chọn hành động" />
             </div>
           </SelectTrigger>
           <SelectContent>
@@ -179,7 +179,7 @@ export function ActionRow({
               }
             >
               <SelectTrigger className="h-8 w-full bg-background/50 text-xs">
-                <SelectValue placeholder="Choose agent" />
+                <SelectValue placeholder="Chọn nhân viên" />
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
@@ -191,7 +191,7 @@ export function ActionRow({
                     ))
                   ) : (
                     <SelectItem value="__none__" disabled className="text-xs">
-                      No members available
+                      Không có thành viên nào
                     </SelectItem>
                   )}
                 </SelectGroup>
@@ -210,7 +210,7 @@ export function ActionRow({
               }
             >
               <SelectTrigger className="h-8 w-full bg-background/50 text-xs">
-                <SelectValue placeholder="Choose team" />
+                <SelectValue placeholder="Chọn nhóm" />
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
@@ -222,7 +222,7 @@ export function ActionRow({
                     ))
                   ) : (
                     <SelectItem value="__none__" disabled className="text-xs">
-                      No teams available
+                      Không có nhóm nào
                     </SelectItem>
                   )}
                 </SelectGroup>
@@ -241,7 +241,7 @@ export function ActionRow({
                     params: { labelTitle: e.target.value },
                   } as AutomationAction)
                 }
-                placeholder="Enter label title (e.g. VIP, Urgent)..."
+                placeholder="Nhập tên nhãn (vd: VIP, Khẩn cấp)..."
                 className="h-8 bg-background/50 text-xs"
               />
               {labels && labels.length > 0 && (
@@ -257,7 +257,7 @@ export function ActionRow({
                   }}
                 >
                   <SelectTrigger className="h-8 w-24 shrink-0 bg-background/50 text-xs text-muted-foreground">
-                    <SelectValue placeholder="Pick..." />
+                    <SelectValue placeholder="Chọn..." />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
@@ -290,7 +290,7 @@ export function ActionRow({
               }
             >
               <SelectTrigger className="h-8 w-full bg-background/50 text-xs">
-                <SelectValue placeholder="Choose status" />
+                <SelectValue placeholder="Chọn trạng thái" />
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
@@ -315,7 +315,7 @@ export function ActionRow({
               }
             >
               <SelectTrigger className="h-8 w-full bg-background/50 text-xs">
-                <SelectValue placeholder="Choose priority" />
+                <SelectValue placeholder="Chọn độ ưu tiên" />
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
@@ -354,7 +354,7 @@ export function ActionRow({
         disabled={isOnlyAction}
         onClick={onRemove}
         className="size-8 shrink-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive disabled:opacity-40"
-        title={isOnlyAction ? 'Rule must have at least one action' : 'Remove action'}
+        title={isOnlyAction ? 'Quy tắc phải có ít nhất một hành động' : 'Xóa hành động'}
       >
         <Trash2 className="size-3.5" />
       </Button>

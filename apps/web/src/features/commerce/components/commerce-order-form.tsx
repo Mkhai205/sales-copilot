@@ -23,7 +23,6 @@ import { RecipientInfoForm } from './recipient-info-form';
 import { OrderFinancialSummary } from './order-financial-summary';
 import { ThermalPrintDialog } from './thermal-print-dialog';
 import { commerceApi } from '../api/commerce-client';
-import { useI18n } from '@/lib/i18n';
 
 export interface CommerceOrderFormProps {
   workspaceId: string;
@@ -47,7 +46,6 @@ export function CommerceOrderForm({
   onCancel,
   onSuccess,
 }: PosOrderFormProps) {
-  const { t } = useI18n();
   const [items, setItems] = React.useState<PosLineItem[]>([]);
   const [shippingAddress, setShippingAddress] = React.useState<Partial<ShippingAddressInputDto>>(
     {},
@@ -138,7 +136,7 @@ export function CommerceOrderForm({
         const maxStock = variant.availableStock ?? 9999;
         const currentQty = existing?.quantity || 1;
         if (currentQty >= maxStock) {
-          toast.warning(t('commerce.form.maxStockReached'));
+          toast.warning('Đã đạt số lượng tồn kho khả dụng tối đa');
           return updated;
         }
         const newQty = currentQty + 1;
@@ -174,12 +172,12 @@ export function CommerceOrderForm({
   // Form submission: Create or Update Order (with immediate confirmation option)
   const handleSaveOrder = async (confirmImmediately = false) => {
     if (!contactId) {
-      toast.error(t('commerce.form.validationCustomerRequired'));
+      toast.error('Không tìm thấy thông tin khách hàng cho cuộc hội thoại này');
       return;
     }
 
     if (items.length === 0) {
-      toast.error(t('commerce.form.validationItemsRequired'));
+      toast.error('Vui lòng thêm ít nhất 1 sản phẩm vào đơn hàng');
       return;
     }
 
@@ -264,10 +262,10 @@ export function CommerceOrderForm({
         if (paymentMethod === PaymentMethod.VIETQR && savedOrder?.id) {
           try {
             await commerceApi.generateVietQr(workspaceId, savedOrder.id, { sendToChat: true });
-            toast.success(t('commerce.form.qrSentSuccess', { id: savedOrder.displayId }));
+            toast.success(`Đã sinh mã VietQR cho đơn #${savedOrder.displayId} và gửi vào chat!`);
           } catch (qrErr: any) {
             toast.warning(
-              t('commerce.form.qrSentWarning', { id: savedOrder.displayId, error: qrErr.message }),
+              `Đã tạo đơn #${savedOrder.displayId}, nhưng chưa thể gửi VietQR: ${qrErr.message}`,
             );
           }
         }
@@ -313,7 +311,7 @@ export function CommerceOrderForm({
               size="icon-xs"
               onClick={onCancel}
               className="text-muted-foreground hover:text-foreground shrink-0 cursor-pointer"
-              title={t('commerce.form.backToOrders')}
+              title={'Quay lại danh sách đơn'}
             >
               <ArrowLeft className="size-3.5" />
             </Button>
@@ -321,9 +319,7 @@ export function CommerceOrderForm({
           <h4 className="text-xs font-semibold text-foreground truncate flex items-center gap-1.5">
             <ShoppingBag className="size-3.5 text-primary shrink-0" />
             <span>
-              {initialOrder
-                ? t('commerce.form.titleEdit', { id: initialOrder.displayId })
-                : t('commerce.form.titleNew')}
+              {initialOrder ? `Sửa đơn #${initialOrder.displayId}` : 'Lập đơn hàng nhanh'}
             </span>
           </h4>
         </div>
@@ -338,11 +334,11 @@ export function CommerceOrderForm({
               onClick={() => setPrintDialogOpen(true)}
             >
               <Printer className="size-3" />
-              {t('commerce.form.printBtn')}
+              {'In'}
             </Button>
           )}
           <kbd className="hidden sm:inline-flex items-center font-mono text-[9px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded border">
-            {t('commerce.form.shortcutSave')}
+            {'Ctrl+↵ lưu'}
           </kbd>
         </div>
       </div>
@@ -359,7 +355,7 @@ export function CommerceOrderForm({
       {/* Product Command Search */}
       <div className="flex flex-col gap-1.5">
         <label className="text-[11px] font-semibold text-foreground uppercase tracking-wider text-muted-foreground">
-          {t('commerce.form.searchProduct')}
+          {'Tìm kiếm sản phẩm'}
         </label>
         <ProductPickerCommand
           workspaceId={workspaceId}
@@ -372,7 +368,7 @@ export function CommerceOrderForm({
       <div className="flex flex-col gap-1.5">
         <div className="flex items-center justify-between">
           <label className="text-[11px] font-semibold text-foreground uppercase tracking-wider text-muted-foreground">
-            {t('commerce.items.selectedCount', { count: items.length })}
+            {`Sản phẩm đã chọn (${items.length})`}
           </label>
           {items.length > 0 && (
             <Button
@@ -384,7 +380,7 @@ export function CommerceOrderForm({
               disabled={isLocked || isSaving}
             >
               <RotateCcw className="size-2.5" />
-              {t('commerce.items.clearAll')}
+              {'Xóa hết'}
             </Button>
           )}
         </div>
@@ -394,7 +390,7 @@ export function CommerceOrderForm({
       {/* Recipient & Address Form */}
       <div className="flex flex-col gap-1.5 pt-2 border-t border-border/60">
         <label className="text-[11px] font-semibold text-foreground uppercase tracking-wider text-muted-foreground">
-          {t('commerce.form.recipientAndAddress')}
+          {'Người nhận & Địa chỉ giao hàng'}
         </label>
         <RecipientInfoForm
           value={shippingAddress}
@@ -432,7 +428,7 @@ export function CommerceOrderForm({
             disabled={isSaving}
             className="text-xs h-8 cursor-pointer"
           >
-            {t('commerce.form.backEsc')}
+            {'Quay lại (Esc)'}
           </Button>
         ) : (
           <div />
@@ -449,11 +445,11 @@ export function CommerceOrderForm({
               className="text-xs h-8 font-semibold gap-1.5 shadow-xs cursor-pointer"
             >
               {isSaving ? (
-                t('commerce.form.saving')
+                'Đang lưu...'
               ) : (
                 <>
                   <CheckCircle2 className="size-3.5" />
-                  {t('commerce.form.saveUpdate')}
+                  {'Lưu cập nhật'}
                 </>
               )}
             </Button>
@@ -467,7 +463,7 @@ export function CommerceOrderForm({
                 disabled={isLocked || isSaving || items.length === 0}
                 className="text-xs h-8 cursor-pointer"
               >
-                {isSaving ? t('commerce.form.saving') : t('commerce.form.saveDraft')}
+                {isSaving ? 'Đang lưu...' : 'Lưu nháp'}
               </Button>
 
               <Button
@@ -479,13 +475,13 @@ export function CommerceOrderForm({
                 className="text-xs h-8 font-semibold gap-1.5 shadow-xs cursor-pointer"
               >
                 {isSaving ? (
-                  t('commerce.form.confirming')
+                  'Đang chốt đơn...'
                 ) : (
                   <>
                     <CheckCircle2 className="size-3.5" />
                     {paymentMethod === PaymentMethod.VIETQR
-                      ? t('commerce.form.createAndSendQr')
-                      : t('commerce.form.confirmAndReserve')}
+                      ? '⚡ Tạo đơn & Gửi VietQR'
+                      : 'Chốt đơn & Giữ kho'}
                     <span className="text-[9px] opacity-75 font-normal ml-0.5">(Ctrl+↵)</span>
                   </>
                 )}

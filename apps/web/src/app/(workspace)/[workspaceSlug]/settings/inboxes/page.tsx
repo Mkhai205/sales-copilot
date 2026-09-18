@@ -5,25 +5,23 @@ import { useParams } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
 import { InboxesList } from '@/features/omnichannel';
 import { SettingsGuard, useSettingsRbac } from '@/features/identity';
-import { useI18n } from '@/lib/i18n';
 
 export default function InboxesSettingsPage() {
   const params = useParams();
   const workspaceSlug = (params?.workspaceSlug as string) || '';
 
   const { currentWorkspace, currentRole, isLoading } = useSettingsRbac(workspaceSlug);
-  const { t } = useI18n();
 
   return (
     <SettingsGuard workspaceSlug={workspaceSlug} segment="inboxes">
-      <div className="flex flex-col gap-6 max-w-5xl">
+      <div className="flex flex-col gap-6 w-full">
         {/* Page Header */}
-        <div>
-          <h1 className="text-xl font-semibold tracking-tight text-foreground">
-            {t('settings.inboxes.title')}
+        <div className="pb-3 border-b border-border/70">
+          <h1 className="text-xl font-bold tracking-tight text-foreground">
+            {'Hộp thư & Kênh liên lạc'}
           </h1>
           <p className="text-xs text-muted-foreground mt-0.5">
-            {t('settings.inboxes.description')}
+            {'Quản lý các kênh giao tiếp khách hàng và phân bổ nhân viên cho từng hộp thư.'}
           </p>
         </div>
 

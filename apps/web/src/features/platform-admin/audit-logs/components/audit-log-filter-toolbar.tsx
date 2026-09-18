@@ -13,7 +13,6 @@ import {
 } from '@/components/ui/select';
 import { PlatformAuditAction, PlatformAuditTargetType } from '@sales-copilot/shared-contracts';
 import { isValidDateFilterRange } from '../utils/audit-log-helpers';
-import { useI18n } from '@/lib/i18n';
 
 export interface AuditLogFilterToolbarProps {
   searchEmail: string;
@@ -50,7 +49,6 @@ export function AuditLogFilterToolbar({
   onRefresh,
   isRefreshing,
 }: AuditLogFilterToolbarProps) {
-  const { t } = useI18n();
   const isFiltered = Boolean(
     searchEmail || targetId || action !== 'ALL' || targetType !== 'ALL' || startDate || endDate,
   );
@@ -67,7 +65,7 @@ export function AuditLogFilterToolbar({
             <Input
               value={searchEmail}
               onChange={e => onSearchEmailChange(e.target.value)}
-              placeholder={t('admin.auditLogs.searchEmailPlaceholder')}
+              placeholder={'Tìm theo email quản trị viên...'}
               className="pl-8.5 h-8 text-xs"
             />
           </div>
@@ -77,7 +75,7 @@ export function AuditLogFilterToolbar({
             <Input
               value={targetId}
               onChange={e => onTargetIdChange(e.target.value)}
-              placeholder={t('admin.auditLogs.targetIdPlaceholder')}
+              placeholder={'Mã đối tượng (ID/Key)...'}
               className="h-8 text-xs"
             />
           </div>
@@ -85,24 +83,20 @@ export function AuditLogFilterToolbar({
           {/* Action Filter */}
           <Select value={action} onValueChange={onActionChange}>
             <SelectTrigger className="h-8 text-xs min-w-[150px]">
-              <SelectValue placeholder={t('admin.auditLogs.filterAction')} />
+              <SelectValue placeholder={'Lọc hành động'} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="ALL">{t('admin.auditLogs.allActions')}</SelectItem>
+              <SelectItem value="ALL">{'Tất cả hành động'}</SelectItem>
               <SelectItem value={PlatformAuditAction.WORKSPACE_SUSPENDED}>
-                {t('admin.auditLogs.actionSuspended')}
+                {'Tạm khóa Shop'}
               </SelectItem>
               <SelectItem value={PlatformAuditAction.WORKSPACE_ACTIVATED}>
-                {t('admin.auditLogs.actionActivated')}
+                {'Kích hoạt Shop'}
               </SelectItem>
-              <SelectItem value={PlatformAuditAction.PLAN_CHANGED}>
-                {t('admin.auditLogs.actionPlanChanged')}
-              </SelectItem>
-              <SelectItem value={PlatformAuditAction.QUOTA_UPDATED}>
-                {t('admin.auditLogs.actionQuotaUpdated')}
-              </SelectItem>
+              <SelectItem value={PlatformAuditAction.PLAN_CHANGED}>{'Đổi gói cước'}</SelectItem>
+              <SelectItem value={PlatformAuditAction.QUOTA_UPDATED}>{'Cập nhật Quota'}</SelectItem>
               <SelectItem value={PlatformAuditAction.SYSTEM_SETTING_UPDATED}>
-                {t('admin.auditLogs.actionSettingUpdated')}
+                {'Sửa cấu hình'}
               </SelectItem>
             </SelectContent>
           </Select>
@@ -110,27 +104,19 @@ export function AuditLogFilterToolbar({
           {/* TargetType Filter */}
           <Select value={targetType} onValueChange={onTargetTypeChange}>
             <SelectTrigger className="h-8 text-xs min-w-[130px]">
-              <SelectValue placeholder={t('admin.auditLogs.filterTargetType')} />
+              <SelectValue placeholder={'Lọc đối tượng'} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="ALL">{t('admin.auditLogs.allTargets')}</SelectItem>
-              <SelectItem value={PlatformAuditTargetType.WORKSPACE}>
-                {t('admin.auditLogs.targetWorkspace')}
-              </SelectItem>
-              <SelectItem value={PlatformAuditTargetType.SYSTEM_SETTING}>
-                {t('admin.auditLogs.targetSetting')}
-              </SelectItem>
-              <SelectItem value={PlatformAuditTargetType.USER}>
-                {t('admin.auditLogs.targetUser')}
-              </SelectItem>
+              <SelectItem value="ALL">{'Tất cả đối tượng'}</SelectItem>
+              <SelectItem value={PlatformAuditTargetType.WORKSPACE}>{'Workspace'}</SelectItem>
+              <SelectItem value={PlatformAuditTargetType.SYSTEM_SETTING}>{'Cấu hình'}</SelectItem>
+              <SelectItem value={PlatformAuditTargetType.USER}>{'Người dùng'}</SelectItem>
             </SelectContent>
           </Select>
 
           {/* Date Range: Start Date */}
           <div className="flex items-center gap-1.5">
-            <span className="text-xs text-muted-foreground whitespace-nowrap">
-              {t('admin.auditLogs.fromDate')}
-            </span>
+            <span className="text-xs text-muted-foreground whitespace-nowrap">{'Từ:'}</span>
             <Input
               type="date"
               value={startDate}
@@ -141,9 +127,7 @@ export function AuditLogFilterToolbar({
 
           {/* Date Range: End Date */}
           <div className="flex items-center gap-1.5">
-            <span className="text-xs text-muted-foreground whitespace-nowrap">
-              {t('admin.auditLogs.toDate')}
-            </span>
+            <span className="text-xs text-muted-foreground whitespace-nowrap">{'Đến:'}</span>
             <Input
               type="date"
               value={endDate}
@@ -161,7 +145,7 @@ export function AuditLogFilterToolbar({
               className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground gap-1.5"
             >
               <RotateCcw className="size-3.5" />
-              <span>{t('admin.workspaces.resetFilters')}</span>
+              <span>{'Đặt lại'}</span>
             </Button>
           )}
         </div>
@@ -176,14 +160,14 @@ export function AuditLogFilterToolbar({
             className="h-8 px-2.5 text-xs gap-1.5 shrink-0"
           >
             <RefreshCw className={`size-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
-            <span>{t('admin.auditLogs.refresh')}</span>
+            <span>{'Làm mới'}</span>
           </Button>
         )}
       </div>
 
       {isDateRangeInvalid && (
         <p className="text-[11px] font-medium text-destructive">
-          {t('admin.auditLogs.invalidDateRange')}
+          {'* Ngày bắt đầu không được lớn hơn ngày kết thúc.'}
         </p>
       )}
     </div>

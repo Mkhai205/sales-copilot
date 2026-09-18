@@ -13,24 +13,22 @@ import {
   formatAverageNumber,
 } from '../utils/overview-helpers';
 import { cn } from '@/lib/utils';
-import { useI18n } from '@/lib/i18n';
 
 export interface KpiMetricCardsProps {
   metrics: PlatformMetricsOverviewDto;
 }
 
 export function KpiMetricCards({ metrics }: KpiMetricCardsProps) {
-  const { t } = useI18n();
   const activeRatio = calculateActiveRatio(metrics.activeWorkspaces, metrics.totalWorkspaces);
   const avgUsersPerWs =
     metrics.activeWorkspaces > 0
       ? formatAverageNumber(metrics.totalUsers / metrics.activeWorkspaces)
       : '0';
 
-  const pgConfig = getHealthBadgeConfig(metrics.systemHealth?.postgres, t);
-  const redisConfig = getHealthBadgeConfig(metrics.systemHealth?.redis, t);
+  const pgConfig = getHealthBadgeConfig(metrics.systemHealth?.postgres);
+  const redisConfig = getHealthBadgeConfig(metrics.systemHealth?.redis);
   const storageConfig = metrics.systemHealth?.storage
-    ? getHealthBadgeConfig(metrics.systemHealth.storage, t)
+    ? getHealthBadgeConfig(metrics.systemHealth.storage)
     : null;
 
   return (
@@ -43,11 +41,11 @@ export function KpiMetricCards({ metrics }: KpiMetricCardsProps) {
               <Building2 className="size-5" />
             </div>
             <Badge variant="outline" className="text-xs font-semibold text-muted-foreground">
-              {t('admin.overview.activePercent', { percent: activeRatio })}
+              {`${activeRatio}% hoạt động`}
             </Badge>
           </div>
           <CardTitle className="text-sm font-medium text-muted-foreground mt-2">
-            {t('admin.workspaces.title')}
+            {'Quản trị Workspaces'}
           </CardTitle>
           <div className="text-2xl font-bold tracking-tight text-foreground">
             {formatMetricNumber(metrics.totalWorkspaces)}
@@ -58,11 +56,11 @@ export function KpiMetricCards({ metrics }: KpiMetricCardsProps) {
           <div className="flex items-center justify-between text-xs">
             <span className="inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-medium">
               <span className="size-2 rounded-full bg-emerald-500" />
-              {t('admin.workspaces.active')}: {formatMetricNumber(metrics.activeWorkspaces)}
+              {'Đang hoạt động'}: {formatMetricNumber(metrics.activeWorkspaces)}
             </span>
             <span className="inline-flex items-center gap-1.5 text-destructive font-medium">
               <span className="size-2 rounded-full bg-destructive" />
-              {t('admin.workspaces.suspendShop')}: {formatMetricNumber(metrics.suspendedWorkspaces)}
+              {'Tạm khóa'}: {formatMetricNumber(metrics.suspendedWorkspaces)}
             </span>
           </div>
         </CardContent>
@@ -76,11 +74,11 @@ export function KpiMetricCards({ metrics }: KpiMetricCardsProps) {
               <Users className="size-5" />
             </div>
             <Badge variant="outline" className="text-xs font-normal text-muted-foreground">
-              {t('admin.overview.systemWide')}
+              {'Toàn hệ thống'}
             </Badge>
           </div>
           <CardTitle className="text-sm font-medium text-muted-foreground mt-2">
-            {t('admin.overview.totalUsers')}
+            {'Tổng Người dùng'}
           </CardTitle>
           <div className="text-2xl font-bold tracking-tight text-foreground">
             {formatMetricNumber(metrics.totalUsers)}
@@ -88,10 +86,10 @@ export function KpiMetricCards({ metrics }: KpiMetricCardsProps) {
         </CardHeader>
         <CardContent className="flex flex-col gap-1 pt-0">
           <CardDescription className="text-xs">
-            {t('admin.overview.avgUsersPerWs', { avg: avgUsersPerWs })}
+            {`Trung bình ~${avgUsersPerWs} người dùng / workspace đang hoạt động`}
           </CardDescription>
           <p className="text-[11px] text-muted-foreground mt-1">
-            {t('admin.overview.avgUsersNote')}
+            {'Bao gồm chủ cửa hàng, quản lý và nhân viên tư vấn bán hàng.'}
           </p>
         </CardContent>
       </Card>
@@ -112,7 +110,7 @@ export function KpiMetricCards({ metrics }: KpiMetricCardsProps) {
             </Badge>
           </div>
           <CardTitle className="text-sm font-medium text-muted-foreground mt-2">
-            {t('admin.overview.systemHealth')}
+            {'Trạng thái Hạ tầng Hệ thống'}
           </CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-2 pt-0">

@@ -33,7 +33,6 @@ import { useRouter } from 'next/navigation';
 import { useDeleteInbox, useInboxes } from './hooks/use-inboxes';
 import { InboxWizardDialog } from './inbox-wizard/inbox-wizard-dialog';
 import { InboxEditDialog } from './inbox-edit-dialog';
-import { useI18n } from '@/lib/i18n';
 
 interface InboxesListProps {
   workspaceId: string;
@@ -43,7 +42,6 @@ interface InboxesListProps {
 
 export function InboxesList({ workspaceId, currentUserRole, workspaceSlug }: InboxesListProps) {
   const router = useRouter();
-  const { t } = useI18n();
   const [searchQuery, setSearchQuery] = React.useState('');
   const [channelFilter, setChannelFilter] = React.useState<string>('ALL');
   const [wizardOpen, setWizardOpen] = React.useState(false);
@@ -95,7 +93,7 @@ export function InboxesList({ workspaceId, currentUserRole, workspaceSlug }: Inb
             <Input
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              placeholder={t('settings.inboxes.searchPlaceholder')}
+              placeholder={'Tìm kiếm hộp thư...'}
               className="h-8 pl-8 pr-8 text-xs bg-card/40"
             />
             {searchQuery && (
@@ -114,26 +112,26 @@ export function InboxesList({ workspaceId, currentUserRole, workspaceSlug }: Inb
           {/* Channel Type Filter */}
           <Select value={channelFilter} onValueChange={setChannelFilter}>
             <SelectTrigger className="h-8 w-36 text-xs bg-card/40">
-              <SelectValue placeholder={t('settings.inboxes.allChannels')} />
+              <SelectValue placeholder={'Tất cả kênh'} />
             </SelectTrigger>
             <SelectContent position="popper">
               <SelectItem value="ALL" className="text-xs">
-                {t('settings.inboxes.allChannels')}
+                {'Tất cả kênh'}
               </SelectItem>
               <SelectItem value={ChannelType.WEB_CHAT} className="text-xs">
-                {t('settings.inboxes.channelWebChat')}
+                {'Web Chat'}
               </SelectItem>
               <SelectItem value={ChannelType.FACEBOOK_MESSENGER} className="text-xs">
-                {t('settings.inboxes.channelMessenger')}
+                {'Messenger'}
               </SelectItem>
               <SelectItem value={ChannelType.TELEGRAM} className="text-xs">
-                {t('settings.inboxes.channelTelegram')}
+                {'Telegram'}
               </SelectItem>
               <SelectItem value={ChannelType.EMAIL} className="text-xs">
-                {t('settings.inboxes.channelEmail')}
+                {'Email'}
               </SelectItem>
               <SelectItem value={ChannelType.ZALO} className="text-xs">
-                {t('settings.inboxes.channelZalo')}
+                {'Zalo OA'}
               </SelectItem>
             </SelectContent>
           </Select>
@@ -143,12 +141,7 @@ export function InboxesList({ workspaceId, currentUserRole, workspaceSlug }: Inb
               variant="secondary"
               className="px-2 py-0.5 text-[11px] font-normal text-muted-foreground"
             >
-              {t(
-                filteredInboxes.length === 1
-                  ? 'settings.inboxes.inboxCount_one'
-                  : 'settings.inboxes.inboxCount_other',
-                { count: filteredInboxes.length },
-              )}
+              {`${filteredInboxes.length} hộp thư`}
             </Badge>
           )}
         </div>
@@ -156,7 +149,7 @@ export function InboxesList({ workspaceId, currentUserRole, workspaceSlug }: Inb
         {canManage && (
           <Button size="sm" onClick={handleAddInbox} className="h-8 gap-1.5 text-xs font-medium">
             <Plus className="size-3.5" data-icon="inline-start" />
-            {t('settings.inboxes.addInbox')}
+            {'Thêm hộp thư'}
           </Button>
         )}
       </div>
@@ -200,13 +193,13 @@ export function InboxesList({ workspaceId, currentUserRole, workspaceSlug }: Inb
           </div>
           <h3 className="text-sm font-semibold text-foreground">
             {searchQuery || channelFilter !== 'ALL'
-              ? t('settings.inboxes.emptyFilterTitle')
-              : t('settings.inboxes.emptyTitle')}
+              ? 'Không tìm thấy hộp thư phù hợp'
+              : 'Chưa có hộp thư nào'}
           </h3>
           <p className="mt-1 text-xs text-muted-foreground max-w-sm">
             {searchQuery || channelFilter !== 'ALL'
-              ? t('settings.inboxes.emptyFilterDesc')
-              : t('settings.inboxes.emptyDesc')}
+              ? 'Thử thay đổi từ khóa tìm kiếm hoặc đặt lại bộ lọc kênh.'
+              : 'Kết nối các kênh giao tiếp (Web Chat, Messenger, Telegram, v.v.) để tiếp nhận và phản hồi khách hàng.'}
           </p>
           {canManage && !searchQuery && channelFilter === 'ALL' && (
             <Button
@@ -215,7 +208,7 @@ export function InboxesList({ workspaceId, currentUserRole, workspaceSlug }: Inb
               className="mt-4 h-8 gap-1.5 text-xs font-medium"
             >
               <Plus className="size-3.5" data-icon="inline-start" />
-              {t('settings.inboxes.createFirstInbox')}
+              {'Tạo hộp thư đầu tiên'}
             </Button>
           )}
         </div>
@@ -270,7 +263,7 @@ export function InboxesList({ workspaceId, currentUserRole, workspaceSlug }: Inb
                               className="px-1.5 py-0 text-[10px] font-medium border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 gap-1"
                             >
                               <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                              {t('settings.inboxes.activeStatus')}
+                              {'Hoạt động'}
                             </Badge>
                           ) : (
                             <Badge
@@ -278,7 +271,7 @@ export function InboxesList({ workspaceId, currentUserRole, workspaceSlug }: Inb
                               className="px-1.5 py-0 text-[10px] font-medium border-border text-muted-foreground gap-1"
                             >
                               <span className="size-1.5 rounded-full bg-muted-foreground/50" />
-                              {t('settings.inboxes.draftStatus')}
+                              {'Bản nháp'}
                             </Badge>
                           )}
                         </div>
@@ -296,10 +289,10 @@ export function InboxesList({ workspaceId, currentUserRole, workspaceSlug }: Inb
                             handleCardClick();
                           }}
                           className="size-7 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted"
-                          title={t('settings.inboxes.editInboxSettings')}
+                          title={'Chỉnh sửa cài đặt hộp thư'}
                         >
                           <Pencil className="size-3.5" />
-                          <span className="sr-only">{t('settings.inboxes.editInbox')}</span>
+                          <span className="sr-only">{'Chỉnh sửa hộp thư'}</span>
                         </Button>
                         <Button
                           variant="ghost"
@@ -309,10 +302,10 @@ export function InboxesList({ workspaceId, currentUserRole, workspaceSlug }: Inb
                             setInboxToDelete(inbox);
                           }}
                           className="size-7 rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
-                          title={t('settings.inboxes.deleteInbox')}
+                          title={'Xóa hộp thư'}
                         >
                           <Trash2 className="size-3.5" />
-                          <span className="sr-only">{t('settings.inboxes.deleteInbox')}</span>
+                          <span className="sr-only">{'Xóa hộp thư'}</span>
                         </Button>
                       </div>
                     )}
@@ -323,21 +316,14 @@ export function InboxesList({ workspaceId, currentUserRole, workspaceSlug }: Inb
                   <p className="text-xs text-muted-foreground/80 line-clamp-2 leading-relaxed">
                     {inbox.greetingMessage ||
                       (inbox.settings?.greetingMessage as string) ||
-                      t('settings.inboxes.noGreeting')}
+                      'Chưa cấu hình lời chào.'}
                   </p>
                 </CardContent>
 
                 <CardFooter className="pt-3 pb-3 px-4 border-t border-border/40 flex items-center justify-between">
                   <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
                     <Users className="size-3.5 text-muted-foreground/70" />
-                    <span>
-                      {t(
-                        memberCount === 1
-                          ? 'settings.inboxes.agentCount_one'
-                          : 'settings.inboxes.agentCount_other',
-                        { count: memberCount },
-                      )}
-                    </span>
+                    <span>{`${memberCount} nhân viên`}</span>
                   </div>
 
                   <span className="text-[10px] text-muted-foreground/60 font-mono">
@@ -375,18 +361,14 @@ export function InboxesList({ workspaceId, currentUserRole, workspaceSlug }: Inb
             <AlertDialogMedia className="bg-destructive/10 text-destructive">
               <AlertTriangle className="size-4" />
             </AlertDialogMedia>
-            <AlertDialogTitle className="text-sm font-semibold">
-              {t('settings.inboxes.deleteDialog.title')}
-            </AlertDialogTitle>
+            <AlertDialogTitle className="text-sm font-semibold">{'Xóa hộp thư?'}</AlertDialogTitle>
             <AlertDialogDescription className="text-xs">
-              {t('settings.inboxes.deleteDialog.description', {
-                name: inboxToDelete?.name || '',
-              })}
+              {`Bạn có chắc chắn muốn xóa "${inboxToDelete?.name || ''}"? Kênh kết nối và phân bổ nhân viên sẽ bị hủy liên kết, đồng thời các hội thoại mới từ kênh này sẽ ngừng tiếp nhận. Thao tác này không thể hoàn tác.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isDeleting} className="text-xs">
-              {t('settings.inboxes.deleteDialog.cancel')}
+              {'Hủy'}
             </AlertDialogCancel>
             <Button
               variant="destructive"
@@ -398,10 +380,10 @@ export function InboxesList({ workspaceId, currentUserRole, workspaceSlug }: Inb
               {isDeleting ? (
                 <>
                   <Spinner className="size-3.5" data-icon="inline-start" />
-                  {t('settings.inboxes.deleteDialog.deleting')}
+                  {'Đang xóa...'}
                 </>
               ) : (
-                t('settings.inboxes.deleteDialog.confirm')
+                'Xóa hộp thư'
               )}
             </Button>
           </AlertDialogFooter>

@@ -7,7 +7,6 @@ import { useWorkspaces } from '@/features/identity';
 import type { ConversationResponseDto } from '@sales-copilot/shared-contracts';
 import { updateConversationInList } from '@/lib/socket/cache-helpers';
 import type { ApiResponse } from '@/lib/api/client';
-import { useI18n } from '@/lib/i18n';
 
 interface UseTakeoverConversationOptions {
   workspaceSlug?: string;
@@ -18,7 +17,6 @@ export function useTakeoverConversation(
   optionsOrWorkspaceId?: string | UseTakeoverConversationOptions,
 ) {
   const queryClient = useQueryClient();
-  const { t } = useI18n();
   const { data: workspaces } = useWorkspaces();
 
   const options: UseTakeoverConversationOptions =
@@ -69,7 +67,7 @@ export function useTakeoverConversation(
         queryKey: ['conversations'],
       });
 
-      toast.success(t('conversations.takeoverSuccess'));
+      toast.success('Đã tiếp quản từ AI thành công');
     },
     onError: (err: Error) => {
       toast.error(err.message || 'Tiếp quản từ AI thất bại');

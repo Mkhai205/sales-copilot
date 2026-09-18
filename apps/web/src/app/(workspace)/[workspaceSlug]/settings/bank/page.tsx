@@ -56,13 +56,15 @@ export default function BankSettingsPage() {
       return res.data;
     },
     onSuccess: () => {
-      toast.success('Bank configuration updated successfully');
+      toast.success('Cập nhật cấu hình ngân hàng thành công');
       queryClient.invalidateQueries({
         queryKey: ['workspace', currentWorkspace?.id, 'bank-config'],
       });
     },
     onError: (error: any) => {
-      toast.error('Failed to update bank configuration: ' + (error.message || 'Unknown error'));
+      toast.error(
+        'Cập nhật cấu hình ngân hàng thất bại: ' + (error.message || 'Lỗi không xác định'),
+      );
     },
   });
 
@@ -70,7 +72,7 @@ export default function BankSettingsPage() {
     e.preventDefault();
     const result = workspacePaymentSettingsSchema.safeParse(formData);
     if (!result.success) {
-      toast.error(result.error.errors[0]?.message || 'Validation error');
+      toast.error(result.error.errors[0]?.message || 'Lỗi xác thực dữ liệu');
       return;
     }
     updateMutation.mutate(result.data);
@@ -89,92 +91,104 @@ export default function BankSettingsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-medium">Bank & Payment</h3>
-        <p className="text-sm text-muted-foreground">
-          Configure your bank account for generating VietQR codes and integrating SePay webhooks.
+    <div className="flex flex-col gap-6 w-full">
+      {/* Page Header */}
+      <div className="pb-3 border-b border-border/70">
+        <h1 className="text-xl font-bold tracking-tight text-foreground">
+          {'Ngân hàng & Thanh toán'}
+        </h1>
+        <p className="text-xs text-muted-foreground mt-0.5">
+          {
+            'Cấu hình tài khoản ngân hàng để tạo mã VietQR chuẩn NAPAS 247 và tích hợp webhook đối soát tự động.'
+          }
         </p>
       </div>
 
-      <form onSubmit={onSubmit} className="space-y-6">
+      <form onSubmit={onSubmit} className="flex flex-col gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>Bank Account Information</CardTitle>
+            <CardTitle>Thông tin tài khoản ngân hàng</CardTitle>
             <CardDescription>
-              Provide the bank BIN and account details. This will be used to generate NAPAS 247
-              VietQR codes.
+              Cung cấp mã BIN và thông tin tài khoản ngân hàng. Dữ liệu này dùng để tạo mã VietQR
+              chuẩn NAPAS 247.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Bank ID (BIN)</label>
-              <Input
-                name="bankBin"
-                value={formData.bankBin}
-                onChange={handleChange}
-                placeholder="e.g. 970415 (Vietinbank)"
-              />
-              <p className="text-[10.5px] text-muted-foreground">
-                The 6-digit BIN code of the bank (e.g., 970415 for VietinBank, 970436 for
-                Vietcombank).
-              </p>
-            </div>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Mã ngân hàng (BIN)</label>
+                <Input
+                  name="bankBin"
+                  value={formData.bankBin}
+                  onChange={handleChange}
+                  placeholder="Ví dụ: 970415 (Vietinbank)"
+                  className="text-xs"
+                />
+                <p className="text-[10.5px] text-muted-foreground">
+                  Mã định danh BIN gồm 6 chữ số của ngân hàng (Ví dụ: 970415 cho VietinBank, 970436
+                  cho Vietcombank).
+                </p>
+              </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Bank Name (Optional)</label>
-              <Input
-                name="bankName"
-                value={formData.bankName}
-                onChange={handleChange}
-                placeholder="e.g. Vietinbank"
-              />
-            </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Tên ngân hàng (Tùy chọn)</label>
+                <Input
+                  name="bankName"
+                  value={formData.bankName}
+                  onChange={handleChange}
+                  placeholder="Ví dụ: Vietinbank"
+                  className="text-xs"
+                />
+              </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Account Number</label>
-              <Input
-                name="accountNumber"
-                value={formData.accountNumber}
-                onChange={handleChange}
-                placeholder="e.g. 113366668888"
-              />
-            </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Số tài khoản</label>
+                <Input
+                  name="accountNumber"
+                  value={formData.accountNumber}
+                  onChange={handleChange}
+                  placeholder="Ví dụ: 113366668888"
+                  className="text-xs"
+                />
+              </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Account Name</label>
-              <Input
-                name="accountName"
-                value={formData.accountName}
-                onChange={handleChange}
-                placeholder="e.g. QUY VAC XIN PHONG CHONG COVID"
-              />
-              <p className="text-[10.5px] text-muted-foreground">
-                The exact name registered with the bank account.
-              </p>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Tên chủ tài khoản</label>
+                <Input
+                  name="accountName"
+                  value={formData.accountName}
+                  onChange={handleChange}
+                  placeholder="Ví dụ: NGUYEN VAN A"
+                  className="text-xs"
+                />
+                <p className="text-[10.5px] text-muted-foreground">
+                  Tên chính xác đã đăng ký với tài khoản ngân hàng.
+                </p>
+              </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>SePay Integration</CardTitle>
+            <CardTitle>Tích hợp SePay</CardTitle>
             <CardDescription>
-              Configure Webhook Secret to automatically reconcile payments via SePay.
+              Cấu hình mã bí mật Webhook để tự động đối soát giao dịch thanh toán qua SePay.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">SePay Webhook Secret (Optional)</label>
+            <div className="space-y-2 max-w-xl">
+              <label className="text-sm font-medium">Mã bí mật SePay Webhook (Tùy chọn)</label>
               <Input
                 type="password"
                 name="webhookSecret"
                 value={formData.webhookSecret}
                 onChange={handleChange}
-                placeholder="Enter your secret here"
+                placeholder="Nhập mã bí mật tại đây"
+                className="text-xs font-mono"
               />
               <p className="text-[10.5px] text-muted-foreground">
-                Used to verify the authenticity of SePay webhook requests.
+                Dùng để xác thực tính hợp lệ của các yêu cầu webhook từ SePay.
               </p>
             </div>
           </CardContent>
@@ -187,7 +201,7 @@ export default function BankSettingsPage() {
             ) : (
               <Save className="mr-2 h-4 w-4" />
             )}
-            Save Configuration
+            Lưu cấu hình
           </Button>
         </div>
       </form>

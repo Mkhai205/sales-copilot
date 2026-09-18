@@ -35,7 +35,7 @@ export function RuleFlowPreview({
   const { data: members } = useWorkspaceMembers(workspaceId);
 
   const triggerLabel = React.useMemo(() => {
-    return TRIGGER_OPTIONS.find(t => t.value === eventTrigger)?.label || 'Event Occurs';
+    return TRIGGER_OPTIONS.find(t => t.value === eventTrigger)?.label || 'Sự kiện diễn ra';
   }, [eventTrigger]);
 
   const formatConditionSummary = (cond: AutomationCondition): string => {
@@ -69,24 +69,24 @@ export function RuleFlowPreview({
     switch (act.type) {
       case AutomationActionType.ASSIGN_AGENT: {
         const member = members?.find(m => m.userId === act.params.agentId);
-        return `Assign to ${member?.user?.name || member?.user?.email || 'Agent'}`;
+        return `Phân công cho ${member?.user?.name || member?.user?.email || 'Nhân viên'}`;
       }
       case AutomationActionType.ASSIGN_TEAM: {
         const team = teams?.find(t => t.id === act.params.teamId);
-        return `Assign to team ${team?.name || 'Team'}`;
+        return `Chuyển cho nhóm ${team?.name || 'Nhóm'}`;
       }
       case AutomationActionType.ADD_LABEL:
-        return `Add label "${act.params.labelTitle || '...'}"`;
+        return `Gắn nhãn "${act.params.labelTitle || '...'}"`;
       case AutomationActionType.REMOVE_LABEL:
-        return `Remove label "${act.params.labelTitle || '...'}"`;
+        return `Gỡ nhãn "${act.params.labelTitle || '...'}"`;
       case AutomationActionType.CHANGE_STATUS:
-        return `Set status to ${act.params.status}`;
+        return `Đặt trạng thái: ${act.params.status}`;
       case AutomationActionType.CHANGE_PRIORITY:
-        return `Set priority to ${act.params.priority}`;
+        return `Đặt độ ưu tiên: ${act.params.priority}`;
       case AutomationActionType.SEND_WEBHOOK:
-        return `Send webhook to ${act.params.url || '[url]'}`;
+        return `Gửi webhook đến ${act.params.url || '[url]'}`;
       default:
-        return 'Execute Action';
+        return 'Thực hiện hành động';
     }
   };
 
@@ -94,11 +94,11 @@ export function RuleFlowPreview({
     <div className="relative overflow-hidden rounded-xl border border-border/80 bg-gradient-to-r from-card/90 via-card/60 to-card/90 p-3.5 shadow-sm">
       <div className="mb-2 flex items-center justify-between">
         <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-          Live Logic Flow Preview
+          Xem trước luồng xử lý
         </span>
         <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
           <span className="size-1.5 animate-pulse rounded-full bg-primary" />
-          Reactive Flow
+          Luồng tự động
         </span>
       </div>
 
@@ -106,7 +106,7 @@ export function RuleFlowPreview({
         {/* WHEN Node */}
         <div className="inline-flex items-center gap-1.5 rounded-lg border border-indigo-500/30 bg-indigo-500/10 px-2.5 py-1 font-medium text-indigo-300">
           <Zap className="size-3 text-indigo-400" />
-          <span className="font-semibold text-indigo-400">WHEN</span>
+          <span className="font-semibold text-indigo-400">KHI</span>
           <span>{triggerLabel}</span>
         </div>
 
@@ -115,14 +115,14 @@ export function RuleFlowPreview({
         {/* IF Node */}
         <div className="inline-flex items-center gap-1.5 rounded-lg border border-sky-500/30 bg-sky-500/10 px-2.5 py-1 font-medium text-sky-300">
           <Filter className="size-3 text-sky-400" />
-          <span className="font-semibold text-sky-400">IF</span>
+          <span className="font-semibold text-sky-400">NẾU</span>
           {conditions.length === 0 ? (
-            <span className="italic text-sky-300/80">Always matches (No conditions)</span>
+            <span className="italic text-sky-300/80">Luôn thỏa mãn (Không điều kiện)</span>
           ) : (
             <span className="truncate max-w-[280px]">
               {conditions.map((c, i) => (
                 <React.Fragment key={i}>
-                  {i > 0 && <span className="font-semibold text-sky-400"> AND </span>}
+                  {i > 0 && <span className="font-semibold text-sky-400"> VÀ </span>}
                   <span>{formatConditionSummary(c)}</span>
                 </React.Fragment>
               ))}
@@ -135,9 +135,9 @@ export function RuleFlowPreview({
         {/* THEN Node */}
         <div className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 font-medium text-emerald-300">
           <Play className="size-3 text-emerald-400" />
-          <span className="font-semibold text-emerald-400">THEN</span>
+          <span className="font-semibold text-emerald-400">THÌ</span>
           {actions.length === 0 ? (
-            <span className="italic text-destructive">No action defined</span>
+            <span className="italic text-destructive">Chưa có hành động nào</span>
           ) : (
             <span className="truncate max-w-[300px]">
               {actions.map((a, i) => (

@@ -22,14 +22,12 @@ import {
   getPlanBadgeConfig,
   getStatusBadgeConfig,
 } from '../utils/workspace-helpers';
-import { useI18n } from '@/lib/i18n';
 
 export interface WorkspaceDetailViewProps {
   workspace: PlatformWorkspaceDetailDto;
 }
 
 export function WorkspaceDetailView({ workspace }: WorkspaceDetailViewProps) {
-  const { t } = useI18n();
   const [copiedSlug, setCopiedSlug] = React.useState(false);
   const [copiedId, setCopiedId] = React.useState(false);
 
@@ -75,12 +73,9 @@ export function WorkspaceDetailView({ workspace }: WorkspaceDetailViewProps) {
         <div className="flex items-start gap-3 rounded-lg border border-destructive/30 bg-destructive/10 p-3.5 text-xs text-destructive">
           <ShieldAlert className="size-4 shrink-0 mt-0.5" />
           <div className="flex flex-col gap-1">
-            <span className="font-semibold">{t('admin.workspaces.suspendedAlertTitle')}</span>
+            <span className="font-semibold">{'Workspace đang bị tạm khóa'}</span>
             <span>
-              {t('admin.workspaces.suspendedAlertReason', {
-                reason: workspace.suspendedReason || t('admin.workspaces.suspendedNoReason'),
-                date: formatDateTime(workspace.suspendedAt),
-              })}
+              {`Lý do: ${workspace.suspendedReason || 'Chưa ghi chú'} (Khóa vào: ${formatDateTime(workspace.suspendedAt)})`}
             </span>
           </div>
         </div>
@@ -103,9 +98,7 @@ export function WorkspaceDetailView({ workspace }: WorkspaceDetailViewProps) {
                     {planBadge.label}
                   </Badge>
                   <Badge variant={statusBadge.variant} className={statusBadge.className}>
-                    {workspace.isSuspended
-                      ? t('admin.workspaces.suspended')
-                      : t('admin.workspaces.active')}
+                    {workspace.isSuspended ? 'Đã tạm dừng' : 'Đang hoạt động'}
                   </Badge>
                 </div>
                 <div className="flex items-center gap-3 text-xs text-muted-foreground">
@@ -116,7 +109,7 @@ export function WorkspaceDetailView({ workspace }: WorkspaceDetailViewProps) {
                       size="icon"
                       className="size-5 text-muted-foreground hover:text-foreground"
                       onClick={() => copyToClipboard(workspace.slug, 'slug')}
-                      title={t('admin.workspaces.copySlug')}
+                      title={'Sao chép slug'}
                     >
                       {copiedSlug ? (
                         <Check className="size-3 text-emerald-600" />
@@ -134,7 +127,7 @@ export function WorkspaceDetailView({ workspace }: WorkspaceDetailViewProps) {
                       size="icon"
                       className="size-5 text-muted-foreground hover:text-foreground"
                       onClick={() => copyToClipboard(workspace.id, 'id')}
-                      title={t('admin.workspaces.copyId')}
+                      title={'Sao chép ID'}
                     >
                       {copiedId ? (
                         <Check className="size-3 text-emerald-600" />
@@ -152,13 +145,13 @@ export function WorkspaceDetailView({ workspace }: WorkspaceDetailViewProps) {
         <CardContent className="grid grid-cols-2 sm:grid-cols-4 gap-4 border-t border-border/50 pt-3 text-xs">
           <div className="flex flex-col gap-1">
             <span className="text-muted-foreground flex items-center gap-1.5">
-              <Clock className="size-3.5" /> {t('admin.workspaces.timezone')}
+              <Clock className="size-3.5" /> {'Múi giờ'}
             </span>
             <span className="font-medium text-foreground">{workspace.timezone}</span>
           </div>
           <div className="flex flex-col gap-1">
             <span className="text-muted-foreground flex items-center gap-1.5">
-              <Globe className="size-3.5" /> {t('admin.workspaces.defaultLanguage')}
+              <Globe className="size-3.5" /> {'Ngôn ngữ mặc định'}
             </span>
             <span className="font-medium text-foreground uppercase">
               {workspace.defaultLanguage}
@@ -166,7 +159,7 @@ export function WorkspaceDetailView({ workspace }: WorkspaceDetailViewProps) {
           </div>
           <div className="flex flex-col gap-1">
             <span className="text-muted-foreground flex items-center gap-1.5">
-              <Clock className="size-3.5" /> {t('admin.workspaces.colCreatedAt')}
+              <Clock className="size-3.5" /> {'Ngày tạo'}
             </span>
             <span className="font-medium text-foreground">
               {formatDateTime(workspace.createdAt)}
@@ -174,7 +167,7 @@ export function WorkspaceDetailView({ workspace }: WorkspaceDetailViewProps) {
           </div>
           <div className="flex flex-col gap-1">
             <span className="text-muted-foreground flex items-center gap-1.5">
-              <Clock className="size-3.5" /> {t('admin.workspaces.updatedAt')}
+              <Clock className="size-3.5" /> {'Cập nhật lần cuối'}
             </span>
             <span className="font-medium text-foreground">
               {formatDateTime(workspace.updatedAt)}
@@ -189,7 +182,7 @@ export function WorkspaceDetailView({ workspace }: WorkspaceDetailViewProps) {
         <Card className="p-3.5 flex flex-col gap-2.5">
           <div className="flex items-center justify-between text-xs">
             <span className="text-muted-foreground font-medium flex items-center gap-1.5">
-              <Users className="size-3.5 text-blue-500" /> {t('admin.workspaces.staffAgents')}
+              <Users className="size-3.5 text-blue-500" /> {'Nhân sự (Agents)'}
             </span>
             <span className="font-semibold text-foreground">
               {workspace.usage.currentAgents} / {workspace.quotas.maxAgents}
@@ -199,8 +192,8 @@ export function WorkspaceDetailView({ workspace }: WorkspaceDetailViewProps) {
           <span
             className={`text-[11px] ${rawAgentPercent > 100 ? 'text-destructive font-semibold' : 'text-muted-foreground'}`}
           >
-            {t('admin.workspaces.usedPercent', { percent: rawAgentPercent })}
-            {rawAgentPercent > 100 ? t('admin.workspaces.overQuota') : ''}
+            {`Đã sử dụng ${rawAgentPercent}%`}
+            {rawAgentPercent > 100 ? ' (Vượt hạn mức)' : ''}
           </span>
         </Card>
 
@@ -208,8 +201,7 @@ export function WorkspaceDetailView({ workspace }: WorkspaceDetailViewProps) {
         <Card className="p-3.5 flex flex-col gap-2.5">
           <div className="flex items-center justify-between text-xs">
             <span className="text-muted-foreground font-medium flex items-center gap-1.5">
-              <Radio className="size-3.5 text-emerald-500" />{' '}
-              {t('admin.workspaces.connectedChannels')}
+              <Radio className="size-3.5 text-emerald-500" /> {'Kênh kết nối'}
             </span>
             <span className="font-semibold text-foreground">
               {workspace.usage.currentChannels} / {workspace.quotas.maxChannels}
@@ -219,8 +211,8 @@ export function WorkspaceDetailView({ workspace }: WorkspaceDetailViewProps) {
           <span
             className={`text-[11px] ${rawChannelPercent > 100 ? 'text-destructive font-semibold' : 'text-muted-foreground'}`}
           >
-            {t('admin.workspaces.usedPercent', { percent: rawChannelPercent })}
-            {rawChannelPercent > 100 ? t('admin.workspaces.overQuota') : ''}
+            {`Đã sử dụng ${rawChannelPercent}%`}
+            {rawChannelPercent > 100 ? ' (Vượt hạn mức)' : ''}
           </span>
         </Card>
 
@@ -228,7 +220,7 @@ export function WorkspaceDetailView({ workspace }: WorkspaceDetailViewProps) {
         <Card className="p-3.5 flex flex-col gap-2.5">
           <div className="flex items-center justify-between text-xs">
             <span className="text-muted-foreground font-medium flex items-center gap-1.5">
-              <HardDrive className="size-3.5 text-amber-500" /> {t('admin.workspaces.storageMinio')}
+              <HardDrive className="size-3.5 text-amber-500" /> {'Lưu trữ MinIO'}
             </span>
             <span className="font-semibold text-foreground">
               {formatStorage(workspace.usage.storageUsedMb)} /{' '}
@@ -239,8 +231,8 @@ export function WorkspaceDetailView({ workspace }: WorkspaceDetailViewProps) {
           <span
             className={`text-[11px] ${rawStoragePercent > 100 ? 'text-destructive font-semibold' : 'text-muted-foreground'}`}
           >
-            {t('admin.workspaces.usedPercent', { percent: rawStoragePercent })}
-            {rawStoragePercent > 100 ? t('admin.workspaces.overQuota') : ''}
+            {`Đã sử dụng ${rawStoragePercent}%`}
+            {rawStoragePercent > 100 ? ' (Vượt hạn mức)' : ''}
           </span>
         </Card>
 
@@ -248,7 +240,7 @@ export function WorkspaceDetailView({ workspace }: WorkspaceDetailViewProps) {
         <Card className="p-3.5 flex flex-col gap-2.5">
           <div className="flex items-center justify-between text-xs">
             <span className="text-muted-foreground font-medium flex items-center gap-1.5">
-              <Cpu className="size-3.5 text-purple-500" /> {t('admin.workspaces.aiTokensMonthly')}
+              <Cpu className="size-3.5 text-purple-500" /> {'Token AI / Tháng'}
             </span>
             <span className="font-semibold text-foreground">
               {formatTokens(workspace.usage.aiUsedTokens)} /{' '}
@@ -259,8 +251,8 @@ export function WorkspaceDetailView({ workspace }: WorkspaceDetailViewProps) {
           <span
             className={`text-[11px] ${rawTokenPercent > 100 ? 'text-destructive font-semibold' : 'text-muted-foreground'}`}
           >
-            {t('admin.workspaces.usedPercent', { percent: rawTokenPercent })}
-            {rawTokenPercent > 100 ? t('admin.workspaces.overQuota') : ''}
+            {`Đã sử dụng ${rawTokenPercent}%`}
+            {rawTokenPercent > 100 ? ' (Vượt hạn mức)' : ''}
           </span>
         </Card>
       </div>
@@ -270,24 +262,24 @@ export function WorkspaceDetailView({ workspace }: WorkspaceDetailViewProps) {
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-semibold flex items-center gap-2">
             <Users className="size-4 text-primary" />
-            <span>{t('admin.workspaces.membersTitle', { count: workspace.members.length })}</span>
+            <span>{`Danh sách thành viên (${workspace.members.length})`}</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead className="text-xs">{t('admin.workspaces.colMember')}</TableHead>
-                <TableHead className="text-xs">{t('admin.workspaces.colEmail')}</TableHead>
-                <TableHead className="text-xs">{t('admin.workspaces.colRole')}</TableHead>
-                <TableHead className="text-xs">{t('admin.workspaces.colJoinDate')}</TableHead>
+                <TableHead className="text-xs">{'Thành viên'}</TableHead>
+                <TableHead className="text-xs">{'Email'}</TableHead>
+                <TableHead className="text-xs">{'Vai trò'}</TableHead>
+                <TableHead className="text-xs">{'Ngày tham gia'}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {workspace.members.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={4} className="text-center py-6 text-xs text-muted-foreground">
-                    {t('admin.workspaces.noMembers')}
+                    {'Chưa có thành viên nào trong workspace này'}
                   </TableCell>
                 </TableRow>
               ) : (

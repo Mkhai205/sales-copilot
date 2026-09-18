@@ -1,3 +1,5 @@
+'use client';
+
 import { FeaturePlaceholder } from '@/components/placeholder/feature-placeholder';
 import { Award } from 'lucide-react';
 

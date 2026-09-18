@@ -73,17 +73,17 @@ export function TeamFormDialog({
   const nameError = React.useMemo(() => {
     if (!touched) return null;
     if (trimmedName.length === 0) {
-      return 'Team name is required';
+      return 'Tên nhóm là bắt buộc';
     }
     if (trimmedName.length > 100) {
-      return 'Team name must not exceed 100 characters';
+      return 'Tên nhóm không được vượt quá 100 ký tự';
     }
     return null;
   }, [trimmedName, touched]);
 
   const descError = React.useMemo(() => {
     if (description.length > 500) {
-      return 'Description must not exceed 500 characters';
+      return 'Mô tả không được vượt quá 500 ký tự';
     }
     return null;
   }, [description]);
@@ -166,13 +166,13 @@ export function TeamFormDialog({
             <div className="flex items-center gap-2">
               <Users2 className="size-4 text-primary" />
               <DialogTitle className="text-sm font-semibold">
-                {isEditing ? 'Edit Team' : 'Create New Team'}
+                {isEditing ? 'Chỉnh sửa nhóm' : 'Tạo nhóm mới'}
               </DialogTitle>
             </div>
             <DialogDescription className="text-xs">
               {isEditing
-                ? 'Update team profile and manage assigned members.'
-                : 'Organize customer service agents into collaborative teams.'}
+                ? 'Cập nhật thông tin nhóm và quản lý các thành viên được gán.'
+                : 'Tổ chức các nhân viên hỗ trợ thành các nhóm làm việc.'}
             </DialogDescription>
           </DialogHeader>
 
@@ -180,7 +180,7 @@ export function TeamFormDialog({
             <FieldGroup className="gap-4">
               {/* Team Name */}
               <Field data-invalid={!!nameError}>
-                <FieldLabel htmlFor="team-name">Team Name</FieldLabel>
+                <FieldLabel htmlFor="team-name">Tên nhóm</FieldLabel>
                 <Input
                   id="team-name"
                   value={name}
@@ -188,7 +188,7 @@ export function TeamFormDialog({
                     setName(e.target.value);
                     if (!touched) setTouched(true);
                   }}
-                  placeholder="e.g. Tier 1 Support, Retail Sales, VIP Account"
+                  placeholder="Ví dụ: Hỗ trợ cấp 1, Bán lẻ, Khách hàng VIP..."
                   maxLength={100}
                   aria-invalid={!!nameError}
                   required
@@ -199,28 +199,26 @@ export function TeamFormDialog({
 
               {/* Team Description */}
               <Field data-invalid={!!descError}>
-                <FieldLabel htmlFor="team-desc">Description</FieldLabel>
+                <FieldLabel htmlFor="team-desc">Mô tả</FieldLabel>
                 <Textarea
                   id="team-desc"
                   value={description}
                   onChange={e => setDescription(e.target.value)}
-                  placeholder="Purpose of this team and responsibility..."
+                  placeholder="Mục đích và trách nhiệm của nhóm này..."
                   rows={2}
                   maxLength={500}
                   className="text-xs"
                 />
-                <FieldDescription>
-                  Optional brief description (max 500 characters).
-                </FieldDescription>
+                <FieldDescription>Mô tả ngắn gọn tùy chọn (tối đa 500 ký tự).</FieldDescription>
                 {descError && <FieldError errors={[{ message: descError }]} />}
               </Field>
 
               {/* Members Selection List */}
               <Field>
                 <div className="flex items-center justify-between">
-                  <FieldLabel>Team Members</FieldLabel>
+                  <FieldLabel>Thành viên nhóm</FieldLabel>
                   <Badge variant="secondary" className="px-1.5 py-0.2 text-[10px]">
-                    {selectedUserIds.length} selected
+                    Đã chọn {selectedUserIds.length}
                   </Badge>
                 </div>
 
@@ -230,7 +228,7 @@ export function TeamFormDialog({
                   <Input
                     value={memberSearchQuery}
                     onChange={e => setMemberSearchQuery(e.target.value)}
-                    placeholder="Search workspace members..."
+                    placeholder="Tìm kiếm thành viên trong workspace..."
                     className="h-7 pl-7 pr-7 text-xs bg-muted/30"
                   />
                   {memberSearchQuery && (
@@ -257,7 +255,7 @@ export function TeamFormDialog({
                       </div>
                     ) : filteredMembers.length === 0 ? (
                       <div className="flex h-32 items-center justify-center p-4 text-center text-xs text-muted-foreground">
-                        No members found.
+                        Không tìm thấy thành viên nào.
                       </div>
                     ) : (
                       <div className="flex flex-col gap-1">
@@ -278,7 +276,7 @@ export function TeamFormDialog({
                                 <Avatar className="size-6 border border-border/60">
                                   <AvatarImage
                                     src={member.user?.avatarUrl || undefined}
-                                    alt={member.user?.name || 'User'}
+                                    alt={member.user?.name || 'Thành viên'}
                                   />
                                   <AvatarFallback className="text-[10px]">
                                     {getInitials(member.user?.name, member.user?.email)}
@@ -286,7 +284,7 @@ export function TeamFormDialog({
                                 </Avatar>
                                 <div className="flex flex-col min-w-0">
                                   <span className="truncate text-xs font-medium text-foreground">
-                                    {member.user?.name || 'Unnamed'}
+                                    {member.user?.name || 'Chưa đặt tên'}
                                   </span>
                                   <span className="truncate text-[10px] text-muted-foreground">
                                     {member.user?.email}
@@ -296,7 +294,15 @@ export function TeamFormDialog({
 
                               <div className="flex items-center gap-2 shrink-0">
                                 <Badge variant="outline" className="px-1 text-[9px] uppercase">
-                                  {member.role}
+                                  {member.role === 'OWNER'
+                                    ? 'Chủ sở hữu'
+                                    : member.role === 'ADMIN'
+                                      ? 'Quản trị'
+                                      : member.role === 'AGENT'
+                                        ? 'Nhân viên'
+                                        : member.role === 'VIEWER'
+                                          ? 'Người xem'
+                                          : member.role}
                                 </Badge>
                                 <div
                                   className={`flex size-4 items-center justify-center rounded border transition-colors ${
@@ -328,7 +334,7 @@ export function TeamFormDialog({
               disabled={isPending}
               className="text-xs"
             >
-              Cancel
+              Hủy
             </Button>
             <Button
               type="submit"
@@ -340,12 +346,12 @@ export function TeamFormDialog({
               {isPending ? (
                 <>
                   <Spinner className="size-3.5" data-icon="inline-start" />
-                  {isEditing ? 'Saving...' : 'Creating...'}
+                  {isEditing ? 'Đang lưu...' : 'Đang tạo...'}
                 </>
               ) : isEditing ? (
-                'Save Changes'
+                'Lưu thay đổi'
               ) : (
-                'Create Team'
+                'Tạo nhóm'
               )}
             </Button>
           </DialogFooter>

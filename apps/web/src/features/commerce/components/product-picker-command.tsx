@@ -13,7 +13,6 @@ import {
 import { useCommerceProducts, type FlatProductVariant } from '../hooks/use-commerce-products';
 import { StockStatusBadge } from './stock-status-badge';
 import { cn } from '@/lib/utils';
-import { useI18n } from '@/lib/i18n';
 
 interface ProductPickerCommandProps {
   workspaceId?: string;
@@ -26,7 +25,6 @@ export function ProductPickerCommand({
   onSelectVariant,
   disabled = false,
 }: ProductPickerCommandProps) {
-  const { t } = useI18n();
   const [search, setSearch] = React.useState('');
   const [isOpen, setIsOpen] = React.useState(false);
   const inputRef = React.useRef<HTMLInputElement>(null);
@@ -81,7 +79,7 @@ export function ProductPickerCommand({
         <div className="relative">
           <CommandInput
             ref={inputRef}
-            placeholder={t('commerce.productPicker.placeholder')}
+            placeholder={'Tìm sản phẩm theo tên, SKU, mã vạch... (Ctrl+K)'}
             className="text-xs"
             value={search}
             onValueChange={val => {
@@ -101,18 +99,14 @@ export function ProductPickerCommand({
             <CommandList>
               {isLoading ? (
                 <div className="py-6 text-center text-xs text-muted-foreground">
-                  {t('commerce.productPicker.loading')}
+                  {'Đang tải danh mục sản phẩm...'}
                 </div>
               ) : filteredVariants.length === 0 ? (
                 <CommandEmpty className="py-6 text-center text-xs text-muted-foreground">
-                  {t('commerce.productPicker.empty')}
+                  {'Không tìm thấy sản phẩm nào phù hợp'}
                 </CommandEmpty>
               ) : (
-                <CommandGroup
-                  heading={t('commerce.productPicker.resultsCount', {
-                    count: filteredVariants.length,
-                  })}
-                >
+                <CommandGroup heading={`Tìm thấy ${filteredVariants.length} phân loại`}>
                   {filteredVariants.map(v => {
                     const isOutOfStock = v.availableStock <= 0;
                     return (

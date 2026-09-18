@@ -28,7 +28,6 @@ import {
   useUpdateWorkspacePlan,
 } from '../hooks/use-platform-workspaces';
 import { Loader2 } from 'lucide-react';
-import { useI18n } from '@/lib/i18n';
 
 export interface UpdatePlanDialogProps {
   workspace: PlatformWorkspaceListItemDto | null;
@@ -37,7 +36,6 @@ export interface UpdatePlanDialogProps {
 }
 
 export function UpdatePlanDialog({ workspace, open, onOpenChange }: UpdatePlanDialogProps) {
-  const { t } = useI18n();
   const { data: detail, isLoading: isLoadingDetail } = usePlatformWorkspaceDetail(
     open ? workspace?.id : undefined,
   );
@@ -114,10 +112,10 @@ export function UpdatePlanDialog({ workspace, open, onOpenChange }: UpdatePlanDi
       <DialogContent className="max-w-md sm:max-w-md p-6">
         <DialogHeader className="pb-2">
           <DialogTitle className="text-base font-semibold">
-            {t('admin.workspaces.changePlanQuotasTitle')}
+            {'Đổi gói & Thiết lập Quotas tùy biến'}
           </DialogTitle>
           <DialogDescription className="text-xs text-muted-foreground">
-            {t('admin.workspaces.changePlanQuotasDesc', { name: workspace?.name || '' })}
+            {`Cập nhật gói cước và tùy chỉnh hạn mức tài nguyên cho tenant ${workspace?.name || ''}.`}
           </DialogDescription>
         </DialogHeader>
 
@@ -125,51 +123,47 @@ export function UpdatePlanDialog({ workspace, open, onOpenChange }: UpdatePlanDi
           <FieldGroup className="gap-3">
             {/* Gói cước */}
             <Field className="gap-1.5">
-              <FieldLabel className="text-xs font-medium">
-                {t('admin.workspaces.planServiceLabel')}
-              </FieldLabel>
+              <FieldLabel className="text-xs font-medium">{'Gói cước dịch vụ'}</FieldLabel>
               <Select
                 value={selectedPlan}
                 onValueChange={val => setSelectedPlan(val as BillingPlanType)}
               >
                 <SelectTrigger className="h-8 text-xs w-full">
-                  <SelectValue placeholder={t('admin.workspaces.planServiceSelect')} />
+                  <SelectValue placeholder={'Chọn gói cước'} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={BillingPlanType.FREE}>
-                    {t('admin.workspaces.planFreeDetail')}
-                  </SelectItem>
+                  <SelectItem value={BillingPlanType.FREE}>{'Gói FREE (Miễn phí)'}</SelectItem>
                   <SelectItem value={BillingPlanType.STANDARD}>
-                    {t('admin.workspaces.planStandardDetail')}
+                    {'Gói STANDARD (Tiêu chuẩn)'}
                   </SelectItem>
                   <SelectItem value={BillingPlanType.ENTERPRISE}>
-                    {t('admin.workspaces.planEnterpriseDetail')}
+                    {'Gói ENTERPRISE (Doanh nghiệp)'}
                   </SelectItem>
                 </SelectContent>
               </Select>
               <FieldDescription className="text-[11px]">
-                {t('admin.workspaces.planChangeHelp')}
+                {'Thay đổi gói sẽ tự động cập nhật hạn mức mặc định tương ứng.'}
               </FieldDescription>
             </Field>
 
             <div className="border-t border-border/50 pt-2 flex flex-col gap-2.5">
               <span className="text-xs font-medium text-foreground">
-                {t('admin.workspaces.quotaOverridesTitle')}
+                {'Ghi đè hạn mức tùy biến (Quota Overrides)'}
               </span>
               <span className="text-[11px] text-muted-foreground">
-                {t('admin.workspaces.quotaOverridesHelp')}
+                {'Để trống ô nếu muốn áp dụng hạn mức mặc định của gói cước.'}
               </span>
 
               <div className="grid grid-cols-2 gap-3">
                 {/* Max Agents */}
                 <Field className="gap-1">
                   <FieldLabel className="text-[11px] font-normal text-muted-foreground">
-                    {t('admin.workspaces.maxAgents')}
+                    {'Số nhân sự tối đa (maxAgents)'}
                   </FieldLabel>
                   <Input
                     type="number"
                     min="1"
-                    placeholder={t('admin.workspaces.defaultQuotaPlaceholder')}
+                    placeholder={'Mặc định'}
                     value={maxAgents}
                     onChange={e => setMaxAgents(e.target.value)}
                     className="h-8 text-xs"
@@ -179,12 +173,12 @@ export function UpdatePlanDialog({ workspace, open, onOpenChange }: UpdatePlanDi
                 {/* Max Channels */}
                 <Field className="gap-1">
                   <FieldLabel className="text-[11px] font-normal text-muted-foreground">
-                    {t('admin.workspaces.maxChannels')}
+                    {'Số kênh kết nối tối đa (maxChannels)'}
                   </FieldLabel>
                   <Input
                     type="number"
                     min="1"
-                    placeholder={t('admin.workspaces.defaultQuotaPlaceholder')}
+                    placeholder={'Mặc định'}
                     value={maxChannels}
                     onChange={e => setMaxChannels(e.target.value)}
                     className="h-8 text-xs"
@@ -194,12 +188,12 @@ export function UpdatePlanDialog({ workspace, open, onOpenChange }: UpdatePlanDi
                 {/* Storage MB */}
                 <Field className="gap-1">
                   <FieldLabel className="text-[11px] font-normal text-muted-foreground">
-                    {t('admin.workspaces.storageMb')}
+                    {'Dung lượng lưu trữ media MB (storageQuotaMb)'}
                   </FieldLabel>
                   <Input
                     type="number"
                     min="100"
-                    placeholder={t('admin.workspaces.defaultQuotaPlaceholder')}
+                    placeholder={'Mặc định'}
                     value={storageMb}
                     onChange={e => setStorageMb(e.target.value)}
                     className="h-8 text-xs"
@@ -209,12 +203,12 @@ export function UpdatePlanDialog({ workspace, open, onOpenChange }: UpdatePlanDi
                 {/* AI Tokens */}
                 <Field className="gap-1">
                   <FieldLabel className="text-[11px] font-normal text-muted-foreground">
-                    {t('admin.workspaces.aiTokens')}
+                    {'Hạn mức tokens AI hàng tháng (aiTokensQuotaMonthly)'}
                   </FieldLabel>
                   <Input
                     type="number"
                     min="0"
-                    placeholder={t('admin.workspaces.defaultQuotaPlaceholder')}
+                    placeholder={'Mặc định'}
                     value={aiTokens}
                     onChange={e => setAiTokens(e.target.value)}
                     className="h-8 text-xs"
@@ -233,7 +227,7 @@ export function UpdatePlanDialog({ workspace, open, onOpenChange }: UpdatePlanDi
               disabled={updatePlanMutation.isPending}
               className="text-xs"
             >
-              {t('common.cancel')}
+              {'Hủy'}
             </Button>
             <Button
               type="submit"
@@ -242,7 +236,7 @@ export function UpdatePlanDialog({ workspace, open, onOpenChange }: UpdatePlanDi
               className="text-xs gap-1.5"
             >
               {updatePlanMutation.isPending && <Loader2 className="size-3.5 animate-spin" />}
-              <span>{t('admin.workspaces.saveChanges')}</span>
+              <span>{'Lưu thay đổi'}</span>
             </Button>
           </DialogFooter>
         </form>

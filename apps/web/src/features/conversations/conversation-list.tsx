@@ -19,7 +19,6 @@ import { ConversationFilterPopover } from './conversation-filter-popover';
 import { ConversationActiveChips } from './conversation-active-chips';
 import { useConversations } from './hooks/use-conversations';
 import { useConversationFilters } from './hooks/use-conversation-filters';
-import { useI18n } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 
 interface ConversationListProps {
@@ -52,7 +51,6 @@ function ConversationListSkeleton() {
 }
 
 export function ConversationList({ workspaceSlug, activeConversationId }: ConversationListProps) {
-  const { t } = useI18n();
   const {
     apiQuery,
     resetFilters,
@@ -165,9 +163,9 @@ export function ConversationList({ workspaceSlug, activeConversationId }: Conver
             ref={searchInputRef}
             id="conversation-search"
             name="conversation-search"
-            aria-label="Search for messages in conversations"
+            aria-label="Tìm kiếm tin nhắn trong hội thoại"
             type="text"
-            placeholder={t('conversations.filter.searchPlaceholder')}
+            placeholder={'Tìm kiếm hội thoại...'}
             value={searchInput}
             onChange={e => setSearchInput(e.target.value)}
             className="text-xs h-6.5 placeholder:text-muted-foreground/70"
@@ -178,7 +176,7 @@ export function ConversationList({ workspaceSlug, activeConversationId }: Conver
                 size="xs"
                 variant="ghost"
                 onClick={handleClearSearch}
-                aria-label="Clear search"
+                aria-label="Xóa tìm kiếm"
                 className="size-4.5 p-0 text-muted-foreground hover:text-foreground cursor-pointer"
               >
                 <X className="size-3" />
@@ -214,13 +212,13 @@ export function ConversationList({ workspaceSlug, activeConversationId }: Conver
                 onClick={() => refetch()}
                 disabled={isLoading || isFetching}
                 className="text-muted-foreground hover:text-foreground size-7 cursor-pointer"
-                aria-label="Refresh conversations"
+                aria-label="Làm mới hội thoại"
               >
                 <RotateCcw className={cn('size-3.5', isFetching && 'animate-spin')} />
               </Button>
             </TooltipTrigger>
             <TooltipContent side="bottom">
-              <span className="text-xs">{t('common.refresh')}</span>
+              <span className="text-xs">{'Làm mới'}</span>
             </TooltipContent>
           </Tooltip>
         </div>
@@ -313,7 +311,7 @@ export function ConversationList({ workspaceSlug, activeConversationId }: Conver
                 </button>
               ) : conversations.length > 0 ? (
                 <p className="text-[11px] text-muted-foreground/70 py-1">
-                  All conversations loaded 🎉
+                  Đã tải tất cả cuộc trò chuyện 🎉
                 </p>
               ) : null}
             </div>

@@ -13,13 +13,14 @@ export default function TeamsSettingsPage() {
 
   return (
     <SettingsGuard workspaceSlug={workspaceSlug} segment="teams">
-      <div className="flex flex-col gap-6 max-w-5xl">
+      <div className="flex flex-col gap-6 w-full">
         {/* Page Header */}
-        <div>
-          <h1 className="text-xl font-semibold tracking-tight text-foreground">Teams</h1>
+        <div className="pb-3 border-b border-border/70">
+          <h1 className="text-xl font-bold tracking-tight text-foreground">{'Đội nhóm'}</h1>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Organize customer support and sales agents into dedicated teams for collaboration and
-            auto-assignment.
+            {
+              'Tổ chức nhân viên tư vấn và bán hàng thành các đội nhóm chuyên biệt để cộng tác và phân bổ hội thoại.'
+            }
           </p>
         </div>
 

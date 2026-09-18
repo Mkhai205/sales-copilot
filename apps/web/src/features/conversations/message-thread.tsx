@@ -68,7 +68,6 @@ import { ImageLightboxDialog } from './image-lightbox-dialog';
 import { MessageImageGrid, isImageAttachment } from './message-image-grid';
 import { MessageActionsToolbar } from './message-actions-toolbar';
 import { VietQrChatCard } from '@/features/commerce';
-import { useI18n } from '@/lib/i18n';
 
 import type { VietQrResponseDto } from '@sales-copilot/shared-contracts';
 
@@ -245,7 +244,6 @@ function MessageItem({
   workspaceId?: string;
   onOpenLightbox: (images: AttachmentDto[], index?: number) => void;
 }) {
-  const { t } = useI18n();
   const isAiGenerated = React.useMemo(() => {
     if (!message.metadata) return false;
     if (typeof message.metadata === 'object') {
@@ -397,7 +395,7 @@ function MessageItem({
               {isAiGenerated ? (
                 <span className="inline-flex items-center gap-1 font-semibold text-foreground">
                   <Bot className="size-3 text-primary" />
-                  <span>{t('conversations.messages.aiSender')}</span>
+                  <span>{'AI Autopilot'}</span>
                 </span>
               ) : (
                 <span>You</span>
@@ -741,7 +739,6 @@ export function MessageThread({
   onOpenPosDrawer,
 }: MessageThreadProps) {
   useConversationRoom(conversationId);
-  const { t } = useI18n();
 
   const { data: conversation, isLoading: isConversationLoading } = useConversation(conversationId, {
     workspaceSlug,
@@ -915,7 +912,7 @@ export function MessageThread({
               {newUnreadCount > 0 ? (
                 <div className="flex items-center gap-1.5 text-xs font-medium">
                   <ArrowDown className="size-3.5 animate-bounce" />
-                  <span>{t('conversations.thread.newMessages')}</span>
+                  <span>{'Tin nhắn mới'}</span>
                   <span className="flex size-4 items-center justify-center rounded-full bg-primary-foreground text-primary text-[10px] font-bold">
                     {newUnreadCount > 9 ? '9+' : newUnreadCount}
                   </span>

@@ -21,7 +21,6 @@ import { OrderDetailSheet } from './order-detail-sheet';
 import { CreateOrderDialog } from './create-order-dialog';
 import { ThermalPrintDialog } from './thermal-print-dialog';
 import { OrderStatus, PaymentStatus, type OrderResponseDto } from '@sales-copilot/shared-contracts';
-import { useI18n } from '@/lib/i18n';
 import { ChevronLeft, ChevronRight, Plus, RefreshCw, Search, ShoppingBag, X } from 'lucide-react';
 
 interface OrdersViewProps {
@@ -29,7 +28,6 @@ interface OrdersViewProps {
 }
 
 export function OrdersView({ workspaceSlug }: OrdersViewProps) {
-  const { t } = useI18n();
   const { data: workspaces } = useWorkspaces();
   const currentWorkspace = workspaces?.find(w => w.slug === workspaceSlug);
   const workspaceId = currentWorkspace?.id;
@@ -121,15 +119,17 @@ export function OrdersView({ workspaceSlug }: OrdersViewProps) {
   };
 
   return (
-    <div className="flex flex-col h-full overflow-y-auto bg-background p-4 sm:p-6 space-y-4">
+    <div className="flex flex-col flex-1 h-full overflow-y-auto bg-background p-6 gap-5">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-border/70">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-border/70">
         <div>
           <h1 className="text-xl font-bold tracking-tight text-foreground flex items-center gap-2">
             <ShoppingBag className="size-5 text-primary" />
-            <span>{t('commerce.orders.title')}</span>
+            <span>{'Quản lý Đơn hàng'}</span>
           </h1>
-          <p className="text-xs text-muted-foreground mt-0.5">{t('commerce.orders.subtitle')}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {'Theo dõi toàn bộ đơn hàng đa kênh, trạng thái giữ kho và vận chuyển'}
+          </p>
         </div>
 
         <div className="flex items-center gap-2 self-start sm:self-auto">
@@ -142,7 +142,7 @@ export function OrdersView({ workspaceSlug }: OrdersViewProps) {
             className="h-8 text-xs gap-1.5 cursor-pointer"
           >
             <RefreshCw className={`size-3.5 ${isFetching ? 'animate-spin' : ''}`} />
-            <span>{t('common.refresh')}</span>
+            <span>{'Làm mới'}</span>
           </Button>
 
           {workspaceId && (
@@ -154,7 +154,7 @@ export function OrdersView({ workspaceSlug }: OrdersViewProps) {
               className="h-8 text-xs font-semibold gap-1.5 shadow-xs cursor-pointer"
             >
               <Plus className="size-3.5" />
-              <span>{t('commerce.orders.createOrder')}</span>
+              <span>{'Tạo đơn hàng mới'}</span>
             </Button>
           )}
         </div>
@@ -172,25 +172,25 @@ export function OrdersView({ workspaceSlug }: OrdersViewProps) {
         >
           <TabsList className="h-9 p-1 bg-muted/60">
             <TabsTrigger value="ALL" className="text-xs px-3">
-              {t('commerce.orders.tabs.all')}
+              {'Tất cả'}
             </TabsTrigger>
             <TabsTrigger value={OrderStatus.DRAFT} className="text-xs px-3">
-              {t('commerce.orders.tabs.draft')}
+              {'Bản nháp'}
             </TabsTrigger>
             <TabsTrigger value={OrderStatus.CONFIRMED} className="text-xs px-3">
-              {t('commerce.orders.tabs.confirmed')}
+              {'Đã xác nhận'}
             </TabsTrigger>
             <TabsTrigger value={OrderStatus.PAID} className="text-xs px-3">
-              {t('commerce.orders.tabs.paid')}
+              {'Đã thanh toán'}
             </TabsTrigger>
             <TabsTrigger value={OrderStatus.SHIPPING} className="text-xs px-3">
-              {t('commerce.orders.tabs.shipping')}
+              {'Đang giao'}
             </TabsTrigger>
             <TabsTrigger value={OrderStatus.COMPLETED} className="text-xs px-3">
-              {t('commerce.orders.tabs.completed')}
+              {'Hoàn thành'}
             </TabsTrigger>
             <TabsTrigger value={OrderStatus.CANCELLED} className="text-xs px-3">
-              {t('commerce.orders.tabs.cancelled')}
+              {'Đã hủy'}
             </TabsTrigger>
           </TabsList>
         </Tabs>
@@ -203,7 +203,7 @@ export function OrdersView({ workspaceSlug }: OrdersViewProps) {
           <Input
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            placeholder={t('commerce.orders.searchPlaceholder')}
+            placeholder={'Tìm theo mã đơn, người nhận, số điện thoại...'}
             className="pl-8 text-xs h-9"
           />
           {searchTerm && (
@@ -226,18 +226,14 @@ export function OrdersView({ workspaceSlug }: OrdersViewProps) {
             }}
           >
             <SelectTrigger className="h-9 text-xs w-[170px]">
-              <SelectValue placeholder={t('commerce.orders.filterPayment')} />
+              <SelectValue placeholder={'Thanh toán'} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="ALL">{t('commerce.orders.allPayments')}</SelectItem>
-              <SelectItem value={PaymentStatus.UNPAID}>{t('commerce.payment.unpaid')}</SelectItem>
-              <SelectItem value={PaymentStatus.PARTIALLY_PAID}>
-                {t('commerce.payment.partial')}
-              </SelectItem>
-              <SelectItem value={PaymentStatus.PAID}>{t('commerce.payment.paid')}</SelectItem>
-              <SelectItem value={PaymentStatus.REFUNDED}>
-                {t('commerce.payment.refunded')}
-              </SelectItem>
+              <SelectItem value="ALL">{'Tất cả thanh toán'}</SelectItem>
+              <SelectItem value={PaymentStatus.UNPAID}>{'Chưa thanh toán'}</SelectItem>
+              <SelectItem value={PaymentStatus.PARTIALLY_PAID}>{'Thanh toán 1 phần'}</SelectItem>
+              <SelectItem value={PaymentStatus.PAID}>{'Đã thanh toán'}</SelectItem>
+              <SelectItem value={PaymentStatus.REFUNDED}>{'Đã hoàn tiền'}</SelectItem>
             </SelectContent>
           </Select>
         </div>

@@ -23,7 +23,6 @@ import { Button } from '@/components/ui/button';
 import { useUpdateInbox } from '../hooks/use-inboxes';
 import { useWorkspaces } from '@/features/identity/hooks/use-workspaces';
 import { workspacesApi } from '@/features/identity/api/workspaces';
-import { useI18n } from '@/lib/i18n';
 
 interface TabAiSettingsProps {
   inbox: InboxDetailDto;
@@ -32,7 +31,6 @@ interface TabAiSettingsProps {
 }
 
 export function TabAiSettings({ inbox, workspaceId, workspaceSlug }: TabAiSettingsProps) {
-  const { t } = useI18n();
   const { mutate: updateInbox, isPending: isUpdating } = useUpdateInbox(workspaceId);
 
   // 1. Resolve workspace payment/bank settings
@@ -151,10 +149,10 @@ export function TabAiSettings({ inbox, workspaceId, workspaceSlug }: TabAiSettin
             aiCommercePolicy: nextPolicy,
           },
         },
-        successMessage: successMsg || t('inboxes.ai.saved'),
+        successMessage: successMsg || 'Đã lưu cấu hình AI',
       });
     },
-    [inbox.id, inbox.settings, updateInbox, t],
+    [inbox.id, inbox.settings, updateInbox],
   );
 
   // Handle Autopilot master toggle with full spec validation (Block cứng)
@@ -163,7 +161,7 @@ export function TabAiSettings({ inbox, workspaceId, workspaceSlug }: TabAiSettin
       if (isResolvingBank) return;
       if (!isBankConfigured) {
         setNoBankError(true);
-        toast.error(t('inboxes.ai.enableBlockedNoBankAccount'));
+        toast.error('Vui lòng cấu hình Tài khoản VietQR trong Cài đặt Workspace trước khi bật AI');
         return;
       }
       if (customInstructions.length > 2000) {
@@ -242,23 +240,23 @@ export function TabAiSettings({ inbox, workspaceId, workspaceSlug }: TabAiSettin
   const PERSONA_OPTIONS = [
     {
       value: 'shop_ban',
-      label: t('inboxes.ai.persona.shop_ban'),
-      desc: t('inboxes.ai.persona.shop_ban_desc'),
+      label: 'Shop - Bạn',
+      desc: 'Trung tính, phổ thông, phù hợp mọi ngành hàng',
     },
     {
       value: 'em_anh_chi',
-      label: t('inboxes.ai.persona.em_anh_chi'),
-      desc: t('inboxes.ai.persona.em_anh_chi_desc'),
+      label: 'Em - Anh/Chị',
+      desc: 'Kính trọng, phổ biến nhất tại Việt Nam',
     },
     {
       value: 'minh_ban',
-      label: t('inboxes.ai.persona.minh_ban'),
-      desc: t('inboxes.ai.persona.minh_ban_desc'),
+      label: 'Mình - Bạn',
+      desc: 'Thân thiện, gần gũi, phù hợp thời trang trẻ',
     },
     {
       value: 'chuyen_vien',
-      label: t('inboxes.ai.persona.chuyen_vien'),
-      desc: t('inboxes.ai.persona.chuyen_vien_desc'),
+      label: 'Chuyên viên',
+      desc: 'Chuyên nghiệp, formal, phù hợp dịch vụ cao cấp',
     },
   ];
 
@@ -291,7 +289,7 @@ export function TabAiSettings({ inbox, workspaceId, workspaceSlug }: TabAiSettin
               }
             >
               {isAiEnabled && <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />}
-              {isAiEnabled ? t('inboxes.ai.statusActive') : t('inboxes.ai.statusInactive')}
+              {isAiEnabled ? 'AI đang hoạt động' : 'AI đang tắt'}
             </Badge>
           </div>
         </CardHeader>
@@ -299,11 +297,9 @@ export function TabAiSettings({ inbox, workspaceId, workspaceSlug }: TabAiSettin
           {/* Master Autopilot Toggle */}
           <div className="flex items-center justify-between rounded-lg border border-border/80 bg-muted/20 p-4">
             <div className="flex flex-col gap-0.5 pr-4">
-              <span className="text-xs font-semibold text-foreground">
-                {t('inboxes.ai.enableToggle')}
-              </span>
+              <span className="text-xs font-semibold text-foreground">{'AI Autopilot'}</span>
               <span className="text-[11px] text-muted-foreground">
-                {t('inboxes.ai.enableToggleDesc')}
+                {'Bật để AI tự động trả lời khách hàng'}
               </span>
             </div>
             <Switch
@@ -318,7 +314,9 @@ export function TabAiSettings({ inbox, workspaceId, workspaceSlug }: TabAiSettin
             <div className="flex items-start gap-3 p-3.5 rounded-lg border border-destructive/40 bg-destructive/10 text-destructive text-xs">
               <AlertCircle className="size-4 shrink-0 mt-0.5" />
               <div className="flex flex-col gap-1">
-                <span className="font-semibold">{t('inboxes.ai.enableBlockedNoBankAccount')}</span>
+                <span className="font-semibold">
+                  {'Vui lòng cấu hình Tài khoản VietQR trong Cài đặt Workspace trước khi bật AI'}
+                </span>
                 <p className="text-[11px] text-destructive/90">
                   AI cần thông tin tài khoản ngân hàng để tạo mã QR chuyển khoản cho khách hàng khi
                   chốt đơn.
@@ -358,7 +356,7 @@ export function TabAiSettings({ inbox, workspaceId, workspaceSlug }: TabAiSettin
           <FieldGroup className="gap-5">
             {/* Persona Tone */}
             <Field>
-              <FieldLabel className="text-xs font-medium">{t('inboxes.ai.personaTone')}</FieldLabel>
+              <FieldLabel className="text-xs font-medium">{'Giọng điệu giao tiếp'}</FieldLabel>
               <Select
                 value={personaTone}
                 onValueChange={handlePersonaToneChange}
@@ -389,7 +387,7 @@ export function TabAiSettings({ inbox, workspaceId, workspaceSlug }: TabAiSettin
             <Field>
               <div className="flex items-center justify-between">
                 <FieldLabel htmlFor="custom-instructions" className="text-xs font-medium">
-                  {t('inboxes.ai.customInstructions')}
+                  {'Hướng dẫn bán hàng riêng'}
                 </FieldLabel>
                 <span
                   className={`text-[11px] ${
@@ -409,7 +407,7 @@ export function TabAiSettings({ inbox, workspaceId, workspaceSlug }: TabAiSettin
                 onChange={handleCustomInstructionsChange}
                 onBlur={handleCustomInstructionsBlur}
                 disabled={!isAiEnabled || isUpdating}
-                placeholder={t('inboxes.ai.customInstructionsPlaceholder')}
+                placeholder={'VD: Luôn giới thiệu combo giảm giá khi khách mua từ 2 sản phẩm...'}
                 className="text-xs min-h-[96px] resize-y"
               />
               <FieldDescription className="text-[11px] text-muted-foreground">
@@ -423,7 +421,7 @@ export function TabAiSettings({ inbox, workspaceId, workspaceSlug }: TabAiSettin
               {/* Max Discount % */}
               <Field>
                 <FieldLabel htmlFor="max-discount-percent" className="text-xs font-medium">
-                  {t('inboxes.ai.maxDiscountPercent')}
+                  {'Giảm giá tối đa (%)'}
                 </FieldLabel>
                 <div className="relative">
                   <Input
@@ -449,7 +447,7 @@ export function TabAiSettings({ inbox, workspaceId, workspaceSlug }: TabAiSettin
               {/* Max Discount VND */}
               <Field>
                 <FieldLabel htmlFor="max-discount-vnd" className="text-xs font-medium">
-                  {t('inboxes.ai.maxDiscountVnd')}
+                  {'Giảm giá tối đa (VNĐ)'}
                 </FieldLabel>
                 <div className="relative">
                   <Input
@@ -493,7 +491,7 @@ export function TabAiSettings({ inbox, workspaceId, workspaceSlug }: TabAiSettin
             <div className="flex items-center gap-2.5">
               <Store className="size-4 text-primary shrink-0" />
               <div className="flex flex-col">
-                <span className="font-medium text-foreground">{t('inboxes.ai.warehouseInfo')}</span>
+                <span className="font-medium text-foreground">{'Kho hàng'}</span>
                 <span className="text-[11px] text-muted-foreground">
                   Kho chính (Hệ thống kho tập trung)
                 </span>
@@ -513,14 +511,14 @@ export function TabAiSettings({ inbox, workspaceId, workspaceSlug }: TabAiSettin
             <div className="flex items-center gap-2.5 min-w-0">
               <Building2 className="size-4 text-primary shrink-0" />
               <div className="flex flex-col min-w-0">
-                <span className="font-medium text-foreground">{t('inboxes.ai.bankInfo')}</span>
+                <span className="font-medium text-foreground">{'Tài khoản VietQR'}</span>
                 {isBankConfigured ? (
                   <span className="text-[11px] text-foreground font-mono truncate">
                     {bankDisplayName} • {bankAccountNo}
                   </span>
                 ) : (
                   <span className="text-[11px] text-destructive font-medium">
-                    {t('inboxes.ai.bankNotConfigured')}
+                    {'Chưa cấu hình. Vui lòng thiết lập trong Cài đặt Workspace.'}
                   </span>
                 )}
               </div>

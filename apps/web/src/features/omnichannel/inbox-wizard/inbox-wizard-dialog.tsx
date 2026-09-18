@@ -20,7 +20,6 @@ import { type ChannelConfigState, StepChannelConfig } from './step-channel-confi
 import { StepMembersReview } from './step-members-review';
 import { useCreateInbox } from '../hooks/use-inboxes';
 import { facebookApi } from '../api/facebook';
-import { useI18n } from '@/lib/i18n';
 
 interface InboxWizardDialogProps {
   open: boolean;
@@ -39,7 +38,6 @@ const DEFAULT_CONFIG: ChannelConfigState = {
 };
 
 export function InboxWizardDialog({ open, onOpenChange, workspaceId }: InboxWizardDialogProps) {
-  const { t } = useI18n();
   const [step, setStep] = React.useState<1 | 2 | 3>(1);
   const [channelType, setChannelType] = React.useState<ChannelType>(ChannelType.WEB_CHAT);
   const [config, setConfig] = React.useState<ChannelConfigState>(DEFAULT_CONFIG);
@@ -75,7 +73,9 @@ export function InboxWizardDialog({ open, onOpenChange, workspaceId }: InboxWiza
         const hasOAuthPage = !!config.facebookSelectedPage;
         const hasManualToken = !!config.credentials.pageAccessToken?.trim();
         if (!hasOAuthPage && !hasManualToken) {
-          toast.error(t('settings.inboxes.wizard.validationFacebookPage'));
+          toast.error(
+            'Vui lòng kết nối và chọn một Facebook Fanpage, hoặc nhập Page Access Token ở mục thiết lập thủ công.',
+          );
           return;
         }
       }
@@ -118,10 +118,10 @@ export function InboxWizardDialog({ open, onOpenChange, workspaceId }: InboxWiza
           config.facebookSessionId,
         );
         queryClient.invalidateQueries({ queryKey: ['workspaces', workspaceId, 'inboxes'] });
-        toast.success(t('settings.inboxes.wizard.fbPageConnected'));
+        toast.success('Đã kết nối Facebook Page thành công');
         onOpenChange(false);
       } catch (err: any) {
-        toast.error(err.message || t('settings.inboxes.wizard.fbPageConnectFailed'));
+        toast.error(err.message || 'Không thể kết nối Facebook Page');
       } finally {
         setIsConnectingFb(false);
       }
@@ -155,12 +155,10 @@ export function InboxWizardDialog({ open, onOpenChange, workspaceId }: InboxWiza
           <DialogHeader>
             <div className="flex items-center gap-2">
               <Inbox className="size-4 text-primary" />
-              <DialogTitle className="text-sm font-semibold">
-                {t('settings.inboxes.wizard.title')}
-              </DialogTitle>
+              <DialogTitle className="text-sm font-semibold">{'Tạo hộp thư mới'}</DialogTitle>
             </div>
             <DialogDescription className="text-xs">
-              {t('settings.inboxes.wizard.description')}
+              {'Kết nối một kênh giao tiếp khách hàng và chỉ định nhân viên hỗ trợ.'}
             </DialogDescription>
 
             {/* Wizard Step Indicator */}
@@ -180,7 +178,7 @@ export function InboxWizardDialog({ open, onOpenChange, workspaceId }: InboxWiza
                     step === 1 ? 'font-semibold text-foreground' : 'text-muted-foreground'
                   }`}
                 >
-                  {t('settings.inboxes.wizard.stepChannelType')}
+                  {'Loại kênh'}
                 </span>
               </div>
 
@@ -201,7 +199,7 @@ export function InboxWizardDialog({ open, onOpenChange, workspaceId }: InboxWiza
                     step === 2 ? 'font-semibold text-foreground' : 'text-muted-foreground'
                   }`}
                 >
-                  {t('settings.inboxes.wizard.stepConfiguration')}
+                  {'Cấu hình'}
                 </span>
               </div>
 
@@ -222,7 +220,7 @@ export function InboxWizardDialog({ open, onOpenChange, workspaceId }: InboxWiza
                     step === 3 ? 'font-semibold text-foreground' : 'text-muted-foreground'
                   }`}
                 >
-                  {t('settings.inboxes.wizard.stepMembersReview')}
+                  {'Thành viên & Xem lại'}
                 </span>
               </div>
             </div>
@@ -240,27 +238,27 @@ export function InboxWizardDialog({ open, onOpenChange, workspaceId }: InboxWiza
                     if (type === ChannelType.WEB_CHAT)
                       setConfig(prev => ({
                         ...prev,
-                        name: t('settings.inboxes.newPage.channels.webChatTitle'),
+                        name: 'Website Live Chat',
                       }));
                     if (type === ChannelType.FACEBOOK_MESSENGER)
                       setConfig(prev => ({
                         ...prev,
-                        name: t('settings.inboxes.newPage.channels.messengerTitle'),
+                        name: 'Facebook Messenger',
                       }));
                     if (type === ChannelType.TELEGRAM)
                       setConfig(prev => ({
                         ...prev,
-                        name: t('settings.inboxes.newPage.channels.telegramTitle'),
+                        name: 'Telegram Bot',
                       }));
                     if (type === ChannelType.EMAIL)
                       setConfig(prev => ({
                         ...prev,
-                        name: t('settings.inboxes.newPage.channels.emailTitle'),
+                        name: 'Hỗ trợ qua Email',
                       }));
                     if (type === ChannelType.ZALO)
                       setConfig(prev => ({
                         ...prev,
-                        name: t('settings.inboxes.newPage.channels.zaloTitle'),
+                        name: 'Zalo Official Account',
                       }));
                   }
                 }}
@@ -299,7 +297,7 @@ export function InboxWizardDialog({ open, onOpenChange, workspaceId }: InboxWiza
                 className="text-xs mr-auto"
               >
                 <ArrowLeft className="size-3.5" data-icon="inline-start" />
-                {t('common.back')}
+                {'Quay lại'}
               </Button>
             ) : (
               <Button
@@ -310,7 +308,7 @@ export function InboxWizardDialog({ open, onOpenChange, workspaceId }: InboxWiza
                 disabled={isPending}
                 className="text-xs mr-auto"
               >
-                {t('common.cancel')}
+                {'Hủy'}
               </Button>
             )}
 
@@ -329,7 +327,7 @@ export function InboxWizardDialog({ open, onOpenChange, workspaceId }: InboxWiza
                 }
                 className="text-xs font-medium"
               >
-                {t('common.next')}
+                {'Tiếp tục'}
                 <ArrowRight className="size-3.5" data-icon="inline-end" />
               </Button>
             ) : (
@@ -343,12 +341,12 @@ export function InboxWizardDialog({ open, onOpenChange, workspaceId }: InboxWiza
                 {isPending || isConnectingFb ? (
                   <>
                     <Spinner className="size-3.5" data-icon="inline-start" />
-                    {t('settings.inboxes.wizard.connecting')}
+                    {'Đang kết nối...'}
                   </>
                 ) : (
                   <>
                     <Check className="size-3.5" data-icon="inline-start" />
-                    {t('settings.inboxes.wizard.createInbox')}
+                    {'Tạo hộp thư'}
                   </>
                 )}
               </Button>

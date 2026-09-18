@@ -59,12 +59,12 @@ export function LabelManager({ conversation, workspaceSlug }: LabelManagerProps)
               disabled={assignLabels.isPending || isLabelsLoading}
             >
               <Plus className="size-3" />
-              Add
+              Thêm
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48 text-xs">
             <DropdownMenuLabel className="text-[11px] text-muted-foreground font-medium">
-              Assign Label
+              Gán nhãn
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
@@ -113,7 +113,7 @@ export function LabelManager({ conversation, workspaceSlug }: LabelManagerProps)
                 className="text-muted-foreground hover:text-foreground ml-0.5 opacity-60 hover:opacity-100 transition-opacity"
               >
                 <X className="size-3" />
-                <span className="sr-only">Remove label {label.title}</span>
+                <span className="sr-only">Xóa nhãn {label.title}</span>
               </button>
             </Badge>
           ))}
@@ -121,7 +121,7 @@ export function LabelManager({ conversation, workspaceSlug }: LabelManagerProps)
       ) : (
         <div className="flex items-center gap-2 text-xs text-muted-foreground/70 py-1">
           <Tag className="size-3.5 text-muted-foreground/40 shrink-0" />
-          <span className="italic">No labels attached</span>
+          <span className="italic">Không có nhãn đính kèm</span>
         </div>
       )}
     </div>

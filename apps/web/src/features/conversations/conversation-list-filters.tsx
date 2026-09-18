@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import * as React from 'react';
 import { useConversationFilters, type AssignmentFilter } from './hooks/use-conversation-filters';
@@ -6,15 +6,12 @@ import { useConversationCounts } from './hooks/use-conversation-counts';
 import { cn } from '@/lib/utils';
 import { ConversationStatus } from '@sales-copilot/shared-contracts';
 
-import { useI18n } from '@/lib/i18n';
-
 interface ConversationListFiltersProps {
   workspaceSlug: string;
 }
 
 export function ConversationListFilters({ workspaceSlug }: ConversationListFiltersProps) {
   const { filters, setAssignment } = useConversationFilters();
-  const { t } = useI18n();
 
   // Fetch live counts for Mine, Unassigned, All based on current status
   const effectiveStatus =
@@ -27,17 +24,17 @@ export function ConversationListFilters({ workspaceSlug }: ConversationListFilte
   const tabItems: Array<{ key: AssignmentFilter; label: string; count?: number }> = [
     {
       key: 'mine',
-      label: t('conversations.tabs.mine'),
+      label: 'Của tôi',
       count: counts?.mine,
     },
     {
       key: 'unassigned',
-      label: t('conversations.tabs.unassigned'),
+      label: 'Chưa phân công',
       count: counts?.unassigned,
     },
     {
       key: 'all',
-      label: t('conversations.tabs.all'),
+      label: 'Tất cả',
       count: counts?.all,
     },
   ];
@@ -59,7 +56,7 @@ export function ConversationListFilters({ workspaceSlug }: ConversationListFilte
 
   return (
     <div className="flex h-10 w-full items-center border-b border-border/60 bg-background/50 px-3 shrink-0">
-      <nav className="flex items-center gap-6 h-full" aria-label="Conversation Assignment Tabs">
+      <nav className="flex items-center gap-6 h-full" aria-label="Tab phân công hội thoại">
         {tabItems.map(tab => {
           const isActive = filters.assignment === tab.key;
           const countDisplay = tab.count !== undefined && !isCountsLoading ? tab.count : null;

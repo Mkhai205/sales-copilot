@@ -76,7 +76,7 @@ export function CreateWorkspaceDialog({ open, onOpenChange }: CreateWorkspaceDia
       router.push(`/${newWorkspace.slug}/conversations`);
     },
     onError: (err: Error) => {
-      setError(err.message || 'Failed to create workspace');
+      setError(err.message || 'Không thể tạo không gian làm việc');
     },
   });
 
@@ -91,7 +91,7 @@ export function CreateWorkspaceDialog({ open, onOpenChange }: CreateWorkspaceDia
 
     if (!validation.success) {
       const firstError = validation.error.issues[0]?.message;
-      setError(firstError || 'Please fill in valid workspace details');
+      setError(firstError || 'Vui lòng điền thông tin không gian làm việc hợp lệ');
       return;
     }
 
@@ -110,9 +110,9 @@ export function CreateWorkspaceDialog({ open, onOpenChange }: CreateWorkspaceDia
               <Building2 className="size-4" />
             </div>
             <div>
-              <DialogTitle className="text-base font-semibold">Create Workspace</DialogTitle>
+              <DialogTitle className="text-base font-semibold">Tạo không gian làm việc</DialogTitle>
               <DialogDescription className="text-xs text-muted-foreground">
-                Set up a new workspace for your team or organization.
+                Thiết lập không gian làm việc mới cho nhóm hoặc tổ chức của bạn.
               </DialogDescription>
             </div>
           </div>
@@ -127,11 +127,11 @@ export function CreateWorkspaceDialog({ open, onOpenChange }: CreateWorkspaceDia
 
           <div className="space-y-1.5">
             <Label htmlFor="workspace-name" className="text-xs font-medium">
-              Workspace Name
+              Tên không gian làm việc
             </Label>
             <Input
               id="workspace-name"
-              placeholder="e.g. Acme Corp"
+              placeholder="Ví dụ: Công ty TNHH ABC"
               value={name}
               onChange={handleNameChange}
               disabled={mutation.isPending}
@@ -142,13 +142,13 @@ export function CreateWorkspaceDialog({ open, onOpenChange }: CreateWorkspaceDia
 
           <div className="space-y-1.5">
             <Label htmlFor="workspace-slug" className="text-xs font-medium">
-              Workspace URL Slug
+              Đường dẫn URL (Slug)
             </Label>
             <div className="flex items-center rounded-md border bg-muted/30 px-2.5 focus-within:ring-1 focus-within:ring-ring">
               <span className="text-xs text-muted-foreground select-none">salescopilot.io/</span>
               <input
                 id="workspace-slug"
-                placeholder="acme-corp"
+                placeholder="cong-ty-abc"
                 value={slug}
                 onChange={handleSlugChange}
                 disabled={mutation.isPending}
@@ -156,7 +156,7 @@ export function CreateWorkspaceDialog({ open, onOpenChange }: CreateWorkspaceDia
               />
             </div>
             <p className="text-[10px] text-muted-foreground">
-              Lowercase letters, numbers, and hyphens only.
+              Chỉ chấp nhận chữ cái thường, số và dấu gạch ngang.
             </p>
           </div>
 
@@ -168,11 +168,11 @@ export function CreateWorkspaceDialog({ open, onOpenChange }: CreateWorkspaceDia
               onClick={() => onOpenChange(false)}
               disabled={mutation.isPending}
             >
-              Cancel
+              Hủy
             </Button>
             <Button type="submit" size="sm" disabled={mutation.isPending || !name.trim()}>
               {mutation.isPending && <Loader2 className="mr-1.5 size-3.5 animate-spin" />}
-              Create Workspace
+              Tạo không gian làm việc
             </Button>
           </DialogFooter>
         </form>

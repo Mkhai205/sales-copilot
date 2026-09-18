@@ -47,7 +47,7 @@ export function InviteMemberDialog({ open, onOpenChange, workspaceId }: InviteMe
     const res = addWorkspaceMemberSchema.safeParse({ email, role });
     if (!res.success) {
       const issue = res.error.issues.find(i => i.path.includes('email'));
-      return issue?.message || 'Invalid email address';
+      return issue?.message || 'Email không hợp lệ';
     }
     return null;
   }, [email, role, touched]);
@@ -85,17 +85,19 @@ export function InviteMemberDialog({ open, onOpenChange, workspaceId }: InviteMe
           <DialogHeader>
             <div className="flex items-center gap-2">
               <UserPlus className="size-4 text-primary" />
-              <DialogTitle className="text-sm font-semibold">Invite Workspace Member</DialogTitle>
+              <DialogTitle className="text-sm font-semibold">
+                Mời thành viên vào không gian làm việc
+              </DialogTitle>
             </div>
             <DialogDescription className="text-xs">
-              Add a colleague to your workspace. An invitation will be sent to their email.
+              Thêm đồng nghiệp vào không gian làm việc. Lời mời sẽ được gửi tới email của họ.
             </DialogDescription>
           </DialogHeader>
 
           <FieldGroup className="gap-4 py-2">
             {/* Email Field */}
             <Field data-invalid={!!emailError}>
-              <FieldLabel htmlFor="invite-email">Email Address</FieldLabel>
+              <FieldLabel htmlFor="invite-email">Địa chỉ Email</FieldLabel>
               <Input
                 id="invite-email"
                 type="email"
@@ -110,47 +112,47 @@ export function InviteMemberDialog({ open, onOpenChange, workspaceId }: InviteMe
                 className="text-xs"
               />
               <FieldDescription>
-                Must be an existing registered user email in the system.
+                Phải là email của người dùng đã đăng ký trong hệ thống.
               </FieldDescription>
               {emailError && <FieldError errors={[{ message: emailError }]} />}
             </Field>
 
             {/* Role Select Field */}
             <Field>
-              <FieldLabel htmlFor="invite-role">Workspace Role</FieldLabel>
+              <FieldLabel htmlFor="invite-role">Vai trò trong Workspace</FieldLabel>
               <Select value={role} onValueChange={(val: AssignableWorkspaceRole) => setRole(val)}>
                 <SelectTrigger id="invite-role" className="w-full text-xs">
-                  <SelectValue placeholder="Select a role" />
+                  <SelectValue placeholder="Chọn vai trò" />
                 </SelectTrigger>
                 <SelectContent position="popper">
                   <SelectItem value={WorkspaceRole.ADMIN} className="text-xs">
                     <div className="flex flex-col">
-                      <span className="font-medium text-foreground">Administrator (Admin)</span>
+                      <span className="font-medium text-foreground">Quản trị viên (Admin)</span>
                       <span className="text-[11px] text-muted-foreground">
-                        Full access to all settings, members, inboxes, and operations.
+                        Toàn quyền truy cập tất cả cài đặt, thành viên, hộp thư và vận hành.
                       </span>
                     </div>
                   </SelectItem>
                   <SelectItem value={WorkspaceRole.AGENT} className="text-xs">
                     <div className="flex flex-col">
-                      <span className="font-medium text-foreground">Support Agent (Agent)</span>
+                      <span className="font-medium text-foreground">Nhân viên hỗ trợ (Agent)</span>
                       <span className="text-[11px] text-muted-foreground">
-                        Manage conversations, canned responses, labels, and contacts.
+                        Quản lý các cuộc hội thoại, câu trả lời mẫu, nhãn và danh bạ.
                       </span>
                     </div>
                   </SelectItem>
                   <SelectItem value={WorkspaceRole.VIEWER} className="text-xs">
                     <div className="flex flex-col">
-                      <span className="font-medium text-foreground">Viewer</span>
+                      <span className="font-medium text-foreground">Người xem (Viewer)</span>
                       <span className="text-[11px] text-muted-foreground">
-                        Read-only access to conversations and customer information.
+                        Quyền chỉ xem các cuộc hội thoại và thông tin khách hàng.
                       </span>
                     </div>
                   </SelectItem>
                 </SelectContent>
               </Select>
               <FieldDescription>
-                Determines what sections and administrative features this user can access.
+                Xác định các mục và quyền quản trị mà người dùng này có thể truy cập.
               </FieldDescription>
             </Field>
           </FieldGroup>
@@ -164,7 +166,7 @@ export function InviteMemberDialog({ open, onOpenChange, workspaceId }: InviteMe
               disabled={isPending}
               className="text-xs"
             >
-              Cancel
+              Hủy
             </Button>
             <Button
               type="submit"
@@ -176,12 +178,12 @@ export function InviteMemberDialog({ open, onOpenChange, workspaceId }: InviteMe
               {isPending ? (
                 <>
                   <Spinner className="size-3.5" data-icon="inline-start" />
-                  Inviting...
+                  Đang mời...
                 </>
               ) : (
                 <>
                   <UserPlus className="size-3.5" data-icon="inline-start" />
-                  Invite Member
+                  Mời thành viên
                 </>
               )}
             </Button>

@@ -16,3 +16,4 @@ export * from './image-lightbox-dialog';
 export * from './message-actions-toolbar';
 export * from './message-image-grid';
 export * from './rich-link-card';
+export * from './conversations-sidebar';

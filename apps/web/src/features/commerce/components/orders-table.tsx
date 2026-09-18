@@ -20,7 +20,6 @@ import {
 import { OrderStatusBadge, PaymentStatusBadge } from './order-status-badge';
 import { OrderStatus, type OrderResponseDto } from '@sales-copilot/shared-contracts';
 import { formatVND } from '@/features/commerce/lib/currency';
-import { useI18n } from '@/lib/i18n';
 import {
   Eye,
   MoreHorizontal,
@@ -67,32 +66,22 @@ export function OrdersTable({
   onCompleteOrder,
   onCancelOrder,
 }: OrdersTableProps) {
-  const { t } = useI18n();
-
   if (isLoading) {
     return (
       <div className="rounded-md border bg-card overflow-hidden shadow-2xs">
         <Table>
           <TableHeader className="bg-muted/40 text-[11px]">
             <TableRow>
-              <TableHead className="w-28">{t('commerce.orders.table.orderId')}</TableHead>
-              <TableHead className="min-w-[160px]">{t('commerce.orders.table.customer')}</TableHead>
-              <TableHead className="w-36">{t('commerce.orders.table.phone')}</TableHead>
-              <TableHead className="w-28">{t('commerce.orders.table.itemsCount')}</TableHead>
-              <TableHead className="w-32 text-right">{t('commerce.orders.table.total')}</TableHead>
-              <TableHead className="w-24 text-center">
-                {t('commerce.orders.table.method')}
-              </TableHead>
-              <TableHead className="w-28 text-center">
-                {t('commerce.orders.table.status')}
-              </TableHead>
-              <TableHead className="w-28 text-center">
-                {t('commerce.orders.table.payment')}
-              </TableHead>
-              <TableHead className="w-36">{t('commerce.orders.table.createdAt')}</TableHead>
-              <TableHead className="w-20 text-right">
-                {t('commerce.orders.table.actions')}
-              </TableHead>
+              <TableHead className="w-28">{'Mã đơn'}</TableHead>
+              <TableHead className="min-w-[160px]">{'Người nhận'}</TableHead>
+              <TableHead className="w-36">{'Điện thoại'}</TableHead>
+              <TableHead className="w-28">{'Sản phẩm'}</TableHead>
+              <TableHead className="w-32 text-right">{'Tổng thanh toán'}</TableHead>
+              <TableHead className="w-24 text-center">{'Phương thức'}</TableHead>
+              <TableHead className="w-28 text-center">{'Trạng thái'}</TableHead>
+              <TableHead className="w-28 text-center">{'Thanh toán'}</TableHead>
+              <TableHead className="w-36">{'Ngày tạo'}</TableHead>
+              <TableHead className="w-20 text-right">{'Thao tác'}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -115,11 +104,9 @@ export function OrdersTable({
     return (
       <div className="flex flex-col items-center justify-center p-12 text-center text-muted-foreground border rounded-lg bg-card/40">
         <ShoppingBag className="size-10 opacity-30 mb-3" />
-        <h3 className="text-sm font-semibold text-foreground">
-          {t('commerce.orders.table.empty')}
-        </h3>
+        <h3 className="text-sm font-semibold text-foreground">{'Không có đơn hàng nào phù hợp'}</h3>
         <p className="text-xs text-muted-foreground mt-1 max-w-sm">
-          {t('commerce.orders.table.emptyDescription')}
+          {'Thử thay đổi bộ lọc hoặc tạo đơn hàng mới'}
         </p>
       </div>
     );
@@ -130,21 +117,21 @@ export function OrdersTable({
       <Table>
         <TableHeader className="bg-muted/40 text-[11px]">
           <TableRow>
-            <TableHead className="w-28">{t('commerce.orders.table.orderId')}</TableHead>
-            <TableHead className="min-w-[160px]">{t('commerce.orders.table.customer')}</TableHead>
-            <TableHead className="w-36">{t('commerce.orders.table.phone')}</TableHead>
-            <TableHead className="w-28">{t('commerce.orders.table.itemsCount')}</TableHead>
-            <TableHead className="w-32 text-right">{t('commerce.orders.table.total')}</TableHead>
-            <TableHead className="w-24 text-center">{t('commerce.orders.table.method')}</TableHead>
-            <TableHead className="w-28 text-center">{t('commerce.orders.table.status')}</TableHead>
-            <TableHead className="w-28 text-center">{t('commerce.orders.table.payment')}</TableHead>
-            <TableHead className="w-36">{t('commerce.orders.table.createdAt')}</TableHead>
-            <TableHead className="w-20 text-right">{t('commerce.orders.table.actions')}</TableHead>
+            <TableHead className="w-28">{'Mã đơn'}</TableHead>
+            <TableHead className="min-w-[160px]">{'Người nhận'}</TableHead>
+            <TableHead className="w-36">{'Điện thoại'}</TableHead>
+            <TableHead className="w-28">{'Sản phẩm'}</TableHead>
+            <TableHead className="w-32 text-right">{'Tổng thanh toán'}</TableHead>
+            <TableHead className="w-24 text-center">{'Phương thức'}</TableHead>
+            <TableHead className="w-28 text-center">{'Trạng thái'}</TableHead>
+            <TableHead className="w-28 text-center">{'Thanh toán'}</TableHead>
+            <TableHead className="w-36">{'Ngày tạo'}</TableHead>
+            <TableHead className="w-20 text-right">{'Thao tác'}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody className="text-xs">
           {orders.map(order => {
-            const customerName = order.shippingAddress?.recipientName || t('common.none');
+            const customerName = order.shippingAddress?.recipientName || 'Không có';
             const phoneNumber = order.shippingAddress?.phoneNumber || '';
             const itemsCount = order.items?.length || 0;
             const firstItemName = order.items?.[0]?.productName || '';
@@ -193,9 +180,7 @@ export function OrdersTable({
                 {/* Items */}
                 <TableCell className="py-2.5">
                   <div className="flex flex-col">
-                    <span className="font-medium">
-                      {t('commerce.history.itemsCount', { count: itemsCount })}
-                    </span>
+                    <span className="font-medium">{`${itemsCount} sản phẩm`}</span>
                     {firstItemName && (
                       <span className="text-[11px] text-muted-foreground line-clamp-1">
                         {firstItemName}
@@ -234,7 +219,7 @@ export function OrdersTable({
                         className="cursor-pointer text-muted-foreground hover:text-foreground"
                       >
                         <MoreHorizontal className="size-4" />
-                        <span className="sr-only">{t('common.actions')}</span>
+                        <span className="sr-only">{'Hành động'}</span>
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-48">
@@ -243,7 +228,7 @@ export function OrdersTable({
                         className="gap-2 cursor-pointer"
                       >
                         <Eye className="size-3.5 text-muted-foreground" />
-                        <span>{t('commerce.orders.actions.viewDetails')}</span>
+                        <span>{'Xem chi tiết'}</span>
                       </DropdownMenuItem>
 
                       <DropdownMenuItem
@@ -251,7 +236,7 @@ export function OrdersTable({
                         className="gap-2 cursor-pointer"
                       >
                         <Printer className="size-3.5 text-muted-foreground" />
-                        <span>{t('commerce.orders.actions.printK80')}</span>
+                        <span>{'In phiếu gửi (K80)'}</span>
                       </DropdownMenuItem>
 
                       <DropdownMenuItem
@@ -259,7 +244,7 @@ export function OrdersTable({
                         className="gap-2 cursor-pointer"
                       >
                         <Printer className="size-3.5 text-muted-foreground" />
-                        <span>{t('commerce.orders.actions.printK58')}</span>
+                        <span>{'In hóa đơn (K58)'}</span>
                       </DropdownMenuItem>
 
                       {order.conversationId && (
@@ -268,7 +253,7 @@ export function OrdersTable({
                             href={`/${workspaceSlug}/inbox?conversationId=${order.conversationId}`}
                           >
                             <MessageSquare className="size-3.5 text-muted-foreground" />
-                            <span>{t('commerce.orders.actions.openChat')}</span>
+                            <span>{'Xem hội thoại'}</span>
                           </Link>
                         </DropdownMenuItem>
                       )}
@@ -281,7 +266,7 @@ export function OrdersTable({
                           className="gap-2 text-emerald-600 focus:text-emerald-600 cursor-pointer"
                         >
                           <CheckCircle2 className="size-3.5" />
-                          <span>{t('commerce.orders.actions.complete')}</span>
+                          <span>{'Hoàn tất đơn'}</span>
                         </DropdownMenuItem>
                       )}
 
@@ -291,7 +276,7 @@ export function OrdersTable({
                           className="gap-2 text-destructive focus:text-destructive cursor-pointer"
                         >
                           <XCircle className="size-3.5" />
-                          <span>{t('commerce.orders.actions.cancel')}</span>
+                          <span>{'Hủy đơn hàng'}</span>
                         </DropdownMenuItem>
                       )}
                     </DropdownMenuContent>

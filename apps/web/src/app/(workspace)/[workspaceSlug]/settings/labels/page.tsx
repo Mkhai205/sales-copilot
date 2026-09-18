@@ -14,13 +14,14 @@ export default function LabelsSettingsPage() {
 
   return (
     <SettingsGuard workspaceSlug={workspaceSlug} segment="labels">
-      <div className="flex flex-col gap-6 max-w-5xl">
+      <div className="flex flex-col gap-6 w-full">
         {/* Page Header */}
-        <div>
-          <h1 className="text-xl font-semibold tracking-tight text-foreground">Labels</h1>
+        <div className="pb-3 border-b border-border/70">
+          <h1 className="text-xl font-bold tracking-tight text-foreground">{'Nhãn hội thoại'}</h1>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Categorize and organize conversations with custom colored tags and sidebar quick
-            filters.
+            {
+              'Phân loại và tổ chức các cuộc hội thoại với nhãn màu tùy chỉnh để lọc nhanh trên thanh điều hướng.'
+            }
           </p>
         </div>
 

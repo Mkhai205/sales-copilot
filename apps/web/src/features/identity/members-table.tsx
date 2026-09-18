@@ -148,7 +148,7 @@ export function MembersTable({ workspaceId, currentUserId, currentUserRole }: Me
             <Input
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Search by name or email..."
+              placeholder="Tìm theo tên hoặc email..."
               className="h-8 pl-8 pr-8 text-xs bg-card/40"
             />
             {searchQuery && (
@@ -166,24 +166,24 @@ export function MembersTable({ workspaceId, currentUserId, currentUserRole }: Me
 
           {/* Role Filter */}
           <Select value={roleFilter} onValueChange={setRoleFilter}>
-            <SelectTrigger className="h-8 w-32 text-xs bg-card/40">
-              <SelectValue placeholder="All Roles" />
+            <SelectTrigger className="h-8 w-36 text-xs bg-card/40">
+              <SelectValue placeholder="Tất cả vai trò" />
             </SelectTrigger>
             <SelectContent position="popper">
               <SelectItem value="ALL" className="text-xs">
-                All Roles
+                Tất cả vai trò
               </SelectItem>
               <SelectItem value={WorkspaceRole.OWNER} className="text-xs">
-                Owners
+                Chủ sở hữu
               </SelectItem>
               <SelectItem value={WorkspaceRole.ADMIN} className="text-xs">
-                Admins
+                Quản trị viên
               </SelectItem>
               <SelectItem value={WorkspaceRole.AGENT} className="text-xs">
-                Agents
+                Nhân viên
               </SelectItem>
               <SelectItem value={WorkspaceRole.VIEWER} className="text-xs">
-                Viewers
+                Người xem
               </SelectItem>
             </SelectContent>
           </Select>
@@ -194,7 +194,7 @@ export function MembersTable({ workspaceId, currentUserId, currentUserRole }: Me
               variant="secondary"
               className="px-2 py-0.5 text-[11px] font-normal text-muted-foreground"
             >
-              {filteredMembers.length} {filteredMembers.length === 1 ? 'member' : 'members'}
+              {filteredMembers.length} thành viên
             </Badge>
           )}
         </div>
@@ -207,7 +207,7 @@ export function MembersTable({ workspaceId, currentUserId, currentUserRole }: Me
             className="h-8 gap-1.5 text-xs font-medium"
           >
             <UserPlus className="size-3.5" data-icon="inline-start" />
-            Invite Member
+            Mời thành viên
           </Button>
         )}
       </div>
@@ -217,11 +217,13 @@ export function MembersTable({ workspaceId, currentUserId, currentUserRole }: Me
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/30 hover:bg-muted/30">
-              <TableHead className="w-[300px] text-xs font-semibold">User</TableHead>
-              <TableHead className="text-xs font-semibold">Role</TableHead>
-              <TableHead className="text-xs font-semibold">Joined</TableHead>
+              <TableHead className="w-[300px] text-xs font-semibold">Thành viên</TableHead>
+              <TableHead className="text-xs font-semibold">Vai trò</TableHead>
+              <TableHead className="text-xs font-semibold">Ngày tham gia</TableHead>
               {canManage && (
-                <TableHead className="w-[80px] text-right text-xs font-semibold">Actions</TableHead>
+                <TableHead className="w-[80px] text-right text-xs font-semibold">
+                  Thao tác
+                </TableHead>
               )}
             </TableRow>
           </TableHeader>
@@ -260,7 +262,7 @@ export function MembersTable({ workspaceId, currentUserId, currentUserRole }: Me
                 >
                   <div className="flex flex-col items-center justify-center gap-2">
                     <UserCheck className="size-6 text-muted-foreground/50" />
-                    <span>No members found matching your search.</span>
+                    <span>Không tìm thấy thành viên nào phù hợp với tìm kiếm.</span>
                   </div>
                 </TableCell>
               </TableRow>
@@ -271,7 +273,7 @@ export function MembersTable({ workspaceId, currentUserId, currentUserRole }: Me
                 const canEditThisMember = canManage && !isOwner && !isSelf;
 
                 const joinedDate = member.createdAt
-                  ? new Date(member.createdAt).toLocaleDateString(undefined, {
+                  ? new Date(member.createdAt).toLocaleDateString('vi-VN', {
                       year: 'numeric',
                       month: 'short',
                       day: 'numeric',
@@ -286,7 +288,7 @@ export function MembersTable({ workspaceId, currentUserId, currentUserRole }: Me
                         <Avatar className="size-8 border border-border/60">
                           <AvatarImage
                             src={member.user?.avatarUrl || undefined}
-                            alt={member.user?.name || 'User'}
+                            alt={member.user?.name || 'Thành viên'}
                           />
                           <AvatarFallback className="text-xs font-medium">
                             {getInitials(member.user?.name, member.user?.email)}
@@ -295,14 +297,14 @@ export function MembersTable({ workspaceId, currentUserId, currentUserRole }: Me
                         <div className="flex flex-col min-w-0">
                           <div className="flex items-center gap-1.5">
                             <span className="truncate text-xs font-semibold text-foreground">
-                              {member.user?.name || 'Unnamed User'}
+                              {member.user?.name || 'Chưa đặt tên'}
                             </span>
                             {isSelf && (
                               <Badge
                                 variant="secondary"
                                 className="h-4 px-1 text-[9px] font-medium"
                               >
-                                You
+                                Bạn
                               </Badge>
                             )}
                           </div>
@@ -321,7 +323,7 @@ export function MembersTable({ workspaceId, currentUserId, currentUserRole }: Me
                           className="gap-1 border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400 px-2 py-0.5 text-xs font-semibold"
                         >
                           <Crown className="size-3" />
-                          Owner
+                          Chủ sở hữu
                         </Badge>
                       ) : canEditThisMember ? (
                         <Select
@@ -331,26 +333,26 @@ export function MembersTable({ workspaceId, currentUserId, currentUserRole }: Me
                           }
                           disabled={isUpdatingRole}
                         >
-                          <SelectTrigger className="h-7 w-28 text-xs bg-background/50">
+                          <SelectTrigger className="h-7 w-32 text-xs bg-background/50">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent position="popper">
                             <SelectItem value={WorkspaceRole.ADMIN} className="text-xs">
                               <span className="flex items-center gap-1.5">
                                 <ShieldCheck className="size-3 text-primary" />
-                                Admin
+                                Quản trị viên
                               </span>
                             </SelectItem>
                             <SelectItem value={WorkspaceRole.AGENT} className="text-xs">
                               <span className="flex items-center gap-1.5">
                                 <UserCheck className="size-3 text-emerald-500" />
-                                Agent
+                                Nhân viên
                               </span>
                             </SelectItem>
                             <SelectItem value={WorkspaceRole.VIEWER} className="text-xs">
                               <span className="flex items-center gap-1.5">
                                 <Eye className="size-3 text-muted-foreground" />
-                                Viewer
+                                Người xem
                               </span>
                             </SelectItem>
                           </SelectContent>
@@ -361,7 +363,13 @@ export function MembersTable({ workspaceId, currentUserId, currentUserRole }: Me
                           className="gap-1 px-2 py-0.5 text-xs font-medium"
                         >
                           {getRoleIcon(member.role)}
-                          {member.role}
+                          {member.role === WorkspaceRole.ADMIN
+                            ? 'Quản trị viên'
+                            : member.role === WorkspaceRole.AGENT
+                              ? 'Nhân viên'
+                              : member.role === WorkspaceRole.VIEWER
+                                ? 'Người xem'
+                                : member.role}
                         </Badge>
                       )}
                     </TableCell>
@@ -387,7 +395,7 @@ export function MembersTable({ workspaceId, currentUserId, currentUserRole }: Me
                               </span>
                             </TooltipTrigger>
                             <TooltipContent side="left" className="text-xs">
-                              Workspace Owner cannot be removed
+                              Không thể xóa Chủ sở hữu workspace
                             </TooltipContent>
                           </Tooltip>
                         ) : isSelf ? (
@@ -405,7 +413,7 @@ export function MembersTable({ workspaceId, currentUserId, currentUserRole }: Me
                               </span>
                             </TooltipTrigger>
                             <TooltipContent side="left" className="text-xs">
-                              You cannot remove your own account
+                              Bạn không thể tự xóa tài khoản của chính mình
                             </TooltipContent>
                           </Tooltip>
                         ) : (
@@ -414,7 +422,7 @@ export function MembersTable({ workspaceId, currentUserId, currentUserRole }: Me
                             size="icon-sm"
                             onClick={() => setMemberToRemove(member)}
                             className="size-7 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
-                            title="Remove member"
+                            title="Xóa thành viên"
                           >
                             <Trash2 className="size-3.5" />
                           </Button>
@@ -449,20 +457,20 @@ export function MembersTable({ workspaceId, currentUserId, currentUserRole }: Me
               <AlertTriangle className="size-4" />
             </AlertDialogMedia>
             <AlertDialogTitle className="text-sm font-semibold">
-              Remove Workspace Member?
+              Xóa thành viên khỏi workspace?
             </AlertDialogTitle>
             <AlertDialogDescription className="text-xs">
-              Are you sure you want to remove{' '}
+              Bạn có chắc chắn muốn xóa{' '}
               <strong className="text-foreground font-semibold">
                 {memberToRemove?.user?.name || memberToRemove?.user?.email}
               </strong>{' '}
-              ({memberToRemove?.user?.email}) from this workspace? They will immediately lose access
-              to all conversations, inboxes, and settings.
+              ({memberToRemove?.user?.email}) khỏi workspace này? Họ sẽ ngay lập tức mất quyền truy
+              cập vào tất cả cuộc hội thoại, hộp thư và cài đặt.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isRemovingMember} className="text-xs">
-              Cancel
+              Hủy
             </AlertDialogCancel>
             <Button
               variant="destructive"
@@ -474,10 +482,10 @@ export function MembersTable({ workspaceId, currentUserId, currentUserRole }: Me
               {isRemovingMember ? (
                 <>
                   <Spinner className="size-3.5" data-icon="inline-start" />
-                  Removing...
+                  Đang xóa...
                 </>
               ) : (
-                'Remove Member'
+                'Xóa thành viên'
               )}
             </Button>
           </AlertDialogFooter>

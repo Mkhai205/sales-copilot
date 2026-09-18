@@ -66,7 +66,7 @@ export function InboxDetailLayout({
   const isConnected = inbox.channel?.isConnected ?? true;
 
   return (
-    <div className="flex flex-col gap-6 max-w-5xl pb-12">
+    <div className="flex flex-col gap-6 w-full pb-12">
       {/* Top Header & Navigation */}
       <div className="flex flex-col gap-4 border-b border-border pb-5">
         <Button

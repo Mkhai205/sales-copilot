@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 import { LoginForm } from '@/features/auth';
 
 export const metadata: Metadata = {
-  title: 'Sign In | Sales Copilot',
-  description: 'Sign in to access your omnichannel conversation dashboard and AI copilot',
+  title: 'Đăng nhập | Sales Copilot',
+  description: 'Đăng nhập để truy cập hộp thư đa kênh và trợ lý hội thoại AI Sales Copilot',
 };
 
 export default function LoginPage() {

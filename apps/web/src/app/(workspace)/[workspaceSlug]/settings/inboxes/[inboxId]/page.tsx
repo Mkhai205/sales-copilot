@@ -47,7 +47,7 @@ function InboxDetailPageContent() {
   return (
     <SettingsGuard workspaceSlug={workspaceSlug} segment="inboxes">
       {isLoading ? (
-        <div className="flex flex-col gap-6 max-w-5xl">
+        <div className="flex flex-col gap-6 w-full">
           <div className="flex items-center gap-3">
             <Skeleton className="size-12 rounded-xl" />
             <div className="flex flex-col gap-2 flex-1">

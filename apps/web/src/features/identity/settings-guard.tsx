@@ -18,7 +18,7 @@ export function SettingsGuard({ workspaceSlug, segment, children }: SettingsGuar
 
   if (isLoading) {
     return (
-      <div className="flex flex-col gap-6 p-6 max-w-4xl">
+      <div className="flex flex-col gap-6 w-full">
         <div className="flex flex-col gap-2">
           <Skeleton className="h-7 w-48" />
           <Skeleton className="h-4 w-96" />

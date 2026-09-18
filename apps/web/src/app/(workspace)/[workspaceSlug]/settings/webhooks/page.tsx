@@ -14,13 +14,14 @@ export default function WebhooksSettingsPage() {
 
   return (
     <SettingsGuard workspaceSlug={workspaceSlug} segment="webhooks">
-      <div className="flex flex-col gap-6 max-w-5xl">
+      <div className="flex flex-col gap-6 w-full">
         {/* Page Header */}
-        <div>
-          <h1 className="text-xl font-semibold tracking-tight text-foreground">Webhooks</h1>
+        <div className="pb-3 border-b border-border/70">
+          <h1 className="text-xl font-bold tracking-tight text-foreground">{'Webhooks'}</h1>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Configure outbound HTTP webhook subscriptions to receive real-time notifications for
-            conversations, messages, and contact updates.
+            {
+              'Cấu hình Webhook gửi dữ liệu HTTP thời gian thực về hệ thống bên ngoài khi có sự kiện phát sinh.'
+            }
           </p>
         </div>
 

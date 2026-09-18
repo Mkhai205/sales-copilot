@@ -11,7 +11,7 @@ import { InventorySummaryCards } from './inventory-summary-cards';
 import { InventoryVariantsTable } from './inventory-variants-table';
 import { StockAdjustmentDialog, TargetVariantForAdjustment } from './stock-adjustment-dialog';
 import { StockLedgerDrawer } from './stock-ledger-drawer';
-import { ChevronLeft, ChevronRight, RefreshCw, Search, X } from 'lucide-react';
+import { Boxes, ChevronLeft, ChevronRight, RefreshCw, Search, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface InventoryViewProps {
@@ -118,10 +118,13 @@ export function InventoryView({ workspaceSlug }: InventoryViewProps) {
   return (
     <div className="flex flex-col flex-1 h-full overflow-hidden p-6 gap-5">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-border/70">
         <div className="flex flex-col">
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold tracking-tight">Quản Trị Tồn Kho & Sổ Kho</h1>
+            <h1 className="text-xl font-bold tracking-tight text-foreground flex items-center gap-2">
+              <Boxes className="size-5 text-primary" />
+              <span>Quản Trị Tồn Kho & Sổ Kho</span>
+            </h1>
             <Badge variant="outline" className="text-xs px-2 py-0.5 border-primary/30 text-primary">
               Kho trung tâm
             </Badge>

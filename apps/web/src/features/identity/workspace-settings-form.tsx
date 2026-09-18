@@ -26,10 +26,7 @@ interface WorkspaceSettingsFormProps {
   workspace: WorkspaceDto;
 }
 
-import { useI18n } from '@/lib/i18n';
-
 export function WorkspaceSettingsForm({ workspace }: WorkspaceSettingsFormProps) {
-  const { t } = useI18n();
   const [name, setName] = React.useState(workspace.name);
   const [timezone, setTimezone] = React.useState(workspace.timezone || 'UTC');
   const [defaultLanguage, setDefaultLanguage] = React.useState(workspace.defaultLanguage || 'en');
@@ -48,16 +45,16 @@ export function WorkspaceSettingsForm({ workspace }: WorkspaceSettingsFormProps)
   const trimmedName = name.trim();
   const nameError = React.useMemo(() => {
     if (trimmedName.length === 0) {
-      return t('settings.workspace.nameRequired');
+      return 'Tên không gian làm việc là bắt buộc';
     }
     if (trimmedName.length < 2) {
-      return t('settings.workspace.nameMinLength');
+      return 'Tên không gian làm việc phải có ít nhất 2 ký tự';
     }
     if (trimmedName.length > 100) {
-      return t('settings.workspace.nameMaxLength');
+      return 'Tên không gian làm việc không được vượt quá 100 ký tự';
     }
     return null;
-  }, [trimmedName, t]);
+  }, [trimmedName]);
 
   const isValid = !nameError;
 
@@ -101,14 +98,14 @@ export function WorkspaceSettingsForm({ workspace }: WorkspaceSettingsFormProps)
   }, [workspace.createdAt]);
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-8">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-6 w-full">
       {/* Page Header */}
-      <div>
-        <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          {t('settings.workspace.title')}
+      <div className="pb-3 border-b border-border/70">
+        <h1 className="text-xl font-bold tracking-tight text-foreground">
+          {'Cài đặt Không gian làm việc'}
         </h1>
         <p className="text-xs text-muted-foreground mt-0.5">
-          {t('settings.workspace.description')}
+          {'Quản lý thông tin chung, múi giờ và ngôn ngữ mặc định của không gian làm việc.'}
         </p>
       </div>
 
@@ -118,18 +115,18 @@ export function WorkspaceSettingsForm({ workspace }: WorkspaceSettingsFormProps)
           <div className="flex items-center gap-2">
             <Building2 className="size-4 text-primary" />
             <CardTitle className="text-sm font-semibold">
-              {t('settings.workspace.profileTitle')}
+              {'Thông tin Không gian làm việc'}
             </CardTitle>
           </div>
           <CardDescription className="text-xs">
-            {t('settings.workspace.profileDesc')}
+            {'Thông tin chung về tổ chức và hiển thị bảng điều khiển của bạn.'}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <FieldGroup className="gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Workspace Name */}
             <Field data-invalid={!!nameError}>
-              <FieldLabel htmlFor="workspace-name">{t('settings.workspace.nameLabel')}</FieldLabel>
+              <FieldLabel htmlFor="workspace-name">{'Tên không gian làm việc'}</FieldLabel>
               <Input
                 id="workspace-name"
                 value={name}
@@ -137,27 +134,33 @@ export function WorkspaceSettingsForm({ workspace }: WorkspaceSettingsFormProps)
                 placeholder="e.g. Acme Corporation"
                 maxLength={100}
                 aria-invalid={!!nameError}
-                className="max-w-md text-xs"
+                className="w-full text-xs"
               />
-              <FieldDescription>{t('settings.workspace.nameHelp')}</FieldDescription>
+              <FieldDescription>
+                {
+                  'Tên hiển thị của không gian làm việc hiển thị cho nhân viên và trên các trao đổi ra ngoài.'
+                }
+              </FieldDescription>
               {nameError && <FieldError errors={[{ message: nameError }]} />}
             </Field>
 
             {/* Workspace Slug (Readonly) */}
             <Field>
-              <FieldLabel htmlFor="workspace-slug">{t('settings.workspace.slugLabel')}</FieldLabel>
-              <div className="flex max-w-md items-center gap-2">
+              <FieldLabel htmlFor="workspace-slug">{'Định danh (Slug)'}</FieldLabel>
+              <div className="flex w-full items-center gap-2">
                 <Input
                   id="workspace-slug"
                   value={workspace.slug}
                   disabled
                   readOnly
-                  className="text-xs font-mono bg-muted/50 cursor-not-allowed"
+                  className="w-full text-xs font-mono bg-muted/50 cursor-not-allowed"
                 />
               </div>
-              <FieldDescription>{t('settings.workspace.slugHelp')}</FieldDescription>
+              <FieldDescription>
+                {'Định danh URL duy nhất để truy cập bảng điều khiển không gian làm việc.'}
+              </FieldDescription>
             </Field>
-          </FieldGroup>
+          </div>
         </CardContent>
       </Card>
 
@@ -166,24 +169,22 @@ export function WorkspaceSettingsForm({ workspace }: WorkspaceSettingsFormProps)
         <CardHeader className="pb-4">
           <div className="flex items-center gap-2">
             <Globe className="size-4 text-primary" />
-            <CardTitle className="text-sm font-semibold">
-              {t('settings.workspace.regionalTitle')}
-            </CardTitle>
+            <CardTitle className="text-sm font-semibold">{'Khu vực & Ngôn ngữ'}</CardTitle>
           </div>
           <CardDescription className="text-xs">
-            {t('settings.workspace.regionalDesc')}
+            {
+              'Thiết lập múi giờ mặc định cho mốc thời gian, quy tắc tự động và tùy chọn ngôn ngữ giao diện.'
+            }
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <FieldGroup className="gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Timezone */}
             <Field>
-              <FieldLabel htmlFor="workspace-timezone">
-                {t('settings.workspace.timezoneLabel')}
-              </FieldLabel>
+              <FieldLabel htmlFor="workspace-timezone">{'Múi giờ'}</FieldLabel>
               <Select value={timezone} onValueChange={setTimezone}>
-                <SelectTrigger id="workspace-timezone" className="w-full max-w-md text-xs">
-                  <SelectValue placeholder={t('settings.workspace.selectTimezone')} />
+                <SelectTrigger id="workspace-timezone" className="w-full text-xs">
+                  <SelectValue placeholder={'Chọn múi giờ'} />
                 </SelectTrigger>
                 <SelectContent position="popper" className="max-h-72">
                   {TIMEZONE_OPTIONS.map(group => (
@@ -200,17 +201,17 @@ export function WorkspaceSettingsForm({ workspace }: WorkspaceSettingsFormProps)
                   ))}
                 </SelectContent>
               </Select>
-              <FieldDescription>{t('settings.workspace.timezoneHelp')}</FieldDescription>
+              <FieldDescription>
+                {'Dùng cho lên lịch quy tắc tự động, giờ làm việc và báo cáo thống kê.'}
+              </FieldDescription>
             </Field>
 
             {/* Default Language */}
             <Field>
-              <FieldLabel htmlFor="workspace-language">
-                {t('settings.workspace.languageLabel')}
-              </FieldLabel>
+              <FieldLabel htmlFor="workspace-language">{'Ngôn ngữ mặc định'}</FieldLabel>
               <Select value={defaultLanguage} onValueChange={setDefaultLanguage}>
-                <SelectTrigger id="workspace-language" className="w-full max-w-md text-xs">
-                  <SelectValue placeholder={t('settings.workspace.selectLanguage')} />
+                <SelectTrigger id="workspace-language" className="w-full text-xs">
+                  <SelectValue placeholder={'Chọn ngôn ngữ'} />
                 </SelectTrigger>
                 <SelectContent position="popper" className="max-h-72">
                   <SelectGroup>
@@ -222,9 +223,11 @@ export function WorkspaceSettingsForm({ workspace }: WorkspaceSettingsFormProps)
                   </SelectGroup>
                 </SelectContent>
               </Select>
-              <FieldDescription>{t('settings.workspace.languageHelp')}</FieldDescription>
+              <FieldDescription>
+                {'Ngôn ngữ chính sử dụng cho thông báo hệ thống và mẫu gửi tin.'}
+              </FieldDescription>
             </Field>
-          </FieldGroup>
+          </div>
         </CardContent>
       </Card>
 
@@ -235,7 +238,7 @@ export function WorkspaceSettingsForm({ workspace }: WorkspaceSettingsFormProps)
             <div className="flex items-center gap-2">
               <Sparkles className="size-4 text-amber-500" />
               <CardTitle className="text-sm font-semibold">
-                {t('settings.workspace.subscriptionTitle')}
+                {'Gói cước & Chi tiết Không gian làm việc'}
               </CardTitle>
             </div>
             <Badge variant="outline" className="px-2 py-0.5 text-xs font-semibold uppercase">
@@ -243,14 +246,14 @@ export function WorkspaceSettingsForm({ workspace }: WorkspaceSettingsFormProps)
             </Badge>
           </div>
           <CardDescription className="text-xs">
-            {t('settings.workspace.subscriptionDesc')}
+            {'Định danh hệ thống và siêu dữ liệu gắn với đơn vị thuê này.'}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 text-xs">
             <div className="flex flex-col gap-1 rounded-lg border border-border/50 bg-background/50 p-3">
               <span className="text-[11px] font-medium text-muted-foreground">
-                {t('settings.workspace.workspaceId')}
+                {'Mã Không gian làm việc'}
               </span>
               <div className="flex items-center justify-between gap-2">
                 <code className="truncate font-mono text-[11px] text-foreground">
@@ -262,7 +265,7 @@ export function WorkspaceSettingsForm({ workspace }: WorkspaceSettingsFormProps)
                   size="sm"
                   onClick={handleCopyId}
                   className="size-6 p-0 hover:bg-muted"
-                  title={t('settings.workspace.copyWorkspaceId')}
+                  title={'Sao chép mã'}
                 >
                   {copiedId ? (
                     <Check className="size-3 text-green-500" />
@@ -274,9 +277,7 @@ export function WorkspaceSettingsForm({ workspace }: WorkspaceSettingsFormProps)
             </div>
 
             <div className="flex flex-col gap-1 rounded-lg border border-border/50 bg-background/50 p-3">
-              <span className="text-[11px] font-medium text-muted-foreground">
-                {t('settings.workspace.createdOn')}
-              </span>
+              <span className="text-[11px] font-medium text-muted-foreground">{'Ngày tạo'}</span>
               <div className="flex items-center gap-2 text-foreground font-medium">
                 <Calendar className="size-3.5 text-muted-foreground" />
                 <span>{formattedCreatedAt}</span>
@@ -299,7 +300,7 @@ export function WorkspaceSettingsForm({ workspace }: WorkspaceSettingsFormProps)
           className="text-xs"
         >
           <RotateCcw className="size-3.5" data-icon="inline-start" />
-          {t('common.cancel')}
+          {'Hủy'}
         </Button>
 
         <Button
@@ -312,12 +313,12 @@ export function WorkspaceSettingsForm({ workspace }: WorkspaceSettingsFormProps)
           {isPending ? (
             <>
               <Spinner className="size-3.5" data-icon="inline-start" />
-              {t('common.saving')}
+              {'Đang lưu...'}
             </>
           ) : (
             <>
               <Save className="size-3.5" data-icon="inline-start" />
-              {t('settings.workspace.saveChanges')}
+              {'Lưu thay đổi'}
             </>
           )}
         </Button>

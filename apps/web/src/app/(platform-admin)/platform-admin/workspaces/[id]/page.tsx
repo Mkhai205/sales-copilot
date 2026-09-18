@@ -21,10 +21,8 @@ import {
   SuspendWorkspaceDialog,
 } from '@/features/platform-admin';
 import type { PlatformWorkspaceListItemDto } from '@sales-copilot/shared-contracts';
-import { useI18n } from '@/lib/i18n';
 
 export default function WorkspaceDetailPage() {
-  const { t } = useI18n();
   const params = useParams();
   const router = useRouter();
   const id = params?.id as string;
@@ -72,20 +70,18 @@ export default function WorkspaceDetailPage() {
             <BreadcrumbList>
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
-                  <Link href="/platform-admin">{t('auth.superAdmin')}</Link>
+                  <Link href="/platform-admin">{'Quản trị cấp cao'}</Link>
                 </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
-                  <Link href="/platform-admin/workspaces">{t('admin.nav.workspaces')}</Link>
+                  <Link href="/platform-admin/workspaces">{'Quản trị Workspaces'}</Link>
                 </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <BreadcrumbPage>
-                  {isLoading ? t('common.loading') : workspace?.name || id}
-                </BreadcrumbPage>
+                <BreadcrumbPage>{isLoading ? 'Đang tải...' : workspace?.name || id}</BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
@@ -98,7 +94,7 @@ export default function WorkspaceDetailPage() {
               className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground gap-1.5"
             >
               <ArrowLeft className="size-3.5" />
-              <span>{t('admin.workspaces.backToList')}</span>
+              <span>{'Quay lại danh sách'}</span>
             </Button>
           </div>
         </div>
@@ -114,7 +110,7 @@ export default function WorkspaceDetailPage() {
               className="h-8 text-xs gap-1.5"
             >
               <RefreshCw className={`size-3.5 ${isRefetching ? 'animate-spin' : ''}`} />
-              <span>{t('common.refresh')}</span>
+              <span>{'Làm mới'}</span>
             </Button>
 
             <Button
@@ -124,7 +120,7 @@ export default function WorkspaceDetailPage() {
               className="h-8 text-xs gap-1.5"
             >
               <Sliders className="size-3.5 text-primary" />
-              <span>{t('admin.workspaces.changePlanQuotas')}</span>
+              <span>{'Đổi gói & Quotas'}</span>
             </Button>
 
             <Button
@@ -136,12 +132,12 @@ export default function WorkspaceDetailPage() {
               {workspace.isSuspended ? (
                 <>
                   <ShieldCheck className="size-3.5 text-emerald-600" />
-                  <span>{t('admin.workspaces.reactivateShop')}</span>
+                  <span>{'Kích hoạt lại'}</span>
                 </>
               ) : (
                 <>
                   <ShieldBan className="size-3.5" />
-                  <span>{t('admin.workspaces.suspendShop')}</span>
+                  <span>{'Tạm khóa'}</span>
                 </>
               )}
             </Button>
@@ -163,9 +159,7 @@ export default function WorkspaceDetailPage() {
         </div>
       ) : isError ? (
         <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-6 text-center text-xs text-destructive">
-          {t('admin.workspaces.cannotLoadWorkspace', {
-            error: error?.message || t('common.notFound'),
-          })}
+          {`Không thể tải thông tin workspace: ${error?.message || 'Không tìm thấy'}`}
         </div>
       ) : workspace ? (
         <WorkspaceDetailView workspace={workspace} />

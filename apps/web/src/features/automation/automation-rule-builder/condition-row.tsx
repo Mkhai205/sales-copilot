@@ -101,9 +101,9 @@ export function ConditionRow({
               : 'border-muted-foreground/30 text-muted-foreground'
           }`}
         >
-          {index === 0 ? 'IF' : 'AND'}
+          {index === 0 ? 'NẾU' : 'VÀ'}
         </Badge>
-        <span className="text-xs text-muted-foreground sm:hidden">Condition #{index + 1}</span>
+        <span className="text-xs text-muted-foreground sm:hidden">Điều kiện #{index + 1}</span>
       </div>
 
       {/* Grid of inputs */}
@@ -111,7 +111,7 @@ export function ConditionRow({
         {/* 1. Attribute Selector */}
         <Select value={condition.attribute} onValueChange={handleAttributeChange}>
           <SelectTrigger className="h-8 w-full bg-background/50 text-xs">
-            <SelectValue placeholder="Select attribute" />
+            <SelectValue placeholder="Chọn thuộc tính" />
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>
@@ -127,7 +127,7 @@ export function ConditionRow({
         {/* 2. Operator Selector */}
         <Select value={condition.operator} onValueChange={handleOperatorChange}>
           <SelectTrigger className="h-8 w-full bg-background/50 text-xs">
-            <SelectValue placeholder="Select operator" />
+            <SelectValue placeholder="Chọn toán tử" />
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>
@@ -144,12 +144,12 @@ export function ConditionRow({
         <div className="w-full">
           {!currentOperatorMeta.requiresValue ? (
             <div className="flex h-8 items-center rounded-md border border-dashed border-border/50 bg-muted/20 px-3 text-xs italic text-muted-foreground">
-              (No value required)
+              (Không yêu cầu giá trị)
             </div>
           ) : selectedAttrMeta.dataType === 'status' ? (
             <Select value={rawValue} onValueChange={handleSingleValueChange}>
               <SelectTrigger className="h-8 w-full bg-background/50 text-xs">
-                <SelectValue placeholder="Choose status" />
+                <SelectValue placeholder="Chọn trạng thái" />
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
@@ -164,7 +164,7 @@ export function ConditionRow({
           ) : selectedAttrMeta.dataType === 'priority' ? (
             <Select value={rawValue} onValueChange={handleSingleValueChange}>
               <SelectTrigger className="h-8 w-full bg-background/50 text-xs">
-                <SelectValue placeholder="Choose priority" />
+                <SelectValue placeholder="Chọn độ ưu tiên" />
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
@@ -179,7 +179,7 @@ export function ConditionRow({
           ) : selectedAttrMeta.dataType === 'sender_type' ? (
             <Select value={rawValue} onValueChange={handleSingleValueChange}>
               <SelectTrigger className="h-8 w-full bg-background/50 text-xs">
-                <SelectValue placeholder="Choose sender" />
+                <SelectValue placeholder="Chọn người gửi" />
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
@@ -194,7 +194,7 @@ export function ConditionRow({
           ) : selectedAttrMeta.dataType === 'inbox' ? (
             <Select value={rawValue} onValueChange={handleSingleValueChange}>
               <SelectTrigger className="h-8 w-full bg-background/50 text-xs">
-                <SelectValue placeholder="Choose inbox" />
+                <SelectValue placeholder="Chọn hộp thư" />
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
@@ -206,7 +206,7 @@ export function ConditionRow({
                     ))
                   ) : (
                     <SelectItem value="__none__" disabled className="text-xs">
-                      No inboxes found
+                      Không tìm thấy hộp thư
                     </SelectItem>
                   )}
                 </SelectGroup>
@@ -215,7 +215,7 @@ export function ConditionRow({
           ) : selectedAttrMeta.dataType === 'team' ? (
             <Select value={rawValue} onValueChange={handleSingleValueChange}>
               <SelectTrigger className="h-8 w-full bg-background/50 text-xs">
-                <SelectValue placeholder="Choose team" />
+                <SelectValue placeholder="Chọn nhóm" />
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
@@ -227,7 +227,7 @@ export function ConditionRow({
                     ))
                   ) : (
                     <SelectItem value="__none__" disabled className="text-xs">
-                      No teams found
+                      Không tìm thấy nhóm
                     </SelectItem>
                   )}
                 </SelectGroup>
@@ -236,7 +236,7 @@ export function ConditionRow({
           ) : selectedAttrMeta.dataType === 'agent' ? (
             <Select value={rawValue} onValueChange={handleSingleValueChange}>
               <SelectTrigger className="h-8 w-full bg-background/50 text-xs">
-                <SelectValue placeholder="Choose agent" />
+                <SelectValue placeholder="Chọn nhân viên" />
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
@@ -248,7 +248,7 @@ export function ConditionRow({
                     ))
                   ) : (
                     <SelectItem value="__none__" disabled className="text-xs">
-                      No agents found
+                      Không tìm thấy nhân viên
                     </SelectItem>
                   )}
                 </SelectGroup>
@@ -258,7 +258,7 @@ export function ConditionRow({
             <Input
               value={rawValue}
               onChange={e => handleSingleValueChange(e.target.value)}
-              placeholder="Enter text or keywords..."
+              placeholder="Nhập văn bản hoặc từ khóa..."
               className="h-8 bg-background/50 text-xs"
             />
           )}
@@ -272,7 +272,7 @@ export function ConditionRow({
         size="icon"
         onClick={onRemove}
         className="size-8 shrink-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-        title="Remove condition"
+        title="Xóa điều kiện"
       >
         <Trash2 className="size-3.5" />
       </Button>

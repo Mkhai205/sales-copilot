@@ -9,7 +9,6 @@ import { Switch } from '@/components/ui/switch';
 import { LABEL_PRESET_COLORS, isValidHexColor } from '../constants/label-colors';
 import { FacebookOAuthConnect } from './facebook-oauth-connect';
 import type { FacebookPageInfo } from '../api/facebook';
-import { useI18n } from '@/lib/i18n';
 
 export interface ChannelConfigState {
   name: string;
@@ -36,8 +35,6 @@ export function StepChannelConfig({
   onChange,
   touched,
 }: StepChannelConfigProps) {
-  const { t } = useI18n();
-
   const updateConfig = (updates: Partial<ChannelConfigState>) => {
     onChange({
       ...config,
@@ -65,31 +62,28 @@ export function StepChannelConfig({
     });
   };
 
-  const nameError =
-    touched && !config.name.trim() ? t('settings.inboxes.wizard.config.nameRequired') : null;
+  const nameError = touched && !config.name.trim() ? 'Tên hộp thư là bắt buộc' : null;
 
   return (
     <div className="flex flex-col gap-4 py-1">
       <FieldGroup className="gap-4">
         {/* Inbox Name */}
         <Field data-invalid={!!nameError}>
-          <FieldLabel htmlFor="inbox-name">
-            {t('settings.inboxes.wizard.config.nameLabel')}
-          </FieldLabel>
+          <FieldLabel htmlFor="inbox-name">{'Tên hộp thư'}</FieldLabel>
           <Input
             id="inbox-name"
             value={config.name}
             onChange={e => updateConfig({ name: e.target.value })}
             placeholder={
               channelType === ChannelType.WEB_CHAT
-                ? t('settings.inboxes.wizard.config.namePlaceholderWebChat')
+                ? 'Ví dụ: Hỗ trợ trực tuyến Website'
                 : channelType === ChannelType.FACEBOOK_MESSENGER
-                  ? t('settings.inboxes.wizard.config.namePlaceholderMessenger')
+                  ? 'Ví dụ: Facebook Fanpage'
                   : channelType === ChannelType.TELEGRAM
-                    ? t('settings.inboxes.wizard.config.namePlaceholderTelegram')
+                    ? 'Ví dụ: Telegram Support Bot'
                     : channelType === ChannelType.EMAIL
-                      ? t('settings.inboxes.wizard.config.namePlaceholderEmail')
-                      : t('settings.inboxes.wizard.config.namePlaceholderZalo')
+                      ? 'Ví dụ: support@company.com'
+                      : 'Ví dụ: Zalo OA Official'
             }
             maxLength={100}
             required
@@ -100,27 +94,25 @@ export function StepChannelConfig({
 
         {/* Greeting Message */}
         <Field>
-          <FieldLabel htmlFor="greeting-msg">
-            {t('settings.inboxes.wizard.config.greetingLabel')}
-          </FieldLabel>
+          <FieldLabel htmlFor="greeting-msg">{'Lời chào tự động'}</FieldLabel>
           <Textarea
             id="greeting-msg"
             value={config.greetingMessage}
             onChange={e => updateConfig({ greetingMessage: e.target.value })}
-            placeholder={t('settings.inboxes.wizard.config.greetingPlaceholder')}
+            placeholder={'Lời chào tự động gửi khi khách hàng bắt đầu cuộc hội thoại mới...'}
             rows={2}
             className="text-xs"
           />
-          <FieldDescription>{t('settings.inboxes.wizard.config.greetingHelp')}</FieldDescription>
+          <FieldDescription>
+            {'Tin nhắn tự động trả lời tùy chọn khi khách hàng mở một cuộc trò chuyện mới.'}
+          </FieldDescription>
         </Field>
 
         {/* Channel Specific Configuration */}
         {channelType === ChannelType.WEB_CHAT && (
           <>
             <Field>
-              <FieldLabel htmlFor="website-url">
-                {t('settings.inboxes.wizard.config.websiteUrlLabel')}
-              </FieldLabel>
+              <FieldLabel htmlFor="website-url">{'Địa chỉ Website'}</FieldLabel>
               <Input
                 id="website-url"
                 value={(config.settings.websiteUrl as string) || ''}
@@ -129,12 +121,12 @@ export function StepChannelConfig({
                 className="text-xs"
               />
               <FieldDescription>
-                {t('settings.inboxes.wizard.config.websiteUrlHelp')}
+                {'Tên miền nơi tiện ích trò chuyện sẽ được triển khai.'}
               </FieldDescription>
             </Field>
 
             <Field>
-              <FieldLabel>{t('settings.inboxes.wizard.config.widgetColorLabel')}</FieldLabel>
+              <FieldLabel>{'Màu chủ đạo Widget'}</FieldLabel>
               <div className="flex flex-wrap items-center gap-2 mt-1">
                 {LABEL_PRESET_COLORS.slice(0, 8).map(preset => {
                   const currentColor = (config.settings.widgetColor as string) || '#2563eb';
@@ -198,9 +190,7 @@ export function StepChannelConfig({
 
         {channelType === ChannelType.TELEGRAM && (
           <Field>
-            <FieldLabel htmlFor="tg-bot-token">
-              {t('settings.inboxes.wizard.config.telegramTokenLabel')}
-            </FieldLabel>
+            <FieldLabel htmlFor="tg-bot-token">{'Telegram Bot Token'}</FieldLabel>
             <Input
               id="tg-bot-token"
               type="password"
@@ -210,7 +200,7 @@ export function StepChannelConfig({
               className="text-xs font-mono"
             />
             <FieldDescription>
-              {t('settings.inboxes.wizard.config.telegramTokenHelp')}
+              {'Nhận từ @BotFather trên Telegram khi tạo bot của bạn.'}
             </FieldDescription>
           </Field>
         )}
@@ -218,9 +208,7 @@ export function StepChannelConfig({
         {channelType === ChannelType.EMAIL && (
           <>
             <Field>
-              <FieldLabel htmlFor="email-addr">
-                {t('settings.inboxes.wizard.config.emailAddressLabel')}
-              </FieldLabel>
+              <FieldLabel htmlFor="email-addr">{'Địa chỉ Email'}</FieldLabel>
               <Input
                 id="email-addr"
                 type="email"
@@ -233,9 +221,7 @@ export function StepChannelConfig({
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <Field>
-                <FieldLabel htmlFor="smtp-host">
-                  {t('settings.inboxes.wizard.config.smtpHostLabel')}
-                </FieldLabel>
+                <FieldLabel htmlFor="smtp-host">{'SMTP Host'}</FieldLabel>
                 <Input
                   id="smtp-host"
                   value={config.credentials.smtpHost || ''}
@@ -245,9 +231,7 @@ export function StepChannelConfig({
                 />
               </Field>
               <Field>
-                <FieldLabel htmlFor="smtp-port">
-                  {t('settings.inboxes.wizard.config.smtpPortLabel')}
-                </FieldLabel>
+                <FieldLabel htmlFor="smtp-port">{'SMTP Port'}</FieldLabel>
                 <Input
                   id="smtp-port"
                   value={config.credentials.smtpPort || '587'}
@@ -260,9 +244,7 @@ export function StepChannelConfig({
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <Field>
-                <FieldLabel htmlFor="smtp-user">
-                  {t('settings.inboxes.wizard.config.smtpUserLabel')}
-                </FieldLabel>
+                <FieldLabel htmlFor="smtp-user">{'Tên đăng nhập SMTP'}</FieldLabel>
                 <Input
                   id="smtp-user"
                   value={config.credentials.smtpUser || ''}
@@ -272,9 +254,7 @@ export function StepChannelConfig({
                 />
               </Field>
               <Field>
-                <FieldLabel htmlFor="smtp-pass">
-                  {t('settings.inboxes.wizard.config.smtpPassLabel')}
-                </FieldLabel>
+                <FieldLabel htmlFor="smtp-pass">{'Mật khẩu SMTP'}</FieldLabel>
                 <Input
                   id="smtp-pass"
                   type="password"
@@ -291,9 +271,7 @@ export function StepChannelConfig({
         {channelType === ChannelType.ZALO && (
           <>
             <Field>
-              <FieldLabel htmlFor="zalo-oa-id">
-                {t('settings.inboxes.wizard.config.zaloOaIdLabel')}
-              </FieldLabel>
+              <FieldLabel htmlFor="zalo-oa-id">{'Zalo OA ID'}</FieldLabel>
               <Input
                 id="zalo-oa-id"
                 value={config.credentials.oaId || ''}
@@ -304,9 +282,7 @@ export function StepChannelConfig({
             </Field>
 
             <Field>
-              <FieldLabel htmlFor="zalo-app-id">
-                {t('settings.inboxes.wizard.config.zaloAppIdLabel')}
-              </FieldLabel>
+              <FieldLabel htmlFor="zalo-app-id">{'Zalo App ID'}</FieldLabel>
               <Input
                 id="zalo-app-id"
                 value={config.credentials.appId || ''}
@@ -317,15 +293,13 @@ export function StepChannelConfig({
             </Field>
 
             <Field>
-              <FieldLabel htmlFor="zalo-secret">
-                {t('settings.inboxes.wizard.config.zaloSecretLabel')}
-              </FieldLabel>
+              <FieldLabel htmlFor="zalo-secret">{'Khóa bí mật (Secret Key)'}</FieldLabel>
               <Input
                 id="zalo-secret"
                 type="password"
                 value={config.credentials.secretKey || ''}
                 onChange={e => updateCredential('secretKey', e.target.value)}
-                placeholder={t('settings.inboxes.wizard.config.zaloSecretPlaceholder')}
+                placeholder={'Khóa bí mật từ Zalo Developer'}
                 className="text-xs font-mono"
               />
             </Field>
@@ -336,10 +310,10 @@ export function StepChannelConfig({
         <div className="flex items-center justify-between rounded-lg border border-border/70 p-3 bg-muted/20">
           <div className="flex flex-col gap-0.5">
             <span className="text-xs font-medium text-foreground">
-              {t('settings.inboxes.wizard.config.autoAssignTitle')}
+              {'Tự động phân bổ hội thoại'}
             </span>
             <span className="text-[11px] text-muted-foreground">
-              {t('settings.inboxes.wizard.config.autoAssignDesc')}
+              {'Tự động phân bổ hội thoại mới xoay vòng cho các nhân viên phụ trách.'}
             </span>
           </div>
           <Switch

@@ -68,24 +68,24 @@ export function LabelFormDialog({
   const titleError = React.useMemo(() => {
     if (!touched) return null;
     if (trimmedTitle.length === 0) {
-      return 'Label title is required';
+      return 'Tiêu đề nhãn là bắt buộc';
     }
     if (trimmedTitle.length > 50) {
-      return 'Label title cannot exceed 50 characters';
+      return 'Tiêu đề nhãn không được vượt quá 50 ký tự';
     }
     return null;
   }, [trimmedTitle, touched]);
 
   const descError = React.useMemo(() => {
     if (description.length > 200) {
-      return 'Description cannot exceed 200 characters';
+      return 'Mô tả không được vượt quá 200 ký tự';
     }
     return null;
   }, [description]);
 
   const colorError = React.useMemo(() => {
     if (!isValidHexColor(color)) {
-      return 'Invalid color format (must be hex #RRGGBB)';
+      return 'Định dạng màu không hợp lệ (phải là mã hex #RRGGBB)';
     }
     return null;
   }, [color]);
@@ -135,20 +135,20 @@ export function LabelFormDialog({
             <div className="flex items-center gap-2">
               <Tag className="size-4 text-primary" />
               <DialogTitle className="text-sm font-semibold">
-                {isEditing ? 'Edit Label' : 'Create New Label'}
+                {isEditing ? 'Chỉnh sửa nhãn' : 'Tạo nhãn mới'}
               </DialogTitle>
             </div>
             <DialogDescription className="text-xs">
               {isEditing
-                ? 'Update label name, color theme, and sidebar visibility.'
-                : 'Create a custom color label to tag and filter customer conversations.'}
+                ? 'Cập nhật tên nhãn, bảng màu và trạng thái hiển thị trên thanh bên.'
+                : 'Tạo nhãn màu tùy chỉnh để gắn thẻ và lọc các cuộc trò chuyện của khách hàng.'}
             </DialogDescription>
           </DialogHeader>
 
           <FieldGroup className="gap-4 py-1">
             {/* Title Field */}
             <Field data-invalid={!!titleError}>
-              <FieldLabel htmlFor="label-title">Title</FieldLabel>
+              <FieldLabel htmlFor="label-title">Tiêu đề</FieldLabel>
               <Input
                 id="label-title"
                 value={title}
@@ -156,7 +156,7 @@ export function LabelFormDialog({
                   setTitle(e.target.value);
                   if (!touched) setTouched(true);
                 }}
-                placeholder="e.g. VIP Customer, Urgent, Billing Bug"
+                placeholder="Ví dụ: Khách hàng VIP, Khẩn cấp, Lỗi thanh toán"
                 maxLength={50}
                 aria-invalid={!!titleError}
                 required
@@ -167,24 +167,24 @@ export function LabelFormDialog({
 
             {/* Description Field */}
             <Field data-invalid={!!descError}>
-              <FieldLabel htmlFor="label-desc">Description</FieldLabel>
+              <FieldLabel htmlFor="label-desc">Mô tả</FieldLabel>
               <Input
                 id="label-desc"
                 value={description}
                 onChange={e => setDescription(e.target.value)}
-                placeholder="Optional purpose for this label..."
+                placeholder="Mục đích tùy chọn cho nhãn này..."
                 maxLength={200}
                 className="text-xs"
               />
               <FieldDescription>
-                Brief summary of when to apply this label (max 200 chars).
+                Tóm tắt ngắn gọn khi nào nên áp dụng nhãn này (tối đa 200 ký tự).
               </FieldDescription>
               {descError && <FieldError errors={[{ message: descError }]} />}
             </Field>
 
             {/* Color Selection Field */}
             <Field data-invalid={!!colorError}>
-              <FieldLabel>Color Palette</FieldLabel>
+              <FieldLabel>Bảng màu</FieldLabel>
 
               {/* Preset Swatches Grid */}
               <div className="grid grid-cols-6 gap-2">
@@ -223,7 +223,7 @@ export function LabelFormDialog({
                     value={isValidHexColor(color) ? color : '#2563eb'}
                     onChange={e => setColor(e.target.value)}
                     className="absolute inset-0 size-full opacity-0 cursor-pointer"
-                    title="Choose custom color"
+                    title="Chọn màu tùy chỉnh"
                   />
                 </div>
                 <Input
@@ -240,7 +240,7 @@ export function LabelFormDialog({
 
             {/* Live Preview Chip */}
             <Field>
-              <FieldLabel>Live Preview</FieldLabel>
+              <FieldLabel>Xem trước trực tiếp</FieldLabel>
               <div className="flex items-center gap-3 rounded-lg border border-border/70 bg-muted/30 p-3">
                 <div
                   className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium border transition-colors shadow-2xs"
@@ -256,10 +256,10 @@ export function LabelFormDialog({
                       backgroundColor: isValidHexColor(color) ? color : '#2563eb',
                     }}
                   />
-                  <span>{trimmedTitle || 'Label Preview'}</span>
+                  <span>{trimmedTitle || 'Xem trước nhãn'}</span>
                 </div>
                 <span className="text-[11px] text-muted-foreground">
-                  How this label will appear in conversation threads
+                  Cách nhãn này sẽ hiển thị trong danh sách hội thoại
                 </span>
               </div>
             </Field>
@@ -267,9 +267,9 @@ export function LabelFormDialog({
             {/* Show on Sidebar Toggle */}
             <div className="flex items-center justify-between rounded-lg border border-border/70 p-3 bg-muted/20">
               <div className="flex flex-col gap-0.5">
-                <span className="text-xs font-medium text-foreground">Show on Sidebar</span>
+                <span className="text-xs font-medium text-foreground">Hiển thị trên thanh bên</span>
                 <span className="text-[11px] text-muted-foreground">
-                  Display this label in sidebar conversation filters.
+                  Hiển thị nhãn này trong bộ lọc hội thoại ở thanh bên.
                 </span>
               </div>
               <Switch checked={showOnSidebar} onCheckedChange={setShowOnSidebar} />
@@ -285,7 +285,7 @@ export function LabelFormDialog({
               disabled={isPending}
               className="text-xs"
             >
-              Cancel
+              Hủy
             </Button>
             <Button
               type="submit"
@@ -297,12 +297,12 @@ export function LabelFormDialog({
               {isPending ? (
                 <>
                   <Spinner className="size-3.5" data-icon="inline-start" />
-                  {isEditing ? 'Saving...' : 'Creating...'}
+                  {isEditing ? 'Đang lưu...' : 'Đang tạo...'}
                 </>
               ) : isEditing ? (
-                'Save Changes'
+                'Lưu thay đổi'
               ) : (
-                'Create Label'
+                'Tạo nhãn'
               )}
             </Button>
           </DialogFooter>

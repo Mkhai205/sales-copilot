@@ -21,7 +21,6 @@ import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui
 import { Input } from '@/components/ui/input';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { facebookApi, type FacebookPageInfo } from '../api/facebook';
-import { useI18n } from '@/lib/i18n';
 
 interface FacebookOAuthConnectProps {
   workspaceId: string;
@@ -42,7 +41,6 @@ export function FacebookOAuthConnect({
   manualCredentials,
   onManualCredentialChange,
 }: FacebookOAuthConnectProps) {
-  const { t } = useI18n();
   const [isAuthenticating, setIsAuthenticating] = React.useState(false);
   const [isLoadingPages, setIsLoadingPages] = React.useState(false);
   const [currentSessionId, setCurrentSessionId] = React.useState<string | undefined>(sessionId);
@@ -65,7 +63,7 @@ export function FacebookOAuthConnect({
       const res = await facebookApi.discoverPages(workspaceId, activeSessionId);
       setPages(res.data || []);
     } catch (err: any) {
-      toast.error(err.message || t('settings.inboxes.wizard.facebook.discoverFailed'));
+      toast.error(err.message || 'Không thể tìm nạp danh sách Facebook Fanpage');
     } finally {
       setIsLoadingPages(false);
     }
@@ -94,7 +92,9 @@ export function FacebookOAuthConnect({
       );
 
       if (!popup) {
-        toast.error(t('settings.inboxes.wizard.facebook.popupBlocked'));
+        toast.error(
+          'Cửa sổ bật lên bị trình duyệt chặn. Vui lòng cho phép mở popup trên trang này và thử lại.',
+        );
         setIsAuthenticating(false);
         return;
       }
@@ -103,14 +103,14 @@ export function FacebookOAuthConnect({
         cleanup();
         setIsAuthenticating(false);
         setCurrentSessionId(newSessionId);
-        toast.success(t('settings.inboxes.wizard.facebook.authSuccess'));
+        toast.success('Xác thực Facebook thành công!');
         loadPages(newSessionId);
       };
 
       const onAuthError = (errorMsg: string) => {
         cleanup();
         setIsAuthenticating(false);
-        toast.error(errorMsg || t('settings.inboxes.wizard.facebook.authFailed'));
+        toast.error(errorMsg || 'Xác thực Facebook thất bại');
       };
 
       // 1. PostMessage listener
@@ -192,7 +192,7 @@ export function FacebookOAuthConnect({
       }, 1000);
     } catch (err: any) {
       setIsAuthenticating(false);
-      toast.error(err.message || t('settings.inboxes.wizard.facebook.initFailed'));
+      toast.error(err.message || 'Không thể khởi tạo ủy quyền Facebook OAuth');
     }
   };
 
@@ -220,7 +220,7 @@ export function FacebookOAuthConnect({
                   <Check className="size-3" />
                 </span>
                 <CardTitle className="text-xs font-semibold text-primary">
-                  {t('settings.inboxes.wizard.facebook.connectedPageTitle')}
+                  {'Facebook Page đã kết nối'}
                 </CardTitle>
               </div>
               <Button
@@ -230,7 +230,7 @@ export function FacebookOAuthConnect({
                 onClick={onClearSelection}
                 className="h-7 text-xs text-muted-foreground hover:text-foreground"
               >
-                {t('settings.inboxes.wizard.facebook.changePage')}
+                {'Đổi trang'}
               </Button>
             </div>
           </CardHeader>
@@ -254,7 +254,7 @@ export function FacebookOAuthConnect({
                 </div>
               </div>
               <Badge variant="outline" className="border-primary/30 text-primary bg-primary/10">
-                {t('settings.inboxes.wizard.facebook.selectedBadge')}
+                {'Đã chọn'}
               </Badge>
             </div>
           </CardContent>
@@ -267,11 +267,9 @@ export function FacebookOAuthConnect({
           <CardHeader className="pb-2 pt-4">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-xs font-semibold">
-                  {t('settings.inboxes.wizard.facebook.selectPageTitle')}
-                </CardTitle>
+                <CardTitle className="text-xs font-semibold">{'Chọn một Facebook Page'}</CardTitle>
                 <CardDescription className="text-[11px]">
-                  {t('settings.inboxes.wizard.facebook.selectPageDesc')}
+                  {'Chọn Facebook Fanpage bạn muốn kết nối với hộp thư này.'}
                 </CardDescription>
               </div>
               <Button
@@ -283,7 +281,7 @@ export function FacebookOAuthConnect({
                 className="h-7 text-xs"
               >
                 <RefreshCw data-icon="inline-start" className="size-3" />
-                {t('settings.inboxes.wizard.facebook.switchAccount')}
+                {'Đổi tài khoản'}
               </Button>
             </div>
           </CardHeader>
@@ -292,17 +290,19 @@ export function FacebookOAuthConnect({
               <div className="flex flex-col items-center justify-center gap-2 py-8 text-center">
                 <Spinner className="size-6 text-primary" />
                 <p className="text-xs text-muted-foreground">
-                  {t('settings.inboxes.wizard.facebook.discoveringPages')}
+                  {'Đang tìm nạp các Facebook Page bạn quản lý...'}
                 </p>
               </div>
             ) : pages.length === 0 ? (
               <div className="flex flex-col items-center justify-center gap-2 py-6 text-center">
                 <AlertCircle className="size-6 text-muted-foreground" />
                 <p className="text-xs font-medium text-foreground">
-                  {t('settings.inboxes.wizard.facebook.noPagesTitle')}
+                  {'Không tìm thấy Facebook Page nào'}
                 </p>
                 <p className="max-w-xs text-[11px] text-muted-foreground">
-                  {t('settings.inboxes.wizard.facebook.noPagesDesc')}
+                  {
+                    'Tài khoản Facebook đã đăng nhập không quản trị Fanpage nào hoặc không đủ quyền truy cập.'
+                  }
                 </p>
                 <Button
                   type="button"
@@ -311,7 +311,7 @@ export function FacebookOAuthConnect({
                   onClick={handleSwitchAccount}
                   className="mt-2 text-xs"
                 >
-                  {t('settings.inboxes.wizard.facebook.tryAnotherAccount')}
+                  {'Thử tài khoản khác'}
                 </Button>
               </div>
             ) : (
@@ -350,7 +350,7 @@ export function FacebookOAuthConnect({
 
                       {isConnected ? (
                         <Badge variant="secondary" className="text-[10px]">
-                          {t('settings.inboxes.wizard.facebook.alreadyConnected')}
+                          {'Đã kết nối'}
                         </Badge>
                       ) : (
                         <Button
@@ -363,7 +363,7 @@ export function FacebookOAuthConnect({
                           }}
                           className="h-7 text-xs font-medium"
                         >
-                          {t('settings.inboxes.wizard.facebook.selectBtn')}
+                          {'Chọn'}
                         </Button>
                       )}
                     </div>
@@ -392,15 +392,16 @@ export function FacebookOAuthConnect({
               <div>
                 <div className="flex items-center gap-1.5">
                   <CardTitle className="text-xs font-semibold">
-                    {t('settings.inboxes.wizard.facebook.oauthTitle')}
+                    {'Facebook OAuth 1-Click'}
                   </CardTitle>
                   <Badge variant="outline" className="text-[10px] text-primary border-primary/30">
-                    <Sparkles className="size-2.5 mr-0.5 text-primary" />{' '}
-                    {t('settings.inboxes.wizard.facebook.recommended')}
+                    <Sparkles className="size-2.5 mr-0.5 text-primary" /> {'Khuyên dùng'}
                   </Badge>
                 </div>
                 <CardDescription className="text-[11px] mt-0.5">
-                  {t('settings.inboxes.wizard.facebook.oauthDesc')}
+                  {
+                    'Kết nối tài khoản Facebook để tự động tìm nạp Fanpage và cấu hình webhook nhanh chóng.'
+                  }
                 </CardDescription>
               </div>
             </div>
@@ -415,17 +416,17 @@ export function FacebookOAuthConnect({
               {isAuthenticating ? (
                 <>
                   <Spinner className="size-4" />
-                  {t('settings.inboxes.wizard.facebook.waitingLogin')}
+                  {'Đang chờ đăng nhập Facebook...'}
                 </>
               ) : (
                 <>
                   <ExternalLink data-icon="inline-start" className="size-4" />
-                  {t('settings.inboxes.wizard.facebook.connectBtn')}
+                  {'Kết nối với Facebook'}
                 </>
               )}
             </Button>
             <p className="text-[11px] text-muted-foreground mt-2 text-center">
-              {t('settings.inboxes.wizard.facebook.permissionsNote')}
+              {'Yêu cầu quyền quản lý trang và gửi/nhận hội thoại Messenger.'}
             </p>
           </CardContent>
         </Card>
@@ -439,7 +440,7 @@ export function FacebookOAuthConnect({
       >
         <div className="flex items-center justify-between py-1">
           <span className="text-[11px] text-muted-foreground font-medium">
-            {t('settings.inboxes.wizard.facebook.manualPrompt')}
+            {'Cần dùng token tùy chỉnh hoặc thiết lập ngoại tuyến?'}
           </span>
           <CollapsibleTrigger asChild>
             <Button
@@ -447,9 +448,7 @@ export function FacebookOAuthConnect({
               size="sm"
               className="h-6 gap-1 px-2 text-[11px] text-muted-foreground"
             >
-              {isManualOpen
-                ? t('settings.inboxes.wizard.facebook.hideManual')
-                : t('settings.inboxes.wizard.facebook.configureManual')}
+              {isManualOpen ? 'Ẩn thiết lập thủ công' : 'Cấu hình thủ công'}
               {isManualOpen ? <ChevronUp className="size-3" /> : <ChevronDown className="size-3" />}
             </Button>
           </CollapsibleTrigger>
@@ -459,7 +458,7 @@ export function FacebookOAuthConnect({
           <FieldGroup className="gap-3 rounded-lg border border-border/70 bg-muted/20 p-3">
             <Field>
               <FieldLabel htmlFor="fb-page-id" className="text-xs">
-                {t('settings.inboxes.wizard.facebook.pageIdLabel')}
+                {'Page ID'}
               </FieldLabel>
               <Input
                 id="fb-page-id"
@@ -472,7 +471,7 @@ export function FacebookOAuthConnect({
 
             <Field>
               <FieldLabel htmlFor="fb-access-token" className="text-xs">
-                {t('settings.inboxes.wizard.facebook.pageAccessTokenLabel')}
+                {'Page Access Token'}
               </FieldLabel>
               <Input
                 id="fb-access-token"
@@ -483,20 +482,20 @@ export function FacebookOAuthConnect({
                 className="text-xs font-mono"
               />
               <FieldDescription className="text-[11px]">
-                {t('settings.inboxes.wizard.facebook.pageAccessTokenHelp')}
+                {'Token truy cập trang dài hạn được tạo từ Meta Developer Tools.'}
               </FieldDescription>
             </Field>
 
             <Field>
               <FieldLabel htmlFor="fb-app-secret" className="text-xs">
-                {t('settings.inboxes.wizard.facebook.appSecretLabel')}
+                {'App Secret (Tùy chọn)'}
               </FieldLabel>
               <Input
                 id="fb-app-secret"
                 type="password"
                 value={manualCredentials.appSecret || ''}
                 onChange={e => onManualCredentialChange('appSecret', e.target.value)}
-                placeholder={t('settings.inboxes.wizard.facebook.appSecretPlaceholder')}
+                placeholder={'Mã bí mật ứng dụng Meta'}
                 className="text-xs font-mono"
               />
             </Field>

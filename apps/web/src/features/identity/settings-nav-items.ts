@@ -138,8 +138,8 @@ export const SETTINGS_NAV_ITEMS: SettingsNavItem[] = [
 ];
 
 export const SETTINGS_CATEGORIES: { id: SettingsCategory; label: string }[] = [
-  { id: 'workspace', label: 'Workspace Settings' },
-  { id: 'operations', label: 'Operations' },
+  { id: 'workspace', label: 'Cài đặt Workspace' },
+  { id: 'operations', label: 'Vận hành' },
 ];
 
 /**

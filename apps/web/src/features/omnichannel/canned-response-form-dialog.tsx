@@ -64,13 +64,13 @@ export function CannedResponseFormDialog({
   const shortCodeError = React.useMemo(() => {
     if (!touched) return null;
     if (cleanShortCode.length === 0) {
-      return 'Shortcode cannot be empty';
+      return 'Phím tắt không được để trống';
     }
     if (cleanShortCode.length > 50) {
-      return 'Shortcode must be at most 50 characters';
+      return 'Phím tắt không được vượt quá 50 ký tự';
     }
     if (/\s/.test(cleanShortCode)) {
-      return 'Shortcode cannot contain spaces';
+      return 'Phím tắt không được chứa khoảng trắng';
     }
     return null;
   }, [cleanShortCode, touched]);
@@ -78,7 +78,7 @@ export function CannedResponseFormDialog({
   const contentError = React.useMemo(() => {
     if (!touched) return null;
     if (trimmedContent.length === 0) {
-      return 'Content cannot be empty';
+      return 'Nội dung tin nhắn không được để trống';
     }
     return null;
   }, [trimmedContent, touched]);
@@ -125,20 +125,20 @@ export function CannedResponseFormDialog({
             <div className="flex items-center gap-2">
               <FileText className="size-4 text-primary" />
               <DialogTitle className="text-sm font-semibold">
-                {isEditing ? 'Edit Canned Response' : 'Create Canned Response'}
+                {isEditing ? 'Chỉnh sửa tin nhắn mẫu' : 'Tạo tin nhắn mẫu'}
               </DialogTitle>
             </div>
             <DialogDescription className="text-xs">
               {isEditing
-                ? 'Update quick response shortcode and template message.'
-                : 'Create reusable response templates that agents can quickly insert into chats.'}
+                ? 'Cập nhật phím tắt phản hồi nhanh và nội dung mẫu tin nhắn.'
+                : 'Tạo các mẫu phản hồi để nhân viên chèn nhanh vào cuộc trò chuyện.'}
             </DialogDescription>
           </DialogHeader>
 
           <FieldGroup className="gap-4 py-1">
             {/* Shortcode Field */}
             <Field data-invalid={!!shortCodeError}>
-              <FieldLabel htmlFor="canned-shortcode">Shortcode</FieldLabel>
+              <FieldLabel htmlFor="canned-shortcode">Phím tắt</FieldLabel>
               <div className="relative">
                 <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 font-mono text-xs font-semibold text-primary">
                   /
@@ -150,7 +150,7 @@ export function CannedResponseFormDialog({
                     setShortCode(e.target.value);
                     if (!touched) setTouched(true);
                   }}
-                  placeholder="e.g. greeting, pricing, refund_policy"
+                  placeholder="Ví dụ: xin_chao, bang_gia, doi_tra"
                   maxLength={50}
                   aria-invalid={!!shortCodeError}
                   required
@@ -158,18 +158,18 @@ export function CannedResponseFormDialog({
                 />
               </div>
               <FieldDescription>
-                Type{' '}
+                Gõ{' '}
                 <code className="font-mono font-semibold text-primary">
-                  /{cleanShortCode || 'shortcode'}
+                  /{cleanShortCode || 'phim_tat'}
                 </code>{' '}
-                in any conversation chat composer to quickly insert this response.
+                trong khung chat của bất kỳ cuộc trò chuyện nào để chèn nhanh phản hồi này.
               </FieldDescription>
               {shortCodeError && <FieldError errors={[{ message: shortCodeError }]} />}
             </Field>
 
             {/* Content Field */}
             <Field data-invalid={!!contentError}>
-              <FieldLabel htmlFor="canned-content">Message Content</FieldLabel>
+              <FieldLabel htmlFor="canned-content">Nội dung tin nhắn</FieldLabel>
               <Textarea
                 id="canned-content"
                 value={content}
@@ -177,7 +177,7 @@ export function CannedResponseFormDialog({
                   setContent(e.target.value);
                   if (!touched) setTouched(true);
                 }}
-                placeholder="Enter the template text that will be inserted when this shortcode is triggered..."
+                placeholder="Nhập nội dung mẫu sẽ được chèn khi phím tắt này được gọi..."
                 rows={5}
                 aria-invalid={!!contentError}
                 required
@@ -190,8 +190,8 @@ export function CannedResponseFormDialog({
             <div className="flex items-start gap-2.5 rounded-lg border border-border/60 bg-muted/20 p-3 text-xs text-muted-foreground">
               <Sparkles className="size-4 shrink-0 text-primary mt-0.5" />
               <span>
-                <strong>Tip:</strong> Canned responses help agents reply to common customer
-                questions consistently and save time during live conversations.
+                <strong>Mẹo:</strong> Tin nhắn mẫu giúp nhân viên trả lời các câu hỏi thường gặp của
+                khách hàng một cách nhất quán và tiết kiệm thời gian.
               </span>
             </div>
           </FieldGroup>
@@ -205,7 +205,7 @@ export function CannedResponseFormDialog({
               disabled={isPending}
               className="text-xs"
             >
-              Cancel
+              Hủy
             </Button>
             <Button
               type="submit"
@@ -217,12 +217,12 @@ export function CannedResponseFormDialog({
               {isPending ? (
                 <>
                   <Spinner className="size-3.5" data-icon="inline-start" />
-                  {isEditing ? 'Saving...' : 'Creating...'}
+                  {isEditing ? 'Đang lưu...' : 'Đang tạo...'}
                 </>
               ) : isEditing ? (
-                'Save Changes'
+                'Lưu thay đổi'
               ) : (
-                'Create Response'
+                'Tạo phản hồi mẫu'
               )}
             </Button>
           </DialogFooter>

@@ -16,7 +16,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Field, FieldLabel } from '@/components/ui/field';
-import { useI18n } from '@/lib/i18n';
 
 interface AddressCascaderProps {
   province?: string;
@@ -44,7 +43,6 @@ export function AddressCascader({
   onChange,
   disabled = false,
 }: AddressCascaderProps) {
-  const { t } = useI18n();
   const [provinces, setProvinces] = React.useState<DivisionItem[]>([]);
   const [districts, setDistricts] = React.useState<DivisionItem[]>([]);
   const [wards, setWards] = React.useState<DivisionItem[]>([]);
@@ -138,16 +136,14 @@ export function AddressCascader({
     <div className="grid grid-cols-3 gap-2">
       {/* Tỉnh / Thành phố */}
       <Field>
-        <FieldLabel className="text-xs text-muted-foreground">
-          {t('commerce.cascader.province')}
-        </FieldLabel>
+        <FieldLabel className="text-xs text-muted-foreground">{'Tỉnh / Thành'}</FieldLabel>
         <Select
           value={currentProvince?.name || province || ''}
           onValueChange={handleProvinceChange}
           disabled={disabled || provinces.length === 0}
         >
           <SelectTrigger className="w-full h-8 text-xs">
-            <SelectValue placeholder={t('commerce.cascader.selectProvince')} />
+            <SelectValue placeholder={'Chọn Tỉnh/Thành'} />
           </SelectTrigger>
           <SelectContent position="popper" className="max-h-60">
             {provinces.map(p => (
@@ -161,22 +157,14 @@ export function AddressCascader({
 
       {/* Quận / Huyện */}
       <Field>
-        <FieldLabel className="text-xs text-muted-foreground">
-          {t('commerce.cascader.district')}
-        </FieldLabel>
+        <FieldLabel className="text-xs text-muted-foreground">{'Quận / Huyện'}</FieldLabel>
         <Select
           value={currentDistrict?.name || district || ''}
           onValueChange={handleDistrictChange}
           disabled={disabled || !currentProvince || districts.length === 0}
         >
           <SelectTrigger className="w-full h-8 text-xs">
-            <SelectValue
-              placeholder={
-                currentProvince
-                  ? t('commerce.cascader.selectDistrict')
-                  : t('commerce.cascader.selectProvinceFirst')
-              }
-            />
+            <SelectValue placeholder={currentProvince ? 'Chọn Quận/Huyện' : 'Chọn Tỉnh trước'} />
           </SelectTrigger>
           <SelectContent position="popper" className="max-h-60">
             {districts.map(d => (
@@ -190,22 +178,14 @@ export function AddressCascader({
 
       {/* Phường / Xã */}
       <Field>
-        <FieldLabel className="text-xs text-muted-foreground">
-          {t('commerce.cascader.ward')}
-        </FieldLabel>
+        <FieldLabel className="text-xs text-muted-foreground">{'Phường / Xã'}</FieldLabel>
         <Select
           value={currentWard?.name || ward || ''}
           onValueChange={handleWardChange}
           disabled={disabled || !currentDistrict || wards.length === 0}
         >
           <SelectTrigger className="w-full h-8 text-xs">
-            <SelectValue
-              placeholder={
-                currentDistrict
-                  ? t('commerce.cascader.selectWard')
-                  : t('commerce.cascader.selectDistrictFirst')
-              }
-            />
+            <SelectValue placeholder={currentDistrict ? 'Chọn Phường/Xã' : 'Chọn Huyện trước'} />
           </SelectTrigger>
           <SelectContent position="popper" className="max-h-60">
             {wards.map(w => (

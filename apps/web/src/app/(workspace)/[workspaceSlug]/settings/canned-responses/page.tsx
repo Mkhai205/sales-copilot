@@ -14,13 +14,12 @@ export default function CannedResponsesSettingsPage() {
 
   return (
     <SettingsGuard workspaceSlug={workspaceSlug} segment="canned-responses">
-      <div className="flex flex-col gap-6 max-w-5xl">
+      <div className="flex flex-col gap-6 w-full">
         {/* Page Header */}
-        <div>
-          <h1 className="text-xl font-semibold tracking-tight text-foreground">Canned Responses</h1>
+        <div className="pb-3 border-b border-border/70">
+          <h1 className="text-xl font-bold tracking-tight text-foreground">{'Tin nhắn mẫu'}</h1>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Create reusable quick response templates with shortcode slash triggers to reply to
-            customers faster.
+            {'Tạo các mẫu câu trả lời nhanh với phím tắt gợi ý (/) để phản hồi khách hàng tức thì.'}
           </p>
         </div>
 

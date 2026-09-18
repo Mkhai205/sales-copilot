@@ -4,7 +4,6 @@ import * as React from 'react';
 import { Minus, Plus, Trash2, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useI18n } from '@/lib/i18n';
 
 export interface PosLineItem {
   productId: string;
@@ -25,8 +24,6 @@ interface LineItemsTableProps {
 }
 
 export function LineItemsTable({ items, onChangeItems, disabled = false }: LineItemsTableProps) {
-  const { t } = useI18n();
-
   const formatCurrency = (val: number) => {
     return new Intl.NumberFormat('vi-VN', {
       style: 'currency',
@@ -55,11 +52,9 @@ export function LineItemsTable({ items, onChangeItems, disabled = false }: LineI
     return (
       <div className="flex flex-col items-center justify-center p-8 rounded-lg border border-dashed border-border/80 bg-muted/20 text-center">
         <ShoppingCart className="size-8 text-muted-foreground/60 mb-2" />
-        <p className="text-xs font-medium text-foreground">
-          {t('commerce.items.emptyItemsInOrder')}
-        </p>
+        <p className="text-xs font-medium text-foreground">{'Chưa có sản phẩm nào trong đơn'}</p>
         <p className="text-[11px] text-muted-foreground mt-0.5">
-          {t('commerce.items.emptyItemsSubtitle', { shortcut: 'Ctrl+K' })}
+          {'Nhấn Ctrl+K hoặc dùng ô tìm kiếm để chọn sản phẩm và phân loại'}
         </p>
       </div>
     );
@@ -95,7 +90,7 @@ export function LineItemsTable({ items, onChangeItems, disabled = false }: LineI
                 className="size-6 text-muted-foreground hover:text-destructive p-0 shrink-0 cursor-pointer"
                 onClick={() => handleRemoveItem(index)}
                 disabled={disabled}
-                title={t('commerce.items.removeFromOrder')}
+                title={'Xóa khỏi đơn'}
               >
                 <Trash2 className="size-3.5" />
               </Button>

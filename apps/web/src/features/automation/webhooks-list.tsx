@@ -108,7 +108,7 @@ export function WebhooksList({ workspaceId, currentUserRole }: WebhooksListProps
   const handleCopyUrl = (id: string, urlText: string) => {
     navigator.clipboard.writeText(urlText);
     setCopiedId(id);
-    toast.success('Endpoint URL copied');
+    toast.success('Đã sao chép URL endpoint');
     setTimeout(() => setCopiedId(null), 2000);
   };
 
@@ -140,7 +140,7 @@ export function WebhooksList({ workspaceId, currentUserRole }: WebhooksListProps
             <Input
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Search by URL or event type..."
+              placeholder="Tìm kiếm theo URL hoặc loại sự kiện..."
               className="h-8 pl-8 pr-8 text-xs bg-card/40"
             />
             {searchQuery && (
@@ -159,18 +159,18 @@ export function WebhooksList({ workspaceId, currentUserRole }: WebhooksListProps
           {/* Status Filter */}
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="h-8 w-32 bg-card/40 text-xs">
-              <SelectValue placeholder="All States" />
+              <SelectValue placeholder="Tất cả trạng thái" />
             </SelectTrigger>
             <SelectContent>
               <SelectGroup>
                 <SelectItem value="ALL" className="text-xs">
-                  All States
+                  Tất cả trạng thái
                 </SelectItem>
                 <SelectItem value="ACTIVE" className="text-xs">
-                  Active only
+                  Đang hoạt động
                 </SelectItem>
                 <SelectItem value="INACTIVE" className="text-xs">
-                  Paused only
+                  Tạm dừng
                 </SelectItem>
               </SelectGroup>
             </SelectContent>
@@ -178,7 +178,7 @@ export function WebhooksList({ workspaceId, currentUserRole }: WebhooksListProps
 
           {subscriptions && (
             <Badge variant="secondary" className="h-7 px-2 text-[11px] font-normal">
-              {filteredSubscriptions.length} of {subscriptions.length} endpoints
+              {filteredSubscriptions.length} / {subscriptions.length} endpoint
             </Badge>
           )}
         </div>
@@ -186,7 +186,7 @@ export function WebhooksList({ workspaceId, currentUserRole }: WebhooksListProps
         {canManage && (
           <Button onClick={handleCreateNew} size="sm" className="h-8 gap-1.5 text-xs shrink-0">
             <Plus className="size-3.5" />
-            Add Webhook
+            Thêm Webhook
           </Button>
         )}
       </div>
@@ -219,9 +219,9 @@ export function WebhooksList({ workspaceId, currentUserRole }: WebhooksListProps
           </div>
           {searchQuery || statusFilter !== 'ALL' ? (
             <>
-              <h3 className="text-sm font-semibold text-foreground">No matching webhooks</h3>
+              <h3 className="text-sm font-semibold text-foreground">Không tìm thấy webhook nào</h3>
               <p className="mt-1 text-xs text-muted-foreground max-w-sm">
-                No webhook subscriptions matched your search filters.
+                Không có đăng ký webhook nào khớp với bộ lọc tìm kiếm.
               </p>
               <Button
                 variant="outline"
@@ -232,20 +232,20 @@ export function WebhooksList({ workspaceId, currentUserRole }: WebhooksListProps
                 }}
                 className="mt-4 h-8 text-xs"
               >
-                Clear Filters
+                Xóa bộ lọc
               </Button>
             </>
           ) : (
             <>
-              <h3 className="text-sm font-semibold text-foreground">No webhooks configured</h3>
+              <h3 className="text-sm font-semibold text-foreground">Chưa có webhook nào</h3>
               <p className="mt-1 text-xs text-muted-foreground max-w-md">
-                Outbound webhooks allow your external servers, CRMs, or analytics pipelines to
-                receive instant HTTP POST notifications on conversation and messaging events.
+                Webhook gửi dữ liệu cho phép máy chủ ngoài, CRM hoặc hệ thống phân tích nhận thông
+                báo HTTP POST tức thời khi có sự kiện hội thoại và tin nhắn.
               </p>
               {canManage && (
                 <Button onClick={handleCreateNew} size="sm" className="mt-4 h-8 gap-1.5 text-xs">
                   <Plus className="size-3.5" />
-                  Add First Webhook
+                  Thêm Webhook đầu tiên
                 </Button>
               )}
             </>
@@ -279,7 +279,7 @@ export function WebhooksList({ workspaceId, currentUserRole }: WebhooksListProps
                           size="icon"
                           onClick={() => handleCopyUrl(sub.id, sub.url)}
                           className="size-5 shrink-0 text-muted-foreground hover:text-foreground"
-                          title="Copy URL"
+                          title="Sao chép URL"
                         >
                           {copiedId === sub.id ? (
                             <Check className="size-3 text-emerald-400" />
@@ -295,14 +295,14 @@ export function WebhooksList({ workspaceId, currentUserRole }: WebhooksListProps
                           className="border-emerald-500/30 bg-emerald-500/10 text-emerald-400 text-[10px] py-0.5"
                         >
                           <ShieldCheck className="size-3 mr-1" />
-                          HMAC Secured
+                          Bảo mật HMAC
                         </Badge>
                       ) : (
                         <Badge
                           variant="secondary"
                           className="text-[10px] text-muted-foreground py-0.5"
                         >
-                          No Secret Key
+                          Không có khóa bí mật
                         </Badge>
                       )}
 
@@ -311,7 +311,7 @@ export function WebhooksList({ workspaceId, currentUserRole }: WebhooksListProps
                           variant="secondary"
                           className="bg-muted text-muted-foreground text-[10px] py-0.5"
                         >
-                          Paused
+                          Tạm dừng
                         </Badge>
                       )}
                     </div>
@@ -319,7 +319,7 @@ export function WebhooksList({ workspaceId, currentUserRole }: WebhooksListProps
                     {/* Subscribed Events Chips */}
                     <div className="flex flex-wrap items-center gap-1.5">
                       <span className="text-[11px] font-medium text-muted-foreground">
-                        Subscribed to:
+                        Đã đăng ký:
                       </span>
                       {events.slice(0, 4).map((evt, idx) => (
                         <Badge
@@ -335,7 +335,7 @@ export function WebhooksList({ workspaceId, currentUserRole }: WebhooksListProps
                           variant="secondary"
                           className="text-[10px] text-muted-foreground py-0"
                         >
-                          +{events.length - 4} more
+                          +{events.length - 4} sự kiện khác
                         </Badge>
                       )}
                     </div>
@@ -351,21 +351,21 @@ export function WebhooksList({ workspaceId, currentUserRole }: WebhooksListProps
                       className="h-8 gap-1.5 text-xs border-border/80 hover:bg-card"
                     >
                       <Activity className="size-3.5 text-primary" />
-                      View Logs
+                      Xem nhật ký
                     </Button>
 
                     {canManage && (
                       <>
                         <div className="flex items-center gap-1.5 pl-1">
                           <span className="text-[11px] text-muted-foreground">
-                            {sub.isActive ? 'Active' : 'Off'}
+                            {sub.isActive ? 'Bật' : 'Tắt'}
                           </span>
                           <Switch
                             checked={sub.isActive}
                             onCheckedChange={checked =>
                               toggleActive({ subscriptionId: sub.id, isActive: checked })
                             }
-                            aria-label={`Toggle ${sub.url}`}
+                            aria-label={`Bật/tắt ${sub.url}`}
                           />
                         </div>
 
@@ -385,7 +385,7 @@ export function WebhooksList({ workspaceId, currentUserRole }: WebhooksListProps
                               className="cursor-pointer gap-2 text-xs"
                             >
                               <Pencil className="size-3.5 text-muted-foreground" />
-                              Edit Webhook
+                              Chỉnh sửa Webhook
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
@@ -393,7 +393,7 @@ export function WebhooksList({ workspaceId, currentUserRole }: WebhooksListProps
                               className="cursor-pointer gap-2 text-xs text-destructive focus:bg-destructive/10 focus:text-destructive"
                             >
                               <Trash2 className="size-3.5" />
-                              Delete
+                              Xóa
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -440,15 +440,15 @@ export function WebhooksList({ workspaceId, currentUserRole }: WebhooksListProps
             <AlertDialogMedia className="bg-destructive/10 text-destructive">
               <AlertTriangle className="size-5" />
             </AlertDialogMedia>
-            <AlertDialogTitle>Delete Webhook Subscription</AlertDialogTitle>
+            <AlertDialogTitle>Xóa đăng ký Webhook</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete the webhook subscription for{' '}
+              Bạn có chắc chắn muốn xóa đăng ký webhook cho{' '}
               <strong className="font-mono text-foreground">{subscriptionToDelete?.url}</strong>?
-              Your endpoint will no longer receive any real-time event notifications.
+              Endpoint của bạn sẽ không còn nhận được các thông báo sự kiện theo thời gian thực.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={isDeleting}>Hủy</AlertDialogCancel>
             <Button
               variant="destructive"
               size="sm"
@@ -457,7 +457,7 @@ export function WebhooksList({ workspaceId, currentUserRole }: WebhooksListProps
               className="gap-1.5"
             >
               {isDeleting && <Spinner className="size-3.5" data-icon="inline-start" />}
-              Delete Webhook
+              Xóa Webhook
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>

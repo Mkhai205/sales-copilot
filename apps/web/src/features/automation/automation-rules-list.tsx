@@ -127,7 +127,7 @@ export function AutomationRulesList({ workspaceId, currentUserRole }: Automation
     const cloned: AutomationRuleDto = {
       ...rule,
       id: '',
-      name: `${rule.name} (Copy)`,
+      name: `${rule.name} (Bản sao)`,
     };
     setRuleToEdit(cloned);
     setBuilderOpen(true);
@@ -171,24 +171,24 @@ export function AutomationRulesList({ workspaceId, currentUserRole }: Automation
     switch (act.type) {
       case AutomationActionType.ASSIGN_AGENT: {
         const member = members?.find(m => m.userId === act.params.agentId);
-        return `Assign: ${member?.user?.name || member?.user?.email || 'Agent'}`;
+        return `Phân công: ${member?.user?.name || member?.user?.email || 'Nhân viên'}`;
       }
       case AutomationActionType.ASSIGN_TEAM: {
         const team = teams?.find(t => t.id === act.params.teamId);
-        return `Assign: ${team?.name || 'Team'}`;
+        return `Chuyển nhóm: ${team?.name || 'Nhóm'}`;
       }
       case AutomationActionType.ADD_LABEL:
-        return `Add Label: "${act.params.labelTitle}"`;
+        return `Gắn nhãn: "${act.params.labelTitle}"`;
       case AutomationActionType.REMOVE_LABEL:
-        return `Remove Label: "${act.params.labelTitle}"`;
+        return `Gỡ nhãn: "${act.params.labelTitle}"`;
       case AutomationActionType.CHANGE_STATUS:
-        return `Status ➔ ${act.params.status}`;
+        return `Trạng thái ➔ ${act.params.status}`;
       case AutomationActionType.CHANGE_PRIORITY:
-        return `Priority ➔ ${act.params.priority}`;
+        return `Độ ưu tiên ➔ ${act.params.priority}`;
       case AutomationActionType.SEND_WEBHOOK:
         return `Webhook: ${act.params.url}`;
       default:
-        return 'Execute Action';
+        return 'Thực hiện hành động';
     }
   };
 
@@ -203,7 +203,7 @@ export function AutomationRulesList({ workspaceId, currentUserRole }: Automation
             <Input
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Search automation rules..."
+              placeholder="Tìm kiếm quy tắc tự động hóa..."
               className="h-8 pl-8 pr-8 text-xs bg-card/40"
             />
             {searchQuery && (
@@ -222,12 +222,12 @@ export function AutomationRulesList({ workspaceId, currentUserRole }: Automation
           {/* Trigger Filter */}
           <Select value={triggerFilter} onValueChange={setTriggerFilter}>
             <SelectTrigger className="h-8 w-44 bg-card/40 text-xs">
-              <SelectValue placeholder="All Triggers" />
+              <SelectValue placeholder="Tất cả kích hoạt" />
             </SelectTrigger>
             <SelectContent>
               <SelectGroup>
                 <SelectItem value="ALL" className="text-xs">
-                  All Triggers
+                  Tất cả kích hoạt
                 </SelectItem>
                 {TRIGGER_OPTIONS.map(opt => (
                   <SelectItem key={opt.value} value={opt.value} className="text-xs">
@@ -241,18 +241,18 @@ export function AutomationRulesList({ workspaceId, currentUserRole }: Automation
           {/* Status Filter */}
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="h-8 w-32 bg-card/40 text-xs">
-              <SelectValue placeholder="All States" />
+              <SelectValue placeholder="Tất cả trạng thái" />
             </SelectTrigger>
             <SelectContent>
               <SelectGroup>
                 <SelectItem value="ALL" className="text-xs">
-                  All States
+                  Tất cả trạng thái
                 </SelectItem>
                 <SelectItem value="ACTIVE" className="text-xs">
-                  Active only
+                  Đang hoạt động
                 </SelectItem>
                 <SelectItem value="INACTIVE" className="text-xs">
-                  Inactive only
+                  Đã tắt
                 </SelectItem>
               </SelectGroup>
             </SelectContent>
@@ -260,7 +260,7 @@ export function AutomationRulesList({ workspaceId, currentUserRole }: Automation
 
           {rules && (
             <Badge variant="secondary" className="h-7 px-2 text-[11px] font-normal">
-              {filteredRules.length} of {rules.length} rules
+              {filteredRules.length} / {rules.length} quy tắc
             </Badge>
           )}
         </div>
@@ -268,7 +268,7 @@ export function AutomationRulesList({ workspaceId, currentUserRole }: Automation
         {canManage && (
           <Button onClick={handleCreateNew} size="sm" className="h-8 gap-1.5 text-xs shrink-0">
             <Plus className="size-3.5" />
-            New Automation Rule
+            Thêm quy tắc mới
           </Button>
         )}
       </div>
@@ -305,10 +305,10 @@ export function AutomationRulesList({ workspaceId, currentUserRole }: Automation
           {searchQuery || triggerFilter !== 'ALL' || statusFilter !== 'ALL' ? (
             <>
               <h3 className="text-sm font-semibold text-foreground">
-                No matching automation rules
+                Không tìm thấy quy tắc tự động hóa nào
               </h3>
               <p className="mt-1 text-xs text-muted-foreground max-w-sm">
-                No rules matched your search filters. Try clearing your filters or search terms.
+                Không có quy tắc nào khớp với bộ lọc tìm kiếm. Thử xóa bộ lọc hoặc từ khóa tìm kiếm.
               </p>
               <Button
                 variant="outline"
@@ -320,22 +320,22 @@ export function AutomationRulesList({ workspaceId, currentUserRole }: Automation
                 }}
                 className="mt-4 h-8 text-xs"
               >
-                Clear Filters
+                Xóa bộ lọc
               </Button>
             </>
           ) : (
             <>
               <h3 className="text-sm font-semibold text-foreground">
-                No automation rules configured
+                Chưa có quy tắc tự động hóa nào
               </h3>
               <p className="mt-1 text-xs text-muted-foreground max-w-md">
-                Automation rules automatically route incoming messages, tag VIP conversations,
-                assign agents/teams, and trigger webhooks without manual intervention.
+                Quy tắc tự động hóa giúp tự động điều phối tin nhắn đến, gắn nhãn hội thoại VIP,
+                phân công nhân viên/nhóm và kích hoạt webhook mà không cần thao tác thủ công.
               </p>
               {canManage && (
                 <Button onClick={handleCreateNew} size="sm" className="mt-4 h-8 gap-1.5 text-xs">
                   <Plus className="size-3.5" />
-                  Create First Rule
+                  Tạo quy tắc đầu tiên
                 </Button>
               )}
             </>
@@ -374,7 +374,7 @@ export function AutomationRulesList({ workspaceId, currentUserRole }: Automation
                           variant="secondary"
                           className="bg-muted text-muted-foreground text-[10px]"
                         >
-                          Inactive
+                          Đã tắt
                         </Badge>
                       )}
                     </div>
@@ -389,14 +389,14 @@ export function AutomationRulesList({ workspaceId, currentUserRole }: Automation
                     <div className="flex flex-wrap items-center gap-1.5 pt-1 text-xs">
                       {/* Conditions */}
                       <span className="flex items-center gap-1 text-[11px] font-semibold text-sky-400">
-                        <Filter className="size-3" /> IF:
+                        <Filter className="size-3" /> NẾU:
                       </span>
                       {rule.conditions && rule.conditions.length > 0 ? (
                         rule.conditions.map((cond, i) => (
                           <React.Fragment key={i}>
                             {i > 0 && (
                               <span className="text-[10px] font-semibold text-muted-foreground">
-                                AND
+                                VÀ
                               </span>
                             )}
                             <Badge
@@ -409,7 +409,7 @@ export function AutomationRulesList({ workspaceId, currentUserRole }: Automation
                         ))
                       ) : (
                         <span className="text-[11px] italic text-muted-foreground">
-                          All trigger events
+                          Mọi sự kiện kích hoạt
                         </span>
                       )}
 
@@ -417,7 +417,7 @@ export function AutomationRulesList({ workspaceId, currentUserRole }: Automation
 
                       {/* Actions */}
                       <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-400">
-                        <Play className="size-3" /> THEN:
+                        <Play className="size-3" /> THÌ:
                       </span>
                       {rule.actions.map((act, i) => (
                         <Badge
@@ -437,14 +437,14 @@ export function AutomationRulesList({ workspaceId, currentUserRole }: Automation
                       <>
                         <div className="flex items-center gap-1.5">
                           <span className="text-[11px] text-muted-foreground">
-                            {rule.isActive ? 'Active' : 'Off'}
+                            {rule.isActive ? 'Bật' : 'Tắt'}
                           </span>
                           <Switch
                             checked={rule.isActive}
                             onCheckedChange={checked =>
                               toggleActive({ ruleId: rule.id, isActive: checked })
                             }
-                            aria-label={`Toggle ${rule.name}`}
+                            aria-label={`Bật/tắt ${rule.name}`}
                           />
                         </div>
 
@@ -464,14 +464,14 @@ export function AutomationRulesList({ workspaceId, currentUserRole }: Automation
                               className="cursor-pointer gap-2 text-xs"
                             >
                               <Pencil className="size-3.5 text-muted-foreground" />
-                              Edit Rule
+                              Chỉnh sửa quy tắc
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => handleDuplicate(rule)}
                               className="cursor-pointer gap-2 text-xs"
                             >
                               <Copy className="size-3.5 text-muted-foreground" />
-                              Duplicate
+                              Nhân bản
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
@@ -479,7 +479,7 @@ export function AutomationRulesList({ workspaceId, currentUserRole }: Automation
                               className="cursor-pointer gap-2 text-xs text-destructive focus:bg-destructive/10 focus:text-destructive"
                             >
                               <Trash2 className="size-3.5" />
-                              Delete
+                              Xóa
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -513,15 +513,15 @@ export function AutomationRulesList({ workspaceId, currentUserRole }: Automation
             <AlertDialogMedia className="bg-destructive/10 text-destructive">
               <AlertTriangle className="size-5" />
             </AlertDialogMedia>
-            <AlertDialogTitle>Delete Automation Rule</AlertDialogTitle>
+            <AlertDialogTitle>Xóa quy tắc tự động hóa</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete the automation rule{' '}
-              <strong className="text-foreground">"{ruleToDelete?.name}"</strong>? This rule will no
-              longer evaluate or execute actions on future events.
+              Bạn có chắc chắn muốn xóa quy tắc tự động hóa{' '}
+              <strong className="text-foreground">"{ruleToDelete?.name}"</strong>? Quy tắc này sẽ
+              không còn đánh giá hoặc thực hiện hành động trên các sự kiện sau này.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={isDeleting}>Hủy</AlertDialogCancel>
             <Button
               variant="destructive"
               size="sm"
@@ -530,7 +530,7 @@ export function AutomationRulesList({ workspaceId, currentUserRole }: Automation
               className="gap-1.5"
             >
               {isDeleting && <Spinner className="size-3.5" data-icon="inline-start" />}
-              Delete Rule
+              Xóa quy tắc
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>

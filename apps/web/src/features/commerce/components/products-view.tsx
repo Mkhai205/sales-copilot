@@ -153,10 +153,13 @@ export function ProductsView({ workspaceSlug }: ProductsViewProps) {
   return (
     <div className="flex flex-col flex-1 h-full overflow-hidden p-6 gap-5">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-border/70">
         <div className="flex flex-col">
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold tracking-tight">Danh Mục Sản Phẩm</h1>
+            <h1 className="text-xl font-bold tracking-tight text-foreground flex items-center gap-2">
+              <Tag className="size-5 text-primary" />
+              <span>Danh Mục Sản Phẩm</span>
+            </h1>
             {meta?.total !== undefined && (
               <Badge variant="secondary" className="text-xs font-mono px-2 py-0.5">
                 {meta.total} sản phẩm

@@ -18,7 +18,7 @@ export default function SettingsIndexPage() {
   }, [isLoading, defaultRoute, router, workspaceSlug]);
 
   return (
-    <div className="flex flex-col gap-6 p-2 max-w-4xl">
+    <div className="flex flex-col gap-6 w-full">
       <div className="flex flex-col gap-2">
         <Skeleton className="h-8 w-48" />
         <Skeleton className="h-4 w-96" />

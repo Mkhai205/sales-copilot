@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import * as React from 'react';
 import Link from 'next/link';
@@ -13,7 +13,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { getChannelMeta } from '@/lib/channels';
-import { useI18n, formatRelativeTime } from '@/lib/i18n';
+import { formatRelativeTime } from '@/lib/format-date';
 
 interface ConversationCardProps {
   conversation: ConversationResponseDto;
@@ -44,14 +44,14 @@ function getLabelBadgeStyle(color?: string) {
   };
 }
 
-function renderPriorityIndicator(priority?: Priority | null, t?: (key: any) => string) {
+function renderPriorityIndicator(priority?: Priority | null) {
   if (!priority) return null;
 
   if (priority === Priority.URGENT) {
     return (
       <span
         className="inline-flex items-center gap-0.5 text-rose-600 dark:text-rose-400 shrink-0"
-        title={t ? t('conversations.card.priorityUrgent') : 'Priority: Urgent'}
+        title="Độ ưu tiên: Khẩn cấp"
       >
         <Flame className="size-3 text-rose-500 fill-rose-500 animate-pulse" />
       </span>
@@ -62,7 +62,7 @@ function renderPriorityIndicator(priority?: Priority | null, t?: (key: any) => s
     return (
       <span
         className="inline-flex items-center gap-0.5 text-amber-600 dark:text-amber-400 shrink-0"
-        title={t ? t('conversations.card.priorityHigh') : 'Priority: High'}
+        title="Độ ưu tiên: Cao"
       >
         <Flag className="size-3 text-amber-500 fill-amber-500" />
       </span>
@@ -77,12 +77,11 @@ export function ConversationCard({
   workspaceSlug,
   isSelected,
 }: ConversationCardProps) {
-  const { locale, t } = useI18n();
-  const contactName = conversation.contact?.name || t('conversations.card.guestCustomer');
+  const contactName = conversation.contact?.name || 'Khách vãng lai';
   const unreadCount = conversation.unreadMessagesCount || 0;
   const isUnread = unreadCount > 0;
-  const time = formatRelativeTime(conversation.lastActivityAt || conversation.createdAt, locale);
-  const channelName = conversation.inbox?.name || t('conversations.card.inboxFallback');
+  const time = formatRelativeTime(conversation.lastActivityAt || conversation.createdAt);
+  const channelName = conversation.inbox?.name || 'Hộp thư';
   const channelMeta = getChannelMeta(conversation.inbox?.channelType);
   const isPrivateNote = conversation.lastMessage?.isPrivate;
   const isAgentReply = conversation.lastMessage?.senderType === SenderType.USER;
@@ -96,9 +95,9 @@ export function ConversationCard({
     const isImg = conversation.lastMessage?.attachments?.some(
       a => a.fileType === 'IMAGE' || a.contentType?.startsWith('image/'),
     );
-    lastMessageText = isImg ? t('conversations.card.image') : t('conversations.card.attachment');
+    lastMessageText = isImg ? 'Hình ảnh' : 'Tệp đính kèm';
   } else if (!lastMessageText) {
-    lastMessageText = t('conversations.card.noMessages');
+    lastMessageText = 'Chưa có tin nhắn';
   }
 
   const searchParams = useSearchParams();
@@ -138,7 +137,7 @@ export function ConversationCard({
             {isUnread && (
               <span
                 className="size-2 rounded-full bg-primary shrink-0 animate-pulse"
-                title={t('conversations.card.unreadMessages')}
+                title={'Tin nhắn mới chưa đọc'}
               />
             )}
             <h3
@@ -152,7 +151,7 @@ export function ConversationCard({
           </div>
 
           <div className="flex items-center gap-1.5 shrink-0 text-muted-foreground">
-            {renderPriorityIndicator(conversation.priority, t)}
+            {renderPriorityIndicator(conversation.priority)}
             <span className="text-[11px] tabular-nums">{time}</span>
           </div>
         </div>
@@ -181,9 +180,7 @@ export function ConversationCard({
             {conversation.assignee ? (
               <div
                 className="flex items-center gap-1 text-[11px] text-muted-foreground/80 font-medium"
-                title={t('conversations.card.assignedTo', {
-                  name: conversation.assignee.name || conversation.assignee.email,
-                })}
+                title={`Phụ trách: ${conversation.assignee.name || conversation.assignee.email}`}
               >
                 <Avatar className="size-4 shrink-0 ring-1 ring-border/50">
                   <AvatarImage
@@ -201,10 +198,10 @@ export function ConversationCard({
             ) : (
               <span
                 className="inline-flex items-center gap-1 text-[10px] text-muted-foreground/50 hover:text-muted-foreground transition-colors"
-                title={t('conversations.card.unassigned')}
+                title={'Chưa phân công'}
               >
                 <UserX className="size-3 text-muted-foreground/40" />
-                <span>{t('conversations.card.unassignedBadge')}</span>
+                <span>{'Chưa nhận'}</span>
               </span>
             )}
           </div>

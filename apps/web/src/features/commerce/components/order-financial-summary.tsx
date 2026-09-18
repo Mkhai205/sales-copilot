@@ -12,7 +12,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-import { useI18n } from '@/lib/i18n';
 
 interface OrderFinancialSummaryProps {
   subtotal: number;
@@ -41,13 +40,11 @@ export function OrderFinancialSummary({
   onChange,
   disabled = false,
 }: OrderFinancialSummaryProps) {
-  const { t } = useI18n();
-
   const SHIPPING_PRESETS = [
-    { label: t('commerce.summary.presetFree'), value: 0 },
-    { label: t('commerce.summary.presetFlat'), value: 25000 },
-    { label: t('commerce.summary.presetStandard'), value: 30000 },
-    { label: t('commerce.summary.presetExpress'), value: 45000 },
+    { label: 'Freeship', value: 0 },
+    { label: 'Đồng giá', value: 25000 },
+    { label: 'Tiêu chuẩn', value: 30000 },
+    { label: 'Hỏa tốc', value: 45000 },
   ];
 
   const formatCurrency = (val: number) => {
@@ -70,19 +67,19 @@ export function OrderFinancialSummary({
   return (
     <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-3 text-xs">
       <h4 className="font-semibold text-foreground text-xs uppercase tracking-wider text-muted-foreground">
-        {t('commerce.summary.title')}
+        {'Tổng kết thanh toán'}
       </h4>
 
       {/* Subtotal */}
       <div className="flex items-center justify-between">
-        <span className="text-muted-foreground">{t('commerce.summary.subtotalColon')}</span>
+        <span className="text-muted-foreground">{'Tạm tính:'}</span>
         <span className="font-medium text-foreground">{formatCurrency(subtotal)}</span>
       </div>
 
       {/* Discount Section */}
       <div className="flex flex-col gap-1.5 pt-1 border-t border-border/50">
         <div className="flex items-center justify-between">
-          <span className="text-muted-foreground">{t('commerce.summary.discountColon')}</span>
+          <span className="text-muted-foreground">{'Chiết khấu:'}</span>
           <span className="font-medium text-destructive">
             -{formatCurrency(calculatedDiscount)}
           </span>
@@ -122,11 +119,7 @@ export function OrderFinancialSummary({
             type="number"
             min={0}
             max={discountType === DiscountType.PERCENTAGE ? 100 : subtotal}
-            placeholder={
-              discountType === DiscountType.PERCENTAGE
-                ? '0 - 100%'
-                : t('commerce.summary.discountAmountPlaceholder')
-            }
+            placeholder={discountType === DiscountType.PERCENTAGE ? '0 - 100%' : 'Số tiền ₫'}
             value={discountAmount || ''}
             onChange={e => {
               const val = Math.max(0, parseInt(e.target.value, 10) || 0);
@@ -138,7 +131,7 @@ export function OrderFinancialSummary({
         </div>
 
         <Input
-          placeholder={t('commerce.summary.discountReasonPlaceholder')}
+          placeholder={'Lý do chiết khấu (tùy chọn)...'}
           value={discountReason || ''}
           onChange={e => onChange({ discountReason: e.target.value })}
           className="h-6 text-[11px] text-muted-foreground"
@@ -149,7 +142,7 @@ export function OrderFinancialSummary({
       {/* Shipping Fee Presets */}
       <div className="flex flex-col gap-1.5 pt-1 border-t border-border/50">
         <div className="flex items-center justify-between">
-          <span className="text-muted-foreground">{t('commerce.summary.shippingFeeColon')}</span>
+          <span className="text-muted-foreground">{'Phí vận chuyển:'}</span>
           <span className="font-medium text-foreground">{formatCurrency(shippingFee)}</span>
         </div>
 
@@ -175,7 +168,7 @@ export function OrderFinancialSummary({
         <Input
           type="number"
           min={0}
-          placeholder={t('commerce.summary.customShippingPlaceholder')}
+          placeholder={'Nhập phí ship tùy chỉnh ₫...'}
           value={shippingFee || ''}
           onChange={e => {
             const val = Math.max(0, parseInt(e.target.value, 10) || 0);
@@ -188,7 +181,7 @@ export function OrderFinancialSummary({
 
       {/* Payment Method */}
       <div className="flex flex-col gap-1 pt-1 border-t border-border/50">
-        <span className="text-muted-foreground">{t('commerce.summary.paymentMethod')}</span>
+        <span className="text-muted-foreground">{'Phương thức thanh toán:'}</span>
         <Select
           value={paymentMethod}
           onValueChange={val => onChange({ paymentMethod: val as PaymentMethod })}
@@ -199,16 +192,16 @@ export function OrderFinancialSummary({
           </SelectTrigger>
           <SelectContent position="popper">
             <SelectItem value={PaymentMethod.COD} className="text-xs">
-              {t('commerce.summary.methodCod')}
+              {'COD (Thanh toán khi nhận hàng)'}
             </SelectItem>
             <SelectItem value={PaymentMethod.VIETQR} className="text-xs">
-              {t('commerce.summary.methodVietQr')}
+              {'VietQR (Chuyển khoản tự động xác thực)'}
             </SelectItem>
             <SelectItem value={PaymentMethod.BANK_TRANSFER} className="text-xs">
-              {t('commerce.summary.methodBank')}
+              {'Chuyển khoản ngân hàng thủ công'}
             </SelectItem>
             <SelectItem value={PaymentMethod.CASH} className="text-xs">
-              {t('commerce.summary.methodCash')}
+              {'Tiền mặt tại quầy (CASH)'}
             </SelectItem>
           </SelectContent>
         </Select>
@@ -216,7 +209,7 @@ export function OrderFinancialSummary({
 
       {/* Grand Total */}
       <div className="flex items-center justify-between pt-2 border-t border-border text-sm font-bold">
-        <span className="text-foreground">{t('commerce.summary.grandTotalColon')}</span>
+        <span className="text-foreground">{'Tổng thanh toán:'}</span>
         <span className="text-primary text-base font-extrabold">{formatCurrency(totalAmount)}</span>
       </div>
     </div>

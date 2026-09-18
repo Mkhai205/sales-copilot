@@ -90,7 +90,7 @@ export function WebhookDeliveryLogsSheet({
                 </div>
                 <div>
                   <SheetTitle className="text-base font-semibold text-foreground">
-                    Delivery History & Logs
+                    Lịch sử & Nhật ký gửi
                   </SheetTitle>
                   <SheetDescription className="text-xs text-muted-foreground font-mono truncate max-w-md">
                     {subscription?.url || 'Webhook Endpoint'}
@@ -107,7 +107,7 @@ export function WebhookDeliveryLogsSheet({
                 className="h-8 gap-1.5 text-xs shrink-0"
               >
                 <RefreshCw className={`size-3 ${isFetching ? 'animate-spin' : ''}`} />
-                Refresh
+                Làm mới
               </Button>
             </div>
           </SheetHeader>
@@ -115,15 +115,17 @@ export function WebhookDeliveryLogsSheet({
           {/* Filter Toolbar */}
           <div className="flex items-center justify-between border-b border-border/60 bg-card/30 px-6 py-2.5">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-medium text-muted-foreground">Filter by Status:</span>
+              <span className="text-xs font-medium text-muted-foreground">
+                Lọc theo trạng thái:
+              </span>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="h-7 w-36 bg-background/50 text-xs">
-                  <SelectValue placeholder="All Statuses" />
+                  <SelectValue placeholder="Tất cả trạng thái" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
                     <SelectItem value="ALL" className="text-xs">
-                      All Statuses
+                      Tất cả trạng thái
                     </SelectItem>
                     {Object.values(DELIVERY_STATUS_META).map(m => (
                       <SelectItem key={m.status} value={m.status} className="text-xs">
@@ -137,7 +139,7 @@ export function WebhookDeliveryLogsSheet({
 
             {meta && (
               <span className="text-xs text-muted-foreground">
-                Total: <strong className="text-foreground">{meta.total}</strong> deliveries
+                Tổng cộng: <strong className="text-foreground">{meta.total}</strong> lượt gửi
               </span>
             )}
           </div>
@@ -155,11 +157,13 @@ export function WebhookDeliveryLogsSheet({
                 <div className="flex size-10 items-center justify-center rounded-full bg-muted text-muted-foreground mb-2">
                   <Send className="size-5" />
                 </div>
-                <h4 className="text-sm font-semibold text-foreground">No delivery logs found</h4>
+                <h4 className="text-sm font-semibold text-foreground">
+                  Không tìm thấy nhật ký gửi nào
+                </h4>
                 <p className="mt-1 text-xs text-muted-foreground max-w-sm">
                   {statusFilter !== 'ALL'
-                    ? 'No delivery events match the selected status filter.'
-                    : 'Events triggered in your workspace will automatically appear here as they are delivered.'}
+                    ? 'Không có sự kiện gửi nào khớp với bộ lọc trạng thái đã chọn.'
+                    : 'Các sự kiện được kích hoạt trong không gian làm việc sẽ tự động xuất hiện ở đây khi được gửi đi.'}
                 </p>
               </div>
             ) : (
@@ -167,12 +171,12 @@ export function WebhookDeliveryLogsSheet({
                 <Table>
                   <TableHeader className="bg-card/60">
                     <TableRow className="hover:bg-transparent">
-                      <TableHead className="text-xs">Status</TableHead>
-                      <TableHead className="text-xs">Event</TableHead>
-                      <TableHead className="text-xs">Response</TableHead>
-                      <TableHead className="text-xs">Attempts</TableHead>
-                      <TableHead className="text-xs">Time</TableHead>
-                      <TableHead className="w-16 text-right text-xs">Action</TableHead>
+                      <TableHead className="text-xs">Trạng thái</TableHead>
+                      <TableHead className="text-xs">Sự kiện</TableHead>
+                      <TableHead className="text-xs">Phản hồi</TableHead>
+                      <TableHead className="text-xs">Lần thử</TableHead>
+                      <TableHead className="text-xs">Thời gian</TableHead>
+                      <TableHead className="w-16 text-right text-xs">Thao tác</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -230,7 +234,7 @@ export function WebhookDeliveryLogsSheet({
                               size="icon"
                               onClick={() => setInspectingDeliveryId(item.id)}
                               className="size-7 text-muted-foreground hover:text-foreground"
-                              title="Inspect payload & response"
+                              title="Xem payload & phản hồi"
                             >
                               <Eye className="size-3.5" />
                             </Button>
@@ -248,7 +252,7 @@ export function WebhookDeliveryLogsSheet({
           {meta && meta.totalPages > 1 && (
             <div className="flex items-center justify-between border-t border-border px-6 py-3 bg-card/20">
               <span className="text-xs text-muted-foreground">
-                Page {meta.page} of {meta.totalPages}
+                Trang {meta.page} / {meta.totalPages}
               </span>
 
               <div className="flex items-center gap-1.5">

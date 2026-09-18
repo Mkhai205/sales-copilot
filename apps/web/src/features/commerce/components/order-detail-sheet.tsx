@@ -22,7 +22,6 @@ import { OrderStatusBadge, PaymentStatusBadge } from './order-status-badge';
 import { ThermalPrintDialog } from './thermal-print-dialog';
 import { useCommerceOrders } from '../hooks/use-commerce-orders';
 import { formatVND } from '@/features/commerce/lib/currency';
-import { useI18n } from '@/lib/i18n';
 import { OrderStatus, type OrderResponseDto } from '@sales-copilot/shared-contracts';
 import {
   Printer,
@@ -69,7 +68,6 @@ export function OrderDetailSheet({
   workspaceSlug,
   onOrderUpdated,
 }: OrderDetailSheetProps) {
-  const { t } = useI18n();
   const { completeOrder, cancelOrder, isCompleting, isCancelling } = useCommerceOrders(workspaceId);
 
   const [printOpen, setPrintOpen] = React.useState(false);
@@ -154,7 +152,7 @@ export function OrderDetailSheet({
               }}
             >
               <Printer className="size-3.5" />
-              {t('commerce.orders.actions.printK80')}
+              {'In phiếu gửi (K80)'}
             </Button>
 
             <Button
@@ -168,7 +166,7 @@ export function OrderDetailSheet({
               }}
             >
               <Printer className="size-3.5" />
-              {t('commerce.orders.actions.printK58')}
+              {'In hóa đơn (K58)'}
             </Button>
 
             {order.conversationId && (
@@ -180,7 +178,7 @@ export function OrderDetailSheet({
               >
                 <Link href={`/${workspaceSlug}/inbox?conversationId=${order.conversationId}`}>
                   <MessageSquare className="size-3.5 text-muted-foreground" />
-                  {t('commerce.orders.actions.openChat')}
+                  {'Xem hội thoại'}
                 </Link>
               </Button>
             )}
@@ -196,7 +194,7 @@ export function OrderDetailSheet({
                   disabled={isCompleting}
                 >
                   <CheckCircle2 className="size-3.5" />
-                  {t('commerce.orders.actions.complete')}
+                  {'Hoàn tất đơn'}
                 </Button>
               )}
 
@@ -210,7 +208,7 @@ export function OrderDetailSheet({
                   disabled={isCancelling}
                 >
                   <XCircle className="size-3.5" />
-                  {t('commerce.orders.actions.cancel')}
+                  {'Hủy đơn hàng'}
                 </Button>
               )}
             </div>
@@ -222,17 +220,17 @@ export function OrderDetailSheet({
             <div className="rounded-lg border bg-card p-3 space-y-2">
               <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
                 <User className="size-3.5 text-primary" />
-                <span>{t('commerce.orders.detail.recipientTitle')}</span>
+                <span>{'Thông tin người nhận'}</span>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                 <div>
-                  <span className="text-muted-foreground">{t('commerce.recipient.name')}: </span>
+                  <span className="text-muted-foreground">{'Tên người nhận'}: </span>
                   <span className="font-semibold text-foreground">
-                    {order.shippingAddress?.recipientName || t('common.none')}
+                    {order.shippingAddress?.recipientName || 'Không có'}
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="text-muted-foreground">{t('commerce.recipient.phone')}: </span>
+                  <span className="text-muted-foreground">{'Số điện thoại'}: </span>
                   <span className="font-mono font-medium">
                     {order.shippingAddress?.phoneNumber || '—'}
                   </span>
@@ -255,8 +253,7 @@ export function OrderDetailSheet({
                     </span>
                     {order.shippingAddress.shippingNotes && (
                       <p className="text-[11px] text-muted-foreground mt-1 italic">
-                        {t('commerce.recipient.shippingNotes')}:{' '}
-                        {order.shippingAddress.shippingNotes}
+                        {'Ghi chú giao hàng'}: {order.shippingAddress.shippingNotes}
                       </p>
                     )}
                   </div>
@@ -268,7 +265,7 @@ export function OrderDetailSheet({
             <div className="rounded-lg border bg-card p-3 space-y-2">
               <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
                 <Package className="size-3.5 text-primary" />
-                <span>{t('commerce.orders.detail.itemsTitle')}</span>
+                <span>{'Danh sách sản phẩm'}</span>
               </div>
               <div className="divide-y divide-border/60">
                 {(order.items || []).map(item => (
@@ -304,11 +301,11 @@ export function OrderDetailSheet({
             <div className="rounded-lg border bg-card p-3 space-y-2">
               <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
                 <CreditCard className="size-3.5 text-primary" />
-                <span>{t('commerce.orders.detail.financialTitle')}</span>
+                <span>{'Thông tin thanh toán'}</span>
               </div>
               <div className="space-y-1.5 text-xs">
                 <div className="flex justify-between text-muted-foreground">
-                  <span>{t('commerce.summary.subtotalColon')}</span>
+                  <span>{'Tạm tính:'}</span>
                   <span className="font-mono font-medium text-foreground">
                     {formatVND(Number(order.subtotal || 0))}
                   </span>
@@ -316,8 +313,7 @@ export function OrderDetailSheet({
                 {Number(order.discountAmount || 0) > 0 && (
                   <div className="flex justify-between text-emerald-600">
                     <span>
-                      {t('commerce.summary.discountColon')}{' '}
-                      {order.discountReason ? `(${order.discountReason})` : ''}
+                      {'Chiết khấu:'} {order.discountReason ? `(${order.discountReason})` : ''}
                     </span>
                     <span className="font-mono font-medium">
                       -{formatVND(Number(order.discountAmount))}
@@ -325,23 +321,23 @@ export function OrderDetailSheet({
                   </div>
                 )}
                 <div className="flex justify-between text-muted-foreground">
-                  <span>{t('commerce.summary.shippingFeeColon')}</span>
+                  <span>{'Phí vận chuyển:'}</span>
                   <span className="font-mono font-medium text-foreground">
                     {formatVND(Number(order.shippingFee || 0))}
                   </span>
                 </div>
                 <div className="flex justify-between font-semibold text-sm pt-1.5 border-t border-border/60">
-                  <span>{t('commerce.summary.grandTotalColon')}</span>
+                  <span>{'Tổng thanh toán:'}</span>
                   <span className="font-mono text-primary">{formatVND(totalAmount)}</span>
                 </div>
                 <div className="flex justify-between text-muted-foreground text-[11px] pt-1 border-t border-dashed border-border/60">
-                  <span>{t('commerce.summary.depositPaid')}:</span>
+                  <span>{'Đã cọc/thanh toán'}:</span>
                   <span className="font-mono font-medium text-emerald-600">
                     {formatVND(paidAmount)}
                   </span>
                 </div>
                 <div className="flex justify-between font-semibold text-xs text-orange-600 dark:text-orange-400">
-                  <span>{t('commerce.summary.codDue')}:</span>
+                  <span>{'Còn phải thu (COD)'}:</span>
                   <span className="font-mono">{formatVND(codDue)}</span>
                 </div>
               </div>
@@ -349,9 +345,7 @@ export function OrderDetailSheet({
 
             {/* Payment Transactions */}
             <div className="rounded-lg border bg-card p-3 space-y-2">
-              <div className="text-xs font-semibold text-foreground">
-                {t('commerce.orders.detail.paymentTransactionsTitle')}
-              </div>
+              <div className="text-xs font-semibold text-foreground">{'Lịch sử giao dịch'}</div>
               {order.paymentTransactions && order.paymentTransactions.length > 0 ? (
                 <div className="divide-y divide-border/60">
                   {order.paymentTransactions.map(tx => (
@@ -373,7 +367,7 @@ export function OrderDetailSheet({
                 </div>
               ) : (
                 <div className="text-[11px] text-muted-foreground italic py-1">
-                  {t('commerce.orders.detail.noTransactions')}
+                  {'Chưa có giao dịch thanh toán nào được ghi nhận'}
                 </div>
               )}
             </div>
@@ -383,21 +377,17 @@ export function OrderDetailSheet({
               <div className="rounded-lg border bg-card p-3 space-y-2 text-xs">
                 <div className="flex items-center gap-1.5 font-semibold text-foreground">
                   <FileText className="size-3.5 text-primary" />
-                  <span>{t('commerce.orders.detail.notesTitle')}</span>
+                  <span>{'Ghi chú đơn hàng'}</span>
                 </div>
                 {order.customerNotes && (
                   <div>
-                    <span className="text-muted-foreground">
-                      {t('commerce.orders.detail.customerNotes')}:{' '}
-                    </span>
+                    <span className="text-muted-foreground">{'Ghi chú của khách'}: </span>
                     <span>{order.customerNotes}</span>
                   </div>
                 )}
                 {order.internalNotes && (
                   <div>
-                    <span className="text-muted-foreground">
-                      {t('commerce.orders.detail.internalNotes')}:{' '}
-                    </span>
+                    <span className="text-muted-foreground">{'Ghi chú nội bộ'}: </span>
                     <span className="italic">{order.internalNotes}</span>
                   </div>
                 )}
@@ -411,8 +401,12 @@ export function OrderDetailSheet({
       <Dialog open={completeDialogOpen} onOpenChange={setCompleteDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{t('commerce.orders.detail.completeConfirmTitle')}</DialogTitle>
-            <DialogDescription>{t('commerce.orders.detail.completeConfirmDesc')}</DialogDescription>
+            <DialogTitle>{'Hoàn tất đơn hàng'}</DialogTitle>
+            <DialogDescription>
+              {
+                'Đơn hàng sẽ được chuyển sang Hoàn thành. Nếu là đơn COD chưa thanh toán, hệ thống sẽ tự động ghi nhận thanh toán.'
+              }
+            </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2 sm:gap-0">
             <Button
@@ -421,7 +415,7 @@ export function OrderDetailSheet({
               onClick={() => setCompleteDialogOpen(false)}
               disabled={isCompleting}
             >
-              {t('common.cancel')}
+              {'Hủy'}
             </Button>
             <Button
               type="button"
@@ -430,7 +424,7 @@ export function OrderDetailSheet({
               onClick={handleConfirmComplete}
               disabled={isCompleting}
             >
-              {isCompleting ? t('common.saving') : t('commerce.orders.detail.confirmCompleteBtn')}
+              {isCompleting ? 'Đang lưu...' : 'Xác nhận hoàn tất'}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -440,20 +434,21 @@ export function OrderDetailSheet({
       <Dialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-destructive">
-              {t('commerce.orders.detail.cancelConfirmTitle')}
-            </DialogTitle>
-            <DialogDescription>{t('commerce.orders.detail.cancelConfirmDesc')}</DialogDescription>
+            <DialogTitle className="text-destructive">{'Xác nhận hủy đơn hàng'}</DialogTitle>
+            <DialogDescription>
+              {
+                'Thao tác này sẽ hủy đơn hàng và hoàn trả tồn kho tương ứng. Vui lòng nhập lý do hủy.'
+              }
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-2 py-2">
             <label className="text-xs font-semibold text-foreground">
-              {t('commerce.orders.detail.cancelReasonLabel')}{' '}
-              <span className="text-destructive">*</span>
+              {'Lý do hủy đơn'} <span className="text-destructive">*</span>
             </label>
             <Textarea
               value={cancelReason}
               onChange={e => setCancelReason(e.target.value)}
-              placeholder={t('commerce.orders.detail.cancelReasonPlaceholder')}
+              placeholder={'Ví dụ: Khách đổi ý, sai địa chỉ...'}
               rows={3}
               className="text-xs"
             />
@@ -465,7 +460,7 @@ export function OrderDetailSheet({
               onClick={() => setCancelDialogOpen(false)}
               disabled={isCancelling}
             >
-              {t('common.cancel')}
+              {'Hủy'}
             </Button>
             <Button
               type="button"
@@ -473,7 +468,7 @@ export function OrderDetailSheet({
               onClick={handleConfirmCancel}
               disabled={isCancelling || cancelReason.trim().length < 3}
             >
-              {isCancelling ? t('common.saving') : t('commerce.orders.detail.confirmCancelBtn')}
+              {isCancelling ? 'Đang lưu...' : 'Xác nhận hủy'}
             </Button>
           </DialogFooter>
         </DialogContent>

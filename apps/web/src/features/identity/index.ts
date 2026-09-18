@@ -6,6 +6,7 @@ export * from './hooks/use-workspace-members';
 export * from './hooks/use-teams';
 export * from './settings-nav-items';
 export * from './settings-nav';
+export * from './settings-sidebar';
 export * from './settings-guard';
 export * from './workspace-settings-form';
 export * from './invite-member-dialog';

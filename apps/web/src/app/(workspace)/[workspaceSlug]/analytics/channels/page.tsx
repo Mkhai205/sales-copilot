@@ -1,3 +1,5 @@
+'use client';
+
 import { FeaturePlaceholder } from '@/components/placeholder/feature-placeholder';
 import { PieChart } from 'lucide-react';
 

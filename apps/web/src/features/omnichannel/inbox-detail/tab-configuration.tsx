@@ -35,7 +35,6 @@ import { Badge } from '@/components/ui/badge';
 import { Spinner } from '@/components/ui/spinner';
 import { facebookApi } from '../api/facebook';
 import { useUpdateInbox } from '../hooks/use-inboxes';
-import { useI18n } from '@/lib/i18n';
 
 interface TabConfigurationProps {
   inbox: InboxDetailDto;
@@ -44,7 +43,6 @@ interface TabConfigurationProps {
 }
 
 export function TabConfiguration({ inbox, workspaceId, workspaceSlug }: TabConfigurationProps) {
-  const { t } = useI18n();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { mutate: updateInbox, isPending: isUpdating } = useUpdateInbox(workspaceId);
@@ -764,12 +762,12 @@ export function TabConfiguration({ inbox, workspaceId, workspaceSlug }: TabConfi
                     onClick={() => {
                       setPrivateReplyTemplate(DEFAULT_COMMENT_GUARD_PRIVATE_REPLY);
                       setPublicReplyTemplate(DEFAULT_COMMENT_GUARD_PUBLIC_REPLY);
-                      toast.success(t('inboxes.commentGuard.resetSuccess'));
+                      toast.success('Đã khôi phục mẫu tin nhắn mặc định');
                     }}
                     className="h-8 gap-1.5 text-xs font-medium"
                   >
                     <RotateCcw className="size-3.5" data-icon="inline-start" />
-                    {t('inboxes.commentGuard.resetDefault')}
+                    {'Khôi phục mặc định'}
                   </Button>
 
                   <Button

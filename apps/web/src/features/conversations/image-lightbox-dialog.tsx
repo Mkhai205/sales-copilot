@@ -6,7 +6,6 @@ import { X, ChevronLeft, ChevronRight, Download, Copy, ExternalLink } from 'luci
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import type { AttachmentDto } from '@sales-copilot/shared-contracts';
-import { useI18n } from '@/lib/i18n';
 
 interface ImageLightboxDialogProps {
   images: AttachmentDto[];
@@ -21,7 +20,6 @@ export function ImageLightboxDialog({
   isOpen,
   onClose,
 }: ImageLightboxDialogProps) {
-  const { t } = useI18n();
   const [currentIndex, setCurrentIndex] = React.useState(initialIndex);
 
   // Sync currentIndex with initialIndex when dialog opens
@@ -81,14 +79,14 @@ export function ImageLightboxDialog({
           [pngBlob.type]: pngBlob,
         }),
       ]);
-      toast.success(t('conversations.details.copyImageSuccess'));
+      toast.success('Đã sao chép ảnh vào bộ nhớ tạm');
     } catch {
       // Fallback: Copy URL if clipboard image write fails
       try {
         await navigator.clipboard.writeText(currentImage.fileUrl);
-        toast.success(t('conversations.details.copyLinkSuccess'));
+        toast.success('Đã sao chép liên kết ảnh');
       } catch {
-        toast.error(t('conversations.details.copyImageError'));
+        toast.error('Không thể sao chép ảnh');
       }
     }
   };
@@ -120,9 +118,7 @@ export function ImageLightboxDialog({
           aria-describedby={undefined}
         >
           <DialogPrimitive.Title className="sr-only">
-            {t('conversations.details.viewImageTitle', {
-              fileName: currentImage.fileName || '',
-            })}
+            {`Xem ảnh ${currentImage.fileName || ''}`}
           </DialogPrimitive.Title>
 
           {/* Top Bar */}
@@ -133,7 +129,7 @@ export function ImageLightboxDialog({
                 type="button"
                 onClick={onClose}
                 className="flex size-9 items-center justify-center rounded-full bg-white/10 text-white/90 hover:bg-white/20 hover:text-white transition-colors cursor-pointer"
-                title={t('conversations.details.closeEsc')}
+                title={'Đóng (Esc)'}
               >
                 <X className="size-5" />
               </button>
@@ -150,7 +146,7 @@ export function ImageLightboxDialog({
                 type="button"
                 onClick={handleCopyImage}
                 className="flex size-9 items-center justify-center rounded-full bg-white/10 text-white/90 hover:bg-white/20 hover:text-white transition-colors cursor-pointer"
-                title={t('conversations.details.copyImage')}
+                title={'Sao chép ảnh'}
               >
                 <Copy className="size-4" />
               </button>
@@ -159,7 +155,7 @@ export function ImageLightboxDialog({
                 type="button"
                 onClick={handleDownload}
                 className="flex size-9 items-center justify-center rounded-full bg-white/10 text-white/90 hover:bg-white/20 hover:text-white transition-colors cursor-pointer"
-                title={t('conversations.details.downloadImage')}
+                title={'Tải xuống ảnh'}
               >
                 <Download className="size-4" />
               </button>
@@ -169,7 +165,7 @@ export function ImageLightboxDialog({
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex size-9 items-center justify-center rounded-full bg-white/10 text-white/90 hover:bg-white/20 hover:text-white transition-colors cursor-pointer"
-                title={t('conversations.details.openInNewTab')}
+                title={'Mở trong tab mới'}
                 onClick={e => e.stopPropagation()}
               >
                 <ExternalLink className="size-4" />
@@ -188,7 +184,7 @@ export function ImageLightboxDialog({
                 type="button"
                 onClick={handlePrev}
                 className="absolute left-4 top-1/2 -translate-y-1/2 z-20 flex size-11 items-center justify-center rounded-full bg-black/60 text-white/90 hover:bg-white/20 hover:text-white transition-all cursor-pointer border border-white/10 shadow-lg"
-                title={t('conversations.details.prevImage')}
+                title={'Ảnh trước (Mũi tên trái)'}
               >
                 <ChevronLeft className="size-6" />
               </button>
@@ -212,7 +208,7 @@ export function ImageLightboxDialog({
                 type="button"
                 onClick={handleNext}
                 className="absolute right-4 top-1/2 -translate-y-1/2 z-20 flex size-11 items-center justify-center rounded-full bg-black/60 text-white/90 hover:bg-white/20 hover:text-white transition-all cursor-pointer border border-white/10 shadow-lg"
-                title={t('conversations.details.nextImage')}
+                title={'Ảnh tiếp theo (Mũi tên phải)'}
               >
                 <ChevronRight className="size-6" />
               </button>

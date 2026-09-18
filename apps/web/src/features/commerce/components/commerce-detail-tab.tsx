@@ -23,7 +23,6 @@ import { CommerceOrderForm } from './commerce-order-form';
 import { useActiveConversationOrder } from '../hooks/use-active-conversation-order';
 import { useCommerceOrders } from '../hooks/use-commerce-orders';
 import { commerceApi } from '../api/commerce-client';
-import { useI18n } from '@/lib/i18n';
 
 export interface CommerceDetailTabProps {
   workspaceId: string;
@@ -45,7 +44,6 @@ export function CommerceDetailTab({
   newOrderTrigger,
   onOpenDrawer,
 }: CommerceDetailTabProps) {
-  const { t } = useI18n();
   const [mode, setMode] = React.useState<'view' | 'form'>('view');
   const [editingOrder, setEditingOrder] = React.useState<OrderResponseDto | null>(null);
 
@@ -82,9 +80,9 @@ export function CommerceDetailTab({
     setIsSendingQr(true);
     try {
       await commerceApi.generateVietQr(workspaceId, activeOrder.id, { sendToChat: true });
-      toast.success(t('commerce.vietQrSentSuccess', { displayId: activeOrder.displayId }));
+      toast.success(`Đã gửi mã VietQR cho đơn #${activeOrder.displayId} vào chat!`);
     } catch (err: any) {
-      toast.error(t('commerce.vietQrSentError', { error: err.message || 'Error' }));
+      toast.error(`Không thể gửi mã VietQR: ${err.message || 'Error'}`);
     } finally {
       setIsSendingQr(false);
     }
@@ -103,14 +101,14 @@ export function CommerceDetailTab({
       dto: {
         paymentMethod: PaymentMethod.CASH,
         amount: remaining || Number(activeOrder.totalAmount),
-        notes: t('commerce.cashPayment'),
+        notes: 'Tiền mặt',
       },
     });
   };
 
   const handleCancel = async () => {
     if (!activeOrder) return;
-    const reason = window.prompt(t('commerce.cancelPrompt'));
+    const reason = window.prompt('Nhập lý do hủy đơn hàng:');
     if (!reason || reason.trim().length < 3) return;
     await cancelOrder({
       orderId: activeOrder.id,
@@ -121,7 +119,7 @@ export function CommerceDetailTab({
   if (isLoading) {
     return (
       <div className="py-8 text-center text-xs text-muted-foreground">
-        {t('commerce.loadingOrder')}
+        {'Đang tải thông tin đơn hàng...'}
       </div>
     );
   }
@@ -143,9 +141,7 @@ export function CommerceDetailTab({
         onSuccess={savedOrder => {
           setMode('view');
           setEditingOrder(null);
-          toast.success(
-            t('commerce.toasts.orderSavedSuccess', { displayId: savedOrder.displayId }),
-          );
+          toast.success(`Đơn hàng #${savedOrder.displayId} đã được lưu thành công!`);
         }}
       />
     );
@@ -159,7 +155,7 @@ export function CommerceDetailTab({
         <div className="flex items-center justify-between">
           <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
             <ShoppingBag className="size-3.5 text-primary" />
-            {t('commerce.currentOrder')}
+            {'Đơn hàng hiện tại'}
           </h4>
 
           <Button
@@ -174,7 +170,7 @@ export function CommerceDetailTab({
             }}
           >
             <Plus className="size-3" />
-            {t('commerce.createOrderShortcut')}
+            {'Tạo đơn (F4)'}
           </Button>
         </div>
 
@@ -229,7 +225,7 @@ export function CommerceDetailTab({
 
             {/* Financials */}
             <div className="flex items-center justify-between pt-2 border-t border-border/60">
-              <span className="text-muted-foreground">{t('commerce.summary.grandTotal')}:</span>
+              <span className="text-muted-foreground">{'Tổng cộng'}:</span>
               <span className="font-bold text-sm text-primary">
                 {formatCurrency(activeOrder.totalAmount)}
               </span>
@@ -248,7 +244,7 @@ export function CommerceDetailTab({
                     disabled={isCancelling}
                   >
                     <XCircle className="size-3.5 mr-1" />
-                    {t('commerce.cancelOrder')}
+                    {'Hủy đơn'}
                   </Button>
                   <Button
                     type="button"
@@ -259,7 +255,7 @@ export function CommerceDetailTab({
                     disabled={isSendingQr}
                   >
                     <QrCode className="size-3.5" />
-                    {isSendingQr ? t('common.saving') : t('commerce.sendVietQr')}
+                    {isSendingQr ? 'Đang lưu...' : 'Gửi mã VietQR'}
                   </Button>
                   <Button
                     type="button"
@@ -272,7 +268,7 @@ export function CommerceDetailTab({
                     }}
                   >
                     <Edit className="size-3.5" />
-                    {t('commerce.editOrder')} (F4)
+                    {'Chỉnh sửa đơn'} (F4)
                   </Button>
                   <Button
                     type="button"
@@ -283,7 +279,7 @@ export function CommerceDetailTab({
                     disabled={isConfirming}
                   >
                     <CheckCircle className="size-3.5" />
-                    {t('commerce.confirmOrder')}
+                    {'Xác nhận đơn'}
                   </Button>
                 </>
               )}
@@ -299,7 +295,7 @@ export function CommerceDetailTab({
                     disabled={isCancelling}
                   >
                     <XCircle className="size-3.5 mr-1" />
-                    {t('commerce.cancelOrder')}
+                    {'Hủy đơn'}
                   </Button>
                   <Button
                     type="button"
@@ -310,7 +306,7 @@ export function CommerceDetailTab({
                     disabled={isSendingQr}
                   >
                     <QrCode className="size-3.5" />
-                    {isSendingQr ? t('common.saving') : t('commerce.sendVietQr')}
+                    {isSendingQr ? 'Đang lưu...' : 'Gửi mã VietQR'}
                   </Button>
                   <Button
                     type="button"
@@ -334,7 +330,7 @@ export function CommerceDetailTab({
                     disabled={isPaying}
                   >
                     <CreditCard className="size-3.5" />
-                    {t('commerce.payOrder')}
+                    {'Thanh toán'}
                   </Button>
                 </>
               )}
@@ -344,9 +340,7 @@ export function CommerceDetailTab({
                 <div className="flex items-center gap-1.5">
                   <div className="flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
                     <CheckCircle className="size-3.5" />
-                    {activeOrder.status === OrderStatus.SHIPPING
-                      ? t('commerce.status.shipping')
-                      : t('commerce.payment.paid')}
+                    {activeOrder.status === OrderStatus.SHIPPING ? 'Đang giao' : 'Đã thanh toán'}
                   </div>
                   <Button
                     type="button"
@@ -359,7 +353,7 @@ export function CommerceDetailTab({
                     }}
                   >
                     <Printer className="size-3.5" />
-                    {t('commerce.print.k80Button')}
+                    {'In phiếu K80'}
                   </Button>
                   <Button
                     type="button"
@@ -372,7 +366,7 @@ export function CommerceDetailTab({
                     }}
                   >
                     <Printer className="size-3.5" />
-                    {t('commerce.print.k58Button')}
+                    {'In K58'}
                   </Button>
                 </div>
               )}
@@ -381,9 +375,11 @@ export function CommerceDetailTab({
         ) : (
           <div className="flex flex-col items-center justify-center p-6 rounded-lg border border-dashed border-border/80 bg-muted/20 text-center">
             <Package className="size-7 text-muted-foreground/60 mb-1.5" />
-            <p className="text-xs font-medium text-foreground">{t('commerce.noOrderTitle')}</p>
+            <p className="text-xs font-medium text-foreground">
+              {'Chưa có đơn hàng nào trong hội thoại này'}
+            </p>
             <p className="text-[11px] text-muted-foreground mt-0.5 mb-3">
-              {t('commerce.noOrderDesc')}
+              {'Nhấn Tạo đơn (F4) để bắt đầu'}
             </p>
             <Button
               type="button"
@@ -396,7 +392,7 @@ export function CommerceDetailTab({
               }}
             >
               <Plus className="size-3.5" />
-              {t('commerce.createOrderShortcut')}
+              {'Tạo đơn (F4)'}
             </Button>
           </div>
         )}
@@ -406,7 +402,7 @@ export function CommerceDetailTab({
       {orders.length > 0 && (
         <div className="flex flex-col gap-1.5 pt-2 border-t border-border/60">
           <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider text-muted-foreground">
-            {t('commerce.orderHistory')} ({orders.length})
+            {'Lịch sử đơn của khách'} ({orders.length})
           </h4>
 
           <div className="rounded-lg border border-border bg-card overflow-hidden">

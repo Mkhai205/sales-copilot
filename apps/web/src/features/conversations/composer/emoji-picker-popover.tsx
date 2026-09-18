@@ -60,7 +60,7 @@ export function EmojiPickerPopover({ onEmojiSelect, disabled = false }: EmojiPic
                 'text-muted-foreground hover:text-foreground transition-colors',
                 open && 'bg-primary/10 text-primary',
               )}
-              aria-label="Insert emoji"
+              aria-label="Chèn biểu tượng cảm xúc"
             >
               <Smile className="size-3.5" data-icon="inline-start" />
             </Button>
@@ -68,7 +68,7 @@ export function EmojiPickerPopover({ onEmojiSelect, disabled = false }: EmojiPic
         </TooltipTrigger>
         {!open && (
           <TooltipContent side="top">
-            <span className="text-xs">Insert emoji</span>
+            <span className="text-xs">{'Chèn biểu tượng cảm xúc'}</span>
           </TooltipContent>
         )}
       </Tooltip>
