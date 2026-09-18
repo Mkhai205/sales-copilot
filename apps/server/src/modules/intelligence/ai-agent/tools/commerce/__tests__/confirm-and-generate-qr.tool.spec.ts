@@ -110,7 +110,7 @@ describe('confirmAndGenerateQR Tool (T7)', () => {
       messagesService: mockMessagesService,
     });
 
-    const result = await tool.execute({ orderId: 'ord-draft' }, {} as any);
+    const result = await tool.execute!({ orderId: 'ord-draft' }, {} as any);
 
     assert.strictEqual(confirmCalls.length, 1);
     assert.strictEqual(confirmCalls[0], 'ord-draft');
@@ -134,7 +134,7 @@ describe('confirmAndGenerateQR Tool (T7)', () => {
       messagesService: mockMessagesService,
     });
 
-    const result = await tool.execute({ orderId: 'ord-confirmed' }, {} as any);
+    const result = await tool.execute!({ orderId: 'ord-confirmed' }, {} as any);
 
     // confirmOrder should NOT have been called again (avoid double-reserving stock!)
     assert.strictEqual(confirmCalls.length, 0);
@@ -152,7 +152,7 @@ describe('confirmAndGenerateQR Tool (T7)', () => {
       messagesService: mockMessagesService,
     });
 
-    const result = await tool.execute({ orderId: 'ord-paid' }, {} as any);
+    const result = await tool.execute!({ orderId: 'ord-paid' }, {} as any);
     assert.strictEqual(result.error, 'ORDER_ALREADY_PAID');
   });
 
@@ -165,7 +165,7 @@ describe('confirmAndGenerateQR Tool (T7)', () => {
       prisma: mockPrisma,
     });
 
-    const result = await tool.execute({ orderId: 'non-existent' }, {} as any);
+    const result = await tool.execute!({ orderId: 'non-existent' }, {} as any);
     assert.strictEqual(result.error, 'ORDER_NOT_FOUND');
   });
 });

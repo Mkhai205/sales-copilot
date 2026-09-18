@@ -11,6 +11,7 @@ import {
   Globe,
   KeyRound,
   RefreshCw,
+  RotateCcw,
   ShieldAlert,
   ShieldCheck,
 } from 'lucide-react';
@@ -34,6 +35,7 @@ import { Badge } from '@/components/ui/badge';
 import { Spinner } from '@/components/ui/spinner';
 import { facebookApi } from '../api/facebook';
 import { useUpdateInbox } from '../hooks/use-inboxes';
+import { useI18n } from '@/lib/i18n';
 
 interface TabConfigurationProps {
   inbox: InboxDetailDto;
@@ -42,6 +44,7 @@ interface TabConfigurationProps {
 }
 
 export function TabConfiguration({ inbox, workspaceId, workspaceSlug }: TabConfigurationProps) {
+  const { t } = useI18n();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { mutate: updateInbox, isPending: isUpdating } = useUpdateInbox(workspaceId);
@@ -752,7 +755,23 @@ export function TabConfiguration({ inbox, workspaceId, workspaceSlug }: TabConfi
                   )}
                 </FieldGroup>
 
-                <div className="flex items-center justify-end pt-2">
+                <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={isUpdating}
+                    onClick={() => {
+                      setPrivateReplyTemplate(DEFAULT_COMMENT_GUARD_PRIVATE_REPLY);
+                      setPublicReplyTemplate(DEFAULT_COMMENT_GUARD_PUBLIC_REPLY);
+                      toast.success(t('inboxes.commentGuard.resetSuccess'));
+                    }}
+                    className="h-8 gap-1.5 text-xs font-medium"
+                  >
+                    <RotateCcw className="size-3.5" data-icon="inline-start" />
+                    {t('inboxes.commentGuard.resetDefault')}
+                  </Button>
+
                   <Button
                     type="submit"
                     size="sm"

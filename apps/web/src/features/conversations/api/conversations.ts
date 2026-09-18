@@ -82,4 +82,10 @@ export const conversationsApi = {
       method: 'DELETE',
       headers: workspaceHeaders(workspaceId),
     }),
+
+  takeover: (workspaceId: string, id: string) =>
+    fetchApi<ConversationResponseDto>(`/conversations/${id}/takeover`, {
+      method: 'POST',
+      headers: workspaceHeaders(workspaceId),
+    }),
 };

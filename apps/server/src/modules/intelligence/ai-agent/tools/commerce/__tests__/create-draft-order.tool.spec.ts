@@ -117,7 +117,7 @@ describe('createDraftOrder Tool (T6)', () => {
       policy: { enabled: true, maxDiscountPercent: 10 },
     });
 
-    const result = await tool.execute(
+    const result = await tool.execute!(
       {
         items: [{ variantId: 'var-polo-l', quantity: 1 }],
         shippingAddress: {
@@ -150,7 +150,7 @@ describe('createDraftOrder Tool (T6)', () => {
     });
 
     // var-low-stock has stockQuantity: 2, reserved: 1 => available: 1. Requesting 5!
-    const result = await tool.execute(
+    const result = await tool.execute!(
       {
         items: [{ variantId: 'var-low-stock', quantity: 5 }],
       },
@@ -173,7 +173,7 @@ describe('createDraftOrder Tool (T6)', () => {
     });
 
     // Subtotal 150,000. 10% = 15,000. LLM attempts discountAmount: 30,000
-    const result = await tool.execute(
+    const result = await tool.execute!(
       {
         items: [{ variantId: 'var-polo-l', quantity: 1 }],
         discountAmount: 30000,
@@ -194,7 +194,7 @@ describe('createDraftOrder Tool (T6)', () => {
       prisma: mockPrisma,
     });
 
-    const result = await tool.execute(
+    const result = await tool.execute!(
       {
         items: [{ variantId: 'var-other-ws', quantity: 1 }],
       },

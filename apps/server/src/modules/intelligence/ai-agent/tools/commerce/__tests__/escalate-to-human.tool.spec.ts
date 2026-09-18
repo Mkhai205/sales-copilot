@@ -56,7 +56,7 @@ describe('escalateToHuman Tool (T9)', () => {
       redisService: mockRedisService,
     });
 
-    const result = await tool.execute(
+    const result = await tool.execute!(
       { reason: 'Khách hàng yêu cầu đổi size và hoàn tiền' },
       {} as any,
     );
@@ -85,7 +85,7 @@ describe('escalateToHuman Tool (T9)', () => {
       messagesService: mockMessagesService,
     });
 
-    const result = await tool.execute({ reason: 'Test' }, {} as any);
+    const result = await tool.execute!({ reason: 'Test' }, {} as any);
     assert.strictEqual(result.escalated, false);
     assert.strictEqual(result.error, 'MISSING_CONVERSATION_ID');
     assert.strictEqual(actionsOrder.length, 0);

@@ -1,9 +1,10 @@
 'use client';
 
 import * as React from 'react';
-import { User, ShoppingBag } from 'lucide-react';
+import { User, ShoppingBag, Bot } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useWorkspaces } from '@/features/identity';
 import { CommerceDetailTab } from '@/features/commerce';
@@ -11,6 +12,8 @@ import { CommerceDetailTab } from '@/features/commerce';
 import type { OrderResponseDto } from '@sales-copilot/shared-contracts';
 import { useI18n } from '@/lib/i18n';
 import { useConversation } from './hooks/use-conversation';
+import { useMessages } from './hooks/use-messages';
+import { useInbox } from '@/features/omnichannel/hooks/use-inboxes';
 import { ContactInfo, ContactIdentities } from '@/features/contacts';
 import { ConversationActions } from './conversation-actions';
 import { LabelManager } from './label-manager';
@@ -90,6 +93,39 @@ export function DetailPanel({
     (workspaceSlug ? workspaces?.find(w => w.slug === workspaceSlug)?.id : undefined) ||
     workspaces?.[0]?.id;
 
+  const { data: inbox } = useInbox(
+    resolvedWorkspaceId,
+    (conversation?.inbox as any)?.settings ? undefined : conversation?.inboxId,
+  );
+  const inboxSettings = (conversation?.inbox as any)?.settings || inbox?.settings;
+  const isAiConfigured =
+    Boolean(inboxSettings?.aiCommercePolicy?.enabled) || Boolean(conversation?.isAiPaused);
+
+  const { messages } = useMessages(conversationId || '', {
+    workspaceSlug,
+    workspaceId: resolvedWorkspaceId,
+    limit: 50,
+    enabled: Boolean(conversationId && isAiConfigured),
+  });
+
+  const aiMessagesCount = React.useMemo(() => {
+    if (!messages) return 0;
+    return messages.filter(m => {
+      if (!m.metadata) return false;
+      if (typeof m.metadata === 'object') {
+        return (m.metadata as any).isAiGenerated === true;
+      }
+      if (typeof m.metadata === 'string') {
+        try {
+          return JSON.parse(m.metadata)?.isAiGenerated === true;
+        } catch {
+          return false;
+        }
+      }
+      return false;
+    }).length;
+  }, [messages]);
+
   return (
     <Tabs
       value={internalTab}
@@ -138,6 +174,41 @@ export function DetailPanel({
 
             {/* Conversation Attributes: Status, Priority, Assignee, Team */}
             <ConversationActions conversation={conversation} workspaceSlug={workspaceSlug} />
+
+            {/* AI Activity Card */}
+            {(isAiConfigured || aiMessagesCount > 0) && (
+              <>
+                <Separator className="bg-border/60" />
+                <div className="rounded-lg border border-border/70 bg-muted/20 p-3 flex flex-col gap-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
+                      <Bot className="size-3.5 text-primary" />
+                      <span>{t('conversations.details.aiStats')}</span>
+                    </div>
+                    {conversation.isAiPaused ? (
+                      <Badge
+                        variant="outline"
+                        className="text-[10px] text-amber-500 border-amber-500/30 bg-amber-500/10 py-0 px-1.5 font-normal"
+                      >
+                        {t('conversations.details.aiStatusPaused')}
+                      </Badge>
+                    ) : (
+                      <Badge
+                        variant="outline"
+                        className="text-[10px] text-emerald-600 border-emerald-500/30 bg-emerald-500/10 py-0 px-1.5 font-normal"
+                      >
+                        {t('conversations.details.aiStatusActive')}
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span>
+                      {t('conversations.details.aiMessagesCount', { count: aiMessagesCount })}
+                    </span>
+                  </div>
+                </div>
+              </>
+            )}
 
             <Separator className="bg-border/60" />
 

@@ -69,6 +69,7 @@ export function mapConversationToDto(conv: any): ConversationResponseDto {
         (conv.inbox.channel?.channelType as ChannelType) ??
         (conv.inbox.channelType as ChannelType) ??
         null,
+      settings: conv.inbox.settings ?? null,
     };
   }
 

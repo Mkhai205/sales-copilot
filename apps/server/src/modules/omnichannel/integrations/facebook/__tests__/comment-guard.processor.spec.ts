@@ -5,8 +5,6 @@ import {
   DEFAULT_COMMENT_GUARD_PRIVATE_REPLY,
   DEFAULT_COMMENT_GUARD_PUBLIC_REPLY,
   SenderType,
-  MessageType,
-  MessageContentType,
 } from '@sales-copilot/shared-contracts';
 import { CommentGuardProcessor, CommentGuardJobData } from '../comment-guard.processor';
 import { FacebookRateLimitError } from '../facebook.adapter';

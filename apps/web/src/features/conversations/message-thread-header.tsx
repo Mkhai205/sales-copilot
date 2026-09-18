@@ -1,8 +1,15 @@
-﻿'use client';
+'use client';
 
 import * as React from 'react';
 import Image from 'next/image';
-import { PanelRightClose, PanelRightOpen, AlertTriangle } from 'lucide-react';
+import {
+  PanelRightClose,
+  PanelRightOpen,
+  AlertTriangle,
+  Bot,
+  UserRoundCheck,
+  Loader2,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -13,7 +20,8 @@ import {
   type ConversationResponseDto,
 } from '@sales-copilot/shared-contracts';
 import { getChannelMeta } from '@/lib/channels';
-
+import { useInbox } from '@/features/omnichannel/hooks/use-inboxes';
+import { useTakeoverConversation } from './hooks/use-takeover-conversation';
 import { useI18n } from '@/lib/i18n';
 
 interface MessageThreadHeaderProps {
@@ -28,10 +36,25 @@ interface MessageThreadHeaderProps {
 
 export function MessageThreadHeader({
   conversation,
+  workspaceSlug,
   isDetailOpen,
   onToggleDetail,
 }: MessageThreadHeaderProps) {
   const { t } = useI18n();
+
+  const takeoverMutation = useTakeoverConversation({
+    workspaceId: conversation?.workspaceId,
+    workspaceSlug,
+  });
+
+  const { data: inbox } = useInbox(
+    conversation?.workspaceId,
+    (conversation?.inbox as any)?.settings ? undefined : conversation?.inboxId,
+  );
+  const inboxSettings = (conversation?.inbox as any)?.settings || inbox?.settings;
+  const isAiConfigured = Boolean(inboxSettings?.aiCommercePolicy?.enabled);
+  const isAiActive = isAiConfigured && !conversation?.isAiPaused;
+  const isStaffTakeover = isAiConfigured && Boolean(conversation?.isAiPaused);
 
   const getStatusBadge = (status?: ConversationStatus) => {
     switch (status) {
@@ -167,6 +190,24 @@ export function MessageThreadHeader({
             </h2>
             {getStatusBadge(conversation?.status)}
             {getPriorityBadge(conversation?.priority)}
+            {isAiActive && (
+              <Badge
+                variant="outline"
+                className="text-[10px] text-emerald-600 border-emerald-500/30 bg-emerald-500/10 py-0 px-1.5 font-medium flex items-center gap-1"
+              >
+                <Bot className="size-2.5" />
+                <span>{t('conversations.aiAutopilotBadge')}</span>
+              </Badge>
+            )}
+            {isStaffTakeover && (
+              <Badge
+                variant="outline"
+                className="text-[10px] text-amber-500 border-amber-500/30 bg-amber-500/10 py-0 px-1.5 font-medium flex items-center gap-1"
+              >
+                <UserRoundCheck className="size-2.5" />
+                <span>{t('conversations.humanBadge')}</span>
+              </Badge>
+            )}
           </div>
           <p className="truncate text-[11px] text-muted-foreground flex items-center gap-1">
             <span>via {channelMeta.label}</span>
@@ -178,6 +219,23 @@ export function MessageThreadHeader({
 
       {/* Header Action Buttons */}
       <div className="flex items-center gap-1.5">
+        {isAiActive && conversation?.id && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => takeoverMutation.mutate(conversation.id)}
+            disabled={takeoverMutation.isPending}
+            className="h-7 text-xs gap-1.5 border-amber-500/40 text-amber-600 hover:bg-amber-500/10 hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300 font-medium cursor-pointer"
+          >
+            {takeoverMutation.isPending ? (
+              <Loader2 className="size-3 animate-spin" />
+            ) : (
+              <UserRoundCheck className="size-3.5" />
+            )}
+            <span>{t('conversations.takeoverAi')}</span>
+          </Button>
+        )}
+
         <Tooltip>
           <TooltipTrigger asChild>
             <Button

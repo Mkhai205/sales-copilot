@@ -74,7 +74,7 @@ describe('updateContactInfo Tool (T8)', () => {
       prisma: mockPrisma,
     });
 
-    const result = await tool.execute(
+    const result = await tool.execute!(
       {
         name: 'Nguyễn Văn Nam',
         phoneNumber: '0988123456',
@@ -104,7 +104,7 @@ describe('updateContactInfo Tool (T8)', () => {
       prisma: mockPrisma,
     });
 
-    const result = await tool.execute({}, {} as any);
+    const result = await tool.execute!({}, {} as any);
     assert.strictEqual(result.updated, false);
     assert.strictEqual(updatePayloads.length, 0);
   });

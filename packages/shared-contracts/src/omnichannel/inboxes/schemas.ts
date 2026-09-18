@@ -48,8 +48,6 @@ export const inboxAiCommercePolicyConfigSchema = z.object({
   maxDiscountVnd: z.number().min(0).optional(),
   personaTone: z.string().optional(),
   customInstructions: z.string().max(2000).optional(),
-  defaultWarehouseId: z.string().optional(),
-  defaultBankAccountId: z.string().optional(),
 });
 export type InboxAiCommercePolicyConfig = z.infer<typeof inboxAiCommercePolicyConfigSchema>;
 

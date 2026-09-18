@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import * as React from 'react';
 import { format, parseISO, isValid } from 'date-fns';
@@ -12,6 +12,7 @@ import {
   FileText,
   MessageSquare,
   ArrowDown,
+  Bot,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -231,20 +232,44 @@ function MessageItem({
   message,
   contactName,
   contactAvatar,
+  inboxAvatar,
+  inboxName,
   workspaceId,
   onOpenLightbox,
 }: {
   message: MessageResponseDto;
   contactName?: string;
   contactAvatar?: string | null;
+  inboxAvatar?: string | null;
+  inboxName?: string;
   workspaceId?: string;
   onOpenLightbox: (images: AttachmentDto[], index?: number) => void;
 }) {
-  const isAgent =
-    message.senderType === SenderType.USER || message.messageType === MessageType.OUTGOING;
+  const { t } = useI18n();
+  const isAiGenerated = React.useMemo(() => {
+    if (!message.metadata) return false;
+    if (typeof message.metadata === 'object') {
+      return (message.metadata as any).isAiGenerated === true;
+    }
+    if (typeof message.metadata === 'string') {
+      try {
+        return JSON.parse(message.metadata)?.isAiGenerated === true;
+      } catch {
+        return false;
+      }
+    }
+    return false;
+  }, [message.metadata]);
   const isPrivate = message.isPrivate;
   const isSystem =
-    message.senderType === SenderType.SYSTEM || message.messageType === MessageType.ACTIVITY;
+    !isAiGenerated &&
+    (message.senderType === SenderType.SYSTEM || message.messageType === MessageType.ACTIVITY);
+  const isAgent =
+    !isPrivate &&
+    !isSystem &&
+    (isAiGenerated ||
+      message.senderType === SenderType.USER ||
+      message.messageType === MessageType.OUTGOING);
 
   const imageAttachments = React.useMemo(
     () => (message.attachments || []).filter(att => isImageAttachment(att) && att.fileUrl),
@@ -341,14 +366,44 @@ function MessageItem({
     );
   }
 
-  // 3. Outbound Message (Agent)
+  // 3. Outbound Message (Agent or AI)
   if (isAgent) {
     return (
       <MessageScrollerItem messageId={message.id}>
         <Message align="end">
+          {isAiGenerated && (
+            <div className="relative self-end shrink-0 group-has-data-[slot=message-footer]/message:-translate-y-8 transition-transform">
+              <MessageAvatar className="translate-y-0 group-has-data-[slot=message-footer]/message:translate-y-0">
+                <Avatar className="size-8 ring-1 ring-primary/30">
+                  <AvatarImage
+                    src={inboxAvatar || '/avatar-bot-copilot.svg'}
+                    alt={inboxName || 'AI Autopilot'}
+                  />
+                  <AvatarFallback className="text-[10px] bg-primary/10 text-primary font-semibold">
+                    AI
+                  </AvatarFallback>
+                </Avatar>
+              </MessageAvatar>
+              <span
+                className="absolute -bottom-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-primary text-[8px] text-primary-foreground ring-2 ring-background shadow-xs pointer-events-none"
+                title="AI Autopilot"
+              >
+                🤖
+              </span>
+            </div>
+          )}
           <MessageContent className="items-end">
-            <MessageHeader className="justify-end">
-              You • {formatMessageTime(message.createdAt)}
+            <MessageHeader className="justify-end gap-1">
+              {isAiGenerated ? (
+                <span className="inline-flex items-center gap-1 font-semibold text-foreground">
+                  <Bot className="size-3 text-primary" />
+                  <span>{t('conversations.messages.aiSender')}</span>
+                </span>
+              ) : (
+                <span>You</span>
+              )}
+              {' • '}
+              {formatMessageTime(message.createdAt)}
             </MessageHeader>
 
             {/* Bubble Row with Left-floating Action Toolbar */}
@@ -831,6 +886,8 @@ export function MessageThread({
                         message={message}
                         contactName={contact?.name}
                         contactAvatar={contact?.avatarUrl}
+                        inboxAvatar={conversation?.inbox?.avatarUrl}
+                        inboxName={conversation?.inbox?.name}
                         workspaceId={activeWorkspaceId}
                         onOpenLightbox={openLightbox}
                       />

@@ -156,8 +156,6 @@ describe('Inboxes & Channels Management (Task 33)', () => {
             maxDiscountPercent: 15,
             maxDiscountVnd: 150000,
             personaTone: 'shop_ban',
-            defaultWarehouseId: 'wh_hcm',
-            defaultBankAccountId: 'bank_vietqr',
           },
         },
       };

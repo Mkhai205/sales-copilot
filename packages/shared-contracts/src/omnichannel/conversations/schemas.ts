@@ -118,6 +118,7 @@ export interface ConversationResponseDto {
     name: string;
     avatarUrl?: string | null;
     channelType?: ChannelType | null;
+    settings?: Record<string, unknown> | null;
   } | null;
   assignee?: {
     id: string;
