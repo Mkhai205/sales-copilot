@@ -58,7 +58,7 @@ export function SettingsSidebar({ workspaceSlug, ...props }: SettingsSidebarProp
 
   return (
     <Sidebar collapsible="icon" className="border-r border-border/80" {...props}>
-      <SidebarHeader className="flex h-12 flex-row items-center justify-between border-b border-sidebar-border/40 px-3">
+      <SidebarHeader className="flex h-12 flex-row items-center justify-between border-b border-sidebar-border/40 px-3 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
         <div className="flex items-center gap-2 font-medium text-sidebar-foreground group-data-[collapsible=icon]:hidden">
           <Settings className="size-4 text-primary" />
           <span className="text-xs font-semibold">Cài đặt</span>

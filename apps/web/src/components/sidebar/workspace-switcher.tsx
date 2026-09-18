@@ -68,13 +68,13 @@ export function WorkspaceSwitcher({ currentSlug }: WorkspaceSwitcherProps) {
                     unoptimized
                   />
                 </div>
-                <div className="grid flex-1 text-left text-sm leading-tight">
+                <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
                   <span className="truncate font-semibold">{activeWorkspace.name}</span>
                   <span className="truncate text-xs text-muted-foreground">
                     {activeWorkspace.role || 'Workspace'}
                   </span>
                 </div>
-                <ChevronsUpDown className="ml-auto size-4 opacity-50" />
+                <ChevronsUpDown className="ml-auto size-4 opacity-50 group-data-[collapsible=icon]:hidden" />
               </SidebarMenuButton>
             </DropdownMenuTrigger>
             <DropdownMenuContent
