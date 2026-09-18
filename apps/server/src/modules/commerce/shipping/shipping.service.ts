@@ -402,10 +402,11 @@ export class ShippingService {
   }
 
   /**
-   * Cancels shipment with carrier.
+   * Cancels shipment with third-party carrier for an order if trackingCode exists.
    */
   async cancelOrderShipment(workspaceId: string, orderId: string): Promise<boolean> {
-    const order = await this.prisma.client.order.findFirst({
+    const client = this.prisma.getClient();
+    const order = await client.order.findFirst({
       where: { id: orderId, workspaceId },
       include: { shippingAddress: true },
     });
@@ -414,11 +415,15 @@ export class ShippingService {
       return false;
     }
 
-    const carrier = order.shippingAddress.shippingCarrier;
+    const carrier = order.shippingAddress.shippingCarrier || CarrierProvider.CUSTOM;
     const adapter = this.getAdapter(carrier);
     const credentials = await this.getCarrierCredentials(workspaceId, carrier);
 
-    return adapter.cancelShipment(order.shippingAddress.trackingCode, credentials);
+    const cancelled = await adapter.cancelShipment(order.shippingAddress.trackingCode, credentials);
+    this.logger.log(
+      `Shipment cancellation with ${carrier} for order #${order.displayId} (tracking: ${order.shippingAddress.trackingCode}): success=${cancelled}`,
+    );
+    return cancelled;
   }
 
   /**

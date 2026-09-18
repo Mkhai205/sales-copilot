@@ -8,8 +8,8 @@ import {
   type UserWorkspaceDto,
   type WorkspaceDto,
   WorkspaceRole,
-  type BankConfigDto,
-  bankConfigSchema,
+  type WorkspacePaymentSettings,
+  workspacePaymentSettingsSchema,
 } from '@sales-copilot/shared-contracts';
 import { ZodBody } from '../../../common/pipes';
 import { CurrentUser } from '../auth';
@@ -106,8 +106,10 @@ export class WorkspacesController {
   })
   @ApiResponse({ status: 200, description: 'Bank configuration retrieved successfully' })
   @ApiResponse({ status: 404, description: 'Bank configuration not found' })
-  async getBankConfig(@CurrentWorkspace() context: WorkspaceContext): Promise<BankConfigDto> {
-    return this.workspacesService.getBankConfig(context.workspaceId);
+  async getBankConfig(
+    @CurrentWorkspace() context: WorkspaceContext,
+  ): Promise<WorkspacePaymentSettings> {
+    return this.workspacesService.getPaymentSettings(context.workspaceId);
   }
 
   @Patch('current/bank')
@@ -125,8 +127,8 @@ export class WorkspacesController {
   @ApiResponse({ status: 200, description: 'Bank configuration updated successfully' })
   async updateBankConfig(
     @CurrentWorkspace() context: WorkspaceContext,
-    @ZodBody(bankConfigSchema) dto: BankConfigDto,
-  ): Promise<BankConfigDto> {
-    return this.workspacesService.updateBankConfig(context.workspaceId, dto);
+    @ZodBody(workspacePaymentSettingsSchema) dto: WorkspacePaymentSettings,
+  ): Promise<WorkspacePaymentSettings> {
+    return this.workspacesService.updatePaymentSettings(context.workspaceId, dto);
   }
 }

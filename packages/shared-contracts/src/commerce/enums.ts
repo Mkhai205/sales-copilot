@@ -84,6 +84,5 @@ export const carrierProviderSchema = z.nativeEnum(CarrierProvider);
 export const inventoryTransactionTypeSchema = z.nativeEnum(InventoryTransactionType);
 
 export const COMMERCE_RECONCILIATION_QUEUE = 'commerce-reconciliation';
-export const POS_RECONCILIATION_QUEUE = COMMERCE_RECONCILIATION_QUEUE;
 
 export type PaymentGatewayType = 'sepay' | 'casso' | 'manual';

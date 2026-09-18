@@ -1,4 +1,4 @@
-﻿import {
+import {
   CanActivate,
   ExecutionContext,
   Injectable,
@@ -51,9 +51,12 @@ export class PaymentWebhooksGuard implements CanActivate {
       });
     }
 
-    const wsSettings = (workspace.settings as any)?.paymentSettings as
-      WorkspacePaymentSettings | undefined;
-    let configuredSecret = wsSettings?.webhookSecret;
+    const rawSettings = workspace.settings as any;
+    const wsSettings = rawSettings?.paymentSettings as WorkspacePaymentSettings | undefined;
+    let configuredSecret =
+      wsSettings?.webhookSecret ||
+      rawSettings?.bankConfig?.webhookSecret ||
+      rawSettings?.bankConfig?.sepayWebhookSecret;
 
     if (!configuredSecret) {
       this.logger.warn(

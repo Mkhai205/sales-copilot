@@ -51,7 +51,6 @@
     "socket.io": "^4.8.3",
     "swagger-ui-express": "^5.0.1",
     "vietnam-divisions-js": "^3.0.0",
-    "vietqr": "^1.1.9",
     "zod": "^3.25.76"
   },
   "devDependencies": {

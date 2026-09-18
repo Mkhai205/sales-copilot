@@ -1,14 +1,7 @@
-import {
-  BadRequestException,
-  ConflictException,
-  Injectable,
-  Logger,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import {
   DomainEvent,
-  InventoryTransactionType,
   OrderStatus,
   PaymentGateway,
   PaymentMethod,
@@ -16,6 +9,7 @@ import {
   PaymentTransactionStatus,
 } from '@sales-copilot/shared-contracts';
 import { PrismaService } from '../../../infrastructure/database/prisma.service';
+import { InventoryLedgerService } from '../inventory/inventory-ledger.service';
 
 export interface ReconcileTransactionParams {
   workspaceId: string;
@@ -46,6 +40,7 @@ export class PaymentReconciliationService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly eventEmitter: EventEmitter2,
+    private readonly inventoryLedgerService: InventoryLedgerService,
   ) {}
 
   /**
@@ -141,6 +136,13 @@ export class PaymentReconciliationService {
           },
         });
 
+        await tx.order.updateMany({
+          where: { id: order.id, workspaceId },
+          data: {
+            paidAmount: Number(order.paidAmount) + amount,
+          },
+        });
+
         return {
           processed: true,
           status: 'CANCELLED_NEEDS_REFUND',
@@ -180,103 +182,118 @@ export class PaymentReconciliationService {
       const wasAlreadyPaid = order.status === OrderStatus.PAID;
       const isPreviouslyConfirmed = order.status === OrderStatus.CONFIRMED;
 
-      let stockCommitted = false;
-      const inventoryUpdateEvents: any[] = [];
+      // 6. Status guard for SHIPPING or COMPLETED:
+      // If order is already in fulfillment or completed, do NOT deduct inventory again or regress order status.
+      if (order.status === OrderStatus.SHIPPING || order.status === OrderStatus.COMPLETED) {
+        this.logger.log(
+          `Order #${order.displayId} has status '${order.status}'. Payment of ${amount} recorded without stock deduction or status regression.`,
+        );
 
-      // 6. Safe Inventory State Machine (Model A)
+        const targetPaymentStatus = isFullyPaid ? PaymentStatus.PAID : PaymentStatus.PARTIALLY_PAID;
+        await tx.order.updateMany({
+          where: { id: order.id, workspaceId },
+          data: {
+            paidAmount: totalPaid,
+            paymentStatus: targetPaymentStatus,
+            ...(isFullyPaid ? { paidAt: order.paidAt || new Date() } : {}),
+          },
+        });
+
+        const overpaidAmount = Math.max(0, totalPaid - orderTotal);
+        ctx.addPostCommitHook(() => {
+          if (isFullyPaid) {
+            this.eventEmitter.emit(DomainEvent.ORDER_PAID, {
+              workspaceId,
+              orderId: order.id,
+              orderNumber: order.orderNumber,
+              displayId: order.displayId,
+              conversationId: order.conversationId,
+              paidAmount: totalPaid,
+              receivedAmount: amount,
+              overpaidAmount,
+              isOverpaid: overpaidAmount > 0,
+              paymentMethod: PaymentMethod.VIETQR,
+              transactionCode,
+              gateway,
+              order: {
+                id: order.id,
+                orderNumber: order.orderNumber,
+                displayId: order.displayId,
+                workspaceId,
+                status: order.status,
+                paymentStatus: targetPaymentStatus,
+                totalAmount: orderTotal,
+                paidAmount: totalPaid,
+                conversationId: order.conversationId,
+                contactId: order.contactId,
+              },
+            });
+          } else {
+            this.eventEmitter.emit(DomainEvent.ORDER_PARTIALLY_PAID, {
+              workspaceId,
+              orderId: order.id,
+              orderNumber: order.orderNumber,
+              displayId: order.displayId,
+              conversationId: order.conversationId,
+              paidAmount: totalPaid,
+              receivedAmount: amount,
+              totalAmount: orderTotal,
+              remainingAmount: Math.max(0, orderTotal - totalPaid),
+              paymentMethod: PaymentMethod.VIETQR,
+              transactionCode,
+              gateway,
+              order: {
+                id: order.id,
+                orderNumber: order.orderNumber,
+                displayId: order.displayId,
+                workspaceId,
+                status: order.status,
+                paymentStatus: targetPaymentStatus,
+                totalAmount: orderTotal,
+                paidAmount: totalPaid,
+                conversationId: order.conversationId,
+                contactId: order.contactId,
+              },
+            });
+          }
+        });
+
+        return {
+          processed: true,
+          status: isFullyPaid ? (wasAlreadyPaid ? 'OVERPAID' : 'PAID') : 'PARTIALLY_PAID',
+          orderId: order.id,
+          displayId: order.displayId,
+          totalPaid,
+          remainingAmount: Math.max(0, orderTotal - totalPaid),
+          stockCommitted: false,
+        };
+      }
+
+      let stockCommitted = false;
+
+      // 7. Safe Inventory State Machine via InventoryLedgerService
       if (isFullyPaid) {
         // Safe Inventory Deduplication Guard:
         // CHỈ thực hiện commit kho thực tế nếu đơn chưa ở trạng thái PAID
         if (!wasAlreadyPaid) {
-          // Sort items by variantId ascending to prevent PostgreSQL Deadlock 40P01
-          const sortedItems = [...(order.items || [])].sort((a, b) =>
-            a.variantId.localeCompare(b.variantId),
-          );
+          const commitItems = (order.items || []).map(item => ({
+            variantId: item.variantId,
+            quantity: item.quantity,
+            productName: item.productName,
+            variantName: item.variantName,
+            sku: item.sku,
+          }));
 
-          for (const item of sortedItems) {
-            let count: number;
-
-            if (isPreviouslyConfirmed) {
-              // Stock was already reserved in CONFIRMED state.
-              // Atomically decrement physical stock and release reserved quantity
-              count = await tx.$executeRaw`
-                UPDATE "product_variants"
-                SET 
-                  "stockQuantity" = "stockQuantity" - ${item.quantity},
-                  "reservedQuantity" = "reservedQuantity" - ${item.quantity},
-                  "updatedAt" = NOW()
-                WHERE "id" = ${item.variantId}
-                  AND "workspaceId" = ${workspaceId}
-                  AND "stockQuantity" >= ${item.quantity}
-                  AND "reservedQuantity" >= ${item.quantity}
-              `;
-            } else {
-              // DRAFT state: Stock was not reserved. Verify available stock and decrement
-              count = await tx.$executeRaw`
-                UPDATE "product_variants"
-                SET 
-                  "stockQuantity" = "stockQuantity" - ${item.quantity},
-                  "updatedAt" = NOW()
-                WHERE "id" = ${item.variantId}
-                  AND "workspaceId" = ${workspaceId}
-                  AND ("stockQuantity" - "reservedQuantity") >= ${item.quantity}
-              `;
-            }
-
-            if (count === 0) {
-              const variant = await tx.productVariant.findFirst({
-                where: { id: item.variantId, workspaceId },
-              });
-              const currentAvailable =
-                (variant?.stockQuantity ?? 0) - (variant?.reservedQuantity ?? 0);
-
-              throw new ConflictException({
-                code: 'INSUFFICIENT_STOCK',
-                message: `Insufficient stock for product '${item.productName}' (${item.sku})`,
-                details: {
-                  variantId: item.variantId,
-                  sku: item.sku,
-                  requestedQuantity: item.quantity,
-                  availableStock: Math.max(0, currentAvailable),
-                },
-              });
-            }
-
-            const currentVariant = await tx.productVariant.findFirstOrThrow({
-              where: { id: item.variantId, workspaceId },
-            });
-
-            await tx.inventoryTransaction.create({
-              data: {
-                workspaceId,
-                variantId: item.variantId,
-                orderId: order.id,
-                type: InventoryTransactionType.COMMIT_SALE,
-                quantity: item.quantity,
-                previousStock: currentVariant.stockQuantity + item.quantity,
-                newStock: currentVariant.stockQuantity,
-                previousReserved: isPreviouslyConfirmed
-                  ? currentVariant.reservedQuantity + item.quantity
-                  : currentVariant.reservedQuantity,
-                newReserved: currentVariant.reservedQuantity,
-                reason: `Commit sale via ${gateway} reconciliation for Order #${order.displayId}`,
-              },
-            });
-
-            inventoryUpdateEvents.push({
-              workspaceId,
-              variantId: item.variantId,
-              sku: currentVariant.sku,
-              previousStock: currentVariant.stockQuantity + item.quantity,
-              newStock: currentVariant.stockQuantity,
-              previousReserved: isPreviouslyConfirmed
-                ? currentVariant.reservedQuantity + item.quantity
-                : currentVariant.reservedQuantity,
-              newReserved: currentVariant.reservedQuantity,
-              availableStock: currentVariant.stockQuantity - currentVariant.reservedQuantity,
-              reason: `Commit sale for Order #${order.displayId}`,
-            });
-          }
+          await this.inventoryLedgerService.commitStock({
+            workspaceId,
+            items: commitItems,
+            orderId: order.id,
+            orderDisplayId: order.displayId,
+            orderNumber: order.orderNumber,
+            isPreviouslyReserved: isPreviouslyConfirmed,
+            reason: `Commit sale via ${gateway} reconciliation for Order #${order.displayId}`,
+            tx,
+          });
 
           stockCommitted = true;
         } else {
@@ -296,13 +313,9 @@ export class PaymentReconciliationService {
           },
         });
 
-        // 7. Post-commit hooks
+        // Post-commit hooks
         const overpaidAmount = Math.max(0, totalPaid - orderTotal);
         ctx.addPostCommitHook(() => {
-          for (const ev of inventoryUpdateEvents) {
-            this.eventEmitter.emit(DomainEvent.INVENTORY_UPDATED, ev);
-          }
-
           this.eventEmitter.emit(DomainEvent.ORDER_PAID, {
             workspaceId,
             orderId: order.id,
@@ -344,71 +357,23 @@ export class PaymentReconciliationService {
         // Partial Payment (PARTIALLY_PAID):
         // If order was DRAFT, reserve inventory and transition to CONFIRMED
         if (!isPreviouslyConfirmed && order.status === OrderStatus.DRAFT) {
-          const sortedItems = [...(order.items || [])].sort((a, b) =>
-            a.variantId.localeCompare(b.variantId),
-          );
+          const reserveItems = (order.items || []).map(item => ({
+            variantId: item.variantId,
+            quantity: item.quantity,
+            productName: item.productName,
+            variantName: item.variantName,
+            sku: item.sku,
+          }));
 
-          for (const item of sortedItems) {
-            const count = await tx.$executeRaw`
-              UPDATE "product_variants"
-              SET 
-                "reservedQuantity" = "reservedQuantity" + ${item.quantity},
-                "updatedAt" = NOW()
-              WHERE "id" = ${item.variantId}
-                AND "workspaceId" = ${workspaceId}
-                AND ("stockQuantity" - "reservedQuantity") >= ${item.quantity}
-            `;
-
-            if (count === 0) {
-              const variant = await tx.productVariant.findFirst({
-                where: { id: item.variantId, workspaceId },
-              });
-              const currentAvailable =
-                (variant?.stockQuantity ?? 0) - (variant?.reservedQuantity ?? 0);
-
-              throw new ConflictException({
-                code: 'INSUFFICIENT_STOCK',
-                message: `Insufficient stock for product '${item.productName}' (${item.sku})`,
-                details: {
-                  variantId: item.variantId,
-                  sku: item.sku,
-                  requestedQuantity: item.quantity,
-                  availableStock: Math.max(0, currentAvailable),
-                },
-              });
-            }
-
-            const currentVariant = await tx.productVariant.findFirstOrThrow({
-              where: { id: item.variantId, workspaceId },
-            });
-
-            await tx.inventoryTransaction.create({
-              data: {
-                workspaceId,
-                variantId: item.variantId,
-                orderId: order.id,
-                type: InventoryTransactionType.RESERVATION,
-                quantity: item.quantity,
-                previousStock: currentVariant.stockQuantity,
-                newStock: currentVariant.stockQuantity,
-                previousReserved: currentVariant.reservedQuantity - item.quantity,
-                newReserved: currentVariant.reservedQuantity,
-                reason: `Reserved on partial payment via ${gateway} for Order #${order.displayId}`,
-              },
-            });
-
-            inventoryUpdateEvents.push({
-              workspaceId,
-              variantId: item.variantId,
-              sku: currentVariant.sku,
-              previousStock: currentVariant.stockQuantity,
-              newStock: currentVariant.stockQuantity,
-              previousReserved: currentVariant.reservedQuantity - item.quantity,
-              newReserved: currentVariant.reservedQuantity,
-              availableStock: currentVariant.stockQuantity - currentVariant.reservedQuantity,
-              reason: `Reserved on partial payment for Order #${order.displayId}`,
-            });
-          }
+          await this.inventoryLedgerService.reserveStock({
+            workspaceId,
+            items: reserveItems,
+            orderId: order.id,
+            orderDisplayId: order.displayId,
+            orderNumber: order.orderNumber,
+            reason: `Reserved on partial payment via ${gateway} for Order #${order.displayId}`,
+            tx,
+          });
         }
 
         // Update Order to PARTIALLY_PAID
@@ -425,10 +390,6 @@ export class PaymentReconciliationService {
         // Post-commit hook for partial payment
         const remainingAmount = Math.max(0, orderTotal - totalPaid);
         ctx.addPostCommitHook(() => {
-          for (const ev of inventoryUpdateEvents) {
-            this.eventEmitter.emit(DomainEvent.INVENTORY_UPDATED, ev);
-          }
-
           this.eventEmitter.emit(DomainEvent.ORDER_PARTIALLY_PAID, {
             workspaceId,
             orderId: order.id,

@@ -198,19 +198,33 @@ export class VietQrService {
       select: { settings: true, name: true },
     });
 
-    const wsSettings = (workspace?.settings as any)?.paymentSettings as
-      WorkspacePaymentSettings | undefined;
+    const rawSettings = workspace?.settings as any;
+    const wsSettings = rawSettings?.paymentSettings as WorkspacePaymentSettings | undefined;
+    const legacyConfig = rawSettings?.bankConfig;
 
-    const bankBin = options?.bankBin || wsSettings?.bankBin;
-    const accountNumber = options?.accountNumber || wsSettings?.accountNumber;
-    const accountName = options?.accountName || wsSettings?.accountName || workspace?.name || '';
+    const bankBin =
+      options?.bankBin || wsSettings?.bankBin || legacyConfig?.bankBin || legacyConfig?.bankId;
+    const accountNumber =
+      options?.accountNumber ||
+      wsSettings?.accountNumber ||
+      legacyConfig?.accountNumber ||
+      legacyConfig?.accountNo;
+    const accountName =
+      options?.accountName ||
+      wsSettings?.accountName ||
+      legacyConfig?.accountName ||
+      workspace?.name ||
+      '';
     const bankCode =
       options?.bankCode ||
       wsSettings?.bankCode ||
+      legacyConfig?.bankCode ||
+      legacyConfig?.bankId ||
       (bankBin && NAPAS_BANKS[bankBin] ? NAPAS_BANKS[bankBin].code : 'BANK');
     const bankName =
       options?.bankName ||
       wsSettings?.bankName ||
+      legacyConfig?.bankName ||
       (bankBin && NAPAS_BANKS[bankBin] ? NAPAS_BANKS[bankBin].name : 'Ngân hàng');
 
     if (!bankBin || !accountNumber || !accountName) {

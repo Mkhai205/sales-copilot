@@ -19,10 +19,11 @@ import {
   WorkspaceDto,
   WorkspaceMemberDto,
   WorkspaceRole,
-  BankConfigDto,
+  type WorkspacePaymentSettings,
 } from '@sales-copilot/shared-contracts';
 import { PrismaService } from '../../../infrastructure/database';
 import { generateSlug } from './utils/slug.util';
+import { ChannelCredentialService } from '../../omnichannel/inboxes/channel-credential.service';
 
 @Injectable()
 export class WorkspacesService {
@@ -31,6 +32,7 @@ export class WorkspacesService {
   constructor(
     private readonly prisma: PrismaService,
     @Optional() private readonly eventEmitter?: EventEmitter2,
+    @Optional() private readonly channelCredentialService?: ChannelCredentialService,
   ) {}
 
   /**
@@ -163,9 +165,9 @@ export class WorkspacesService {
   }
 
   /**
-   * Retrieves bank configuration from workspace settings
+   * Retrieves payment settings from workspace settings, with legacy bankConfig fallback.
    */
-  async getBankConfig(workspaceId: string): Promise<BankConfigDto> {
+  async getPaymentSettings(workspaceId: string): Promise<WorkspacePaymentSettings> {
     const client = this.prisma.getClient();
     const workspace = await client.workspace.findUnique({ where: { id: workspaceId } });
 
@@ -177,21 +179,64 @@ export class WorkspacesService {
     }
 
     const settings = workspace.settings as Record<string, any> | null;
-    const bankConfig = settings?.bankConfig;
-    if (!bankConfig) {
+    let paymentSettings = settings?.paymentSettings as WorkspacePaymentSettings | undefined;
+
+    // Fallback: support legacy bankConfig if paymentSettings not yet migrated
+    if (!paymentSettings && settings?.bankConfig) {
+      const bc = settings.bankConfig;
+      paymentSettings = {
+        bankBin: bc.bankBin || bc.bankId || '',
+        bankCode: bc.bankCode || bc.bankId || '',
+        bankName: bc.bankName || '',
+        accountNumber: bc.accountNumber || bc.accountNo || '',
+        accountName: bc.accountName || '',
+        webhookSecret: bc.webhookSecret || bc.sepayWebhookSecret,
+      };
+    }
+
+    if (!paymentSettings) {
       throw new NotFoundException({
         code: 'BANK_CONFIG_NOT_FOUND',
         message: 'Bank configuration has not been set for this workspace',
       });
     }
 
-    return bankConfig as BankConfigDto;
+    let webhookSecret = paymentSettings.webhookSecret;
+    if (webhookSecret && this.channelCredentialService && webhookSecret.split(':').length === 3) {
+      try {
+        const decrypted = this.channelCredentialService.decrypt<{
+          secret?: string;
+          webhookSecret?: string;
+        }>(webhookSecret);
+        webhookSecret =
+          decrypted.secret ||
+          decrypted.webhookSecret ||
+          (typeof decrypted === 'string' ? decrypted : webhookSecret);
+      } catch {
+        // Continue with raw string if decryption fails (test/dev)
+      }
+    }
+
+    return {
+      ...paymentSettings,
+      webhookSecret,
+    };
   }
 
   /**
-   * Updates bank configuration in workspace settings
+   * Alias for backward compatibility
    */
-  async updateBankConfig(workspaceId: string, dto: BankConfigDto): Promise<BankConfigDto> {
+  async getBankConfig(workspaceId: string): Promise<WorkspacePaymentSettings> {
+    return this.getPaymentSettings(workspaceId);
+  }
+
+  /**
+   * Updates payment settings in workspace settings with encrypted webhookSecret
+   */
+  async updatePaymentSettings(
+    workspaceId: string,
+    dto: WorkspacePaymentSettings,
+  ): Promise<WorkspacePaymentSettings> {
     const client = this.prisma.getClient();
     const existing = await client.workspace.findUnique({ where: { id: workspaceId } });
 
@@ -202,10 +247,23 @@ export class WorkspacesService {
       });
     }
 
+    let encryptedSecret = dto.webhookSecret;
+    if (dto.webhookSecret && this.channelCredentialService) {
+      encryptedSecret = this.channelCredentialService.encrypt({
+        secret: dto.webhookSecret,
+        webhookSecret: dto.webhookSecret,
+      });
+    }
+
     const currentSettings = (existing.settings as Record<string, any>) || {};
+    const paymentSettingsToSave: WorkspacePaymentSettings = {
+      ...dto,
+      webhookSecret: encryptedSecret,
+    };
+
     const updatedSettings = {
       ...currentSettings,
-      bankConfig: dto,
+      paymentSettings: paymentSettingsToSave,
     };
 
     await client.workspace.update({
@@ -214,6 +272,16 @@ export class WorkspacesService {
     });
 
     return dto;
+  }
+
+  /**
+   * Alias for backward compatibility
+   */
+  async updateBankConfig(
+    workspaceId: string,
+    dto: WorkspacePaymentSettings,
+  ): Promise<WorkspacePaymentSettings> {
+    return this.updatePaymentSettings(workspaceId, dto);
   }
 
   /**

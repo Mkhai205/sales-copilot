@@ -3,10 +3,12 @@ import * as assert from 'node:assert';
 import {
   DiscountType,
   DomainEvent,
+  FulfillmentStatus,
   InventoryTransactionType,
   OrderStatus,
   PaymentMethod,
   PaymentStatus,
+  PaymentTransactionStatus,
 } from '@sales-copilot/shared-contracts';
 import { InventoryLedgerService } from '../../inventory/inventory-ledger.service';
 import { OrdersService } from '../orders.service';
@@ -15,6 +17,11 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
   let service: OrdersService;
   let mockPrismaService: any;
   let mockEventEmitter: any;
+  let mockRedisService: any;
+  let mockShippingService: any;
+  let acquiredLocks: string[];
+  let releasedLocks: string[];
+  let cancelledShipments: Array<{ workspaceId: string; orderId: string }>;
   let clientMock: any;
   let emittedEvents: Array<{ event: string; payload: any }>;
 
@@ -256,6 +263,7 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
             currency: data.currency,
             customerNotes: data.customerNotes,
             internalNotes: data.internalNotes,
+            paymentMethod: data.paymentMethod || data.metadata?.paymentMethod || PaymentMethod.COD,
             metadata: data.metadata || {},
             createdAt: new Date(),
             updatedAt: new Date(),
@@ -324,6 +332,15 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
         },
       },
       paymentTransaction: {
+        findFirst: async ({ where }: any) => {
+          for (const tx of paymentTransactionsDb.values()) {
+            if (where.workspaceId && tx.workspaceId !== where.workspaceId) continue;
+            if (where.idempotencyKey && tx.idempotencyKey !== where.idempotencyKey) continue;
+            if (where.orderId && tx.orderId !== where.orderId) continue;
+            return { ...tx };
+          }
+          return null;
+        },
         create: async ({ data }: any) => {
           const id = `ptx_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
           const record = { id, ...data, createdAt: new Date(), updatedAt: new Date() };
@@ -418,12 +435,36 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
       },
     };
 
+    acquiredLocks = [];
+    releasedLocks = [];
+    cancelledShipments = [];
+
+    mockRedisService = {
+      acquireLock: async (key: string, _ttl: number) => {
+        acquiredLocks.push(key);
+        return 'mock-lock-token';
+      },
+      releaseLock: async (key: string, _token: string) => {
+        releasedLocks.push(key);
+        return true;
+      },
+    };
+
+    mockShippingService = {
+      cancelOrderShipment: async (workspaceId: string, orderId: string) => {
+        cancelledShipments.push({ workspaceId, orderId });
+        return true;
+      },
+    };
+
     const inventoryLedgerService = new InventoryLedgerService(mockPrismaService, mockEventEmitter);
     service = new OrdersService(
       mockPrismaService,
       mockEventEmitter,
       inventoryLedgerService,
       {} as any,
+      mockRedisService,
+      mockShippingService,
     );
   });
 
@@ -1199,6 +1240,254 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
           return true;
         },
       );
+    });
+  });
+
+  describe('payOrder (Redlock & Idempotency)', () => {
+    it('should acquire Redlock, record manual payment with deterministic key, and emit ORDER_PAID', async () => {
+      const order = await service.createOrder(ws1, {
+        contactId: contact1,
+        items: [{ productId: prod1, variantId: varA, quantity: 1, unitPrice: 350000 }],
+      });
+      await service.confirmOrder(ws1, order.id, userId);
+
+      const paid = await service.payOrder(
+        ws1,
+        order.id,
+        {
+          amount: 350000,
+          paymentMethod: PaymentMethod.CASH,
+        },
+        userId,
+      );
+
+      // Verify Redlock was acquired and released
+      assert.ok(acquiredLocks.includes(`order:payment:${order.id}`));
+      assert.ok(releasedLocks.includes(`order:payment:${order.id}`));
+
+      // Verify order status
+      assert.strictEqual(paid.status, OrderStatus.PAID);
+      assert.strictEqual(paid.paymentStatus, PaymentStatus.PAID);
+      assert.strictEqual(paid.paidAmount, 350000);
+
+      // Verify deterministic idempotency key in payment transactions
+      const tx = Array.from(paymentTransactionsDb.values()).find(
+        t => t.idempotencyKey === `manual:${order.id}`,
+      );
+      assert.ok(tx);
+      assert.strictEqual(tx.idempotencyKey, `manual:${order.id}`);
+      assert.strictEqual(tx.amount, 350000);
+
+      // Verify ORDER_PAID event emitted
+      const paidEvent = emittedEvents.find(e => e.event === DomainEvent.ORDER_PAID);
+      assert.ok(paidEvent);
+      assert.strictEqual(paidEvent.payload.orderId, order.id);
+    });
+
+    it('should reject duplicate payment attempt on the same order with ConflictException', async () => {
+      const order = await service.createOrder(ws1, {
+        contactId: contact1,
+        items: [{ productId: prod1, variantId: varA, quantity: 1, unitPrice: 350000 }],
+      });
+      await service.confirmOrder(ws1, order.id, userId);
+
+      await service.payOrder(
+        ws1,
+        order.id,
+        { amount: 350000, paymentMethod: PaymentMethod.CASH },
+        userId,
+      );
+
+      // Attempt second payment
+      await assert.rejects(
+        async () => {
+          await service.payOrder(
+            ws1,
+            order.id,
+            { amount: 350000, paymentMethod: PaymentMethod.CASH },
+            userId,
+          );
+        },
+        (err: any) => {
+          assert.strictEqual(err.name, 'ConflictException');
+          assert.strictEqual(err.response?.code, 'PAYMENT_ALREADY_PROCESSED');
+          return true;
+        },
+      );
+    });
+
+    it('should reject second manual payment attempt even on partially paid CONFIRMED order', async () => {
+      const order = await service.createOrder(ws1, {
+        contactId: contact1,
+        items: [{ productId: prod1, variantId: varA, quantity: 1, unitPrice: 350000 }],
+      });
+      await service.confirmOrder(ws1, order.id, userId);
+
+      // First partial payment
+      const partial = await service.payOrder(
+        ws1,
+        order.id,
+        { amount: 100000, paymentMethod: PaymentMethod.CASH },
+        userId,
+      );
+      assert.strictEqual(partial.status, OrderStatus.CONFIRMED);
+      assert.strictEqual(partial.paymentStatus, PaymentStatus.PARTIALLY_PAID);
+      assert.strictEqual(partial.paidAmount, 100000);
+
+      // Attempt second manual payment: must be rejected by idempotency key
+      await assert.rejects(
+        async () => {
+          await service.payOrder(
+            ws1,
+            order.id,
+            { amount: 250000, paymentMethod: PaymentMethod.CASH },
+            userId,
+          );
+        },
+        (err: any) => {
+          assert.strictEqual(err.name, 'ConflictException');
+          assert.strictEqual(err.response?.code, 'PAYMENT_ALREADY_PROCESSED');
+          return true;
+        },
+      );
+    });
+  });
+
+  describe('completeOrder (COD auto-pay guard)', () => {
+    it('should auto-pay COD order and record cod: transaction with ORDER_PAID event', async () => {
+      const order = await service.createOrder(ws1, {
+        contactId: contact1,
+        items: [{ productId: prod1, variantId: varA, quantity: 1, unitPrice: 350000 }],
+        metadata: { paymentMethod: PaymentMethod.COD },
+      });
+      await service.confirmOrder(ws1, order.id, userId);
+
+      const completed = await service.completeOrder(ws1, order.id, { notes: 'Delivered' }, userId);
+
+      assert.strictEqual(completed.status, OrderStatus.COMPLETED);
+      assert.strictEqual(completed.fulfillmentStatus, FulfillmentStatus.DELIVERED);
+      assert.strictEqual(completed.paymentStatus, PaymentStatus.PAID);
+      assert.strictEqual(completed.paidAmount, 350000);
+
+      // Verify deterministic cod idempotency key
+      const codTx = Array.from(paymentTransactionsDb.values()).find(
+        t => t.idempotencyKey === `cod:${order.id}`,
+      );
+      assert.ok(codTx);
+      assert.strictEqual(codTx.amount, 350000);
+
+      // Verify ORDER_PAID event emitted
+      const paidEvent = emittedEvents.find(e => e.event === DomainEvent.ORDER_PAID);
+      assert.ok(paidEvent);
+      assert.strictEqual(paidEvent.payload.orderId, order.id);
+    });
+
+    it('should NOT auto-pay non-COD orders (e.g. VIETQR) leaving paymentStatus UNPAID', async () => {
+      const order = await service.createOrder(ws1, {
+        contactId: contact1,
+        items: [{ productId: prod1, variantId: varA, quantity: 1, unitPrice: 350000 }],
+        metadata: { paymentMethod: PaymentMethod.VIETQR },
+      });
+      await service.confirmOrder(ws1, order.id, userId);
+
+      const completed = await service.completeOrder(ws1, order.id, {}, userId);
+
+      assert.strictEqual(completed.status, OrderStatus.COMPLETED);
+      assert.strictEqual(completed.fulfillmentStatus, FulfillmentStatus.DELIVERED);
+      // Payment status must remain UNPAID
+      assert.strictEqual(completed.paymentStatus, PaymentStatus.UNPAID);
+      assert.strictEqual(completed.paidAmount, 0);
+
+      // No cod transaction created
+      const codTx = Array.from(paymentTransactionsDb.values()).find(
+        t => t.idempotencyKey === `cod:${order.id}`,
+      );
+      assert.strictEqual(codTx, undefined);
+    });
+
+    it('should NOT auto-pay orders without explicit COD/CASH payment method', async () => {
+      const order = await service.createOrder(ws1, {
+        contactId: contact1,
+        items: [{ productId: prod1, variantId: varA, quantity: 1, unitPrice: 350000 }],
+        metadata: {},
+      });
+      // Clear paymentMethod if set
+      const rawOrd = ordersDb.get(order.id);
+      if (rawOrd) {
+        delete rawOrd.paymentMethod;
+        rawOrd.metadata = {};
+      }
+      await service.confirmOrder(ws1, order.id, userId);
+
+      const completed = await service.completeOrder(ws1, order.id, {}, userId);
+
+      assert.strictEqual(completed.status, OrderStatus.COMPLETED);
+      assert.strictEqual(completed.paymentStatus, PaymentStatus.UNPAID);
+      assert.strictEqual(completed.paidAmount, 0);
+
+      const codTx = Array.from(paymentTransactionsDb.values()).find(
+        t => t.idempotencyKey === `cod:${order.id}`,
+      );
+      assert.strictEqual(codTx, undefined);
+    });
+  });
+
+  describe('cancelOrder (Refund tracking & 3PL shipment cancellation)', () => {
+    it('should record refund transaction with negative amount and mark paymentStatus REFUNDED', async () => {
+      const order = await service.createOrder(ws1, {
+        contactId: contact1,
+        items: [{ productId: prod1, variantId: varA, quantity: 1, unitPrice: 350000 }],
+      });
+      await service.confirmOrder(ws1, order.id, userId);
+      await service.payOrder(
+        ws1,
+        order.id,
+        { amount: 350000, paymentMethod: PaymentMethod.CASH },
+        userId,
+      );
+
+      const cancelled = await service.cancelOrder(
+        ws1,
+        order.id,
+        { cancelReason: 'Customer requested cancellation' },
+        userId,
+      );
+
+      assert.strictEqual(cancelled.status, OrderStatus.CANCELLED);
+      assert.strictEqual(cancelled.paymentStatus, PaymentStatus.REFUNDED);
+
+      // Verify refund payment transaction
+      const refundTx = Array.from(paymentTransactionsDb.values()).find(
+        t => t.idempotencyKey === `refund:${order.id}`,
+      );
+      assert.ok(refundTx);
+      assert.strictEqual(refundTx.amount, -350000);
+      assert.strictEqual(refundTx.status, PaymentTransactionStatus.SUCCESS);
+      assert.strictEqual(refundTx.transactionCode, `REFUND-${order.displayId}`);
+    });
+
+    it('should call shippingService.cancelOrderShipment when cancelling SHIPPING order', async () => {
+      const order = await service.createOrder(ws1, {
+        contactId: contact1,
+        items: [{ productId: prod1, variantId: varA, quantity: 1, unitPrice: 350000 }],
+      });
+      await service.confirmOrder(ws1, order.id, userId);
+
+      // Simulate order in SHIPPING status
+      const ordRecord = ordersDb.get(order.id);
+      ordRecord.status = OrderStatus.SHIPPING;
+
+      const cancelled = await service.cancelOrder(
+        ws1,
+        order.id,
+        { cancelReason: 'Package damaged' },
+        userId,
+      );
+
+      assert.strictEqual(cancelled.status, OrderStatus.CANCELLED);
+      assert.strictEqual(cancelledShipments.length, 1);
+      assert.strictEqual(cancelledShipments[0].workspaceId, ws1);
+      assert.strictEqual(cancelledShipments[0].orderId, order.id);
     });
   });
 });

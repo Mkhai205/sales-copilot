@@ -14,14 +14,12 @@ import {
   InventoryTransactionType,
   PaymentMethod,
   COMMERCE_RECONCILIATION_QUEUE,
-  POS_RECONCILIATION_QUEUE,
 } from '../index';
 
 describe('Shared Contracts — Commerce Context Schemas', () => {
   describe('Queue & Job Contract Invariants', () => {
-    it('should maintain queue and job names with backward compatibility', () => {
+    it('should maintain queue and job names', () => {
       assert.strictEqual(COMMERCE_RECONCILIATION_QUEUE, 'commerce-reconciliation');
-      assert.strictEqual(POS_RECONCILIATION_QUEUE, COMMERCE_RECONCILIATION_QUEUE);
     });
   });
 

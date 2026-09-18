@@ -93,12 +93,15 @@ export class CommerceReconciliationProcessor extends WorkerHost {
       return { status: 'WORKSPACE_NOT_FOUND' };
     }
 
-    const wsSettings = (workspace.settings as any)?.paymentSettings as
-      WorkspacePaymentSettings | undefined;
+    const rawSettings = workspace.settings as any;
+    const wsSettings = rawSettings?.paymentSettings as WorkspacePaymentSettings | undefined;
+    const legacyConfig = rawSettings?.bankConfig;
+    const expectedAccount =
+      wsSettings?.accountNumber || legacyConfig?.accountNumber || legacyConfig?.accountNo;
 
-    if (wsSettings?.accountNumber && accountNumber) {
+    if (expectedAccount && accountNumber) {
       const cleanIncomingAcc = accountNumber.replace(/[^0-9]/g, '');
-      const cleanConfiguredAcc = wsSettings.accountNumber.replace(/[^0-9]/g, '');
+      const cleanConfiguredAcc = expectedAccount.replace(/[^0-9]/g, '');
       if (
         cleanIncomingAcc &&
         cleanConfiguredAcc &&

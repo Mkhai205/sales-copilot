@@ -7,6 +7,7 @@ import type {
   UserWorkspaceDto,
   WorkspaceDto,
   WorkspaceMemberDto,
+  WorkspacePaymentSettings,
 } from '@sales-copilot/shared-contracts';
 
 export const workspacesApi = {
@@ -56,12 +57,12 @@ export const workspacesApi = {
     }),
 
   getBankConfig: (workspaceId: string) =>
-    fetchApi<any>('/workspaces/current/bank', {
+    fetchApi<WorkspacePaymentSettings>('/workspaces/current/bank', {
       headers: workspaceHeaders(workspaceId),
     }),
 
-  updateBankConfig: (workspaceId: string, dto: any) =>
-    fetchApi<any>('/workspaces/current/bank', {
+  updateBankConfig: (workspaceId: string, dto: WorkspacePaymentSettings) =>
+    fetchApi<WorkspacePaymentSettings>('/workspaces/current/bank', {
       method: 'PATCH',
       headers: workspaceHeaders(workspaceId),
       body: JSON.stringify(dto),

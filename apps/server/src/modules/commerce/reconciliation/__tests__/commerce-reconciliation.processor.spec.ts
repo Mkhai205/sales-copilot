@@ -52,6 +52,7 @@ describe('CommerceReconciliation (Bank Reconciliation Engine & Safe Inventory Ma
     let service: PaymentReconciliationService;
     let mockPrismaService: any;
     let mockEventEmitter: any;
+    let mockInventoryLedgerService: any;
     let clientMock: any;
     let emittedEvents: Array<{ event: string; payload: any }>;
     let postCommitHooks: Array<() => any>;
@@ -200,7 +201,49 @@ describe('CommerceReconciliation (Bank Reconciliation Engine & Safe Inventory Ma
         },
       };
 
-      service = new PaymentReconciliationService(mockPrismaService, mockEventEmitter as any);
+      mockInventoryLedgerService = {
+        commitStock: async (params: any) => {
+          for (const item of params.items || []) {
+            const variant = variantsDb.get(item.variantId);
+            if (variant) {
+              variant.stockQuantity -= item.quantity;
+              variant.reservedQuantity -= item.quantity;
+            }
+            inventoryTxsDb.push({
+              workspaceId: params.workspaceId,
+              variantId: item.variantId,
+              quantity: item.quantity,
+              type: InventoryTransactionType.COMMIT_SALE,
+              referenceId: params.orderId,
+              note: params.reason,
+            });
+          }
+          return { success: true };
+        },
+        reserveStock: async (params: any) => {
+          for (const item of params.items || []) {
+            const variant = variantsDb.get(item.variantId);
+            if (variant) {
+              variant.reservedQuantity += item.quantity;
+            }
+            inventoryTxsDb.push({
+              workspaceId: params.workspaceId,
+              variantId: item.variantId,
+              quantity: item.quantity,
+              type: InventoryTransactionType.RESERVATION,
+              referenceId: params.orderId,
+              note: params.reason,
+            });
+          }
+          return { success: true };
+        },
+      };
+
+      service = new PaymentReconciliationService(
+        mockPrismaService,
+        mockEventEmitter as any,
+        mockInventoryLedgerService as any,
+      );
     });
 
     it('should reconcile full payment: mark order PAID, commit stock, emit ORDER_PAID', async () => {
@@ -330,6 +373,71 @@ describe('CommerceReconciliation (Bank Reconciliation Engine & Safe Inventory Ma
       // Order status MUST remain CANCELLED
       assert.strictEqual(ord.status, OrderStatus.CANCELLED);
       // No stock deduction
+      assert.strictEqual(inventoryTxsDb.length, 0);
+    });
+
+    it('should NOT regress status or touch stock when reconciling SHIPPING order', async () => {
+      const ord = ordersDb.get(orderId);
+      ord.status = OrderStatus.SHIPPING;
+      ord.paymentStatus = PaymentStatus.UNPAID;
+      ord.paidAmount = 0;
+
+      const result = await service.reconcileTransaction({
+        workspaceId: wsId,
+        orderId,
+        amount: 500000,
+        gateway: PaymentGateway.SEPAY,
+        transactionCode: 'SEPAY_TX_SHIPPING',
+        accountNumber: '0987654321',
+        transferContent: 'ORD 1004',
+      });
+
+      assert.strictEqual(result.processed, true);
+      assert.strictEqual(result.status, 'PAID');
+      assert.strictEqual(result.stockCommitted, false);
+      assert.strictEqual(result.totalPaid, 500000);
+
+      // Order status MUST remain SHIPPING, NOT regress to PAID
+      assert.strictEqual(ord.status, OrderStatus.SHIPPING);
+      assert.strictEqual(ord.paymentStatus, PaymentStatus.PAID);
+      assert.strictEqual(ord.paidAmount, 500000);
+
+      // No double stock deduction
+      assert.strictEqual(inventoryTxsDb.length, 0);
+
+      // Domain event ORDER_PAID should be emitted
+      const orderPaidEvent = emittedEvents.find(e => e.event === DomainEvent.ORDER_PAID);
+      assert.ok(orderPaidEvent);
+      assert.strictEqual(orderPaidEvent.payload.orderId, orderId);
+    });
+
+    it('should NOT regress status or touch stock when reconciling COMPLETED order', async () => {
+      const ord = ordersDb.get(orderId);
+      ord.status = OrderStatus.COMPLETED;
+      ord.paymentStatus = PaymentStatus.UNPAID;
+      ord.paidAmount = 0;
+
+      const result = await service.reconcileTransaction({
+        workspaceId: wsId,
+        orderId,
+        amount: 500000,
+        gateway: PaymentGateway.SEPAY,
+        transactionCode: 'SEPAY_TX_COMPLETED',
+        accountNumber: '0987654321',
+        transferContent: 'ORD 1004',
+      });
+
+      assert.strictEqual(result.processed, true);
+      assert.strictEqual(result.status, 'PAID');
+      assert.strictEqual(result.stockCommitted, false);
+      assert.strictEqual(result.totalPaid, 500000);
+
+      // Order status MUST remain COMPLETED
+      assert.strictEqual(ord.status, OrderStatus.COMPLETED);
+      assert.strictEqual(ord.paymentStatus, PaymentStatus.PAID);
+      assert.strictEqual(ord.paidAmount, 500000);
+
+      // No double stock deduction
       assert.strictEqual(inventoryTxsDb.length, 0);
     });
 

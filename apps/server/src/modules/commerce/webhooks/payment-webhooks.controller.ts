@@ -1,4 +1,4 @@
-﻿import {
+import {
   Body,
   Controller,
   HttpCode,
@@ -11,7 +11,7 @@
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import * as crypto from 'crypto';
-import { POS_RECONCILIATION_QUEUE, PaymentGatewayType } from '@sales-copilot/shared-contracts';
+import { COMMERCE_RECONCILIATION_QUEUE, PaymentGatewayType } from '@sales-copilot/shared-contracts';
 import { Public } from '../../identity/auth/decorators/public.decorator';
 import { PaymentWebhooksGuard } from './payment-webhooks.guard';
 
@@ -34,7 +34,7 @@ export class PaymentWebhooksController {
   private readonly logger = new Logger(PaymentWebhooksController.name);
 
   constructor(
-    @InjectQueue(POS_RECONCILIATION_QUEUE)
+    @InjectQueue(COMMERCE_RECONCILIATION_QUEUE)
     private readonly reconciliationQueue: Queue<PaymentReconciliationJobData>,
   ) {}
 

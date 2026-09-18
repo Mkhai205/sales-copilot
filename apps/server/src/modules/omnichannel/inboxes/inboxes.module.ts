@@ -1,4 +1,4 @@
-﻿import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { DatabaseModule } from '../../../infrastructure/database';
 import { AuthModule } from '../../identity/auth';
 import { WorkspacesModule } from '../../identity/workspaces';
@@ -8,7 +8,7 @@ import { InboxesController } from './inboxes.controller';
 import { InboxesService } from './inboxes.service';
 
 @Module({
-  imports: [DatabaseModule, AuthModule, WorkspacesModule],
+  imports: [DatabaseModule, AuthModule, forwardRef(() => WorkspacesModule)],
   controllers: [InboxesController, InboxMembersController],
   providers: [ChannelCredentialService, InboxesService],
   exports: [ChannelCredentialService, InboxesService],
