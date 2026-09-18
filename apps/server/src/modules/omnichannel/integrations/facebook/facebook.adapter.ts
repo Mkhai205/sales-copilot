@@ -29,6 +29,19 @@ export interface FacebookApiResponse<_T = unknown> {
   [key: string]: unknown;
 }
 
+export class FacebookRateLimitError extends Error {
+  readonly isRateLimit = true;
+  readonly status: number;
+  readonly code?: number;
+
+  constructor(message: string, status: number = 429, code?: number) {
+    super(message);
+    this.name = 'FacebookRateLimitError';
+    this.status = status;
+    this.code = code;
+  }
+}
+
 export interface FacebookPageProfile {
   id: string;
   name: string;
@@ -857,6 +870,149 @@ export class FacebookAdapter implements ChannelAdapter {
         `Failed to fetch sender profile for PSID '${externalContactId}': ${(err as Error).message}`,
       );
       return null;
+    }
+  }
+
+  /**
+   * Hides a comment on a Facebook Page post/livestream.
+   *
+   * Endpoint: POST https://graph.facebook.com/{graphVersion}/{commentId}
+   * Body: { is_hidden: true }
+   */
+  async hideComment(
+    credentials: Record<string, unknown>,
+    commentId: string,
+    graphVersion: string = this.defaultGraphApiVersion,
+  ): Promise<boolean> {
+    if (!commentId || !commentId.trim()) {
+      throw new Error('Comment ID is required to hide comment');
+    }
+
+    const pageAccessToken = this.extractPageAccessToken(credentials);
+    const apiUrl = `${this.graphApiBaseUrl}/${graphVersion}/${encodeURIComponent(commentId.trim())}`;
+
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${pageAccessToken}`,
+      },
+      body: JSON.stringify({ is_hidden: true }),
+    });
+
+    const data = (await response.json()) as FacebookApiResponse;
+
+    if (!response.ok || data.error || data.success === false) {
+      const errorMsg = data.error
+        ? `[${data.error.code || response.status}] ${data.error.message}`
+        : `${response.status} ${response.statusText}`;
+      this.checkRateLimitError(response.status, data.error?.code, errorMsg);
+      throw new Error(`Facebook API hideComment error: ${errorMsg}`);
+    }
+
+    return true;
+  }
+
+  /**
+   * Sends a private message reply into user's Messenger from a post comment.
+   *
+   * Endpoint: POST https://graph.facebook.com/{graphVersion}/{commentId}/private_replies
+   * Body: { message }
+   */
+  async sendPrivateReply(
+    credentials: Record<string, unknown>,
+    commentId: string,
+    message: string,
+    graphVersion: string = this.defaultGraphApiVersion,
+  ): Promise<{ id: string }> {
+    if (!commentId || !commentId.trim()) {
+      throw new Error('Comment ID is required to send private reply');
+    }
+    if (!message || !message.trim()) {
+      throw new Error('Message content is required to send private reply');
+    }
+
+    const pageAccessToken = this.extractPageAccessToken(credentials);
+    const apiUrl = `${this.graphApiBaseUrl}/${graphVersion}/${encodeURIComponent(commentId.trim())}/private_replies`;
+
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${pageAccessToken}`,
+      },
+      body: JSON.stringify({ message: message.trim() }),
+    });
+
+    const data = (await response.json()) as FacebookApiResponse<{ id: string }>;
+
+    if (!response.ok || data.error || !data.id) {
+      const errorMsg = data.error
+        ? `[${data.error.code || response.status}] ${data.error.message}`
+        : `${response.status} ${response.statusText}`;
+      this.checkRateLimitError(response.status, data.error?.code, errorMsg);
+      throw new Error(`Facebook API sendPrivateReply error: ${errorMsg}`);
+    }
+
+    return { id: String(data.id) };
+  }
+
+  /**
+   * Publishes a public comment reply under a Facebook comment.
+   *
+   * Endpoint: POST https://graph.facebook.com/{graphVersion}/{commentId}/comments
+   * Body: { message }
+   */
+  async sendPublicCommentReply(
+    credentials: Record<string, unknown>,
+    commentId: string,
+    message: string,
+    graphVersion: string = this.defaultGraphApiVersion,
+  ): Promise<{ id: string }> {
+    if (!commentId || !commentId.trim()) {
+      throw new Error('Comment ID is required to send public comment reply');
+    }
+    if (!message || !message.trim()) {
+      throw new Error('Message content is required to send public comment reply');
+    }
+
+    const pageAccessToken = this.extractPageAccessToken(credentials);
+    const apiUrl = `${this.graphApiBaseUrl}/${graphVersion}/${encodeURIComponent(commentId.trim())}/comments`;
+
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${pageAccessToken}`,
+      },
+      body: JSON.stringify({ message: message.trim() }),
+    });
+
+    const data = (await response.json()) as FacebookApiResponse<{ id: string }>;
+
+    if (!response.ok || data.error || !data.id) {
+      const errorMsg = data.error
+        ? `[${data.error.code || response.status}] ${data.error.message}`
+        : `${response.status} ${response.statusText}`;
+      this.checkRateLimitError(response.status, data.error?.code, errorMsg);
+      throw new Error(`Facebook API sendPublicCommentReply error: ${errorMsg}`);
+    }
+
+    return { id: String(data.id) };
+  }
+
+  /**
+   * Helper to inspect response status and Meta error code for rate limiting / throttling.
+   */
+  private checkRateLimitError(status: number, errorCode?: number, errorMsg?: string): void {
+    const isRateLimit =
+      status === 429 || (typeof errorCode === 'number' && [4, 17, 32, 613].includes(errorCode));
+    if (isRateLimit) {
+      throw new FacebookRateLimitError(
+        `Facebook API rate limit exceeded: ${errorMsg || status}`,
+        status,
+        errorCode,
+      );
     }
   }
 }

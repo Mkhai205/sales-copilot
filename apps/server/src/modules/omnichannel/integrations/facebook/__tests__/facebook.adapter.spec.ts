@@ -2,7 +2,7 @@ import { describe, it, beforeEach, afterEach } from 'node:test';
 import * as assert from 'node:assert';
 import * as crypto from 'crypto';
 import { ChannelType, DeliveryStatus, MessageContentType } from '@sales-copilot/shared-contracts';
-import { FacebookAdapter } from '../facebook.adapter';
+import { FacebookAdapter, FacebookRateLimitError } from '../facebook.adapter';
 import {
   ChannelContext,
   OutboundMessagePayload,
@@ -1128,6 +1128,261 @@ describe('FacebookAdapter (Facebook Messenger Platform Integration)', () => {
         const info = await adapter.getChannelInfo(contextWithCustomVersion);
         assert.ok(interceptedUrl.includes('https://graph.facebook.com/v21.0/me'));
         assert.strictEqual(info.name, 'Store v21');
+      });
+    });
+
+    describe('Comment Guard Graph API Methods', () => {
+      const mockCreds = { pageAccessToken: 'EAA_test_token_123' };
+      const commentId = '123456_789012';
+
+      describe('hideComment()', () => {
+        it('should hide comment via POST /{commentId} with is_hidden: true', async () => {
+          let interceptedUrl = '';
+          let interceptedHeaders: Record<string, string> = {};
+          let interceptedBody: any = {};
+
+          globalThis.fetch = (async (url: string | URL | Request, init?: RequestInit) => {
+            interceptedUrl = String(url);
+            interceptedHeaders = (init?.headers as Record<string, string>) || {};
+            interceptedBody = JSON.parse((init?.body as string) || '{}');
+            return {
+              ok: true,
+              status: 200,
+              json: async () => ({ success: true }),
+            } as unknown as Response;
+          }) as typeof globalThis.fetch;
+
+          const result = await adapter.hideComment(mockCreds, commentId);
+
+          assert.strictEqual(result, true);
+          assert.ok(interceptedUrl.includes(`/v26.0/${commentId}`));
+          assert.strictEqual(interceptedHeaders.Authorization, 'Bearer EAA_test_token_123');
+          assert.strictEqual(interceptedBody.is_hidden, true);
+        });
+
+        it('should throw error when commentId is empty', async () => {
+          await assert.rejects(async () => {
+            await adapter.hideComment(mockCreds, '');
+          }, /Comment ID is required to hide comment/);
+        });
+
+        it('should throw error when pageAccessToken is missing', async () => {
+          await assert.rejects(async () => {
+            await adapter.hideComment({}, commentId);
+          }, /Facebook Page Access Token is missing/);
+        });
+
+        it('should throw error when Facebook API returns error or fails', async () => {
+          globalThis.fetch = (async () => ({
+            ok: false,
+            status: 403,
+            statusText: 'Forbidden',
+            json: async () => ({
+              error: {
+                message: '(#200) Requires pages_manage_engagement permission.',
+                type: 'OAuthException',
+                code: 200,
+              },
+            }),
+          })) as unknown as typeof globalThis.fetch;
+
+          await assert.rejects(async () => {
+            await adapter.hideComment(mockCreds, commentId);
+          }, /Facebook API hideComment error: \[200\]/);
+        });
+
+        it('should throw FacebookRateLimitError when Facebook API returns HTTP 429', async () => {
+          globalThis.fetch = (async () => ({
+            ok: false,
+            status: 429,
+            statusText: 'Too Many Requests',
+            json: async () => ({
+              error: {
+                message: 'Application request limit reached',
+                code: 4,
+              },
+            }),
+          })) as unknown as typeof globalThis.fetch;
+
+          await assert.rejects(
+            async () => {
+              await adapter.hideComment(mockCreds, commentId);
+            },
+            (err: any) => {
+              assert.ok(err instanceof FacebookRateLimitError);
+              assert.strictEqual(err.isRateLimit, true);
+              assert.strictEqual(err.status, 429);
+              assert.strictEqual(err.code, 4);
+              return true;
+            },
+          );
+        });
+      });
+
+      describe('sendPrivateReply()', () => {
+        it('should send private reply via POST /{commentId}/private_replies', async () => {
+          let interceptedUrl = '';
+          let interceptedHeaders: Record<string, string> = {};
+          let interceptedBody: any = {};
+
+          globalThis.fetch = (async (url: string | URL | Request, init?: RequestInit) => {
+            interceptedUrl = String(url);
+            interceptedHeaders = (init?.headers as Record<string, string>) || {};
+            interceptedBody = JSON.parse((init?.body as string) || '{}');
+            return {
+              ok: true,
+              status: 200,
+              json: async () => ({ id: 'm_pr_123456' }),
+            } as unknown as Response;
+          }) as typeof globalThis.fetch;
+
+          const result = await adapter.sendPrivateReply(mockCreds, commentId, 'Shop chào bạn!');
+
+          assert.strictEqual(result.id, 'm_pr_123456');
+          assert.ok(interceptedUrl.includes(`/v26.0/${commentId}/private_replies`));
+          assert.strictEqual(interceptedHeaders.Authorization, 'Bearer EAA_test_token_123');
+          assert.strictEqual(interceptedBody.message, 'Shop chào bạn!');
+        });
+
+        it('should throw error when commentId or message is empty', async () => {
+          await assert.rejects(async () => {
+            await adapter.sendPrivateReply(mockCreds, '', 'Hello');
+          }, /Comment ID is required to send private reply/);
+
+          await assert.rejects(async () => {
+            await adapter.sendPrivateReply(mockCreds, commentId, '   ');
+          }, /Message content is required to send private reply/);
+        });
+
+        it('should throw error when Facebook API returns error', async () => {
+          globalThis.fetch = (async () => ({
+            ok: false,
+            status: 400,
+            statusText: 'Bad Request',
+            json: async () => ({
+              error: {
+                message: 'Comment is too old to send private reply.',
+                code: 100,
+              },
+            }),
+          })) as unknown as typeof globalThis.fetch;
+
+          await assert.rejects(async () => {
+            await adapter.sendPrivateReply(mockCreds, commentId, 'Hello');
+          }, /Facebook API sendPrivateReply error: \[100\]/);
+        });
+
+        it('should throw FacebookRateLimitError when sendPrivateReply receives HTTP 429', async () => {
+          globalThis.fetch = (async () => ({
+            ok: false,
+            status: 429,
+            statusText: 'Too Many Requests',
+            json: async () => ({
+              error: {
+                message: 'Page request limit reached',
+                code: 32,
+              },
+            }),
+          })) as unknown as typeof globalThis.fetch;
+
+          await assert.rejects(
+            async () => {
+              await adapter.sendPrivateReply(mockCreds, commentId, 'Hello');
+            },
+            (err: any) => {
+              assert.ok(err instanceof FacebookRateLimitError);
+              assert.strictEqual(err.isRateLimit, true);
+              assert.strictEqual(err.status, 429);
+              assert.strictEqual(err.code, 32);
+              return true;
+            },
+          );
+        });
+      });
+
+      describe('sendPublicCommentReply()', () => {
+        it('should post public comment reply via POST /{commentId}/comments', async () => {
+          let interceptedUrl = '';
+          let interceptedHeaders: Record<string, string> = {};
+          let interceptedBody: any = {};
+
+          globalThis.fetch = (async (url: string | URL | Request, init?: RequestInit) => {
+            interceptedUrl = String(url);
+            interceptedHeaders = (init?.headers as Record<string, string>) || {};
+            interceptedBody = JSON.parse((init?.body as string) || '{}');
+            return {
+              ok: true,
+              status: 200,
+              json: async () => ({ id: 'comm_reply_999' }),
+            } as unknown as Response;
+          }) as typeof globalThis.fetch;
+
+          const result = await adapter.sendPublicCommentReply(
+            mockCreds,
+            commentId,
+            'Đã inbox bạn nhé!',
+          );
+
+          assert.strictEqual(result.id, 'comm_reply_999');
+          assert.ok(interceptedUrl.includes(`/v26.0/${commentId}/comments`));
+          assert.strictEqual(interceptedHeaders.Authorization, 'Bearer EAA_test_token_123');
+          assert.strictEqual(interceptedBody.message, 'Đã inbox bạn nhé!');
+        });
+
+        it('should throw error when commentId or message is empty', async () => {
+          await assert.rejects(async () => {
+            await adapter.sendPublicCommentReply(mockCreds, '', 'Hello');
+          }, /Comment ID is required to send public comment reply/);
+
+          await assert.rejects(async () => {
+            await adapter.sendPublicCommentReply(mockCreds, commentId, '');
+          }, /Message content is required to send public comment reply/);
+        });
+
+        it('should throw error when Facebook API returns error', async () => {
+          globalThis.fetch = (async () => ({
+            ok: false,
+            status: 400,
+            statusText: 'Bad Request',
+            json: async () => ({
+              error: {
+                message: 'Cannot comment on hidden post.',
+                code: 100,
+              },
+            }),
+          })) as unknown as typeof globalThis.fetch;
+
+          await assert.rejects(async () => {
+            await adapter.sendPublicCommentReply(mockCreds, commentId, 'Hello');
+          }, /Facebook API sendPublicCommentReply error: \[100\]/);
+        });
+
+        it('should throw FacebookRateLimitError when sendPublicCommentReply receives HTTP 429', async () => {
+          globalThis.fetch = (async () => ({
+            ok: false,
+            status: 429,
+            statusText: 'Too Many Requests',
+            json: async () => ({
+              error: {
+                message: 'Rate limit exceeded',
+                code: 613,
+              },
+            }),
+          })) as unknown as typeof globalThis.fetch;
+
+          await assert.rejects(
+            async () => {
+              await adapter.sendPublicCommentReply(mockCreds, commentId, 'Hello');
+            },
+            (err: any) => {
+              assert.ok(err instanceof FacebookRateLimitError);
+              assert.strictEqual(err.isRateLimit, true);
+              assert.strictEqual(err.status, 429);
+              assert.strictEqual(err.code, 613);
+              return true;
+            },
+          );
+        });
       });
     });
   });

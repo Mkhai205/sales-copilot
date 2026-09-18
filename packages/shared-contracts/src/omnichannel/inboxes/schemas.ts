@@ -53,6 +53,29 @@ export const inboxAiCommercePolicyConfigSchema = z.object({
 });
 export type InboxAiCommercePolicyConfig = z.infer<typeof inboxAiCommercePolicyConfigSchema>;
 
+export const DEFAULT_COMMENT_GUARD_PRIVATE_REPLY =
+  'Dạ shop đã nhận thông tin của bạn rồi ạ 😊\nShop sẽ tư vấn riêng cho bạn trong tin nhắn này nhé!';
+
+export const DEFAULT_COMMENT_GUARD_PUBLIC_REPLY =
+  'Shop đã nhận thông tin và nhắn tin riêng cho bạn rồi nhé 😊';
+
+export const COMMENT_GUARD_QUEUE = 'comment-guard';
+
+export const commentGuardConfigSchema = z.object({
+  enabled: z.boolean().default(false),
+  privateReplyTemplate: z.string().optional(),
+  publicReplyEnabled: z.boolean().default(true),
+  publicReplyTemplate: z.string().optional(),
+});
+export type CommentGuardConfig = z.infer<typeof commentGuardConfigSchema>;
+
+export const channelSettingsSchema = z
+  .object({
+    commentGuard: commentGuardConfigSchema.optional(),
+  })
+  .passthrough();
+export type ChannelSettings = z.infer<typeof channelSettingsSchema> & { [key: string]: unknown };
+
 export const inboxSettingsSchema = z
   .object({
     greetingMessage: z.string().optional(),
@@ -116,7 +139,7 @@ export interface ChannelSummaryDto {
   inboxId: string;
   channelType: ChannelType;
   providerAccountId?: string | null;
-  settings: Record<string, unknown>;
+  settings: ChannelSettings;
   isConnected: boolean;
   createdAt: string;
   updatedAt: string;

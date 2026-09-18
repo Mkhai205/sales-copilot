@@ -17,6 +17,8 @@ import {
 import { toast } from 'sonner';
 import {
   ChannelType,
+  DEFAULT_COMMENT_GUARD_PRIVATE_REPLY,
+  DEFAULT_COMMENT_GUARD_PUBLIC_REPLY,
   type InboxDetailDto,
   type InboxWebWidgetConfig,
   type PreChatFormConfig,
@@ -24,6 +26,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
@@ -79,6 +82,34 @@ export function TabConfiguration({ inbox, workspaceId, workspaceSlug }: TabConfi
   const [preChatRequirePhone, setPreChatRequirePhone] = React.useState(
     existingWidget?.preChatForm?.requirePhone ?? false,
   );
+
+  // Comment Guard Settings State (Facebook Messenger)
+  const existingCommentGuard = (inbox.channel?.settings as any)?.commentGuard;
+  const [commentGuardEnabled, setCommentGuardEnabled] = React.useState(
+    existingCommentGuard?.enabled || false,
+  );
+  const [publicReplyEnabled, setPublicReplyEnabled] = React.useState(
+    existingCommentGuard?.publicReplyEnabled ?? true,
+  );
+  const [privateReplyTemplate, setPrivateReplyTemplate] = React.useState(
+    existingCommentGuard?.privateReplyTemplate || DEFAULT_COMMENT_GUARD_PRIVATE_REPLY,
+  );
+  const [publicReplyTemplate, setPublicReplyTemplate] = React.useState(
+    existingCommentGuard?.publicReplyTemplate || DEFAULT_COMMENT_GUARD_PUBLIC_REPLY,
+  );
+
+  React.useEffect(() => {
+    if (existingCommentGuard) {
+      setCommentGuardEnabled(existingCommentGuard.enabled ?? false);
+      setPublicReplyEnabled(existingCommentGuard.publicReplyEnabled ?? true);
+      setPrivateReplyTemplate(
+        existingCommentGuard.privateReplyTemplate || DEFAULT_COMMENT_GUARD_PRIVATE_REPLY,
+      );
+      setPublicReplyTemplate(
+        existingCommentGuard.publicReplyTemplate || DEFAULT_COMMENT_GUARD_PUBLIC_REPLY,
+      );
+    }
+  }, [inbox.channel?.updatedAt, inbox.updatedAt]);
 
   // Masked channel credential state
   const [telegramToken, setTelegramToken] = React.useState('');
@@ -188,6 +219,29 @@ export function TabConfiguration({ inbox, workspaceId, workspaceSlug }: TabConfi
         },
       },
     );
+  };
+
+  const handleSaveCommentGuard = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const currentChannelSettings = (inbox.channel?.settings as Record<string, unknown>) || {};
+    const updatedChannelSettings = {
+      ...currentChannelSettings,
+      commentGuard: {
+        enabled: commentGuardEnabled,
+        publicReplyEnabled,
+        privateReplyTemplate: privateReplyTemplate.trim(),
+        publicReplyTemplate: publicReplyTemplate.trim(),
+      },
+    };
+
+    updateInbox({
+      inboxId: inbox.id,
+      dto: {
+        channelSettings: updatedChannelSettings,
+      },
+      successMessage: 'Lưu cấu hình Vệ sĩ bình luận (Comment Guard) thành công',
+    });
   };
 
   return (
@@ -478,105 +532,250 @@ export function TabConfiguration({ inbox, workspaceId, workspaceSlug }: TabConfi
 
       {/* ─── FACEBOOK MESSENGER CONFIGURATION ──────────────────────────────── */}
       {inbox.channelType === ChannelType.FACEBOOK_MESSENGER && (
-        <Card className="border-border bg-card/40">
-          <CardHeader className="pb-4">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base font-semibold">
-                Thông tin kết nối Facebook Fanpage
-              </CardTitle>
-              <Badge
-                variant="outline"
-                className={
-                  inbox.channel?.isConnected
-                    ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-500'
-                    : 'border-destructive/30 bg-destructive/10 text-destructive'
-                }
-              >
-                {inbox.channel?.isConnected ? (
-                  <span className="flex items-center gap-1.5">
-                    <ShieldCheck className="size-3" />
-                    Đang hoạt động (Healthy)
-                  </span>
-                ) : (
-                  <span className="flex items-center gap-1.5">
-                    <ShieldAlert className="size-3" />
-                    Chưa kết nối
-                  </span>
-                )}
-              </Badge>
-            </div>
-            <CardDescription className="text-xs">
-              Trạng thái tích hợp Graph API và Webhook tiếp nhận tin nhắn từ Facebook Messenger.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-4">
-            <Field>
-              <FieldLabel className="text-xs font-medium">Facebook Page ID</FieldLabel>
-              <Input
-                readOnly
-                value={inbox.channel?.providerAccountId || 'Chưa liên kết'}
-                className="h-9 text-xs font-mono bg-muted/40"
-              />
-            </Field>
-
-            <Field>
-              <FieldLabel className="text-xs font-medium">Meta Webhook Callback URL</FieldLabel>
-              <div className="flex items-center gap-2">
+        <>
+          <Card className="border-border bg-card/40">
+            <CardHeader className="pb-4">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base font-semibold">
+                  Thông tin kết nối Facebook Fanpage
+                </CardTitle>
+                <Badge
+                  variant="outline"
+                  className={
+                    inbox.channel?.isConnected
+                      ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-500'
+                      : 'border-destructive/30 bg-destructive/10 text-destructive'
+                  }
+                >
+                  {inbox.channel?.isConnected ? (
+                    <span className="flex items-center gap-1.5">
+                      <ShieldCheck className="size-3" />
+                      Đang hoạt động (Healthy)
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1.5">
+                      <ShieldAlert className="size-3" />
+                      Chưa kết nối
+                    </span>
+                  )}
+                </Badge>
+              </div>
+              <CardDescription className="text-xs">
+                Trạng thái tích hợp Graph API và Webhook tiếp nhận tin nhắn từ Facebook Messenger.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-4">
+              <Field>
+                <FieldLabel className="text-xs font-medium">Facebook Page ID</FieldLabel>
                 <Input
                   readOnly
-                  value={`${origin}/api/webhooks/facebook`}
+                  value={inbox.channel?.providerAccountId || 'Chưa liên kết'}
                   className="h-9 text-xs font-mono bg-muted/40"
                 />
+              </Field>
+
+              <Field>
+                <FieldLabel className="text-xs font-medium">Meta Webhook Callback URL</FieldLabel>
+                <div className="flex items-center gap-2">
+                  <Input
+                    readOnly
+                    value={`${origin}/api/webhooks/facebook`}
+                    className="h-9 text-xs font-mono bg-muted/40"
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      copyToClipboard(
+                        `${origin}/api/webhooks/facebook`,
+                        'fb-webhook',
+                        'Webhook URL',
+                      )
+                    }
+                    className="h-9 shrink-0 gap-1 text-xs"
+                  >
+                    {copiedKey === 'fb-webhook' ? (
+                      <Check className="size-3 text-emerald-500" />
+                    ) : (
+                      <Copy className="size-3" />
+                    )}
+                    Chép
+                  </Button>
+                </div>
+              </Field>
+
+              {/* Re-authorize action */}
+              <div className="rounded-lg border border-border/80 bg-muted/20 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-2">
+                <div className="flex flex-col gap-1">
+                  <span className="text-xs font-semibold text-foreground">
+                    Ủy quyền lại kết nối Facebook (Re-authorize)
+                  </span>
+                  <span className="text-[11px] text-muted-foreground">
+                    Nếu token Facebook hết hạn hoặc đổi mật khẩu tài khoản Admin, nhấn vào đây để
+                    cấp lại quyền cho Sales Copilot.
+                  </span>
+                </div>
                 <Button
-                  variant="outline"
                   size="sm"
-                  onClick={() =>
-                    copyToClipboard(`${origin}/api/webhooks/facebook`, 'fb-webhook', 'Webhook URL')
-                  }
-                  className="h-9 shrink-0 gap-1 text-xs"
+                  onClick={handleStartFacebookOAuth}
+                  disabled={isReauthorizing}
+                  className="h-8 gap-1.5 text-xs font-medium shrink-0 bg-[#1877F2] text-white hover:bg-[#1877F2]/90"
                 >
-                  {copiedKey === 'fb-webhook' ? (
-                    <Check className="size-3 text-emerald-500" />
+                  {isReauthorizing ? (
+                    <>
+                      <Spinner className="size-3.5" data-icon="inline-start" />
+                      Đang kết nối...
+                    </>
                   ) : (
-                    <Copy className="size-3" />
+                    <>
+                      <RefreshCw className="size-3.5" data-icon="inline-start" />
+                      Ủy quyền lại 1-Click
+                    </>
                   )}
-                  Chép
                 </Button>
               </div>
-            </Field>
+            </CardContent>
+          </Card>
 
-            {/* Re-authorize action */}
-            <div className="rounded-lg border border-border/80 bg-muted/20 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-2">
-              <div className="flex flex-col gap-1">
-                <span className="text-xs font-semibold text-foreground">
-                  Ủy quyền lại kết nối Facebook (Re-authorize)
-                </span>
-                <span className="text-[11px] text-muted-foreground">
-                  Nếu token Facebook hết hạn hoặc đổi mật khẩu tài khoản Admin, nhấn vào đây để cấp
-                  lại quyền cho Sales Copilot.
-                </span>
+          {/* Comment Guard Card */}
+          <Card className="border-border bg-card/40">
+            <CardHeader className="pb-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <ShieldAlert className="size-4 text-primary" />
+                  <CardTitle className="text-base font-semibold">
+                    Vệ Sĩ Bình Luận (Comment Guard)
+                  </CardTitle>
+                </div>
+                <Badge
+                  variant="outline"
+                  className={
+                    commentGuardEnabled
+                      ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-500'
+                      : 'border-muted bg-muted/40 text-muted-foreground'
+                  }
+                >
+                  {commentGuardEnabled ? 'Đang bật bảo vệ' : 'Đang tắt'}
+                </Badge>
               </div>
-              <Button
-                size="sm"
-                onClick={handleStartFacebookOAuth}
-                disabled={isReauthorizing}
-                className="h-8 gap-1.5 text-xs font-medium shrink-0 bg-[#1877F2] text-white hover:bg-[#1877F2]/90"
-              >
-                {isReauthorizing ? (
-                  <>
-                    <Spinner className="size-3.5" data-icon="inline-start" />
-                    Đang kết nối...
-                  </>
-                ) : (
-                  <>
-                    <RefreshCw className="size-3.5" data-icon="inline-start" />
-                    Ủy quyền lại 1-Click
-                  </>
-                )}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+              <CardDescription className="text-xs">
+                Tự động quét và ẩn bình luận chứa số điện thoại dưới bài viết/livestream để chống
+                cướp khách, đồng thời gửi tin nhắn riêng qua Messenger và mở hội thoại tư vấn trong
+                Inbox.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSaveCommentGuard} className="flex flex-col gap-5">
+                <FieldGroup className="gap-4">
+                  {/* Master toggle */}
+                  <div className="flex items-center justify-between rounded-lg border border-border/80 bg-muted/20 p-3.5">
+                    <div className="flex flex-col gap-0.5 pr-4">
+                      <span className="text-xs font-medium text-foreground">
+                        Bật tự động ẩn bình luận chứa số điện thoại (Comment Guard)
+                      </span>
+                      <span className="text-[11px] text-muted-foreground">
+                        Khi phát hiện bình luận có số điện thoại Việt Nam, hệ thống lập tức ẩn bình
+                        luận để đối thủ không thể khai thác.
+                      </span>
+                    </div>
+                    <Switch
+                      checked={commentGuardEnabled}
+                      onCheckedChange={setCommentGuardEnabled}
+                    />
+                  </div>
+
+                  {commentGuardEnabled && (
+                    <>
+                      {/* Public reply toggle */}
+                      <div className="flex items-center justify-between rounded-lg border border-border/80 bg-muted/20 p-3.5">
+                        <div className="flex flex-col gap-0.5 pr-4">
+                          <span className="text-xs font-medium text-foreground">
+                            Đăng bình luận phản hồi công khai (Public Reply)
+                          </span>
+                          <span className="text-[11px] text-muted-foreground">
+                            Bình luận trả lời công khai giúp khách an tâm đã được shop ghi nhận và
+                            bảo toàn tương tác cho bài viết.
+                          </span>
+                        </div>
+                        <Switch
+                          checked={publicReplyEnabled}
+                          onCheckedChange={setPublicReplyEnabled}
+                        />
+                      </div>
+
+                      {/* Private reply textarea */}
+                      <Field>
+                        <FieldLabel
+                          htmlFor="private-reply-template"
+                          className="text-xs font-medium"
+                        >
+                          Mẫu tin nhắn riêng tư (Private Reply qua Messenger)
+                        </FieldLabel>
+                        <Textarea
+                          id="private-reply-template"
+                          rows={3}
+                          value={privateReplyTemplate}
+                          onChange={e => setPrivateReplyTemplate(e.target.value)}
+                          placeholder={DEFAULT_COMMENT_GUARD_PRIVATE_REPLY}
+                          className="text-xs min-h-[72px]"
+                        />
+                        <FieldDescription className="text-[11px] text-muted-foreground">
+                          Hệ thống sẽ gửi tin nhắn này trực tiếp vào Messenger của khách hàng ngay
+                          khi ẩn bình luận.
+                        </FieldDescription>
+                      </Field>
+
+                      {/* Public reply textarea */}
+                      {publicReplyEnabled && (
+                        <Field>
+                          <FieldLabel
+                            htmlFor="public-reply-template"
+                            className="text-xs font-medium"
+                          >
+                            Mẫu bình luận công khai dưới bài viết (Public Reply)
+                          </FieldLabel>
+                          <Textarea
+                            id="public-reply-template"
+                            rows={2}
+                            value={publicReplyTemplate}
+                            onChange={e => setPublicReplyTemplate(e.target.value)}
+                            placeholder={DEFAULT_COMMENT_GUARD_PUBLIC_REPLY}
+                            className="text-xs min-h-[56px]"
+                          />
+                          <FieldDescription className="text-[11px] text-muted-foreground">
+                            Nội dung bình luận phản hồi hiển thị công khai dưới comment của khách
+                            hàng.
+                          </FieldDescription>
+                        </Field>
+                      )}
+                    </>
+                  )}
+                </FieldGroup>
+
+                <div className="flex items-center justify-end pt-2">
+                  <Button
+                    type="submit"
+                    size="sm"
+                    disabled={isUpdating}
+                    className="h-8 gap-1.5 text-xs font-medium"
+                  >
+                    {isUpdating ? (
+                      <>
+                        <Spinner className="size-3.5" data-icon="inline-start" />
+                        Đang lưu...
+                      </>
+                    ) : (
+                      <>
+                        <Check className="size-3.5" data-icon="inline-start" />
+                        Lưu cấu hình Comment Guard
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </>
       )}
 
       {/* ─── ZALO OA CONFIGURATION ─────────────────────────────────────────── */}

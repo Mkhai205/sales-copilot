@@ -1,4 +1,4 @@
-﻿import { describe, it, beforeEach } from 'node:test';
+import { describe, it, beforeEach } from 'node:test';
 import * as assert from 'node:assert';
 import * as crypto from 'crypto';
 import { ConfigService } from '@nestjs/config';
@@ -18,6 +18,9 @@ describe('FacebookController (REST & Central Webhook Endpoints)', () => {
   let prismaMock: any;
   let channelsDb: Map<string, any>;
   let forwardedWebhooks: Array<{ channelId: string; payload: any; headers: any }>;
+  let channelEventsDb: Map<string, any>;
+  let commentGuardJobs: Array<{ name: string; data: any; options: any }>;
+  let commentGuardQueueMock: any;
 
   const wsId = 'ws_fb_ctrl_test';
   const chanId = 'chan_fb_ctrl_1';
@@ -33,7 +36,9 @@ describe('FacebookController (REST & Central Webhook Endpoints)', () => {
 
   beforeEach(() => {
     channelsDb = new Map();
+    channelEventsDb = new Map();
     forwardedWebhooks = [];
+    commentGuardJobs = [];
 
     const mockConfig = {
       get: (key: string) => {
@@ -59,6 +64,18 @@ describe('FacebookController (REST & Central Webhook Endpoints)', () => {
             return c;
           }
           return null;
+        },
+      },
+      channelEvent: {
+        findUnique: async ({ where }: { where: any }) => {
+          const key = `${where.channelId_externalEventId?.channelId}_${where.channelId_externalEventId?.externalEventId}`;
+          return channelEventsDb.get(key) || null;
+        },
+        create: async ({ data }: { data: any }) => {
+          const key = `${data.channelId}_${data.externalEventId}`;
+          const evt = { id: `evt_${Date.now()}`, ...data };
+          channelEventsDb.set(key, evt);
+          return evt;
         },
       },
     };
@@ -112,6 +129,13 @@ describe('FacebookController (REST & Central Webhook Endpoints)', () => {
       },
     } as unknown as WebhooksService;
 
+    commentGuardQueueMock = {
+      add: async (name: string, data: any, options: any) => {
+        commentGuardJobs.push({ name, data, options });
+        return { id: `job_${data.commentId}` };
+      },
+    };
+
     const adapter = new FacebookAdapter();
 
     controller = new FacebookController(
@@ -121,6 +145,7 @@ describe('FacebookController (REST & Central Webhook Endpoints)', () => {
       credentialService,
       webhooksService,
       adapter,
+      commentGuardQueueMock,
     );
   });
 
@@ -333,6 +358,298 @@ describe('FacebookController (REST & Central Webhook Endpoints)', () => {
       const result = await controller.handleCentralWebhook(body, headers, {});
       assert.strictEqual(result.success, false);
       assert.strictEqual(forwardedWebhooks.length, 0);
+    });
+
+    it('should process feed comment and enqueue to commentGuardQueue when commentGuard is enabled', async () => {
+      channelsDb.set(chanId, {
+        id: chanId,
+        workspaceId: wsId,
+        channelType: 'FACEBOOK_MESSENGER',
+        providerAccountId: mockPageId,
+        settings: {
+          commentGuard: {
+            enabled: true,
+            publicReplyEnabled: true,
+          },
+        },
+      });
+
+      const body = {
+        object: 'page',
+        entry: [
+          {
+            id: mockPageId,
+            time: 1700000000000,
+            changes: [
+              {
+                field: 'feed',
+                value: {
+                  item: 'comment',
+                  verb: 'add',
+                  comment_id: 'comment_fb_123',
+                  post_id: 'post_fb_999',
+                  from: { id: 'customer_psid_1', name: 'Nguyen Van Test' },
+                  message: 'Shop oi tu van em ao size L 0912345678',
+                  created_time: 1700000000,
+                },
+              },
+            ],
+          },
+        ],
+      };
+
+      const bodyString = JSON.stringify(body);
+      const signature = `sha256=${crypto
+        .createHmac('sha256', mockAppSecret)
+        .update(bodyString)
+        .digest('hex')}`;
+
+      const headers = {
+        'x-hub-signature-256': signature,
+      };
+
+      const result = await controller.handleCentralWebhook(body, headers, {});
+      assert.strictEqual(result.success, true);
+
+      // Verify job enqueued to commentGuardQueue
+      assert.strictEqual(commentGuardJobs.length, 1);
+      assert.strictEqual(commentGuardJobs[0].name, 'process-comment-guard');
+      assert.strictEqual(commentGuardJobs[0].data.commentId, 'comment_fb_123');
+      assert.strictEqual(commentGuardJobs[0].data.senderId, 'customer_psid_1');
+      assert.strictEqual(
+        commentGuardJobs[0].data.message,
+        'Shop oi tu van em ao size L 0912345678',
+      );
+      assert.strictEqual(commentGuardJobs[0].options.jobId, 'comment_comment_fb_123');
+    });
+
+    it('should filter out comments authored by the Page itself', async () => {
+      channelsDb.set(chanId, {
+        id: chanId,
+        workspaceId: wsId,
+        channelType: 'FACEBOOK_MESSENGER',
+        providerAccountId: mockPageId,
+        settings: {
+          commentGuard: {
+            enabled: true,
+          },
+        },
+      });
+
+      const body = {
+        object: 'page',
+        entry: [
+          {
+            id: mockPageId,
+            changes: [
+              {
+                field: 'feed',
+                value: {
+                  item: 'comment',
+                  verb: 'add',
+                  comment_id: 'page_comment_1',
+                  from: { id: mockPageId, name: 'Page Name' }, // Same as page ID
+                  message: 'Lien he hotline 0912345678',
+                },
+              },
+            ],
+          },
+        ],
+      };
+
+      const bodyString = JSON.stringify(body);
+      const signature = `sha256=${crypto
+        .createHmac('sha256', mockAppSecret)
+        .update(bodyString)
+        .digest('hex')}`;
+
+      const result = await controller.handleCentralWebhook(
+        body,
+        { 'x-hub-signature-256': signature },
+        {},
+      );
+      assert.strictEqual(result.success, true);
+      assert.strictEqual(commentGuardJobs.length, 0);
+    });
+
+    it('should skip feed comment when Comment Guard is disabled on channel', async () => {
+      channelsDb.set(chanId, {
+        id: chanId,
+        workspaceId: wsId,
+        channelType: 'FACEBOOK_MESSENGER',
+        providerAccountId: mockPageId,
+        settings: {
+          commentGuard: {
+            enabled: false,
+          },
+        },
+      });
+
+      const body = {
+        object: 'page',
+        entry: [
+          {
+            id: mockPageId,
+            changes: [
+              {
+                field: 'feed',
+                value: {
+                  item: 'comment',
+                  verb: 'add',
+                  comment_id: 'comment_skip',
+                  from: { id: 'cust_2' },
+                  message: '0912345678',
+                },
+              },
+            ],
+          },
+        ],
+      };
+
+      const bodyString = JSON.stringify(body);
+      const signature = `sha256=${crypto
+        .createHmac('sha256', mockAppSecret)
+        .update(bodyString)
+        .digest('hex')}`;
+
+      const result = await controller.handleCentralWebhook(
+        body,
+        { 'x-hub-signature-256': signature },
+        {},
+      );
+      assert.strictEqual(result.success, true);
+      assert.strictEqual(commentGuardJobs.length, 0);
+    });
+
+    it('should deduplicate when duplicate comment ID webhook is received', async () => {
+      channelsDb.set(chanId, {
+        id: chanId,
+        workspaceId: wsId,
+        channelType: 'FACEBOOK_MESSENGER',
+        providerAccountId: mockPageId,
+        settings: {
+          commentGuard: {
+            enabled: true,
+          },
+        },
+      });
+
+      const body = {
+        object: 'page',
+        entry: [
+          {
+            id: mockPageId,
+            changes: [
+              {
+                field: 'feed',
+                value: {
+                  item: 'comment',
+                  verb: 'add',
+                  comment_id: 'comment_dedup_1',
+                  from: { id: 'cust_3' },
+                  message: '0912345678',
+                },
+              },
+            ],
+          },
+        ],
+      };
+
+      const bodyString = JSON.stringify(body);
+      const signature = `sha256=${crypto
+        .createHmac('sha256', mockAppSecret)
+        .update(bodyString)
+        .digest('hex')}`;
+
+      // First webhook: should enqueue
+      await controller.handleCentralWebhook(body, { 'x-hub-signature-256': signature }, {});
+      assert.strictEqual(commentGuardJobs.length, 1);
+
+      // Second webhook with same comment_id: should deduplicate and NOT enqueue second job
+      await controller.handleCentralWebhook(body, { 'x-hub-signature-256': signature }, {});
+      assert.strictEqual(commentGuardJobs.length, 1);
+    });
+
+    it('should correctly enqueue edited comment even if add comment with same comment_id was already received', async () => {
+      channelsDb.set(chanId, {
+        id: chanId,
+        workspaceId: wsId,
+        channelType: 'FACEBOOK_MESSENGER',
+        providerAccountId: mockPageId,
+        settings: {
+          commentGuard: {
+            enabled: true,
+          },
+        },
+      });
+
+      const addBody = {
+        object: 'page',
+        entry: [
+          {
+            id: mockPageId,
+            changes: [
+              {
+                field: 'feed',
+                value: {
+                  item: 'comment',
+                  verb: 'add',
+                  comment_id: 'comment_edit_test_1',
+                  from: { id: 'cust_4' },
+                  message: 'San pham con hang khong?',
+                },
+              },
+            ],
+          },
+        ],
+      };
+
+      const addSignature = `sha256=${crypto
+        .createHmac('sha256', mockAppSecret)
+        .update(JSON.stringify(addBody))
+        .digest('hex')}`;
+
+      // 1. Initial comment added without phone
+      await controller.handleCentralWebhook(addBody, { 'x-hub-signature-256': addSignature }, {});
+      assert.strictEqual(commentGuardJobs.length, 1);
+      assert.strictEqual(commentGuardJobs[0].data.verb, 'add');
+
+      // 2. Customer edits the comment to add phone number
+      const editBody = {
+        object: 'page',
+        entry: [
+          {
+            id: mockPageId,
+            changes: [
+              {
+                field: 'feed',
+                value: {
+                  item: 'comment',
+                  verb: 'edited',
+                  comment_id: 'comment_edit_test_1',
+                  from: { id: 'cust_4' },
+                  message: 'San pham con hang khong? 0912345678',
+                  created_time: 1726000000,
+                },
+              },
+            ],
+          },
+        ],
+      };
+
+      const editSignature = `sha256=${crypto
+        .createHmac('sha256', mockAppSecret)
+        .update(JSON.stringify(editBody))
+        .digest('hex')}`;
+
+      await controller.handleCentralWebhook(editBody, { 'x-hub-signature-256': editSignature }, {});
+      assert.strictEqual(commentGuardJobs.length, 2);
+      assert.strictEqual(commentGuardJobs[1].data.verb, 'edited');
+      assert.strictEqual(commentGuardJobs[1].data.message, 'San pham con hang khong? 0912345678');
+
+      // 3. Duplicate retry of the edited event should be deduplicated
+      await controller.handleCentralWebhook(editBody, { 'x-hub-signature-256': editSignature }, {});
+      assert.strictEqual(commentGuardJobs.length, 2);
     });
   });
 });

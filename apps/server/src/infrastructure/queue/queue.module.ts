@@ -9,9 +9,11 @@ import { MessagesModule } from '../../modules/omnichannel/messages';
 import { InboxesModule } from '../../modules/omnichannel/inboxes';
 
 import { WebhookDeliveryProcessor, WEBHOOK_DELIVERY_QUEUE } from './webhook-delivery.processor';
+import { CommentGuardProcessor } from '../../modules/omnichannel/integrations/facebook/comment-guard.processor';
+import { COMMENT_GUARD_QUEUE } from '@sales-copilot/shared-contracts';
 
 export const CHANNEL_INGESTION_QUEUE = 'channel-ingestion';
-export { WEBHOOK_DELIVERY_QUEUE };
+export { WEBHOOK_DELIVERY_QUEUE, COMMENT_GUARD_QUEUE };
 
 @Global()
 @Module({
@@ -54,9 +56,12 @@ export { WEBHOOK_DELIVERY_QUEUE };
       {
         name: WEBHOOK_DELIVERY_QUEUE,
       },
+      {
+        name: COMMENT_GUARD_QUEUE,
+      },
     ),
   ],
-  providers: [ChannelIngestionProcessor, WebhookDeliveryProcessor],
-  exports: [BullModule, ChannelIngestionProcessor, WebhookDeliveryProcessor],
+  providers: [ChannelIngestionProcessor, WebhookDeliveryProcessor, CommentGuardProcessor],
+  exports: [BullModule, ChannelIngestionProcessor, WebhookDeliveryProcessor, CommentGuardProcessor],
 })
 export class QueueModule {}

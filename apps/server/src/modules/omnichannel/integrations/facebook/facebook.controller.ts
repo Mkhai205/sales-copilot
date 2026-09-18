@@ -1,4 +1,4 @@
-﻿import {
+import {
   Body,
   Controller,
   Delete,
@@ -21,7 +21,9 @@ import { Throttle } from '@nestjs/throttler';
 import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import * as crypto from 'crypto';
 import type { Request, Response } from 'express';
-import { WorkspaceRole } from '@sales-copilot/shared-contracts';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
+import { COMMENT_GUARD_QUEUE, WorkspaceRole } from '@sales-copilot/shared-contracts';
 import { Public } from '../../../identity/auth';
 import { CurrentWorkspace, Roles } from '../../../identity/workspaces/decorators';
 import { RolesGuard, WorkspaceGuard } from '../../../identity/workspaces/guards';
@@ -60,6 +62,8 @@ export class FacebookController {
     @Inject(forwardRef(() => WebhooksService))
     private readonly webhooksService: WebhooksService,
     private readonly adapter: FacebookAdapter,
+    @InjectQueue(COMMENT_GUARD_QUEUE)
+    private readonly commentGuardQueue: Queue,
   ) {}
 
   // ─── OAuth Endpoints ────────────────────────────────────────────────────────
@@ -441,6 +445,7 @@ export class FacebookController {
     }
 
     const client = this.prisma.getClient();
+    const requestId = headers['x-request-id'] || headers['x-correlation-id'];
 
     for (const entry of body.entry) {
       const pageId = String(entry.id);
@@ -461,26 +466,160 @@ export class FacebookController {
         continue;
       }
 
-      // Delegate to existing WebhooksService per-channel handler
-      // Construct a single-entry payload for the channel
-      const singleEntryPayload = {
-        object: body.object,
-        entry: [entry],
-      };
+      // 2a. Process Feed changes (Comment Guard)
+      if (Array.isArray(entry.changes)) {
+        for (const change of entry.changes) {
+          if (
+            change.field === 'feed' &&
+            change.value?.item === 'comment' &&
+            (change.value?.verb === 'add' || change.value?.verb === 'edited')
+          ) {
+            const fromId = change.value?.from?.id ? String(change.value.from.id) : undefined;
+            // Filter out comments from the page itself
+            if (fromId === pageId) {
+              this.logger.debug(
+                `Central Webhook: Skipping feed comment from page itself '${pageId}'`,
+              );
+              continue;
+            }
 
-      try {
-        await this.webhooksService.handleInboundWebhook(
-          channel.id,
-          singleEntryPayload,
-          headers,
-          query,
-          { skipSignatureVerification: true },
-        );
-      } catch (err) {
-        this.logger.error(
-          `Central Webhook: Error processing entry for Page '${pageId}' (Channel: ${channel.id}): ${(err as Error).message}`,
-        );
-        // Continue processing other entries — don't fail the whole batch
+            const commentId = change.value?.comment_id
+              ? String(change.value.comment_id)
+              : change.value?.id
+                ? String(change.value.id)
+                : undefined;
+            if (!commentId) {
+              continue;
+            }
+
+            const verb = change.value?.verb || 'add';
+            // Construct deterministic externalEventId:
+            // For 'add', use commentId.
+            // For 'edited', use commentId + stable edit signature (created_time or message content hash)
+            // so an edited comment is not falsely blocked by the earlier 'add' event,
+            // while retries of the edited webhook are properly deduplicated.
+            const editSignature =
+              verb === 'edited'
+                ? `_edit_${
+                    change.value?.created_time ||
+                    crypto
+                      .createHash('md5')
+                      .update(change.value?.message || '')
+                      .digest('hex')
+                      .substring(0, 10)
+                  }`
+                : '';
+            const externalEventId = `${commentId}${editSignature}`;
+
+            const channelSettings = (channel.settings as any) || {};
+            if (channelSettings.commentGuard?.enabled === true) {
+              // Deduplicate via ChannelEvent (idempotency key: [channelId, externalEventId])
+              const existingEvent = await client.channelEvent.findUnique({
+                where: {
+                  channelId_externalEventId: {
+                    channelId: channel.id,
+                    externalEventId,
+                  },
+                },
+              });
+
+              if (existingEvent) {
+                this.logger.log(
+                  `Duplicate feed comment '${externalEventId}' received for channel '${channel.id}'. Skipping.`,
+                );
+                continue;
+              }
+
+              let channelEvent;
+              try {
+                channelEvent = await client.channelEvent.create({
+                  data: {
+                    channelId: channel.id,
+                    externalEventId,
+                    eventType: `feed_comment_${verb}`,
+                    payload: change as any,
+                  },
+                });
+              } catch (err: any) {
+                if (err?.code === 'P2002') {
+                  this.logger.log(
+                    `Concurrent duplicate feed comment '${externalEventId}' caught for channel '${channel.id}'. Skipping.`,
+                  );
+                  continue;
+                }
+                this.logger.error(
+                  `Failed to persist channelEvent for comment '${externalEventId}': ${err.message}`,
+                );
+                continue;
+              }
+
+              // Enqueue job into BullMQ comment-guard queue
+              await this.commentGuardQueue.add(
+                'process-comment-guard',
+                {
+                  workspaceId: channel.workspaceId,
+                  channelId: channel.id,
+                  channelEventId: channelEvent.id,
+                  commentId,
+                  parentId: change.value.parent_id ? String(change.value.parent_id) : undefined,
+                  postId: change.value.post_id ? String(change.value.post_id) : undefined,
+                  senderId: fromId || commentId,
+                  senderName: change.value.from?.name,
+                  message: change.value.message || '',
+                  verb,
+                  timestamp: change.value.created_time
+                    ? new Date(change.value.created_time * 1000).toISOString()
+                    : new Date().toISOString(),
+                  ...(requestId ? { requestId: String(requestId) } : {}),
+                },
+                {
+                  jobId: `comment_${externalEventId}`,
+                  attempts: 3,
+                  backoff: {
+                    type: 'exponential',
+                    delay: 30_000,
+                  },
+                  removeOnComplete: true,
+                  removeOnFail: false,
+                },
+              );
+
+              this.logger.log(
+                `Enqueued comment-guard job for comment '${externalEventId}' on channel '${channel.id}'`,
+              );
+            }
+          }
+        }
+      }
+
+      // 2b. Process Messaging events (chats)
+      if (entry.messaging || entry.standby) {
+        // Delegate to existing WebhooksService per-channel handler
+        // Construct a single-entry payload without feed changes for messaging handler
+        const singleEntryPayload = {
+          object: body.object,
+          entry: [
+            {
+              ...entry,
+              changes: undefined,
+            },
+          ],
+        };
+
+        try {
+          await this.webhooksService.handleInboundWebhook(
+            channel.id,
+            singleEntryPayload,
+            headers,
+            query,
+            { skipSignatureVerification: true },
+          );
+        } catch (err) {
+          this.logger.error(
+            `Central Webhook: Error processing entry for Page '${pageId}' (Channel: ${channel.id}): ${(err as Error).message}`,
+          );
+          // Continue processing other entries — don't fail the whole batch
+        }
       }
     }
 
