@@ -40,6 +40,19 @@ describe('Contacts Module & API Client Tests (R1.2)', () => {
       assert.ok(contactsModule.useMergeContacts, 'useMergeContacts should be exported');
       assert.ok(contactsModule.ContactInfo, 'ContactInfo should be exported');
       assert.ok(contactsModule.ContactIdentities, 'ContactIdentities should be exported');
+      assert.ok(contactsModule.ContactsView, 'ContactsView should be exported');
+      assert.ok(contactsModule.ContactsTable, 'ContactsTable should be exported');
+      assert.ok(contactsModule.ContactDetailSheet, 'ContactDetailSheet should be exported');
+      assert.ok(contactsModule.ContactDetailDialog, 'ContactDetailDialog should be exported');
+      assert.ok(contactsModule.CreateContactDialog, 'CreateContactDialog should be exported');
+      assert.ok(contactsModule.MergeContactsDialog, 'MergeContactsDialog should be exported');
+      assert.ok(contactsModule.usePaginatedContacts, 'usePaginatedContacts should be exported');
+      assert.ok(contactsModule.useDeleteContact, 'useDeleteContact should be exported');
+      assert.ok(contactsModule.useLinkContactIdentity, 'useLinkContactIdentity should be exported');
+      assert.ok(
+        contactsModule.useUnlinkContactIdentity,
+        'useUnlinkContactIdentity should be exported',
+      );
     });
   });
 

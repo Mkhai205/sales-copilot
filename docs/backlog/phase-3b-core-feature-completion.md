@@ -72,11 +72,11 @@
 - API endpoints hiện tại: `GET /contacts/search`, `POST /contacts`, etc.
 
 ### 5. Tiêu chí nghiệm thu (Acceptance Criteria & Definition of Done)
-- [ ] Bảng ContactsTable render đúng dữ liệu, có phân trang, search, và filter theo kênh hoạt động.
-- [ ] `ContactDetailSheet` hiển thị đúng thông tin khi click vào một row.
-- [ ] Flow "Add Contact" hoạt động tạo contact thành công.
-- [ ] Flow "Merge Contacts" hoạt động, contact bị merge biến mất khỏi bảng và dữ liệu được gộp.
-- [ ] Quản lý Identities (view/link/unlink) hoạt động tốt.
+- [x] Bảng ContactsTable render đúng dữ liệu, có phân trang, search, và filter theo kênh hoạt động.
+- [x] `ContactDetailSheet` hiển thị đúng thông tin khi click vào một row.
+- [x] Flow "Add Contact" hoạt động tạo contact thành công.
+- [x] Flow "Merge Contacts" hoạt động, contact bị merge biến mất khỏi bảng và dữ liệu được gộp.
+- [x] Quản lý Identities (view/link/unlink) hoạt động tốt.
 
 ---
 

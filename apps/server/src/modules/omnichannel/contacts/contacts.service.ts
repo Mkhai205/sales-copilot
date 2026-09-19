@@ -157,11 +157,27 @@ export class ContactsService {
       ];
     }
 
+    if (query.channelType) {
+      where.identities = {
+        some: {
+          channel: {
+            channelType: query.channelType,
+          },
+        },
+      };
+    }
+
     const [total, contacts] = await Promise.all([
       client.contact.count({ where }),
       client.contact.findMany({
         where,
-        include: { identities: true },
+        include: {
+          identities: {
+            include: {
+              channel: true,
+            },
+          },
+        },
         orderBy: { [sortBy]: sortOrder },
         skip,
         take: limit,
@@ -206,7 +222,13 @@ export class ContactsService {
 
     const contact = await client.contact.findFirst({
       where: { id: contactId, workspaceId },
-      include: { identities: true },
+      include: {
+        identities: {
+          include: {
+            channel: true,
+          },
+        },
+      },
     });
 
     if (!contact) {
