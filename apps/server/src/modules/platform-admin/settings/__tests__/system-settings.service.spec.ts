@@ -1,5 +1,4 @@
-import { describe, it, beforeEach } from 'node:test';
-import * as assert from 'node:assert';
+import { expectReject } from '../../../../../test/test-assertions';
 import {
   PlatformAuditAction,
   PlatformAuditTargetType,
@@ -142,9 +141,9 @@ describe('SystemSettingsService (Dynamic System Settings & 2-Tier Caching Engine
     });
 
     const first = await service.getSetting('feature.pos_vietqr_enabled');
-    assert.strictEqual(first, true);
-    assert.strictEqual(dbCalls.findUnique.length, 1);
-    assert.strictEqual(redisCalls.get.length, 1);
+    expect(first).toBe(true);
+    expect(dbCalls.findUnique.length).toBe(1);
+    expect(redisCalls.get.length).toBe(1);
 
     // Reset call counters
     dbCalls.findUnique = [];
@@ -152,9 +151,9 @@ describe('SystemSettingsService (Dynamic System Settings & 2-Tier Caching Engine
 
     // Second read: must be L1 hit!
     const second = await service.getSetting('feature.pos_vietqr_enabled');
-    assert.strictEqual(second, true);
-    assert.strictEqual(dbCalls.findUnique.length, 0, 'Should not query DB on L1 hit');
-    assert.strictEqual(redisCalls.get.length, 0, 'Should not query Redis on L1 hit');
+    expect(second).toBe(true);
+    expect(dbCalls.findUnique.length).toBe(0);
+    expect(redisCalls.get.length).toBe(0);
   });
 
   it('2. L2 Cache Hit: L1 miss, Redis hit -> returns from Redis and populates L1 RAM', async () => {
@@ -165,15 +164,15 @@ describe('SystemSettingsService (Dynamic System Settings & 2-Tier Caching Engine
     service.clearMemoryCache();
 
     const val = await service.getSetting('llm.default_provider');
-    assert.strictEqual(val, 'OPENAI');
-    assert.strictEqual(redisCalls.get.length, 1);
-    assert.strictEqual(dbCalls.findUnique.length, 0, 'Should not query DB on L2 hit');
+    expect(val).toBe('OPENAI');
+    expect(redisCalls.get.length).toBe(1);
+    expect(dbCalls.findUnique.length).toBe(0);
 
     // Subsequent read must now hit L1 RAM
     redisCalls.get = [];
     const val2 = await service.getSetting('llm.default_provider');
-    assert.strictEqual(val2, 'OPENAI');
-    assert.strictEqual(redisCalls.get.length, 0, 'Second read should hit L1 RAM');
+    expect(val2).toBe('OPENAI');
+    expect(redisCalls.get.length).toBe(0);
   });
 
   it('3. L3 Database Query: L1 & L2 miss -> queries DB, populates L2 Redis and L1 RAM', async () => {
@@ -186,24 +185,24 @@ describe('SystemSettingsService (Dynamic System Settings & 2-Tier Caching Engine
     service.clearMemoryCache();
 
     const val = await service.getSetting('quotas.free.max_agents');
-    assert.strictEqual(val, 5);
-    assert.strictEqual(dbCalls.findUnique.length, 1);
-    assert.strictEqual(redisCalls.set.length, 1, 'Should set L2 Redis cache');
-    assert.strictEqual(redisStore.get('system:settings:quotas.free.max_agents'), JSON.stringify(5));
+    expect(val).toBe(5);
+    expect(dbCalls.findUnique.length).toBe(1);
+    expect(redisCalls.set.length).toBe(1);
+    expect(redisStore.get('system:settings:quotas.free.max_agents')).toBe(JSON.stringify(5));
 
     // Subsequent read hits L1
     dbCalls.findUnique = [];
     redisCalls.get = [];
     const val2 = await service.getSetting('quotas.free.max_agents');
-    assert.strictEqual(val2, 5);
-    assert.strictEqual(dbCalls.findUnique.length, 0);
-    assert.strictEqual(redisCalls.get.length, 0);
+    expect(val2).toBe(5);
+    expect(dbCalls.findUnique.length).toBe(0);
+    expect(redisCalls.get.length).toBe(0);
   });
 
   it('4. Default Value Fallback: returns default value when key does not exist in any tier', async () => {
     const val = await service.getSetting('unknown.key', 'fallback-val');
-    assert.strictEqual(val, 'fallback-val');
-    assert.strictEqual(dbCalls.findUnique.length, 1);
+    expect(val).toBe('fallback-val');
+    expect(dbCalls.findUnique.length).toBe(1);
   });
 
   it('5. Redis Degradation Resilience: soft catch on Redis error, falls back to DB safely', async () => {
@@ -224,8 +223,8 @@ describe('SystemSettingsService (Dynamic System Settings & 2-Tier Caching Engine
 
     // Should not throw!
     const val = await service.getSetting('feature.comment_masking_enabled', true);
-    assert.strictEqual(val, false);
-    assert.strictEqual(dbCalls.findUnique.length, 1);
+    expect(val).toBe(false);
+    expect(dbCalls.findUnique.length).toBe(1);
   });
 
   it('6. Atomic Transaction & Audit Logging: updateSetting records oldValue, newValue into platform_audit_logs', async () => {
@@ -247,29 +246,29 @@ describe('SystemSettingsService (Dynamic System Settings & 2-Tier Caching Engine
       },
     );
 
-    assert.strictEqual(result.key, 'feature.ai_autopilot_enabled');
-    assert.strictEqual(result.value, false);
-    assert.strictEqual(result.description, 'Updated auto-pilot');
+    expect(result.key).toBe('feature.ai_autopilot_enabled');
+    expect(result.value).toBe(false);
+    expect(result.description).toBe('Updated auto-pilot');
 
     // Check DB updated
     const inDb = dbSettings.get('feature.ai_autopilot_enabled');
-    assert.strictEqual(inDb.value, false);
+    expect(inDb.value).toBe(false);
 
     // Check Audit Log created
-    assert.strictEqual(dbAuditLogs.length, 1);
+    expect(dbAuditLogs.length).toBe(1);
     const log = dbAuditLogs[0];
-    assert.strictEqual(log.actorId, 'admin_123');
-    assert.strictEqual(log.actorEmail, 'superadmin@salescopilot.io');
-    assert.strictEqual(log.action, PlatformAuditAction.SYSTEM_SETTING_UPDATED);
-    assert.strictEqual(log.targetType, PlatformAuditTargetType.SYSTEM_SETTING);
-    assert.strictEqual(log.targetId, 'feature.ai_autopilot_enabled');
-    assert.deepStrictEqual(log.metadata, {
+    expect(log.actorId).toBe('admin_123');
+    expect(log.actorEmail).toBe('superadmin@salescopilot.io');
+    expect(log.action).toBe(PlatformAuditAction.SYSTEM_SETTING_UPDATED);
+    expect(log.targetType).toBe(PlatformAuditTargetType.SYSTEM_SETTING);
+    expect(log.targetId).toBe('feature.ai_autopilot_enabled');
+    expect(log.metadata).toEqual({
       key: 'feature.ai_autopilot_enabled',
       oldValue: true,
       newValue: false,
     });
-    assert.strictEqual(log.ipAddress, '127.0.0.1');
-    assert.strictEqual(log.userAgent, 'Mozilla/5.0');
+    expect(log.ipAddress).toBe('127.0.0.1');
+    expect(log.userAgent).toBe('Mozilla/5.0');
   });
 
   it('7. Cache Invalidation Post-Commit: synchronizes key in L1/L2 and invalidates system:settings:all', async () => {
@@ -286,18 +285,15 @@ describe('SystemSettingsService (Dynamic System Settings & 2-Tier Caching Engine
     );
 
     // Redis key for specific setting must be updated
-    assert.strictEqual(
-      redisStore.get('system:settings:system.maintenance_mode'),
-      JSON.stringify(true),
-    );
+    expect(redisStore.get('system:settings:system.maintenance_mode')).toBe(JSON.stringify(true));
 
     // Redis key for 'all' must be deleted
-    assert.strictEqual(redisStore.has('system:settings:all'), false);
-    assert.ok(redisCalls.del.includes('system:settings:all'));
+    expect(redisStore.has('system:settings:all')).toBe(false);
+    expect(redisCalls.del.includes('system:settings:all')).toBeTruthy();
 
     // L1 cache for the key must return true immediately
     const l1Val = await service.getSetting('system.maintenance_mode');
-    assert.strictEqual(l1Val, true);
+    expect(l1Val).toBe(true);
   });
 
   it('8. Transaction Rollback Safety: when DB transaction fails, post-commit hooks do not fire', async () => {
@@ -335,9 +331,9 @@ describe('SystemSettingsService (Dynamic System Settings & 2-Tier Caching Engine
       caughtError = err;
     }
 
-    assert.ok(caughtError);
-    assert.strictEqual(caughtError.message, 'DB_DEADLOCK');
-    assert.strictEqual(redisStore.has('system:settings:system.banner_message'), false);
+    expect(caughtError).toBeTruthy();
+    expect(caughtError.message).toBe('DB_DEADLOCK');
+    expect(redisStore.has('system:settings:system.banner_message')).toBe(false);
   });
 
   it('9. Single-Query Bootstrap: onModuleInit calls createMany with skipDuplicates: true', async () => {
@@ -349,32 +345,22 @@ describe('SystemSettingsService (Dynamic System Settings & 2-Tier Caching Engine
 
     await service.onModuleInit();
 
-    assert.ok(calledWith);
-    assert.strictEqual(calledWith.skipDuplicates, true);
-    assert.strictEqual(calledWith.data.length, DEFAULT_SYSTEM_SETTINGS.length);
-    assert.ok(calledWith.data.length >= 14);
+    expect(calledWith).toBeTruthy();
+    expect(calledWith.skipDuplicates).toBe(true);
+    expect(calledWith.data.length).toBe(DEFAULT_SYSTEM_SETTINGS.length);
+    expect(calledWith.data.length >= 14).toBeTruthy();
   });
 
   it('10. Category Inference: correctly maps key prefixes to SystemSettingCategory', () => {
-    assert.strictEqual(
-      service.inferCategory('feature.pos_vietqr_enabled'),
+    expect(service.inferCategory('feature.pos_vietqr_enabled')).toBe(
       SystemSettingCategory.FEATURE_FLAGS,
     );
-    assert.strictEqual(service.inferCategory('llm.default_provider'), SystemSettingCategory.AI);
-    assert.strictEqual(service.inferCategory('ai.temperature'), SystemSettingCategory.AI);
-    assert.strictEqual(
-      service.inferCategory('quotas.free.max_agents'),
-      SystemSettingCategory.BILLING,
-    );
-    assert.strictEqual(service.inferCategory('billing.currency'), SystemSettingCategory.BILLING);
-    assert.strictEqual(
-      service.inferCategory('system.maintenance_mode'),
-      SystemSettingCategory.SYSTEM,
-    );
-    assert.strictEqual(
-      service.inferCategory('custom.unknown_setting'),
-      SystemSettingCategory.GENERAL,
-    );
+    expect(service.inferCategory('llm.default_provider')).toBe(SystemSettingCategory.AI);
+    expect(service.inferCategory('ai.temperature')).toBe(SystemSettingCategory.AI);
+    expect(service.inferCategory('quotas.free.max_agents')).toBe(SystemSettingCategory.BILLING);
+    expect(service.inferCategory('billing.currency')).toBe(SystemSettingCategory.BILLING);
+    expect(service.inferCategory('system.maintenance_mode')).toBe(SystemSettingCategory.SYSTEM);
+    expect(service.inferCategory('custom.unknown_setting')).toBe(SystemSettingCategory.GENERAL);
   });
 
   it('11. getAllSettings: retrieves from cache or DB and supports category filtering', async () => {
@@ -399,18 +385,18 @@ describe('SystemSettingsService (Dynamic System Settings & 2-Tier Caching Engine
 
     // 1st call: queries DB
     const all = await service.getAllSettings();
-    assert.strictEqual(all.length, 2);
-    assert.strictEqual(dbCalls.findMany, 1);
+    expect(all.length).toBe(2);
+    expect(dbCalls.findMany).toBe(1);
 
     // 2nd call: L1 cache hit, filter by category
     const aiOnly = await service.getAllSettings(SystemSettingCategory.AI);
-    assert.strictEqual(aiOnly.length, 1);
-    assert.strictEqual(aiOnly[0].key, 'ai.one');
-    assert.strictEqual(dbCalls.findMany, 1, 'Should not query DB again due to L1 cache');
+    expect(aiOnly.length).toBe(1);
+    expect(aiOnly[0].key).toBe('ai.one');
+    expect(dbCalls.findMany).toBe(1);
   });
 
   it('12. Key Validation: throws BadRequestException when key is empty, blank, or non-string', async () => {
-    await assert.rejects(
+    await expectReject(
       async () => {
         await service.updateSetting(
           '   ',
@@ -436,27 +422,26 @@ describe('SystemSettingsService (Dynamic System Settings & 2-Tier Caching Engine
       { userId: 'u1', email: 'admin@salescopilot.io' },
     );
 
-    assert.strictEqual(result.value, 'Original message', 'Value should be preserved');
-    assert.strictEqual(result.description, 'New desc');
+    expect(result.value).toBe('Original message');
+    expect(result.description).toBe('New desc');
 
     // Verify L1 Memory Cache has the original value (not undefined!)
     const l1Val = await service.getSetting('system.banner_message');
-    assert.strictEqual(l1Val, 'Original message');
+    expect(l1Val).toBe('Original message');
 
     // Verify L2 Redis Cache has the original value (not undefined!)
-    assert.strictEqual(
-      redisStore.get('system:settings:system.banner_message'),
+    expect(redisStore.get('system:settings:system.banner_message')).toBe(
       JSON.stringify('Original message'),
     );
 
     // Verify Audit Log records original value as newValue
-    assert.strictEqual(dbAuditLogs.length, 1);
-    assert.strictEqual(dbAuditLogs[0].metadata.oldValue, 'Original message');
-    assert.strictEqual(dbAuditLogs[0].metadata.newValue, 'Original message');
+    expect(dbAuditLogs.length).toBe(1);
+    expect(dbAuditLogs[0].metadata.oldValue).toBe('Original message');
+    expect(dbAuditLogs[0].metadata.newValue).toBe('Original message');
   });
 
   it('14. Require value for nonexistent key: throws BadRequestException when creating new setting without value', async () => {
-    await assert.rejects(
+    await expectReject(
       async () => {
         await service.updateSetting(
           'brand.new.setting',
@@ -489,11 +474,11 @@ describe('SystemSettingsService (Dynamic System Settings & 2-Tier Caching Engine
       ),
     ]);
 
-    assert.ok(res1);
-    assert.ok(res2);
+    expect(res1).toBeTruthy();
+    expect(res2).toBeTruthy();
     // Both audit logs must be recorded
-    assert.strictEqual(dbAuditLogs.length, 2);
+    expect(dbAuditLogs.length).toBe(2);
     // Redis cache key exists and is non-empty
-    assert.ok(redisStore.has('system:settings:feature.pos_vietqr_enabled'));
+    expect(redisStore.has('system:settings:feature.pos_vietqr_enabled')).toBeTruthy();
   });
 });

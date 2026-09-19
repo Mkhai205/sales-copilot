@@ -1,5 +1,4 @@
-﻿import { describe, it, beforeEach } from 'node:test';
-import * as assert from 'node:assert';
+import { assertDefined, expectReject } from '../../../../../test/test-assertions';
 import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
 import { ChannelType, WorkspaceRole } from '@sales-copilot/shared-contracts';
 import { InboxesService } from '../inboxes.service';
@@ -206,16 +205,16 @@ describe('InboxMember Management (Feature F-1.3.2 pt.2 & BR-1.3)', () => {
 
       const member = await service.addMember(wsAlpha, inbox.id, userAgent1.id);
 
-      assert.ok(member.id);
-      assert.strictEqual(member.inboxId, inbox.id);
-      assert.strictEqual(member.userId, userAgent1.id);
-      assert.strictEqual(member.user.email, userAgent1.email);
-      assert.strictEqual(member.user.role, WorkspaceRole.AGENT);
+      assertDefined(member.id);
+      expect(member.inboxId).toBe(inbox.id);
+      expect(member.userId).toBe(userAgent1.id);
+      expect(member.user.email).toBe(userAgent1.email);
+      expect(member.user.role).toBe(WorkspaceRole.AGENT);
 
       // Verify in list
       const membersList = await service.listMembers(wsAlpha, inbox.id);
-      assert.strictEqual(membersList.length, 1);
-      assert.strictEqual(membersList[0].userId, userAgent1.id);
+      expect(membersList.length).toBe(1);
+      expect(membersList[0].userId).toBe(userAgent1.id);
     });
 
     it('should throw BadRequestException (INVALID_INBOX_MEMBER) when user is NOT in workspace (BR-1.3)', async () => {
@@ -225,11 +224,11 @@ describe('InboxMember Management (Feature F-1.3.2 pt.2 & BR-1.3)', () => {
       });
 
       // userExternal belongs to wsBeta, not wsAlpha
-      await assert.rejects(
+      await expectReject(
         () => service.addMember(wsAlpha, inbox.id, userExternal.id),
         (err: any) => {
-          assert.ok(err instanceof BadRequestException);
-          assert.strictEqual((err.getResponse() as any).code, 'INVALID_INBOX_MEMBER');
+          expect(err instanceof BadRequestException).toBeTruthy();
+          expect((err.getResponse() as any).code).toBe('INVALID_INBOX_MEMBER');
           return true;
         },
       );
@@ -243,22 +242,22 @@ describe('InboxMember Management (Feature F-1.3.2 pt.2 & BR-1.3)', () => {
 
       await service.addMember(wsAlpha, inbox.id, userAgent1.id);
 
-      await assert.rejects(
+      await expectReject(
         () => service.addMember(wsAlpha, inbox.id, userAgent1.id),
         (err: any) => {
-          assert.ok(err instanceof ConflictException);
-          assert.strictEqual((err.getResponse() as any).code, 'INBOX_MEMBER_ALREADY_EXISTS');
+          expect(err instanceof ConflictException).toBeTruthy();
+          expect((err.getResponse() as any).code).toBe('INBOX_MEMBER_ALREADY_EXISTS');
           return true;
         },
       );
     });
 
     it('should throw NotFoundException when adding member to non-existent inbox or in another workspace', async () => {
-      await assert.rejects(
+      await expectReject(
         () => service.addMember(wsAlpha, 'non_existent_inbox', userAgent1.id),
         (err: any) => {
-          assert.ok(err instanceof NotFoundException);
-          assert.strictEqual((err.getResponse() as any).code, 'INBOX_NOT_FOUND');
+          expect(err instanceof NotFoundException).toBeTruthy();
+          expect((err.getResponse() as any).code).toBe('INBOX_NOT_FOUND');
           return true;
         },
       );
@@ -276,26 +275,26 @@ describe('InboxMember Management (Feature F-1.3.2 pt.2 & BR-1.3)', () => {
       await service.addMember(wsAlpha, inbox.id, userAgent2.id);
 
       const members = await service.listMembers(wsAlpha, inbox.id);
-      assert.strictEqual(members.length, 2);
+      expect(members.length).toBe(2);
 
       const m1 = members.find(m => m.userId === userAgent1.id);
       const m2 = members.find(m => m.userId === userAgent2.id);
 
-      assert.ok(m1);
-      assert.strictEqual(m1.user.name, 'Agent One');
-      assert.strictEqual(m1.user.role, WorkspaceRole.AGENT);
+      assertDefined(m1);
+      expect(m1.user.name).toBe('Agent One');
+      expect(m1.user.role).toBe(WorkspaceRole.AGENT);
 
-      assert.ok(m2);
-      assert.strictEqual(m2.user.name, 'Agent Two');
-      assert.strictEqual(m2.user.role, WorkspaceRole.ADMIN);
+      assertDefined(m2);
+      expect(m2.user.name).toBe('Agent Two');
+      expect(m2.user.role).toBe(WorkspaceRole.ADMIN);
     });
 
     it('should throw NotFoundException when listing members for non-existent inbox', async () => {
-      await assert.rejects(
+      await expectReject(
         () => service.listMembers(wsAlpha, 'unknown_inbox'),
         (err: any) => {
-          assert.ok(err instanceof NotFoundException);
-          assert.strictEqual((err.getResponse() as any).code, 'INBOX_NOT_FOUND');
+          expect(err instanceof NotFoundException).toBeTruthy();
+          expect((err.getResponse() as any).code).toBe('INBOX_NOT_FOUND');
           return true;
         },
       );
@@ -310,12 +309,12 @@ describe('InboxMember Management (Feature F-1.3.2 pt.2 & BR-1.3)', () => {
       });
 
       await service.addMember(wsAlpha, inbox.id, userAgent1.id);
-      assert.strictEqual((await service.listMembers(wsAlpha, inbox.id)).length, 1);
+      expect((await service.listMembers(wsAlpha, inbox.id)).length).toBe(1);
 
       const result = await service.removeMember(wsAlpha, inbox.id, userAgent1.id);
-      assert.strictEqual(result.success, true);
+      expect(result.success).toBe(true);
 
-      assert.strictEqual((await service.listMembers(wsAlpha, inbox.id)).length, 0);
+      expect((await service.listMembers(wsAlpha, inbox.id)).length).toBe(0);
     });
 
     it('should throw NotFoundException (INBOX_MEMBER_NOT_FOUND) when removing member not in inbox', async () => {
@@ -324,11 +323,11 @@ describe('InboxMember Management (Feature F-1.3.2 pt.2 & BR-1.3)', () => {
         channelType: ChannelType.ZALO,
       });
 
-      await assert.rejects(
+      await expectReject(
         () => service.removeMember(wsAlpha, inbox.id, userAgent1.id),
         (err: any) => {
-          assert.ok(err instanceof NotFoundException);
-          assert.strictEqual((err.getResponse() as any).code, 'INBOX_MEMBER_NOT_FOUND');
+          expect(err instanceof NotFoundException).toBeTruthy();
+          expect((err.getResponse() as any).code).toBe('INBOX_MEMBER_NOT_FOUND');
           return true;
         },
       );
@@ -351,10 +350,10 @@ describe('InboxMember Management (Feature F-1.3.2 pt.2 & BR-1.3)', () => {
       });
 
       const result = await service.removeMember(wsAlpha, inbox.id, userAgent1.id);
-      assert.strictEqual(result.success, true);
+      expect(result.success).toBe(true);
 
       const conv = conversationsDb.get('conv_active_1');
-      assert.strictEqual(conv.assigneeId, null);
+      expect(conv.assigneeId).toBe(null);
     });
   });
 
@@ -389,8 +388,8 @@ describe('InboxMember Management (Feature F-1.3.2 pt.2 & BR-1.3)', () => {
       await service.addMember(wsAlpha, inbox.id, userAgent1.id);
 
       const list = await controller.listMembers(mockContext, inbox.id);
-      assert.strictEqual(list.length, 1);
-      assert.strictEqual(list[0].userId, userAgent1.id);
+      expect(list.length).toBe(1);
+      expect(list[0].userId).toBe(userAgent1.id);
     });
 
     it('should handle add member endpoint', async () => {
@@ -400,7 +399,7 @@ describe('InboxMember Management (Feature F-1.3.2 pt.2 & BR-1.3)', () => {
       });
 
       const added = await controller.addMember(mockContext, inbox.id, { userId: userAgent1.id });
-      assert.strictEqual(added.userId, userAgent1.id);
+      expect(added.userId).toBe(userAgent1.id);
     });
 
     it('should handle remove member endpoint', async () => {
@@ -411,7 +410,7 @@ describe('InboxMember Management (Feature F-1.3.2 pt.2 & BR-1.3)', () => {
       await service.addMember(wsAlpha, inbox.id, userAgent1.id);
 
       const removed = await controller.removeMember(mockContext, inbox.id, userAgent1.id);
-      assert.strictEqual(removed.success, true);
+      expect(removed.success).toBe(true);
     });
   });
 });

@@ -1,5 +1,4 @@
-import { describe, it, beforeEach, afterEach } from 'node:test';
-import * as assert from 'node:assert';
+import { assertDefined, expectReject } from '../../../../../../test/test-assertions';
 import { ConfigService } from '@nestjs/config';
 import { ChannelType } from '@sales-copilot/shared-contracts';
 import { FacebookService } from '../facebook.service';
@@ -171,19 +170,17 @@ describe('FacebookService (OAuth Provisioning & Page Connection)', () => {
   describe('getAuthUrl()', () => {
     it('should generate a valid Facebook OAuth URL containing client_id, redirect_uri, and CSRF state', async () => {
       const result = await service.getAuthUrl(wsId);
-      assert.ok(result.authUrl);
+      assertDefined(result.authUrl);
 
       const parsedUrl = new URL(result.authUrl);
-      assert.strictEqual(parsedUrl.hostname, 'www.facebook.com');
-      assert.strictEqual(parsedUrl.pathname, '/v26.0/dialog/oauth');
-      assert.strictEqual(parsedUrl.searchParams.get('client_id'), mockAppId);
-      assert.strictEqual(
-        parsedUrl.searchParams.get('redirect_uri'),
+      expect(parsedUrl.hostname).toBe('www.facebook.com');
+      expect(parsedUrl.pathname).toBe('/v26.0/dialog/oauth');
+      expect(parsedUrl.searchParams.get('client_id')).toBe(mockAppId);
+      expect(parsedUrl.searchParams.get('redirect_uri')).toBe(
         'https://api-sales-copilot.example.com/api/v1/integrations/facebook/callback',
       );
-      assert.ok(parsedUrl.searchParams.get('state')?.startsWith(`${wsId}:`));
-      assert.strictEqual(
-        parsedUrl.searchParams.get('scope'),
+      expect(parsedUrl.searchParams.get('state')?.startsWith(`${wsId}:`)).toBeTruthy();
+      expect(parsedUrl.searchParams.get('scope')).toBe(
         'pages_show_list,pages_messaging,pages_manage_metadata',
       );
     });
@@ -215,19 +212,19 @@ describe('FacebookService (OAuth Provisioning & Page Connection)', () => {
 
       const result = await service.handleCallback('valid_auth_code_123', state);
 
-      assert.strictEqual(result.workspaceId, wsId);
-      assert.ok(result.sessionId);
+      expect(result.workspaceId).toBe(wsId);
+      assertDefined(result.sessionId);
 
       // Verify token is stored in Redis
       const sessionData = redisStore.get(`fb_user_token:${result.sessionId}`);
-      assert.ok(sessionData);
+      assertDefined(sessionData);
       const parsed = JSON.parse(sessionData);
-      assert.strictEqual(parsed.userAccessToken, 'EAAB_LONG_LIVED_USER_TOKEN');
-      assert.strictEqual(parsed.workspaceId, wsId);
+      expect(parsed.userAccessToken).toBe('EAAB_LONG_LIVED_USER_TOKEN');
+      expect(parsed.workspaceId).toBe(wsId);
     });
 
     it('should throw BadRequestException if state is invalid or expired', async () => {
-      await assert.rejects(
+      await expectReject(
         () => service.handleCallback('code_123', 'invalid_state'),
         /OAuth state token is invalid or expired/,
       );
@@ -284,18 +281,18 @@ describe('FacebookService (OAuth Provisioning & Page Connection)', () => {
 
       const pages = await service.discoverPages(wsId, sessionId);
 
-      assert.strictEqual(pages.length, 2);
-      assert.strictEqual(pages[0].pageId, 'page_1');
-      assert.strictEqual(pages[0].isAlreadyConnected, false);
-      assert.strictEqual(pages[1].pageId, 'page_2');
-      assert.strictEqual(pages[1].isAlreadyConnected, true);
+      expect(pages.length).toBe(2);
+      expect(pages[0].pageId).toBe('page_1');
+      expect(pages[0].isAlreadyConnected).toBe(false);
+      expect(pages[1].pageId).toBe('page_2');
+      expect(pages[1].isAlreadyConnected).toBe(true);
 
       // Verify page tokens were cached in Redis session
       const updatedSession = redisStore.get(`fb_user_token:${sessionId}`);
-      assert.ok(updatedSession);
+      assertDefined(updatedSession);
       const parsed = JSON.parse(updatedSession);
-      assert.strictEqual(parsed.pages['page_1'].accessToken, 'EAAB_PAGE_1_TOKEN');
-      assert.strictEqual(parsed.pages['page_2'].accessToken, 'EAAB_PAGE_2_TOKEN');
+      expect(parsed.pages['page_1'].accessToken).toBe('EAAB_PAGE_1_TOKEN');
+      expect(parsed.pages['page_2'].accessToken).toBe('EAAB_PAGE_2_TOKEN');
     });
   });
 
@@ -318,25 +315,25 @@ describe('FacebookService (OAuth Provisioning & Page Connection)', () => {
         sessionId,
       );
 
-      assert.ok(result.inboxId);
-      assert.ok(result.channelId);
+      assertDefined(result.inboxId);
+      assertDefined(result.channelId);
 
       // Verify channel in DB
       const channel = channelsDb.get(result.channelId);
-      assert.ok(channel);
-      assert.strictEqual(channel.workspaceId, wsId);
-      assert.strictEqual(channel.providerAccountId, 'page_new_123');
-      assert.strictEqual(channel.channelType, 'FACEBOOK_MESSENGER');
+      assertDefined(channel);
+      expect(channel.workspaceId).toBe(wsId);
+      expect(channel.providerAccountId).toBe('page_new_123');
+      expect(channel.channelType).toBe('FACEBOOK_MESSENGER');
 
       // Verify credentials decrypted
       const decrypted = credentialService.decrypt(channel.credentials.encrypted);
-      assert.strictEqual(decrypted.pageAccessToken, 'EAAB_PAGE_ACCESS_TOKEN');
+      expect(decrypted.pageAccessToken).toBe('EAAB_PAGE_ACCESS_TOKEN');
 
       // Verify channel.created event was emitted
       const emitted = emittedEvents.find(e => e.event === 'channel.created');
-      assert.ok(emitted);
-      assert.strictEqual(emitted.payload.channelId, result.channelId);
-      assert.strictEqual(emitted.payload.channelType, ChannelType.FACEBOOK_MESSENGER);
+      assertDefined(emitted);
+      expect(emitted.payload.channelId).toBe(result.channelId);
+      expect(emitted.payload.channelType).toBe(ChannelType.FACEBOOK_MESSENGER);
     });
 
     it('should auto-resolve pageAccessToken and userAccessToken from Redis session when omitted in DTO', async () => {
@@ -365,14 +362,14 @@ describe('FacebookService (OAuth Provisioning & Page Connection)', () => {
         sessionId,
       );
 
-      assert.ok(result.inboxId);
-      assert.ok(result.channelId);
+      assertDefined(result.inboxId);
+      assertDefined(result.channelId);
 
       const channel = channelsDb.get(result.channelId);
-      assert.ok(channel);
+      assertDefined(channel);
       const decrypted = credentialService.decrypt(channel.credentials.encrypted);
-      assert.strictEqual(decrypted.pageAccessToken, 'EAAB_SESSION_PAGE_TOKEN');
-      assert.strictEqual(decrypted.userAccessToken, 'EAAB_SESSION_USER_TOKEN');
+      expect(decrypted.pageAccessToken).toBe('EAAB_SESSION_PAGE_TOKEN');
+      expect(decrypted.userAccessToken).toBe('EAAB_SESSION_USER_TOKEN');
     });
 
     it('should throw ConflictException if page is already connected in workspace', async () => {
@@ -383,7 +380,7 @@ describe('FacebookService (OAuth Provisioning & Page Connection)', () => {
         providerAccountId: 'page_already_connected',
       });
 
-      await assert.rejects(
+      await expectReject(
         () =>
           service.connectPage(wsId, {
             pageId: 'page_already_connected',
@@ -403,7 +400,7 @@ describe('FacebookService (OAuth Provisioning & Page Connection)', () => {
         providerAccountId: 'page_connected_elsewhere',
       });
 
-      await assert.rejects(
+      await expectReject(
         () =>
           service.connectPage(wsId, {
             pageId: 'page_connected_elsewhere',
@@ -445,20 +442,20 @@ describe('FacebookService (OAuth Provisioning & Page Connection)', () => {
         assignAllMembers: true,
       });
 
-      assert.strictEqual(result.inboxes.length, 2);
-      assert.strictEqual(result.inboxes[0].pageId, 'page_batch_1');
-      assert.strictEqual(result.inboxes[0].pageName, 'Batch Fanpage 1');
-      assert.strictEqual(result.inboxes[1].pageId, 'page_batch_2');
-      assert.strictEqual(result.inboxes[1].pageName, 'Batch Fanpage 2');
+      expect(result.inboxes.length).toBe(2);
+      expect(result.inboxes[0].pageId).toBe('page_batch_1');
+      expect(result.inboxes[0].pageName).toBe('Batch Fanpage 1');
+      expect(result.inboxes[1].pageId).toBe('page_batch_2');
+      expect(result.inboxes[1].pageName).toBe('Batch Fanpage 2');
 
       // Check DB records
-      assert.ok(channelsDb.get(result.inboxes[0].channelId));
-      assert.ok(channelsDb.get(result.inboxes[1].channelId));
-      assert.ok(inboxesDb.get(result.inboxes[0].inboxId));
-      assert.ok(inboxesDb.get(result.inboxes[1].inboxId));
+      expect(channelsDb.get(result.inboxes[0].channelId)).toBeTruthy();
+      expect(channelsDb.get(result.inboxes[1].channelId)).toBeTruthy();
+      expect(inboxesDb.get(result.inboxes[0].inboxId)).toBeTruthy();
+      expect(inboxesDb.get(result.inboxes[1].inboxId)).toBeTruthy();
 
       // Check session cleaned up
-      assert.strictEqual(redisStore.has(`fb_user_token:${sessionId}`), false);
+      expect(redisStore.has(`fb_user_token:${sessionId}`)).toBe(false);
     });
   });
 
@@ -473,13 +470,13 @@ describe('FacebookService (OAuth Provisioning & Page Connection)', () => {
       inboxesDb.set(inboxId, { id: inboxId, workspaceId: wsId });
 
       const result = await service.disconnectPage(wsId, chanId);
-      assert.strictEqual(result.success, true);
-      assert.strictEqual(channelsDb.has(chanId), false);
-      assert.strictEqual(inboxesDb.has(inboxId), false);
+      expect(result.success).toBe(true);
+      expect(channelsDb.has(chanId)).toBe(false);
+      expect(inboxesDb.has(inboxId)).toBe(false);
 
       const emitted = emittedEvents.find(e => e.event === 'channel.deleted');
-      assert.ok(emitted);
-      assert.strictEqual(emitted.payload.channelId, chanId);
+      assertDefined(emitted);
+      expect(emitted.payload.channelId).toBe(chanId);
     });
   });
 });

@@ -1,5 +1,4 @@
-import { describe, it, beforeEach } from 'node:test';
-import * as assert from 'node:assert';
+import { assertDefined, expectReject } from '../../../../../test/test-assertions';
 import { LabelsService } from '../labels.service';
 import { ConflictException, NotFoundException } from '@nestjs/common';
 
@@ -142,15 +141,15 @@ describe('LabelsService (Label CRUD & Workspace Scoping)', () => {
         showOnSidebar: true,
       });
 
-      assert.strictEqual(result.workspaceId, 'ws_1');
-      assert.strictEqual(result.title, 'VIP Support');
-      assert.strictEqual(result.description, 'VIP client inquiries');
-      assert.strictEqual(result.color, '#FF0000');
-      assert.strictEqual(result.showOnSidebar, true);
+      expect(result.workspaceId).toBe('ws_1');
+      expect(result.title).toBe('VIP Support');
+      expect(result.description).toBe('VIP client inquiries');
+      expect(result.color).toBe('#FF0000');
+      expect(result.showOnSidebar).toBe(true);
 
-      assert.strictEqual(emittedEvents.length, 1);
-      assert.strictEqual(emittedEvents[0].event, 'label.created');
-      assert.strictEqual(emittedEvents[0].payload.label.id, result.id);
+      expect(emittedEvents.length).toBe(1);
+      expect(emittedEvents[0].event).toBe('label.created');
+      expect(emittedEvents[0].payload.label.id).toBe(result.id);
     });
 
     it('should trim title and apply defaults', async () => {
@@ -158,22 +157,22 @@ describe('LabelsService (Label CRUD & Workspace Scoping)', () => {
         title: '   VIP Customer   ',
       });
 
-      assert.strictEqual(result.title, 'VIP Customer');
-      assert.strictEqual(result.color, '#2563eb');
-      assert.strictEqual(result.description, null);
-      assert.strictEqual(result.showOnSidebar, true);
+      expect(result.title).toBe('VIP Customer');
+      expect(result.color).toBe('#2563eb');
+      expect(result.description).toBe(null);
+      expect(result.showOnSidebar).toBe(true);
     });
 
     it('should throw ConflictException on duplicate title in the same workspace', async () => {
       await service.create('ws_1', { title: 'Billing Issue' });
 
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.create('ws_1', { title: 'Billing Issue' });
         },
         (err: any) => {
-          assert.strictEqual(err instanceof ConflictException, true);
-          assert.strictEqual(err.response.code, 'LABEL_ALREADY_EXISTS');
+          expect(err instanceof ConflictException).toBe(true);
+          expect(err.response.code).toBe('LABEL_ALREADY_EXISTS');
           return true;
         },
       );
@@ -183,10 +182,10 @@ describe('LabelsService (Label CRUD & Workspace Scoping)', () => {
       const l1 = await service.create('ws_1', { title: 'Feedback' });
       const l2 = await service.create('ws_2', { title: 'Feedback' });
 
-      assert.strictEqual(l1.workspaceId, 'ws_1');
-      assert.strictEqual(l2.workspaceId, 'ws_2');
-      assert.strictEqual(l1.title, l2.title);
-      assert.notStrictEqual(l1.id, l2.id);
+      expect(l1.workspaceId).toBe('ws_1');
+      expect(l2.workspaceId).toBe('ws_2');
+      expect(l1.title).toBe(l2.title);
+      expect(l1.id).not.toBe(l2.id);
     });
   });
 
@@ -200,22 +199,19 @@ describe('LabelsService (Label CRUD & Workspace Scoping)', () => {
 
     it('should list only labels belonging to the specified workspace', async () => {
       const labels = await service.list('ws_1');
-      assert.strictEqual(labels.length, 3);
-      assert.strictEqual(
-        labels.every(l => l.workspaceId === 'ws_1'),
-        true,
-      );
+      expect(labels.length).toBe(3);
+      expect(labels.every(l => l.workspaceId === 'ws_1')).toBe(true);
     });
 
     it('should filter labels by search query q', async () => {
       const labels = await service.list('ws_1', { q: 'urgent' } as any);
-      assert.strictEqual(labels.length, 1);
-      assert.strictEqual(labels[0].title, 'Beta Urgent');
+      expect(labels.length).toBe(1);
+      expect(labels[0].title).toBe('Beta Urgent');
     });
 
     it('should filter labels by showOnSidebar', async () => {
       const labels = await service.list('ws_1', { showOnSidebar: true } as any);
-      assert.strictEqual(labels.length, 2);
+      expect(labels.length).toBe(2);
     });
   });
 
@@ -224,18 +220,18 @@ describe('LabelsService (Label CRUD & Workspace Scoping)', () => {
       const created = await service.create('ws_1', { title: 'Refund' });
       const found = await service.getById('ws_1', created.id);
 
-      assert.strictEqual(found.id, created.id);
-      assert.strictEqual(found.title, 'Refund');
+      expect(found.id).toBe(created.id);
+      expect(found.title).toBe('Refund');
     });
 
     it('should throw NotFoundException if label is not found', async () => {
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.getById('ws_1', 'non_existent_id');
         },
         (err: any) => {
-          assert.strictEqual(err instanceof NotFoundException, true);
-          assert.strictEqual(err.response.code, 'LABEL_NOT_FOUND');
+          expect(err instanceof NotFoundException).toBe(true);
+          expect(err.response.code).toBe('LABEL_NOT_FOUND');
           return true;
         },
       );
@@ -244,13 +240,13 @@ describe('LabelsService (Label CRUD & Workspace Scoping)', () => {
     it('should throw NotFoundException if label belongs to another workspace (cross-tenant security)', async () => {
       const created = await service.create('ws_2', { title: 'Internal Only' });
 
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.getById('ws_1', created.id);
         },
         (err: any) => {
-          assert.strictEqual(err instanceof NotFoundException, true);
-          assert.strictEqual(err.response.code, 'LABEL_NOT_FOUND');
+          expect(err instanceof NotFoundException).toBe(true);
+          expect(err.response.code).toBe('LABEL_NOT_FOUND');
           return true;
         },
       );
@@ -267,27 +263,27 @@ describe('LabelsService (Label CRUD & Workspace Scoping)', () => {
         showOnSidebar: false,
       });
 
-      assert.strictEqual(updated.id, created.id);
-      assert.strictEqual(updated.title, 'High Priority Bug');
-      assert.strictEqual(updated.color, '#FF0000');
-      assert.strictEqual(updated.showOnSidebar, false);
+      expect(updated.id).toBe(created.id);
+      expect(updated.title).toBe('High Priority Bug');
+      expect(updated.color).toBe('#FF0000');
+      expect(updated.showOnSidebar).toBe(false);
 
       const updateEvent = emittedEvents.find(e => e.event === 'label.updated');
-      assert.ok(updateEvent);
-      assert.strictEqual(updateEvent.payload.label.title, 'High Priority Bug');
+      assertDefined(updateEvent);
+      expect(updateEvent.payload.label.title).toBe('High Priority Bug');
     });
 
     it('should throw ConflictException if renaming to an existing title in same workspace', async () => {
       const l1 = await service.create('ws_1', { title: 'First Title' });
       await service.create('ws_1', { title: 'Second Title' });
 
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.update('ws_1', l1.id, { title: 'Second Title' });
         },
         (err: any) => {
-          assert.strictEqual(err instanceof ConflictException, true);
-          assert.strictEqual(err.response.code, 'LABEL_ALREADY_EXISTS');
+          expect(err instanceof ConflictException).toBe(true);
+          expect(err.response.code).toBe('LABEL_ALREADY_EXISTS');
           return true;
         },
       );
@@ -297,17 +293,17 @@ describe('LabelsService (Label CRUD & Workspace Scoping)', () => {
       const l1 = await service.create('ws_1', { title: 'Original', color: '#000000' });
       const updated = await service.update('ws_1', l1.id, { color: '#FFFFFF' });
 
-      assert.strictEqual(updated.title, 'Original');
-      assert.strictEqual(updated.color, '#FFFFFF');
+      expect(updated.title).toBe('Original');
+      expect(updated.color).toBe('#FFFFFF');
     });
 
     it('should throw NotFoundException if updating non-existent label', async () => {
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.update('ws_1', 'not_found', { title: 'New' });
         },
         (err: any) => {
-          assert.strictEqual(err instanceof NotFoundException, true);
+          expect(err instanceof NotFoundException).toBe(true);
           return true;
         },
       );
@@ -319,24 +315,24 @@ describe('LabelsService (Label CRUD & Workspace Scoping)', () => {
       const created = await service.create('ws_1', { title: 'To Delete' });
       const result = await service.delete('ws_1', created.id);
 
-      assert.deepStrictEqual(result, { success: true });
+      expect(result).toEqual({ success: true });
 
       const deleteEvent = emittedEvents.find(e => e.event === 'label.deleted');
-      assert.ok(deleteEvent);
-      assert.strictEqual(deleteEvent.payload.labelId, created.id);
+      assertDefined(deleteEvent);
+      expect(deleteEvent.payload.labelId).toBe(created.id);
 
-      await assert.rejects(async () => {
+      await expectReject(async () => {
         await service.getById('ws_1', created.id);
       }, NotFoundException);
     });
 
     it('should throw NotFoundException if deleting non-existent label', async () => {
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.delete('ws_1', 'unknown_id');
         },
         (err: any) => {
-          assert.strictEqual(err instanceof NotFoundException, true);
+          expect(err instanceof NotFoundException).toBe(true);
           return true;
         },
       );

@@ -1,5 +1,4 @@
-import { describe, it, beforeEach } from 'node:test';
-import * as assert from 'node:assert';
+import { assertDefined, expectReject } from '../../../../../test/test-assertions';
 import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import {
   ConversationStatus,
@@ -346,18 +345,18 @@ describe('MessagesService (Task T-1.5.6: Message Threading & Polymorphic Senders
         content: 'Hello from customer',
       });
 
-      assert.strictEqual(result.senderType, SenderType.CONTACT);
-      assert.strictEqual(result.senderId, 'cnt_1');
-      assert.strictEqual(result.content, 'Hello from customer');
-      assert.strictEqual(result.deliveryStatus, DeliveryStatus.DELIVERED);
-      assert.strictEqual(result.messageType, MessageType.INCOMING);
-      assert.ok(result.sender);
-      assert.strictEqual(result.sender?.name, 'John Doe');
+      expect(result.senderType).toBe(SenderType.CONTACT);
+      expect(result.senderId).toBe('cnt_1');
+      expect(result.content).toBe('Hello from customer');
+      expect(result.deliveryStatus).toBe(DeliveryStatus.DELIVERED);
+      expect(result.messageType).toBe(MessageType.INCOMING);
+      assertDefined(result.sender);
+      expect(result.sender?.name).toBe('John Doe');
 
       // Check event
       const event = emittedEvents.find(e => e.event === 'message.created');
-      assert.ok(event);
-      assert.strictEqual(event.payload.message.id, result.id);
+      assertDefined(event);
+      expect(event.payload.message.id).toBe(result.id);
     });
 
     it('should auto-populate senderId for CONTACT when omitted', async () => {
@@ -366,12 +365,12 @@ describe('MessagesService (Task T-1.5.6: Message Threading & Polymorphic Senders
         content: 'Hello again',
       });
 
-      assert.strictEqual(result.senderType, SenderType.CONTACT);
-      assert.strictEqual(result.senderId, 'cnt_1');
+      expect(result.senderType).toBe(SenderType.CONTACT);
+      expect(result.senderId).toBe('cnt_1');
     });
 
     it('should reject CONTACT message when senderId does not match conversation contactId', async () => {
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.create('ws_1', 'conv_1', {
             senderType: SenderType.CONTACT,
@@ -380,8 +379,8 @@ describe('MessagesService (Task T-1.5.6: Message Threading & Polymorphic Senders
           });
         },
         (err: any) => {
-          assert.strictEqual(err instanceof BadRequestException, true);
-          assert.strictEqual(err.response.code, 'INVALID_SENDER');
+          expect(err instanceof BadRequestException).toBe(true);
+          expect(err.response.code).toBe('INVALID_SENDER');
           return true;
         },
       );
@@ -394,15 +393,15 @@ describe('MessagesService (Task T-1.5.6: Message Threading & Polymorphic Senders
         content: 'Hello, how can I help you today?',
       });
 
-      assert.strictEqual(result.senderType, SenderType.USER);
-      assert.strictEqual(result.senderId, 'usr_agent_1');
-      assert.strictEqual(result.messageType, MessageType.OUTGOING);
-      assert.strictEqual(result.deliveryStatus, DeliveryStatus.SENT);
-      assert.strictEqual(result.sender?.name, 'Agent Smith');
+      expect(result.senderType).toBe(SenderType.USER);
+      expect(result.senderId).toBe('usr_agent_1');
+      expect(result.messageType).toBe(MessageType.OUTGOING);
+      expect(result.deliveryStatus).toBe(DeliveryStatus.SENT);
+      expect(result.sender?.name).toBe('Agent Smith');
     });
 
     it('should reject USER message when senderId is omitted', async () => {
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.create('ws_1', 'conv_1', {
             senderType: SenderType.USER,
@@ -410,15 +409,15 @@ describe('MessagesService (Task T-1.5.6: Message Threading & Polymorphic Senders
           });
         },
         (err: any) => {
-          assert.strictEqual(err instanceof BadRequestException, true);
-          assert.strictEqual(err.response.code, 'INVALID_SENDER');
+          expect(err instanceof BadRequestException).toBe(true);
+          expect(err.response.code).toBe('INVALID_SENDER');
           return true;
         },
       );
     });
 
     it('should reject USER message when user is not a member of the workspace', async () => {
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.create('ws_1', 'conv_1', {
             senderType: SenderType.USER,
@@ -427,15 +426,15 @@ describe('MessagesService (Task T-1.5.6: Message Threading & Polymorphic Senders
           });
         },
         (err: any) => {
-          assert.strictEqual(err instanceof BadRequestException, true);
-          assert.strictEqual(err.response.code, 'INVALID_SENDER');
+          expect(err instanceof BadRequestException).toBe(true);
+          expect(err.response.code).toBe('INVALID_SENDER');
           return true;
         },
       );
     });
 
     it('should reject USER message when actorUserId does not match senderId (impersonation attempt)', async () => {
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.create(
             'ws_1',
@@ -451,15 +450,15 @@ describe('MessagesService (Task T-1.5.6: Message Threading & Polymorphic Senders
           );
         },
         (err: any) => {
-          assert.strictEqual(err instanceof ForbiddenException, true);
-          assert.strictEqual(err.response.code, 'SENDER_IMPERSONATION_DENIED');
+          expect(err instanceof ForbiddenException).toBe(true);
+          expect(err.response.code).toBe('SENDER_IMPERSONATION_DENIED');
           return true;
         },
       );
     });
 
     it('should reject CONTACT message when isPrivate is true (contacts cannot author private notes)', async () => {
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.create('ws_1', 'conv_1', {
             senderType: SenderType.CONTACT,
@@ -469,8 +468,8 @@ describe('MessagesService (Task T-1.5.6: Message Threading & Polymorphic Senders
           });
         },
         (err: any) => {
-          assert.strictEqual(err instanceof BadRequestException, true);
-          assert.strictEqual(err.response.code, 'INVALID_PRIVATE_NOTE');
+          expect(err instanceof BadRequestException).toBe(true);
+          expect(err.response.code).toBe('INVALID_PRIVATE_NOTE');
           return true;
         },
       );
@@ -482,13 +481,13 @@ describe('MessagesService (Task T-1.5.6: Message Threading & Polymorphic Senders
         content: 'Conversation was transferred to Support Team',
       });
 
-      assert.strictEqual(result.senderType, SenderType.SYSTEM);
-      assert.strictEqual(result.senderId, null);
-      assert.strictEqual(result.sender?.type, SenderType.SYSTEM);
+      expect(result.senderType).toBe(SenderType.SYSTEM);
+      expect(result.senderId).toBe(null);
+      expect(result.sender?.type).toBe(SenderType.SYSTEM);
     });
 
     it('should reject SYSTEM message if senderId is provided', async () => {
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.create('ws_1', 'conv_1', {
             senderType: SenderType.SYSTEM,
@@ -497,8 +496,8 @@ describe('MessagesService (Task T-1.5.6: Message Threading & Polymorphic Senders
           });
         },
         (err: any) => {
-          assert.strictEqual(err instanceof BadRequestException, true);
-          assert.strictEqual(err.response.code, 'INVALID_SENDER');
+          expect(err instanceof BadRequestException).toBe(true);
+          expect(err.response.code).toBe('INVALID_SENDER');
           return true;
         },
       );
@@ -507,7 +506,7 @@ describe('MessagesService (Task T-1.5.6: Message Threading & Polymorphic Senders
 
   describe('create - Content & Attachment Invariant (BR-5.2)', () => {
     it('should reject message with empty content and no attachments', async () => {
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.create('ws_1', 'conv_1', {
             senderType: SenderType.USER,
@@ -516,8 +515,8 @@ describe('MessagesService (Task T-1.5.6: Message Threading & Polymorphic Senders
           });
         },
         (err: any) => {
-          assert.strictEqual(err instanceof BadRequestException, true);
-          assert.strictEqual(err.response.code, 'MESSAGE_CONTENT_REQUIRED');
+          expect(err instanceof BadRequestException).toBe(true);
+          expect(err.response.code).toBe('MESSAGE_CONTENT_REQUIRED');
           return true;
         },
       );
@@ -544,10 +543,10 @@ describe('MessagesService (Task T-1.5.6: Message Threading & Polymorphic Senders
         mockFiles,
       );
 
-      assert.strictEqual(result.content, null);
-      assert.strictEqual(result.contentType, MessageContentType.FILE);
-      assert.strictEqual(result.attachments?.length, 1);
-      assert.strictEqual(result.attachments?.[0].fileName, 'photo.png');
+      expect(result.content).toBe(null);
+      expect(result.contentType).toBe(MessageContentType.FILE);
+      expect(result.attachments?.length).toBe(1);
+      expect(result.attachments?.[0].fileName).toBe('photo.png');
     });
 
     it('should allow message with empty content if external attachments are provided', async () => {
@@ -565,8 +564,8 @@ describe('MessagesService (Task T-1.5.6: Message Threading & Polymorphic Senders
         ],
       });
 
-      assert.strictEqual(result.attachments?.length, 1);
-      assert.strictEqual(result.attachments?.[0].fileName, 'doc.pdf');
+      expect(result.attachments?.length).toBe(1);
+      expect(result.attachments?.[0].fileName).toBe('doc.pdf');
     });
 
     it('should sanitize malicious script tags and inline handlers from USER agent message', async () => {
@@ -577,9 +576,9 @@ describe('MessagesService (Task T-1.5.6: Message Threading & Polymorphic Senders
           '<p>Hello <b>Customer</b></p><script>alert("xss")</script><img src="x" onerror="evil()" />',
       });
 
-      assert.ok(!result.content?.includes('<script>'));
-      assert.ok(!result.content?.includes('onerror'));
-      assert.ok(result.content?.includes('<p>Hello <b>Customer</b></p>'));
+      expect(!result.content?.includes('<script>')).toBeTruthy();
+      expect(!result.content?.includes('onerror')).toBeTruthy();
+      expect(result.content?.includes('<p>Hello <b>Customer</b></p>')).toBeTruthy();
     });
 
     it('should sanitize inbound malicious HTML from CONTACT sender', async () => {
@@ -588,13 +587,13 @@ describe('MessagesService (Task T-1.5.6: Message Threading & Polymorphic Senders
         content: '<a href="javascript:alert(1)">Click me</a> Safe question?',
       });
 
-      assert.ok(!result.content?.includes('javascript:'));
-      assert.ok(result.content?.includes('Click me'));
-      assert.ok(result.content?.includes('Safe question?'));
+      expect(!result.content?.includes('javascript:')).toBeTruthy();
+      expect(result.content?.includes('Click me')).toBeTruthy();
+      expect(result.content?.includes('Safe question?')).toBeTruthy();
     });
 
     it('should reject message if content is exclusively malicious script and has no attachments', async () => {
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.create('ws_1', 'conv_1', {
             senderType: SenderType.USER,
@@ -603,8 +602,8 @@ describe('MessagesService (Task T-1.5.6: Message Threading & Polymorphic Senders
           });
         },
         (err: any) => {
-          assert.strictEqual(err instanceof BadRequestException, true);
-          assert.strictEqual(err.response.code, 'MESSAGE_CONTENT_REQUIRED');
+          expect(err instanceof BadRequestException).toBe(true);
+          expect(err.response.code).toBe('MESSAGE_CONTENT_REQUIRED');
           return true;
         },
       );
@@ -625,9 +624,9 @@ describe('MessagesService (Task T-1.5.6: Message Threading & Polymorphic Senders
         externalId: 'ext_msg_123',
       });
 
-      assert.strictEqual(msg1.id, msg2.id);
-      assert.strictEqual(msg2.content, 'Original message');
-      assert.strictEqual(messagesDb.size, 1);
+      expect(msg1.id).toBe(msg2.id);
+      expect(msg2.content).toBe('Original message');
+      expect(messagesDb.size).toBe(1);
     });
   });
 
@@ -645,12 +644,12 @@ describe('MessagesService (Task T-1.5.6: Message Threading & Polymorphic Senders
       });
 
       const updatedConv = conversationsDb.get('conv_1');
-      assert.strictEqual(updatedConv.status, ConversationStatus.OPEN);
-      assert.strictEqual(updatedConv.unreadMessagesCount, 1);
+      expect(updatedConv.status).toBe(ConversationStatus.OPEN);
+      expect(updatedConv.unreadMessagesCount).toBe(1);
 
       const reopenEvent = emittedEvents.find(e => e.event === 'conversation.reopened');
-      assert.ok(reopenEvent);
-      assert.strictEqual(reopenEvent.payload.conversationId, 'conv_1');
+      assertDefined(reopenEvent);
+      expect(reopenEvent.payload.conversationId).toBe('conv_1');
     });
 
     it('should auto-reopen SNOOZED conversation and clear snoozedUntil when CONTACT messages', async () => {
@@ -667,8 +666,8 @@ describe('MessagesService (Task T-1.5.6: Message Threading & Polymorphic Senders
       });
 
       const updatedConv = conversationsDb.get('conv_1');
-      assert.strictEqual(updatedConv.status, ConversationStatus.OPEN);
-      assert.strictEqual(updatedConv.snoozedUntil, null);
+      expect(updatedConv.status).toBe(ConversationStatus.OPEN);
+      expect(updatedConv.snoozedUntil).toBe(null);
     });
 
     it('should reset unread count, set firstReplyCreatedAt, and keep status OPEN on USER reply (Option A)', async () => {
@@ -686,9 +685,9 @@ describe('MessagesService (Task T-1.5.6: Message Threading & Polymorphic Senders
       });
 
       const updatedConv = conversationsDb.get('conv_1');
-      assert.strictEqual(updatedConv.status, ConversationStatus.OPEN);
-      assert.strictEqual(updatedConv.unreadMessagesCount, 0);
-      assert.ok(updatedConv.firstReplyCreatedAt instanceof Date);
+      expect(updatedConv.status).toBe(ConversationStatus.OPEN);
+      expect(updatedConv.unreadMessagesCount).toBe(0);
+      expect(updatedConv.firstReplyCreatedAt instanceof Date).toBeTruthy();
     });
 
     it('should transition PENDING conversation to OPEN when CONTACT messages', async () => {
@@ -704,15 +703,15 @@ describe('MessagesService (Task T-1.5.6: Message Threading & Polymorphic Senders
       });
 
       const updatedConv = conversationsDb.get('conv_1');
-      assert.strictEqual(updatedConv.status, ConversationStatus.OPEN);
-      assert.strictEqual(updatedConv.unreadMessagesCount, 1);
+      expect(updatedConv.status).toBe(ConversationStatus.OPEN);
+      expect(updatedConv.unreadMessagesCount).toBe(1);
 
       const statusEvent = emittedEvents.find(
         e =>
           e.event === 'conversation.status_updated' &&
           e.payload.currentStatus === ConversationStatus.OPEN,
       );
-      assert.ok(statusEvent);
+      assertDefined(statusEvent);
     });
 
     it('should transition PENDING conversation to OPEN when USER sends an outgoing reply', async () => {
@@ -729,7 +728,7 @@ describe('MessagesService (Task T-1.5.6: Message Threading & Polymorphic Senders
       });
 
       const updatedConv = conversationsDb.get('conv_1');
-      assert.strictEqual(updatedConv.status, ConversationStatus.OPEN);
+      expect(updatedConv.status).toBe(ConversationStatus.OPEN);
     });
 
     it('should NOT alter conversation status or firstReplyCreatedAt on private note (isPrivate = true)', async () => {
@@ -747,12 +746,12 @@ describe('MessagesService (Task T-1.5.6: Message Threading & Polymorphic Senders
         isPrivate: true,
       });
 
-      assert.strictEqual(note.isPrivate, true);
+      expect(note.isPrivate).toBe(true);
 
       const updatedConv = conversationsDb.get('conv_1');
-      assert.strictEqual(updatedConv.status, ConversationStatus.OPEN);
-      assert.strictEqual(updatedConv.unreadMessagesCount, 3);
-      assert.strictEqual(updatedConv.firstReplyCreatedAt, null);
+      expect(updatedConv.status).toBe(ConversationStatus.OPEN);
+      expect(updatedConv.unreadMessagesCount).toBe(3);
+      expect(updatedConv.firstReplyCreatedAt).toBe(null);
     });
   });
 
@@ -777,20 +776,17 @@ describe('MessagesService (Task T-1.5.6: Message Threading & Polymorphic Senders
 
     it('should list all messages including private notes when isAgent is true', async () => {
       const res = await service.list('ws_1', 'conv_1', {}, true);
-      assert.strictEqual(res.items.length, 3);
-      assert.strictEqual(res.meta.total, 3);
-      assert.strictEqual(res.items[0].content, 'Message 1');
-      assert.strictEqual(res.items[1].isPrivate, true);
+      expect(res.items.length).toBe(3);
+      expect(res.meta.total).toBe(3);
+      expect(res.items[0].content).toBe('Message 1');
+      expect(res.items[1].isPrivate).toBe(true);
     });
 
     it('should hide private notes when isAgent is false', async () => {
       const res = await service.list('ws_1', 'conv_1', {}, false);
-      assert.strictEqual(res.items.length, 2);
-      assert.strictEqual(res.meta.total, 2);
-      assert.strictEqual(
-        res.items.some(m => m.isPrivate),
-        false,
-      );
+      expect(res.items.length).toBe(2);
+      expect(res.meta.total).toBe(2);
+      expect(res.items.some(m => m.isPrivate)).toBe(false);
     });
   });
 
@@ -802,8 +798,8 @@ describe('MessagesService (Task T-1.5.6: Message Threading & Polymorphic Senders
       });
 
       const found = await service.getById('ws_1', created.id);
-      assert.strictEqual(found.id, created.id);
-      assert.strictEqual(found.content, 'Test message');
+      expect(found.id).toBe(created.id);
+      expect(found.content).toBe('Test message');
     });
 
     it('should throw ForbiddenException if non-agent accesses private note', async () => {
@@ -814,13 +810,13 @@ describe('MessagesService (Task T-1.5.6: Message Threading & Polymorphic Senders
         isPrivate: true,
       });
 
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.getById('ws_1', note.id, false);
         },
         (err: any) => {
-          assert.strictEqual(err instanceof ForbiddenException, true);
-          assert.strictEqual(err.response.code, 'PRIVATE_NOTE_ACCESS_DENIED');
+          expect(err instanceof ForbiddenException).toBe(true);
+          expect(err.response.code).toBe('PRIVATE_NOTE_ACCESS_DENIED');
           return true;
         },
       );
@@ -832,13 +828,13 @@ describe('MessagesService (Task T-1.5.6: Message Threading & Polymorphic Senders
         content: 'WS 1 message',
       });
 
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.getById('ws_other', created.id);
         },
         (err: any) => {
-          assert.strictEqual(err instanceof NotFoundException, true);
-          assert.strictEqual(err.response.code, 'MESSAGE_NOT_FOUND');
+          expect(err instanceof NotFoundException).toBe(true);
+          expect(err.response.code).toBe('MESSAGE_NOT_FOUND');
           return true;
         },
       );
@@ -857,12 +853,12 @@ describe('MessagesService (Task T-1.5.6: Message Threading & Polymorphic Senders
         deliveryStatus: DeliveryStatus.READ,
       });
 
-      assert.strictEqual(updated.deliveryStatus, DeliveryStatus.READ);
+      expect(updated.deliveryStatus).toBe(DeliveryStatus.READ);
 
       const statusEvent = emittedEvents.find(e => e.event === 'message.delivery_status_updated');
-      assert.ok(statusEvent);
-      assert.strictEqual(statusEvent.payload.currentStatus, DeliveryStatus.READ);
-      assert.strictEqual(statusEvent.payload.previousStatus, DeliveryStatus.SENT);
+      assertDefined(statusEvent);
+      expect(statusEvent.payload.currentStatus).toBe(DeliveryStatus.READ);
+      expect(statusEvent.payload.previousStatus).toBe(DeliveryStatus.SENT);
     });
   });
 
@@ -888,16 +884,16 @@ describe('MessagesService (Task T-1.5.6: Message Threading & Polymorphic Senders
         mockFiles,
       );
 
-      assert.strictEqual(attachmentsDb.size, 1);
+      expect(attachmentsDb.size).toBe(1);
 
       const result = await service.delete('ws_1', created.id);
-      assert.deepStrictEqual(result, { success: true });
-      assert.strictEqual(messagesDb.has(created.id), false);
-      assert.strictEqual(attachmentsDb.size, 0);
+      expect(result).toEqual({ success: true });
+      expect(messagesDb.has(created.id)).toBe(false);
+      expect(attachmentsDb.size).toBe(0);
 
       const deleteEvent = emittedEvents.find(e => e.event === 'message.deleted');
-      assert.ok(deleteEvent);
-      assert.strictEqual(deleteEvent.payload.messageId, created.id);
+      assertDefined(deleteEvent);
+      expect(deleteEvent.payload.messageId).toBe(created.id);
     });
   });
 
@@ -933,10 +929,10 @@ describe('MessagesService (Task T-1.5.6: Message Threading & Polymorphic Senders
       messagesDb.get(m3.id).createdAt = new Date(Date.now() - 1000);
 
       const recent = await service.getRecentMessages('ws_1', 'conv_1', 10);
-      assert.strictEqual(recent.length, 3);
-      assert.strictEqual(recent[0].content, 'Turn 1');
-      assert.strictEqual(recent[1].content, 'Turn 2');
-      assert.strictEqual(recent[2].content, 'Turn 3');
+      expect(recent.length).toBe(3);
+      expect(recent[0].content).toBe('Turn 1');
+      expect(recent[1].content).toBe('Turn 2');
+      expect(recent[2].content).toBe('Turn 3');
     });
   });
 });

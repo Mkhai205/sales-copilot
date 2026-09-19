@@ -1,5 +1,4 @@
-import { describe, it, beforeEach } from 'node:test';
-import * as assert from 'node:assert';
+import { expectReject } from '../../../../../test/test-assertions';
 import { CannedResponsesService, normalizeShortCode } from '../canned-responses.service';
 import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
 
@@ -142,11 +141,11 @@ describe('CannedResponsesService (Feature F-1.8.3)', () => {
 
   describe('normalizeShortCode', () => {
     it('should strip leading slashes, convert to lowercase, and trim', () => {
-      assert.strictEqual(normalizeShortCode('/chao'), 'chao');
-      assert.strictEqual(normalizeShortCode('  /BaoGia  '), 'baogia');
-      assert.strictEqual(normalizeShortCode('///ho_tro'), 'ho_tro');
-      assert.strictEqual(normalizeShortCode('HELLO'), 'hello');
-      assert.strictEqual(normalizeShortCode(''), '');
+      expect(normalizeShortCode('/chao')).toBe('chao');
+      expect(normalizeShortCode('  /BaoGia  ')).toBe('baogia');
+      expect(normalizeShortCode('///ho_tro')).toBe('ho_tro');
+      expect(normalizeShortCode('HELLO')).toBe('hello');
+      expect(normalizeShortCode('')).toBe('');
     });
   });
 
@@ -157,20 +156,20 @@ describe('CannedResponsesService (Feature F-1.8.3)', () => {
         content: 'Xin chào quý khách, tôi có thể giúp gì cho bạn?',
       });
 
-      assert.strictEqual(created.workspaceId, 'ws_1');
-      assert.strictEqual(created.shortCode, 'chao');
-      assert.strictEqual(created.content, 'Xin chào quý khách, tôi có thể giúp gì cho bạn?');
-      assert.ok(created.id);
-      assert.ok(created.createdAt);
+      expect(created.workspaceId).toBe('ws_1');
+      expect(created.shortCode).toBe('chao');
+      expect(created.content).toBe('Xin chào quý khách, tôi có thể giúp gì cho bạn?');
+      expect(created.id).toBeTruthy();
+      expect(created.createdAt).toBeTruthy();
 
-      assert.strictEqual(emittedEvents.length, 1);
-      assert.strictEqual(emittedEvents[0].event, 'canned_response.created');
-      assert.strictEqual(emittedEvents[0].payload.workspaceId, 'ws_1');
-      assert.strictEqual(emittedEvents[0].payload.cannedResponse.shortCode, 'chao');
+      expect(emittedEvents.length).toBe(1);
+      expect(emittedEvents[0].event).toBe('canned_response.created');
+      expect(emittedEvents[0].payload.workspaceId).toBe('ws_1');
+      expect(emittedEvents[0].payload.cannedResponse.shortCode).toBe('chao');
     });
 
     it('should throw BadRequestException if shortcode is empty or solely slashes', async () => {
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.create('ws_1', {
             shortCode: '///',
@@ -178,15 +177,15 @@ describe('CannedResponsesService (Feature F-1.8.3)', () => {
           });
         },
         (err: any) => {
-          assert.strictEqual(err instanceof BadRequestException, true);
-          assert.strictEqual(err.response.code, 'INVALID_SHORT_CODE');
+          expect(err instanceof BadRequestException).toBe(true);
+          expect(err.response.code).toBe('INVALID_SHORT_CODE');
           return true;
         },
       );
     });
 
     it('should throw BadRequestException if content is empty', async () => {
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.create('ws_1', {
             shortCode: 'chao',
@@ -194,8 +193,8 @@ describe('CannedResponsesService (Feature F-1.8.3)', () => {
           });
         },
         (err: any) => {
-          assert.strictEqual(err instanceof BadRequestException, true);
-          assert.strictEqual(err.response.code, 'INVALID_CONTENT');
+          expect(err instanceof BadRequestException).toBe(true);
+          expect(err.response.code).toBe('INVALID_CONTENT');
           return true;
         },
       );
@@ -207,7 +206,7 @@ describe('CannedResponsesService (Feature F-1.8.3)', () => {
         content: 'Xin chào',
       });
 
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.create('ws_1', {
             shortCode: 'Chao',
@@ -215,8 +214,8 @@ describe('CannedResponsesService (Feature F-1.8.3)', () => {
           });
         },
         (err: any) => {
-          assert.strictEqual(err instanceof ConflictException, true);
-          assert.strictEqual(err.response.code, 'CANNED_RESPONSE_ALREADY_EXISTS');
+          expect(err instanceof ConflictException).toBe(true);
+          expect(err.response.code).toBe('CANNED_RESPONSE_ALREADY_EXISTS');
           return true;
         },
       );
@@ -232,10 +231,10 @@ describe('CannedResponsesService (Feature F-1.8.3)', () => {
         content: 'Workspace 2 chào',
       });
 
-      assert.strictEqual(cr1.shortCode, 'chao');
-      assert.strictEqual(cr2.shortCode, 'chao');
-      assert.strictEqual(cr1.workspaceId, 'ws_1');
-      assert.strictEqual(cr2.workspaceId, 'ws_2');
+      expect(cr1.shortCode).toBe('chao');
+      expect(cr2.shortCode).toBe('chao');
+      expect(cr1.workspaceId).toBe('ws_1');
+      expect(cr2.workspaceId).toBe('ws_2');
     });
   });
 
@@ -250,31 +249,28 @@ describe('CannedResponsesService (Feature F-1.8.3)', () => {
 
     it('should list all canned responses for workspace in alphabetical order', async () => {
       const list = await service.list('ws_1');
-      assert.strictEqual(list.length, 4);
-      assert.deepStrictEqual(
-        list.map(i => i.shortCode),
-        ['baogia', 'baohiem', 'chao', 'thongbao'],
-      );
+      expect(list.length).toBe(4);
+      expect(list.map(i => i.shortCode)).toEqual(['baogia', 'baohiem', 'chao', 'thongbao']);
     });
 
     it('should search by prefix using search parameter and prioritize prefix matches', async () => {
       const results = await service.list('ws_1', { search: '/bao' });
-      assert.strictEqual(results.length, 3);
+      expect(results.length).toBe(3);
       // 'baogia' and 'baohiem' start with 'bao', 'thongbao' contains 'bao'
-      assert.strictEqual(results[0].shortCode, 'baogia');
-      assert.strictEqual(results[1].shortCode, 'baohiem');
-      assert.strictEqual(results[2].shortCode, 'thongbao');
+      expect(results[0].shortCode).toBe('baogia');
+      expect(results[1].shortCode).toBe('baohiem');
+      expect(results[2].shortCode).toBe('thongbao');
     });
 
     it('should search by content', async () => {
       const results = await service.list('ws_1', { q: 'khách hàng' });
-      assert.strictEqual(results.length, 1);
-      assert.strictEqual(results[0].shortCode, 'chao');
+      expect(results.length).toBe(1);
+      expect(results[0].shortCode).toBe('chao');
     });
 
     it('should return empty array if no matches found', async () => {
       const results = await service.list('ws_1', { search: '/khongtontai' });
-      assert.strictEqual(results.length, 0);
+      expect(results.length).toBe(0);
     });
   });
 
@@ -286,8 +282,8 @@ describe('CannedResponsesService (Feature F-1.8.3)', () => {
       });
 
       const found = await service.getById('ws_1', created.id);
-      assert.strictEqual(found.id, created.id);
-      assert.strictEqual(found.shortCode, 'tam_biet');
+      expect(found.id).toBe(created.id);
+      expect(found.shortCode).toBe('tam_biet');
     });
 
     it('should throw NotFoundException if id belongs to another workspace', async () => {
@@ -296,13 +292,13 @@ describe('CannedResponsesService (Feature F-1.8.3)', () => {
         content: 'Tạm biệt quý khách',
       });
 
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.getById('ws_2', created.id);
         },
         (err: any) => {
-          assert.strictEqual(err instanceof NotFoundException, true);
-          assert.strictEqual(err.response.code, 'CANNED_RESPONSE_NOT_FOUND');
+          expect(err instanceof NotFoundException).toBe(true);
+          expect(err.response.code).toBe('CANNED_RESPONSE_NOT_FOUND');
           return true;
         },
       );
@@ -322,25 +318,25 @@ describe('CannedResponsesService (Feature F-1.8.3)', () => {
         content: 'New content',
       });
 
-      assert.strictEqual(updated.shortCode, 'c1_new');
-      assert.strictEqual(updated.content, 'New content');
+      expect(updated.shortCode).toBe('c1_new');
+      expect(updated.content).toBe('New content');
 
-      assert.strictEqual(emittedEvents.length, 1);
-      assert.strictEqual(emittedEvents[0].event, 'canned_response.updated');
-      assert.strictEqual(emittedEvents[0].payload.cannedResponse.shortCode, 'c1_new');
+      expect(emittedEvents.length).toBe(1);
+      expect(emittedEvents[0].event).toBe('canned_response.updated');
+      expect(emittedEvents[0].payload.cannedResponse.shortCode).toBe('c1_new');
     });
 
     it('should throw ConflictException if updated shortcode collides with another canned response', async () => {
       const cr1 = await service.create('ws_1', { shortCode: '/c1', content: 'Content 1' });
       await service.create('ws_1', { shortCode: '/c2', content: 'Content 2' });
 
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.update('ws_1', cr1.id, { shortCode: '/c2' });
         },
         (err: any) => {
-          assert.strictEqual(err instanceof ConflictException, true);
-          assert.strictEqual(err.response.code, 'CANNED_RESPONSE_ALREADY_EXISTS');
+          expect(err instanceof ConflictException).toBe(true);
+          expect(err.response.code).toBe('CANNED_RESPONSE_ALREADY_EXISTS');
           return true;
         },
       );
@@ -354,7 +350,7 @@ describe('CannedResponsesService (Feature F-1.8.3)', () => {
         content: 'Updated content',
       });
 
-      assert.strictEqual(updated.content, 'Updated content');
+      expect(updated.content).toBe('Updated content');
     });
   });
 
@@ -367,27 +363,27 @@ describe('CannedResponsesService (Feature F-1.8.3)', () => {
       emittedEvents = [];
 
       const res = await service.delete('ws_1', created.id);
-      assert.deepStrictEqual(res, { success: true });
+      expect(res).toEqual({ success: true });
 
-      assert.strictEqual(emittedEvents.length, 1);
-      assert.strictEqual(emittedEvents[0].event, 'canned_response.deleted');
-      assert.strictEqual(emittedEvents[0].payload.cannedResponseId, created.id);
-      assert.strictEqual(emittedEvents[0].payload.shortCode, 'to_delete');
+      expect(emittedEvents.length).toBe(1);
+      expect(emittedEvents[0].event).toBe('canned_response.deleted');
+      expect(emittedEvents[0].payload.cannedResponseId).toBe(created.id);
+      expect(emittedEvents[0].payload.shortCode).toBe('to_delete');
 
       // Verify deletion
-      await assert.rejects(async () => {
+      await expectReject(async () => {
         await service.getById('ws_1', created.id);
       });
     });
 
     it('should throw NotFoundException when deleting non-existent canned response', async () => {
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.delete('ws_1', 'cr_nonexistent');
         },
         (err: any) => {
-          assert.strictEqual(err instanceof NotFoundException, true);
-          assert.strictEqual(err.response.code, 'CANNED_RESPONSE_NOT_FOUND');
+          expect(err instanceof NotFoundException).toBe(true);
+          expect(err.response.code).toBe('CANNED_RESPONSE_NOT_FOUND');
           return true;
         },
       );

@@ -1,5 +1,3 @@
-import { describe, it, beforeEach } from 'node:test';
-import * as assert from 'node:assert';
 import { createCreateDraftOrderTool } from '../create-draft-order.tool';
 import { DiscountGuardService } from '../../../services/discount-guard.service';
 
@@ -133,11 +131,11 @@ describe('createDraftOrder Tool (T6)', () => {
       {} as any,
     );
 
-    assert.strictEqual(result.orderId, 'ord-1042');
-    assert.strictEqual(result.orderNumber, 'ORD-20260917-1042');
-    assert.strictEqual(result.status, 'DRAFT');
-    assert.strictEqual(result.items.length, 1);
-    assert.strictEqual(result.items[0].unitPrice, 150000);
+    expect(result.orderId).toBe('ord-1042');
+    expect(result.orderNumber).toBe('ORD-20260917-1042');
+    expect(result.status).toBe('DRAFT');
+    expect(result.items.length).toBe(1);
+    expect(result.items[0].unitPrice).toBe(150000);
   });
 
   it('should reject when requested quantity exceeds available stock', async () => {
@@ -157,9 +155,9 @@ describe('createDraftOrder Tool (T6)', () => {
       {} as any,
     );
 
-    assert.strictEqual(result.error, 'INSUFFICIENT_STOCK');
-    assert.strictEqual(result.availableStock, 1);
-    assert.strictEqual(result.requestedQuantity, 5);
+    expect(result.error).toBe('INSUFFICIENT_STOCK');
+    expect(result.availableStock).toBe(1);
+    expect(result.requestedQuantity).toBe(5);
   });
 
   it('should reject when discount exceeds policy limits (Double-Check Guard)', async () => {
@@ -181,8 +179,8 @@ describe('createDraftOrder Tool (T6)', () => {
       {} as any,
     );
 
-    assert.strictEqual(result.error, 'DISCOUNT_LIMIT_EXCEEDED');
-    assert.strictEqual(result.allowedDiscount, 15000);
+    expect(result.error).toBe('DISCOUNT_LIMIT_EXCEEDED');
+    expect(result.allowedDiscount).toBe(15000);
   });
 
   it('should enforce multi-tenancy and reject variants belonging to other workspaces', async () => {
@@ -201,7 +199,7 @@ describe('createDraftOrder Tool (T6)', () => {
       {} as any,
     );
 
-    assert.strictEqual(result.error, 'VARIANT_NOT_FOUND');
-    assert.ok(result.missingVariantIds.includes('var-other-ws'));
+    expect(result.error).toBe('VARIANT_NOT_FOUND');
+    expect(result.missingVariantIds.includes('var-other-ws')).toBeTruthy();
   });
 });

@@ -1,5 +1,3 @@
-import { describe, it, beforeEach } from 'node:test';
-import * as assert from 'node:assert';
 import { ConfigService } from '@nestjs/config';
 import { ChannelType } from '@sales-copilot/shared-contracts';
 import { TelegramLifecycleService } from '../telegram.lifecycle';
@@ -144,30 +142,26 @@ describe('TelegramLifecycleService (Automated Webhook Setup & Token Validation)'
         channelType: ChannelType.TELEGRAM,
       });
 
-      assert.strictEqual(getChannelInfoCalled, true);
-      assert.strictEqual(deleteWebhookCalled, true);
-      assert.strictEqual(setWebhookUrl, `https://app.salescopilot.io/channels/${chanId}/webhook`);
-      assert.strictEqual(setWebhookSecret, 'secret_token_123');
+      expect(getChannelInfoCalled).toBe(true);
+      expect(deleteWebhookCalled).toBe(true);
+      expect(setWebhookUrl).toBe(`https://app.salescopilot.io/channels/${chanId}/webhook`);
+      expect(setWebhookSecret).toBe('secret_token_123');
 
       // Verify channel updated in DB
       const updatedChannel = channelsDb.get(chanId);
-      assert.strictEqual(updatedChannel.isConnected, true);
-      assert.strictEqual(updatedChannel.providerAccountId, '99887766');
-      assert.strictEqual(updatedChannel.settings.botUsername, 'sales_copilot_bot');
-      assert.strictEqual(updatedChannel.settings.botName, 'Sales Copilot Bot');
-      assert.strictEqual(
-        updatedChannel.settings.webhookUrl,
+      expect(updatedChannel.isConnected).toBe(true);
+      expect(updatedChannel.providerAccountId).toBe('99887766');
+      expect(updatedChannel.settings.botUsername).toBe('sales_copilot_bot');
+      expect(updatedChannel.settings.botName).toBe('Sales Copilot Bot');
+      expect(updatedChannel.settings.webhookUrl).toBe(
         `https://app.salescopilot.io/channels/${chanId}/webhook`,
       );
-      assert.strictEqual(updatedChannel.settings.lastSyncError, null);
-      assert.ok(updatedChannel.settings.lastSyncAt);
+      expect(updatedChannel.settings.lastSyncError).toBe(null);
+      expect(updatedChannel.settings.lastSyncAt).toBeTruthy();
 
       // Verify inbox avatar updated
       const updatedInbox = inboxesDb.get(inboxId);
-      assert.strictEqual(
-        updatedInbox.avatarUrl,
-        'https://api.telegram.org/file/bot123/bot_avatar.jpg',
-      );
+      expect(updatedInbox.avatarUrl).toBe('https://api.telegram.org/file/bot123/bot_avatar.jpg');
     });
 
     it('should handle invalid bot token gracefully and mark isConnected = false', async () => {
@@ -191,15 +185,15 @@ describe('TelegramLifecycleService (Automated Webhook Setup & Token Validation)'
       };
 
       const result = await service.setupWebhook(wsId, chanId);
-      assert.strictEqual(result, false);
+      expect(result).toBe(false);
 
       const updatedChannel = channelsDb.get(chanId);
-      assert.strictEqual(updatedChannel.isConnected, false);
-      assert.ok(
+      expect(updatedChannel.isConnected).toBe(false);
+      expect(
         updatedChannel.settings.lastSyncError.includes(
           'Telegram API getMe error: [401] Unauthorized',
         ),
-      );
+      ).toBeTruthy();
     });
 
     it('should handle missing bot token in credentials and mark isConnected = false', async () => {
@@ -215,11 +209,11 @@ describe('TelegramLifecycleService (Automated Webhook Setup & Token Validation)'
       });
 
       const result = await service.setupWebhook(wsId, chanId);
-      assert.strictEqual(result, false);
+      expect(result).toBe(false);
 
       const updatedChannel = channelsDb.get(chanId);
-      assert.strictEqual(updatedChannel.isConnected, false);
-      assert.strictEqual(updatedChannel.settings.lastSyncError, 'MISSING_BOT_TOKEN');
+      expect(updatedChannel.isConnected).toBe(false);
+      expect(updatedChannel.settings.lastSyncError).toBe('MISSING_BOT_TOKEN');
     });
 
     it('should handle Telegram setWebhook failure gracefully', async () => {
@@ -248,12 +242,11 @@ describe('TelegramLifecycleService (Automated Webhook Setup & Token Validation)'
       });
 
       const result = await service.setupWebhook(wsId, chanId);
-      assert.strictEqual(result, false);
+      expect(result).toBe(false);
 
       const updatedChannel = channelsDb.get(chanId);
-      assert.strictEqual(updatedChannel.isConnected, false);
-      assert.strictEqual(
-        updatedChannel.settings.lastSyncError,
+      expect(updatedChannel.isConnected).toBe(false);
+      expect(updatedChannel.settings.lastSyncError).toBe(
         'Bad Request: HTTPS url must be provided for webhook',
       );
     });
@@ -272,12 +265,12 @@ describe('TelegramLifecycleService (Automated Webhook Setup & Token Validation)'
         channelType: ChannelType.FACEBOOK_MESSENGER,
       });
 
-      assert.strictEqual(setupCalled, false);
+      expect(setupCalled).toBe(false);
     });
 
     it('should return false if channel does not exist in workspace', async () => {
       const result = await service.setupWebhook(wsId, 'non_existent_chan');
-      assert.strictEqual(result, false);
+      expect(result).toBe(false);
     });
   });
 
@@ -295,7 +288,7 @@ describe('TelegramLifecycleService (Automated Webhook Setup & Token Validation)'
 
       let deleteWebhookCalled = false;
       adapter.deleteWebhook = async (token: string) => {
-        assert.strictEqual(token, botToken);
+        expect(token).toBe(botToken);
         deleteWebhookCalled = true;
         return { ok: true };
       };
@@ -307,12 +300,12 @@ describe('TelegramLifecycleService (Automated Webhook Setup & Token Validation)'
         channelType: ChannelType.TELEGRAM,
       });
 
-      assert.strictEqual(deleteWebhookCalled, true);
+      expect(deleteWebhookCalled).toBe(true);
     });
 
     it('should return false if channel is missing or has no token', async () => {
       const res1 = await service.removeWebhook(wsId, 'missing_chan');
-      assert.strictEqual(res1, false);
+      expect(res1).toBe(false);
 
       channelsDb.set(chanId, {
         id: chanId,
@@ -322,7 +315,7 @@ describe('TelegramLifecycleService (Automated Webhook Setup & Token Validation)'
       });
 
       const res2 = await service.removeWebhook(wsId, chanId);
-      assert.strictEqual(res2, false);
+      expect(res2).toBe(false);
     });
   });
 });

@@ -1,5 +1,3 @@
-import { describe, it, beforeEach, afterEach } from 'node:test';
-import * as assert from 'node:assert';
 import { EventEmitter } from 'node:events';
 import { Writable } from 'node:stream';
 import pinoHttp from 'pino-http';
@@ -94,10 +92,10 @@ describe('Request ID Correlation & Context Enrichment (Task 5 — Feature F-1.11
       middleware(req, res);
       req.log.info('test message with existing id');
 
-      assert.strictEqual(setHeaders['x-request-id'], inputReqId);
-      assert.strictEqual(logs.length, 1);
-      assert.strictEqual(logs[0].requestId, inputReqId);
-      assert.strictEqual(logs[0].msg, 'test message with existing id');
+      expect(setHeaders['x-request-id']).toBe(inputReqId);
+      expect(logs.length).toBe(1);
+      expect(logs[0].requestId).toBe(inputReqId);
+      expect(logs[0].msg).toBe('test message with existing id');
     });
 
     it('should generate UUID requestId and set response header when x-request-id is absent', () => {
@@ -110,10 +108,10 @@ describe('Request ID Correlation & Context Enrichment (Task 5 — Feature F-1.11
       req.log.info('test message with generated id');
 
       const generatedId = setHeaders['x-request-id'];
-      assert.ok(generatedId, 'Expected x-request-id header to be set');
-      assert.strictEqual(typeof generatedId, 'string');
-      assert.strictEqual(logs.length, 1);
-      assert.strictEqual(logs[0].requestId, generatedId);
+      expect(generatedId).toBeTruthy();
+      expect(typeof generatedId).toBe('string');
+      expect(logs.length).toBe(1);
+      expect(logs[0].requestId).toBe(generatedId);
     });
 
     it('should enrich log entries with userId and workspaceId for authenticated requests', () => {
@@ -129,14 +127,14 @@ describe('Request ID Correlation & Context Enrichment (Task 5 — Feature F-1.11
       middleware(req, res);
       req.log.info('authenticated action performed');
 
-      assert.strictEqual(logs.length, 1);
+      expect(logs.length).toBe(1);
       const entry = logs[0];
-      assert.strictEqual(entry.requestId, 'req_auth_123');
-      assert.strictEqual(entry.userId, 'usr_alpha_456');
-      assert.strictEqual(entry.workspaceId, 'ws_finance_789');
-      assert.strictEqual(entry.msg, 'authenticated action performed');
-      assert.ok(entry.level);
-      assert.ok(entry.time);
+      expect(entry.requestId).toBe('req_auth_123');
+      expect(entry.userId).toBe('usr_alpha_456');
+      expect(entry.workspaceId).toBe('ws_finance_789');
+      expect(entry.msg).toBe('authenticated action performed');
+      expect(entry.level).toBeTruthy();
+      expect(entry.time).toBeTruthy();
     });
 
     it('should extract workspaceId from x-workspace-id header when req.workspace is not yet set', () => {
@@ -153,10 +151,10 @@ describe('Request ID Correlation & Context Enrichment (Task 5 — Feature F-1.11
       middleware(req, res);
       req.log.info('early request log');
 
-      assert.strictEqual(logs.length, 1);
-      assert.strictEqual(logs[0].requestId, 'req_header_123');
-      assert.strictEqual(logs[0].workspaceId, 'ws_from_header_999');
-      assert.strictEqual(logs[0].userId, undefined);
+      expect(logs.length).toBe(1);
+      expect(logs[0].requestId).toBe('req_header_123');
+      expect(logs[0].workspaceId).toBe('ws_from_header_999');
+      expect(logs[0].userId).toBe(undefined);
     });
   });
 });

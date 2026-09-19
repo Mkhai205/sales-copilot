@@ -1,5 +1,3 @@
-import { describe, it, beforeEach } from 'node:test';
-import * as assert from 'node:assert';
 import { DiscountGuardService } from '../discount-guard.service';
 
 describe('DiscountGuardService', () => {
@@ -11,25 +9,25 @@ describe('DiscountGuardService', () => {
 
   it('should reject when orderTotal <= 0', () => {
     const result = service.evaluate(0, 50000, { enabled: true, maxDiscountPercent: 10 });
-    assert.strictEqual(result.approved, false);
-    assert.strictEqual(result.allowedDiscount, 0);
-    assert.ok(result.reason?.includes('không hợp lệ'));
+    expect(result.approved).toBe(false);
+    expect(result.allowedDiscount).toBe(0);
+    expect(result.reason?.includes('không hợp lệ')).toBeTruthy();
   });
 
   it('should approve when requestedDiscount <= 0', () => {
     const result = service.evaluate(200000, 0, { enabled: true, maxDiscountPercent: 10 });
-    assert.strictEqual(result.approved, true);
-    assert.strictEqual(result.allowedDiscount, 0);
+    expect(result.approved).toBe(true);
+    expect(result.allowedDiscount).toBe(0);
   });
 
   it('should reject when no discount policy is configured', () => {
     const result1 = service.evaluate(200000, 20000, undefined);
-    assert.strictEqual(result1.approved, false);
-    assert.strictEqual(result1.allowedDiscount, 0);
+    expect(result1.approved).toBe(false);
+    expect(result1.allowedDiscount).toBe(0);
 
     const result2 = service.evaluate(200000, 20000, { enabled: true });
-    assert.strictEqual(result2.approved, false);
-    assert.strictEqual(result2.allowedDiscount, 0);
+    expect(result2.approved).toBe(false);
+    expect(result2.allowedDiscount).toBe(0);
   });
 
   it('should enforce percentage discount cap correctly', () => {
@@ -37,29 +35,29 @@ describe('DiscountGuardService', () => {
     const policy = { enabled: true, maxDiscountPercent: 10 };
 
     const withinLimit = service.evaluate(200000, 15000, policy);
-    assert.strictEqual(withinLimit.approved, true);
-    assert.strictEqual(withinLimit.allowedDiscount, 15000);
+    expect(withinLimit.approved).toBe(true);
+    expect(withinLimit.allowedDiscount).toBe(15000);
 
     const exactLimit = service.evaluate(200000, 20000, policy);
-    assert.strictEqual(exactLimit.approved, true);
-    assert.strictEqual(exactLimit.allowedDiscount, 20000);
+    expect(exactLimit.approved).toBe(true);
+    expect(exactLimit.allowedDiscount).toBe(20000);
 
     const exceedLimit = service.evaluate(200000, 25000, policy);
-    assert.strictEqual(exceedLimit.approved, false);
-    assert.strictEqual(exceedLimit.allowedDiscount, 20000);
-    assert.ok(exceedLimit.reason?.includes('vượt quá'));
+    expect(exceedLimit.approved).toBe(false);
+    expect(exceedLimit.allowedDiscount).toBe(20000);
+    expect(exceedLimit.reason?.includes('vượt quá')).toBeTruthy();
   });
 
   it('should enforce fixed VND discount cap correctly', () => {
     const policy = { enabled: true, maxDiscountVnd: 50000 };
 
     const withinLimit = service.evaluate(1000000, 40000, policy);
-    assert.strictEqual(withinLimit.approved, true);
-    assert.strictEqual(withinLimit.allowedDiscount, 40000);
+    expect(withinLimit.approved).toBe(true);
+    expect(withinLimit.allowedDiscount).toBe(40000);
 
     const exceedLimit = service.evaluate(1000000, 60000, policy);
-    assert.strictEqual(exceedLimit.approved, false);
-    assert.strictEqual(exceedLimit.allowedDiscount, 50000);
+    expect(exceedLimit.approved).toBe(false);
+    expect(exceedLimit.allowedDiscount).toBe(50000);
   });
 
   it('should enforce min(percentage, fixedVnd) when both are configured', () => {
@@ -72,17 +70,17 @@ describe('DiscountGuardService', () => {
     };
 
     const withinLimit = service.evaluate(1000000, 50000, policy);
-    assert.strictEqual(withinLimit.approved, true);
-    assert.strictEqual(withinLimit.allowedDiscount, 50000);
+    expect(withinLimit.approved).toBe(true);
+    expect(withinLimit.allowedDiscount).toBe(50000);
 
     const exceedLimit = service.evaluate(1000000, 60000, policy);
-    assert.strictEqual(exceedLimit.approved, false);
-    assert.strictEqual(exceedLimit.allowedDiscount, 50000);
+    expect(exceedLimit.approved).toBe(false);
+    expect(exceedLimit.allowedDiscount).toBe(50000);
 
     // For a smaller order: 200,000. 10% is 20,000, which is < 50,000.
     // So effective cap is 20,000.
     const smallOrderExceed = service.evaluate(200000, 30000, policy);
-    assert.strictEqual(smallOrderExceed.approved, false);
-    assert.strictEqual(smallOrderExceed.allowedDiscount, 20000);
+    expect(smallOrderExceed.approved).toBe(false);
+    expect(smallOrderExceed.allowedDiscount).toBe(20000);
   });
 });

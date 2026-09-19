@@ -1,5 +1,4 @@
-import { describe, it, beforeEach } from 'node:test';
-import * as assert from 'node:assert';
+import { assertDefined, expectReject } from '../../../../../test/test-assertions';
 import {
   DiscountType,
   DomainEvent,
@@ -494,26 +493,26 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
         userId,
       );
 
-      assert.strictEqual(order.workspaceId, ws1);
-      assert.strictEqual(order.status, OrderStatus.DRAFT);
-      assert.strictEqual(order.paymentStatus, PaymentStatus.UNPAID);
-      assert.strictEqual(order.subtotal, 700000); // 2 * 350000
-      assert.strictEqual(order.discountAmount, 50000);
-      assert.strictEqual(order.shippingFee, 30000);
-      assert.strictEqual(order.totalAmount, 680000); // 700000 - 50000 + 30000
-      assert.ok(order.orderNumber.startsWith('ORD-'));
-      assert.strictEqual(order.items?.length, 1);
-      assert.strictEqual(order.items?.[0].productName, 'Áo Sơ Mi Oxford');
-      assert.strictEqual(order.items?.[0].variantName, 'Size M / Trắng');
+      expect(order.workspaceId).toBe(ws1);
+      expect(order.status).toBe(OrderStatus.DRAFT);
+      expect(order.paymentStatus).toBe(PaymentStatus.UNPAID);
+      expect(order.subtotal).toBe(700000); // 2 * 350000
+      expect(order.discountAmount).toBe(50000);
+      expect(order.shippingFee).toBe(30000);
+      expect(order.totalAmount).toBe(680000); // 700000 - 50000 + 30000
+      expect(order.orderNumber.startsWith('ORD-')).toBeTruthy();
+      expect(order.items?.length).toBe(1);
+      expect(order.items?.[0].productName).toBe('Áo Sơ Mi Oxford');
+      expect(order.items?.[0].variantName).toBe('Size M / Trắng');
 
       // Verify physical and reserved stock remain untouched in DRAFT
       const v = variantsDb.get(varA);
-      assert.strictEqual(v.stockQuantity, 10);
-      assert.strictEqual(v.reservedQuantity, 0);
+      expect(v.stockQuantity).toBe(10);
+      expect(v.reservedQuantity).toBe(0);
 
       // Verify domain event emitted
-      assert.strictEqual(emittedEvents.length, 1);
-      assert.strictEqual(emittedEvents[0].event, DomainEvent.ORDER_CREATED);
+      expect(emittedEvents.length).toBe(1);
+      expect(emittedEvents[0].event).toBe(DomainEvent.ORDER_CREATED);
     });
 
     it('should create order and confirm immediately with atomic stock reservation (1-click confirm)', async () => {
@@ -535,21 +534,21 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
         userId,
       );
 
-      assert.strictEqual(order.status, OrderStatus.CONFIRMED);
-      assert.ok(order.confirmedAt);
+      expect(order.status).toBe(OrderStatus.CONFIRMED);
+      assertDefined(order.confirmedAt);
 
       // Verify reserved quantity increased to 3
       const v = variantsDb.get(varA);
-      assert.strictEqual(v.stockQuantity, 10);
-      assert.strictEqual(v.reservedQuantity, 3);
+      expect(v.stockQuantity).toBe(10);
+      expect(v.reservedQuantity).toBe(3);
 
       // Verify domain events: both ORDER_CREATED and ORDER_CONFIRMED emitted
-      assert.ok(emittedEvents.some(e => e.event === DomainEvent.ORDER_CREATED));
-      assert.ok(emittedEvents.some(e => e.event === DomainEvent.ORDER_CONFIRMED));
+      expect(emittedEvents.some(e => e.event === DomainEvent.ORDER_CREATED)).toBeTruthy();
+      expect(emittedEvents.some(e => e.event === DomainEvent.ORDER_CONFIRMED)).toBeTruthy();
     });
 
     it('should reject order creation with invalid contact in workspace', async () => {
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.createOrder(ws1, {
             contactId: 'non-existent-contact',
@@ -557,7 +556,7 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
           });
         },
         (err: any) => {
-          assert.strictEqual(err.response?.code, 'CONTACT_NOT_FOUND');
+          expect(err.response?.code).toBe('CONTACT_NOT_FOUND');
           return true;
         },
       );
@@ -585,28 +584,28 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
     it('should successfully confirm order and increment reservedQuantity (Model A)', async () => {
       const confirmed = await service.confirmOrder(ws1, draftOrder1.id, userId);
 
-      assert.strictEqual(confirmed.status, OrderStatus.CONFIRMED);
-      assert.ok(confirmed.confirmedAt);
+      expect(confirmed.status).toBe(OrderStatus.CONFIRMED);
+      assertDefined(confirmed.confirmedAt);
 
       // Physical stock remains unchanged; reservedQuantity increments to 1
       const v = variantsDb.get(varB);
-      assert.strictEqual(v.stockQuantity, 1);
-      assert.strictEqual(v.reservedQuantity, 1);
+      expect(v.stockQuantity).toBe(1);
+      expect(v.reservedQuantity).toBe(1);
 
       // Verify inventory transaction ledger recorded RESERVATION
-      assert.strictEqual(inventoryTransactionsDb.size, 1);
+      expect(inventoryTransactionsDb.size).toBe(1);
       const invTx = Array.from(inventoryTransactionsDb.values())[0];
-      assert.strictEqual(invTx.type, InventoryTransactionType.RESERVATION);
-      assert.strictEqual(invTx.quantity, 1);
-      assert.strictEqual(invTx.previousReserved, 0);
-      assert.strictEqual(invTx.newReserved, 1);
+      expect(invTx.type).toBe(InventoryTransactionType.RESERVATION);
+      expect(invTx.quantity).toBe(1);
+      expect(invTx.previousReserved).toBe(0);
+      expect(invTx.newReserved).toBe(1);
 
       // Verify domain events emitted: INVENTORY_UPDATED and ORDER_CONFIRMED
-      assert.strictEqual(emittedEvents.length, 2);
+      expect(emittedEvents.length).toBe(2);
       const orderConfirmedEvent = emittedEvents.find(e => e.event === DomainEvent.ORDER_CONFIRMED);
-      assert.ok(orderConfirmedEvent);
+      assertDefined(orderConfirmedEvent);
       const invUpdatedEvent = emittedEvents.find(e => e.event === DomainEvent.INVENTORY_UPDATED);
-      assert.ok(invUpdatedEvent);
+      assertDefined(invUpdatedEvent);
     });
 
     it('should block race-condition oversell when 2 concurrent orders compete for 1 unit', async () => {
@@ -614,21 +613,21 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
       await service.confirmOrder(ws1, draftOrder1.id, userId);
 
       // Attempting to confirm second order must fail with INSUFFICIENT_STOCK
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.confirmOrder(ws1, draftOrder2.id, userId);
         },
         (err: any) => {
-          assert.strictEqual(err.response?.code, 'INSUFFICIENT_STOCK');
-          assert.strictEqual(err.response?.details?.availableStock, 0);
+          expect(err.response?.code).toBe('INSUFFICIENT_STOCK');
+          expect(err.response?.details?.availableStock).toBe(0);
           return true;
         },
       );
 
       // Verify variant reservedQuantity never exceeded physical stock
       const v = variantsDb.get(varB);
-      assert.strictEqual(v.stockQuantity, 1);
-      assert.strictEqual(v.reservedQuantity, 1);
+      expect(v.stockQuantity).toBe(1);
+      expect(v.reservedQuantity).toBe(1);
     });
 
     it('should simulate 10 concurrent requests for 1 unit yielding exactly 1 success and 9 rejections', async () => {
@@ -650,13 +649,13 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
       const fulfilled = results.filter(r => r.status === 'fulfilled');
       const rejected = results.filter(r => r.status === 'rejected');
 
-      assert.strictEqual(fulfilled.length, 1);
-      assert.strictEqual(rejected.length, 9);
+      expect(fulfilled.length).toBe(1);
+      expect(rejected.length).toBe(9);
 
       // Variant inventory invariant holds: reserved = 1 <= stock = 1
       const v = variantsDb.get(varB);
-      assert.strictEqual(v.stockQuantity, 1);
-      assert.strictEqual(v.reservedQuantity, 1);
+      expect(v.stockQuantity).toBe(1);
+      expect(v.reservedQuantity).toBe(1);
     });
   });
 
@@ -670,7 +669,7 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
       await service.confirmOrder(ws1, order.id, userId);
 
       // Verify reservedQuantity is 3
-      assert.strictEqual(variantsDb.get(varA).reservedQuantity, 3);
+      expect(variantsDb.get(varA).reservedQuantity).toBe(3);
 
       emittedEvents = [];
 
@@ -682,31 +681,31 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
         userId,
       );
 
-      assert.strictEqual(cancelled.status, OrderStatus.CANCELLED);
-      assert.strictEqual(cancelled.cancelReason, 'Khách không có nhu cầu nữa');
+      expect(cancelled.status).toBe(OrderStatus.CANCELLED);
+      expect(cancelled.cancelReason).toBe('Khách không có nhu cầu nữa');
 
       // Reserved quantity must be restored to 0
-      assert.strictEqual(variantsDb.get(varA).reservedQuantity, 0);
+      expect(variantsDb.get(varA).reservedQuantity).toBe(0);
 
       // Ledger must contain RELEASE_RESERVATION
       const releaseTx = Array.from(inventoryTransactionsDb.values()).find(
         tx => tx.type === InventoryTransactionType.RELEASE_RESERVATION,
       );
-      assert.ok(releaseTx);
-      assert.strictEqual(releaseTx.quantity, 3);
-      assert.strictEqual(releaseTx.previousReserved, 3);
-      assert.strictEqual(releaseTx.newReserved, 0);
+      assertDefined(releaseTx);
+      expect(releaseTx.quantity).toBe(3);
+      expect(releaseTx.previousReserved).toBe(3);
+      expect(releaseTx.newReserved).toBe(0);
 
       // Domain events emitted: INVENTORY_UPDATED and ORDER_CANCELLED
-      assert.strictEqual(emittedEvents.length, 2);
+      expect(emittedEvents.length).toBe(2);
       const invEvent = emittedEvents.find(e => e.event === DomainEvent.INVENTORY_UPDATED);
-      assert.ok(invEvent);
-      assert.strictEqual(invEvent.payload.variantId, varA);
-      assert.strictEqual(invEvent.payload.newReserved, 0);
+      assertDefined(invEvent);
+      expect(invEvent.payload.variantId).toBe(varA);
+      expect(invEvent.payload.newReserved).toBe(0);
 
       const cancelEvent = emittedEvents.find(e => e.event === DomainEvent.ORDER_CANCELLED);
-      assert.ok(cancelEvent);
-      assert.strictEqual(cancelEvent.payload.releasedStock, true);
+      assertDefined(cancelEvent);
+      expect(cancelEvent.payload.releasedStock).toBe(true);
     });
 
     it('should reject cancelling an already CANCELLED order', async () => {
@@ -717,12 +716,12 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
 
       await service.cancelOrder(ws1, order.id, { cancelReason: 'First cancellation' });
 
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.cancelOrder(ws1, order.id, { cancelReason: 'Second cancellation' });
         },
         (err: any) => {
-          assert.strictEqual(err.response?.code, 'ORDER_NOT_CANCELLABLE');
+          expect(err.response?.code).toBe('ORDER_NOT_CANCELLABLE');
           return true;
         },
       );
@@ -746,8 +745,8 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
       );
 
       // Stock was decremented from 10 to 8 upon payment commit
-      assert.strictEqual(variantsDb.get(varA).stockQuantity, 8);
-      assert.strictEqual(variantsDb.get(varA).reservedQuantity, 0);
+      expect(variantsDb.get(varA).stockQuantity).toBe(8);
+      expect(variantsDb.get(varA).reservedQuantity).toBe(0);
 
       emittedEvents = [];
 
@@ -759,24 +758,24 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
         userId,
       );
 
-      assert.strictEqual(cancelled.status, OrderStatus.CANCELLED);
+      expect(cancelled.status).toBe(OrderStatus.CANCELLED);
 
       // Physical stock must be restored to 10
-      assert.strictEqual(variantsDb.get(varA).stockQuantity, 10);
-      assert.strictEqual(variantsDb.get(varA).reservedQuantity, 0);
+      expect(variantsDb.get(varA).stockQuantity).toBe(10);
+      expect(variantsDb.get(varA).reservedQuantity).toBe(0);
 
       // Sổ cái kho ghi nhận RETURN_RESTOCK
       const restockTx = Array.from(inventoryTransactionsDb.values()).find(
         tx => tx.type === InventoryTransactionType.RETURN_RESTOCK,
       );
-      assert.ok(restockTx);
-      assert.strictEqual(restockTx.quantity, 2);
-      assert.strictEqual(restockTx.previousStock, 8);
-      assert.strictEqual(restockTx.newStock, 10);
+      assertDefined(restockTx);
+      expect(restockTx.quantity).toBe(2);
+      expect(restockTx.previousStock).toBe(8);
+      expect(restockTx.newStock).toBe(10);
 
       // Events: INVENTORY_UPDATED & ORDER_CANCELLED
-      assert.ok(emittedEvents.some(e => e.event === DomainEvent.INVENTORY_UPDATED));
-      assert.ok(emittedEvents.some(e => e.event === DomainEvent.ORDER_CANCELLED));
+      expect(emittedEvents.some(e => e.event === DomainEvent.INVENTORY_UPDATED)).toBeTruthy();
+      expect(emittedEvents.some(e => e.event === DomainEvent.ORDER_CANCELLED)).toBeTruthy();
     });
 
     it('should reject cancelling a COMPLETED order with ORDER_ALREADY_COMPLETED', async () => {
@@ -787,12 +786,12 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
       await service.confirmOrder(ws1, order.id, userId);
       await service.completeOrder(ws1, order.id, { notes: 'Delivered' }, userId);
 
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.cancelOrder(ws1, order.id, { cancelReason: 'Want to cancel completed' });
         },
         (err: any) => {
-          assert.strictEqual(err.response?.code, 'ORDER_ALREADY_COMPLETED');
+          expect(err.response?.code).toBe('ORDER_ALREADY_COMPLETED');
           return true;
         },
       );
@@ -822,13 +821,13 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
         userId,
       );
 
-      assert.strictEqual(completed.status, OrderStatus.COMPLETED);
-      assert.strictEqual(completed.fulfillmentStatus, 'DELIVERED');
-      assert.ok(completed.completedAt);
+      expect(completed.status).toBe(OrderStatus.COMPLETED);
+      expect(completed.fulfillmentStatus).toBe('DELIVERED');
+      assertDefined(completed.completedAt);
 
       const event = emittedEvents.find(e => e.event === DomainEvent.ORDER_COMPLETED);
-      assert.ok(event);
-      assert.strictEqual(event.payload.orderId, order.id);
+      assertDefined(event);
+      expect(event.payload.orderId).toBe(order.id);
     });
 
     it('should auto-reconcile COD and commit stock when completing a CONFIRMED unpaid order', async () => {
@@ -839,8 +838,8 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
       await service.confirmOrder(ws1, order.id, userId);
 
       // Reserved stock is 2, physical stock is 10, paidAmount is 0
-      assert.strictEqual(variantsDb.get(varA).reservedQuantity, 2);
-      assert.strictEqual(order.paidAmount, 0);
+      expect(variantsDb.get(varA).reservedQuantity).toBe(2);
+      expect(order.paidAmount).toBe(0);
 
       emittedEvents = [];
 
@@ -851,24 +850,24 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
         userId,
       );
 
-      assert.strictEqual(completed.status, OrderStatus.COMPLETED);
-      assert.strictEqual(completed.fulfillmentStatus, 'DELIVERED');
-      assert.strictEqual(completed.paymentStatus, PaymentStatus.PAID);
-      assert.strictEqual(completed.paidAmount, 700000);
+      expect(completed.status).toBe(OrderStatus.COMPLETED);
+      expect(completed.fulfillmentStatus).toBe('DELIVERED');
+      expect(completed.paymentStatus).toBe(PaymentStatus.PAID);
+      expect(completed.paidAmount).toBe(700000);
 
       // Stock was committed: physical stock reduced to 8, reserved reduced to 0
-      assert.strictEqual(variantsDb.get(varA).stockQuantity, 8);
-      assert.strictEqual(variantsDb.get(varA).reservedQuantity, 0);
+      expect(variantsDb.get(varA).stockQuantity).toBe(8);
+      expect(variantsDb.get(varA).reservedQuantity).toBe(0);
 
       // Payment transaction created with COD method
       const codTx = Array.from(paymentTransactionsDb.values()).find(
         tx => tx.orderId === order.id && tx.paymentMethod === PaymentMethod.COD,
       );
-      assert.ok(codTx);
-      assert.strictEqual(codTx.amount, 700000);
+      assertDefined(codTx);
+      expect(codTx.amount).toBe(700000);
 
       const event = emittedEvents.find(e => e.event === DomainEvent.ORDER_COMPLETED);
-      assert.ok(event);
+      assertDefined(event);
     });
 
     it('should reject completing a DRAFT order', async () => {
@@ -877,12 +876,12 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
         items: [{ productId: prod1, variantId: varA, quantity: 1, unitPrice: 350000 }],
       });
 
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.completeOrder(ws1, order.id);
         },
         (err: any) => {
-          assert.strictEqual(err.response?.code, 'INVALID_STATUS_FOR_COMPLETION');
+          expect(err.response?.code).toBe('INVALID_STATUS_FOR_COMPLETION');
           return true;
         },
       );
@@ -896,12 +895,12 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
       await service.confirmOrder(ws1, order.id, userId);
       await service.completeOrder(ws1, order.id, undefined, userId);
 
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.completeOrder(ws1, order.id, undefined, userId);
         },
         (err: any) => {
-          assert.strictEqual(err.response?.code, 'ORDER_ALREADY_COMPLETED');
+          expect(err.response?.code).toBe('ORDER_ALREADY_COMPLETED');
           return true;
         },
       );
@@ -918,8 +917,8 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
       await service.confirmOrder(ws1, order.id, userId);
 
       // Before pay: stock = 10, reserved = 2
-      assert.strictEqual(variantsDb.get(varA).stockQuantity, 10);
-      assert.strictEqual(variantsDb.get(varA).reservedQuantity, 2);
+      expect(variantsDb.get(varA).stockQuantity).toBe(10);
+      expect(variantsDb.get(varA).reservedQuantity).toBe(2);
 
       emittedEvents = [];
 
@@ -934,27 +933,27 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
         userId,
       );
 
-      assert.strictEqual(paidOrder.status, OrderStatus.PAID);
-      assert.strictEqual(paidOrder.paymentStatus, PaymentStatus.PAID);
-      assert.strictEqual(paidOrder.paidAmount, 700000);
+      expect(paidOrder.status).toBe(OrderStatus.PAID);
+      expect(paidOrder.paymentStatus).toBe(PaymentStatus.PAID);
+      expect(paidOrder.paidAmount).toBe(700000);
 
       // After COMMIT_SALE: stock reduced from 10 to 8, reserved reduced from 2 to 0
-      assert.strictEqual(variantsDb.get(varA).stockQuantity, 8);
-      assert.strictEqual(variantsDb.get(varA).reservedQuantity, 0);
+      expect(variantsDb.get(varA).stockQuantity).toBe(8);
+      expect(variantsDb.get(varA).reservedQuantity).toBe(0);
 
       // Verify payment transaction created
-      assert.strictEqual(paymentTransactionsDb.size, 1);
+      expect(paymentTransactionsDb.size).toBe(1);
 
       // Verify domain events emitted: INVENTORY_UPDATED and ORDER_PAID
-      assert.strictEqual(emittedEvents.length, 2);
+      expect(emittedEvents.length).toBe(2);
       const invEv = emittedEvents.find(e => e.event === DomainEvent.INVENTORY_UPDATED);
-      assert.ok(invEv);
-      assert.strictEqual(invEv.payload.variantId, varA);
-      assert.strictEqual(invEv.payload.newStock, 8);
-      assert.strictEqual(invEv.payload.newReserved, 0);
+      assertDefined(invEv);
+      expect(invEv.payload.variantId).toBe(varA);
+      expect(invEv.payload.newStock).toBe(8);
+      expect(invEv.payload.newReserved).toBe(0);
 
       const paidEv = emittedEvents.find(e => e.event === DomainEvent.ORDER_PAID);
-      assert.ok(paidEv);
+      assertDefined(paidEv);
     });
 
     it('should handle partial payment: transition to CONFIRMED + PARTIALLY_PAID and emit ORDER_PARTIALLY_PAID', async () => {
@@ -980,19 +979,19 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
       );
 
       // Order should transition to CONFIRMED (not PAID), with PARTIALLY_PAID paymentStatus
-      assert.strictEqual(partialRes.status, OrderStatus.CONFIRMED);
-      assert.strictEqual(partialRes.paymentStatus, PaymentStatus.PARTIALLY_PAID);
-      assert.strictEqual(partialRes.paidAmount, 300000);
+      expect(partialRes.status).toBe(OrderStatus.CONFIRMED);
+      expect(partialRes.paymentStatus).toBe(PaymentStatus.PARTIALLY_PAID);
+      expect(partialRes.paidAmount).toBe(300000);
 
       // Inventory should be reserved (stock remains 10, reserved becomes 2)
-      assert.strictEqual(variantsDb.get(varA).stockQuantity, 10);
-      assert.strictEqual(variantsDb.get(varA).reservedQuantity, 2);
+      expect(variantsDb.get(varA).stockQuantity).toBe(10);
+      expect(variantsDb.get(varA).reservedQuantity).toBe(2);
 
       // Event emitted must be ORDER_PARTIALLY_PAID
       const partialEvent = emittedEvents.find(e => e.event === DomainEvent.ORDER_PARTIALLY_PAID);
-      assert.ok(partialEvent);
-      assert.strictEqual(partialEvent.payload.paidAmount, 300000);
-      assert.strictEqual(partialEvent.payload.remainingAmount, 400000);
+      assertDefined(partialEvent);
+      expect(partialEvent.payload.paidAmount).toBe(300000);
+      expect(partialEvent.payload.remainingAmount).toBe(400000);
 
       emittedEvents = [];
 
@@ -1009,16 +1008,16 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
       );
 
       // Now order is fully paid: status PAID, paymentStatus PAID
-      assert.strictEqual(finalRes.status, OrderStatus.PAID);
-      assert.strictEqual(finalRes.paymentStatus, PaymentStatus.PAID);
-      assert.strictEqual(finalRes.paidAmount, 700000);
+      expect(finalRes.status).toBe(OrderStatus.PAID);
+      expect(finalRes.paymentStatus).toBe(PaymentStatus.PAID);
+      expect(finalRes.paidAmount).toBe(700000);
 
       // Sale committed: stock 10 -> 8, reserved 2 -> 0
-      assert.strictEqual(variantsDb.get(varA).stockQuantity, 8);
-      assert.strictEqual(variantsDb.get(varA).reservedQuantity, 0);
+      expect(variantsDb.get(varA).stockQuantity).toBe(8);
+      expect(variantsDb.get(varA).reservedQuantity).toBe(0);
 
       const paidEvent = emittedEvents.find(e => e.event === DomainEvent.ORDER_PAID);
-      assert.ok(paidEvent);
+      assertDefined(paidEvent);
     });
 
     it('should reject direct payment of DRAFT order if stock is insufficient', async () => {
@@ -1028,7 +1027,7 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
         items: [{ productId: prod1, variantId: varB, quantity: 2, unitPrice: 350000 }],
       });
 
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.payOrder(ws1, order.id, {
             paymentMethod: PaymentMethod.CASH,
@@ -1036,7 +1035,7 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
           });
         },
         (err: any) => {
-          assert.strictEqual(err.response?.code, 'INSUFFICIENT_STOCK');
+          expect(err.response?.code).toBe('INSUFFICIENT_STOCK');
           return true;
         },
       );
@@ -1054,9 +1053,9 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
 
       // Confirm order executes without deadlock or ordering error
       const confirmed = await service.confirmOrder(ws1, order.id, userId);
-      assert.strictEqual(confirmed.status, OrderStatus.CONFIRMED);
-      assert.strictEqual(variantsDb.get(varA).reservedQuantity, 1);
-      assert.strictEqual(variantsDb.get(varB).reservedQuantity, 1);
+      expect(confirmed.status).toBe(OrderStatus.CONFIRMED);
+      expect(variantsDb.get(varA).reservedQuantity).toBe(1);
+      expect(variantsDb.get(varB).reservedQuantity).toBe(1);
     });
   });
 
@@ -1069,23 +1068,23 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
 
       // 1. Lookup by UUID
       const byUuid = await service.getOrderById(ws1, order.id);
-      assert.strictEqual(byUuid.id, order.id);
+      expect(byUuid.id).toBe(order.id);
 
       // 2. Lookup by orderNumber
       const byOrderNum = await service.getOrderById(ws1, order.orderNumber);
-      assert.strictEqual(byOrderNum.id, order.id);
+      expect(byOrderNum.id).toBe(order.id);
 
       // 3. Lookup by displayId
       const byDisplayId = await service.getOrderById(ws1, String(order.displayId));
-      assert.strictEqual(byDisplayId.id, order.id);
+      expect(byDisplayId.id).toBe(order.id);
 
       // 4. Cross-tenant isolation check: Tenant 2 cannot access Tenant 1 order
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.getOrderById(ws2, order.id);
         },
         (err: any) => {
-          assert.strictEqual(err.response?.code, 'ORDER_NOT_FOUND');
+          expect(err.response?.code).toBe('ORDER_NOT_FOUND');
           return true;
         },
       );
@@ -1125,21 +1124,21 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
         userId,
       );
 
-      assert.strictEqual(updated.id, order.id);
-      assert.strictEqual(updated.status, OrderStatus.DRAFT);
-      assert.strictEqual(updated.subtotal, 1050000); // 2 * 350k + 1 * 350k
-      assert.strictEqual(updated.discountAmount, 100000);
-      assert.strictEqual(updated.shippingFee, 30000);
-      assert.strictEqual(updated.totalAmount, 980000); // 1050000 - 100000 + 30000
-      assert.strictEqual(updated.customerNotes, 'Giao hàng giờ hành chính');
-      assert.strictEqual(updated.items?.length, 2);
-      assert.strictEqual(updated.shippingAddress?.recipientName, 'Nguyễn Văn An Cập Nhật');
-      assert.strictEqual(updated.shippingAddress?.streetAddress, '15 Duy Tân');
+      expect(updated.id).toBe(order.id);
+      expect(updated.status).toBe(OrderStatus.DRAFT);
+      expect(updated.subtotal).toBe(1050000); // 2 * 350k + 1 * 350k
+      expect(updated.discountAmount).toBe(100000);
+      expect(updated.shippingFee).toBe(30000);
+      expect(updated.totalAmount).toBe(980000); // 1050000 - 100000 + 30000
+      expect(updated.customerNotes).toBe('Giao hàng giờ hành chính');
+      expect(updated.items?.length).toBe(2);
+      expect(updated.shippingAddress?.recipientName).toBe('Nguyễn Văn An Cập Nhật');
+      expect(updated.shippingAddress?.streetAddress).toBe('15 Duy Tân');
 
       // Verify domain event emitted
-      assert.strictEqual(emittedEvents.length, 1);
-      assert.strictEqual(emittedEvents[0].event, DomainEvent.ORDER_UPDATED);
-      assert.strictEqual(emittedEvents[0].payload.orderId, order.id);
+      expect(emittedEvents.length).toBe(1);
+      expect(emittedEvents[0].event).toBe(DomainEvent.ORDER_UPDATED);
+      expect(emittedEvents[0].payload.orderId).toBe(order.id);
     });
 
     it('should preserve and correctly recalculate percentage discount when items change and discountAmount is not passed', async () => {
@@ -1152,9 +1151,9 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
         shippingFee: 0,
       });
 
-      assert.strictEqual(order.subtotal, 500000);
-      assert.strictEqual(order.discountAmount, 50000);
-      assert.strictEqual(order.totalAmount, 450000);
+      expect(order.subtotal).toBe(500000);
+      expect(order.discountAmount).toBe(50000);
+      expect(order.totalAmount).toBe(450000);
 
       // Now update order: change items to 2 units (subtotal = 1,000,000), without passing discountAmount or discountType
       const updated = await service.updateOrder(
@@ -1167,9 +1166,9 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
       );
 
       // Should maintain 10% discount on new subtotal: 10% of 1,000,000 = 100,000
-      assert.strictEqual(updated.subtotal, 1000000);
-      assert.strictEqual(updated.discountAmount, 100000);
-      assert.strictEqual(updated.totalAmount, 900000);
+      expect(updated.subtotal).toBe(1000000);
+      expect(updated.discountAmount).toBe(100000);
+      expect(updated.totalAmount).toBe(900000);
     });
 
     it('should correctly update order with a new percentage discount', async () => {
@@ -1179,8 +1178,8 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
         shippingFee: 0,
       });
 
-      assert.strictEqual(order.subtotal, 500000);
-      assert.strictEqual(order.discountAmount, 0);
+      expect(order.subtotal).toBe(500000);
+      expect(order.discountAmount).toBe(0);
 
       // Update with 20% discount
       const updated = await service.updateOrder(
@@ -1193,9 +1192,9 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
         userId,
       );
 
-      assert.strictEqual(updated.subtotal, 500000);
-      assert.strictEqual(updated.discountAmount, 100000); // 20% of 500,000
-      assert.strictEqual(updated.totalAmount, 400000);
+      expect(updated.subtotal).toBe(500000);
+      expect(updated.discountAmount).toBe(100000); // 20% of 500,000
+      expect(updated.totalAmount).toBe(400000);
     });
 
     it('should reject updating order if not in DRAFT status', async () => {
@@ -1206,14 +1205,14 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
 
       await service.confirmOrder(ws1, order.id, userId);
 
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.updateOrder(ws1, order.id, {
             shippingFee: 50000,
           });
         },
         (err: any) => {
-          assert.strictEqual(err.response?.code, 'INVALID_STATUS_FOR_UPDATE');
+          expect(err.response?.code).toBe('INVALID_STATUS_FOR_UPDATE');
           return true;
         },
       );
@@ -1225,14 +1224,14 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
         items: [{ productId: prod1, variantId: varA, quantity: 1, unitPrice: 350000 }],
       });
 
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.updateOrder(ws2, order.id, {
             shippingFee: 50000,
           });
         },
         (err: any) => {
-          assert.strictEqual(err.response?.code, 'ORDER_NOT_FOUND');
+          expect(err.response?.code).toBe('ORDER_NOT_FOUND');
           return true;
         },
       );
@@ -1258,26 +1257,26 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
       );
 
       // Verify Redlock was acquired and released
-      assert.ok(acquiredLocks.includes(`order:payment:${order.id}`));
-      assert.ok(releasedLocks.includes(`order:payment:${order.id}`));
+      expect(acquiredLocks.includes(`order:payment:${order.id}`)).toBeTruthy();
+      expect(releasedLocks.includes(`order:payment:${order.id}`)).toBeTruthy();
 
       // Verify order status
-      assert.strictEqual(paid.status, OrderStatus.PAID);
-      assert.strictEqual(paid.paymentStatus, PaymentStatus.PAID);
-      assert.strictEqual(paid.paidAmount, 350000);
+      expect(paid.status).toBe(OrderStatus.PAID);
+      expect(paid.paymentStatus).toBe(PaymentStatus.PAID);
+      expect(paid.paidAmount).toBe(350000);
 
       // Verify deterministic idempotency key in payment transactions
       const tx = Array.from(paymentTransactionsDb.values()).find(
         t => t.idempotencyKey === `manual:${order.id}`,
       );
-      assert.ok(tx);
-      assert.strictEqual(tx.idempotencyKey, `manual:${order.id}`);
-      assert.strictEqual(tx.amount, 350000);
+      assertDefined(tx);
+      expect(tx.idempotencyKey).toBe(`manual:${order.id}`);
+      expect(tx.amount).toBe(350000);
 
       // Verify ORDER_PAID event emitted
       const paidEvent = emittedEvents.find(e => e.event === DomainEvent.ORDER_PAID);
-      assert.ok(paidEvent);
-      assert.strictEqual(paidEvent.payload.orderId, order.id);
+      assertDefined(paidEvent);
+      expect(paidEvent.payload.orderId).toBe(order.id);
     });
 
     it('should reject duplicate payment attempt on the same order with ConflictException', async () => {
@@ -1295,7 +1294,7 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
       );
 
       // Attempt second payment
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.payOrder(
             ws1,
@@ -1305,8 +1304,8 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
           );
         },
         (err: any) => {
-          assert.strictEqual(err.name, 'ConflictException');
-          assert.strictEqual(err.response?.code, 'PAYMENT_ALREADY_PROCESSED');
+          expect(err.name).toBe('ConflictException');
+          expect(err.response?.code).toBe('PAYMENT_ALREADY_PROCESSED');
           return true;
         },
       );
@@ -1326,12 +1325,12 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
         { amount: 100000, paymentMethod: PaymentMethod.CASH },
         userId,
       );
-      assert.strictEqual(partial.status, OrderStatus.CONFIRMED);
-      assert.strictEqual(partial.paymentStatus, PaymentStatus.PARTIALLY_PAID);
-      assert.strictEqual(partial.paidAmount, 100000);
+      expect(partial.status).toBe(OrderStatus.CONFIRMED);
+      expect(partial.paymentStatus).toBe(PaymentStatus.PARTIALLY_PAID);
+      expect(partial.paidAmount).toBe(100000);
 
       // Attempt second manual payment: must be rejected by idempotency key
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.payOrder(
             ws1,
@@ -1341,8 +1340,8 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
           );
         },
         (err: any) => {
-          assert.strictEqual(err.name, 'ConflictException');
-          assert.strictEqual(err.response?.code, 'PAYMENT_ALREADY_PROCESSED');
+          expect(err.name).toBe('ConflictException');
+          expect(err.response?.code).toBe('PAYMENT_ALREADY_PROCESSED');
           return true;
         },
       );
@@ -1360,22 +1359,22 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
 
       const completed = await service.completeOrder(ws1, order.id, { notes: 'Delivered' }, userId);
 
-      assert.strictEqual(completed.status, OrderStatus.COMPLETED);
-      assert.strictEqual(completed.fulfillmentStatus, FulfillmentStatus.DELIVERED);
-      assert.strictEqual(completed.paymentStatus, PaymentStatus.PAID);
-      assert.strictEqual(completed.paidAmount, 350000);
+      expect(completed.status).toBe(OrderStatus.COMPLETED);
+      expect(completed.fulfillmentStatus).toBe(FulfillmentStatus.DELIVERED);
+      expect(completed.paymentStatus).toBe(PaymentStatus.PAID);
+      expect(completed.paidAmount).toBe(350000);
 
       // Verify deterministic cod idempotency key
       const codTx = Array.from(paymentTransactionsDb.values()).find(
         t => t.idempotencyKey === `cod:${order.id}`,
       );
-      assert.ok(codTx);
-      assert.strictEqual(codTx.amount, 350000);
+      assertDefined(codTx);
+      expect(codTx.amount).toBe(350000);
 
       // Verify ORDER_PAID event emitted
       const paidEvent = emittedEvents.find(e => e.event === DomainEvent.ORDER_PAID);
-      assert.ok(paidEvent);
-      assert.strictEqual(paidEvent.payload.orderId, order.id);
+      assertDefined(paidEvent);
+      expect(paidEvent.payload.orderId).toBe(order.id);
     });
 
     it('should NOT auto-pay non-COD orders (e.g. VIETQR) leaving paymentStatus UNPAID', async () => {
@@ -1388,17 +1387,17 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
 
       const completed = await service.completeOrder(ws1, order.id, {}, userId);
 
-      assert.strictEqual(completed.status, OrderStatus.COMPLETED);
-      assert.strictEqual(completed.fulfillmentStatus, FulfillmentStatus.DELIVERED);
+      expect(completed.status).toBe(OrderStatus.COMPLETED);
+      expect(completed.fulfillmentStatus).toBe(FulfillmentStatus.DELIVERED);
       // Payment status must remain UNPAID
-      assert.strictEqual(completed.paymentStatus, PaymentStatus.UNPAID);
-      assert.strictEqual(completed.paidAmount, 0);
+      expect(completed.paymentStatus).toBe(PaymentStatus.UNPAID);
+      expect(completed.paidAmount).toBe(0);
 
       // No cod transaction created
       const codTx = Array.from(paymentTransactionsDb.values()).find(
         t => t.idempotencyKey === `cod:${order.id}`,
       );
-      assert.strictEqual(codTx, undefined);
+      expect(codTx).toBe(undefined);
     });
 
     it('should NOT auto-pay orders without explicit COD/CASH payment method', async () => {
@@ -1417,14 +1416,14 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
 
       const completed = await service.completeOrder(ws1, order.id, {}, userId);
 
-      assert.strictEqual(completed.status, OrderStatus.COMPLETED);
-      assert.strictEqual(completed.paymentStatus, PaymentStatus.UNPAID);
-      assert.strictEqual(completed.paidAmount, 0);
+      expect(completed.status).toBe(OrderStatus.COMPLETED);
+      expect(completed.paymentStatus).toBe(PaymentStatus.UNPAID);
+      expect(completed.paidAmount).toBe(0);
 
       const codTx = Array.from(paymentTransactionsDb.values()).find(
         t => t.idempotencyKey === `cod:${order.id}`,
       );
-      assert.strictEqual(codTx, undefined);
+      expect(codTx).toBe(undefined);
     });
   });
 
@@ -1449,17 +1448,17 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
         userId,
       );
 
-      assert.strictEqual(cancelled.status, OrderStatus.CANCELLED);
-      assert.strictEqual(cancelled.paymentStatus, PaymentStatus.REFUNDED);
+      expect(cancelled.status).toBe(OrderStatus.CANCELLED);
+      expect(cancelled.paymentStatus).toBe(PaymentStatus.REFUNDED);
 
       // Verify refund payment transaction
       const refundTx = Array.from(paymentTransactionsDb.values()).find(
         t => t.idempotencyKey === `refund:${order.id}`,
       );
-      assert.ok(refundTx);
-      assert.strictEqual(refundTx.amount, -350000);
-      assert.strictEqual(refundTx.status, PaymentTransactionStatus.SUCCESS);
-      assert.strictEqual(refundTx.transactionCode, `REFUND-${order.displayId}`);
+      assertDefined(refundTx);
+      expect(refundTx.amount).toBe(-350000);
+      expect(refundTx.status).toBe(PaymentTransactionStatus.SUCCESS);
+      expect(refundTx.transactionCode).toBe(`REFUND-${order.displayId}`);
     });
   });
 });

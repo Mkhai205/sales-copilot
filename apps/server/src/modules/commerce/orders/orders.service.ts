@@ -165,7 +165,6 @@ export class OrdersService {
           createdById: userId || null,
           status: OrderStatus.DRAFT,
           paymentStatus: PaymentStatus.UNPAID,
-          paymentMethod: resolvedPaymentMethod,
           fulfillmentStatus: FulfillmentStatus.UNFULFILLED,
           subtotal,
           discountAmount,
@@ -481,8 +480,13 @@ export class OrdersService {
       if (dto.discountReason !== undefined) updateData.discountReason = dto.discountReason;
       if (dto.customerNotes !== undefined) updateData.customerNotes = dto.customerNotes;
       if (dto.internalNotes !== undefined) updateData.internalNotes = dto.internalNotes;
-      if (dto.paymentMethod !== undefined) updateData.paymentMethod = dto.paymentMethod;
-      if (dto.metadata !== undefined) updateData.metadata = dto.metadata;
+      if (dto.paymentMethod !== undefined || dto.metadata !== undefined) {
+        updateData.metadata = {
+          ...((order.metadata as Record<string, unknown>) || {}),
+          ...((dto.metadata as Record<string, unknown>) || {}),
+          ...(dto.paymentMethod !== undefined ? { paymentMethod: dto.paymentMethod } : {}),
+        };
+      }
 
       await tx.order.updateMany({
         where: { id: order.id, workspaceId },

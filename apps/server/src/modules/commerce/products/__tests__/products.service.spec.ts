@@ -1,5 +1,4 @@
-import { describe, it, beforeEach } from 'node:test';
-import * as assert from 'node:assert';
+import { expectReject } from '../../../../../test/test-assertions';
 import { DomainEvent, InventoryTransactionType } from '@sales-copilot/shared-contracts';
 import { InventoryLedgerService } from '../../inventory/inventory-ledger.service';
 import { ProductsService } from '../products.service';
@@ -300,24 +299,24 @@ describe('ProductsService (Catalog & Inventory Management)', () => {
         userId,
       );
 
-      assert.strictEqual(product.workspaceId, ws1);
-      assert.strictEqual(product.name, 'Áo Polo Pique Cotton');
-      assert.strictEqual(product.sku, 'POLO-01');
-      assert.strictEqual(product.variants?.length, 1);
-      assert.strictEqual(product.totalStock, 20);
-      assert.strictEqual(product.totalAvailable, 20);
+      expect(product.workspaceId).toBe(ws1);
+      expect(product.name).toBe('Áo Polo Pique Cotton');
+      expect(product.sku).toBe('POLO-01');
+      expect(product.variants?.length).toBe(1);
+      expect(product.totalStock).toBe(20);
+      expect(product.totalAvailable).toBe(20);
 
       // Verify initial stock transaction created
-      assert.strictEqual(inventoryTransactionsDb.size, 1);
+      expect(inventoryTransactionsDb.size).toBe(1);
       const invTx = Array.from(inventoryTransactionsDb.values())[0];
-      assert.strictEqual(invTx.type, InventoryTransactionType.STOCK_IN);
-      assert.strictEqual(invTx.quantity, 20);
-      assert.strictEqual(invTx.performedByUserId, userId);
+      expect(invTx.type).toBe(InventoryTransactionType.STOCK_IN);
+      expect(invTx.quantity).toBe(20);
+      expect(invTx.performedByUserId).toBe(userId);
 
       // Verify domain event emitted
-      assert.strictEqual(emittedEvents.length, 1);
-      assert.strictEqual(emittedEvents[0].event, DomainEvent.INVENTORY_UPDATED);
-      assert.strictEqual(emittedEvents[0].payload.availableStock, 20);
+      expect(emittedEvents.length).toBe(1);
+      expect(emittedEvents[0].event).toBe(DomainEvent.INVENTORY_UPDATED);
+      expect(emittedEvents[0].payload.availableStock).toBe(20);
     });
 
     it('should throw ConflictException if SKU already exists in workspace', async () => {
@@ -328,7 +327,7 @@ describe('ProductsService (Catalog & Inventory Management)', () => {
         variants: [{ name: 'V1', sku: 'V1-SKU', price: 100000 }],
       });
 
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.createProduct(ws1, {
             name: 'Product B',
@@ -338,7 +337,7 @@ describe('ProductsService (Catalog & Inventory Management)', () => {
           });
         },
         (err: any) => {
-          assert.strictEqual(err.response?.code, 'SKU_ALREADY_EXISTS');
+          expect(err.response?.code).toBe('SKU_ALREADY_EXISTS');
           return true;
         },
       );
@@ -359,12 +358,12 @@ describe('ProductsService (Catalog & Inventory Management)', () => {
         variants: [{ name: 'V2', sku: 'V2-SKU-2', price: 200000 }],
       });
 
-      assert.strictEqual(p1.workspaceId, ws1);
-      assert.strictEqual(p2.workspaceId, ws2);
+      expect(p1.workspaceId).toBe(ws1);
+      expect(p2.workspaceId).toBe(ws2);
     });
 
     it('should throw BadRequestException if variant SKUs within product are duplicated', async () => {
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.createProduct(ws1, {
             name: 'Product Dup',
@@ -377,7 +376,7 @@ describe('ProductsService (Catalog & Inventory Management)', () => {
           });
         },
         (err: any) => {
-          assert.strictEqual(err.response?.code, 'DUPLICATE_VARIANT_SKUS');
+          expect(err.response?.code).toBe('DUPLICATE_VARIANT_SKUS');
           return true;
         },
       );
@@ -391,7 +390,7 @@ describe('ProductsService (Catalog & Inventory Management)', () => {
         variants: [{ name: 'V1', sku: 'EXISTING-VAR-SKU', price: 100000 }],
       });
 
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.createProduct(ws1, {
             name: 'Product 2',
@@ -401,7 +400,7 @@ describe('ProductsService (Catalog & Inventory Management)', () => {
           });
         },
         (err: any) => {
-          assert.strictEqual(err.response?.code, 'VARIANT_SKU_ALREADY_EXISTS');
+          expect(err.response?.code).toBe('VARIANT_SKU_ALREADY_EXISTS');
           return true;
         },
       );
@@ -416,14 +415,14 @@ describe('ProductsService (Catalog & Inventory Management)', () => {
         variants: [],
       });
 
-      assert.strictEqual(product.sku, 'SERUM-TRANG-DA');
-      assert.strictEqual(product.variants?.length, 1);
+      expect(product.sku).toBe('SERUM-TRANG-DA');
+      expect(product.variants?.length).toBe(1);
       const defaultVar = product.variants![0];
-      assert.strictEqual(defaultVar.name, 'Tiêu chuẩn');
-      assert.strictEqual(defaultVar.sku, 'SERUM-TRANG-DA');
-      assert.strictEqual(defaultVar.price, 350000);
-      assert.strictEqual(defaultVar.costPrice, 180000);
-      assert.strictEqual(defaultVar.stockQuantity, 0);
+      expect(defaultVar.name).toBe('Tiêu chuẩn');
+      expect(defaultVar.sku).toBe('SERUM-TRANG-DA');
+      expect(defaultVar.price).toBe(350000);
+      expect(defaultVar.costPrice).toBe(180000);
+      expect(defaultVar.stockQuantity).toBe(0);
     });
 
     it('should normalize SKU with diacritics and spaces into uppercase hyphenated SKU', async () => {
@@ -440,8 +439,8 @@ describe('ProductsService (Catalog & Inventory Management)', () => {
         ],
       });
 
-      assert.strictEqual(product.sku, 'AO-POLO-DEN-NAM');
-      assert.strictEqual(product.variants![0].sku, 'AO-POLO-DEN-NAM-XL');
+      expect(product.sku).toBe('AO-POLO-DEN-NAM');
+      expect(product.variants![0].sku).toBe('AO-POLO-DEN-NAM-XL');
     });
   });
 
@@ -478,9 +477,9 @@ describe('ProductsService (Catalog & Inventory Management)', () => {
         sortBy: 'createdAt',
         sortOrder: 'desc',
       });
-      assert.strictEqual(result.items.length, 2);
-      assert.strictEqual(result.meta.total, 2);
-      assert.ok(result.items.every(p => p.workspaceId === ws1));
+      expect(result.items.length).toBe(2);
+      expect(result.meta.total).toBe(2);
+      expect(result.items.every(p => p.workspaceId === ws1)).toBeTruthy();
     });
 
     it('should filter products by search query (case-insensitive)', async () => {
@@ -491,8 +490,8 @@ describe('ProductsService (Catalog & Inventory Management)', () => {
         sortBy: 'createdAt',
         sortOrder: 'desc',
       });
-      assert.strictEqual(result.items.length, 1);
-      assert.strictEqual(result.items[0].sku, 'JEAN-SLIM');
+      expect(result.items.length).toBe(1);
+      expect(result.items[0].sku).toBe('JEAN-SLIM');
     });
 
     it('should filter products by lowStock flag', async () => {
@@ -503,8 +502,8 @@ describe('ProductsService (Catalog & Inventory Management)', () => {
         sortBy: 'createdAt',
         sortOrder: 'desc',
       });
-      assert.strictEqual(result.items.length, 1);
-      assert.strictEqual(result.items[0].sku, 'POLO-SPORT'); // stockQuantity 3 <= 5
+      expect(result.items.length).toBe(1);
+      expect(result.items[0].sku).toBe('POLO-SPORT'); // stockQuantity 3 <= 5
     });
   });
 
@@ -544,13 +543,13 @@ describe('ProductsService (Catalog & Inventory Management)', () => {
         userId,
       );
 
-      assert.strictEqual(res.previousStock, 10);
-      assert.strictEqual(res.newStock, 25);
-      assert.strictEqual(res.quantity, 15);
+      expect(res.previousStock).toBe(10);
+      expect(res.newStock).toBe(25);
+      expect(res.quantity).toBe(15);
 
       // Verify domain event emitted
-      assert.strictEqual(emittedEvents.length, 1);
-      assert.strictEqual(emittedEvents[0].payload.stockQuantity, 25);
+      expect(emittedEvents.length).toBe(1);
+      expect(emittedEvents[0].payload.stockQuantity).toBe(25);
     });
 
     it('should decrease stock on STOCK_OUT', async () => {
@@ -566,8 +565,8 @@ describe('ProductsService (Catalog & Inventory Management)', () => {
         userId,
       );
 
-      assert.strictEqual(res.previousStock, 10);
-      assert.strictEqual(res.newStock, 6);
+      expect(res.previousStock).toBe(10);
+      expect(res.newStock).toBe(6);
     });
 
     it('should prevent STOCK_OUT from reducing below reservedQuantity', async () => {
@@ -577,7 +576,7 @@ describe('ProductsService (Catalog & Inventory Management)', () => {
       variantsDb.set(variantId, rawVariant);
 
       // Attempting to deduct 5 units would leave 5 < 8
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.adjustInventory(ws1, createdProd.id, variantId, {
             type: InventoryTransactionType.STOCK_OUT,
@@ -586,14 +585,14 @@ describe('ProductsService (Catalog & Inventory Management)', () => {
           });
         },
         (err: any) => {
-          assert.strictEqual(err.response?.code, 'CANNOT_REDUCE_BELOW_RESERVED');
+          expect(err.response?.code).toBe('CANNOT_REDUCE_BELOW_RESERVED');
           return true;
         },
       );
     });
 
     it('should prevent cross-tenant inventory manipulation', async () => {
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.adjustInventory(ws2, createdProd.id, variantId, {
             type: InventoryTransactionType.STOCK_IN,
@@ -602,7 +601,7 @@ describe('ProductsService (Catalog & Inventory Management)', () => {
           });
         },
         (err: any) => {
-          assert.strictEqual(err.response?.code, 'VARIANT_NOT_FOUND');
+          expect(err.response?.code).toBe('VARIANT_NOT_FOUND');
           return true;
         },
       );
@@ -624,10 +623,10 @@ describe('ProductsService (Catalog & Inventory Management)', () => {
         variants: [{ id: prod.variants![0].id, name: 'V1 Updated', price: 120000 }],
       });
 
-      assert.strictEqual(updated.name, 'Updated Name');
-      assert.strictEqual(updated.basePrice, 120000);
-      assert.strictEqual(updated.variants![0].name, 'V1 Updated');
-      assert.strictEqual(updated.variants![0].price, 120000);
+      expect(updated.name).toBe('Updated Name');
+      expect(updated.basePrice).toBe(120000);
+      expect(updated.variants![0].name).toBe('V1 Updated');
+      expect(updated.variants![0].price).toBe(120000);
     });
 
     it('should emit INVENTORY_UPDATED when adding a new variant with initial stock in updateProduct', async () => {
@@ -644,16 +643,16 @@ describe('ProductsService (Catalog & Inventory Management)', () => {
         variants: [{ name: 'V2 New Variant', sku: 'EXPAND-V2', price: 220000, stockQuantity: 12 }],
       });
 
-      assert.strictEqual(updated.variants!.length, 2);
+      expect(updated.variants!.length).toBe(2);
       const newVar = updated.variants!.find(v => v.sku === 'EXPAND-V2');
-      assert.ok(newVar);
-      assert.strictEqual(newVar!.stockQuantity, 12);
+      expect(newVar).toBeTruthy();
+      expect(newVar!.stockQuantity).toBe(12);
 
       const invEvents = emittedEvents.filter(e => e.event === DomainEvent.INVENTORY_UPDATED);
-      assert.strictEqual(invEvents.length, 1);
-      assert.strictEqual(invEvents[0].payload.sku, 'EXPAND-V2');
-      assert.strictEqual(invEvents[0].payload.newStock, 12);
-      assert.strictEqual(invEvents[0].payload.availableStock, 12);
+      expect(invEvents.length).toBe(1);
+      expect(invEvents[0].payload.sku).toBe('EXPAND-V2');
+      expect(invEvents[0].payload.newStock).toBe(12);
+      expect(invEvents[0].payload.availableStock).toBe(12);
     });
   });
 });

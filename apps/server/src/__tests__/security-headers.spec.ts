@@ -1,5 +1,4 @@
-import { describe, it } from 'node:test';
-import * as assert from 'node:assert';
+import { assertDefined } from '../../test/test-assertions';
 import { Controller, Get, Module } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import helmet from 'helmet';
@@ -33,12 +32,12 @@ describe('JWT Policy & Security Headers Verification (Task 12 — Feature F-1.11
 
     it('should configure access token expiration to 15 minutes (900 seconds) by default', () => {
       const parsed = envSchema.parse(baseEnv);
-      assert.strictEqual(parsed.JWT_ACCESS_TOKEN_EXPIRES_IN_SECONDS, 900);
+      expect(parsed.JWT_ACCESS_TOKEN_EXPIRES_IN_SECONDS).toBe(900);
     });
 
     it('should configure refresh token expiration to 7 days (604800 seconds) by default', () => {
       const parsed = envSchema.parse(baseEnv);
-      assert.strictEqual(parsed.REFRESH_TOKEN_EXPIRES_IN_SECONDS, 604800);
+      expect(parsed.REFRESH_TOKEN_EXPIRES_IN_SECONDS).toBe(604800);
     });
 
     it('should generate tokens adhering to 15-minute access and 7-day refresh policies', async () => {
@@ -82,22 +81,22 @@ describe('JWT Policy & Security Headers Verification (Task 12 — Feature F-1.11
       const tokens = await tokenService.generateTokens(user);
 
       // Verify returned tokens object
-      assert.strictEqual(tokens.accessToken, 'mock.access.token');
-      assert.strictEqual(tokens.expiresIn, 900);
-      assert.ok(tokens.refreshToken.includes('.')); // format: tokenId.tokenSecret
+      expect(tokens.accessToken).toBe('mock.access.token');
+      expect(tokens.expiresIn).toBe(900);
+      expect(tokens.refreshToken.includes('.')).toBeTruthy(); // format: tokenId.tokenSecret
 
       // Verify JWT sign options & payload (Identity-Only, no sensitive data)
-      assert.strictEqual(signedOptions.expiresIn, 900);
-      assert.strictEqual(signedPayload.sub, 'usr_test_1');
-      assert.strictEqual(signedPayload.email, 'agent@salescopilot.vn');
-      assert.strictEqual(signedPayload.role, PlatformRole.USER);
-      assert.strictEqual(signedPayload.password, undefined);
+      expect(signedOptions.expiresIn).toBe(900);
+      expect(signedPayload.sub).toBe('usr_test_1');
+      expect(signedPayload.email).toBe('agent@salescopilot.vn');
+      expect(signedPayload.role).toBe(PlatformRole.USER);
+      expect(signedPayload.password).toBe(undefined);
 
       // Verify Redis storage TTL for refresh token is exactly 7 days
       const [tokenId] = tokens.refreshToken.split('.');
       const stored = redisStore.get(`auth:refresh_token:${tokenId}`);
-      assert.ok(stored);
-      assert.strictEqual(stored.ttl, 604800);
+      assertDefined(stored);
+      expect(stored.ttl).toBe(604800);
     });
   });
 
@@ -111,20 +110,16 @@ describe('JWT Policy & Security Headers Verification (Task 12 — Feature F-1.11
         path: '/',
       };
 
-      assert.strictEqual(
-        cookieOptions.httpOnly,
-        true,
-        'httpOnly must be true to prevent XSS access',
-      );
-      assert.strictEqual(cookieOptions.secure, true, 'secure must be true for HTTPS transmission');
-      assert.strictEqual(cookieOptions.sameSite, 'lax', 'sameSite must be lax to prevent CSRF');
-      assert.strictEqual(cookieOptions.path, '/', 'path must be root /');
+      expect(cookieOptions.httpOnly).toBe(true);
+      expect(cookieOptions.secure).toBe(true);
+      expect(cookieOptions.sameSite).toBe('lax');
+      expect(cookieOptions.path).toBe('/');
 
       const ACCESS_TOKEN_MAX_AGE = 900; // 15 minutes
       const REFRESH_TOKEN_MAX_AGE = 7 * 24 * 60 * 60; // 7 days (604800s)
 
-      assert.strictEqual(ACCESS_TOKEN_MAX_AGE, 900);
-      assert.strictEqual(REFRESH_TOKEN_MAX_AGE, 604800);
+      expect(ACCESS_TOKEN_MAX_AGE).toBe(900);
+      expect(REFRESH_TOKEN_MAX_AGE).toBe(604800);
     });
   });
 
@@ -139,48 +134,32 @@ describe('JWT Policy & Security Headers Verification (Task 12 — Feature F-1.11
 
       try {
         const res = await fetch(url);
-        assert.strictEqual(res.status, 200);
+        expect(res.status).toBe(200);
 
         // 1. X-Content-Type-Options
-        assert.strictEqual(
-          res.headers.get('x-content-type-options'),
-          'nosniff',
-          'X-Content-Type-Options must be nosniff',
-        );
+        expect(res.headers.get('x-content-type-options')).toBe('nosniff');
 
         // 2. X-Frame-Options
-        assert.strictEqual(
-          res.headers.get('x-frame-options'),
-          'SAMEORIGIN',
-          'X-Frame-Options must be SAMEORIGIN',
-        );
+        expect(res.headers.get('x-frame-options')).toBe('SAMEORIGIN');
 
         // 3. Strict-Transport-Security (HSTS)
         const hsts = res.headers.get('strict-transport-security');
-        assert.ok(hsts, 'Strict-Transport-Security header must be present');
-        assert.ok(hsts.includes('max-age=31536000'), 'HSTS max-age must be 1 year (31536000s)');
-        assert.ok(hsts.includes('includeSubDomains'), 'HSTS must includeSubDomains');
+        assertDefined(hsts);
+        expect(hsts.includes('max-age=31536000')).toBeTruthy();
+        expect(hsts.includes('includeSubDomains')).toBeTruthy();
 
         // 4. Content-Security-Policy (CSP)
         const csp = res.headers.get('content-security-policy');
-        assert.ok(csp, 'Content-Security-Policy header must be present');
-        assert.ok(csp.includes("default-src 'self'"), "CSP must define default-src 'self'");
-        assert.ok(csp.includes("script-src 'self'"), "CSP must define script-src 'self'");
-        assert.ok(csp.includes("object-src 'none'"), "CSP must define object-src 'none'");
+        assertDefined(csp);
+        expect(csp.includes("default-src 'self'")).toBeTruthy();
+        expect(csp.includes("script-src 'self'")).toBeTruthy();
+        expect(csp.includes("object-src 'none'")).toBeTruthy();
 
         // 5. Cross-Origin-Resource-Policy
-        assert.strictEqual(
-          res.headers.get('cross-origin-resource-policy'),
-          'cross-origin',
-          'CORP must be cross-origin',
-        );
+        expect(res.headers.get('cross-origin-resource-policy')).toBe('cross-origin');
 
         // 6. X-Download-Options
-        assert.strictEqual(
-          res.headers.get('x-download-options'),
-          'noopen',
-          'X-Download-Options must be noopen',
-        );
+        expect(res.headers.get('x-download-options')).toBe('noopen');
       } finally {
         await app.close();
       }

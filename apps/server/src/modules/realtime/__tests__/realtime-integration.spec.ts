@@ -1,5 +1,4 @@
-import { describe, it, beforeEach } from 'node:test';
-import * as assert from 'node:assert';
+import { assertDefined } from '../../../../test/test-assertions';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import {
   ConversationPriority,
@@ -200,14 +199,14 @@ describe('Realtime Integration (Full End-to-End Event Pipeline — Task 14)', ()
         e =>
           e.room === `conversation_${conversationId}` && e.event === WsServerEvent.MESSAGE_CREATED,
       );
-      assert.strictEqual(convBroadcasts.length, 1);
-      assert.deepStrictEqual((convBroadcasts[0].payload as any).data, messagePayload.message);
+      expect(convBroadcasts.length).toBe(1);
+      expect((convBroadcasts[0].payload as any).data).toEqual(messagePayload.message);
 
       // Verify Dispatcher broadcast to workspace room
       const wsBroadcasts = emittedBroadcasts.filter(
         e => e.room === `workspace_${workspaceId}` && e.event === WsServerEvent.MESSAGE_CREATED,
       );
-      assert.strictEqual(wsBroadcasts.length, 1);
+      expect(wsBroadcasts.length).toBe(1);
     });
 
     it('should route message.deleted through EventEmitter2 to conversation and workspace rooms', () => {
@@ -221,8 +220,8 @@ describe('Realtime Integration (Full End-to-End Event Pipeline — Task 14)', ()
         e =>
           e.room === `conversation_${conversationId}` && e.event === WsServerEvent.MESSAGE_DELETED,
       );
-      assert.ok(convBroadcast);
-      assert.deepStrictEqual((convBroadcast.payload as any).data, {
+      assertDefined(convBroadcast);
+      expect((convBroadcast.payload as any).data).toEqual({
         conversationId,
         messageId,
       });
@@ -249,38 +248,38 @@ describe('Realtime Integration (Full End-to-End Event Pipeline — Task 14)', ()
       });
 
       // 1. Workspace room
-      assert.ok(
+      expect(
         emittedBroadcasts.some(
           e =>
             e.room === `workspace_${workspaceId}` &&
             e.event === WsServerEvent.CONVERSATION_ASSIGNED,
         ),
-      );
+      ).toBeTruthy();
 
       // 2. Conversation room
-      assert.ok(
+      expect(
         emittedBroadcasts.some(
           e =>
             e.room === `conversation_${conversationId}` &&
             e.event === WsServerEvent.CONVERSATION_ASSIGNED,
         ),
-      );
+      ).toBeTruthy();
 
       // 3. New assignee personal notification room
-      assert.ok(
+      expect(
         emittedBroadcasts.some(
           e =>
             e.room === `user_${newAssigneeId}` && e.event === WsServerEvent.CONVERSATION_ASSIGNED,
         ),
-      );
+      ).toBeTruthy();
 
       // 4. Old assignee personal notification room
-      assert.ok(
+      expect(
         emittedBroadcasts.some(
           e =>
             e.room === `user_${oldAssigneeId}` && e.event === WsServerEvent.CONVERSATION_ASSIGNED,
         ),
-      );
+      ).toBeTruthy();
     });
   });
 
@@ -297,8 +296,8 @@ describe('Realtime Integration (Full End-to-End Event Pipeline — Task 14)', ()
       const wsBroadcast = emittedBroadcasts.find(
         e => e.room === `workspace_${workspaceId}` && e.event === WsServerEvent.CONTACT_MERGED,
       );
-      assert.ok(wsBroadcast);
-      assert.deepStrictEqual((wsBroadcast.payload as any).data, {
+      assertDefined(wsBroadcast);
+      expect((wsBroadcast.payload as any).data).toEqual({
         primaryContactId: 'cont_primary_1',
         mergedContactId: 'cont_merged_2',
         mergedByUserId: 'usr_admin',
@@ -314,15 +313,15 @@ describe('Realtime Integration (Full End-to-End Event Pipeline — Task 14)', ()
 
       // 2. Verify Redis state
       const userPres = await presenceService.getUserPresence(workspaceId, newAssigneeId);
-      assert.strictEqual(userPres?.status, PresenceStatus.ONLINE);
+      expect(userPres?.status).toBe(PresenceStatus.ONLINE);
 
       // 3. Verify WebSocket broadcast was dispatched to workspace room
       const wsPresenceBroadcast = emittedBroadcasts.find(
         e => e.room === `workspace_${workspaceId}` && e.event === WsServerEvent.PRESENCE_UPDATED,
       );
-      assert.ok(wsPresenceBroadcast);
-      assert.strictEqual((wsPresenceBroadcast.payload as any).data.userId, newAssigneeId);
-      assert.strictEqual((wsPresenceBroadcast.payload as any).data.status, PresenceStatus.ONLINE);
+      assertDefined(wsPresenceBroadcast);
+      expect((wsPresenceBroadcast.payload as any).data.userId).toBe(newAssigneeId);
+      expect((wsPresenceBroadcast.payload as any).data.status).toBe(PresenceStatus.ONLINE);
     });
 
     it('should trigger presence.updated broadcast when agent goes offline', async () => {
@@ -334,14 +333,14 @@ describe('Realtime Integration (Full End-to-End Event Pipeline — Task 14)', ()
 
       // 2. Verify Redis state
       const userPres = await presenceService.getUserPresence(workspaceId, newAssigneeId);
-      assert.strictEqual(userPres?.status, PresenceStatus.OFFLINE);
+      expect(userPres?.status).toBe(PresenceStatus.OFFLINE);
 
       // 3. Verify WebSocket broadcast was dispatched to workspace room
       const wsPresenceBroadcast = emittedBroadcasts.find(
         e => e.room === `workspace_${workspaceId}` && e.event === WsServerEvent.PRESENCE_UPDATED,
       );
-      assert.ok(wsPresenceBroadcast);
-      assert.strictEqual((wsPresenceBroadcast.payload as any).data.status, PresenceStatus.OFFLINE);
+      assertDefined(wsPresenceBroadcast);
+      expect((wsPresenceBroadcast.payload as any).data.status).toBe(PresenceStatus.OFFLINE);
     });
   });
 
@@ -360,9 +359,9 @@ describe('Realtime Integration (Full End-to-End Event Pipeline — Task 14)', ()
       const wsPresenceBroadcast = emittedBroadcasts.find(
         e => e.room === `workspace_${workspaceId}` && e.event === WsServerEvent.PRESENCE_UPDATED,
       );
-      assert.ok(wsPresenceBroadcast);
-      assert.strictEqual((wsPresenceBroadcast.payload as any).data.userId, oldAssigneeId);
-      assert.strictEqual((wsPresenceBroadcast.payload as any).data.status, PresenceStatus.OFFLINE);
+      assertDefined(wsPresenceBroadcast);
+      expect((wsPresenceBroadcast.payload as any).data.userId).toBe(oldAssigneeId);
+      expect((wsPresenceBroadcast.payload as any).data.status).toBe(PresenceStatus.OFFLINE);
     });
   });
 
@@ -373,18 +372,18 @@ describe('Realtime Integration (Full End-to-End Event Pipeline — Task 14)', ()
       };
 
       // 1. Emitting domain event should not throw
-      assert.doesNotThrow(() => {
+      expect(() => {
         eventEmitter.emit(DomainEvent.MESSAGE_CREATED, {
           workspaceId,
           conversationId,
           message: { id: messageId },
         });
-      });
+      }).not.toThrow();
 
       // 2. Presence transition should not throw
-      await assert.doesNotReject(async () => {
+      await await expect(async () => {
         await presenceService.setOnline(workspaceId, oldAssigneeId);
-      });
+      }).resolves.not.toThrow();
     });
   });
 });

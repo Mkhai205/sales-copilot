@@ -1,5 +1,4 @@
-import { describe, it } from 'node:test';
-import * as assert from 'node:assert';
+import { expectReject } from '../../../test/test-assertions';
 import { ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ThrottlerStorageService, ThrottlerException } from '@nestjs/throttler';
@@ -36,7 +35,7 @@ describe('Per-Route Rate Limiting & Proxy Tracking (Task 8 — Feature F-1.11.4)
       };
 
       const tracker = await guard.getTracker(req);
-      assert.strictEqual(tracker, '203.0.113.195');
+      expect(tracker).toBe('203.0.113.195');
     });
 
     it('should extract first client IP from x-forwarded-for header string', async () => {
@@ -48,7 +47,7 @@ describe('Per-Route Rate Limiting & Proxy Tracking (Task 8 — Feature F-1.11.4)
       };
 
       const tracker = await guard.getTracker(req);
-      assert.strictEqual(tracker, '198.51.100.42');
+      expect(tracker).toBe('198.51.100.42');
     });
 
     it('should extract first client IP from x-forwarded-for header array', async () => {
@@ -60,7 +59,7 @@ describe('Per-Route Rate Limiting & Proxy Tracking (Task 8 — Feature F-1.11.4)
       };
 
       const tracker = await guard.getTracker(req);
-      assert.strictEqual(tracker, '203.0.113.50');
+      expect(tracker).toBe('203.0.113.50');
     });
 
     it('should extract x-real-ip when x-forwarded-for is absent', async () => {
@@ -72,7 +71,7 @@ describe('Per-Route Rate Limiting & Proxy Tracking (Task 8 — Feature F-1.11.4)
       };
 
       const tracker = await guard.getTracker(req);
-      assert.strictEqual(tracker, '192.0.2.88');
+      expect(tracker).toBe('192.0.2.88');
     });
 
     it('should fall back to Express req.ips when present', async () => {
@@ -83,7 +82,7 @@ describe('Per-Route Rate Limiting & Proxy Tracking (Task 8 — Feature F-1.11.4)
       };
 
       const tracker = await guard.getTracker(req);
-      assert.strictEqual(tracker, '198.51.100.99');
+      expect(tracker).toBe('198.51.100.99');
     });
 
     it('should fall back to direct req.ip when no proxy headers exist', async () => {
@@ -93,7 +92,7 @@ describe('Per-Route Rate Limiting & Proxy Tracking (Task 8 — Feature F-1.11.4)
       };
 
       const tracker = await guard.getTracker(req);
-      assert.strictEqual(tracker, '172.16.0.25');
+      expect(tracker).toBe('172.16.0.25');
     });
 
     it('should fall back to 127.0.0.1 if request has no IP properties', async () => {
@@ -102,7 +101,7 @@ describe('Per-Route Rate Limiting & Proxy Tracking (Task 8 — Feature F-1.11.4)
       };
 
       const tracker = await guard.getTracker(req);
-      assert.strictEqual(tracker, '127.0.0.1');
+      expect(tracker).toBe('127.0.0.1');
     });
   });
 
@@ -114,8 +113,8 @@ describe('Per-Route Rate Limiting & Proxy Tracking (Task 8 — Feature F-1.11.4)
       const limit = reflector.get(THROTTLER_LIMIT + 'default', handler);
       const ttl = reflector.get(THROTTLER_TTL + 'default', handler);
 
-      assert.strictEqual(limit, 200);
-      assert.strictEqual(ttl, 60000);
+      expect(limit).toBe(200);
+      expect(ttl).toBe(60000);
     });
 
     it('should configure FacebookController.handleCentralWebhook with 200 req/min limit', () => {
@@ -123,8 +122,8 @@ describe('Per-Route Rate Limiting & Proxy Tracking (Task 8 — Feature F-1.11.4)
       const limit = reflector.get(THROTTLER_LIMIT + 'default', handler);
       const ttl = reflector.get(THROTTLER_TTL + 'default', handler);
 
-      assert.strictEqual(limit, 200);
-      assert.strictEqual(ttl, 60000);
+      expect(limit).toBe(200);
+      expect(ttl).toBe(60000);
     });
 
     it('should configure MessagesController.create (file upload) with 20 req/min limit', () => {
@@ -132,8 +131,8 @@ describe('Per-Route Rate Limiting & Proxy Tracking (Task 8 — Feature F-1.11.4)
       const limit = reflector.get(THROTTLER_LIMIT + 'default', handler);
       const ttl = reflector.get(THROTTLER_TTL + 'default', handler);
 
-      assert.strictEqual(limit, 20);
-      assert.strictEqual(ttl, 60000);
+      expect(limit).toBe(20);
+      expect(ttl).toBe(60000);
     });
 
     it('should configure AuthController.login with 5 req/min limit', () => {
@@ -141,8 +140,8 @@ describe('Per-Route Rate Limiting & Proxy Tracking (Task 8 — Feature F-1.11.4)
       const limit = reflector.get(THROTTLER_LIMIT + 'default', handler);
       const ttl = reflector.get(THROTTLER_TTL + 'default', handler);
 
-      assert.strictEqual(limit, 5);
-      assert.strictEqual(ttl, 60000);
+      expect(limit).toBe(5);
+      expect(ttl).toBe(60000);
     });
 
     it('should configure AuthController.refresh with 10 req/min limit', () => {
@@ -150,8 +149,8 @@ describe('Per-Route Rate Limiting & Proxy Tracking (Task 8 — Feature F-1.11.4)
       const limit = reflector.get(THROTTLER_LIMIT + 'default', handler);
       const ttl = reflector.get(THROTTLER_TTL + 'default', handler);
 
-      assert.strictEqual(limit, 10);
-      assert.strictEqual(ttl, 60000);
+      expect(limit).toBe(10);
+      expect(ttl).toBe(60000);
     });
   });
 
@@ -192,11 +191,11 @@ describe('Per-Route Rate Limiting & Proxy Tracking (Task 8 — Feature F-1.11.4)
         getClass: () => MessagesController,
       } as unknown as ExecutionContext;
 
-      await assert.rejects(
+      await expectReject(
         async () => guard.canActivate(context),
         (err: any) => {
-          assert.ok(err instanceof ThrottlerException);
-          assert.strictEqual(err.getStatus(), 429);
+          expect(err instanceof ThrottlerException).toBeTruthy();
+          expect(err.getStatus()).toBe(429);
           return true;
         },
       );
@@ -235,10 +234,10 @@ describe('Per-Route Rate Limiting & Proxy Tracking (Task 8 — Feature F-1.11.4)
       const throttlerException = new ThrottlerException('Too Many Requests');
       filter.catch(throttlerException, host);
 
-      assert.strictEqual(sentStatus, 429);
-      assert.strictEqual(sentBody.success, false);
-      assert.strictEqual(sentBody.error.code, 'THROTTLER');
-      assert.strictEqual(sentBody.error.message, 'Too Many Requests');
+      expect(sentStatus).toBe(429);
+      expect(sentBody.success).toBe(false);
+      expect(sentBody.error.code).toBe('THROTTLER');
+      expect(sentBody.error.message).toBe('Too Many Requests');
     });
   });
 });

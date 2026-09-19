@@ -1,5 +1,3 @@
-import { describe, it, beforeEach } from 'node:test';
-import * as assert from 'node:assert';
 import { MessageType, SenderType } from '@sales-copilot/shared-contracts';
 import { AiAgentWorker } from '../ai-agent.worker';
 import { getAiDebounceKey, HumanTakeoverAbortError } from '../ai-agent.constants';
@@ -78,9 +76,9 @@ describe('AiAgentWorker', () => {
       },
     } as any);
 
-    assert.strictEqual(result.skipped, true);
-    assert.strictEqual(result.reason, 'SUPERSEDED_BY_NEWER_MESSAGE');
-    assert.strictEqual(createdMessages.length, 0);
+    expect(result.skipped).toBe(true);
+    expect(result.reason).toBe('SUPERSEDED_BY_NEWER_MESSAGE');
+    expect(createdMessages.length).toBe(0);
   });
 
   it('should skip job if conversation has isAiPaused=true prior to processing', async () => {
@@ -101,9 +99,9 @@ describe('AiAgentWorker', () => {
       },
     } as any);
 
-    assert.strictEqual(result.skipped, true);
-    assert.strictEqual(result.reason, 'HUMAN_TAKEOVER');
-    assert.strictEqual(createdMessages.length, 0);
+    expect(result.skipped).toBe(true);
+    expect(result.reason).toBe('HUMAN_TAKEOVER');
+    expect(createdMessages.length).toBe(0);
   });
 
   it('should successfully run AI agent and persist outbound system message with attribution', async () => {
@@ -124,20 +122,20 @@ describe('AiAgentWorker', () => {
       },
     } as any);
 
-    assert.strictEqual(result.text, 'Dạ shop còn hàng ạ!');
-    assert.strictEqual(createdMessages.length, 1);
+    expect(result.text).toBe('Dạ shop còn hàng ạ!');
+    expect(createdMessages.length).toBe(1);
 
     const saved = createdMessages[0];
-    assert.strictEqual(saved.wsId, workspaceId);
-    assert.strictEqual(saved.convId, conversationId);
-    assert.strictEqual(saved.dto.content, 'Dạ shop còn hàng ạ!');
-    assert.strictEqual(saved.dto.senderType, SenderType.SYSTEM);
-    assert.strictEqual(saved.dto.messageType, MessageType.OUTGOING);
-    assert.strictEqual(saved.dto.isPrivate, false);
-    assert.strictEqual(saved.dto.metadata.isAiGenerated, true);
+    expect(saved.wsId).toBe(workspaceId);
+    expect(saved.convId).toBe(conversationId);
+    expect(saved.dto.content).toBe('Dạ shop còn hàng ạ!');
+    expect(saved.dto.senderType).toBe(SenderType.SYSTEM);
+    expect(saved.dto.messageType).toBe(MessageType.OUTGOING);
+    expect(saved.dto.isPrivate).toBe(false);
+    expect(saved.dto.metadata.isAiGenerated).toBe(true);
 
     const conv = conversationsDb.get(conversationId);
-    assert.ok(conv.lastAiMessageAt instanceof Date);
+    expect(conv.lastAiMessageAt instanceof Date).toBeTruthy();
   });
 
   it('should handle HumanTakeoverAbortError gracefully when takeover happens mid-execution', async () => {
@@ -162,8 +160,8 @@ describe('AiAgentWorker', () => {
       },
     } as any);
 
-    assert.strictEqual(result.skipped, true);
-    assert.strictEqual(result.reason, 'HUMAN_TAKEOVER');
-    assert.strictEqual(createdMessages.length, 0);
+    expect(result.skipped).toBe(true);
+    expect(result.reason).toBe('HUMAN_TAKEOVER');
+    expect(createdMessages.length).toBe(0);
   });
 });

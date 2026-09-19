@@ -1,5 +1,4 @@
-import { describe, it, beforeEach } from 'node:test';
-import * as assert from 'node:assert';
+import { expectReject } from '../../../../test/test-assertions';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma.service';
 
@@ -40,11 +39,11 @@ describe('PrismaService (Database & Ambient Transaction Manager)', () => {
     let postHookExecuted = false;
 
     const result = await prismaService.runInTransaction(async ctx => {
-      assert.ok(ctx.id.startsWith('tx_'));
-      assert.strictEqual((ctx.tx as any).isMockTx, true);
+      expect(ctx.id.startsWith('tx_')).toBeTruthy();
+      expect((ctx.tx as any).isMockTx).toBe(true);
 
       // Verify ambient client inside transaction returns the transaction client
-      assert.strictEqual((prismaService.client as any).isMockTx, true);
+      expect((prismaService.client as any).isMockTx).toBe(true);
 
       ctx.addPostCommitHook(async () => {
         postHookExecuted = true;
@@ -53,12 +52,8 @@ describe('PrismaService (Database & Ambient Transaction Manager)', () => {
       return { success: true };
     });
 
-    assert.deepStrictEqual(result, { success: true });
-    assert.strictEqual(
-      postHookExecuted,
-      true,
-      'Post-commit hook should be executed after successful transaction',
-    );
+    expect(result).toEqual({ success: true });
+    expect(postHookExecuted).toBe(true);
   });
 
   it('should rollback and run rollback hooks if transaction operation throws an error', async () => {
@@ -66,7 +61,7 @@ describe('PrismaService (Database & Ambient Transaction Manager)', () => {
     let rollbackHookExecuted = false;
     let capturedError: unknown = null;
 
-    await assert.rejects(
+    await expectReject(
       async () => {
         await prismaService.runInTransaction(async ctx => {
           ctx.addPostCommitHook(() => {
@@ -87,9 +82,9 @@ describe('PrismaService (Database & Ambient Transaction Manager)', () => {
       },
     );
 
-    assert.strictEqual(postHookExecuted, false, 'Post-commit hook must NOT run on rollback');
-    assert.strictEqual(rollbackHookExecuted, true, 'Rollback hook must run on error');
-    assert.strictEqual((capturedError as Error)?.message, 'Database constraint violation');
+    expect(postHookExecuted).toBe(false);
+    expect(rollbackHookExecuted).toBe(true);
+    expect((capturedError as Error)?.message).toBe('Database constraint violation');
   });
 
   it('should join existing ambient transaction when nested runInTransaction is called', async () => {
@@ -108,24 +103,20 @@ describe('PrismaService (Database & Ambient Transaction Manager)', () => {
       // Nested transaction invocation
       await prismaService.runInTransaction(async innerCtx => {
         executionTrace.push(`inner_${innerCtx.id}`);
-        assert.strictEqual(
-          innerCtx.id,
-          outerCtx.id,
-          'Inner context must equal outer context (joined transaction)',
-        );
+        expect(innerCtx.id).toBe(outerCtx.id);
       });
 
       executionTrace.push(`outer_end_${outerCtx.id}`);
     });
 
-    assert.strictEqual(rootTransactionCount, 1, 'Only one root $transaction should be created');
-    assert.strictEqual(executionTrace.length, 3);
+    expect(rootTransactionCount).toBe(1);
+    expect(executionTrace.length).toBe(3);
   });
 
   it('should perform ping healthcheck successfully', async () => {
     const health = await prismaService.ping();
-    assert.strictEqual(health.status, 'up');
-    assert.ok(typeof health.latencyMs === 'number');
+    expect(health.status).toBe('up');
+    expect(typeof health.latencyMs === 'number').toBeTruthy();
   });
 
   it('should report status down when ping fails', async () => {
@@ -134,24 +125,24 @@ describe('PrismaService (Database & Ambient Transaction Manager)', () => {
     };
 
     const health = await prismaService.ping();
-    assert.strictEqual(health.status, 'down');
-    assert.strictEqual(health.error, 'Connection refused');
+    expect(health.status).toBe('down');
+    expect(health.error).toBe('Connection refused');
   });
 
   it('should return applied: true when migrations are present', async () => {
     mockPrismaClient.$queryRaw = async () => [{ count: 2 }];
 
     const result = await prismaService.checkMigrations();
-    assert.strictEqual(result.applied, true);
-    assert.strictEqual(result.count, 2);
+    expect(result.applied).toBe(true);
+    expect(result.count).toBe(2);
   });
 
   it('should return applied: false when migrations count is 0', async () => {
     mockPrismaClient.$queryRaw = async () => [{ count: 0 }];
 
     const result = await prismaService.checkMigrations();
-    assert.strictEqual(result.applied, false);
-    assert.strictEqual(result.count, 0);
+    expect(result.applied).toBe(false);
+    expect(result.count).toBe(0);
   });
 
   it('should return applied: false and error message when query fails', async () => {
@@ -160,7 +151,7 @@ describe('PrismaService (Database & Ambient Transaction Manager)', () => {
     };
 
     const result = await prismaService.checkMigrations();
-    assert.strictEqual(result.applied, false);
-    assert.strictEqual(result.error, 'Table _prisma_migrations does not exist');
+    expect(result.applied).toBe(false);
+    expect(result.error).toBe('Table _prisma_migrations does not exist');
   });
 });

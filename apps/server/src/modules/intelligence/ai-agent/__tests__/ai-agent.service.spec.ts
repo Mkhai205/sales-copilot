@@ -1,5 +1,4 @@
-import { describe, it, beforeEach } from 'node:test';
-import * as assert from 'node:assert';
+import { expectReject } from '../../../../../test/test-assertions';
 import { AiAgentService } from '../ai-agent.service';
 
 describe('AiAgentService', () => {
@@ -61,7 +60,7 @@ describe('AiAgentService', () => {
     });
 
     const key = await service.resolveApiKey(workspaceId);
-    assert.strictEqual(key, 'byok-key-xyz');
+    expect(key).toBe('byok-key-xyz');
   });
 
   it('should fallback to env GEMINI_API_KEY when BYOK is not configured', async () => {
@@ -71,7 +70,7 @@ describe('AiAgentService', () => {
     });
 
     const key = await service.resolveApiKey(workspaceId);
-    assert.strictEqual(key, 'env-gemini-key-123');
+    expect(key).toBe('env-gemini-key-123');
   });
 
   it('should throw Error when neither BYOK nor env key is available', async () => {
@@ -81,7 +80,7 @@ describe('AiAgentService', () => {
     });
     mockConfig.get = () => undefined;
 
-    await assert.rejects(
+    await expectReject(
       async () => service.resolveApiKey(workspaceId),
       /No Gemini API key available/,
     );

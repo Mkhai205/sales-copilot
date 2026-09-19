@@ -1,5 +1,3 @@
-import { describe, it, beforeEach } from 'node:test';
-import * as assert from 'node:assert';
 import { createEscalateToHumanTool } from '../escalate-to-human.tool';
 
 describe('escalateToHuman Tool (T9)', () => {
@@ -61,11 +59,11 @@ describe('escalateToHuman Tool (T9)', () => {
       {} as any,
     );
 
-    assert.strictEqual(result.escalated, true);
-    assert.strictEqual(result.reason, 'Khách hàng yêu cầu đổi size và hoàn tiền');
+    expect(result.escalated).toBe(true);
+    expect(result.reason).toBe('Khách hàng yêu cầu đổi size và hoàn tiền');
 
     // Verify ordering: Farewell must be before pause!
-    assert.deepStrictEqual(actionsOrder, [
+    expect(actionsOrder).toEqual([
       'CUSTOMER_FAREWELL_MESSAGE',
       'INTERNAL_ACTIVITY_NOTE',
       'SET_AI_PAUSED_TRUE',
@@ -73,8 +71,8 @@ describe('escalateToHuman Tool (T9)', () => {
     ]);
 
     // Check Redis debounce key format
-    assert.strictEqual(deletedKeys.length, 1);
-    assert.ok(deletedKeys[0].includes(`ws:${workspaceId}:ai:debounce:${conversationId}`));
+    expect(deletedKeys.length).toBe(1);
+    expect(deletedKeys[0].includes(`ws:${workspaceId}:ai:debounce:${conversationId}`)).toBeTruthy();
   });
 
   it('should return error when conversationId is missing', async () => {
@@ -86,8 +84,8 @@ describe('escalateToHuman Tool (T9)', () => {
     });
 
     const result = await tool.execute!({ reason: 'Test' }, {} as any);
-    assert.strictEqual(result.escalated, false);
-    assert.strictEqual(result.error, 'MISSING_CONVERSATION_ID');
-    assert.strictEqual(actionsOrder.length, 0);
+    expect(result.escalated).toBe(false);
+    expect(result.error).toBe('MISSING_CONVERSATION_ID');
+    expect(actionsOrder.length).toBe(0);
   });
 });

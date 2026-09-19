@@ -1,5 +1,3 @@
-import { describe, it } from 'node:test';
-import * as assert from 'node:assert';
 import { Queue } from 'bullmq';
 import { HealthService } from '../health.service';
 import { PrismaService } from '../../../infrastructure/database';
@@ -43,12 +41,12 @@ describe('HealthService (Healthcheck Aggregator)', () => {
     );
     const health = await healthService.getHealth();
 
-    assert.strictEqual(health.status, 'ok');
-    assert.strictEqual(health.dependencies.database.status, 'up');
-    assert.strictEqual(health.dependencies.redis.status, 'up');
-    assert.strictEqual(health.dependencies.storage.status, 'up');
-    assert.strictEqual(health.dependencies.queues.channelIngestion.status, 'ok');
-    assert.strictEqual(health.dependencies.queues.commentGuard.status, 'ok');
+    expect(health.status).toBe('ok');
+    expect(health.dependencies.database.status).toBe('up');
+    expect(health.dependencies.redis.status).toBe('up');
+    expect(health.dependencies.storage.status).toBe('up');
+    expect(health.dependencies.queues.channelIngestion.status).toBe('ok');
+    expect(health.dependencies.queues.commentGuard.status).toBe('ok');
   });
 
   it('should return status degraded when one dependency is down', async () => {
@@ -76,11 +74,11 @@ describe('HealthService (Healthcheck Aggregator)', () => {
     );
     const health = await healthService.getHealth();
 
-    assert.strictEqual(health.status, 'degraded');
-    assert.strictEqual(health.dependencies.database.status, 'up');
-    assert.strictEqual(health.dependencies.redis.status, 'down');
-    assert.strictEqual(health.dependencies.redis.error, 'Connection timeout');
-    assert.strictEqual(health.dependencies.storage.status, 'up');
+    expect(health.status).toBe('degraded');
+    expect(health.dependencies.database.status).toBe('up');
+    expect(health.dependencies.redis.status).toBe('down');
+    expect(health.dependencies.redis.error).toBe('Connection timeout');
+    expect(health.dependencies.storage.status).toBe('up');
   });
 
   it('should return status degraded when Storage is down in getHealth', async () => {
@@ -108,9 +106,9 @@ describe('HealthService (Healthcheck Aggregator)', () => {
     );
     const health = await healthService.getHealth();
 
-    assert.strictEqual(health.status, 'degraded');
-    assert.strictEqual(health.dependencies.storage.status, 'down');
-    assert.strictEqual(health.dependencies.storage.error, 'MinIO unavailable');
+    expect(health.status).toBe('degraded');
+    expect(health.dependencies.storage.status).toBe('down');
+    expect(health.dependencies.storage.error).toBe('MinIO unavailable');
   });
 
   it('should return status down when database is down in getHealth', async () => {
@@ -138,9 +136,9 @@ describe('HealthService (Healthcheck Aggregator)', () => {
     );
     const health = await healthService.getHealth();
 
-    assert.strictEqual(health.status, 'down');
-    assert.strictEqual(health.dependencies.database.status, 'down');
-    assert.strictEqual(health.dependencies.database.error, 'DB connection refused');
+    expect(health.status).toBe('down');
+    expect(health.dependencies.database.status).toBe('down');
+    expect(health.dependencies.database.error).toBe('DB connection refused');
   });
 
   it('should return status degraded when webhook delivery queue is down in getHealth', async () => {
@@ -168,12 +166,9 @@ describe('HealthService (Healthcheck Aggregator)', () => {
     );
     const health = await healthService.getHealth();
 
-    assert.strictEqual(health.status, 'degraded');
-    assert.strictEqual(health.dependencies.queues.commentGuard.status, 'down');
-    assert.strictEqual(
-      health.dependencies.queues.commentGuard.error,
-      'Webhook delivery queue timeout',
-    );
+    expect(health.status).toBe('degraded');
+    expect(health.dependencies.queues.commentGuard.status).toBe('down');
+    expect(health.dependencies.queues.commentGuard.error).toBe('Webhook delivery queue timeout');
   });
 
   it('should safely handle unexpected rejected promise in getHealth', async () => {
@@ -203,9 +198,9 @@ describe('HealthService (Healthcheck Aggregator)', () => {
     );
     const health = await healthService.getHealth();
 
-    assert.strictEqual(health.status, 'down');
-    assert.strictEqual(health.dependencies.database.status, 'down');
-    assert.strictEqual(health.dependencies.database.error, 'Fatal unhandled DB error');
+    expect(health.status).toBe('down');
+    expect(health.dependencies.database.status).toBe('down');
+    expect(health.dependencies.database.error).toBe('Fatal unhandled DB error');
   });
 
   it('should return status degraded when a BullMQ queue is down', async () => {
@@ -233,13 +228,12 @@ describe('HealthService (Healthcheck Aggregator)', () => {
     );
     const health = await healthService.getHealth();
 
-    assert.strictEqual(health.status, 'degraded');
-    assert.strictEqual(health.dependencies.queues.channelIngestion.status, 'down');
-    assert.strictEqual(
-      health.dependencies.queues.channelIngestion.error,
+    expect(health.status).toBe('degraded');
+    expect(health.dependencies.queues.channelIngestion.status).toBe('down');
+    expect(health.dependencies.queues.channelIngestion.error).toBe(
       'Channel queue Redis connection error',
     );
-    assert.strictEqual(health.dependencies.queues.commentGuard.status, 'ok');
+    expect(health.dependencies.queues.commentGuard.status).toBe('ok');
   });
 
   describe('getLiveness', () => {
@@ -259,10 +253,10 @@ describe('HealthService (Healthcheck Aggregator)', () => {
       );
       const liveness = healthService.getLiveness();
 
-      assert.strictEqual(liveness.status, 'ok');
-      assert.strictEqual(liveness.service, 'sales-copilot-api');
-      assert.strictEqual(typeof liveness.uptime, 'number');
-      assert.ok(liveness.timestamp);
+      expect(liveness.status).toBe('ok');
+      expect(liveness.service).toBe('sales-copilot-api');
+      expect(typeof liveness.uptime).toBe('number');
+      expect(liveness.timestamp).toBeTruthy();
     });
   });
 
@@ -293,14 +287,14 @@ describe('HealthService (Healthcheck Aggregator)', () => {
       );
       const readiness = await healthService.getReadiness();
 
-      assert.strictEqual(readiness.status, 'ok');
-      assert.strictEqual(readiness.checks.database.status, 'up');
-      assert.strictEqual(readiness.checks.database.migrationsApplied, true);
-      assert.strictEqual(readiness.checks.database.migrationCount, 2);
-      assert.strictEqual(readiness.checks.redis.status, 'up');
-      assert.strictEqual(readiness.checks.storage.status, 'up');
-      assert.strictEqual(readiness.checks.queues.channelIngestion.status, 'ok');
-      assert.strictEqual(readiness.checks.queues.commentGuard.status, 'ok');
+      expect(readiness.status).toBe('ok');
+      expect(readiness.checks.database.status).toBe('up');
+      expect(readiness.checks.database.migrationsApplied).toBe(true);
+      expect(readiness.checks.database.migrationCount).toBe(2);
+      expect(readiness.checks.redis.status).toBe('up');
+      expect(readiness.checks.storage.status).toBe('up');
+      expect(readiness.checks.queues.channelIngestion.status).toBe('ok');
+      expect(readiness.checks.queues.commentGuard.status).toBe('ok');
     });
 
     it('should return status down when database is down', async () => {
@@ -329,9 +323,9 @@ describe('HealthService (Healthcheck Aggregator)', () => {
       );
       const readiness = await healthService.getReadiness();
 
-      assert.strictEqual(readiness.status, 'down');
-      assert.strictEqual(readiness.checks.database.status, 'down');
-      assert.strictEqual(readiness.checks.database.migrationsApplied, false);
+      expect(readiness.status).toBe('down');
+      expect(readiness.checks.database.status).toBe('down');
+      expect(readiness.checks.database.migrationsApplied).toBe(false);
     });
 
     it('should return status down when database is reachable but migrations are not applied', async () => {
@@ -360,9 +354,9 @@ describe('HealthService (Healthcheck Aggregator)', () => {
       );
       const readiness = await healthService.getReadiness();
 
-      assert.strictEqual(readiness.status, 'down');
-      assert.strictEqual(readiness.checks.database.status, 'up');
-      assert.strictEqual(readiness.checks.database.migrationsApplied, false);
+      expect(readiness.status).toBe('down');
+      expect(readiness.checks.database.status).toBe('up');
+      expect(readiness.checks.database.migrationsApplied).toBe(false);
     });
 
     it('should return status down when migrations check throws an unexpected error in getReadiness', async () => {
@@ -393,10 +387,10 @@ describe('HealthService (Healthcheck Aggregator)', () => {
       );
       const readiness = await healthService.getReadiness();
 
-      assert.strictEqual(readiness.status, 'down');
-      assert.strictEqual(readiness.checks.database.status, 'up');
-      assert.strictEqual(readiness.checks.database.migrationsApplied, false);
-      assert.strictEqual(readiness.checks.database.migrationError, 'Database schema corrupted');
+      expect(readiness.status).toBe('down');
+      expect(readiness.checks.database.status).toBe('up');
+      expect(readiness.checks.database.migrationsApplied).toBe(false);
+      expect(readiness.checks.database.migrationError).toBe('Database schema corrupted');
     });
 
     it('should return status degraded when Redis is down', async () => {
@@ -425,8 +419,8 @@ describe('HealthService (Healthcheck Aggregator)', () => {
       );
       const readiness = await healthService.getReadiness();
 
-      assert.strictEqual(readiness.status, 'degraded');
-      assert.strictEqual(readiness.checks.redis.status, 'down');
+      expect(readiness.status).toBe('degraded');
+      expect(readiness.checks.redis.status).toBe('down');
     });
 
     it('should return status degraded when Storage is down', async () => {
@@ -455,8 +449,8 @@ describe('HealthService (Healthcheck Aggregator)', () => {
       );
       const readiness = await healthService.getReadiness();
 
-      assert.strictEqual(readiness.status, 'degraded');
-      assert.strictEqual(readiness.checks.storage.status, 'down');
+      expect(readiness.status).toBe('degraded');
+      expect(readiness.checks.storage.status).toBe('down');
     });
 
     it('should return status degraded when channel ingestion queue is down during readiness check', async () => {
@@ -485,10 +479,9 @@ describe('HealthService (Healthcheck Aggregator)', () => {
       );
       const readiness = await healthService.getReadiness();
 
-      assert.strictEqual(readiness.status, 'degraded');
-      assert.strictEqual(readiness.checks.queues.channelIngestion.status, 'down');
-      assert.strictEqual(
-        readiness.checks.queues.channelIngestion.error,
+      expect(readiness.status).toBe('degraded');
+      expect(readiness.checks.queues.channelIngestion.status).toBe('down');
+      expect(readiness.checks.queues.channelIngestion.error).toBe(
         'Channel ingestion queue not ready',
       );
     });
@@ -519,9 +512,9 @@ describe('HealthService (Healthcheck Aggregator)', () => {
       );
       const readiness = await healthService.getReadiness();
 
-      assert.strictEqual(readiness.status, 'degraded');
-      assert.strictEqual(readiness.checks.queues.commentGuard.status, 'down');
-      assert.strictEqual(readiness.checks.queues.commentGuard.error, 'Webhook queue not ready');
+      expect(readiness.status).toBe('degraded');
+      expect(readiness.checks.queues.commentGuard.status).toBe('down');
+      expect(readiness.checks.queues.commentGuard.error).toBe('Webhook queue not ready');
     });
   });
 });

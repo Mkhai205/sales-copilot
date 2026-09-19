@@ -1,5 +1,4 @@
-import { describe, it, beforeEach } from 'node:test';
-import * as assert from 'node:assert';
+import { assertDefined } from '../../../../test/test-assertions';
 import {
   ConversationPriority,
   ConversationStatus,
@@ -90,17 +89,17 @@ describe('RealtimeEventDispatcher — Event Routing & Error Isolation (Task 12)'
         e => e.room === `workspace_${workspaceId}`,
       );
 
-      assert.strictEqual(conversationEmissions.length, 2); // typed event + generic 'event'
-      assert.strictEqual(workspaceEmissions.length, 2);
+      expect(conversationEmissions.length).toBe(2); // typed event + generic 'event'
+      expect(workspaceEmissions.length).toBe(2);
 
       const typedEvent = conversationEmissions.find(e => e.event === WsServerEvent.MESSAGE_CREATED);
-      assert.ok(typedEvent);
-      assert.deepStrictEqual((typedEvent.payload as any).data, mockMessage);
-      assert.strictEqual((typedEvent.payload as any).event, WsServerEvent.MESSAGE_CREATED);
+      assertDefined(typedEvent);
+      expect((typedEvent.payload as any).data).toEqual(mockMessage);
+      expect((typedEvent.payload as any).event).toBe(WsServerEvent.MESSAGE_CREATED);
 
       const genericEvent = conversationEmissions.find(e => e.event === 'event');
-      assert.ok(genericEvent);
-      assert.deepStrictEqual((genericEvent.payload as any).data, mockMessage);
+      assertDefined(genericEvent);
+      expect((genericEvent.payload as any).data).toEqual(mockMessage);
     });
 
     it('should broadcast message.updated to conversation and workspace rooms', () => {
@@ -111,18 +110,18 @@ describe('RealtimeEventDispatcher — Event Routing & Error Isolation (Task 12)'
         message: mockMessage,
       });
 
-      assert.ok(
+      expect(
         emittedBroadcasts.some(
           e =>
             e.room === `conversation_${conversationId}` &&
             e.event === WsServerEvent.MESSAGE_UPDATED,
         ),
-      );
-      assert.ok(
+      ).toBeTruthy();
+      expect(
         emittedBroadcasts.some(
           e => e.room === `workspace_${workspaceId}` && e.event === WsServerEvent.MESSAGE_UPDATED,
         ),
-      );
+      ).toBeTruthy();
     });
 
     it('should broadcast message.deleted to conversation and workspace rooms', () => {
@@ -136,8 +135,8 @@ describe('RealtimeEventDispatcher — Event Routing & Error Isolation (Task 12)'
         e =>
           e.room === `conversation_${conversationId}` && e.event === WsServerEvent.MESSAGE_DELETED,
       );
-      assert.ok(convBroadcast);
-      assert.deepStrictEqual((convBroadcast.payload as any).data, {
+      assertDefined(convBroadcast);
+      expect((convBroadcast.payload as any).data).toEqual({
         conversationId,
         messageId,
       });
@@ -145,7 +144,7 @@ describe('RealtimeEventDispatcher — Event Routing & Error Isolation (Task 12)'
       const wsBroadcast = emittedBroadcasts.find(
         e => e.room === `workspace_${workspaceId}` && e.event === WsServerEvent.MESSAGE_DELETED,
       );
-      assert.ok(wsBroadcast);
+      assertDefined(wsBroadcast);
     });
 
     it('should broadcast message.delivery_status_updated to conversation and workspace rooms', () => {
@@ -158,20 +157,20 @@ describe('RealtimeEventDispatcher — Event Routing & Error Isolation (Task 12)'
         message: mockMessage,
       });
 
-      assert.ok(
+      expect(
         emittedBroadcasts.some(
           e =>
             e.room === `conversation_${conversationId}` &&
             e.event === WsServerEvent.MESSAGE_DELIVERY_STATUS_UPDATED,
         ),
-      );
-      assert.ok(
+      ).toBeTruthy();
+      expect(
         emittedBroadcasts.some(
           e =>
             e.room === `workspace_${workspaceId}` &&
             e.event === WsServerEvent.MESSAGE_DELIVERY_STATUS_UPDATED,
         ),
-      );
+      ).toBeTruthy();
     });
   });
 
@@ -186,14 +185,11 @@ describe('RealtimeEventDispatcher — Event Routing & Error Isolation (Task 12)'
         e =>
           e.room === `workspace_${workspaceId}` && e.event === WsServerEvent.CONVERSATION_CREATED,
       );
-      assert.ok(wsBroadcast);
-      assert.deepStrictEqual((wsBroadcast.payload as any).data, mockConversation);
+      assertDefined(wsBroadcast);
+      expect((wsBroadcast.payload as any).data).toEqual(mockConversation);
 
       // Verify not broadcast to conversation-specific room
-      assert.strictEqual(
-        emittedBroadcasts.some(e => e.room === `conversation_${conversationId}`),
-        false,
-      );
+      expect(emittedBroadcasts.some(e => e.room === `conversation_${conversationId}`)).toBe(false);
     });
 
     it('should broadcast conversation.status_updated to conversation and workspace rooms', () => {
@@ -205,20 +201,20 @@ describe('RealtimeEventDispatcher — Event Routing & Error Isolation (Task 12)'
         conversation: mockConversation,
       });
 
-      assert.ok(
+      expect(
         emittedBroadcasts.some(
           e =>
             e.room === `conversation_${conversationId}` &&
             e.event === WsServerEvent.CONVERSATION_STATUS_UPDATED,
         ),
-      );
-      assert.ok(
+      ).toBeTruthy();
+      expect(
         emittedBroadcasts.some(
           e =>
             e.room === `workspace_${workspaceId}` &&
             e.event === WsServerEvent.CONVERSATION_STATUS_UPDATED,
         ),
-      );
+      ).toBeTruthy();
     });
 
     it('should broadcast conversation.reopened to conversation and workspace rooms', () => {
@@ -229,20 +225,20 @@ describe('RealtimeEventDispatcher — Event Routing & Error Isolation (Task 12)'
         conversation: mockConversation,
       });
 
-      assert.ok(
+      expect(
         emittedBroadcasts.some(
           e =>
             e.room === `conversation_${conversationId}` &&
             e.event === WsServerEvent.CONVERSATION_REOPENED,
         ),
-      );
-      assert.ok(
+      ).toBeTruthy();
+      expect(
         emittedBroadcasts.some(
           e =>
             e.room === `workspace_${workspaceId}` &&
             e.event === WsServerEvent.CONVERSATION_REOPENED,
         ),
-      );
+      ).toBeTruthy();
     });
 
     it('should broadcast conversation.assigned to workspace, conversation, new assignee, and previous assignee rooms', () => {
@@ -257,36 +253,36 @@ describe('RealtimeEventDispatcher — Event Routing & Error Isolation (Task 12)'
       });
 
       // 1. Workspace room
-      assert.ok(
+      expect(
         emittedBroadcasts.some(
           e =>
             e.room === `workspace_${workspaceId}` &&
             e.event === WsServerEvent.CONVERSATION_ASSIGNED,
         ),
-      );
+      ).toBeTruthy();
 
       // 2. Conversation room
-      assert.ok(
+      expect(
         emittedBroadcasts.some(
           e =>
             e.room === `conversation_${conversationId}` &&
             e.event === WsServerEvent.CONVERSATION_ASSIGNED,
         ),
-      );
+      ).toBeTruthy();
 
       // 3. New assignee direct notification room
-      assert.ok(
+      expect(
         emittedBroadcasts.some(
           e => e.room === `user_${agent2Id}` && e.event === WsServerEvent.CONVERSATION_ASSIGNED,
         ),
-      );
+      ).toBeTruthy();
 
       // 4. Previous assignee direct notification room
-      assert.ok(
+      expect(
         emittedBroadcasts.some(
           e => e.room === `user_${agent1Id}` && e.event === WsServerEvent.CONVERSATION_ASSIGNED,
         ),
-      );
+      ).toBeTruthy();
     });
 
     it('should broadcast conversation.priority_updated to conversation and workspace rooms', () => {
@@ -298,20 +294,20 @@ describe('RealtimeEventDispatcher — Event Routing & Error Isolation (Task 12)'
         conversation: mockConversation,
       });
 
-      assert.ok(
+      expect(
         emittedBroadcasts.some(
           e =>
             e.room === `conversation_${conversationId}` &&
             e.event === WsServerEvent.CONVERSATION_PRIORITY_UPDATED,
         ),
-      );
-      assert.ok(
+      ).toBeTruthy();
+      expect(
         emittedBroadcasts.some(
           e =>
             e.room === `workspace_${workspaceId}` &&
             e.event === WsServerEvent.CONVERSATION_PRIORITY_UPDATED,
         ),
-      );
+      ).toBeTruthy();
     });
 
     it('should broadcast conversation.labels_updated to conversation and workspace rooms', () => {
@@ -323,20 +319,20 @@ describe('RealtimeEventDispatcher — Event Routing & Error Isolation (Task 12)'
         conversation: mockConversation,
       });
 
-      assert.ok(
+      expect(
         emittedBroadcasts.some(
           e =>
             e.room === `conversation_${conversationId}` &&
             e.event === WsServerEvent.CONVERSATION_LABELS_UPDATED,
         ),
-      );
-      assert.ok(
+      ).toBeTruthy();
+      expect(
         emittedBroadcasts.some(
           e =>
             e.room === `workspace_${workspaceId}` &&
             e.event === WsServerEvent.CONVERSATION_LABELS_UPDATED,
         ),
-      );
+      ).toBeTruthy();
     });
   });
 
@@ -365,8 +361,8 @@ describe('RealtimeEventDispatcher — Event Routing & Error Isolation (Task 12)'
       const wsBroadcast = emittedBroadcasts.find(
         e => e.room === `workspace_${workspaceId}` && e.event === WsServerEvent.CONTACT_CREATED,
       );
-      assert.ok(wsBroadcast);
-      assert.deepStrictEqual((wsBroadcast.payload as any).data, mockContact);
+      assertDefined(wsBroadcast);
+      expect((wsBroadcast.payload as any).data).toEqual(mockContact);
     });
 
     it('should broadcast contact.updated to workspace room', () => {
@@ -379,8 +375,8 @@ describe('RealtimeEventDispatcher — Event Routing & Error Isolation (Task 12)'
       const wsBroadcast = emittedBroadcasts.find(
         e => e.room === `workspace_${workspaceId}` && e.event === WsServerEvent.CONTACT_UPDATED,
       );
-      assert.ok(wsBroadcast);
-      assert.deepStrictEqual((wsBroadcast.payload as any).data, mockContact);
+      assertDefined(wsBroadcast);
+      expect((wsBroadcast.payload as any).data).toEqual(mockContact);
     });
 
     it('should broadcast contact.deleted to workspace room', () => {
@@ -393,8 +389,8 @@ describe('RealtimeEventDispatcher — Event Routing & Error Isolation (Task 12)'
       const wsBroadcast = emittedBroadcasts.find(
         e => e.room === `workspace_${workspaceId}` && e.event === WsServerEvent.CONTACT_DELETED,
       );
-      assert.ok(wsBroadcast);
-      assert.deepStrictEqual((wsBroadcast.payload as any).data, {
+      assertDefined(wsBroadcast);
+      expect((wsBroadcast.payload as any).data).toEqual({
         contactId,
         contact: mockContact,
       });
@@ -412,8 +408,8 @@ describe('RealtimeEventDispatcher — Event Routing & Error Isolation (Task 12)'
       const wsBroadcast = emittedBroadcasts.find(
         e => e.room === `workspace_${workspaceId}` && e.event === WsServerEvent.CONTACT_MERGED,
       );
-      assert.ok(wsBroadcast);
-      assert.deepStrictEqual((wsBroadcast.payload as any).data, {
+      assertDefined(wsBroadcast);
+      expect((wsBroadcast.payload as any).data).toEqual({
         primaryContactId: 'cont_primary',
         mergedContactId: 'cont_merged',
         mergedByUserId: 'usr_admin',
@@ -437,20 +433,20 @@ describe('RealtimeEventDispatcher — Event Routing & Error Isolation (Task 12)'
         identity: mockIdentity,
       });
 
-      assert.ok(
+      expect(
         emittedBroadcasts.some(
           e =>
             e.room === `workspace_${workspaceId}` &&
             e.event === WsServerEvent.CHANNEL_IDENTITY_CREATED,
         ),
-      );
-      assert.ok(
+      ).toBeTruthy();
+      expect(
         emittedBroadcasts.some(
           e =>
             e.room === `workspace_${workspaceId}` &&
             e.event === WsServerEvent.CHANNEL_IDENTITY_DELETED,
         ),
-      );
+      ).toBeTruthy();
     });
   });
 
@@ -467,21 +463,21 @@ describe('RealtimeEventDispatcher — Event Routing & Error Isolation (Task 12)'
       dispatcher.handleLabelUpdated({ workspaceId, label: mockLabel });
       dispatcher.handleLabelDeleted({ workspaceId, labelId: 'lbl_001', label: mockLabel });
 
-      assert.ok(
+      expect(
         emittedBroadcasts.some(
           e => e.room === `workspace_${workspaceId}` && e.event === WsServerEvent.LABEL_CREATED,
         ),
-      );
-      assert.ok(
+      ).toBeTruthy();
+      expect(
         emittedBroadcasts.some(
           e => e.room === `workspace_${workspaceId}` && e.event === WsServerEvent.LABEL_UPDATED,
         ),
-      );
-      assert.ok(
+      ).toBeTruthy();
+      expect(
         emittedBroadcasts.some(
           e => e.room === `workspace_${workspaceId}` && e.event === WsServerEvent.LABEL_DELETED,
         ),
-      );
+      ).toBeTruthy();
     });
 
     it('should broadcast channel events to workspace room', () => {
@@ -504,21 +500,21 @@ describe('RealtimeEventDispatcher — Event Routing & Error Isolation (Task 12)'
         channelType: 'WEB_CHAT' as any,
       });
 
-      assert.ok(
+      expect(
         emittedBroadcasts.some(
           e => e.room === `workspace_${workspaceId}` && e.event === WsServerEvent.CHANNEL_CREATED,
         ),
-      );
-      assert.ok(
+      ).toBeTruthy();
+      expect(
         emittedBroadcasts.some(
           e => e.room === `workspace_${workspaceId}` && e.event === WsServerEvent.CHANNEL_UPDATED,
         ),
-      );
-      assert.ok(
+      ).toBeTruthy();
+      expect(
         emittedBroadcasts.some(
           e => e.room === `workspace_${workspaceId}` && e.event === WsServerEvent.CHANNEL_DELETED,
         ),
-      );
+      ).toBeTruthy();
     });
   });
 
@@ -537,27 +533,27 @@ describe('RealtimeEventDispatcher — Event Routing & Error Isolation (Task 12)'
         isTyping: false,
       });
 
-      assert.ok(
+      expect(
         emittedBroadcasts.some(
           e =>
             e.room === `conversation_${conversationId}` && e.event === WsServerEvent.TYPING_START,
         ),
-      );
-      assert.ok(
+      ).toBeTruthy();
+      expect(
         emittedBroadcasts.some(
           e => e.room === `conversation_${conversationId}` && e.event === WsServerEvent.TYPING_STOP,
         ),
-      );
-      assert.ok(
+      ).toBeTruthy();
+      expect(
         emittedBroadcasts.some(
           e => e.room === `workspace_${workspaceId}` && e.event === WsServerEvent.TYPING_START,
         ),
-      );
-      assert.ok(
+      ).toBeTruthy();
+      expect(
         emittedBroadcasts.some(
           e => e.room === `workspace_${workspaceId}` && e.event === WsServerEvent.TYPING_STOP,
         ),
-      );
+      ).toBeTruthy();
     });
 
     it('should broadcast presence.updated to workspace room', () => {
@@ -573,8 +569,8 @@ describe('RealtimeEventDispatcher — Event Routing & Error Isolation (Task 12)'
       const wsBroadcast = emittedBroadcasts.find(
         e => e.room === `workspace_${workspaceId}` && e.event === WsServerEvent.PRESENCE_UPDATED,
       );
-      assert.ok(wsBroadcast);
-      assert.deepStrictEqual((wsBroadcast.payload as any).data, {
+      assertDefined(wsBroadcast);
+      expect((wsBroadcast.payload as any).data).toEqual({
         userId: 'usr_001',
         status: PresenceStatus.ONLINE,
         lastSeenAt: payload.lastSeenAt,
@@ -588,7 +584,7 @@ describe('RealtimeEventDispatcher — Event Routing & Error Isolation (Task 12)'
         throw new Error('Socket adapter network failure');
       };
 
-      assert.doesNotThrow(() => {
+      expect(() => {
         dispatcher.handleMessageCreated({
           workspaceId,
           conversationId,
@@ -605,13 +601,13 @@ describe('RealtimeEventDispatcher — Event Routing & Error Isolation (Task 12)'
           status: PresenceStatus.ONLINE,
           lastSeenAt: new Date().toISOString(),
         });
-      });
+      }).not.toThrow();
     });
 
     it('should not throw when gateway is undefined / unprovided', () => {
       const unprovidedDispatcher = new RealtimeEventDispatcher(undefined);
 
-      assert.doesNotThrow(() => {
+      expect(() => {
         unprovidedDispatcher.handleMessageCreated({
           workspaceId,
           conversationId,
@@ -624,30 +620,30 @@ describe('RealtimeEventDispatcher — Event Routing & Error Isolation (Task 12)'
           status: PresenceStatus.ONLINE,
           lastSeenAt: new Date().toISOString(),
         });
-      });
+      }).not.toThrow();
     });
 
     it('should not throw when gateway.server is undefined', () => {
       const noServerGateway: any = {};
       const noServerDispatcher = new RealtimeEventDispatcher(noServerGateway);
 
-      assert.doesNotThrow(() => {
+      expect(() => {
         noServerDispatcher.handleConversationCreated({
           workspaceId,
           conversation: mockConversation,
         });
-      });
+      }).not.toThrow();
     });
 
     it('should gracefully handle null/undefined payloads or missing workspaceId', () => {
-      assert.doesNotThrow(() => {
+      expect(() => {
         dispatcher.handleMessageCreated(null as any);
         dispatcher.handleConversationCreated({} as any);
         dispatcher.handleContactCreated({} as any);
         dispatcher.handlePresenceUpdated(null as any);
         dispatcher.handleOrderShipped(null as any);
-      });
-      assert.strictEqual(emittedBroadcasts.length, 0);
+      }).not.toThrow();
+      expect(emittedBroadcasts.length).toBe(0);
     });
 
     it('should broadcast ORDER_SHIPPED to conversation and workspace rooms', () => {
@@ -666,12 +662,12 @@ describe('RealtimeEventDispatcher — Event Routing & Error Isolation (Task 12)'
       const wsBroadcast = emittedBroadcasts.find(
         b => b.room === `workspace_${workspaceId}` && b.event === WsServerEvent.ORDER_SHIPPED,
       );
-      assert.ok(wsBroadcast);
+      assertDefined(wsBroadcast);
 
       const convBroadcast = emittedBroadcasts.find(
         b => b.room === `conversation_${conversationId}` && b.event === WsServerEvent.ORDER_SHIPPED,
       );
-      assert.ok(convBroadcast);
+      assertDefined(convBroadcast);
     });
   });
 });

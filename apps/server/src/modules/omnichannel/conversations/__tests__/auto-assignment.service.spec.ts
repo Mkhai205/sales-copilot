@@ -1,5 +1,4 @@
-import { describe, it, beforeEach } from 'node:test';
-import * as assert from 'node:assert';
+import { assertDefined } from '../../../../../test/test-assertions';
 import { AutoAssignmentService } from '../auto-assignment.service';
 import { AutoAssignmentListener } from '../auto-assignment.listener';
 import { ConversationsService } from '../conversations.service';
@@ -235,8 +234,8 @@ describe('AutoAssignmentService (Round-Robin & Least-Loaded Assignment)', () => 
       });
 
       const result = await autoAssignmentService.assignConversation('ws_1', 'conv_1');
-      assert.strictEqual(result, null);
-      assert.strictEqual(conversationsDb.get('conv_1').assigneeId, null);
+      expect(result).toBe(null);
+      expect(conversationsDb.get('conv_1').assigneeId).toBe(null);
     });
 
     it('should skip auto-assignment if conversation already has an assignee', async () => {
@@ -252,7 +251,7 @@ describe('AutoAssignmentService (Round-Robin & Least-Loaded Assignment)', () => 
       });
 
       const result = await autoAssignmentService.assignConversation('ws_1', 'conv_1');
-      assert.strictEqual(result, null);
+      expect(result).toBe(null);
     });
 
     it('should skip auto-assignment if conversation status is not OPEN', async () => {
@@ -268,12 +267,12 @@ describe('AutoAssignmentService (Round-Robin & Least-Loaded Assignment)', () => 
       });
 
       const result = await autoAssignmentService.assignConversation('ws_1', 'conv_resolved');
-      assert.strictEqual(result, null);
+      expect(result).toBe(null);
     });
 
     it('should return null if conversation does not exist', async () => {
       const result = await autoAssignmentService.assignConversation('ws_1', 'nonexistent_conv');
-      assert.strictEqual(result, null);
+      expect(result).toBe(null);
     });
   });
 
@@ -304,8 +303,8 @@ describe('AutoAssignmentService (Round-Robin & Least-Loaded Assignment)', () => 
       ]);
 
       const result = await autoAssignmentService.assignConversation('ws_1', 'conv_new');
-      assert.strictEqual(result, null);
-      assert.strictEqual(conversationsDb.get('conv_new').assigneeId, null);
+      expect(result).toBe(null);
+      expect(conversationsDb.get('conv_new').assigneeId).toBe(null);
     });
 
     it('should assign immediately when exactly one inbox member is ONLINE', async () => {
@@ -316,15 +315,15 @@ describe('AutoAssignmentService (Round-Robin & Least-Loaded Assignment)', () => 
       ]);
 
       const result = await autoAssignmentService.assignConversation('ws_1', 'conv_new');
-      assert.ok(result !== null);
-      assert.strictEqual(result.assigneeId, 'usr_2');
-      assert.strictEqual(conversationsDb.get('conv_new').assigneeId, 'usr_2');
+      assertDefined(result);
+      expect(result.assigneeId).toBe('usr_2');
+      expect(conversationsDb.get('conv_new').assigneeId).toBe('usr_2');
 
       // Verify domain event emitted
       const assignEvent = emittedEvents.find(e => e.event === 'conversation.assigned');
-      assert.ok(assignEvent);
-      assert.strictEqual(assignEvent.payload.newAssigneeId, 'usr_2');
-      assert.strictEqual(assignEvent.payload.previousAssigneeId, null);
+      assertDefined(assignEvent);
+      expect(assignEvent.payload.newAssigneeId).toBe('usr_2');
+      expect(assignEvent.payload.previousAssigneeId).toBe(null);
     });
   });
 
@@ -402,8 +401,8 @@ describe('AutoAssignmentService (Round-Robin & Least-Loaded Assignment)', () => 
 
     it('should select agent with fewest OPEN conversations (usr_2 with 1 open)', async () => {
       const result = await autoAssignmentService.assignConversation('ws_1', 'conv_to_assign');
-      assert.ok(result !== null);
-      assert.strictEqual(result.assigneeId, 'usr_2');
+      assertDefined(result);
+      expect(result.assigneeId).toBe('usr_2');
     });
   });
 
@@ -435,9 +434,9 @@ describe('AutoAssignmentService (Round-Robin & Least-Loaded Assignment)', () => 
         status: ConversationStatus.OPEN,
       });
       const res1 = await autoAssignmentService.assignConversation('ws_1', 'conv_1');
-      assert.strictEqual(res1?.assigneeId, 'usr_a');
+      expect(res1?.assigneeId).toBe('usr_a');
       // Queue rotated: [usr_b, usr_c, usr_a]
-      assert.deepStrictEqual(redisLists.get('round_robin:inbox:ib_1'), ['usr_b', 'usr_c', 'usr_a']);
+      expect(redisLists.get('round_robin:inbox:ib_1')).toEqual(['usr_b', 'usr_c', 'usr_a']);
 
       // 2. Second assignment: usr_a has 1 open, usr_b and usr_c have 0 open -> selects usr_b
       conversationsDb.set('conv_2', {
@@ -450,9 +449,9 @@ describe('AutoAssignmentService (Round-Robin & Least-Loaded Assignment)', () => 
         status: ConversationStatus.OPEN,
       });
       const res2 = await autoAssignmentService.assignConversation('ws_1', 'conv_2');
-      assert.strictEqual(res2?.assigneeId, 'usr_b');
+      expect(res2?.assigneeId).toBe('usr_b');
       // Queue rotated: [usr_c, usr_a, usr_b]
-      assert.deepStrictEqual(redisLists.get('round_robin:inbox:ib_1'), ['usr_c', 'usr_a', 'usr_b']);
+      expect(redisLists.get('round_robin:inbox:ib_1')).toEqual(['usr_c', 'usr_a', 'usr_b']);
 
       // 3. Third assignment: usr_a has 1, usr_b has 1, usr_c has 0 -> selects usr_c (least load)
       conversationsDb.set('conv_3', {
@@ -465,9 +464,9 @@ describe('AutoAssignmentService (Round-Robin & Least-Loaded Assignment)', () => 
         status: ConversationStatus.OPEN,
       });
       const res3 = await autoAssignmentService.assignConversation('ws_1', 'conv_3');
-      assert.strictEqual(res3?.assigneeId, 'usr_c');
+      expect(res3?.assigneeId).toBe('usr_c');
       // Queue rotated: [usr_a, usr_b, usr_c]
-      assert.deepStrictEqual(redisLists.get('round_robin:inbox:ib_1'), ['usr_a', 'usr_b', 'usr_c']);
+      expect(redisLists.get('round_robin:inbox:ib_1')).toEqual(['usr_a', 'usr_b', 'usr_c']);
 
       // 4. Fourth assignment: all 3 now have 1 open -> selects usr_a (tiebreaker front)
       conversationsDb.set('conv_4', {
@@ -480,8 +479,8 @@ describe('AutoAssignmentService (Round-Robin & Least-Loaded Assignment)', () => 
         status: ConversationStatus.OPEN,
       });
       const res4 = await autoAssignmentService.assignConversation('ws_1', 'conv_4');
-      assert.strictEqual(res4?.assigneeId, 'usr_a');
-      assert.deepStrictEqual(redisLists.get('round_robin:inbox:ib_1'), ['usr_b', 'usr_c', 'usr_a']);
+      expect(res4?.assigneeId).toBe('usr_a');
+      expect(redisLists.get('round_robin:inbox:ib_1')).toEqual(['usr_b', 'usr_c', 'usr_a']);
     });
 
     it('should prioritize agent missing from Redis queue and add them', async () => {
@@ -494,7 +493,7 @@ describe('AutoAssignmentService (Round-Robin & Least-Loaded Assignment)', () => 
         'usr_b',
         'usr_c',
       ]);
-      assert.strictEqual(selected, 'usr_c');
+      expect(selected).toBe('usr_c');
     });
   });
 
@@ -554,9 +553,9 @@ describe('AutoAssignmentService (Round-Robin & Least-Loaded Assignment)', () => 
       });
 
       const result = await autoAssignmentService.assignConversation('ws_1', 'conv_team');
-      assert.ok(result !== null);
+      assertDefined(result);
       // Candidate must be chosen from [usr_2, usr_3] -> usr_2 has fewer open than usr_3
-      assert.strictEqual(result.assigneeId, 'usr_2');
+      expect(result.assigneeId).toBe('usr_2');
     });
 
     it('should leave unassigned if no online members intersect between Inbox and Team', async () => {
@@ -579,7 +578,7 @@ describe('AutoAssignmentService (Round-Robin & Least-Loaded Assignment)', () => 
       });
 
       const result = await autoAssignmentService.assignConversation('ws_1', 'conv_team_none');
-      assert.strictEqual(result, null);
+      expect(result).toBe(null);
     });
   });
 
@@ -600,8 +599,8 @@ describe('AutoAssignmentService (Round-Robin & Least-Loaded Assignment)', () => 
 
       acquireLockAttempts = 0;
       const result = await autoAssignmentService.assignConversation('ws_1', 'conv_locked');
-      assert.strictEqual(result, null);
-      assert.strictEqual(acquireLockAttempts, 4);
+      expect(result).toBe(null);
+      expect(acquireLockAttempts).toBe(4);
     });
 
     it('should always release lock after successful assignment', async () => {
@@ -619,7 +618,7 @@ describe('AutoAssignmentService (Round-Robin & Least-Loaded Assignment)', () => 
       });
 
       await autoAssignmentService.assignConversation('ws_1', 'conv_test');
-      assert.strictEqual(redisLocks.has('lock:auto_assign:inbox:ib_1'), false);
+      expect(redisLocks.has('lock:auto_assign:inbox:ib_1')).toBe(false);
     });
 
     it('should retry and succeed when lock becomes available on subsequent attempt', async () => {
@@ -643,8 +642,8 @@ describe('AutoAssignmentService (Round-Robin & Least-Loaded Assignment)', () => 
       }, 30);
 
       const result = await autoAssignmentService.assignConversation('ws_1', 'conv_retry_success');
-      assert.ok(result);
-      assert.strictEqual(result.assigneeId, 'usr_1');
+      assertDefined(result);
+      expect(result.assigneeId).toBe('usr_1');
     });
   });
 
@@ -679,7 +678,7 @@ describe('AutoAssignmentService (Round-Robin & Least-Loaded Assignment)', () => 
       };
 
       await autoAssignmentListener.handleConversationCreated(eventPayload);
-      assert.strictEqual(conversationsDb.get('conv_event_1').assigneeId, 'usr_1');
+      expect(conversationsDb.get('conv_event_1').assigneeId).toBe('usr_1');
     });
 
     it('should skip conversation.created event when conversation already has assignee', async () => {
@@ -707,7 +706,7 @@ describe('AutoAssignmentService (Round-Robin & Least-Loaded Assignment)', () => 
       };
 
       await autoAssignmentListener.handleConversationCreated(eventPayload);
-      assert.strictEqual(conversationsDb.get('conv_event_2').assigneeId, 'usr_manual');
+      expect(conversationsDb.get('conv_event_2').assigneeId).toBe('usr_manual');
     });
 
     it('should auto-assign upon receiving conversation.reopened event when unassigned', async () => {
@@ -737,7 +736,7 @@ describe('AutoAssignmentService (Round-Robin & Least-Loaded Assignment)', () => 
       };
 
       await autoAssignmentListener.handleConversationReopened(eventPayload);
-      assert.strictEqual(conversationsDb.get('conv_reopened_1').assigneeId, 'usr_1');
+      expect(conversationsDb.get('conv_reopened_1').assigneeId).toBe('usr_1');
     });
   });
 });

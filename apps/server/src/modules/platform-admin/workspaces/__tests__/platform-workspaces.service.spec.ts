@@ -1,5 +1,4 @@
-import { describe, it, beforeEach } from 'node:test';
-import * as assert from 'node:assert';
+import { assertDefined, expectReject } from '../../../../../test/test-assertions';
 import {
   BillingPlanType,
   PlatformAuditAction,
@@ -241,55 +240,55 @@ describe('PlatformWorkspacesService (Super Admin Workspace Management)', () => {
       settingsStore.set('quotas.free.ai_monthly_tokens', 80000);
 
       const quotas = await service.getDefaultQuotas(BillingPlanType.FREE);
-      assert.strictEqual(quotas.maxAgents, 4);
-      assert.strictEqual(quotas.maxChannels, 3);
-      assert.strictEqual(quotas.storageLimitMb, 1000);
-      assert.strictEqual(quotas.aiMonthlyTokens, 80000);
+      expect(quotas.maxAgents).toBe(4);
+      expect(quotas.maxChannels).toBe(3);
+      expect(quotas.storageLimitMb).toBe(1000);
+      expect(quotas.aiMonthlyTokens).toBe(80000);
     });
 
     it('should return fallback defaults when system settings are unset', async () => {
       const freeQuotas = await service.getDefaultQuotas(BillingPlanType.FREE);
-      assert.strictEqual(freeQuotas.maxAgents, 2);
-      assert.strictEqual(freeQuotas.maxChannels, 2);
-      assert.strictEqual(freeQuotas.storageLimitMb, 500);
-      assert.strictEqual(freeQuotas.aiMonthlyTokens, 50000);
+      expect(freeQuotas.maxAgents).toBe(2);
+      expect(freeQuotas.maxChannels).toBe(2);
+      expect(freeQuotas.storageLimitMb).toBe(500);
+      expect(freeQuotas.aiMonthlyTokens).toBe(50000);
 
       const standardQuotas = await service.getDefaultQuotas(BillingPlanType.STANDARD);
-      assert.strictEqual(standardQuotas.maxAgents, 10);
-      assert.strictEqual(standardQuotas.maxChannels, 5);
+      expect(standardQuotas.maxAgents).toBe(10);
+      expect(standardQuotas.maxChannels).toBe(5);
 
       const enterpriseQuotas = await service.getDefaultQuotas(BillingPlanType.ENTERPRISE);
-      assert.strictEqual(enterpriseQuotas.maxAgents, 100);
-      assert.strictEqual(enterpriseQuotas.maxChannels, 20);
+      expect(enterpriseQuotas.maxAgents).toBe(100);
+      expect(enterpriseQuotas.maxChannels).toBe(20);
     });
   });
 
   describe('getWorkspaces', () => {
     it('should return paginated workspaces with meta', async () => {
       const result = await service.getWorkspaces({ page: 1, limit: 10 });
-      assert.strictEqual(result.items.length, 2);
-      assert.strictEqual(result.meta.total, 2);
-      assert.strictEqual(result.meta.page, 1);
-      assert.strictEqual(result.meta.limit, 10);
-      assert.strictEqual(result.items[0].name, 'Beta Shoes'); // default desc by createdAt
+      expect(result.items.length).toBe(2);
+      expect(result.meta.total).toBe(2);
+      expect(result.meta.page).toBe(1);
+      expect(result.meta.limit).toBe(10);
+      expect(result.items[0].name).toBe('Beta Shoes'); // default desc by createdAt
     });
 
     it('should filter workspaces by search keyword on name, slug, or owner email', async () => {
       const byName = await service.getWorkspaces({ search: 'Alpha' });
-      assert.strictEqual(byName.items.length, 1);
-      assert.strictEqual(byName.items[0].id, 'ws_1');
+      expect(byName.items.length).toBe(1);
+      expect(byName.items[0].id).toBe('ws_1');
 
       const bySlug = await service.getWorkspaces({ search: 'beta-shoes' });
-      assert.strictEqual(bySlug.items.length, 1);
-      assert.strictEqual(bySlug.items[0].id, 'ws_2');
+      expect(bySlug.items.length).toBe(1);
+      expect(bySlug.items[0].id).toBe('ws_2');
 
       const byEmail = await service.getWorkspaces({ search: 'owner@alpha.com' });
-      assert.strictEqual(byEmail.items.length, 1);
-      assert.strictEqual(byEmail.items[0].id, 'ws_1');
+      expect(byEmail.items.length).toBe(1);
+      expect(byEmail.items[0].id).toBe('ws_1');
 
       const byOwnerName = await service.getWorkspaces({ search: 'Alpha Owner' });
-      assert.strictEqual(byOwnerName.items.length, 1);
-      assert.strictEqual(byOwnerName.items[0].id, 'ws_1');
+      expect(byOwnerName.items.length).toBe(1);
+      expect(byOwnerName.items[0].id).toBe('ws_1');
     });
 
     it('should filter workspaces by plan and suspension status', async () => {
@@ -297,23 +296,23 @@ describe('PlatformWorkspacesService (Super Admin Workspace Management)', () => {
         plan: BillingPlanType.FREE,
         status: 'ACTIVE',
       });
-      assert.strictEqual(activeFree.items.length, 1);
-      assert.strictEqual(activeFree.items[0].id, 'ws_1');
+      expect(activeFree.items.length).toBe(1);
+      expect(activeFree.items[0].id).toBe('ws_1');
 
       const suspended = await service.getWorkspaces({ status: 'SUSPENDED' });
-      assert.strictEqual(suspended.items.length, 1);
-      assert.strictEqual(suspended.items[0].id, 'ws_2');
+      expect(suspended.items.length).toBe(1);
+      expect(suspended.items[0].id).toBe('ws_2');
     });
   });
 
   describe('getWorkspaceDetail', () => {
     it('should throw NotFoundException if workspace does not exist', async () => {
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.getWorkspaceDetail('ws_non_existent');
         },
         (err: any) => {
-          assert.strictEqual(err.response?.code, 'WORKSPACE_NOT_FOUND');
+          expect(err.response?.code).toBe('WORKSPACE_NOT_FOUND');
           return true;
         },
       );
@@ -321,20 +320,20 @@ describe('PlatformWorkspacesService (Super Admin Workspace Management)', () => {
 
     it('should return full workspace detail with effectiveQuotas and usage calculations', async () => {
       const detail = await service.getWorkspaceDetail('ws_1');
-      assert.strictEqual(detail.id, 'ws_1');
-      assert.strictEqual(detail.name, 'Alpha Fashion');
+      expect(detail.id).toBe('ws_1');
+      expect(detail.name).toBe('Alpha Fashion');
       // effectiveQuotas: custom maxAgents (5) overrides free default (2)
-      assert.strictEqual(detail.quotas.maxAgents, 5);
-      assert.strictEqual(detail.quotas.maxChannels, 2); // default
+      expect(detail.quotas.maxAgents).toBe(5);
+      expect(detail.quotas.maxChannels).toBe(2); // default
       // usage
-      assert.strictEqual(detail.usage.currentAgents, 2);
-      assert.strictEqual(detail.usage.currentChannels, 2);
-      assert.strictEqual(detail.usage.storageUsedMb, 120);
-      assert.strictEqual(detail.usage.aiUsedTokens, 15000);
+      expect(detail.usage.currentAgents).toBe(2);
+      expect(detail.usage.currentChannels).toBe(2);
+      expect(detail.usage.storageUsedMb).toBe(120);
+      expect(detail.usage.aiUsedTokens).toBe(15000);
       // members
-      assert.strictEqual(detail.members.length, 2);
-      assert.strictEqual(detail.members[0].email, 'owner@alpha.com');
-      assert.strictEqual(detail.members[0].role, 'OWNER');
+      expect(detail.members.length).toBe(2);
+      expect(detail.members[0].email).toBe('owner@alpha.com');
+      expect(detail.members[0].role).toBe('OWNER');
     });
   });
 
@@ -346,16 +345,16 @@ describe('PlatformWorkspacesService (Super Admin Workspace Management)', () => {
         actor,
       );
 
-      assert.strictEqual(updated.billingPlan, BillingPlanType.ENTERPRISE);
-      assert.strictEqual(dbAuditLogs.length, 1);
-      assert.strictEqual(dbAuditLogs[0].action, PlatformAuditAction.PLAN_CHANGED);
-      assert.strictEqual(dbAuditLogs[0].targetType, PlatformAuditTargetType.WORKSPACE);
-      assert.strictEqual(dbAuditLogs[0].targetId, 'ws_1');
-      assert.strictEqual(dbAuditLogs[0].metadata.oldPlan, BillingPlanType.FREE);
-      assert.strictEqual(dbAuditLogs[0].metadata.newPlan, BillingPlanType.ENTERPRISE);
+      expect(updated.billingPlan).toBe(BillingPlanType.ENTERPRISE);
+      expect(dbAuditLogs.length).toBe(1);
+      expect(dbAuditLogs[0].action).toBe(PlatformAuditAction.PLAN_CHANGED);
+      expect(dbAuditLogs[0].targetType).toBe(PlatformAuditTargetType.WORKSPACE);
+      expect(dbAuditLogs[0].targetId).toBe('ws_1');
+      expect(dbAuditLogs[0].metadata.oldPlan).toBe(BillingPlanType.FREE);
+      expect(dbAuditLogs[0].metadata.newPlan).toBe(BillingPlanType.ENTERPRISE);
 
-      assert.strictEqual(emittedEvents.length, 1);
-      assert.strictEqual(emittedEvents[0].event, 'workspace.plan_updated');
+      expect(emittedEvents.length).toBe(1);
+      expect(emittedEvents[0].event).toBe('workspace.plan_updated');
     });
 
     it('should update custom quotas and write QUOTA_UPDATED audit log', async () => {
@@ -365,13 +364,13 @@ describe('PlatformWorkspacesService (Super Admin Workspace Management)', () => {
         actor,
       );
 
-      assert.strictEqual(updated.quotas.maxAgents, 15);
-      assert.strictEqual(updated.quotas.storageLimitMb, 2000);
+      expect(updated.quotas.maxAgents).toBe(15);
+      expect(updated.quotas.storageLimitMb).toBe(2000);
 
       const quotaLog = dbAuditLogs.find(l => l.action === PlatformAuditAction.QUOTA_UPDATED);
-      assert.ok(quotaLog);
-      assert.strictEqual(quotaLog.metadata.newQuotas.maxAgents, 15);
-      assert.strictEqual(quotaLog.metadata.newQuotas.storageLimitMb, 2000);
+      assertDefined(quotaLog);
+      expect(quotaLog.metadata.newQuotas.maxAgents).toBe(15);
+      expect(quotaLog.metadata.newQuotas.storageLimitMb).toBe(2000);
     });
 
     it('should remove custom quota override when set to null and revert to default', async () => {
@@ -382,10 +381,10 @@ describe('PlatformWorkspacesService (Super Admin Workspace Management)', () => {
         actor,
       );
 
-      assert.strictEqual(updated.quotas.maxAgents, 2); // reverted to free default
+      expect(updated.quotas.maxAgents).toBe(2); // reverted to free default
       const quotaLog = dbAuditLogs.find(l => l.action === PlatformAuditAction.QUOTA_UPDATED);
-      assert.ok(quotaLog);
-      assert.strictEqual(quotaLog.metadata.newQuotas.maxAgents, undefined);
+      assertDefined(quotaLog);
+      expect(quotaLog.metadata.newQuotas.maxAgents).toBe(undefined);
     });
 
     it('should not perform database update or write audit logs if plan and quotas are unchanged', async () => {
@@ -396,9 +395,9 @@ describe('PlatformWorkspacesService (Super Admin Workspace Management)', () => {
         actor,
       );
 
-      assert.strictEqual(updated.billingPlan, BillingPlanType.FREE);
-      assert.strictEqual(updated.quotas.maxAgents, 5);
-      assert.strictEqual(dbAuditLogs.length, 0); // No audit log for no-op update
+      expect(updated.billingPlan).toBe(BillingPlanType.FREE);
+      expect(updated.quotas.maxAgents).toBe(5);
+      expect(dbAuditLogs.length).toBe(0); // No audit log for no-op update
     });
 
     it('should write both PLAN_CHANGED and QUOTA_UPDATED audit logs when both are changed', async () => {
@@ -413,14 +412,14 @@ describe('PlatformWorkspacesService (Super Admin Workspace Management)', () => {
 
       const planLog = dbAuditLogs.find(l => l.action === PlatformAuditAction.PLAN_CHANGED);
       const quotaLog = dbAuditLogs.find(l => l.action === PlatformAuditAction.QUOTA_UPDATED);
-      assert.ok(planLog);
-      assert.ok(quotaLog);
+      assertDefined(planLog);
+      assertDefined(quotaLog);
     });
   });
 
   describe('toggleWorkspaceSuspension', () => {
     it('should throw BadRequestException if trying to suspend an already suspended workspace', async () => {
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.toggleWorkspaceSuspension(
             'ws_2', // already suspended
@@ -429,14 +428,14 @@ describe('PlatformWorkspacesService (Super Admin Workspace Management)', () => {
           );
         },
         (err: any) => {
-          assert.strictEqual(err.response?.code, 'WORKSPACE_ALREADY_SUSPENDED');
+          expect(err.response?.code).toBe('WORKSPACE_ALREADY_SUSPENDED');
           return true;
         },
       );
     });
 
     it('should throw BadRequestException if trying to activate an already active workspace', async () => {
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.toggleWorkspaceSuspension(
             'ws_1', // already active
@@ -445,7 +444,7 @@ describe('PlatformWorkspacesService (Super Admin Workspace Management)', () => {
           );
         },
         (err: any) => {
-          assert.strictEqual(err.response?.code, 'WORKSPACE_ALREADY_ACTIVE');
+          expect(err.response?.code).toBe('WORKSPACE_ALREADY_ACTIVE');
           return true;
         },
       );
@@ -458,37 +457,37 @@ describe('PlatformWorkspacesService (Super Admin Workspace Management)', () => {
         actor,
       );
 
-      assert.strictEqual(res.isSuspended, true);
-      assert.strictEqual(res.suspendedReason, 'Payment overdue');
-      assert.ok(res.suspendedAt);
+      expect(res.isSuspended).toBe(true);
+      expect(res.suspendedReason).toBe('Payment overdue');
+      assertDefined(res.suspendedAt);
 
       const suspendLog = dbAuditLogs.find(
         l => l.action === PlatformAuditAction.WORKSPACE_SUSPENDED,
       );
-      assert.ok(suspendLog);
-      assert.strictEqual(suspendLog.metadata.reason, 'Payment overdue');
+      assertDefined(suspendLog);
+      expect(suspendLog.metadata.reason).toBe('Payment overdue');
 
       const suspendEvent = emittedEvents.find(e => e.event === 'workspace.suspended');
-      assert.ok(suspendEvent);
-      assert.strictEqual(suspendEvent.payload.workspaceId, 'ws_1');
-      assert.strictEqual(suspendEvent.payload.reason, 'Payment overdue');
+      assertDefined(suspendEvent);
+      expect(suspendEvent.payload.workspaceId).toBe('ws_1');
+      expect(suspendEvent.payload.reason).toBe('Payment overdue');
     });
 
     it('should activate a suspended workspace, write audit log, and emit workspace.activated', async () => {
       const res = await service.toggleWorkspaceSuspension('ws_2', { isSuspended: false }, actor);
 
-      assert.strictEqual(res.isSuspended, false);
-      assert.strictEqual(res.suspendedReason, null);
-      assert.strictEqual(res.suspendedAt, null);
+      expect(res.isSuspended).toBe(false);
+      expect(res.suspendedReason).toBe(null);
+      expect(res.suspendedAt).toBe(null);
 
       const activateLog = dbAuditLogs.find(
         l => l.action === PlatformAuditAction.WORKSPACE_ACTIVATED,
       );
-      assert.ok(activateLog);
+      assertDefined(activateLog);
 
       const activateEvent = emittedEvents.find(e => e.event === 'workspace.activated');
-      assert.ok(activateEvent);
-      assert.strictEqual(activateEvent.payload.workspaceId, 'ws_2');
+      assertDefined(activateEvent);
+      expect(activateEvent.payload.workspaceId).toBe('ws_2');
     });
   });
 });

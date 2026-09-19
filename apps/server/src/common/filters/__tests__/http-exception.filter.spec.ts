@@ -1,5 +1,3 @@
-import { describe, it, beforeEach, afterEach } from 'node:test';
-import * as assert from 'node:assert';
 import { ArgumentsHost, BadRequestException, HttpStatus, NotFoundException } from '@nestjs/common';
 import { z, ZodError } from 'zod';
 import { HttpExceptionFilter } from '../http-exception.filter';
@@ -56,8 +54,8 @@ describe('HttpExceptionFilter (Global Exception Normalization)', () => {
     } as unknown as ArgumentsHost;
 
     filter.catch(new Error('WS error'), nonHttpHost);
-    assert.strictEqual(responseStatusCode, 0);
-    assert.strictEqual(responseBody, null);
+    expect(responseStatusCode).toBe(0);
+    expect(responseBody).toBe(null);
   });
 
   it('should catch ZodError and format as 400 VALIDATION_FAILED with field issues', () => {
@@ -75,18 +73,18 @@ describe('HttpExceptionFilter (Global Exception Normalization)', () => {
       }
     }
 
-    assert.ok(zodError, 'Expected ZodError to be caught');
+    expect(zodError).toBeTruthy();
 
     filter.catch(zodError, mockHost);
 
-    assert.strictEqual(responseStatusCode, HttpStatus.BAD_REQUEST);
-    assert.strictEqual(responseBody.success, false);
-    assert.strictEqual(responseBody.error.code, 'VALIDATION_FAILED');
-    assert.strictEqual(responseBody.error.message, 'Request validation failed');
-    assert.strictEqual(Array.isArray(responseBody.error.details), true);
-    assert.strictEqual(responseBody.error.details.length, 2);
-    assert.strictEqual(responseBody.error.details[0].field, 'email');
-    assert.strictEqual(responseBody.error.details[1].field, 'age');
+    expect(responseStatusCode).toBe(HttpStatus.BAD_REQUEST);
+    expect(responseBody.success).toBe(false);
+    expect(responseBody.error.code).toBe('VALIDATION_FAILED');
+    expect(responseBody.error.message).toBe('Request validation failed');
+    expect(Array.isArray(responseBody.error.details)).toBe(true);
+    expect(responseBody.error.details.length).toBe(2);
+    expect(responseBody.error.details[0].field).toBe('email');
+    expect(responseBody.error.details[1].field).toBe('age');
   });
 
   it('should handle standard HttpException with structured response', () => {
@@ -98,11 +96,11 @@ describe('HttpExceptionFilter (Global Exception Normalization)', () => {
 
     filter.catch(exception, mockHost);
 
-    assert.strictEqual(responseStatusCode, HttpStatus.BAD_REQUEST);
-    assert.strictEqual(responseBody.success, false);
-    assert.strictEqual(responseBody.error.code, 'INVALID_CREDENTIALS');
-    assert.strictEqual(responseBody.error.message, 'Invalid email or password');
-    assert.deepStrictEqual(responseBody.error.details, { attemptsRemaining: 2 });
+    expect(responseStatusCode).toBe(HttpStatus.BAD_REQUEST);
+    expect(responseBody.success).toBe(false);
+    expect(responseBody.error.code).toBe('INVALID_CREDENTIALS');
+    expect(responseBody.error.message).toBe('Invalid email or password');
+    expect(responseBody.error.details).toEqual({ attemptsRemaining: 2 });
   });
 
   it('should derive error code when HttpException contains plain string response', () => {
@@ -110,10 +108,10 @@ describe('HttpExceptionFilter (Global Exception Normalization)', () => {
 
     filter.catch(exception, mockHost);
 
-    assert.strictEqual(responseStatusCode, HttpStatus.NOT_FOUND);
-    assert.strictEqual(responseBody.success, false);
-    assert.strictEqual(responseBody.error.code, 'NOT_FOUND');
-    assert.strictEqual(responseBody.error.message, 'Resource not found');
+    expect(responseStatusCode).toBe(HttpStatus.NOT_FOUND);
+    expect(responseBody.success).toBe(false);
+    expect(responseBody.error.code).toBe('NOT_FOUND');
+    expect(responseBody.error.message).toBe('Resource not found');
   });
 
   it('should sanitize unhandled Error message in production (FINDING-P5-03)', () => {
@@ -124,11 +122,11 @@ describe('HttpExceptionFilter (Global Exception Normalization)', () => {
 
     filter.catch(secretError, mockHost);
 
-    assert.strictEqual(responseStatusCode, HttpStatus.INTERNAL_SERVER_ERROR);
-    assert.strictEqual(responseBody.success, false);
-    assert.strictEqual(responseBody.error.code, 'INTERNAL_SERVER_ERROR');
-    assert.strictEqual(responseBody.error.message, 'An unexpected internal error occurred');
-    assert.strictEqual(responseBody.error.details, null);
+    expect(responseStatusCode).toBe(HttpStatus.INTERNAL_SERVER_ERROR);
+    expect(responseBody.success).toBe(false);
+    expect(responseBody.error.code).toBe('INTERNAL_SERVER_ERROR');
+    expect(responseBody.error.message).toBe('An unexpected internal error occurred');
+    expect(responseBody.error.details).toBe(null);
   });
 
   it('should expose error message in development mode for debugging', () => {
@@ -137,9 +135,9 @@ describe('HttpExceptionFilter (Global Exception Normalization)', () => {
 
     filter.catch(debugError, mockHost);
 
-    assert.strictEqual(responseStatusCode, HttpStatus.INTERNAL_SERVER_ERROR);
-    assert.strictEqual(responseBody.success, false);
-    assert.strictEqual(responseBody.error.code, 'INTERNAL_SERVER_ERROR');
-    assert.strictEqual(responseBody.error.message, 'Debug stack info');
+    expect(responseStatusCode).toBe(HttpStatus.INTERNAL_SERVER_ERROR);
+    expect(responseBody.success).toBe(false);
+    expect(responseBody.error.code).toBe('INTERNAL_SERVER_ERROR');
+    expect(responseBody.error.message).toBe('Debug stack info');
   });
 });

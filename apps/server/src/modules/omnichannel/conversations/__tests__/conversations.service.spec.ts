@@ -1,5 +1,4 @@
-import { describe, it, beforeEach } from 'node:test';
-import * as assert from 'node:assert';
+import { assertDefined, expectReject } from '../../../../../test/test-assertions';
 import { ConversationsService } from '../conversations.service';
 import {
   ConversationPriority,
@@ -387,20 +386,20 @@ describe('ConversationsService (Core & State Machine)', () => {
         inboxId: 'ib_1',
       });
 
-      assert.strictEqual(conv.workspaceId, 'ws_1');
-      assert.strictEqual(conv.contactId, 'cnt_1');
-      assert.strictEqual(conv.inboxId, 'ib_1');
-      assert.strictEqual(conv.status, ConversationStatus.OPEN);
-      assert.strictEqual(conv.priority, ConversationPriority.MEDIUM);
-      assert.strictEqual(conv.unreadMessagesCount, 0);
+      expect(conv.workspaceId).toBe('ws_1');
+      expect(conv.contactId).toBe('cnt_1');
+      expect(conv.inboxId).toBe('ib_1');
+      expect(conv.status).toBe(ConversationStatus.OPEN);
+      expect(conv.priority).toBe(ConversationPriority.MEDIUM);
+      expect(conv.unreadMessagesCount).toBe(0);
 
-      assert.strictEqual(emittedEvents.length, 1);
-      assert.strictEqual(emittedEvents[0].event, 'conversation.created');
-      assert.strictEqual(emittedEvents[0].payload.conversation.id, conv.id);
+      expect(emittedEvents.length).toBe(1);
+      expect(emittedEvents[0].event).toBe('conversation.created');
+      expect(emittedEvents[0].payload.conversation.id).toBe(conv.id);
     });
 
     it('should throw NotFoundException if contact does not exist in workspace', async () => {
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.create('ws_1', {
             contactId: 'cnt_unknown',
@@ -408,15 +407,15 @@ describe('ConversationsService (Core & State Machine)', () => {
           });
         },
         (err: any) => {
-          assert.strictEqual(err instanceof NotFoundException, true);
-          assert.strictEqual(err.response.code, 'CONTACT_NOT_FOUND');
+          expect(err instanceof NotFoundException).toBe(true);
+          expect(err.response.code).toBe('CONTACT_NOT_FOUND');
           return true;
         },
       );
     });
 
     it('should throw NotFoundException if inbox does not exist in workspace', async () => {
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.create('ws_1', {
             contactId: 'cnt_1',
@@ -424,15 +423,15 @@ describe('ConversationsService (Core & State Machine)', () => {
           });
         },
         (err: any) => {
-          assert.strictEqual(err instanceof NotFoundException, true);
-          assert.strictEqual(err.response.code, 'INBOX_NOT_FOUND');
+          expect(err instanceof NotFoundException).toBe(true);
+          expect(err.response.code).toBe('INBOX_NOT_FOUND');
           return true;
         },
       );
     });
 
     it('should throw BadRequestException if assignee is not a member of the inbox', async () => {
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.create('ws_1', {
             contactId: 'cnt_1',
@@ -441,8 +440,8 @@ describe('ConversationsService (Core & State Machine)', () => {
           });
         },
         (err: any) => {
-          assert.strictEqual(err instanceof BadRequestException, true);
-          assert.strictEqual(err.response.code, 'ASSIGNEE_NOT_IN_INBOX');
+          expect(err instanceof BadRequestException).toBe(true);
+          expect(err.response.code).toBe('ASSIGNEE_NOT_IN_INBOX');
           return true;
         },
       );
@@ -458,9 +457,9 @@ describe('ConversationsService (Core & State Machine)', () => {
         priority: Priority.HIGH,
       });
 
-      assert.strictEqual(conv.assigneeId, 'usr_agent_1');
-      assert.strictEqual(conv.teamId, 'tm_1');
-      assert.strictEqual(conv.priority, ConversationPriority.HIGH);
+      expect(conv.assigneeId).toBe('usr_agent_1');
+      expect(conv.teamId).toBe('tm_1');
+      expect(conv.priority).toBe(ConversationPriority.HIGH);
     });
   });
 
@@ -481,11 +480,8 @@ describe('ConversationsService (Core & State Machine)', () => {
         status: ConversationStatus.PENDING,
       });
 
-      assert.strictEqual(updated.status, ConversationStatus.PENDING);
-      assert.strictEqual(
-        emittedEvents.some(e => e.event === 'conversation.status_updated'),
-        true,
-      );
+      expect(updated.status).toBe(ConversationStatus.PENDING);
+      expect(emittedEvents.some(e => e.event === 'conversation.status_updated')).toBe(true);
     });
 
     it('should transition OPEN -> SNOOZED with valid future date', async () => {
@@ -495,20 +491,20 @@ describe('ConversationsService (Core & State Machine)', () => {
         snoozedUntil: futureTime,
       });
 
-      assert.strictEqual(updated.status, ConversationStatus.SNOOZED);
-      assert.strictEqual(updated.snoozedUntil, futureTime);
+      expect(updated.status).toBe(ConversationStatus.SNOOZED);
+      expect(updated.snoozedUntil).toBe(futureTime);
     });
 
     it('should reject transition to SNOOZED without snoozedUntil', async () => {
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.updateStatus('ws_1', convId, {
             status: ConversationStatus.SNOOZED,
           });
         },
         (err: any) => {
-          assert.strictEqual(err instanceof BadRequestException, true);
-          assert.strictEqual(err.response.code, 'INVALID_SNOOZED_UNTIL');
+          expect(err instanceof BadRequestException).toBe(true);
+          expect(err.response.code).toBe('INVALID_SNOOZED_UNTIL');
           return true;
         },
       );
@@ -516,7 +512,7 @@ describe('ConversationsService (Core & State Machine)', () => {
 
     it('should reject transition to SNOOZED with past date', async () => {
       const pastTime = new Date(Date.now() - 3600000).toISOString();
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.updateStatus('ws_1', convId, {
             status: ConversationStatus.SNOOZED,
@@ -524,8 +520,8 @@ describe('ConversationsService (Core & State Machine)', () => {
           });
         },
         (err: any) => {
-          assert.strictEqual(err instanceof BadRequestException, true);
-          assert.strictEqual(err.response.code, 'INVALID_SNOOZED_UNTIL');
+          expect(err instanceof BadRequestException).toBe(true);
+          expect(err.response.code).toBe('INVALID_SNOOZED_UNTIL');
           return true;
         },
       );
@@ -539,8 +535,8 @@ describe('ConversationsService (Core & State Machine)', () => {
         status: ConversationStatus.RESOLVED,
       });
 
-      assert.strictEqual(updated.status, ConversationStatus.RESOLVED);
-      assert.strictEqual(updated.unreadMessagesCount, 0);
+      expect(updated.status).toBe(ConversationStatus.RESOLVED);
+      expect(updated.unreadMessagesCount).toBe(0);
     });
 
     it('should forward performedBy metadata in status_updated event', async () => {
@@ -553,8 +549,8 @@ describe('ConversationsService (Core & State Machine)', () => {
       );
 
       const statusEvent = emittedEvents.find(e => e.event === 'conversation.status_updated');
-      assert.ok(statusEvent);
-      assert.deepStrictEqual(statusEvent.payload.performedBy, {
+      assertDefined(statusEvent);
+      expect(statusEvent.payload.performedBy).toEqual({
         type: 'AUTOMATION_RULE',
         id: 'rule_999',
       });
@@ -568,27 +564,21 @@ describe('ConversationsService (Core & State Machine)', () => {
         status: ConversationStatus.OPEN,
       });
 
-      assert.strictEqual(reopened.status, ConversationStatus.OPEN);
-      assert.strictEqual(
-        emittedEvents.some(e => e.event === 'conversation.status_updated'),
-        true,
-      );
-      assert.strictEqual(
-        emittedEvents.some(e => e.event === 'conversation.reopened'),
-        true,
-      );
+      expect(reopened.status).toBe(ConversationStatus.OPEN);
+      expect(emittedEvents.some(e => e.event === 'conversation.status_updated')).toBe(true);
+      expect(emittedEvents.some(e => e.event === 'conversation.reopened')).toBe(true);
     });
 
     it('should reject invalid transition RESOLVED -> PENDING with 400', async () => {
       await service.updateStatus('ws_1', convId, { status: ConversationStatus.RESOLVED });
 
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.updateStatus('ws_1', convId, { status: ConversationStatus.PENDING });
         },
         (err: any) => {
-          assert.strictEqual(err instanceof BadRequestException, true);
-          assert.strictEqual(err.response.code, 'INVALID_STATUS_TRANSITION');
+          expect(err instanceof BadRequestException).toBe(true);
+          expect(err.response.code).toBe('INVALID_STATUS_TRANSITION');
           return true;
         },
       );
@@ -601,13 +591,13 @@ describe('ConversationsService (Core & State Machine)', () => {
         snoozedUntil: future,
       });
 
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.updateStatus('ws_1', convId, { status: ConversationStatus.PENDING });
         },
         (err: any) => {
-          assert.strictEqual(err instanceof BadRequestException, true);
-          assert.strictEqual(err.response.code, 'INVALID_STATUS_TRANSITION');
+          expect(err instanceof BadRequestException).toBe(true);
+          expect(err.response.code).toBe('INVALID_STATUS_TRANSITION');
           return true;
         },
       );
@@ -617,7 +607,7 @@ describe('ConversationsService (Core & State Machine)', () => {
       const result = await service.updateStatus('ws_1', convId, {
         status: ConversationStatus.OPEN,
       });
-      assert.strictEqual(result.status, ConversationStatus.OPEN);
+      expect(result.status).toBe(ConversationStatus.OPEN);
     });
   });
 
@@ -641,54 +631,54 @@ describe('ConversationsService (Core & State Machine)', () => {
         'usr_admin',
       );
 
-      assert.strictEqual(assigned.assigneeId, 'usr_agent_1');
-      assert.strictEqual(assigned.teamId, 'tm_1');
+      expect(assigned.assigneeId).toBe('usr_agent_1');
+      expect(assigned.teamId).toBe('tm_1');
 
       const assignEvent = emittedEvents.find(e => e.event === 'conversation.assigned');
-      assert.ok(assignEvent);
-      assert.strictEqual(assignEvent.payload.workspaceId, 'ws_1');
-      assert.strictEqual(assignEvent.payload.conversationId, convId);
-      assert.strictEqual(assignEvent.payload.previousAssigneeId, null);
-      assert.strictEqual(assignEvent.payload.newAssigneeId, 'usr_agent_1');
-      assert.strictEqual(assignEvent.payload.teamId, 'tm_1');
-      assert.strictEqual(assignEvent.payload.assignedByUserId, 'usr_admin');
-      assert.strictEqual(assignEvent.payload.conversation.id, convId);
+      assertDefined(assignEvent);
+      expect(assignEvent.payload.workspaceId).toBe('ws_1');
+      expect(assignEvent.payload.conversationId).toBe(convId);
+      expect(assignEvent.payload.previousAssigneeId).toBe(null);
+      expect(assignEvent.payload.newAssigneeId).toBe('usr_agent_1');
+      expect(assignEvent.payload.teamId).toBe('tm_1');
+      expect(assignEvent.payload.assignedByUserId).toBe('usr_admin');
+      expect(assignEvent.payload.conversation.id).toBe(convId);
     });
 
     it('should throw NotFoundException if conversation does not exist in workspace', async () => {
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.assign('ws_wrong', convId, { assigneeId: 'usr_agent_1' });
         },
         (err: any) => {
-          assert.strictEqual(err instanceof NotFoundException, true);
-          assert.strictEqual(err.response.code, 'CONVERSATION_NOT_FOUND');
+          expect(err instanceof NotFoundException).toBe(true);
+          expect(err.response.code).toBe('CONVERSATION_NOT_FOUND');
           return true;
         },
       );
     });
 
     it('should throw BadRequestException if assignee is not in inbox members', async () => {
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.assign('ws_1', convId, { assigneeId: 'usr_outsider' });
         },
         (err: any) => {
-          assert.strictEqual(err instanceof BadRequestException, true);
-          assert.strictEqual(err.response.code, 'ASSIGNEE_NOT_IN_INBOX');
+          expect(err instanceof BadRequestException).toBe(true);
+          expect(err.response.code).toBe('ASSIGNEE_NOT_IN_INBOX');
           return true;
         },
       );
     });
 
     it('should throw NotFoundException if team does not exist in workspace', async () => {
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.assign('ws_1', convId, { teamId: 'tm_nonexistent' });
         },
         (err: any) => {
-          assert.strictEqual(err instanceof NotFoundException, true);
-          assert.strictEqual(err.response.code, 'TEAM_NOT_FOUND');
+          expect(err instanceof NotFoundException).toBe(true);
+          expect(err.response.code).toBe('TEAM_NOT_FOUND');
           return true;
         },
       );
@@ -705,13 +695,13 @@ describe('ConversationsService (Core & State Machine)', () => {
         'usr_supervisor',
       );
 
-      assert.strictEqual(reassigned.assigneeId, 'usr_agent_2');
+      expect(reassigned.assigneeId).toBe('usr_agent_2');
 
       const assignEvent = emittedEvents.find(e => e.event === 'conversation.assigned');
-      assert.ok(assignEvent);
-      assert.strictEqual(assignEvent.payload.previousAssigneeId, 'usr_agent_1');
-      assert.strictEqual(assignEvent.payload.newAssigneeId, 'usr_agent_2');
-      assert.strictEqual(assignEvent.payload.assignedByUserId, 'usr_supervisor');
+      assertDefined(assignEvent);
+      expect(assignEvent.payload.previousAssigneeId).toBe('usr_agent_1');
+      expect(assignEvent.payload.newAssigneeId).toBe('usr_agent_2');
+      expect(assignEvent.payload.assignedByUserId).toBe('usr_supervisor');
     });
 
     it('should allow assigning only team without altering existing assignee', async () => {
@@ -720,8 +710,8 @@ describe('ConversationsService (Core & State Machine)', () => {
 
       const updated = await service.assign('ws_1', convId, { teamId: 'tm_1' });
 
-      assert.strictEqual(updated.assigneeId, 'usr_agent_1');
-      assert.strictEqual(updated.teamId, 'tm_1');
+      expect(updated.assigneeId).toBe('usr_agent_1');
+      expect(updated.teamId).toBe('tm_1');
     });
 
     it('should allow unassigning agent by passing null', async () => {
@@ -730,13 +720,13 @@ describe('ConversationsService (Core & State Machine)', () => {
 
       const unassigned = await service.assign('ws_1', convId, { assigneeId: null });
 
-      assert.strictEqual(unassigned.assigneeId, null);
-      assert.strictEqual(unassigned.teamId, 'tm_1');
+      expect(unassigned.assigneeId).toBe(null);
+      expect(unassigned.teamId).toBe('tm_1');
 
       const assignEvent = emittedEvents.find(e => e.event === 'conversation.assigned');
-      assert.ok(assignEvent);
-      assert.strictEqual(assignEvent.payload.previousAssigneeId, 'usr_agent_1');
-      assert.strictEqual(assignEvent.payload.newAssigneeId, null);
+      assertDefined(assignEvent);
+      expect(assignEvent.payload.previousAssigneeId).toBe('usr_agent_1');
+      expect(assignEvent.payload.newAssigneeId).toBe(null);
     });
 
     it('should allow unassigning team by passing null', async () => {
@@ -745,8 +735,8 @@ describe('ConversationsService (Core & State Machine)', () => {
 
       const unassigned = await service.assign('ws_1', convId, { teamId: null });
 
-      assert.strictEqual(unassigned.assigneeId, 'usr_agent_1');
-      assert.strictEqual(unassigned.teamId, null);
+      expect(unassigned.assigneeId).toBe('usr_agent_1');
+      expect(unassigned.teamId).toBe(null);
     });
 
     it('should allow unassigning both assignee and team simultaneously', async () => {
@@ -755,14 +745,14 @@ describe('ConversationsService (Core & State Machine)', () => {
 
       const unassigned = await service.assign('ws_1', convId, { assigneeId: null, teamId: null });
 
-      assert.strictEqual(unassigned.assigneeId, null);
-      assert.strictEqual(unassigned.teamId, null);
+      expect(unassigned.assigneeId).toBe(null);
+      expect(unassigned.teamId).toBe(null);
 
       const assignEvent = emittedEvents.find(e => e.event === 'conversation.assigned');
-      assert.ok(assignEvent);
-      assert.strictEqual(assignEvent.payload.previousAssigneeId, 'usr_agent_1');
-      assert.strictEqual(assignEvent.payload.newAssigneeId, null);
-      assert.strictEqual(assignEvent.payload.teamId, null);
+      assertDefined(assignEvent);
+      expect(assignEvent.payload.previousAssigneeId).toBe('usr_agent_1');
+      expect(assignEvent.payload.newAssigneeId).toBe(null);
+      expect(assignEvent.payload.teamId).toBe(null);
     });
   });
 
@@ -775,11 +765,11 @@ describe('ConversationsService (Core & State Machine)', () => {
         priority: Priority.URGENT,
       });
 
-      assert.strictEqual(updated.priority, ConversationPriority.URGENT);
+      expect(updated.priority).toBe(ConversationPriority.URGENT);
 
       const priorityEvent = emittedEvents.find(e => e.event === 'conversation.priority_updated');
-      assert.ok(priorityEvent);
-      assert.strictEqual(priorityEvent.payload.currentPriority, Priority.URGENT);
+      assertDefined(priorityEvent);
+      expect(priorityEvent.payload.currentPriority).toBe(Priority.URGENT);
     });
   });
 
@@ -790,7 +780,7 @@ describe('ConversationsService (Core & State Machine)', () => {
       conversationsDb.get(conv.id).unreadMessagesCount = 5;
 
       const reset = await service.resetUnreadCount('ws_1', conv.id);
-      assert.strictEqual(reset.unreadMessagesCount, 0);
+      expect(reset.unreadMessagesCount).toBe(0);
     });
   });
 
@@ -799,8 +789,8 @@ describe('ConversationsService (Core & State Machine)', () => {
       const conv = await service.create('ws_1', { contactId: 'cnt_1', inboxId: 'ib_1' });
 
       const found = await service.findActiveByContactAndInbox('ws_1', 'cnt_1', 'ib_1');
-      assert.ok(found);
-      assert.strictEqual(found.id, conv.id);
+      assertDefined(found);
+      expect(found.id).toBe(conv.id);
     });
 
     it('should return null if only RESOLVED conversations exist', async () => {
@@ -808,7 +798,7 @@ describe('ConversationsService (Core & State Machine)', () => {
       await service.updateStatus('ws_1', conv.id, { status: ConversationStatus.RESOLVED });
 
       const found = await service.findActiveByContactAndInbox('ws_1', 'cnt_1', 'ib_1');
-      assert.strictEqual(found, null);
+      expect(found).toBe(null);
     });
 
     it('should auto-reopen if findOrCreateActiveConversation hits a SNOOZED conversation', async () => {
@@ -824,8 +814,8 @@ describe('ConversationsService (Core & State Machine)', () => {
         inboxId: 'ib_1',
       });
 
-      assert.strictEqual(active.id, conv.id);
-      assert.strictEqual(active.status, ConversationStatus.OPEN);
+      expect(active.id).toBe(conv.id);
+      expect(active.status).toBe(ConversationStatus.OPEN);
     });
 
     it('should create new conversation if findOrCreateActiveConversation finds no active', async () => {
@@ -834,8 +824,8 @@ describe('ConversationsService (Core & State Machine)', () => {
         inboxId: 'ib_1',
       });
 
-      assert.ok(active);
-      assert.strictEqual(active.status, ConversationStatus.OPEN);
+      assertDefined(active);
+      expect(active.status).toBe(ConversationStatus.OPEN);
     });
   });
 
@@ -844,18 +834,18 @@ describe('ConversationsService (Core & State Machine)', () => {
       await service.create('ws_1', { contactId: 'cnt_1', inboxId: 'ib_1' });
       const res = await service.list('ws_1', { status: ConversationStatus.OPEN });
 
-      assert.strictEqual(res.items.length, 1);
-      assert.strictEqual(res.meta.total, 1);
-      assert.strictEqual(res.meta.page, 1);
+      expect(res.items.length).toBe(1);
+      expect(res.meta.total).toBe(1);
+      expect(res.meta.page).toBe(1);
     });
 
     it('should get conversation by ID or throw NotFoundException', async () => {
       const conv = await service.create('ws_1', { contactId: 'cnt_1', inboxId: 'ib_1' });
       const found = await service.getById('ws_1', conv.id);
 
-      assert.strictEqual(found.id, conv.id);
+      expect(found.id).toBe(conv.id);
 
-      await assert.rejects(async () => {
+      await expectReject(async () => {
         await service.getById('ws_1', 'non_existent');
       }, NotFoundException);
     });
@@ -873,31 +863,31 @@ describe('ConversationsService (Core & State Machine)', () => {
     it('should assign labels to conversation and emit conversation.labels_updated', async () => {
       const labels = await service.assignLabels('ws_1', convId, ['lbl_1', 'lbl_2']);
 
-      assert.strictEqual(labels.length, 2);
-      assert.strictEqual(labels[0].title, 'Billing');
-      assert.strictEqual(labels[1].title, 'VIP');
+      expect(labels.length).toBe(2);
+      expect(labels[0].title).toBe('Billing');
+      expect(labels[1].title).toBe('VIP');
 
       const labelEvent = emittedEvents.find(e => e.event === 'conversation.labels_updated');
-      assert.ok(labelEvent);
-      assert.strictEqual(labelEvent.payload.labelIds.length, 2);
+      assertDefined(labelEvent);
+      expect(labelEvent.payload.labelIds.length).toBe(2);
     });
 
     it('should be idempotent when assigning the same label again', async () => {
       await service.assignLabels('ws_1', convId, ['lbl_1']);
       const labels = await service.assignLabels('ws_1', convId, ['lbl_1']);
 
-      assert.strictEqual(labels.length, 1);
-      assert.strictEqual(labels[0].id, 'lbl_1');
+      expect(labels.length).toBe(1);
+      expect(labels[0].id).toBe('lbl_1');
     });
 
     it('should throw NotFoundException if label does not exist in workspace', async () => {
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.assignLabels('ws_1', convId, ['lbl_unknown']);
         },
         (err: any) => {
-          assert.strictEqual(err instanceof NotFoundException, true);
-          assert.strictEqual(err.response.code, 'LABEL_NOT_FOUND');
+          expect(err instanceof NotFoundException).toBe(true);
+          expect(err.response.code).toBe('LABEL_NOT_FOUND');
           return true;
         },
       );
@@ -908,25 +898,25 @@ describe('ConversationsService (Core & State Machine)', () => {
       emittedEvents = [];
 
       const result = await service.removeLabel('ws_1', convId, 'lbl_1');
-      assert.deepStrictEqual(result, { success: true });
+      expect(result).toEqual({ success: true });
 
       const remaining = await service.getLabels('ws_1', convId);
-      assert.strictEqual(remaining.length, 1);
-      assert.strictEqual(remaining[0].id, 'lbl_2');
+      expect(remaining.length).toBe(1);
+      expect(remaining[0].id).toBe('lbl_2');
 
       const labelEvent = emittedEvents.find(e => e.event === 'conversation.labels_updated');
-      assert.ok(labelEvent);
-      assert.strictEqual(labelEvent.payload.labelIds.length, 1);
+      assertDefined(labelEvent);
+      expect(labelEvent.payload.labelIds.length).toBe(1);
     });
 
     it('should throw NotFoundException when removing unassigned label', async () => {
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.removeLabel('ws_1', convId, 'lbl_1');
         },
         (err: any) => {
-          assert.strictEqual(err instanceof NotFoundException, true);
-          assert.strictEqual(err.response.code, 'CONVERSATION_LABEL_NOT_FOUND');
+          expect(err instanceof NotFoundException).toBe(true);
+          expect(err.response.code).toBe('CONVERSATION_LABEL_NOT_FOUND');
           return true;
         },
       );
@@ -936,10 +926,10 @@ describe('ConversationsService (Core & State Machine)', () => {
   describe('getCounts', () => {
     it('should return correct counts for all, unassigned, and mine', async () => {
       const counts = await service.getCounts('ws_1', ConversationStatus.OPEN, 'usr_agent_1');
-      assert.strictEqual(typeof counts.all, 'number');
-      assert.strictEqual(typeof counts.unassigned, 'number');
-      assert.strictEqual(typeof counts.mine, 'number');
-      assert.ok(counts.all >= counts.unassigned);
+      expect(typeof counts.all).toBe('number');
+      expect(typeof counts.unassigned).toBe('number');
+      expect(typeof counts.mine).toBe('number');
+      expect(counts.all >= counts.unassigned).toBeTruthy();
     });
   });
 
@@ -949,22 +939,22 @@ describe('ConversationsService (Core & State Machine)', () => {
         contactId: 'cnt_1',
         inboxId: 'ib_1',
       });
-      assert.strictEqual(conv.isAiPaused, false);
+      expect(conv.isAiPaused).toBe(false);
 
       emittedEvents = [];
       const paused = await service.setAiPause('ws_1', conv.id, true);
-      assert.strictEqual(paused.isAiPaused, true);
+      expect(paused.isAiPaused).toBe(true);
 
       const updateEvent = emittedEvents.find(e => e.event === 'conversation.updated');
-      assert.ok(updateEvent);
-      assert.strictEqual(updateEvent.payload.conversation.isAiPaused, true);
+      assertDefined(updateEvent);
+      expect(updateEvent.payload.conversation.isAiPaused).toBe(true);
 
       const resumed = await service.setAiPause('ws_1', conv.id, false);
-      assert.strictEqual(resumed.isAiPaused, false);
+      expect(resumed.isAiPaused).toBe(false);
     });
 
     it('should throw NotFoundException if conversation not found in workspace', async () => {
-      await assert.rejects(
+      await expectReject(
         () => service.setAiPause('wrong_ws', 'non-existent', true),
         (err: any) => err instanceof NotFoundException,
       );

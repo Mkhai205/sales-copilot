@@ -1,5 +1,3 @@
-import { describe, it, beforeEach } from 'node:test';
-import * as assert from 'node:assert';
 import { createSearchProductsTool } from '../search-products.tool';
 
 describe('searchProducts Tool (T1)', () => {
@@ -63,22 +61,22 @@ describe('searchProducts Tool (T1)', () => {
 
   it('should return empty list when query is whitespace', async () => {
     const result = await tool.execute({ query: '   ' }, {} as any);
-    assert.deepStrictEqual(result, []);
+    expect(result).toEqual([]);
   });
 
   it('should find matching products and only include active variants', async () => {
     const result = await tool.execute({ query: 'polo' }, {} as any);
-    assert.strictEqual(Array.isArray(result), true);
-    assert.strictEqual(result.length, 1);
+    expect(Array.isArray(result)).toBe(true);
+    expect(result.length).toBe(1);
 
     const product = result[0];
-    assert.strictEqual(product.productId, 'prod-1');
-    assert.strictEqual(product.name, 'Áo Polo Cotton');
-    assert.strictEqual(product.basePrice, 150000);
+    expect(product.productId).toBe('prod-1');
+    expect(product.name).toBe('Áo Polo Cotton');
+    expect(product.basePrice).toBe(150000);
     // var-3 is inactive, so only 2 variants should be present
-    assert.strictEqual(product.variants.length, 2);
-    assert.strictEqual(product.variants[0].variantId, 'var-1');
-    assert.strictEqual(product.variants[0].availableStock, 23);
+    expect(product.variants.length).toBe(2);
+    expect(product.variants[0].variantId).toBe('var-1');
+    expect(product.variants[0].availableStock).toBe(23);
   });
 
   it('should handle service errors gracefully without throwing', async () => {
@@ -87,7 +85,7 @@ describe('searchProducts Tool (T1)', () => {
     };
 
     const result = await tool.execute({ query: 'error-query' }, {} as any);
-    assert.strictEqual(result.error, 'SEARCH_PRODUCTS_FAILED');
-    assert.strictEqual(result.message, 'Database connection timeout');
+    expect(result.error).toBe('SEARCH_PRODUCTS_FAILED');
+    expect(result.message).toBe('Database connection timeout');
   });
 });

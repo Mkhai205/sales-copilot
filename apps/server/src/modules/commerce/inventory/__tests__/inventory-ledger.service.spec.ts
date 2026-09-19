@@ -1,5 +1,4 @@
-import { describe, it, beforeEach } from 'node:test';
-import * as assert from 'node:assert';
+import { expectReject } from '../../../../../test/test-assertions';
 import { DomainEvent, InventoryTransactionType } from '@sales-copilot/shared-contracts';
 import { InventoryLedgerService } from '../inventory-ledger.service';
 
@@ -183,14 +182,14 @@ describe('InventoryLedgerService (Atomic 3-State Stock & Immutable Ledger)', () 
   describe('getStock', () => {
     it('should return 3-state stock levels (physical, reserved, available)', async () => {
       const stock = await service.getStock(ws1, varA);
-      assert.strictEqual(stock.variantId, varA);
-      assert.strictEqual(stock.stockQuantity, 10);
-      assert.strictEqual(stock.reservedQuantity, 2);
-      assert.strictEqual(stock.availableStock, 8);
+      expect(stock.variantId).toBe(varA);
+      expect(stock.stockQuantity).toBe(10);
+      expect(stock.reservedQuantity).toBe(2);
+      expect(stock.availableStock).toBe(8);
     });
 
     it('should throw NotFoundException if variant does not exist in workspace', async () => {
-      await assert.rejects(() => service.getStock(ws1, varWs2), /VARIANT_NOT_FOUND/);
+      await expectReject(() => service.getStock(ws1, varWs2), /VARIANT_NOT_FOUND/);
     });
   });
 
@@ -206,29 +205,29 @@ describe('InventoryLedgerService (Atomic 3-State Stock & Immutable Ledger)', () 
         orderNumber: 'ORD-20260916-101',
       });
 
-      assert.strictEqual(txs.length, 1);
-      assert.strictEqual(txs[0].type, InventoryTransactionType.RESERVATION);
-      assert.strictEqual(txs[0].quantity, 3);
-      assert.strictEqual(txs[0].previousReserved, 2);
-      assert.strictEqual(txs[0].newReserved, 5);
+      expect(txs.length).toBe(1);
+      expect(txs[0].type).toBe(InventoryTransactionType.RESERVATION);
+      expect(txs[0].quantity).toBe(3);
+      expect(txs[0].previousReserved).toBe(2);
+      expect(txs[0].newReserved).toBe(5);
 
       const variant = variantsDb.get(varA);
-      assert.strictEqual(variant.reservedQuantity, 5);
+      expect(variant.reservedQuantity).toBe(5);
 
       const events = emittedEvents.filter(e => e.event === DomainEvent.INVENTORY_UPDATED);
-      assert.strictEqual(events.length, 1);
-      assert.strictEqual(events[0].payload.availableStock, 5);
+      expect(events.length).toBe(1);
+      expect(events[0].payload.availableStock).toBe(5);
     });
 
     it('should throw INSUFFICIENT_STOCK if available stock is less than requested quantity', async () => {
-      await assert.rejects(
+      await expectReject(
         () =>
           service.reserveStock({
             workspaceId: ws1,
             items: [{ variantId: varA, quantity: 9, sku: 'SHIRT-M-BLK' }],
           }),
         (err: any) => {
-          assert.strictEqual(err.response?.code, 'INSUFFICIENT_STOCK');
+          expect(err.response?.code).toBe('INSUFFICIENT_STOCK');
           return true;
         },
       );
@@ -244,16 +243,16 @@ describe('InventoryLedgerService (Atomic 3-State Stock & Immutable Ledger)', () 
         isPreviouslyReserved: true,
       });
 
-      assert.strictEqual(txs.length, 1);
-      assert.strictEqual(txs[0].type, InventoryTransactionType.COMMIT_SALE);
-      assert.strictEqual(txs[0].previousStock, 10);
-      assert.strictEqual(txs[0].newStock, 8);
-      assert.strictEqual(txs[0].previousReserved, 2);
-      assert.strictEqual(txs[0].newReserved, 0);
+      expect(txs.length).toBe(1);
+      expect(txs[0].type).toBe(InventoryTransactionType.COMMIT_SALE);
+      expect(txs[0].previousStock).toBe(10);
+      expect(txs[0].newStock).toBe(8);
+      expect(txs[0].previousReserved).toBe(2);
+      expect(txs[0].newReserved).toBe(0);
 
       const variant = variantsDb.get(varA);
-      assert.strictEqual(variant.stockQuantity, 8);
-      assert.strictEqual(variant.reservedQuantity, 0);
+      expect(variant.stockQuantity).toBe(8);
+      expect(variant.reservedQuantity).toBe(0);
     });
 
     it('should commit unreserved stock directly (decrementing physical stock)', async () => {
@@ -264,14 +263,14 @@ describe('InventoryLedgerService (Atomic 3-State Stock & Immutable Ledger)', () 
         isPreviouslyReserved: false,
       });
 
-      assert.strictEqual(txs.length, 1);
-      assert.strictEqual(txs[0].type, InventoryTransactionType.COMMIT_SALE);
-      assert.strictEqual(txs[0].previousStock, 5);
-      assert.strictEqual(txs[0].newStock, 2);
+      expect(txs.length).toBe(1);
+      expect(txs[0].type).toBe(InventoryTransactionType.COMMIT_SALE);
+      expect(txs[0].previousStock).toBe(5);
+      expect(txs[0].newStock).toBe(2);
 
       const variant = variantsDb.get(varB);
-      assert.strictEqual(variant.stockQuantity, 2);
-      assert.strictEqual(variant.reservedQuantity, 0);
+      expect(variant.stockQuantity).toBe(2);
+      expect(variant.reservedQuantity).toBe(0);
     });
   });
 
@@ -283,13 +282,13 @@ describe('InventoryLedgerService (Atomic 3-State Stock & Immutable Ledger)', () 
         orderId: 'ord_101',
       });
 
-      assert.strictEqual(txs.length, 1);
-      assert.strictEqual(txs[0].type, InventoryTransactionType.RELEASE_RESERVATION);
-      assert.strictEqual(txs[0].previousReserved, 2);
-      assert.strictEqual(txs[0].newReserved, 0);
+      expect(txs.length).toBe(1);
+      expect(txs[0].type).toBe(InventoryTransactionType.RELEASE_RESERVATION);
+      expect(txs[0].previousReserved).toBe(2);
+      expect(txs[0].newReserved).toBe(0);
 
       const variant = variantsDb.get(varA);
-      assert.strictEqual(variant.reservedQuantity, 0);
+      expect(variant.reservedQuantity).toBe(0);
     });
 
     it('should accurately record previousReserved and newReserved if quantity exceeds reservedQuantity', async () => {
@@ -300,23 +299,23 @@ describe('InventoryLedgerService (Atomic 3-State Stock & Immutable Ledger)', () 
         orderId: 'ord_102',
       });
 
-      assert.strictEqual(txs.length, 1);
-      assert.strictEqual(txs[0].previousReserved, 2);
-      assert.strictEqual(txs[0].newReserved, 0);
+      expect(txs.length).toBe(1);
+      expect(txs[0].previousReserved).toBe(2);
+      expect(txs[0].newReserved).toBe(0);
 
       const variant = variantsDb.get(varA);
-      assert.strictEqual(variant.reservedQuantity, 0);
+      expect(variant.reservedQuantity).toBe(0);
     });
 
     it('should throw VARIANT_NOT_FOUND if variant does not exist in workspace during releaseStock', async () => {
-      await assert.rejects(
+      await expectReject(
         () =>
           service.releaseStock({
             workspaceId: ws1,
             items: [{ variantId: 'non_existent_var', quantity: 1 }],
           }),
         (err: any) => {
-          assert.strictEqual(err.response?.code, 'VARIANT_NOT_FOUND');
+          expect(err.response?.code).toBe('VARIANT_NOT_FOUND');
           return true;
         },
       );
@@ -335,16 +334,16 @@ describe('InventoryLedgerService (Atomic 3-State Stock & Immutable Ledger)', () 
         },
       });
 
-      assert.strictEqual(result.type, InventoryTransactionType.STOCK_IN);
-      assert.strictEqual(result.previousStock, 5);
-      assert.strictEqual(result.newStock, 15);
+      expect(result.type).toBe(InventoryTransactionType.STOCK_IN);
+      expect(result.previousStock).toBe(5);
+      expect(result.newStock).toBe(15);
 
       const variant = variantsDb.get(varB);
-      assert.strictEqual(variant.stockQuantity, 15);
+      expect(variant.stockQuantity).toBe(15);
     });
 
     it('should throw VARIANT_NOT_FOUND in adjustStock if variant does not exist in workspace', async () => {
-      await assert.rejects(
+      await expectReject(
         () =>
           service.adjustStock({
             workspaceId: ws1,
@@ -356,14 +355,14 @@ describe('InventoryLedgerService (Atomic 3-State Stock & Immutable Ledger)', () 
             },
           }),
         (err: any) => {
-          assert.strictEqual(err.response?.code, 'VARIANT_NOT_FOUND');
+          expect(err.response?.code).toBe('VARIANT_NOT_FOUND');
           return true;
         },
       );
     });
 
     it('should reject STOCK_OUT if it would breach reservedQuantity', async () => {
-      await assert.rejects(
+      await expectReject(
         () =>
           service.adjustStock({
             workspaceId: ws1,
@@ -375,7 +374,7 @@ describe('InventoryLedgerService (Atomic 3-State Stock & Immutable Ledger)', () 
             },
           }),
         (err: any) => {
-          assert.strictEqual(err.response?.code, 'CANNOT_REDUCE_BELOW_RESERVED');
+          expect(err.response?.code).toBe('CANNOT_REDUCE_BELOW_RESERVED');
           return true;
         },
       );
@@ -392,12 +391,12 @@ describe('InventoryLedgerService (Atomic 3-State Stock & Immutable Ledger)', () 
         },
       });
 
-      assert.strictEqual(result.type, InventoryTransactionType.INVENTORY_AUDIT);
-      assert.strictEqual(result.previousStock, 10);
-      assert.strictEqual(result.newStock, 7);
+      expect(result.type).toBe(InventoryTransactionType.INVENTORY_AUDIT);
+      expect(result.previousStock).toBe(10);
+      expect(result.newStock).toBe(7);
 
       const variant = variantsDb.get(varA);
-      assert.strictEqual(variant.stockQuantity, 7);
+      expect(variant.stockQuantity).toBe(7);
     });
   });
 });

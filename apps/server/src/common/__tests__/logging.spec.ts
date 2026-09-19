@@ -1,5 +1,3 @@
-import { describe, it } from 'node:test';
-import * as assert from 'node:assert';
 import { EventEmitter } from 'node:events';
 import { Writable } from 'node:stream';
 import pino from 'pino';
@@ -58,38 +56,38 @@ describe('Structured Logging & Redaction (Task 7 — Feature F-1.11.3)', () => {
 
   describe('Pino Redaction Configuration', () => {
     it('should verify standard [REDACTED] censor and key redaction paths', () => {
-      assert.strictEqual(REDACTION_CENSOR, '[REDACTED]');
-      assert.ok(Array.isArray(REDACT_PATHS));
-      assert.ok(REDACT_PATHS.length >= 25);
+      expect(REDACTION_CENSOR).toBe('[REDACTED]');
+      expect(Array.isArray(REDACT_PATHS)).toBeTruthy();
+      expect(REDACT_PATHS.length >= 25).toBeTruthy();
 
       // Verify headers
-      assert.ok(REDACT_PATHS.includes('req.headers.authorization'));
-      assert.ok(REDACT_PATHS.includes('req.headers.cookie'));
-      assert.ok(REDACT_PATHS.includes('req.headers["set-cookie"]'));
-      assert.ok(REDACT_PATHS.includes('res.headers["set-cookie"]'));
+      expect(REDACT_PATHS.includes('req.headers.authorization')).toBeTruthy();
+      expect(REDACT_PATHS.includes('req.headers.cookie')).toBeTruthy();
+      expect(REDACT_PATHS.includes('req.headers["set-cookie"]')).toBeTruthy();
+      expect(REDACT_PATHS.includes('res.headers["set-cookie"]')).toBeTruthy();
 
       // Verify passwords & keys
-      assert.ok(REDACT_PATHS.includes('password'));
-      assert.ok(REDACT_PATHS.includes('*.password'));
-      assert.ok(REDACT_PATHS.includes('*[*].password'));
-      assert.ok(REDACT_PATHS.includes('currentPassword'));
-      assert.ok(REDACT_PATHS.includes('newPassword'));
-      assert.ok(REDACT_PATHS.includes('channelEncryptionKey'));
+      expect(REDACT_PATHS.includes('password')).toBeTruthy();
+      expect(REDACT_PATHS.includes('*.password')).toBeTruthy();
+      expect(REDACT_PATHS.includes('*[*].password')).toBeTruthy();
+      expect(REDACT_PATHS.includes('currentPassword')).toBeTruthy();
+      expect(REDACT_PATHS.includes('newPassword')).toBeTruthy();
+      expect(REDACT_PATHS.includes('channelEncryptionKey')).toBeTruthy();
 
       // Verify tokens & secrets
-      assert.ok(REDACT_PATHS.includes('accessToken'));
-      assert.ok(REDACT_PATHS.includes('refreshToken'));
-      assert.ok(REDACT_PATHS.includes('token'));
-      assert.ok(REDACT_PATHS.includes('pageAccessToken'));
-      assert.ok(REDACT_PATHS.includes('credentials'));
-      assert.ok(REDACT_PATHS.includes('appSecret'));
-      assert.ok(REDACT_PATHS.includes('webhookSecret'));
-      assert.ok(REDACT_PATHS.includes('secretKey'));
+      expect(REDACT_PATHS.includes('accessToken')).toBeTruthy();
+      expect(REDACT_PATHS.includes('refreshToken')).toBeTruthy();
+      expect(REDACT_PATHS.includes('token')).toBeTruthy();
+      expect(REDACT_PATHS.includes('pageAccessToken')).toBeTruthy();
+      expect(REDACT_PATHS.includes('credentials')).toBeTruthy();
+      expect(REDACT_PATHS.includes('appSecret')).toBeTruthy();
+      expect(REDACT_PATHS.includes('webhookSecret')).toBeTruthy();
+      expect(REDACT_PATHS.includes('secretKey')).toBeTruthy();
 
       // Verify PII
-      assert.ok(REDACT_PATHS.includes('email'));
-      assert.ok(REDACT_PATHS.includes('phone'));
-      assert.ok(REDACT_PATHS.includes('phoneNumber'));
+      expect(REDACT_PATHS.includes('email')).toBeTruthy();
+      expect(REDACT_PATHS.includes('phone')).toBeTruthy();
+      expect(REDACT_PATHS.includes('phoneNumber')).toBeTruthy();
     });
   });
 
@@ -113,15 +111,15 @@ describe('Structured Logging & Redaction (Task 7 — Feature F-1.11.3)', () => {
         ],
       });
 
-      assert.strictEqual(logs.length, 1);
+      expect(logs.length).toBe(1);
       const entry = logs[0];
-      assert.strictEqual(entry.password, '[REDACTED]');
-      assert.strictEqual(entry.auth.currentPassword, '[REDACTED]');
-      assert.strictEqual(entry.auth.newPassword, '[REDACTED]');
-      assert.strictEqual(entry.auth.nested.password, '[REDACTED]');
-      assert.strictEqual(entry.members[0].password, '[REDACTED]');
-      assert.strictEqual(entry.members[1].password, '[REDACTED]');
-      assert.strictEqual(entry.members[0].id, 'usr_1');
+      expect(entry.password).toBe('[REDACTED]');
+      expect(entry.auth.currentPassword).toBe('[REDACTED]');
+      expect(entry.auth.newPassword).toBe('[REDACTED]');
+      expect(entry.auth.nested.password).toBe('[REDACTED]');
+      expect(entry.members[0].password).toBe('[REDACTED]');
+      expect(entry.members[1].password).toBe('[REDACTED]');
+      expect(entry.members[0].id).toBe('usr_1');
     });
 
     it('should redact appSecret, webhookSecret, secretKey, and channelEncryptionKey', () => {
@@ -141,12 +139,12 @@ describe('Structured Logging & Redaction (Task 7 — Feature F-1.11.3)', () => {
         },
       });
 
-      assert.strictEqual(logs.length, 1);
+      expect(logs.length).toBe(1);
       const entry = logs[0];
-      assert.strictEqual(entry.channelEncryptionKey, '[REDACTED]');
-      assert.strictEqual(entry.integrations.fb.appSecret, '[REDACTED]');
-      assert.strictEqual(entry.integrations.webhook.webhookSecret, '[REDACTED]');
-      assert.strictEqual(entry.integrations.webhook.secretKey, '[REDACTED]');
+      expect(entry.channelEncryptionKey).toBe('[REDACTED]');
+      expect(entry.integrations.fb.appSecret).toBe('[REDACTED]');
+      expect(entry.integrations.webhook.webhookSecret).toBe('[REDACTED]');
+      expect(entry.integrations.webhook.secretKey).toBe('[REDACTED]');
     });
   });
 
@@ -169,14 +167,14 @@ describe('Structured Logging & Redaction (Task 7 — Feature F-1.11.3)', () => {
         },
       });
 
-      assert.strictEqual(logs.length, 1);
+      expect(logs.length).toBe(1);
       const entry = logs[0];
-      assert.strictEqual(entry.accessToken, '[REDACTED]');
-      assert.strictEqual(entry.refreshToken, '[REDACTED]');
-      assert.strictEqual(entry.token, '[REDACTED]');
-      assert.strictEqual(entry.channel.pageAccessToken, '[REDACTED]');
-      assert.strictEqual(entry.channel.credentials, '[REDACTED]');
-      assert.strictEqual(entry.channel.id, 'ch_fb_123');
+      expect(entry.accessToken).toBe('[REDACTED]');
+      expect(entry.refreshToken).toBe('[REDACTED]');
+      expect(entry.token).toBe('[REDACTED]');
+      expect(entry.channel.pageAccessToken).toBe('[REDACTED]');
+      expect(entry.channel.credentials).toBe('[REDACTED]');
+      expect(entry.channel.id).toBe('ch_fb_123');
     });
   });
 
@@ -198,16 +196,16 @@ describe('Structured Logging & Redaction (Task 7 — Feature F-1.11.3)', () => {
         ],
       });
 
-      assert.strictEqual(logs.length, 1);
+      expect(logs.length).toBe(1);
       const entry = logs[0];
-      assert.strictEqual(entry.user.id, 'usr_admin');
-      assert.strictEqual(entry.user.name, 'Sales Manager');
-      assert.strictEqual(entry.user.email, '[REDACTED]');
-      assert.strictEqual(entry.user.phone, '[REDACTED]');
-      assert.strictEqual(entry.customers[0].email, '[REDACTED]');
-      assert.strictEqual(entry.customers[0].phoneNumber, '[REDACTED]');
-      assert.strictEqual(entry.customers[1].email, '[REDACTED]');
-      assert.strictEqual(entry.customers[1].phoneNumber, '[REDACTED]');
+      expect(entry.user.id).toBe('usr_admin');
+      expect(entry.user.name).toBe('Sales Manager');
+      expect(entry.user.email).toBe('[REDACTED]');
+      expect(entry.user.phone).toBe('[REDACTED]');
+      expect(entry.customers[0].email).toBe('[REDACTED]');
+      expect(entry.customers[0].phoneNumber).toBe('[REDACTED]');
+      expect(entry.customers[1].email).toBe('[REDACTED]');
+      expect(entry.customers[1].phoneNumber).toBe('[REDACTED]');
     });
   });
 
@@ -247,26 +245,23 @@ describe('Structured Logging & Redaction (Task 7 — Feature F-1.11.3)', () => {
         'User login processed',
       );
 
-      assert.strictEqual(logs.length, 1);
+      expect(logs.length).toBe(1);
       const entry = logs[0];
 
       // Headers redacted
-      assert.strictEqual(entry.req.headers.authorization, '[REDACTED]');
-      assert.strictEqual(entry.req.headers.cookie, '[REDACTED]');
-      assert.strictEqual(entry.req.headers['set-cookie'], '[REDACTED]');
+      expect(entry.req.headers.authorization).toBe('[REDACTED]');
+      expect(entry.req.headers.cookie).toBe('[REDACTED]');
+      expect(entry.req.headers['set-cookie']).toBe('[REDACTED]');
 
       // Headers preserved
-      assert.strictEqual(
-        entry.req.headers['user-agent'],
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-      );
-      assert.strictEqual(entry.req.headers['content-type'], 'application/json');
-      assert.strictEqual(entry.req.headers['x-request-id'], 'req-test-uuid-999');
+      expect(entry.req.headers['user-agent']).toBe('Mozilla/5.0 (Windows NT 10.0; Win64; x64)');
+      expect(entry.req.headers['content-type']).toBe('application/json');
+      expect(entry.req.headers['x-request-id']).toBe('req-test-uuid-999');
 
       // Request body sensitive fields redacted
-      assert.strictEqual(entry.body.password, '[REDACTED]');
-      assert.strictEqual(entry.body.email, '[REDACTED]');
-      assert.strictEqual(entry.body.twoFactorToken, '123456');
+      expect(entry.body.password).toBe('[REDACTED]');
+      expect(entry.body.email).toBe('[REDACTED]');
+      expect(entry.body.twoFactorToken).toBe('123456');
     });
   });
 });

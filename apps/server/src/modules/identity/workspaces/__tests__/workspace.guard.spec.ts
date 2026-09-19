@@ -1,5 +1,4 @@
-import { describe, it, beforeEach } from 'node:test';
-import * as assert from 'node:assert';
+import { expectReject } from '../../../../../test/test-assertions';
 import { ExecutionContext } from '@nestjs/common';
 import { BillingPlanType, WorkspaceRole } from '@sales-copilot/shared-contracts';
 import { WorkspaceGuard } from '../guards/workspace.guard';
@@ -77,11 +76,11 @@ describe('WorkspaceGuard (Tenant Isolation & Context Injection)', () => {
 
     const result = await guard.canActivate(context);
 
-    assert.strictEqual(result, true);
-    assert.ok(request.workspace);
-    assert.strictEqual(request.workspace.workspaceId, 'ws_tenant_123');
-    assert.strictEqual(request.workspace.role, WorkspaceRole.OWNER);
-    assert.strictEqual(request.workspace.workspace.name, 'Acme Corp');
+    expect(result).toBe(true);
+    expect(request.workspace).toBeTruthy();
+    expect(request.workspace.workspaceId).toBe('ws_tenant_123');
+    expect(request.workspace.role).toBe(WorkspaceRole.OWNER);
+    expect(request.workspace.workspace.name).toBe('Acme Corp');
   });
 
   it('should throw BadRequestException when X-Workspace-Id header is missing and user has no workspaces', async () => {
@@ -90,12 +89,12 @@ describe('WorkspaceGuard (Tenant Isolation & Context Injection)', () => {
       { userId: 'usr_valid_123', email: 'owner@acme.com', role: 'USER' },
     );
 
-    await assert.rejects(
+    await expectReject(
       async () => {
         await guard.canActivate(context);
       },
       (err: any) => {
-        assert.strictEqual(err.response?.code, 'WORKSPACE_ID_REQUIRED');
+        expect(err.response?.code).toBe('WORKSPACE_ID_REQUIRED');
         return true;
       },
     );
@@ -123,9 +122,9 @@ describe('WorkspaceGuard (Tenant Isolation & Context Injection)', () => {
 
     const result = await guard.canActivate(context);
 
-    assert.strictEqual(result, true);
-    assert.ok(request.workspace);
-    assert.strictEqual(request.workspace.workspaceId, 'ws_tenant_123');
+    expect(result).toBe(true);
+    expect(request.workspace).toBeTruthy();
+    expect(request.workspace.workspaceId).toBe('ws_tenant_123');
   });
 
   it('should throw BadRequestException when header is omitted and user belongs to multiple workspaces (TASK-3A-05)', async () => {
@@ -139,12 +138,12 @@ describe('WorkspaceGuard (Tenant Isolation & Context Injection)', () => {
       { userId: 'usr_valid_123', email: 'owner@acme.com', role: 'USER' },
     );
 
-    await assert.rejects(
+    await expectReject(
       async () => {
         await guard.canActivate(context);
       },
       (err: any) => {
-        assert.strictEqual(err.response?.code, 'WORKSPACE_ID_REQUIRED');
+        expect(err.response?.code).toBe('WORKSPACE_ID_REQUIRED');
         return true;
       },
     );
@@ -156,12 +155,12 @@ describe('WorkspaceGuard (Tenant Isolation & Context Injection)', () => {
       { userId: 'usr_valid_123', email: 'owner@acme.com', role: 'USER' },
     );
 
-    await assert.rejects(
+    await expectReject(
       async () => {
         await guard.canActivate(context);
       },
       (err: any) => {
-        assert.strictEqual(err.response?.code, 'WORKSPACE_ID_REQUIRED');
+        expect(err.response?.code).toBe('WORKSPACE_ID_REQUIRED');
         return true;
       },
     );
@@ -173,12 +172,12 @@ describe('WorkspaceGuard (Tenant Isolation & Context Injection)', () => {
       undefined,
     );
 
-    await assert.rejects(
+    await expectReject(
       async () => {
         await guard.canActivate(context);
       },
       (err: any) => {
-        assert.strictEqual(err.response?.code, 'UNAUTHORIZED');
+        expect(err.response?.code).toBe('UNAUTHORIZED');
         return true;
       },
     );
@@ -190,12 +189,12 @@ describe('WorkspaceGuard (Tenant Isolation & Context Injection)', () => {
       { userId: 'usr_stranger_999', email: 'stranger@other.com', role: 'USER' },
     );
 
-    await assert.rejects(
+    await expectReject(
       async () => {
         await guard.canActivate(context);
       },
       (err: any) => {
-        assert.strictEqual(err.response?.code, 'WORKSPACE_ACCESS_DENIED');
+        expect(err.response?.code).toBe('WORKSPACE_ACCESS_DENIED');
         return true;
       },
     );
@@ -210,8 +209,8 @@ describe('WorkspaceGuard (Tenant Isolation & Context Injection)', () => {
     );
 
     const result = await guard.canActivate(context);
-    assert.strictEqual(result, true);
-    assert.strictEqual(request.workspace?.workspaceId, 'ws_tenant_123');
+    expect(result).toBe(true);
+    expect(request.workspace?.workspaceId).toBe('ws_tenant_123');
   });
 
   it('should throw BadRequestException with WORKSPACE_ID_MISMATCH when header and param differ', async () => {
@@ -222,12 +221,12 @@ describe('WorkspaceGuard (Tenant Isolation & Context Injection)', () => {
       { workspaceId: 'ws_other_456' },
     );
 
-    await assert.rejects(
+    await expectReject(
       async () => {
         await guard.canActivate(context);
       },
       (err: any) => {
-        assert.strictEqual(err.response?.code, 'WORKSPACE_ID_MISMATCH');
+        expect(err.response?.code).toBe('WORKSPACE_ID_MISMATCH');
         return true;
       },
     );
@@ -251,15 +250,15 @@ describe('WorkspaceGuard (Tenant Isolation & Context Injection)', () => {
       { userId: 'usr_valid_123', email: 'owner@acme.com', role: 'USER' },
     );
 
-    await assert.rejects(
+    await expectReject(
       async () => {
         await guard.canActivate(context);
       },
       (err: any) => {
-        assert.strictEqual(err.response?.code, 'WORKSPACE_SUSPENDED');
-        assert.strictEqual(err.response?.message, 'Payment overdue');
-        assert.strictEqual(err.response?.details?.suspendedReason, 'Payment overdue');
-        assert.strictEqual(err.response?.details?.suspendedAt, suspendedDate);
+        expect(err.response?.code).toBe('WORKSPACE_SUSPENDED');
+        expect(err.response?.message).toBe('Payment overdue');
+        expect(err.response?.details?.suspendedReason).toBe('Payment overdue');
+        expect(err.response?.details?.suspendedAt).toBe(suspendedDate);
         return true;
       },
     );
@@ -282,14 +281,13 @@ describe('WorkspaceGuard (Tenant Isolation & Context Injection)', () => {
       { userId: 'usr_valid_123', email: 'owner@acme.com', role: 'USER' },
     );
 
-    await assert.rejects(
+    await expectReject(
       async () => {
         await guard.canActivate(context);
       },
       (err: any) => {
-        assert.strictEqual(err.response?.code, 'WORKSPACE_SUSPENDED');
-        assert.strictEqual(
-          err.response?.message,
+        expect(err.response?.code).toBe('WORKSPACE_SUSPENDED');
+        expect(err.response?.message).toBe(
           'Workspace has been suspended by platform administrator',
         );
         return true;

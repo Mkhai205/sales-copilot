@@ -1,5 +1,3 @@
-import { describe, it, beforeEach } from 'node:test';
-import * as assert from 'node:assert';
 import { MessageType, SenderType } from '@sales-copilot/shared-contracts';
 import { CommerceEventListener } from '../commerce-event.listener';
 
@@ -37,16 +35,16 @@ describe('CommerceEventListener (Realtime Chat Receipt)', () => {
       transactionCode: 'TX_SEPAY_111',
     });
 
-    assert.strictEqual(createdMessages.length, 1);
+    expect(createdMessages.length).toBe(1);
     const msg = createdMessages[0];
-    assert.strictEqual(msg.workspaceId, wsId);
-    assert.strictEqual(msg.convId, conversationId);
-    assert.strictEqual(msg.dto.senderType, SenderType.SYSTEM);
-    assert.strictEqual(msg.dto.senderId, undefined);
-    assert.strictEqual(msg.dto.messageType, MessageType.ACTIVITY);
-    assert.ok(msg.dto.content.includes('1004'));
-    assert.ok(msg.dto.content.includes('SEPAY'));
-    assert.ok(msg.dto.content.includes('TX_SEPAY_111'));
+    expect(msg.workspaceId).toBe(wsId);
+    expect(msg.convId).toBe(conversationId);
+    expect(msg.dto.senderType).toBe(SenderType.SYSTEM);
+    expect(msg.dto.senderId).toBe(undefined);
+    expect(msg.dto.messageType).toBe(MessageType.ACTIVITY);
+    expect(msg.dto.content.includes('1004')).toBeTruthy();
+    expect(msg.dto.content.includes('SEPAY')).toBeTruthy();
+    expect(msg.dto.content.includes('TX_SEPAY_111')).toBeTruthy();
   });
 
   it('should post system receipt to conversation thread on ORDER_PARTIALLY_PAID', async () => {
@@ -63,18 +61,18 @@ describe('CommerceEventListener (Realtime Chat Receipt)', () => {
       transactionCode: 'TX_PARTIAL_99',
     });
 
-    assert.strictEqual(createdMessages.length, 1);
+    expect(createdMessages.length).toBe(1);
     const msg = createdMessages[0];
-    assert.strictEqual(msg.workspaceId, wsId);
-    assert.strictEqual(msg.convId, conversationId);
-    assert.strictEqual(msg.dto.senderType, SenderType.SYSTEM);
-    assert.strictEqual(msg.dto.senderId, undefined);
-    assert.strictEqual(msg.dto.messageType, MessageType.ACTIVITY);
-    assert.ok(msg.dto.content.includes('1004'));
-    assert.ok(msg.dto.content.includes('200.000'));
-    assert.ok(msg.dto.content.includes('300.000'));
-    assert.strictEqual(msg.dto.metadata.type, 'PAYMENT_RECEIPT');
-    assert.strictEqual(msg.dto.metadata.status, 'PARTIALLY_PAID');
+    expect(msg.workspaceId).toBe(wsId);
+    expect(msg.convId).toBe(conversationId);
+    expect(msg.dto.senderType).toBe(SenderType.SYSTEM);
+    expect(msg.dto.senderId).toBe(undefined);
+    expect(msg.dto.messageType).toBe(MessageType.ACTIVITY);
+    expect(msg.dto.content.includes('1004')).toBeTruthy();
+    expect(msg.dto.content.includes('200.000')).toBeTruthy();
+    expect(msg.dto.content.includes('300.000')).toBeTruthy();
+    expect(msg.dto.metadata.type).toBe('PAYMENT_RECEIPT');
+    expect(msg.dto.metadata.status).toBe('PARTIALLY_PAID');
   });
 
   it('should post order shipped activity message to conversation thread on ORDER_SHIPPED', async () => {
@@ -87,16 +85,16 @@ describe('CommerceEventListener (Realtime Chat Receipt)', () => {
       shippingCarrier: 'GHTK',
     });
 
-    assert.strictEqual(createdMessages.length, 1);
+    expect(createdMessages.length).toBe(1);
     const msg = createdMessages[0];
-    assert.strictEqual(msg.workspaceId, wsId);
-    assert.strictEqual(msg.convId, conversationId);
-    assert.strictEqual(msg.dto.senderType, SenderType.SYSTEM);
-    assert.strictEqual(msg.dto.messageType, MessageType.ACTIVITY);
-    assert.ok(msg.dto.content.includes('1004'));
-    assert.ok(msg.dto.content.includes('GHTK'));
-    assert.ok(msg.dto.content.includes('GHTK998877'));
-    assert.strictEqual(msg.dto.metadata.type, 'ORDER_SHIPPED');
-    assert.strictEqual(msg.dto.metadata.trackingCode, 'GHTK998877');
+    expect(msg.workspaceId).toBe(wsId);
+    expect(msg.convId).toBe(conversationId);
+    expect(msg.dto.senderType).toBe(SenderType.SYSTEM);
+    expect(msg.dto.messageType).toBe(MessageType.ACTIVITY);
+    expect(msg.dto.content.includes('1004')).toBeTruthy();
+    expect(msg.dto.content.includes('GHTK')).toBeTruthy();
+    expect(msg.dto.content.includes('GHTK998877')).toBeTruthy();
+    expect(msg.dto.metadata.type).toBe('ORDER_SHIPPED');
+    expect(msg.dto.metadata.trackingCode).toBe('GHTK998877');
   });
 });

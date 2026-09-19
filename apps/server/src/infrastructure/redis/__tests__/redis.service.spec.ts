@@ -1,5 +1,4 @@
-import { describe, it, beforeEach } from 'node:test';
-import * as assert from 'node:assert';
+import { assertDefined } from '../../../../test/test-assertions';
 import { ConfigService } from '@nestjs/config';
 import { RedisService } from '../redis.service';
 
@@ -126,34 +125,34 @@ describe('RedisService (Cache & Data Store Operations)', () => {
 
   it('should get, set and delete key values', async () => {
     await redisService.set('test_key', 'hello_world', 60);
-    assert.strictEqual(await redisService.get('test_key'), 'hello_world');
-    assert.strictEqual(await redisService.exists('test_key'), true);
+    expect(await redisService.get('test_key')).toBe('hello_world');
+    expect(await redisService.exists('test_key')).toBe(true);
 
     const deletedCount = await redisService.del('test_key');
-    assert.strictEqual(deletedCount, 1);
-    assert.strictEqual(await redisService.get('test_key'), null);
-    assert.strictEqual(await redisService.exists('test_key'), false);
+    expect(deletedCount).toBe(1);
+    expect(await redisService.get('test_key')).toBe(null);
+    expect(await redisService.exists('test_key')).toBe(false);
   });
 
   it('should support atomic incr and decr counters', async () => {
-    assert.strictEqual(await redisService.incr('rate_limit:user1'), 1);
-    assert.strictEqual(await redisService.incr('rate_limit:user1'), 2);
-    assert.strictEqual(await redisService.decr('rate_limit:user1'), 1);
+    expect(await redisService.incr('rate_limit:user1')).toBe(1);
+    expect(await redisService.incr('rate_limit:user1')).toBe(2);
+    expect(await redisService.decr('rate_limit:user1')).toBe(1);
   });
 
   it('should support hash operations (hset, hget, hdel, hgetall)', async () => {
     await redisService.hset('session:123', 'ip', '127.0.0.1');
     await redisService.hset('session:123', 'userAgent', 'Mozilla');
 
-    assert.strictEqual(await redisService.hget('session:123', 'ip'), '127.0.0.1');
-    assert.strictEqual(await redisService.hget('session:123', 'nonexistent'), null);
+    expect(await redisService.hget('session:123', 'ip')).toBe('127.0.0.1');
+    expect(await redisService.hget('session:123', 'nonexistent')).toBe(null);
 
     const all = await redisService.hgetall('session:123');
-    assert.deepStrictEqual(all, { ip: '127.0.0.1', userAgent: 'Mozilla' });
+    expect(all).toEqual({ ip: '127.0.0.1', userAgent: 'Mozilla' });
 
     const deleted = await redisService.hdel('session:123', 'ip');
-    assert.strictEqual(deleted, 1);
-    assert.strictEqual(await redisService.hget('session:123', 'ip'), null);
+    expect(deleted).toBe(1);
+    expect(await redisService.hget('session:123', 'ip')).toBe(null);
   });
 
   it('should support batch mget and ttl lookups', async () => {
@@ -161,19 +160,19 @@ describe('RedisService (Cache & Data Store Operations)', () => {
     await redisService.set('k2', 'v2');
 
     const values = await redisService.mget(['k1', 'k2', 'k3']);
-    assert.deepStrictEqual(values, ['v1', 'v2', null]);
+    expect(values).toEqual(['v1', 'v2', null]);
 
     const ttl = await redisService.ttl('k1');
-    assert.strictEqual(ttl, 3600);
+    expect(ttl).toBe(3600);
     const nonExistentTtl = await redisService.ttl('k_unknown');
-    assert.strictEqual(nonExistentTtl, -2);
+    expect(nonExistentTtl).toBe(-2);
   });
 
   it('should respond to ping healthcheck with status up', async () => {
     const health = await redisService.ping();
-    assert.strictEqual(health.status, 'up');
-    assert.ok(typeof health.latencyMs === 'number');
-    assert.strictEqual(await redisService.isHealthy(), true);
+    expect(health.status).toBe('up');
+    expect(typeof health.latencyMs === 'number').toBeTruthy();
+    expect(await redisService.isHealthy()).toBe(true);
   });
 
   it('should report status down when ping fails', async () => {
@@ -184,24 +183,24 @@ describe('RedisService (Cache & Data Store Operations)', () => {
     };
 
     const health = await redisService.ping();
-    assert.strictEqual(health.status, 'down');
-    assert.strictEqual(health.error, 'Connection refused');
-    assert.strictEqual(await redisService.isHealthy(), false);
+    expect(health.status).toBe('down');
+    expect(health.error).toBe('Connection refused');
+    expect(await redisService.isHealthy()).toBe(false);
   });
 
   it('should support list operations (rpush, lrange, lpush, lrem)', async () => {
     await redisService.rpush('queue:1', 'agent_1', 'agent_2');
     let items = await redisService.lrange('queue:1');
-    assert.deepStrictEqual(items, ['agent_1', 'agent_2']);
+    expect(items).toEqual(['agent_1', 'agent_2']);
 
     await redisService.lpush('queue:1', 'agent_0');
     items = await redisService.lrange('queue:1');
-    assert.deepStrictEqual(items, ['agent_0', 'agent_1', 'agent_2']);
+    expect(items).toEqual(['agent_0', 'agent_1', 'agent_2']);
 
     const removed = await redisService.lrem('queue:1', 0, 'agent_1');
-    assert.strictEqual(removed, 1);
+    expect(removed).toBe(1);
     items = await redisService.lrange('queue:1');
-    assert.deepStrictEqual(items, ['agent_0', 'agent_2']);
+    expect(items).toEqual(['agent_0', 'agent_2']);
   });
 
   it('should support acquiring and releasing distributed locks', async () => {
@@ -209,22 +208,22 @@ describe('RedisService (Cache & Data Store Operations)', () => {
 
     // 1. First acquire succeeds
     const token1 = await redisService.acquireLock(lockKey, 3000);
-    assert.ok(token1 !== null);
+    assertDefined(token1);
 
     // 2. Second acquire fails while lock held
     const token2 = await redisService.acquireLock(lockKey, 3000);
-    assert.strictEqual(token2, null);
+    expect(token2).toBe(null);
 
     // 3. Release with wrong token fails
     const releasedWrong = await redisService.releaseLock(lockKey, 'wrong_token');
-    assert.strictEqual(releasedWrong, false);
+    expect(releasedWrong).toBe(false);
 
     // 4. Release with correct token succeeds
     const releasedCorrect = await redisService.releaseLock(lockKey, token1);
-    assert.strictEqual(releasedCorrect, true);
+    expect(releasedCorrect).toBe(true);
 
     // 5. Can acquire again after release
     const token3 = await redisService.acquireLock(lockKey, 3000);
-    assert.ok(token3 !== null);
+    assertDefined(token3);
   });
 });

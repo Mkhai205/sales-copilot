@@ -1,5 +1,4 @@
-import { describe, it } from 'node:test';
-import * as assert from 'node:assert';
+import { expectReject } from '../../../../../test/test-assertions';
 import { PasswordService } from '../password.service';
 
 describe('PasswordService (Argon2id Hashing)', () => {
@@ -9,9 +8,9 @@ describe('PasswordService (Argon2id Hashing)', () => {
     const rawPassword = 'StrongPassword@2026!';
     const hash = await passwordService.hash(rawPassword);
 
-    assert.ok(hash);
-    assert.strictEqual(typeof hash, 'string');
-    assert.ok(hash.startsWith('$argon2id$'), 'Hash should use Argon2id format');
+    expect(hash).toBeTruthy();
+    expect(typeof hash).toBe('string');
+    expect(hash.startsWith('$argon2id$')).toBeTruthy();
   });
 
   it('should successfully verify a correct password', async () => {
@@ -19,7 +18,7 @@ describe('PasswordService (Argon2id Hashing)', () => {
     const hash = await passwordService.hash(rawPassword);
 
     const isValid = await passwordService.verify(hash, rawPassword);
-    assert.strictEqual(isValid, true, 'Verification should return true for correct password');
+    expect(isValid).toBe(true);
   });
 
   it('should fail verification for an incorrect password', async () => {
@@ -28,20 +27,17 @@ describe('PasswordService (Argon2id Hashing)', () => {
     const hash = await passwordService.hash(rawPassword);
 
     const isValid = await passwordService.verify(hash, wrongPassword);
-    assert.strictEqual(isValid, false, 'Verification should return false for wrong password');
+    expect(isValid).toBe(false);
   });
 
   it('should handle invalid or empty inputs gracefully without throwing', async () => {
-    assert.strictEqual(await passwordService.verify('', 'password'), false);
-    assert.strictEqual(await passwordService.verify('invalid_hash_string', 'password'), false);
-    assert.strictEqual(
-      await passwordService.verify('$argon2id$v=19$m=65536,t=3,p=4$dummy', ''),
-      false,
-    );
+    expect(await passwordService.verify('', 'password')).toBe(false);
+    expect(await passwordService.verify('invalid_hash_string', 'password')).toBe(false);
+    expect(await passwordService.verify('$argon2id$v=19$m=65536,t=3,p=4$dummy', '')).toBe(false);
   });
 
   it('should reject hashing empty password string', async () => {
-    await assert.rejects(async () => {
+    await expectReject(async () => {
       await passwordService.hash('');
     }, /Password must be a non-empty string/);
   });

@@ -1,5 +1,4 @@
-import { describe, it, beforeEach } from 'node:test';
-import * as assert from 'node:assert';
+import { expectReject, expectThrow } from '../../../../../test/test-assertions';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { FileType } from '@sales-copilot/shared-contracts';
 import { AttachmentsService, MAX_FILE_SIZE } from '../attachments.service';
@@ -129,10 +128,10 @@ describe('AttachmentsService (Task T-1.5.5: Attachment & Media Storage Integrati
         originalname: 'screenshot.png',
       });
 
-      assert.strictEqual(result.fileType, FileType.IMAGE);
-      assert.strictEqual(result.contentType, 'image/png');
-      assert.strictEqual(result.fileName, 'screenshot.png');
-      assert.strictEqual(result.fileSize, 1024 * 100);
+      expect(result.fileType).toBe(FileType.IMAGE);
+      expect(result.contentType).toBe('image/png');
+      expect(result.fileName).toBe('screenshot.png');
+      expect(result.fileSize).toBe(1024 * 100);
     });
 
     it('should correctly classify audio MIME types', () => {
@@ -142,8 +141,8 @@ describe('AttachmentsService (Task T-1.5.5: Attachment & Media Storage Integrati
         originalname: 'voice_note.mp3',
       });
 
-      assert.strictEqual(result.fileType, FileType.AUDIO);
-      assert.strictEqual(result.contentType, 'audio/mpeg');
+      expect(result.fileType).toBe(FileType.AUDIO);
+      expect(result.contentType).toBe('audio/mpeg');
     });
 
     it('should correctly classify video MIME types', () => {
@@ -153,8 +152,8 @@ describe('AttachmentsService (Task T-1.5.5: Attachment & Media Storage Integrati
         originalname: 'demo.mp4',
       });
 
-      assert.strictEqual(result.fileType, FileType.VIDEO);
-      assert.strictEqual(result.contentType, 'video/mp4');
+      expect(result.fileType).toBe(FileType.VIDEO);
+      expect(result.contentType).toBe('video/mp4');
     });
 
     it('should correctly classify document & archive MIME types', () => {
@@ -163,25 +162,25 @@ describe('AttachmentsService (Task T-1.5.5: Attachment & Media Storage Integrati
         size: 1024 * 200,
         originalname: 'contract.pdf',
       });
-      assert.strictEqual(pdf.fileType, FileType.FILE);
+      expect(pdf.fileType).toBe(FileType.FILE);
 
       const zip = service.validateFile({
         mimetype: 'application/zip',
         size: 1024 * 300,
         originalname: 'bundle.zip',
       });
-      assert.strictEqual(zip.fileType, FileType.FILE);
+      expect(zip.fileType).toBe(FileType.FILE);
 
       const docx = service.validateFile({
         mimetype: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
         size: 1024 * 400,
         originalname: 'document.docx',
       });
-      assert.strictEqual(docx.fileType, FileType.FILE);
+      expect(docx.fileType).toBe(FileType.FILE);
     });
 
     it('should reject unsupported MIME types with BadRequestException', () => {
-      assert.throws(
+      expectThrow(
         () => {
           service.validateFile({
             mimetype: 'application/x-msdownload',
@@ -190,15 +189,15 @@ describe('AttachmentsService (Task T-1.5.5: Attachment & Media Storage Integrati
           });
         },
         (err: any) => {
-          assert.strictEqual(err instanceof BadRequestException, true);
-          assert.strictEqual(err.response.code, 'UNSUPPORTED_FILE_TYPE');
+          expect(err instanceof BadRequestException).toBe(true);
+          expect(err.response.code).toBe('UNSUPPORTED_FILE_TYPE');
           return true;
         },
       );
     });
 
     it('should reject missing MIME type with BadRequestException', () => {
-      assert.throws(
+      expectThrow(
         () => {
           service.validateFile({
             size: 1024,
@@ -206,15 +205,15 @@ describe('AttachmentsService (Task T-1.5.5: Attachment & Media Storage Integrati
           });
         },
         (err: any) => {
-          assert.strictEqual(err instanceof BadRequestException, true);
-          assert.strictEqual(err.response.code, 'UNSUPPORTED_FILE_TYPE');
+          expect(err instanceof BadRequestException).toBe(true);
+          expect(err.response.code).toBe('UNSUPPORTED_FILE_TYPE');
           return true;
         },
       );
     });
 
     it('should reject empty files (size <= 0) with BadRequestException', () => {
-      assert.throws(
+      expectThrow(
         () => {
           service.validateFile({
             mimetype: 'image/png',
@@ -223,15 +222,15 @@ describe('AttachmentsService (Task T-1.5.5: Attachment & Media Storage Integrati
           });
         },
         (err: any) => {
-          assert.strictEqual(err instanceof BadRequestException, true);
-          assert.strictEqual(err.response.code, 'EMPTY_FILE');
+          expect(err instanceof BadRequestException).toBe(true);
+          expect(err.response.code).toBe('EMPTY_FILE');
           return true;
         },
       );
     });
 
     it('should reject files exceeding MAX_FILE_SIZE (25MB)', () => {
-      assert.throws(
+      expectThrow(
         () => {
           service.validateFile({
             mimetype: 'video/mp4',
@@ -240,8 +239,8 @@ describe('AttachmentsService (Task T-1.5.5: Attachment & Media Storage Integrati
           });
         },
         (err: any) => {
-          assert.strictEqual(err instanceof BadRequestException, true);
-          assert.strictEqual(err.response.code, 'FILE_TOO_LARGE');
+          expect(err instanceof BadRequestException).toBe(true);
+          expect(err.response.code).toBe('FILE_TOO_LARGE');
           return true;
         },
       );
@@ -254,9 +253,9 @@ describe('AttachmentsService (Task T-1.5.5: Attachment & Media Storage Integrati
         originalname: '../../etc/passwd..//my picture #1!.png',
       });
 
-      assert.strictEqual(result.fileName.includes('..'), false);
-      assert.strictEqual(result.fileName.includes('/'), false);
-      assert.strictEqual(result.fileName.includes('\\'), false);
+      expect(result.fileName.includes('..')).toBe(false);
+      expect(result.fileName.includes('/')).toBe(false);
+      expect(result.fileName.includes('\\')).toBe(false);
     });
   });
 
@@ -272,19 +271,20 @@ describe('AttachmentsService (Task T-1.5.5: Attachment & Media Storage Integrati
 
       const result = await service.uploadAndCreate('ws_100', 'msg_200', mockMulterFile);
 
-      assert.strictEqual(uploadedFiles.length, 1);
-      assert.strictEqual(uploadedFiles[0].mimetype, 'image/jpeg');
-      assert.strictEqual(uploadedFiles[0].body, mockBuffer);
-      assert.match(uploadedFiles[0].key, /^attachments\/ws_100\/msg_200\/[a-f0-9-]+-avatar\.jpg$/);
+      expect(uploadedFiles.length).toBe(1);
+      expect(uploadedFiles[0].mimetype).toBe('image/jpeg');
+      expect(uploadedFiles[0].body).toBe(mockBuffer);
+      expect(uploadedFiles[0].key).toMatch(
+        /^attachments\/ws_100\/msg_200\/[a-f0-9-]+-avatar\.jpg$/,
+      );
 
-      assert.strictEqual(result.messageId, 'msg_200');
-      assert.strictEqual(result.fileType, FileType.IMAGE);
-      assert.strictEqual(result.fileName, 'avatar.jpg');
-      assert.strictEqual(result.fileSize, mockBuffer.length);
-      assert.strictEqual(result.contentType, 'image/jpeg');
-      assert.strictEqual(result.storagePath, uploadedFiles[0].key);
-      assert.strictEqual(
-        result.fileUrl,
+      expect(result.messageId).toBe('msg_200');
+      expect(result.fileType).toBe(FileType.IMAGE);
+      expect(result.fileName).toBe('avatar.jpg');
+      expect(result.fileSize).toBe(mockBuffer.length);
+      expect(result.contentType).toBe('image/jpeg');
+      expect(result.storagePath).toBe(uploadedFiles[0].key);
+      expect(result.fileUrl).toBe(
         `http://localhost:9000/sales-copilot-dev/${uploadedFiles[0].key}`,
       );
     });
@@ -300,12 +300,12 @@ describe('AttachmentsService (Task T-1.5.5: Attachment & Media Storage Integrati
         contentType: 'image/jpeg',
       });
 
-      assert.strictEqual(result.messageId, 'msg_200');
-      assert.strictEqual(result.fileType, FileType.IMAGE);
-      assert.strictEqual(result.fileName, 'facebook_image.jpg');
-      assert.strictEqual(result.fileSize, 54321);
-      assert.strictEqual(result.storagePath, 'https://cdn.facebook.com/images/12345.jpg');
-      assert.strictEqual(result.fileUrl, 'https://cdn.facebook.com/images/12345.jpg');
+      expect(result.messageId).toBe('msg_200');
+      expect(result.fileType).toBe(FileType.IMAGE);
+      expect(result.fileName).toBe('facebook_image.jpg');
+      expect(result.fileSize).toBe(54321);
+      expect(result.storagePath).toBe('https://cdn.facebook.com/images/12345.jpg');
+      expect(result.fileUrl).toBe('https://cdn.facebook.com/images/12345.jpg');
     });
   });
 
@@ -334,14 +334,14 @@ describe('AttachmentsService (Task T-1.5.5: Attachment & Media Storage Integrati
         contentType: 'image/jpeg',
       });
 
-      assert.strictEqual(attachmentsDb.size, 3);
-      assert.strictEqual(uploadedFiles.length, 2);
+      expect(attachmentsDb.size).toBe(3);
+      expect(uploadedFiles.length).toBe(2);
 
       const deleteResult = await service.deleteByMessageId('msg_1');
 
-      assert.strictEqual(deleteResult.deletedCount, 3);
-      assert.strictEqual(attachmentsDb.size, 0);
-      assert.strictEqual(deletedKeys.length, 2); // External URL was not sent to MinIO delete
+      expect(deleteResult.deletedCount).toBe(3);
+      expect(attachmentsDb.size).toBe(0);
+      expect(deletedKeys.length).toBe(2); // External URL was not sent to MinIO delete
     });
   });
 
@@ -358,9 +358,9 @@ describe('AttachmentsService (Task T-1.5.5: Attachment & Media Storage Integrati
       } as any);
 
       const result = await service.deleteById('ws_1', att.id);
-      assert.deepStrictEqual(result, { success: true });
-      assert.strictEqual(deletedKeys.includes(att.storagePath), true);
-      assert.strictEqual(attachmentsDb.has(att.id), false);
+      expect(result).toEqual({ success: true });
+      expect(deletedKeys.includes(att.storagePath)).toBe(true);
+      expect(attachmentsDb.has(att.id)).toBe(false);
     });
 
     it('should throw NotFoundException when deleting attachment belonging to another workspace', async () => {
@@ -374,13 +374,13 @@ describe('AttachmentsService (Task T-1.5.5: Attachment & Media Storage Integrati
         originalname: 'secret.png',
       } as any);
 
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.deleteById('ws_1', att.id);
         },
         (err: any) => {
-          assert.strictEqual(err instanceof NotFoundException, true);
-          assert.strictEqual(err.response.code, 'ATTACHMENT_NOT_FOUND');
+          expect(err instanceof NotFoundException).toBe(true);
+          expect(err.response.code).toBe('ATTACHMENT_NOT_FOUND');
           return true;
         },
       );
@@ -400,8 +400,7 @@ describe('AttachmentsService (Task T-1.5.5: Attachment & Media Storage Integrati
       } as any);
 
       const signedUrl = await service.getSignedDownloadUrl(att.id, 'ws_1', 600);
-      assert.strictEqual(
-        signedUrl,
+      expect(signedUrl).toBe(
         `http://localhost:9000/sales-copilot-dev/${att.storagePath}?signed=true`,
       );
     });
@@ -418,7 +417,7 @@ describe('AttachmentsService (Task T-1.5.5: Attachment & Media Storage Integrati
       });
 
       const signedUrl = await service.getSignedDownloadUrl(att.id, 'ws_1');
-      assert.strictEqual(signedUrl, 'https://cdn.telegram.org/file_123.png');
+      expect(signedUrl).toBe('https://cdn.telegram.org/file_123.png');
     });
 
     it('should throw NotFoundException on cross-tenant getSignedDownloadUrl access', async () => {
@@ -432,13 +431,13 @@ describe('AttachmentsService (Task T-1.5.5: Attachment & Media Storage Integrati
         contentType: 'application/pdf',
       });
 
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.getSignedDownloadUrl(att.id, 'ws_company_b');
         },
         (err: any) => {
-          assert.strictEqual(err instanceof NotFoundException, true);
-          assert.strictEqual(err.response.code, 'ATTACHMENT_NOT_FOUND');
+          expect(err instanceof NotFoundException).toBe(true);
+          expect(err.response.code).toBe('ATTACHMENT_NOT_FOUND');
           return true;
         },
       );
@@ -467,21 +466,21 @@ describe('AttachmentsService (Task T-1.5.5: Attachment & Media Storage Integrati
 
     it('should get attachment by id within workspace', async () => {
       const all = await service.listByMessageId('msg_shared', 'ws_main');
-      assert.strictEqual(all.length, 2);
+      expect(all.length).toBe(2);
 
       const single = await service.getAttachmentById(all[0].id, 'ws_main');
-      assert.strictEqual(single.id, all[0].id);
-      assert.strictEqual(single.fileName, all[0].fileName);
+      expect(single.id).toBe(all[0].id);
+      expect(single.fileName).toBe(all[0].fileName);
     });
 
     it('should throw NotFoundException when listing attachments for message in different workspace', async () => {
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.listByMessageId('msg_shared', 'ws_other');
         },
         (err: any) => {
-          assert.strictEqual(err instanceof NotFoundException, true);
-          assert.strictEqual(err.response.code, 'MESSAGE_NOT_FOUND');
+          expect(err instanceof NotFoundException).toBe(true);
+          expect(err.response.code).toBe('MESSAGE_NOT_FOUND');
           return true;
         },
       );

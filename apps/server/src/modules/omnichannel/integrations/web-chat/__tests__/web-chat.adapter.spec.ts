@@ -1,5 +1,3 @@
-import { describe, it, beforeEach } from 'node:test';
-import * as assert from 'node:assert';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ChannelType, DeliveryStatus, MessageContentType } from '@sales-copilot/shared-contracts';
 import { WebChatAdapter } from '../web-chat.adapter';
@@ -52,7 +50,7 @@ describe('WebChatAdapter (Web Chat Widget Channel Integration)', () => {
 
   describe('Adapter Configuration', () => {
     it('should declare channelType as WEB_CHAT', () => {
-      assert.strictEqual(adapter.channelType, ChannelType.WEB_CHAT);
+      expect(adapter.channelType).toBe(ChannelType.WEB_CHAT);
     });
   });
 
@@ -63,7 +61,7 @@ describe('WebChatAdapter (Web Chat Widget Channel Integration)', () => {
           'x-widget-token': 'wt_secret_token_12345',
         },
       };
-      assert.strictEqual(adapter.verifyWebhook(request, mockChannelContext.credentials), true);
+      expect(adapter.verifyWebhook(request, mockChannelContext.credentials)).toBe(true);
     });
 
     it('should verify token from x-website-token header', () => {
@@ -72,7 +70,7 @@ describe('WebChatAdapter (Web Chat Widget Channel Integration)', () => {
           'x-website-token': 'wt_secret_token_12345',
         },
       };
-      assert.strictEqual(adapter.verifyWebhook(request, mockChannelContext.credentials), true);
+      expect(adapter.verifyWebhook(request, mockChannelContext.credentials)).toBe(true);
     });
 
     it('should verify token from x-channel-token header', () => {
@@ -81,7 +79,7 @@ describe('WebChatAdapter (Web Chat Widget Channel Integration)', () => {
           'x-channel-token': 'wt_secret_token_12345',
         },
       };
-      assert.strictEqual(adapter.verifyWebhook(request, mockChannelContext.credentials), true);
+      expect(adapter.verifyWebhook(request, mockChannelContext.credentials)).toBe(true);
     });
 
     it('should verify token from Authorization Bearer header', () => {
@@ -90,7 +88,7 @@ describe('WebChatAdapter (Web Chat Widget Channel Integration)', () => {
           authorization: 'Bearer wt_secret_token_12345',
         },
       };
-      assert.strictEqual(adapter.verifyWebhook(request, mockChannelContext.credentials), true);
+      expect(adapter.verifyWebhook(request, mockChannelContext.credentials)).toBe(true);
     });
 
     it('should verify token from query parameters (widget_token)', () => {
@@ -100,7 +98,7 @@ describe('WebChatAdapter (Web Chat Widget Channel Integration)', () => {
           widget_token: 'wt_secret_token_12345',
         },
       };
-      assert.strictEqual(adapter.verifyWebhook(request, mockChannelContext.credentials), true);
+      expect(adapter.verifyWebhook(request, mockChannelContext.credentials)).toBe(true);
     });
 
     it('should verify token from query parameters (website_token)', () => {
@@ -110,7 +108,7 @@ describe('WebChatAdapter (Web Chat Widget Channel Integration)', () => {
           website_token: 'wt_secret_token_12345',
         },
       };
-      assert.strictEqual(adapter.verifyWebhook(request, mockChannelContext.credentials), true);
+      expect(adapter.verifyWebhook(request, mockChannelContext.credentials)).toBe(true);
     });
 
     it('should verify token from rawBody object', () => {
@@ -120,7 +118,7 @@ describe('WebChatAdapter (Web Chat Widget Channel Integration)', () => {
           widget_token: 'wt_secret_token_12345',
         },
       };
-      assert.strictEqual(adapter.verifyWebhook(request, mockChannelContext.credentials), true);
+      expect(adapter.verifyWebhook(request, mockChannelContext.credentials)).toBe(true);
     });
 
     it('should verify token matching request.webhookSecret when credentials token is not explicitly set', () => {
@@ -130,7 +128,7 @@ describe('WebChatAdapter (Web Chat Widget Channel Integration)', () => {
         },
         webhookSecret: 'custom_secret_abc',
       };
-      assert.strictEqual(adapter.verifyWebhook(request, {}), true);
+      expect(adapter.verifyWebhook(request, {})).toBe(true);
     });
 
     it('should return false when configured token does not match provided token', () => {
@@ -139,21 +137,21 @@ describe('WebChatAdapter (Web Chat Widget Channel Integration)', () => {
           'x-widget-token': 'wrong_token',
         },
       };
-      assert.strictEqual(adapter.verifyWebhook(request, mockChannelContext.credentials), false);
+      expect(adapter.verifyWebhook(request, mockChannelContext.credentials)).toBe(false);
     });
 
     it('should return false when configured token is required but no token is provided', () => {
       const request: WebhookVerificationRequest = {
         headers: {},
       };
-      assert.strictEqual(adapter.verifyWebhook(request, mockChannelContext.credentials), false);
+      expect(adapter.verifyWebhook(request, mockChannelContext.credentials)).toBe(false);
     });
 
     it('should return true when no token is configured and no credentials supplied', () => {
       const request: WebhookVerificationRequest = {
         headers: {},
       };
-      assert.strictEqual(adapter.verifyWebhook(request, {}), true);
+      expect(adapter.verifyWebhook(request, {})).toBe(true);
     });
 
     describe('HMAC verification in verifyWebhook()', () => {
@@ -169,7 +167,7 @@ describe('WebChatAdapter (Web Chat Widget Channel Integration)', () => {
           },
           query: { identifier },
         };
-        assert.strictEqual(adapter.verifyWebhook(request, mockChannelContext.credentials), true);
+        expect(adapter.verifyWebhook(request, mockChannelContext.credentials)).toBe(true);
       });
 
       it('should strip sha256= prefix and verify valid signature with x-hub-signature-256', () => {
@@ -181,7 +179,7 @@ describe('WebChatAdapter (Web Chat Widget Channel Integration)', () => {
           },
           query: { identifier },
         };
-        assert.strictEqual(adapter.verifyWebhook(request, mockChannelContext.credentials), true);
+        expect(adapter.verifyWebhook(request, mockChannelContext.credentials)).toBe(true);
       });
 
       it('should reject invalid HMAC signature', () => {
@@ -192,7 +190,7 @@ describe('WebChatAdapter (Web Chat Widget Channel Integration)', () => {
           },
           query: { identifier },
         };
-        assert.strictEqual(adapter.verifyWebhook(request, mockChannelContext.credentials), false);
+        expect(adapter.verifyWebhook(request, mockChannelContext.credentials)).toBe(false);
       });
 
       it('should reject when HMAC is mandatory but signature header is missing', () => {
@@ -207,17 +205,17 @@ describe('WebChatAdapter (Web Chat Widget Channel Integration)', () => {
           },
           query: { identifier },
         };
-        assert.strictEqual(adapter.verifyWebhook(request, credentialsWithMandatoryHmac), false);
+        expect(adapter.verifyWebhook(request, credentialsWithMandatoryHmac)).toBe(false);
       });
     });
   });
 
   describe('parseInboundPayload()', () => {
     it('should return empty array for null, undefined, or primitive rawBody', () => {
-      assert.deepStrictEqual(adapter.parseInboundPayload(null), []);
-      assert.deepStrictEqual(adapter.parseInboundPayload(undefined), []);
-      assert.deepStrictEqual(adapter.parseInboundPayload('string_payload'), []);
-      assert.deepStrictEqual(adapter.parseInboundPayload(12345), []);
+      expect(adapter.parseInboundPayload(null)).toEqual([]);
+      expect(adapter.parseInboundPayload(undefined)).toEqual([]);
+      expect(adapter.parseInboundPayload('string_payload')).toEqual([]);
+      expect(adapter.parseInboundPayload(12345)).toEqual([]);
     });
 
     it('should parse single standard text message payload', () => {
@@ -237,19 +235,19 @@ describe('WebChatAdapter (Web Chat Widget Channel Integration)', () => {
 
       const results = adapter.parseInboundPayload(rawPayload);
 
-      assert.strictEqual(results.length, 1);
+      expect(results.length).toBe(1);
       const parsed = results[0];
-      assert.strictEqual(parsed.eventKind, 'message');
-      assert.strictEqual(parsed.externalContactId, 'contact_tok_123');
-      assert.strictEqual(parsed.externalMessageId, 'msg_client_999');
-      assert.strictEqual(parsed.content, 'Hello, I need help with my billing invoice.');
-      assert.strictEqual(parsed.contentType, MessageContentType.TEXT);
-      assert.strictEqual(parsed.attachments, undefined);
-      assert.strictEqual(parsed.senderInfo?.name, 'Jane Doe');
-      assert.strictEqual(parsed.senderInfo?.email, 'jane@example.com');
-      assert.strictEqual(parsed.senderInfo?.phoneNumber, '+1555123456');
-      assert.strictEqual(parsed.senderInfo?.avatarUrl, 'https://example.com/avatar.png');
-      assert.strictEqual(parsed.timestamp.toISOString(), '2026-08-24T00:00:00.000Z');
+      expect(parsed.eventKind).toBe('message');
+      expect(parsed.externalContactId).toBe('contact_tok_123');
+      expect(parsed.externalMessageId).toBe('msg_client_999');
+      expect(parsed.content).toBe('Hello, I need help with my billing invoice.');
+      expect(parsed.contentType).toBe(MessageContentType.TEXT);
+      expect(parsed.attachments).toBe(undefined);
+      expect(parsed.senderInfo?.name).toBe('Jane Doe');
+      expect(parsed.senderInfo?.email).toBe('jane@example.com');
+      expect(parsed.senderInfo?.phoneNumber).toBe('+1555123456');
+      expect(parsed.senderInfo?.avatarUrl).toBe('https://example.com/avatar.png');
+      expect(parsed.timestamp.toISOString()).toBe('2026-08-24T00:00:00.000Z');
     });
 
     it('should parse message with media attachments', () => {
@@ -271,19 +269,18 @@ describe('WebChatAdapter (Web Chat Widget Channel Integration)', () => {
 
       const results = adapter.parseInboundPayload(rawPayload);
 
-      assert.strictEqual(results.length, 1);
+      expect(results.length).toBe(1);
       const parsed = results[0];
-      assert.strictEqual(parsed.externalContactId, 'visitor_abc');
-      assert.strictEqual(parsed.externalMessageId, 'msg_media_001');
-      assert.strictEqual(parsed.contentType, MessageContentType.IMAGE);
-      assert.strictEqual(parsed.attachments?.length, 1);
-      assert.strictEqual(
-        parsed.attachments![0].fileUrl,
+      expect(parsed.externalContactId).toBe('visitor_abc');
+      expect(parsed.externalMessageId).toBe('msg_media_001');
+      expect(parsed.contentType).toBe(MessageContentType.IMAGE);
+      expect(parsed.attachments?.length).toBe(1);
+      expect(parsed.attachments![0].fileUrl).toBe(
         'https://s3.amazonaws.com/uploads/screenshot.png',
       );
-      assert.strictEqual(parsed.attachments![0].fileName, 'screenshot.png');
-      assert.strictEqual(parsed.attachments![0].fileSize, 1048576);
-      assert.strictEqual(parsed.attachments![0].contentType, MessageContentType.IMAGE);
+      expect(parsed.attachments![0].fileName).toBe('screenshot.png');
+      expect(parsed.attachments![0].fileSize).toBe(1048576);
+      expect(parsed.attachments![0].contentType).toBe(MessageContentType.IMAGE);
     });
 
     it('should derive contentType from attachments when content is empty', () => {
@@ -300,8 +297,8 @@ describe('WebChatAdapter (Web Chat Widget Channel Integration)', () => {
 
       const results = adapter.parseInboundPayload(rawPayload);
 
-      assert.strictEqual(results.length, 1);
-      assert.strictEqual(results[0].contentType, MessageContentType.FILE);
+      expect(results.length).toBe(1);
+      expect(results[0].contentType).toBe(MessageContentType.FILE);
     });
 
     it('should parse an array of messages', () => {
@@ -312,9 +309,9 @@ describe('WebChatAdapter (Web Chat Widget Channel Integration)', () => {
 
       const results = adapter.parseInboundPayload(rawPayload);
 
-      assert.strictEqual(results.length, 2);
-      assert.strictEqual(results[0].content, 'Message 1');
-      assert.strictEqual(results[1].content, 'Message 2');
+      expect(results.length).toBe(2);
+      expect(results[0].content).toBe('Message 1');
+      expect(results[1].content).toBe('Message 2');
     });
 
     it('should parse wrapped messages under messages property', () => {
@@ -327,9 +324,9 @@ describe('WebChatAdapter (Web Chat Widget Channel Integration)', () => {
 
       const results = adapter.parseInboundPayload(rawPayload);
 
-      assert.strictEqual(results.length, 2);
-      assert.strictEqual(results[0].content, 'Hello 1');
-      assert.strictEqual(results[1].content, 'Hello 2');
+      expect(results.length).toBe(2);
+      expect(results[0].content).toBe('Hello 1');
+      expect(results[1].content).toBe('Hello 2');
     });
 
     it('should parse wrapped payload under data property', () => {
@@ -343,8 +340,8 @@ describe('WebChatAdapter (Web Chat Widget Channel Integration)', () => {
 
       const results = adapter.parseInboundPayload(rawPayload);
 
-      assert.strictEqual(results.length, 1);
-      assert.strictEqual(results[0].content, 'Wrapped data payload');
+      expect(results.length).toBe(1);
+      expect(results[0].content).toBe('Wrapped data payload');
     });
 
     it('should parse delivery_status events accurately', () => {
@@ -360,16 +357,13 @@ describe('WebChatAdapter (Web Chat Widget Channel Integration)', () => {
 
       const results = adapter.parseInboundPayload(rawPayload);
 
-      assert.strictEqual(results.length, 1);
+      expect(results.length).toBe(1);
       const parsed = results[0];
-      assert.strictEqual(parsed.eventKind, 'delivery_status');
-      assert.strictEqual(parsed.externalMessageId, 'msg_original_456');
-      assert.strictEqual(parsed.deliveryStatusInfo?.status, DeliveryStatus.READ);
-      assert.strictEqual(parsed.deliveryStatusInfo?.externalMessageId, 'msg_original_456');
-      assert.strictEqual(
-        parsed.deliveryStatusInfo?.timestamp.toISOString(),
-        '2026-08-24T00:10:00.000Z',
-      );
+      expect(parsed.eventKind).toBe('delivery_status');
+      expect(parsed.externalMessageId).toBe('msg_original_456');
+      expect(parsed.deliveryStatusInfo?.status).toBe(DeliveryStatus.READ);
+      expect(parsed.deliveryStatusInfo?.externalMessageId).toBe('msg_original_456');
+      expect(parsed.deliveryStatusInfo?.timestamp.toISOString()).toBe('2026-08-24T00:10:00.000Z');
     });
 
     it('should handle timestamp formats: unix seconds, unix milliseconds, Date instance, and fallback', () => {
@@ -385,10 +379,12 @@ describe('WebChatAdapter (Web Chat Widget Channel Integration)', () => {
         timestamp: 'invalid_date',
       })[0];
 
-      assert.strictEqual(pDate.timestamp.getTime(), now.getTime());
-      assert.strictEqual(pSec.timestamp.getTime(), unixSec * 1000);
-      assert.strictEqual(pMs.timestamp.getTime(), unixMs);
-      assert.ok(pInvalid.timestamp instanceof Date && !isNaN(pInvalid.timestamp.getTime()));
+      expect(pDate.timestamp.getTime()).toBe(now.getTime());
+      expect(pSec.timestamp.getTime()).toBe(unixSec * 1000);
+      expect(pMs.timestamp.getTime()).toBe(unixMs);
+      expect(
+        pInvalid.timestamp instanceof Date && !isNaN(pInvalid.timestamp.getTime()),
+      ).toBeTruthy();
     });
   });
 
@@ -403,22 +399,19 @@ describe('WebChatAdapter (Web Chat Widget Channel Integration)', () => {
 
       const result = await adapter.sendMessage(mockChannelContext, outboundPayload);
 
-      assert.strictEqual(result.externalMessageId, 'ext_conv_789');
-      assert.strictEqual(result.deliveryStatus, DeliveryStatus.SENT);
-      assert.strictEqual(typeof result.rawResponse, 'object');
+      expect(result.externalMessageId).toBe('ext_conv_789');
+      expect(result.deliveryStatus).toBe(DeliveryStatus.SENT);
+      expect(typeof result.rawResponse).toBe('object');
 
-      assert.strictEqual(emittedEvents.length, 2);
-      assert.strictEqual(emittedEvents[0].event, 'widget.outbound_message');
-      assert.strictEqual(emittedEvents[1].event, 'widget:message');
+      expect(emittedEvents.length).toBe(2);
+      expect(emittedEvents[0].event).toBe('widget.outbound_message');
+      expect(emittedEvents[1].event).toBe('widget:message');
 
       const payload = emittedEvents[0].payload as any;
-      assert.strictEqual(payload.workspaceId, mockChannelContext.workspaceId);
-      assert.strictEqual(payload.channelId, mockChannelContext.channelId);
-      assert.strictEqual(payload.recipientExternalId, 'visitor_jane_123');
-      assert.strictEqual(
-        payload.message.content,
-        'Hi Jane, our billing team has resolved your ticket.',
-      );
+      expect(payload.workspaceId).toBe(mockChannelContext.workspaceId);
+      expect(payload.channelId).toBe(mockChannelContext.channelId);
+      expect(payload.recipientExternalId).toBe('visitor_jane_123');
+      expect(payload.message.content).toBe('Hi Jane, our billing team has resolved your ticket.');
     });
 
     it('should generate externalMessageId when not provided in payload', async () => {
@@ -429,8 +422,8 @@ describe('WebChatAdapter (Web Chat Widget Channel Integration)', () => {
 
       const result = await adapter.sendMessage(mockChannelContext, outboundPayload);
 
-      assert.ok(result.externalMessageId.startsWith('web_'));
-      assert.strictEqual(result.deliveryStatus, DeliveryStatus.SENT);
+      expect(result.externalMessageId.startsWith('web_')).toBeTruthy();
+      expect(result.deliveryStatus).toBe(DeliveryStatus.SENT);
     });
 
     it('should handle sendMessage when EventEmitter2 is not provided', async () => {
@@ -442,7 +435,7 @@ describe('WebChatAdapter (Web Chat Widget Channel Integration)', () => {
 
       const result = await standaloneAdapter.sendMessage(mockChannelContext, outboundPayload);
 
-      assert.strictEqual(result.deliveryStatus, DeliveryStatus.SENT);
+      expect(result.deliveryStatus).toBe(DeliveryStatus.SENT);
     });
   });
 
@@ -450,21 +443,21 @@ describe('WebChatAdapter (Web Chat Widget Channel Integration)', () => {
     it('should return complete widget configuration from channel settings and credentials', async () => {
       const info = await adapter.getChannelInfo(mockChannelContext);
 
-      assert.strictEqual(info.name, 'Acme Support Widget');
-      assert.strictEqual(info.providerAccountId, 'wt_secret_token_12345');
-      assert.strictEqual(typeof info.metadata, 'object');
+      expect(info.name).toBe('Acme Support Widget');
+      expect(info.providerAccountId).toBe('wt_secret_token_12345');
+      expect(typeof info.metadata).toBe('object');
 
       const meta = info.metadata as any;
-      assert.strictEqual(meta.widgetToken, 'wt_secret_token_12345');
-      assert.strictEqual(meta.widgetColor, '#0066ff');
-      assert.strictEqual(meta.welcomeTitle, 'Chat with Acme Team');
-      assert.strictEqual(meta.welcomeTagline, 'We reply immediately');
-      assert.strictEqual(meta.greetingMessage, 'Welcome! How can we assist you?');
-      assert.strictEqual(meta.websiteUrl, 'https://example.com');
-      assert.strictEqual(meta.replyTime, 'in_a_few_minutes');
-      assert.strictEqual(meta.preChatFormEnabled, true);
-      assert.strictEqual(meta.allowedDomains, 'https://example.com,https://shop.example.com');
-      assert.strictEqual(meta.hmacMandatory, false);
+      expect(meta.widgetToken).toBe('wt_secret_token_12345');
+      expect(meta.widgetColor).toBe('#0066ff');
+      expect(meta.welcomeTitle).toBe('Chat with Acme Team');
+      expect(meta.welcomeTagline).toBe('We reply immediately');
+      expect(meta.greetingMessage).toBe('Welcome! How can we assist you?');
+      expect(meta.websiteUrl).toBe('https://example.com');
+      expect(meta.replyTime).toBe('in_a_few_minutes');
+      expect(meta.preChatFormEnabled).toBe(true);
+      expect(meta.allowedDomains).toBe('https://example.com,https://shop.example.com');
+      expect(meta.hmacMandatory).toBe(false);
     });
 
     it('should return default fallback widget config when settings are empty', async () => {
@@ -479,17 +472,17 @@ describe('WebChatAdapter (Web Chat Widget Channel Integration)', () => {
 
       const info = await adapter.getChannelInfo(emptyContext);
 
-      assert.strictEqual(info.name, 'Welcome to our live chat');
+      expect(info.name).toBe('Welcome to our live chat');
       const meta = info.metadata as any;
-      assert.strictEqual(meta.widgetColor, '#1f93ff');
-      assert.strictEqual(meta.welcomeTitle, 'Welcome to our live chat');
-      assert.strictEqual(meta.welcomeTagline, 'How can we help you today?');
-      assert.strictEqual(meta.greetingMessage, 'Hi! Let us know if you have any questions.');
-      assert.strictEqual(meta.replyTime, 'in_a_few_minutes');
-      assert.strictEqual(meta.preChatFormEnabled, false);
-      assert.strictEqual(meta.allowedDomains, '*');
-      assert.strictEqual(meta.hmacMandatory, false);
-      assert.ok(Array.isArray(meta.preChatFormOptions?.preChatFields));
+      expect(meta.widgetColor).toBe('#1f93ff');
+      expect(meta.welcomeTitle).toBe('Welcome to our live chat');
+      expect(meta.welcomeTagline).toBe('How can we help you today?');
+      expect(meta.greetingMessage).toBe('Hi! Let us know if you have any questions.');
+      expect(meta.replyTime).toBe('in_a_few_minutes');
+      expect(meta.preChatFormEnabled).toBe(false);
+      expect(meta.allowedDomains).toBe('*');
+      expect(meta.hmacMandatory).toBe(false);
+      expect(Array.isArray(meta.preChatFormOptions?.preChatFields)).toBeTruthy();
     });
   });
 
@@ -499,15 +492,15 @@ describe('WebChatAdapter (Web Chat Widget Channel Integration)', () => {
         const token1 = adapter.generateWidgetToken();
         const token2 = adapter.generateWidgetToken();
 
-        assert.strictEqual(token1.length, 40);
-        assert.strictEqual(token2.length, 40);
-        assert.notStrictEqual(token1, token2);
-        assert.match(token1, /^[0-9a-f]+$/);
+        expect(token1.length).toBe(40);
+        expect(token2.length).toBe(40);
+        expect(token1).not.toBe(token2);
+        expect(token1).toMatch(/^[0-9a-f]+$/);
       });
 
       it('should respect custom byte length parameter', () => {
         const token = adapter.generateWidgetToken(16);
-        assert.strictEqual(token.length, 32);
+        expect(token.length).toBe(32);
       });
     });
 
@@ -517,40 +510,33 @@ describe('WebChatAdapter (Web Chat Widget Channel Integration)', () => {
 
       it('should generate HMAC-SHA256 hex string', () => {
         const signature = adapter.generateHmacSignature(identifier, secret);
-        assert.strictEqual(signature.length, 64);
-        assert.match(signature, /^[0-9a-f]+$/);
+        expect(signature.length).toBe(64);
+        expect(signature).toMatch(/^[0-9a-f]+$/);
       });
 
       it('should return true for identical signature verification', () => {
         const signature = adapter.generateHmacSignature(identifier, secret);
-        assert.strictEqual(adapter.verifyHmacSignature(identifier, signature, secret), true);
+        expect(adapter.verifyHmacSignature(identifier, signature, secret)).toBe(true);
       });
 
       it('should support case-insensitive hex comparison', () => {
         const signature = adapter.generateHmacSignature(identifier, secret);
-        assert.strictEqual(
-          adapter.verifyHmacSignature(identifier, signature.toUpperCase(), secret),
-          true,
-        );
+        expect(adapter.verifyHmacSignature(identifier, signature.toUpperCase(), secret)).toBe(true);
       });
 
       it('should return false for invalid signature or mismatched secret', () => {
         const signature = adapter.generateHmacSignature(identifier, secret);
-        assert.strictEqual(
-          adapter.verifyHmacSignature(identifier, 'wrong_signature_hex_1234', secret),
+        expect(adapter.verifyHmacSignature(identifier, 'wrong_signature_hex_1234', secret)).toBe(
           false,
         );
-        assert.strictEqual(
-          adapter.verifyHmacSignature(identifier, signature, 'wrong_secret_key'),
-          false,
-        );
-        assert.strictEqual(adapter.verifyHmacSignature('different_user', signature, secret), false);
+        expect(adapter.verifyHmacSignature(identifier, signature, 'wrong_secret_key')).toBe(false);
+        expect(adapter.verifyHmacSignature('different_user', signature, secret)).toBe(false);
       });
 
       it('should return false for empty/null arguments', () => {
-        assert.strictEqual(adapter.verifyHmacSignature('', 'sig', secret), false);
-        assert.strictEqual(adapter.verifyHmacSignature(identifier, '', secret), false);
-        assert.strictEqual(adapter.verifyHmacSignature(identifier, 'sig', ''), false);
+        expect(adapter.verifyHmacSignature('', 'sig', secret)).toBe(false);
+        expect(adapter.verifyHmacSignature(identifier, '', secret)).toBe(false);
+        expect(adapter.verifyHmacSignature(identifier, 'sig', '')).toBe(false);
       });
     });
 
@@ -558,10 +544,10 @@ describe('WebChatAdapter (Web Chat Widget Channel Integration)', () => {
       it('should generate script snippet containing websiteToken and default baseUrl', () => {
         const script = adapter.buildEmbedScript('tok_website_xyz_123');
 
-        assert.ok(script.includes("websiteToken: 'tok_website_xyz_123'"));
-        assert.ok(script.includes('https://app.salescopilot.com'));
-        assert.ok(script.includes('/widget/sdk.js'));
-        assert.ok(script.includes('window.SalesCopilotWidget.init'));
+        expect(script.includes("websiteToken: 'tok_website_xyz_123'")).toBeTruthy();
+        expect(script.includes('https://app.salescopilot.com')).toBeTruthy();
+        expect(script.includes('/widget/sdk.js')).toBeTruthy();
+        expect(script.includes('window.SalesCopilotWidget.init')).toBeTruthy();
       });
 
       it('should support custom baseUrl and strip trailing slash', () => {
@@ -570,7 +556,7 @@ describe('WebChatAdapter (Web Chat Widget Channel Integration)', () => {
           'https://chat.example.com///',
         );
 
-        assert.ok(script.includes('var BASE_URL = "https://chat.example.com";'));
+        expect(script.includes('var BASE_URL = "https://chat.example.com";')).toBeTruthy();
       });
     });
   });

@@ -1,5 +1,3 @@
-import { describe, it, beforeEach } from 'node:test';
-import * as assert from 'node:assert';
 import {
   ChannelType,
   ConversationStatus,
@@ -331,36 +329,36 @@ describe('ChannelIngestionProcessor (Task T-1.5.7: Inbound Ingestion Pipeline In
     await processor.process(mockJob);
 
     // 1. Contact & Identity created
-    assert.strictEqual(contactsDb.size, 1);
-    assert.strictEqual(channelIdentitiesDb.size, 1);
+    expect(contactsDb.size).toBe(1);
+    expect(channelIdentitiesDb.size).toBe(1);
     const contact = Array.from(contactsDb.values())[0];
-    assert.strictEqual(contact.name, 'Facebook User');
-    assert.strictEqual(contact.workspaceId, 'ws_corp');
+    expect(contact.name).toBe('Facebook User');
+    expect(contact.workspaceId).toBe('ws_corp');
 
     const identity = Array.from(channelIdentitiesDb.values())[0];
-    assert.strictEqual(identity.externalContactId, 'psid_user_999');
-    assert.strictEqual(identity.contactId, contact.id);
+    expect(identity.externalContactId).toBe('psid_user_999');
+    expect(identity.contactId).toBe(contact.id);
 
     // 2. Active Conversation created
-    assert.strictEqual(conversationsDb.size, 1);
+    expect(conversationsDb.size).toBe(1);
     const conv = Array.from(conversationsDb.values())[0];
-    assert.strictEqual(conv.contactId, contact.id);
-    assert.strictEqual(conv.inboxId, 'ib_main');
-    assert.strictEqual(conv.status, ConversationStatus.OPEN);
-    assert.strictEqual(conv.unreadMessagesCount, 1);
+    expect(conv.contactId).toBe(contact.id);
+    expect(conv.inboxId).toBe('ib_main');
+    expect(conv.status).toBe(ConversationStatus.OPEN);
+    expect(conv.unreadMessagesCount).toBe(1);
 
     // 3. Message created
-    assert.strictEqual(messagesDb.size, 1);
+    expect(messagesDb.size).toBe(1);
     const msg = Array.from(messagesDb.values())[0];
-    assert.strictEqual(msg.conversationId, conv.id);
-    assert.strictEqual(msg.senderType, SenderType.CONTACT);
-    assert.strictEqual(msg.senderId, contact.id);
-    assert.strictEqual(msg.content, 'Hello, I want to inquire about pricing');
-    assert.strictEqual(msg.externalId, 'mid.fb.12345');
+    expect(msg.conversationId).toBe(conv.id);
+    expect(msg.senderType).toBe(SenderType.CONTACT);
+    expect(msg.senderId).toBe(contact.id);
+    expect(msg.content).toBe('Hello, I want to inquire about pricing');
+    expect(msg.externalId).toBe('mid.fb.12345');
 
     // 4. ChannelEvent marked as processed
     const processedEvent = channelEventsDb.get(eventId);
-    assert.ok(processedEvent.processedAt instanceof Date);
+    expect(processedEvent.processedAt instanceof Date).toBeTruthy();
   });
 
   it('should group subsequent inbound messages from same customer into the existing active conversation', async () => {
@@ -386,8 +384,8 @@ describe('ChannelIngestionProcessor (Task T-1.5.7: Inbound Ingestion Pipeline In
       },
     } as any);
 
-    assert.strictEqual(conversationsDb.size, 1);
-    assert.strictEqual(messagesDb.size, 1);
+    expect(conversationsDb.size).toBe(1);
+    expect(messagesDb.size).toBe(1);
     const firstConvId = Array.from(conversationsDb.values())[0].id;
 
     // 2. Second message from same customer
@@ -413,15 +411,15 @@ describe('ChannelIngestionProcessor (Task T-1.5.7: Inbound Ingestion Pipeline In
     } as any);
 
     // Still 1 contact, 1 identity, 1 conversation, but 2 messages
-    assert.strictEqual(contactsDb.size, 1);
-    assert.strictEqual(channelIdentitiesDb.size, 1);
-    assert.strictEqual(conversationsDb.size, 1);
-    assert.strictEqual(messagesDb.size, 2);
+    expect(contactsDb.size).toBe(1);
+    expect(channelIdentitiesDb.size).toBe(1);
+    expect(conversationsDb.size).toBe(1);
+    expect(messagesDb.size).toBe(2);
 
     const messages = Array.from(messagesDb.values());
-    assert.strictEqual(messages[0].conversationId, firstConvId);
-    assert.strictEqual(messages[1].conversationId, firstConvId);
-    assert.strictEqual(messages[1].content, 'Second message');
+    expect(messages[0].conversationId).toBe(firstConvId);
+    expect(messages[1].conversationId).toBe(firstConvId);
+    expect(messages[1].content).toBe('Second message');
   });
 
   it('should process inbound messages with media attachments', async () => {
@@ -455,11 +453,11 @@ describe('ChannelIngestionProcessor (Task T-1.5.7: Inbound Ingestion Pipeline In
       },
     } as any);
 
-    assert.strictEqual(messagesDb.size, 1);
+    expect(messagesDb.size).toBe(1);
     const msg = Array.from(messagesDb.values())[0];
-    assert.strictEqual(msg.attachments.length, 1);
-    assert.strictEqual(msg.attachments[0].storagePath, 'https://cdn.facebook.com/pic123.jpg');
-    assert.strictEqual(msg.attachments[0].fileName, 'fb_image.jpg');
+    expect(msg.attachments.length).toBe(1);
+    expect(msg.attachments[0].storagePath).toBe('https://cdn.facebook.com/pic123.jpg');
+    expect(msg.attachments[0].fileName).toBe('fb_image.jpg');
   });
 
   it('should gracefully handle fallback payload when adapter is not registered', async () => {
@@ -489,13 +487,13 @@ describe('ChannelIngestionProcessor (Task T-1.5.7: Inbound Ingestion Pipeline In
       },
     } as any);
 
-    assert.strictEqual(contactsDb.size, 1);
-    assert.strictEqual(conversationsDb.size, 1);
-    assert.strictEqual(messagesDb.size, 1);
+    expect(contactsDb.size).toBe(1);
+    expect(conversationsDb.size).toBe(1);
+    expect(messagesDb.size).toBe(1);
 
     const msg = Array.from(messagesDb.values())[0];
-    assert.strictEqual(msg.content, 'Hello from Telegram via fallback payload');
-    assert.strictEqual(msg.externalId, 'tg_msg_999');
+    expect(msg.content).toBe('Hello from Telegram via fallback payload');
+    expect(msg.externalId).toBe('tg_msg_999');
   });
 
   it('should skip processing and log warning when channel does not exist', async () => {
@@ -509,9 +507,9 @@ describe('ChannelIngestionProcessor (Task T-1.5.7: Inbound Ingestion Pipeline In
       },
     } as any);
 
-    assert.strictEqual(contactsDb.size, 0);
-    assert.strictEqual(conversationsDb.size, 0);
-    assert.strictEqual(messagesDb.size, 0);
+    expect(contactsDb.size).toBe(0);
+    expect(conversationsDb.size).toBe(0);
+    expect(messagesDb.size).toBe(0);
   });
 
   describe('Delivery Status Updates (Feature Task S-2)', () => {
@@ -562,11 +560,11 @@ describe('ChannelIngestionProcessor (Task T-1.5.7: Inbound Ingestion Pipeline In
 
       // Verify deliveryStatus updated to DELIVERED
       const updatedMsg = messagesDb.get(msgId);
-      assert.strictEqual(updatedMsg.deliveryStatus, DeliveryStatus.DELIVERED);
+      expect(updatedMsg.deliveryStatus).toBe(DeliveryStatus.DELIVERED);
 
       // Verify channelEvent marked processed
       const updatedEvt = channelEventsDb.get(eventId);
-      assert.ok(updatedEvt.processedAt instanceof Date);
+      expect(updatedEvt.processedAt instanceof Date).toBeTruthy();
     });
 
     it('should gracefully handle delivery status update when message externalId is not found', async () => {
@@ -600,7 +598,7 @@ describe('ChannelIngestionProcessor (Task T-1.5.7: Inbound Ingestion Pipeline In
 
       // No crash, and channelEvent marked processed
       const updatedEvt = channelEventsDb.get(eventId);
-      assert.ok(updatedEvt.processedAt instanceof Date);
+      expect(updatedEvt.processedAt instanceof Date).toBeTruthy();
     });
   });
 
@@ -667,15 +665,19 @@ describe('ChannelIngestionProcessor (Task T-1.5.7: Inbound Ingestion Pipeline In
           },
         } as any);
 
-        assert.strictEqual(uploadedFiles.length, 1);
-        assert.ok(uploadedFiles[0].key.startsWith('attachments/ws_corp/inbound/'));
-        assert.ok(uploadedFiles[0].key.includes('fb_image.jpg'));
-        assert.strictEqual(uploadedFiles[0].contentType, 'image/jpeg');
+        expect(uploadedFiles.length).toBe(1);
+        expect(uploadedFiles[0].key.startsWith('attachments/ws_corp/inbound/')).toBeTruthy();
+        expect(uploadedFiles[0].key.includes('fb_image.jpg')).toBeTruthy();
+        expect(uploadedFiles[0].contentType).toBe('image/jpeg');
 
         const msg = Array.from(messagesDb.values())[0];
-        assert.strictEqual(msg.attachments.length, 1);
-        assert.ok(msg.attachments[0].storagePath.startsWith('attachments/ws_corp/inbound/'));
-        assert.ok(msg.attachments[0].fileUrl.startsWith('https://minio.salescopilot.test/'));
+        expect(msg.attachments.length).toBe(1);
+        expect(
+          msg.attachments[0].storagePath.startsWith('attachments/ws_corp/inbound/'),
+        ).toBeTruthy();
+        expect(
+          msg.attachments[0].fileUrl.startsWith('https://minio.salescopilot.test/'),
+        ).toBeTruthy();
       } finally {
         globalThis.fetch = originalFetch;
       }
@@ -739,9 +741,9 @@ describe('ChannelIngestionProcessor (Task T-1.5.7: Inbound Ingestion Pipeline In
 
         // Message should still be created with fallback external URL
         const msg = Array.from(messagesDb.values())[0];
-        assert.strictEqual(msg.attachments.length, 1);
-        assert.strictEqual(msg.attachments[0].storagePath, 'https://cdn.fb.test/broken_link.jpg');
-        assert.strictEqual(msg.attachments[0].fileUrl, 'https://cdn.fb.test/broken_link.jpg');
+        expect(msg.attachments.length).toBe(1);
+        expect(msg.attachments[0].storagePath).toBe('https://cdn.fb.test/broken_link.jpg');
+        expect(msg.attachments[0].fileUrl).toBe('https://cdn.fb.test/broken_link.jpg');
       } finally {
         globalThis.fetch = originalFetch;
       }

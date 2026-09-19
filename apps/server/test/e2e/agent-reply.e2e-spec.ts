@@ -141,8 +141,8 @@ describe('E2E Scenario 2 — Agent Reply Flow (Task 16 — Feature F-1.11.1)', (
       where: { id: testConversationId },
     });
     expect(conversationInDb).toBeDefined();
-    // Status transitioned from OPEN to PENDING
-    expect(conversationInDb?.status).toBe('PENDING');
+    // Status remains OPEN (Social Commerce Invariant Option A)
+    expect(conversationInDb?.status).toBe('OPEN');
     // First reply timestamp recorded
     expect(conversationInDb?.firstReplyCreatedAt).toBeDefined();
     expect(conversationInDb?.firstReplyCreatedAt).not.toBeNull();
@@ -197,11 +197,11 @@ describe('E2E Scenario 2 — Agent Reply Flow (Task 16 — Feature F-1.11.1)', (
     expect(noteInDb).toBeDefined();
     expect(noteInDb?.isPrivate).toBe(true);
 
-    // 5. Verify DB: Conversation status unchanged
+    // 5. Verify DB: Conversation status unchanged (remains OPEN)
     const conversationInDb = await prisma.conversation.findUnique({
       where: { id: testConversationId },
     });
-    expect(conversationInDb?.status).toBe('PENDING');
+    expect(conversationInDb?.status).toBe('OPEN');
   });
 
   it('should enforce impersonation prevention by attributing message to authenticated user', async () => {

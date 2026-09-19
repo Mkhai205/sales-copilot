@@ -1,5 +1,3 @@
-import { describe, it, beforeEach } from 'node:test';
-import * as assert from 'node:assert';
 import { AuditLogService } from '../audit-logs.service';
 
 describe('AuditLogService (Feature F-1.8.4: Audit Logging)', () => {
@@ -120,17 +118,17 @@ describe('AuditLogService (Feature F-1.8.4: Audit Logging)', () => {
         ipAddress: '127.0.0.1',
       });
 
-      assert.strictEqual(entry.workspaceId, 'ws_1');
-      assert.strictEqual(entry.userId, 'usr_admin_1');
-      assert.strictEqual(entry.action, 'MEMBER_ADDED');
-      assert.strictEqual(entry.resourceType, 'WORKSPACE_MEMBER');
-      assert.strictEqual(entry.resourceId, 'wm_123');
-      assert.deepStrictEqual(entry.payload, { email: 'newmember@acme.com', role: 'AGENT' });
-      assert.strictEqual(entry.ipAddress, '127.0.0.1');
-      assert.strictEqual(entry.user?.email, 'admin@acme.com');
-      assert.ok(entry.createdAt);
+      expect(entry.workspaceId).toBe('ws_1');
+      expect(entry.userId).toBe('usr_admin_1');
+      expect(entry.action).toBe('MEMBER_ADDED');
+      expect(entry.resourceType).toBe('WORKSPACE_MEMBER');
+      expect(entry.resourceId).toBe('wm_123');
+      expect(entry.payload).toEqual({ email: 'newmember@acme.com', role: 'AGENT' });
+      expect(entry.ipAddress).toBe('127.0.0.1');
+      expect(entry.user?.email).toBe('admin@acme.com');
+      expect(entry.createdAt).toBeTruthy();
 
-      assert.strictEqual(auditLogsDb.length, 1);
+      expect(auditLogsDb.length).toBe(1);
     });
 
     it('should allow system actions with null userId', async () => {
@@ -143,9 +141,9 @@ describe('AuditLogService (Feature F-1.8.4: Audit Logging)', () => {
         payload: { ruleName: 'Auto-reply outside hours' },
       });
 
-      assert.strictEqual(entry.userId, null);
-      assert.strictEqual(entry.user, null);
-      assert.strictEqual(entry.action, 'AUTOMATION_TRIGGERED');
+      expect(entry.userId).toBe(null);
+      expect(entry.user).toBe(null);
+      expect(entry.action).toBe('AUTOMATION_TRIGGERED');
     });
   });
 
@@ -183,54 +181,54 @@ describe('AuditLogService (Feature F-1.8.4: Audit Logging)', () => {
 
     it('should list all logs for workspace with pagination meta', async () => {
       const result = await service.list('ws_1');
-      assert.strictEqual(result.items.length, 3);
-      assert.strictEqual(result.meta.total, 3);
-      assert.strictEqual(result.meta.page, 1);
-      assert.strictEqual(result.meta.limit, 20);
-      assert.strictEqual(result.meta.hasMore, false);
+      expect(result.items.length).toBe(3);
+      expect(result.meta.total).toBe(3);
+      expect(result.meta.page).toBe(1);
+      expect(result.meta.limit).toBe(20);
+      expect(result.meta.hasMore).toBe(false);
     });
 
     it('should filter by action type', async () => {
       const result = await service.list('ws_1', { action: 'MEMBER_ADDED' });
-      assert.strictEqual(result.items.length, 1);
-      assert.strictEqual(result.items[0].action, 'MEMBER_ADDED');
+      expect(result.items.length).toBe(1);
+      expect(result.items[0].action).toBe('MEMBER_ADDED');
     });
 
     it('should filter by actor / userId', async () => {
       const result = await service.list('ws_1', { actorId: 'usr_agent_2' });
-      assert.strictEqual(result.items.length, 1);
-      assert.strictEqual(result.items[0].action, 'CONTACT_MERGED');
+      expect(result.items.length).toBe(1);
+      expect(result.items[0].action).toBe('CONTACT_MERGED');
     });
 
     it('should filter by resourceType', async () => {
       const result = await service.list('ws_1', { resourceType: 'CONTACT' });
-      assert.strictEqual(result.items.length, 1);
-      assert.strictEqual(result.items[0].resourceId, 'cnt_target');
+      expect(result.items.length).toBe(1);
+      expect(result.items[0].resourceId).toBe('cnt_target');
     });
 
     it('should filter by resourceId', async () => {
       const result = await service.list('ws_1', { resourceId: 'wm_1' });
-      assert.strictEqual(result.items.length, 2);
+      expect(result.items.length).toBe(2);
     });
 
     it('should enforce tenant isolation (workspace 2 logs not visible in workspace 1)', async () => {
       const ws1 = await service.list('ws_1');
       const ws2 = await service.list('ws_2');
 
-      assert.strictEqual(ws1.items.length, 3);
-      assert.strictEqual(ws2.items.length, 1);
-      assert.strictEqual(ws2.items[0].workspaceId, 'ws_2');
+      expect(ws1.items.length).toBe(3);
+      expect(ws2.items.length).toBe(1);
+      expect(ws2.items[0].workspaceId).toBe('ws_2');
     });
 
     it('should handle pagination with page and limit', async () => {
       const page1 = await service.list('ws_1', { page: 1, limit: 2 });
-      assert.strictEqual(page1.items.length, 2);
-      assert.strictEqual(page1.meta.total, 3);
-      assert.strictEqual(page1.meta.hasMore, true);
+      expect(page1.items.length).toBe(2);
+      expect(page1.meta.total).toBe(3);
+      expect(page1.meta.hasMore).toBe(true);
 
       const page2 = await service.list('ws_1', { page: 2, limit: 2 });
-      assert.strictEqual(page2.items.length, 1);
-      assert.strictEqual(page2.meta.hasMore, false);
+      expect(page2.items.length).toBe(1);
+      expect(page2.meta.hasMore).toBe(false);
     });
   });
 
@@ -243,10 +241,10 @@ describe('AuditLogService (Feature F-1.8.4: Audit Logging)', () => {
         mergedContactId: 'cnt_2',
       });
 
-      assert.strictEqual(auditLogsDb.length, 1);
-      assert.strictEqual(auditLogsDb[0].action, 'CONTACT_MERGED');
-      assert.strictEqual(auditLogsDb[0].resourceType, 'CONTACT');
-      assert.strictEqual(auditLogsDb[0].resourceId, 'cnt_1');
+      expect(auditLogsDb.length).toBe(1);
+      expect(auditLogsDb[0].action).toBe('CONTACT_MERGED');
+      expect(auditLogsDb[0].resourceType).toBe('CONTACT');
+      expect(auditLogsDb[0].resourceId).toBe('cnt_1');
     });
 
     it('should record audit log on channel.created and channel.deleted events', async () => {
@@ -265,9 +263,9 @@ describe('AuditLogService (Feature F-1.8.4: Audit Logging)', () => {
         channelType: 'FACEBOOK_MESSENGER',
       });
 
-      assert.strictEqual(auditLogsDb.length, 2);
-      assert.strictEqual(auditLogsDb[0].action, 'CHANNEL_CREATED');
-      assert.strictEqual(auditLogsDb[1].action, 'CHANNEL_DELETED');
+      expect(auditLogsDb.length).toBe(2);
+      expect(auditLogsDb[0].action).toBe('CHANNEL_CREATED');
+      expect(auditLogsDb[1].action).toBe('CHANNEL_DELETED');
     });
 
     it('should record audit log on label.created and label.deleted events', async () => {
@@ -284,9 +282,9 @@ describe('AuditLogService (Feature F-1.8.4: Audit Logging)', () => {
         title: 'VIP',
       });
 
-      assert.strictEqual(auditLogsDb.length, 2);
-      assert.strictEqual(auditLogsDb[0].action, 'LABEL_CREATED');
-      assert.strictEqual(auditLogsDb[1].action, 'LABEL_DELETED');
+      expect(auditLogsDb.length).toBe(2);
+      expect(auditLogsDb[0].action).toBe('LABEL_CREATED');
+      expect(auditLogsDb[1].action).toBe('LABEL_DELETED');
     });
 
     it('should record audit log on canned_response.created and canned_response.deleted events', async () => {
@@ -303,9 +301,9 @@ describe('AuditLogService (Feature F-1.8.4: Audit Logging)', () => {
         shortCode: 'chao',
       });
 
-      assert.strictEqual(auditLogsDb.length, 2);
-      assert.strictEqual(auditLogsDb[0].action, 'CANNED_RESPONSE_CREATED');
-      assert.strictEqual(auditLogsDb[1].action, 'CANNED_RESPONSE_DELETED');
+      expect(auditLogsDb.length).toBe(2);
+      expect(auditLogsDb[0].action).toBe('CANNED_RESPONSE_CREATED');
+      expect(auditLogsDb[1].action).toBe('CANNED_RESPONSE_DELETED');
     });
 
     it('should record audit log on automation_rule created, updated, and deleted events', async () => {
@@ -338,11 +336,11 @@ describe('AuditLogService (Feature F-1.8.4: Audit Logging)', () => {
         name: 'VIP Auto Assign Updated',
       });
 
-      assert.strictEqual(auditLogsDb.length, 3);
-      assert.strictEqual(auditLogsDb[0].action, 'AUTOMATION_RULE_CREATED');
-      assert.strictEqual(auditLogsDb[0].resourceType, 'AUTOMATION_RULE');
-      assert.strictEqual(auditLogsDb[1].action, 'AUTOMATION_RULE_UPDATED');
-      assert.strictEqual(auditLogsDb[2].action, 'AUTOMATION_RULE_DELETED');
+      expect(auditLogsDb.length).toBe(3);
+      expect(auditLogsDb[0].action).toBe('AUTOMATION_RULE_CREATED');
+      expect(auditLogsDb[0].resourceType).toBe('AUTOMATION_RULE');
+      expect(auditLogsDb[1].action).toBe('AUTOMATION_RULE_UPDATED');
+      expect(auditLogsDb[2].action).toBe('AUTOMATION_RULE_DELETED');
     });
 
     it('should record audit log on workspace_member added, role_updated, and removed events (FINDING-P8-01)', async () => {
@@ -372,16 +370,16 @@ describe('AuditLogService (Feature F-1.8.4: Audit Logging)', () => {
         role: 'ADMIN',
       });
 
-      assert.strictEqual(auditLogsDb.length, 3);
-      assert.strictEqual(auditLogsDb[0].action, 'WORKSPACE_MEMBER_ADDED');
-      assert.strictEqual(auditLogsDb[0].resourceType, 'WORKSPACE_MEMBER');
-      assert.strictEqual(auditLogsDb[0].resourceId, 'wm_1');
-      assert.strictEqual(auditLogsDb[0].payload.role, 'AGENT');
+      expect(auditLogsDb.length).toBe(3);
+      expect(auditLogsDb[0].action).toBe('WORKSPACE_MEMBER_ADDED');
+      expect(auditLogsDb[0].resourceType).toBe('WORKSPACE_MEMBER');
+      expect(auditLogsDb[0].resourceId).toBe('wm_1');
+      expect(auditLogsDb[0].payload.role).toBe('AGENT');
 
-      assert.strictEqual(auditLogsDb[1].action, 'WORKSPACE_MEMBER_ROLE_UPDATED');
-      assert.strictEqual(auditLogsDb[1].payload.newRole, 'ADMIN');
+      expect(auditLogsDb[1].action).toBe('WORKSPACE_MEMBER_ROLE_UPDATED');
+      expect(auditLogsDb[1].payload.newRole).toBe('ADMIN');
 
-      assert.strictEqual(auditLogsDb[2].action, 'WORKSPACE_MEMBER_REMOVED');
+      expect(auditLogsDb[2].action).toBe('WORKSPACE_MEMBER_REMOVED');
     });
 
     it('should record audit log on webhook_subscription created, updated, and deleted events (FINDING-P8-01)', async () => {
@@ -414,14 +412,14 @@ describe('AuditLogService (Feature F-1.8.4: Audit Logging)', () => {
         url: 'https://example.com/webhook-v2',
       });
 
-      assert.strictEqual(auditLogsDb.length, 3);
-      assert.strictEqual(auditLogsDb[0].action, 'WEBHOOK_SUBSCRIPTION_CREATED');
-      assert.strictEqual(auditLogsDb[0].resourceType, 'WEBHOOK_SUBSCRIPTION');
-      assert.strictEqual(auditLogsDb[0].resourceId, 'sub_1');
+      expect(auditLogsDb.length).toBe(3);
+      expect(auditLogsDb[0].action).toBe('WEBHOOK_SUBSCRIPTION_CREATED');
+      expect(auditLogsDb[0].resourceType).toBe('WEBHOOK_SUBSCRIPTION');
+      expect(auditLogsDb[0].resourceId).toBe('sub_1');
 
-      assert.strictEqual(auditLogsDb[1].action, 'WEBHOOK_SUBSCRIPTION_UPDATED');
-      assert.strictEqual(auditLogsDb[2].action, 'WEBHOOK_SUBSCRIPTION_DELETED');
-      assert.strictEqual(auditLogsDb[2].resourceId, 'sub_1');
+      expect(auditLogsDb[1].action).toBe('WEBHOOK_SUBSCRIPTION_UPDATED');
+      expect(auditLogsDb[2].action).toBe('WEBHOOK_SUBSCRIPTION_DELETED');
+      expect(auditLogsDb[2].resourceId).toBe('sub_1');
     });
   });
 });

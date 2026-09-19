@@ -1,5 +1,3 @@
-import { describe, it } from 'node:test';
-import * as assert from 'node:assert';
 import { Controller, Get, Module } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import {
@@ -38,7 +36,7 @@ describe('Strict CORS Configuration & Verification (Task 9 — Feature F-1.11.4)
         ...baseEnv,
         CORS_ORIGIN: 'http://localhost:3000',
       });
-      assert.deepStrictEqual(parsed.CORS_ORIGIN, ['http://localhost:3000']);
+      expect(parsed.CORS_ORIGIN).toEqual(['http://localhost:3000']);
     });
 
     it('should parse comma-separated origins with whitespace', () => {
@@ -46,7 +44,7 @@ describe('Strict CORS Configuration & Verification (Task 9 — Feature F-1.11.4)
         ...baseEnv,
         CORS_ORIGIN: 'http://localhost:3000, https://app.salescopilot.vn,  http://localhost:8080 ',
       });
-      assert.deepStrictEqual(parsed.CORS_ORIGIN, [
+      expect(parsed.CORS_ORIGIN).toEqual([
         'http://localhost:3000',
         'https://app.salescopilot.vn',
         'http://localhost:8080',
@@ -58,15 +56,12 @@ describe('Strict CORS Configuration & Verification (Task 9 — Feature F-1.11.4)
         ...baseEnv,
         CORS_ORIGIN: ['http://localhost:3000', 'https://app.salescopilot.vn'],
       });
-      assert.deepStrictEqual(parsed.CORS_ORIGIN, [
-        'http://localhost:3000',
-        'https://app.salescopilot.vn',
-      ]);
+      expect(parsed.CORS_ORIGIN).toEqual(['http://localhost:3000', 'https://app.salescopilot.vn']);
     });
 
     it('should default to [http://localhost:3000] when omitted', () => {
       const parsed = envSchema.parse(baseEnv);
-      assert.deepStrictEqual(parsed.CORS_ORIGIN, ['http://localhost:3000']);
+      expect(parsed.CORS_ORIGIN).toEqual(['http://localhost:3000']);
     });
   });
 
@@ -74,32 +69,29 @@ describe('Strict CORS Configuration & Verification (Task 9 — Feature F-1.11.4)
     it('should construct strict CORS options with credentials and standard headers', () => {
       const options = createCorsOptions(['http://localhost:3000', 'https://app.salescopilot.vn']);
 
-      assert.deepStrictEqual(options.origin, [
-        'http://localhost:3000',
-        'https://app.salescopilot.vn',
-      ]);
-      assert.strictEqual(options.credentials, true);
-      assert.strictEqual(options.maxAge, 86400);
+      expect(options.origin).toEqual(['http://localhost:3000', 'https://app.salescopilot.vn']);
+      expect(options.credentials).toBe(true);
+      expect(options.maxAge).toBe(86400);
 
       // Verify HTTP methods
-      assert.deepStrictEqual(options.methods, CORS_ALLOWED_METHODS);
-      assert.ok(CORS_ALLOWED_METHODS.includes('GET'));
-      assert.ok(CORS_ALLOWED_METHODS.includes('POST'));
-      assert.ok(CORS_ALLOWED_METHODS.includes('PUT'));
-      assert.ok(CORS_ALLOWED_METHODS.includes('PATCH'));
-      assert.ok(CORS_ALLOWED_METHODS.includes('DELETE'));
-      assert.ok(CORS_ALLOWED_METHODS.includes('OPTIONS'));
+      expect(options.methods).toEqual(CORS_ALLOWED_METHODS);
+      expect(CORS_ALLOWED_METHODS.includes('GET')).toBeTruthy();
+      expect(CORS_ALLOWED_METHODS.includes('POST')).toBeTruthy();
+      expect(CORS_ALLOWED_METHODS.includes('PUT')).toBeTruthy();
+      expect(CORS_ALLOWED_METHODS.includes('PATCH')).toBeTruthy();
+      expect(CORS_ALLOWED_METHODS.includes('DELETE')).toBeTruthy();
+      expect(CORS_ALLOWED_METHODS.includes('OPTIONS')).toBeTruthy();
 
       // Verify allowed and exposed headers
-      assert.deepStrictEqual(options.allowedHeaders, CORS_ALLOWED_HEADERS);
-      assert.ok(CORS_ALLOWED_HEADERS.includes('Authorization'));
-      assert.ok(CORS_ALLOWED_HEADERS.includes('X-Request-Id'));
-      assert.ok(CORS_ALLOWED_HEADERS.includes('X-Workspace-Id'));
-      assert.ok(CORS_ALLOWED_HEADERS.includes('CF-Connecting-IP'));
+      expect(options.allowedHeaders).toEqual(CORS_ALLOWED_HEADERS);
+      expect(CORS_ALLOWED_HEADERS.includes('Authorization')).toBeTruthy();
+      expect(CORS_ALLOWED_HEADERS.includes('X-Request-Id')).toBeTruthy();
+      expect(CORS_ALLOWED_HEADERS.includes('X-Workspace-Id')).toBeTruthy();
+      expect(CORS_ALLOWED_HEADERS.includes('CF-Connecting-IP')).toBeTruthy();
 
-      assert.deepStrictEqual(options.exposedHeaders, CORS_EXPOSED_HEADERS);
-      assert.ok(CORS_EXPOSED_HEADERS.includes('X-Request-Id'));
-      assert.ok(CORS_EXPOSED_HEADERS.includes('Retry-After'));
+      expect(options.exposedHeaders).toEqual(CORS_EXPOSED_HEADERS);
+      expect(CORS_EXPOSED_HEADERS.includes('X-Request-Id')).toBeTruthy();
+      expect(CORS_EXPOSED_HEADERS.includes('Retry-After')).toBeTruthy();
     });
   });
 
@@ -119,9 +111,9 @@ describe('Strict CORS Configuration & Verification (Task 9 — Feature F-1.11.4)
           headers: { Origin: 'http://localhost:3000' },
         });
 
-        assert.strictEqual(res.status, 200);
-        assert.strictEqual(res.headers.get('access-control-allow-origin'), 'http://localhost:3000');
-        assert.strictEqual(res.headers.get('access-control-allow-credentials'), 'true');
+        expect(res.status).toBe(200);
+        expect(res.headers.get('access-control-allow-origin')).toBe('http://localhost:3000');
+        expect(res.headers.get('access-control-allow-credentials')).toBe('true');
       } finally {
         await app.close();
       }
@@ -140,7 +132,7 @@ describe('Strict CORS Configuration & Verification (Task 9 — Feature F-1.11.4)
           headers: { Origin: 'https://malicious-attacker.com' },
         });
 
-        assert.strictEqual(res.headers.get('access-control-allow-origin'), null);
+        expect(res.headers.get('access-control-allow-origin')).toBe(null);
       } finally {
         await app.close();
       }
@@ -164,15 +156,12 @@ describe('Strict CORS Configuration & Verification (Task 9 — Feature F-1.11.4)
           },
         });
 
-        assert.strictEqual(res.status, 204);
-        assert.strictEqual(
-          res.headers.get('access-control-allow-origin'),
-          'https://app.salescopilot.vn',
-        );
-        assert.strictEqual(res.headers.get('access-control-allow-credentials'), 'true');
+        expect(res.status).toBe(204);
+        expect(res.headers.get('access-control-allow-origin')).toBe('https://app.salescopilot.vn');
+        expect(res.headers.get('access-control-allow-credentials')).toBe('true');
         const methods = res.headers.get('access-control-allow-methods');
-        assert.ok(methods?.includes('POST'));
-        assert.ok(methods?.includes('GET'));
+        expect(methods?.includes('POST')).toBeTruthy();
+        expect(methods?.includes('GET')).toBeTruthy();
       } finally {
         await app.close();
       }
@@ -195,7 +184,7 @@ describe('Strict CORS Configuration & Verification (Task 9 — Feature F-1.11.4)
           },
         });
 
-        assert.strictEqual(res.headers.get('access-control-allow-origin'), null);
+        expect(res.headers.get('access-control-allow-origin')).toBe(null);
       } finally {
         await app.close();
       }

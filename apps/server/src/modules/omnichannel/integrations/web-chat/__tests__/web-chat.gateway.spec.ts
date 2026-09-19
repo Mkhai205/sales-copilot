@@ -1,5 +1,3 @@
-import { describe, it, beforeEach } from 'node:test';
-import * as assert from 'node:assert';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import {
   ChannelType,
@@ -196,7 +194,7 @@ describe('WebChatGateway (Widget WebSocket Namespace /widget)', () => {
 
   describe('Gateway Lifecycle & afterInit', () => {
     it('should initialize without error', () => {
-      assert.doesNotThrow(() => gateway.afterInit(gateway.server));
+      expect(() => gateway.afterInit(gateway.server)).not.toThrow();
     });
   });
 
@@ -208,22 +206,22 @@ describe('WebChatGateway (Widget WebSocket Namespace /widget)', () => {
 
       await gateway.handleConnection(socket);
 
-      assert.strictEqual(socket._isDisconnected(), false);
+      expect(socket._isDisconnected()).toBe(false);
       const emitted = socket._getEmitted();
-      assert.strictEqual(emitted.length, 1);
-      assert.strictEqual(emitted[0].event, 'widget:connected');
+      expect(emitted.length).toBe(1);
+      expect(emitted[0].event).toBe('widget:connected');
 
       const connectedPayload = emitted[0].payload as any;
-      assert.strictEqual(connectedPayload.contactId, mockContact.id);
-      assert.strictEqual(connectedPayload.greetingMessage, 'Hello, how can we help?');
+      expect(connectedPayload.contactId).toBe(mockContact.id);
+      expect(connectedPayload.greetingMessage).toBe('Hello, how can we help?');
 
       const rooms = socket._getJoinedRooms();
-      assert.ok(rooms.includes(`widget:${mockChannel.id}:${mockContact.id}`));
-      assert.ok(rooms.includes(`widget:${mockContact.id}`));
+      expect(rooms.includes(`widget:${mockChannel.id}:${mockContact.id}`)).toBeTruthy();
+      expect(rooms.includes(`widget:${mockContact.id}`)).toBeTruthy();
 
-      assert.strictEqual(socket.data.workspaceId, mockChannel.workspaceId);
-      assert.strictEqual(socket.data.channelId, mockChannel.id);
-      assert.strictEqual(socket.data.contactId, mockContact.id);
+      expect(socket.data.workspaceId).toBe(mockChannel.workspaceId);
+      expect(socket.data.channelId).toBe(mockChannel.id);
+      expect(socket.data.contactId).toBe(mockContact.id);
     });
 
     it('should extract widget_token from query parameters', async () => {
@@ -233,8 +231,8 @@ describe('WebChatGateway (Widget WebSocket Namespace /widget)', () => {
 
       await gateway.handleConnection(socket);
 
-      assert.strictEqual(socket._isDisconnected(), false);
-      assert.strictEqual(socket._getEmitted()[0].event, 'widget:connected');
+      expect(socket._isDisconnected()).toBe(false);
+      expect(socket._getEmitted()[0].event).toBe('widget:connected');
     });
 
     it('should extract widget_token from headers', async () => {
@@ -244,8 +242,8 @@ describe('WebChatGateway (Widget WebSocket Namespace /widget)', () => {
 
       await gateway.handleConnection(socket);
 
-      assert.strictEqual(socket._isDisconnected(), false);
-      assert.strictEqual(socket._getEmitted()[0].event, 'widget:connected');
+      expect(socket._isDisconnected()).toBe(false);
+      expect(socket._getEmitted()[0].event).toBe('widget:connected');
     });
 
     it('should resolve channel by inboxId when providerAccountId is not direct match (TASK-3A-06)', async () => {
@@ -276,8 +274,8 @@ describe('WebChatGateway (Widget WebSocket Namespace /widget)', () => {
 
       await gateway.handleConnection(socket);
 
-      assert.strictEqual(socket._isDisconnected(), false);
-      assert.strictEqual(socket._getEmitted()[0].event, 'widget:connected');
+      expect(socket._isDisconnected()).toBe(false);
+      expect(socket._getEmitted()[0].event).toBe('widget:connected');
     });
 
     it('should disconnect client when widget_token is missing', async () => {
@@ -288,11 +286,11 @@ describe('WebChatGateway (Widget WebSocket Namespace /widget)', () => {
 
       await gateway.handleConnection(socket);
 
-      assert.strictEqual(socket._isDisconnected(), true);
+      expect(socket._isDisconnected()).toBe(true);
       const emitted = socket._getEmitted();
-      assert.strictEqual(emitted.length, 1);
-      assert.strictEqual(emitted[0].event, 'widget:error');
-      assert.strictEqual((emitted[0].payload as any).code, 'UNAUTHORIZED');
+      expect(emitted.length).toBe(1);
+      expect(emitted[0].event).toBe('widget:error');
+      expect((emitted[0].payload as any).code).toBe('UNAUTHORIZED');
     });
 
     it('should disconnect client when channel is not found', async () => {
@@ -302,11 +300,11 @@ describe('WebChatGateway (Widget WebSocket Namespace /widget)', () => {
 
       await gateway.handleConnection(socket);
 
-      assert.strictEqual(socket._isDisconnected(), true);
+      expect(socket._isDisconnected()).toBe(true);
       const emitted = socket._getEmitted();
-      assert.strictEqual(emitted.length, 1);
-      assert.strictEqual(emitted[0].event, 'widget:error');
-      assert.strictEqual((emitted[0].payload as any).code, 'CHANNEL_NOT_FOUND');
+      expect(emitted.length).toBe(1);
+      expect(emitted[0].event).toBe('widget:error');
+      expect((emitted[0].payload as any).code).toBe('CHANNEL_NOT_FOUND');
     });
 
     it('should handle internal errors gracefully during connection', async () => {
@@ -320,11 +318,11 @@ describe('WebChatGateway (Widget WebSocket Namespace /widget)', () => {
 
       await gateway.handleConnection(socket);
 
-      assert.strictEqual(socket._isDisconnected(), true);
+      expect(socket._isDisconnected()).toBe(true);
       const emitted = socket._getEmitted();
-      assert.strictEqual(emitted.length, 1);
-      assert.strictEqual(emitted[0].event, 'widget:error');
-      assert.strictEqual((emitted[0].payload as any).code, 'INTERNAL_ERROR');
+      expect(emitted.length).toBe(1);
+      expect(emitted[0].event).toBe('widget:error');
+      expect((emitted[0].payload as any).code).toBe('INTERNAL_ERROR');
     });
   });
 
@@ -336,12 +334,12 @@ describe('WebChatGateway (Widget WebSocket Namespace /widget)', () => {
         channelId: 'chan_123',
       };
 
-      assert.doesNotThrow(() => gateway.handleDisconnect(socket));
+      expect(() => gateway.handleDisconnect(socket)).not.toThrow();
     });
 
     it('should handle unauthenticated client disconnect cleanly', () => {
       const socket = createMockSocket();
-      assert.doesNotThrow(() => gateway.handleDisconnect(socket));
+      expect(() => gateway.handleDisconnect(socket)).not.toThrow();
     });
   });
 
@@ -364,18 +362,18 @@ describe('WebChatGateway (Widget WebSocket Namespace /widget)', () => {
 
       const response = await gateway.handleSendMessage(socket, payload);
 
-      assert.strictEqual(response.success, true);
-      assert.strictEqual(response.messageId, 'msg_web_001');
+      expect(response.success).toBe(true);
+      expect(response.messageId).toBe('msg_web_001');
 
       const emitted = socket._getEmitted();
-      assert.strictEqual(emitted.length, 1);
-      assert.strictEqual(emitted[0].event, 'widget:message_sent');
-      assert.strictEqual((emitted[0].payload as any).tempId, 'temp_client_msg_001');
-      assert.strictEqual((emitted[0].payload as any).message.id, 'msg_web_001');
+      expect(emitted.length).toBe(1);
+      expect(emitted[0].event).toBe('widget:message_sent');
+      expect((emitted[0].payload as any).tempId).toBe('temp_client_msg_001');
+      expect((emitted[0].payload as any).message.id).toBe('msg_web_001');
 
-      assert.strictEqual(emittedServerEvents.length, 1);
-      assert.strictEqual(emittedServerEvents[0].room, `widget:${mockChannel.id}:${mockContact.id}`);
-      assert.strictEqual(emittedServerEvents[0].event, 'widget:message');
+      expect(emittedServerEvents.length).toBe(1);
+      expect(emittedServerEvents[0].room).toBe(`widget:${mockChannel.id}:${mockContact.id}`);
+      expect(emittedServerEvents[0].event).toBe('widget:message');
     });
 
     it('should handle incoming message with attachments', async () => {
@@ -409,10 +407,10 @@ describe('WebChatGateway (Widget WebSocket Namespace /widget)', () => {
 
       const response = await gateway.handleSendMessage(socket, payload);
 
-      assert.strictEqual(response.success, true);
-      assert.strictEqual(capturedDto.attachments?.length, 1);
-      assert.strictEqual(capturedDto.attachments[0].fileType, FileType.IMAGE);
-      assert.strictEqual(capturedDto.attachments[0].fileUrl, 'https://example.com/image.png');
+      expect(response.success).toBe(true);
+      expect(capturedDto.attachments?.length).toBe(1);
+      expect(capturedDto.attachments[0].fileType).toBe(FileType.IMAGE);
+      expect(capturedDto.attachments[0].fileUrl).toBe('https://example.com/image.png');
     });
 
     it('should reject message when socket is unauthenticated', async () => {
@@ -421,9 +419,9 @@ describe('WebChatGateway (Widget WebSocket Namespace /widget)', () => {
 
       const response = await gateway.handleSendMessage(socket, { content: 'Hello' });
 
-      assert.strictEqual(response.success, false);
-      assert.strictEqual(response.error, 'UNAUTHORIZED');
-      assert.strictEqual(socket._getEmitted()[0].event, 'widget:error');
+      expect(response.success).toBe(false);
+      expect(response.error).toBe('UNAUTHORIZED');
+      expect(socket._getEmitted()[0].event).toBe('widget:error');
     });
 
     it('should handle error during message creation and emit error event', async () => {
@@ -443,13 +441,13 @@ describe('WebChatGateway (Widget WebSocket Namespace /widget)', () => {
         tempId: 'temp_failed',
       });
 
-      assert.strictEqual(response.success, false);
-      assert.strictEqual(response.error, 'Message validation failed');
+      expect(response.success).toBe(false);
+      expect(response.error).toBe('Message validation failed');
 
       const emitted = socket._getEmitted();
-      assert.strictEqual(emitted[0].event, 'widget:error');
-      assert.strictEqual((emitted[0].payload as any).code, 'MESSAGE_SEND_FAILED');
-      assert.strictEqual((emitted[0].payload as any).tempId, 'temp_failed');
+      expect(emitted[0].event).toBe('widget:error');
+      expect((emitted[0].payload as any).code).toBe('MESSAGE_SEND_FAILED');
+      expect((emitted[0].payload as any).tempId).toBe('temp_failed');
     });
   });
 
@@ -470,13 +468,13 @@ describe('WebChatGateway (Widget WebSocket Namespace /widget)', () => {
 
       const response = await gateway.handleIdentify(socket, payload);
 
-      assert.strictEqual(response.success, true);
-      assert.strictEqual(response.contactId, mockContact.id);
+      expect(response.success).toBe(true);
+      expect(response.contactId).toBe(mockContact.id);
 
       const emitted = socket._getEmitted();
-      assert.strictEqual(emitted.length, 1);
-      assert.strictEqual(emitted[0].event, 'widget:identified');
-      assert.strictEqual((emitted[0].payload as any).contact.name, 'Alice Wonder');
+      expect(emitted.length).toBe(1);
+      expect(emitted[0].event).toBe('widget:identified');
+      expect((emitted[0].payload as any).contact.name).toBe('Alice Wonder');
     });
 
     it('should verify valid HMAC signature when hmacSecret is configured', async () => {
@@ -500,8 +498,8 @@ describe('WebChatGateway (Widget WebSocket Namespace /widget)', () => {
 
       const response = await gateway.handleIdentify(socket, payload);
 
-      assert.strictEqual(response.success, true);
-      assert.strictEqual(socket._getEmitted()[0].event, 'widget:identified');
+      expect(response.success).toBe(true);
+      expect(socket._getEmitted()[0].event).toBe('widget:identified');
     });
 
     it('should reject identification when HMAC signature is invalid', async () => {
@@ -520,10 +518,10 @@ describe('WebChatGateway (Widget WebSocket Namespace /widget)', () => {
 
       const response = await gateway.handleIdentify(socket, payload);
 
-      assert.strictEqual(response.success, false);
-      assert.strictEqual(response.error, 'INVALID_HMAC_SIGNATURE');
-      assert.strictEqual(socket._getEmitted()[0].event, 'widget:error');
-      assert.strictEqual((socket._getEmitted()[0].payload as any).code, 'INVALID_HMAC_SIGNATURE');
+      expect(response.success).toBe(false);
+      expect(response.error).toBe('INVALID_HMAC_SIGNATURE');
+      expect(socket._getEmitted()[0].event).toBe('widget:error');
+      expect((socket._getEmitted()[0].payload as any).code).toBe('INVALID_HMAC_SIGNATURE');
     });
 
     it('should reject identification when HMAC is mandatory but signature is omitted', async () => {
@@ -542,10 +540,10 @@ describe('WebChatGateway (Widget WebSocket Namespace /widget)', () => {
 
       const response = await gateway.handleIdentify(socket, payload);
 
-      assert.strictEqual(response.success, false);
-      assert.strictEqual(response.error, 'HMAC_REQUIRED');
-      assert.strictEqual(socket._getEmitted()[0].event, 'widget:error');
-      assert.strictEqual((socket._getEmitted()[0].payload as any).code, 'HMAC_REQUIRED');
+      expect(response.success).toBe(false);
+      expect(response.error).toBe('HMAC_REQUIRED');
+      expect(socket._getEmitted()[0].event).toBe('widget:error');
+      expect((socket._getEmitted()[0].payload as any).code).toBe('HMAC_REQUIRED');
     });
 
     it('should reject identify from unauthenticated socket', async () => {
@@ -554,8 +552,8 @@ describe('WebChatGateway (Widget WebSocket Namespace /widget)', () => {
 
       const response = await gateway.handleIdentify(socket, { identifier: 'id123' });
 
-      assert.strictEqual(response.success, false);
-      assert.strictEqual(response.error, 'UNAUTHORIZED');
+      expect(response.success).toBe(false);
+      expect(response.error).toBe('UNAUTHORIZED');
     });
   });
 
@@ -571,13 +569,13 @@ describe('WebChatGateway (Widget WebSocket Namespace /widget)', () => {
 
       const response = await gateway.handleTyping(socket, { isTyping: true });
 
-      assert.strictEqual(response.success, true);
-      assert.strictEqual(emittedInternalEvents.length, 1);
-      assert.strictEqual(emittedInternalEvents[0].event, 'widget.visitor_typing');
+      expect(response.success).toBe(true);
+      expect(emittedInternalEvents.length).toBe(1);
+      expect(emittedInternalEvents[0].event).toBe('widget.visitor_typing');
       const payload = emittedInternalEvents[0].payload as any;
-      assert.strictEqual(payload.workspaceId, mockChannel.workspaceId);
-      assert.strictEqual(payload.contactId, mockContact.id);
-      assert.strictEqual(payload.isTyping, true);
+      expect(payload.workspaceId).toBe(mockChannel.workspaceId);
+      expect(payload.contactId).toBe(mockContact.id);
+      expect(payload.isTyping).toBe(true);
     });
 
     it('should return false for unauthenticated socket typing event', async () => {
@@ -585,7 +583,7 @@ describe('WebChatGateway (Widget WebSocket Namespace /widget)', () => {
       socket.data = {};
 
       const response = await gateway.handleTyping(socket, { isTyping: true });
-      assert.strictEqual(response.success, false);
+      expect(response.success).toBe(false);
     });
 
     it('should throttle rapid visitor typing bursts when sent within 1000ms cooldown (FINDING-P7-03)', async () => {
@@ -598,16 +596,16 @@ describe('WebChatGateway (Widget WebSocket Namespace /widget)', () => {
       };
 
       const firstResponse = await gateway.handleTyping(socket, { isTyping: true });
-      assert.strictEqual(firstResponse.success, true);
-      assert.strictEqual((firstResponse as any).throttled, undefined);
-      assert.strictEqual(emittedInternalEvents.length, 1);
+      expect(firstResponse.success).toBe(true);
+      expect((firstResponse as any).throttled).toBe(undefined);
+      expect(emittedInternalEvents.length).toBe(1);
 
       // Rapid consecutive typing event within 1000ms
       const secondResponse = await gateway.handleTyping(socket, { isTyping: true });
-      assert.strictEqual(secondResponse.success, true);
-      assert.strictEqual((secondResponse as any).throttled, true);
+      expect(secondResponse.success).toBe(true);
+      expect((secondResponse as any).throttled).toBe(true);
       // EventEmitter should NOT have emitted second event
-      assert.strictEqual(emittedInternalEvents.length, 1);
+      expect(emittedInternalEvents.length).toBe(1);
     });
 
     it('should allow typing event after 1000ms cooldown expires', async () => {
@@ -621,9 +619,9 @@ describe('WebChatGateway (Widget WebSocket Namespace /widget)', () => {
       };
 
       const response = await gateway.handleTyping(socket, { isTyping: true });
-      assert.strictEqual(response.success, true);
-      assert.strictEqual((response as any).throttled, undefined);
-      assert.strictEqual(emittedInternalEvents.length, 1);
+      expect(response.success).toBe(true);
+      expect((response as any).throttled).toBe(undefined);
+      expect(emittedInternalEvents.length).toBe(1);
     });
   });
 
@@ -644,20 +642,17 @@ describe('WebChatGateway (Widget WebSocket Namespace /widget)', () => {
 
       gateway.handleOutboundMessage(eventPayload as any);
 
-      assert.strictEqual(emittedServerEvents.length, 2);
-      assert.strictEqual(emittedServerEvents[0].room, 'widget:chan_web_001:ext_vis_001');
-      assert.strictEqual(emittedServerEvents[0].event, 'widget:message');
-      assert.strictEqual(emittedServerEvents[1].room, 'widget:ext_vis_001');
-      assert.strictEqual(emittedServerEvents[1].event, 'widget:message');
-      assert.strictEqual(
-        (emittedServerEvents[0].payload as any).content,
-        'Agent reply from dashboard',
-      );
+      expect(emittedServerEvents.length).toBe(2);
+      expect(emittedServerEvents[0].room).toBe('widget:chan_web_001:ext_vis_001');
+      expect(emittedServerEvents[0].event).toBe('widget:message');
+      expect(emittedServerEvents[1].room).toBe('widget:ext_vis_001');
+      expect(emittedServerEvents[1].event).toBe('widget:message');
+      expect((emittedServerEvents[0].payload as any).content).toBe('Agent reply from dashboard');
     });
 
     it('should ignore event when payload or recipientExternalId is missing', () => {
-      assert.doesNotThrow(() => gateway.handleOutboundMessage(null as any));
-      assert.doesNotThrow(() => gateway.handleOutboundMessage({} as any));
+      expect(() => gateway.handleOutboundMessage(null as any)).not.toThrow();
+      expect(() => gateway.handleOutboundMessage({} as any)).not.toThrow();
     });
   });
 });

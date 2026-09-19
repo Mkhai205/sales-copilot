@@ -1,5 +1,4 @@
-import { describe, it, beforeEach } from 'node:test';
-import * as assert from 'node:assert';
+import { expectReject } from '../../../../../test/test-assertions';
 import { NotFoundException } from '@nestjs/common';
 import { SenderType } from '@sales-copilot/shared-contracts';
 import { AiContextBuilder } from '../ai-context.builder';
@@ -47,7 +46,7 @@ describe('AiContextBuilder', () => {
   });
 
   it('should throw NotFoundException if conversation does not exist or workspace mismatch', async () => {
-    await assert.rejects(
+    await expectReject(
       async () => builder.build('wrong-ws', conversationId),
       (err: any) => err instanceof NotFoundException,
     );
@@ -74,15 +73,15 @@ describe('AiContextBuilder', () => {
 
     const result = await builder.build(workspaceId, conversationId);
 
-    assert.ok(result.systemPrompt.includes('Thế Giới Giày'));
-    assert.ok(result.systemPrompt.includes(PERSONA_TONE_DESCRIPTIONS.em_anh_chi));
-    assert.ok(result.systemPrompt.includes('15%'));
-    assert.ok(result.systemPrompt.includes('100.000đ'));
-    assert.ok(
+    expect(result.systemPrompt.includes('Thế Giới Giày')).toBeTruthy();
+    expect(result.systemPrompt.includes(PERSONA_TONE_DESCRIPTIONS.em_anh_chi)).toBeTruthy();
+    expect(result.systemPrompt.includes('15%')).toBeTruthy();
+    expect(result.systemPrompt.includes('100.000đ')).toBeTruthy();
+    expect(
       result.systemPrompt.includes('Luôn báo khách hàng kiểm tra size giày trước khi đặt.'),
-    );
-    assert.ok(result.systemPrompt.includes('Nguyễn Văn A'));
-    assert.ok(result.systemPrompt.includes('0901234567'));
+    ).toBeTruthy();
+    expect(result.systemPrompt.includes('Nguyễn Văn A')).toBeTruthy();
+    expect(result.systemPrompt.includes('0901234567')).toBeTruthy();
   });
 
   it('should map conversation history to user and assistant roles in chronological order', async () => {
@@ -136,16 +135,16 @@ describe('AiContextBuilder', () => {
 
     const result = await builder.build(workspaceId, conversationId);
 
-    assert.strictEqual(result.messages.length, 3);
-    assert.deepStrictEqual(result.messages[0], {
+    expect(result.messages.length).toBe(3);
+    expect(result.messages[0]).toEqual({
       role: 'user',
       content: 'Shop còn áo polo không?',
     });
-    assert.deepStrictEqual(result.messages[1], {
+    expect(result.messages[1]).toEqual({
       role: 'assistant',
       content: 'Dạ shop còn ạ!',
     });
-    assert.deepStrictEqual(result.messages[2], {
+    expect(result.messages[2]).toEqual({
       role: 'user',
       content: 'Size L màu đen còn không?',
     });

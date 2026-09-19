@@ -1,5 +1,4 @@
-import { describe, it, beforeEach } from 'node:test';
-import * as assert from 'node:assert';
+import { expectThrow, assertDefined } from '../../../../../test/test-assertions';
 import { NotFoundException } from '@nestjs/common';
 import { ChannelType, DeliveryStatus, MessageContentType } from '@sales-copilot/shared-contracts';
 import { ChannelAdapterRegistry } from '../channel-adapter.registry';
@@ -61,10 +60,10 @@ describe('ChannelAdapterRegistry (Channel Integration Abstraction)', () => {
 
       registry.register(telegramAdapter);
 
-      assert.strictEqual(registry.has(ChannelType.TELEGRAM), true);
+      expect(registry.has(ChannelType.TELEGRAM)).toBe(true);
       const retrieved = registry.get(ChannelType.TELEGRAM);
-      assert.strictEqual(retrieved, telegramAdapter);
-      assert.strictEqual(retrieved.channelType, ChannelType.TELEGRAM);
+      expect(retrieved).toBe(telegramAdapter);
+      expect(retrieved.channelType).toBe(ChannelType.TELEGRAM);
     });
 
     it('should support registration with explicit channelType parameter', () => {
@@ -72,9 +71,9 @@ describe('ChannelAdapterRegistry (Channel Integration Abstraction)', () => {
 
       registry.register(ChannelType.ZALO, zaloAdapter);
 
-      assert.strictEqual(registry.has(ChannelType.ZALO), true);
+      expect(registry.has(ChannelType.ZALO)).toBe(true);
       const retrieved = registry.get(ChannelType.ZALO);
-      assert.strictEqual(retrieved, zaloAdapter);
+      expect(retrieved).toBe(zaloAdapter);
     });
 
     it('should list all registered types and adapter instances', () => {
@@ -87,16 +86,16 @@ describe('ChannelAdapterRegistry (Channel Integration Abstraction)', () => {
       registry.register(emailAdapter);
 
       const registeredTypes = registry.getRegisteredTypes();
-      assert.strictEqual(registeredTypes.length, 3);
-      assert.ok(registeredTypes.includes(ChannelType.FACEBOOK_MESSENGER));
-      assert.ok(registeredTypes.includes(ChannelType.TELEGRAM));
-      assert.ok(registeredTypes.includes(ChannelType.EMAIL));
+      expect(registeredTypes.length).toBe(3);
+      expect(registeredTypes.includes(ChannelType.FACEBOOK_MESSENGER)).toBeTruthy();
+      expect(registeredTypes.includes(ChannelType.TELEGRAM)).toBeTruthy();
+      expect(registeredTypes.includes(ChannelType.EMAIL)).toBeTruthy();
 
       const allAdapters = registry.getAll();
-      assert.strictEqual(allAdapters.length, 3);
-      assert.ok(allAdapters.includes(fbAdapter));
-      assert.ok(allAdapters.includes(telegramAdapter));
-      assert.ok(allAdapters.includes(emailAdapter));
+      expect(allAdapters.length).toBe(3);
+      expect(allAdapters.includes(fbAdapter)).toBeTruthy();
+      expect(allAdapters.includes(telegramAdapter)).toBeTruthy();
+      expect(allAdapters.includes(emailAdapter)).toBeTruthy();
     });
 
     it('should allow overwriting an existing adapter registration', () => {
@@ -104,47 +103,47 @@ describe('ChannelAdapterRegistry (Channel Integration Abstraction)', () => {
       const replacementAdapter = createMockAdapter(ChannelType.WEB_CHAT);
 
       registry.register(initialAdapter);
-      assert.strictEqual(registry.get(ChannelType.WEB_CHAT), initialAdapter);
+      expect(registry.get(ChannelType.WEB_CHAT)).toBe(initialAdapter);
 
       registry.register(replacementAdapter);
-      assert.strictEqual(registry.get(ChannelType.WEB_CHAT), replacementAdapter);
+      expect(registry.get(ChannelType.WEB_CHAT)).toBe(replacementAdapter);
     });
 
     it('should clear all registered adapters', () => {
       registry.register(createMockAdapter(ChannelType.TELEGRAM));
       registry.register(createMockAdapter(ChannelType.ZALO));
 
-      assert.strictEqual(registry.getAll().length, 2);
+      expect(registry.getAll().length).toBe(2);
 
       registry.clear();
 
-      assert.strictEqual(registry.getAll().length, 0);
-      assert.strictEqual(registry.has(ChannelType.TELEGRAM), false);
+      expect(registry.getAll().length).toBe(0);
+      expect(registry.has(ChannelType.TELEGRAM)).toBe(false);
     });
   });
 
   describe('Error Handling & Invariants', () => {
     it('should throw NotFoundException when getting an unregistered adapter', () => {
-      assert.strictEqual(registry.has(ChannelType.ZALO), false);
+      expect(registry.has(ChannelType.ZALO)).toBe(false);
 
-      assert.throws(
+      expectThrow(
         () => registry.get(ChannelType.ZALO),
         (err: any) => {
-          assert.ok(err instanceof NotFoundException);
+          expect(err instanceof NotFoundException).toBeTruthy();
           const response = err.getResponse() as any;
-          assert.strictEqual(response.code, 'CHANNEL_ADAPTER_NOT_FOUND');
-          assert.strictEqual(response.details?.channelType, ChannelType.ZALO);
+          expect(response.code).toBe('CHANNEL_ADAPTER_NOT_FOUND');
+          expect(response.details?.channelType).toBe(ChannelType.ZALO);
           return true;
         },
       );
     });
 
     it('should throw Error when registering invalid adapter object', () => {
-      assert.throws(() => registry.register({} as any), /valid channelType/);
+      expectThrow(() => registry.register({} as any), /valid channelType/);
     });
 
     it('should throw Error when registering with type but missing adapter instance', () => {
-      assert.throws(
+      expectThrow(
         () => registry.register(ChannelType.TELEGRAM, undefined as any),
         /Adapter instance must be provided/,
       );
@@ -163,7 +162,7 @@ describe('ChannelAdapterRegistry (Channel Integration Abstraction)', () => {
         headers: { 'x-hub-signature-256': 'sha256=123' },
         rawBody: '{"entry":[]}',
       });
-      assert.strictEqual(isValid, true);
+      expect(isValid).toBe(true);
 
       // 2. parseInboundPayload
       const inboundPayloads = await resolvedAdapter.parseInboundPayload({
@@ -171,12 +170,12 @@ describe('ChannelAdapterRegistry (Channel Integration Abstraction)', () => {
         msgId: 'mid_8888',
         text: 'Xin chào shop!',
       });
-      assert.strictEqual(Array.isArray(inboundPayloads), true);
-      assert.strictEqual(inboundPayloads.length, 1);
-      assert.strictEqual(inboundPayloads[0].externalContactId, 'psid_9999');
-      assert.strictEqual(inboundPayloads[0].externalMessageId, 'mid_8888');
-      assert.strictEqual(inboundPayloads[0].content, 'Xin chào shop!');
-      assert.strictEqual(inboundPayloads[0].contentType, MessageContentType.TEXT);
+      expect(Array.isArray(inboundPayloads)).toBe(true);
+      expect(inboundPayloads.length).toBe(1);
+      expect(inboundPayloads[0].externalContactId).toBe('psid_9999');
+      expect(inboundPayloads[0].externalMessageId).toBe('mid_8888');
+      expect(inboundPayloads[0].content).toBe('Xin chào shop!');
+      expect(inboundPayloads[0].contentType).toBe(MessageContentType.TEXT);
 
       // 3. sendMessage
       const channelContext: ChannelContext = {
@@ -194,13 +193,13 @@ describe('ChannelAdapterRegistry (Channel Integration Abstraction)', () => {
       };
 
       const sendResult = await resolvedAdapter.sendMessage(channelContext, outboundPayload);
-      assert.strictEqual(sendResult.externalMessageId, 'out_msg_123');
-      assert.strictEqual(sendResult.deliveryStatus, DeliveryStatus.SENT);
+      expect(sendResult.externalMessageId).toBe('out_msg_123');
+      expect(sendResult.deliveryStatus).toBe(DeliveryStatus.SENT);
 
       // 4. getChannelInfo
       const info = await resolvedAdapter.getChannelInfo(channelContext);
-      assert.strictEqual(info.providerAccountId, 'page_123');
-      assert.strictEqual(info.name, `Test Channel for ${ChannelType.FACEBOOK_MESSENGER}`);
+      expect(info.providerAccountId).toBe('page_123');
+      expect(info.name).toBe(`Test Channel for ${ChannelType.FACEBOOK_MESSENGER}`);
     });
 
     it('should support parsing inbound delivery status payloads with DeliveryStatusInfo', async () => {
@@ -241,12 +240,12 @@ describe('ChannelAdapterRegistry (Channel Integration Abstraction)', () => {
         delivery: { mid: 'mid_delivered_1', watermark: 1700000000000 },
       });
 
-      assert.strictEqual(parsed.length, 1);
-      assert.strictEqual(parsed[0].eventKind, 'delivery_status');
-      assert.strictEqual(parsed[0].externalContactId, 'psid_123');
-      assert.ok(parsed[0].deliveryStatusInfo);
-      assert.strictEqual(parsed[0].deliveryStatusInfo.externalMessageId, 'mid_delivered_1');
-      assert.strictEqual(parsed[0].deliveryStatusInfo.status, DeliveryStatus.DELIVERED);
+      expect(parsed.length).toBe(1);
+      expect(parsed[0].eventKind).toBe('delivery_status');
+      expect(parsed[0].externalContactId).toBe('psid_123');
+      assertDefined(parsed[0].deliveryStatusInfo);
+      expect(parsed[0].deliveryStatusInfo.externalMessageId).toBe('mid_delivered_1');
+      expect(parsed[0].deliveryStatusInfo.status).toBe(DeliveryStatus.DELIVERED);
     });
   });
 });

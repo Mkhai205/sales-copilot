@@ -1,5 +1,4 @@
-import { describe, it, beforeEach, afterEach } from 'node:test';
-import * as assert from 'node:assert';
+import { assertDefined, expectReject } from '../../../../../../test/test-assertions';
 import { ChannelType, DeliveryStatus, MessageContentType } from '@sales-copilot/shared-contracts';
 import { TelegramAdapter } from '../telegram.adapter';
 import {
@@ -34,7 +33,7 @@ describe('TelegramAdapter (Telegram Bot API Integration)', () => {
 
   describe('Adapter Configuration', () => {
     it('should declare channelType as TELEGRAM', () => {
-      assert.strictEqual(adapter.channelType, ChannelType.TELEGRAM);
+      expect(adapter.channelType).toBe(ChannelType.TELEGRAM);
     });
   });
 
@@ -46,7 +45,7 @@ describe('TelegramAdapter (Telegram Bot API Integration)', () => {
         },
       };
       const credentials = { webhookSecret: 'secret_token_123' };
-      assert.strictEqual(adapter.verifyWebhook(request, credentials), true);
+      expect(adapter.verifyWebhook(request, credentials)).toBe(true);
     });
 
     it('should return true when secret token header matches credentials.secret_token', () => {
@@ -56,7 +55,7 @@ describe('TelegramAdapter (Telegram Bot API Integration)', () => {
         },
       };
       const credentials = { secret_token: 'secret_token_123' };
-      assert.strictEqual(adapter.verifyWebhook(request, credentials), true);
+      expect(adapter.verifyWebhook(request, credentials)).toBe(true);
     });
 
     it('should support uppercase X-Telegram-Bot-Api-Secret-Token header', () => {
@@ -66,7 +65,7 @@ describe('TelegramAdapter (Telegram Bot API Integration)', () => {
         },
       };
       const credentials = { secretToken: 'secret_token_123' };
-      assert.strictEqual(adapter.verifyWebhook(request, credentials), true);
+      expect(adapter.verifyWebhook(request, credentials)).toBe(true);
     });
 
     it('should support array header values for secret token', () => {
@@ -76,7 +75,7 @@ describe('TelegramAdapter (Telegram Bot API Integration)', () => {
         },
       };
       const credentials = { webhookSecret: 'secret_token_123' };
-      assert.strictEqual(adapter.verifyWebhook(request, credentials), true);
+      expect(adapter.verifyWebhook(request, credentials)).toBe(true);
     });
 
     it('should return false when secret token header does not match configured secret', () => {
@@ -86,7 +85,7 @@ describe('TelegramAdapter (Telegram Bot API Integration)', () => {
         },
       };
       const credentials = { webhookSecret: 'secret_token_123' };
-      assert.strictEqual(adapter.verifyWebhook(request, credentials), false);
+      expect(adapter.verifyWebhook(request, credentials)).toBe(false);
     });
 
     it('should return false when configured secret exists but header is missing', () => {
@@ -94,7 +93,7 @@ describe('TelegramAdapter (Telegram Bot API Integration)', () => {
         headers: {},
       };
       const credentials = { webhookSecret: 'secret_token_123' };
-      assert.strictEqual(adapter.verifyWebhook(request, credentials), false);
+      expect(adapter.verifyWebhook(request, credentials)).toBe(false);
     });
 
     it('should return false when secret token header is provided but credentials have no configured secret', () => {
@@ -104,15 +103,15 @@ describe('TelegramAdapter (Telegram Bot API Integration)', () => {
         },
       };
       const credentials = {};
-      assert.strictEqual(adapter.verifyWebhook(request, credentials), false);
+      expect(adapter.verifyWebhook(request, credentials)).toBe(false);
     });
 
     it('should return false when no secret is configured on channel (must reject unauthenticated webhook)', () => {
       const request: WebhookVerificationRequest = {
         headers: {},
       };
-      assert.strictEqual(adapter.verifyWebhook(request, {}), false);
-      assert.strictEqual(adapter.verifyWebhook(request, undefined), false);
+      expect(adapter.verifyWebhook(request, {})).toBe(false);
+      expect(adapter.verifyWebhook(request, undefined)).toBe(false);
     });
   });
 
@@ -142,18 +141,18 @@ describe('TelegramAdapter (Telegram Bot API Integration)', () => {
       };
 
       const result = adapter.parseInboundPayload(payload);
-      assert.strictEqual(result.length, 1);
+      expect(result.length).toBe(1);
 
       const msg = result[0];
-      assert.strictEqual(msg.eventKind, 'message');
-      assert.strictEqual(msg.externalContactId, '998877');
-      assert.strictEqual(msg.externalMessageId, '501');
-      assert.strictEqual(msg.content, 'Hello from Telegram!');
-      assert.strictEqual(msg.contentType, MessageContentType.TEXT);
-      assert.strictEqual(msg.attachments, undefined);
-      assert.strictEqual(msg.senderInfo?.name, 'John Doe');
-      assert.strictEqual(msg.senderInfo?.username, 'johndoe');
-      assert.strictEqual(msg.timestamp.getTime(), 1700000000 * 1000);
+      expect(msg.eventKind).toBe('message');
+      expect(msg.externalContactId).toBe('998877');
+      expect(msg.externalMessageId).toBe('501');
+      expect(msg.content).toBe('Hello from Telegram!');
+      expect(msg.contentType).toBe(MessageContentType.TEXT);
+      expect(msg.attachments).toBe(undefined);
+      expect(msg.senderInfo?.name).toBe('John Doe');
+      expect(msg.senderInfo?.username).toBe('johndoe');
+      expect(msg.timestamp.getTime()).toBe(1700000000 * 1000);
     });
 
     it('should parse stringified JSON rawBody correctly', () => {
@@ -169,10 +168,10 @@ describe('TelegramAdapter (Telegram Bot API Integration)', () => {
       });
 
       const result = adapter.parseInboundPayload(payload);
-      assert.strictEqual(result.length, 1);
-      assert.strictEqual(result[0].externalContactId, '12345');
-      assert.strictEqual(result[0].content, 'Parsed from JSON string');
-      assert.strictEqual(result[0].senderInfo?.name, 'Alice');
+      expect(result.length).toBe(1);
+      expect(result[0].externalContactId).toBe('12345');
+      expect(result[0].content).toBe('Parsed from JSON string');
+      expect(result[0].senderInfo?.name).toBe('Alice');
     });
 
     it('should handle photo messages and select highest resolution size', () => {
@@ -211,19 +210,20 @@ describe('TelegramAdapter (Telegram Bot API Integration)', () => {
       };
 
       const result = adapter.parseInboundPayload(payload);
-      assert.strictEqual(result.length, 1);
+      expect(result.length).toBe(1);
 
       const msg = result[0];
-      assert.strictEqual(msg.contentType, MessageContentType.IMAGE);
-      assert.strictEqual(msg.content, 'Look at this photo');
-      assert.ok(msg.attachments && msg.attachments.length === 1);
+      expect(msg.contentType).toBe(MessageContentType.IMAGE);
+      expect(msg.content).toBe('Look at this photo');
+      assertDefined(msg.attachments);
+      expect(msg.attachments.length).toBe(1);
 
       const att = msg.attachments[0];
-      assert.strictEqual(att.fileUrl, 'photo_large_123');
-      assert.strictEqual(att.fileName, 'photo_photo_large_123.jpg');
-      assert.strictEqual(att.fileType, 'IMAGE');
-      assert.strictEqual(att.fileSize, 51200);
-      assert.strictEqual(att.contentType, MessageContentType.IMAGE);
+      expect(att.fileUrl).toBe('photo_large_123');
+      expect(att.fileName).toBe('photo_photo_large_123.jpg');
+      expect(att.fileType).toBe('IMAGE');
+      expect(att.fileSize).toBe(51200);
+      expect(att.contentType).toBe(MessageContentType.IMAGE);
     });
 
     it('should parse video messages', () => {
@@ -248,15 +248,16 @@ describe('TelegramAdapter (Telegram Bot API Integration)', () => {
       };
 
       const result = adapter.parseInboundPayload(payload);
-      assert.strictEqual(result.length, 1);
+      expect(result.length).toBe(1);
 
       const msg = result[0];
-      assert.strictEqual(msg.contentType, MessageContentType.VIDEO);
-      assert.strictEqual(msg.content, 'Video caption');
-      assert.ok(msg.attachments && msg.attachments.length === 1);
-      assert.strictEqual(msg.attachments[0].fileUrl, 'video_file_456');
-      assert.strictEqual(msg.attachments[0].fileName, 'sample_video.mp4');
-      assert.strictEqual(msg.attachments[0].fileType, 'VIDEO');
+      expect(msg.contentType).toBe(MessageContentType.VIDEO);
+      expect(msg.content).toBe('Video caption');
+      assertDefined(msg.attachments);
+      expect(msg.attachments.length).toBe(1);
+      expect(msg.attachments[0].fileUrl).toBe('video_file_456');
+      expect(msg.attachments[0].fileName).toBe('sample_video.mp4');
+      expect(msg.attachments[0].fileType).toBe('VIDEO');
     });
 
     it('should parse audio messages', () => {
@@ -279,11 +280,11 @@ describe('TelegramAdapter (Telegram Bot API Integration)', () => {
       };
 
       const result = adapter.parseInboundPayload(payload);
-      assert.strictEqual(result.length, 1);
-      assert.strictEqual(result[0].contentType, MessageContentType.AUDIO);
-      assert.strictEqual(result[0].attachments?.[0].fileUrl, 'audio_file_789');
-      assert.strictEqual(result[0].attachments?.[0].fileName, 'song.mp3');
-      assert.strictEqual(result[0].attachments?.[0].fileType, 'AUDIO');
+      expect(result.length).toBe(1);
+      expect(result[0].contentType).toBe(MessageContentType.AUDIO);
+      expect(result[0].attachments?.[0].fileUrl).toBe('audio_file_789');
+      expect(result[0].attachments?.[0].fileName).toBe('song.mp3');
+      expect(result[0].attachments?.[0].fileType).toBe('AUDIO');
     });
 
     it('should parse voice messages', () => {
@@ -304,10 +305,10 @@ describe('TelegramAdapter (Telegram Bot API Integration)', () => {
       };
 
       const result = adapter.parseInboundPayload(payload);
-      assert.strictEqual(result.length, 1);
-      assert.strictEqual(result[0].contentType, MessageContentType.AUDIO);
-      assert.strictEqual(result[0].attachments?.[0].fileUrl, 'voice_file_999');
-      assert.strictEqual(result[0].attachments?.[0].fileName, 'voice_voice_file_999.ogg');
+      expect(result.length).toBe(1);
+      expect(result[0].contentType).toBe(MessageContentType.AUDIO);
+      expect(result[0].attachments?.[0].fileUrl).toBe('voice_file_999');
+      expect(result[0].attachments?.[0].fileName).toBe('voice_voice_file_999.ogg');
     });
 
     it('should parse video note messages', () => {
@@ -329,10 +330,10 @@ describe('TelegramAdapter (Telegram Bot API Integration)', () => {
       };
 
       const result = adapter.parseInboundPayload(payload);
-      assert.strictEqual(result.length, 1);
-      assert.strictEqual(result[0].contentType, MessageContentType.VIDEO);
-      assert.strictEqual(result[0].attachments?.[0].fileUrl, 'vn_file_111');
-      assert.strictEqual(result[0].attachments?.[0].fileName, 'video_note_vn_file_111.mp4');
+      expect(result.length).toBe(1);
+      expect(result[0].contentType).toBe(MessageContentType.VIDEO);
+      expect(result[0].attachments?.[0].fileUrl).toBe('vn_file_111');
+      expect(result[0].attachments?.[0].fileName).toBe('video_note_vn_file_111.mp4');
     });
 
     it('should parse document messages', () => {
@@ -355,12 +356,12 @@ describe('TelegramAdapter (Telegram Bot API Integration)', () => {
       };
 
       const result = adapter.parseInboundPayload(payload);
-      assert.strictEqual(result.length, 1);
-      assert.strictEqual(result[0].contentType, MessageContentType.FILE);
-      assert.strictEqual(result[0].content, 'Please see invoice attached');
-      assert.strictEqual(result[0].attachments?.[0].fileUrl, 'doc_file_222');
-      assert.strictEqual(result[0].attachments?.[0].fileName, 'invoice_2026.pdf');
-      assert.strictEqual(result[0].attachments?.[0].fileType, 'FILE');
+      expect(result.length).toBe(1);
+      expect(result[0].contentType).toBe(MessageContentType.FILE);
+      expect(result[0].content).toBe('Please see invoice attached');
+      expect(result[0].attachments?.[0].fileUrl).toBe('doc_file_222');
+      expect(result[0].attachments?.[0].fileName).toBe('invoice_2026.pdf');
+      expect(result[0].attachments?.[0].fileType).toBe('FILE');
     });
 
     it('should parse sticker messages', () => {
@@ -383,11 +384,11 @@ describe('TelegramAdapter (Telegram Bot API Integration)', () => {
       };
 
       const result = adapter.parseInboundPayload(payload);
-      assert.strictEqual(result.length, 1);
-      assert.strictEqual(result[0].contentType, MessageContentType.IMAGE);
-      assert.strictEqual(result[0].content, '👍');
-      assert.strictEqual(result[0].attachments?.[0].fileUrl, 'sticker_333');
-      assert.strictEqual(result[0].attachments?.[0].fileName, 'sticker_sticker_333.webp');
+      expect(result.length).toBe(1);
+      expect(result[0].contentType).toBe(MessageContentType.IMAGE);
+      expect(result[0].content).toBe('👍');
+      expect(result[0].attachments?.[0].fileUrl).toBe('sticker_333');
+      expect(result[0].attachments?.[0].fileName).toBe('sticker_sticker_333.webp');
     });
 
     it('should parse location messages into structured text', () => {
@@ -406,9 +407,9 @@ describe('TelegramAdapter (Telegram Bot API Integration)', () => {
       };
 
       const result = adapter.parseInboundPayload(payload);
-      assert.strictEqual(result.length, 1);
-      assert.strictEqual(result[0].contentType, MessageContentType.TEXT);
-      assert.strictEqual(result[0].content, '📍 Location: 10.7769, 106.7009');
+      expect(result.length).toBe(1);
+      expect(result[0].contentType).toBe(MessageContentType.TEXT);
+      expect(result[0].content).toBe('📍 Location: 10.7769, 106.7009');
     });
 
     it('should parse venue messages into structured text', () => {
@@ -431,10 +432,9 @@ describe('TelegramAdapter (Telegram Bot API Integration)', () => {
       };
 
       const result = adapter.parseInboundPayload(payload);
-      assert.strictEqual(result.length, 1);
-      assert.strictEqual(result[0].contentType, MessageContentType.TEXT);
-      assert.strictEqual(
-        result[0].content,
+      expect(result.length).toBe(1);
+      expect(result[0].contentType).toBe(MessageContentType.TEXT);
+      expect(result[0].content).toBe(
         '📍 Landmark 81 - Nguyen Huu Canh, Binh Thanh, HCMC (10.795, 106.7218)',
       );
     });
@@ -456,9 +456,9 @@ describe('TelegramAdapter (Telegram Bot API Integration)', () => {
       };
 
       const result = adapter.parseInboundPayload(payload);
-      assert.strictEqual(result.length, 1);
-      assert.strictEqual(result[0].contentType, MessageContentType.TEXT);
-      assert.strictEqual(result[0].content, '👤 Contact: Jane Smith (+84901234567)');
+      expect(result.length).toBe(1);
+      expect(result[0].contentType).toBe(MessageContentType.TEXT);
+      expect(result[0].content).toBe('👤 Contact: Jane Smith (+84901234567)');
     });
 
     it('should parse callback_query updates from inline keyboard buttons', () => {
@@ -482,15 +482,15 @@ describe('TelegramAdapter (Telegram Bot API Integration)', () => {
       };
 
       const result = adapter.parseInboundPayload(payload);
-      assert.strictEqual(result.length, 1);
+      expect(result.length).toBe(1);
 
       const msg = result[0];
-      assert.strictEqual(msg.externalContactId, '887766');
-      assert.strictEqual(msg.externalMessageId, 'cq_999888');
-      assert.strictEqual(msg.content, 'confirm_order_123');
-      assert.strictEqual(msg.contentType, MessageContentType.TEXT);
-      assert.strictEqual(msg.senderInfo?.name, 'Charlie');
-      assert.strictEqual(msg.senderInfo?.username, 'charlie_tg');
+      expect(msg.externalContactId).toBe('887766');
+      expect(msg.externalMessageId).toBe('cq_999888');
+      expect(msg.content).toBe('confirm_order_123');
+      expect(msg.contentType).toBe(MessageContentType.TEXT);
+      expect(msg.senderInfo?.name).toBe('Charlie');
+      expect(msg.senderInfo?.username).toBe('charlie_tg');
     });
 
     it('should parse business_message updates', () => {
@@ -506,9 +506,9 @@ describe('TelegramAdapter (Telegram Bot API Integration)', () => {
       };
 
       const result = adapter.parseInboundPayload(payload);
-      assert.strictEqual(result.length, 1);
-      assert.strictEqual(result[0].externalContactId, '554433');
-      assert.strictEqual(result[0].content, 'Business message content');
+      expect(result.length).toBe(1);
+      expect(result[0].externalContactId).toBe('554433');
+      expect(result[0].content).toBe('Business message content');
     });
 
     it('should ignore non-private chat updates (group / channel)', () => {
@@ -524,15 +524,15 @@ describe('TelegramAdapter (Telegram Bot API Integration)', () => {
       };
 
       const result = adapter.parseInboundPayload(groupPayload);
-      assert.deepStrictEqual(result, []);
+      expect(result).toEqual([]);
     });
 
     it('should return empty array for malformed or unknown payloads', () => {
-      assert.deepStrictEqual(adapter.parseInboundPayload(null), []);
-      assert.deepStrictEqual(adapter.parseInboundPayload(undefined), []);
-      assert.deepStrictEqual(adapter.parseInboundPayload('invalid json string {'), []);
-      assert.deepStrictEqual(adapter.parseInboundPayload({ update_id: 999 }), []);
-      assert.deepStrictEqual(adapter.parseInboundPayload({ message: {} }), []);
+      expect(adapter.parseInboundPayload(null)).toEqual([]);
+      expect(adapter.parseInboundPayload(undefined)).toEqual([]);
+      expect(adapter.parseInboundPayload('invalid json string {')).toEqual([]);
+      expect(adapter.parseInboundPayload({ update_id: 999 })).toEqual([]);
+      expect(adapter.parseInboundPayload({ message: {} })).toEqual([]);
     });
   });
 
@@ -567,15 +567,14 @@ describe('TelegramAdapter (Telegram Bot API Integration)', () => {
 
       const result = await adapter.sendMessage(mockChannelContext, payload);
 
-      assert.strictEqual(
-        requestedUrl,
+      expect(requestedUrl).toBe(
         'https://api.telegram.org/bot123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11/sendMessage',
       );
-      assert.strictEqual(requestedBody.chat_id, '998877');
-      assert.strictEqual(requestedBody.text, '<b>Hello Agent</b>');
-      assert.strictEqual(requestedBody.parse_mode, 'HTML');
-      assert.strictEqual(result.externalMessageId, '8888');
-      assert.strictEqual(result.deliveryStatus, DeliveryStatus.SENT);
+      expect(requestedBody.chat_id).toBe('998877');
+      expect(requestedBody.text).toBe('<b>Hello Agent</b>');
+      expect(requestedBody.parse_mode).toBe('HTML');
+      expect(result.externalMessageId).toBe('8888');
+      expect(result.deliveryStatus).toBe(DeliveryStatus.SENT);
     });
 
     it('should automatically retry text message without parse_mode if Telegram returns HTML entity parse error', async () => {
@@ -620,11 +619,11 @@ describe('TelegramAdapter (Telegram Bot API Integration)', () => {
 
       const result = await adapter.sendMessage(mockChannelContext, payload);
 
-      assert.strictEqual(callCount, 2);
-      assert.strictEqual(requestBodies[0].parse_mode, 'HTML');
-      assert.strictEqual(requestBodies[1].parse_mode, undefined);
-      assert.strictEqual(result.externalMessageId, '8889');
-      assert.strictEqual(result.deliveryStatus, DeliveryStatus.SENT);
+      expect(callCount).toBe(2);
+      expect(requestBodies[0].parse_mode).toBe('HTML');
+      expect(requestBodies[1].parse_mode).toBe(undefined);
+      expect(result.externalMessageId).toBe('8889');
+      expect(result.deliveryStatus).toBe(DeliveryStatus.SENT);
     });
 
     it('should deliver photo attachment via POST /sendPhoto', async () => {
@@ -662,14 +661,13 @@ describe('TelegramAdapter (Telegram Bot API Integration)', () => {
 
       const result = await adapter.sendMessage(mockChannelContext, payload);
 
-      assert.strictEqual(
-        requestedUrl,
+      expect(requestedUrl).toBe(
         'https://api.telegram.org/bot123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11/sendPhoto',
       );
-      assert.strictEqual(requestedBody.chat_id, '998877');
-      assert.strictEqual(requestedBody.photo, 'https://minio.example.com/attachments/photo.jpg');
-      assert.strictEqual(requestedBody.caption, 'Photo caption');
-      assert.strictEqual(result.externalMessageId, '8890');
+      expect(requestedBody.chat_id).toBe('998877');
+      expect(requestedBody.photo).toBe('https://minio.example.com/attachments/photo.jpg');
+      expect(requestedBody.caption).toBe('Photo caption');
+      expect(result.externalMessageId).toBe('8890');
     });
 
     it('should deliver video attachment via POST /sendVideo', async () => {
@@ -703,9 +701,9 @@ describe('TelegramAdapter (Telegram Bot API Integration)', () => {
       };
 
       const result = await adapter.sendMessage(mockChannelContext, payload);
-      assert.ok(requestedUrl.endsWith('/sendVideo'));
-      assert.strictEqual(requestedBody.video, 'https://minio.example.com/attachments/video.mp4');
-      assert.strictEqual(result.externalMessageId, '8891');
+      expect(requestedUrl.endsWith('/sendVideo')).toBeTruthy();
+      expect(requestedBody.video).toBe('https://minio.example.com/attachments/video.mp4');
+      expect(result.externalMessageId).toBe('8891');
     });
 
     it('should deliver audio attachment via POST /sendAudio', async () => {
@@ -739,9 +737,9 @@ describe('TelegramAdapter (Telegram Bot API Integration)', () => {
       };
 
       const result = await adapter.sendMessage(mockChannelContext, payload);
-      assert.ok(requestedUrl.endsWith('/sendAudio'));
-      assert.strictEqual(requestedBody.audio, 'https://minio.example.com/attachments/audio.mp3');
-      assert.strictEqual(result.externalMessageId, '8892');
+      expect(requestedUrl.endsWith('/sendAudio')).toBeTruthy();
+      expect(requestedBody.audio).toBe('https://minio.example.com/attachments/audio.mp3');
+      expect(result.externalMessageId).toBe('8892');
     });
 
     it('should deliver document attachment via POST /sendDocument', async () => {
@@ -775,12 +773,9 @@ describe('TelegramAdapter (Telegram Bot API Integration)', () => {
       };
 
       const result = await adapter.sendMessage(mockChannelContext, payload);
-      assert.ok(requestedUrl.endsWith('/sendDocument'));
-      assert.strictEqual(
-        requestedBody.document,
-        'https://minio.example.com/attachments/contract.pdf',
-      );
-      assert.strictEqual(result.externalMessageId, '8893');
+      expect(requestedUrl.endsWith('/sendDocument')).toBeTruthy();
+      expect(requestedBody.document).toBe('https://minio.example.com/attachments/contract.pdf');
+      expect(result.externalMessageId).toBe('8893');
     });
 
     it('should throw Error when botToken is missing in channel credentials', async () => {
@@ -790,7 +785,7 @@ describe('TelegramAdapter (Telegram Bot API Integration)', () => {
         content: 'Hello',
       };
 
-      await assert.rejects(
+      await expectReject(
         async () => adapter.sendMessage(badContext, payload),
         /Telegram bot token is missing in channel credentials/,
       );
@@ -802,7 +797,7 @@ describe('TelegramAdapter (Telegram Bot API Integration)', () => {
         content: 'Hello',
       };
 
-      await assert.rejects(
+      await expectReject(
         async () => adapter.sendMessage(mockChannelContext, payload),
         /Recipient chat ID is required to send Telegram message/,
       );
@@ -826,7 +821,7 @@ describe('TelegramAdapter (Telegram Bot API Integration)', () => {
         content: 'Hello',
       };
 
-      await assert.rejects(
+      await expectReject(
         async () => adapter.sendMessage(mockChannelContext, payload),
         /Telegram API sendMessage error: \[403\] Forbidden: bot was blocked by the user/,
       );
@@ -891,14 +886,13 @@ describe('TelegramAdapter (Telegram Bot API Integration)', () => {
 
       const info = await adapter.getChannelInfo(mockChannelContext);
 
-      assert.strictEqual(info.providerAccountId, '123456789');
-      assert.strictEqual(info.name, 'Sales Copilot Bot');
-      assert.strictEqual(
-        info.avatarUrl,
+      expect(info.providerAccountId).toBe('123456789');
+      expect(info.name).toBe('Sales Copilot Bot');
+      expect(info.avatarUrl).toBe(
         'https://api.telegram.org/file/bot123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11/photos/bot_avatar.jpg',
       );
-      assert.strictEqual(info.metadata?.username, 'sales_copilot_bot');
-      assert.strictEqual(info.metadata?.isBot, true);
+      expect(info.metadata?.username).toBe('sales_copilot_bot');
+      expect(info.metadata?.isBot).toBe(true);
     });
 
     it('should handle bot without profile photos gracefully', async () => {
@@ -936,9 +930,9 @@ describe('TelegramAdapter (Telegram Bot API Integration)', () => {
       };
 
       const info = await adapter.getChannelInfo(mockChannelContext);
-      assert.strictEqual(info.providerAccountId, '123456789');
-      assert.strictEqual(info.name, 'Sales Bot');
-      assert.strictEqual(info.avatarUrl, undefined);
+      expect(info.providerAccountId).toBe('123456789');
+      expect(info.name).toBe('Sales Bot');
+      expect(info.avatarUrl).toBe(undefined);
     });
 
     it('should throw Error if getMe fails', async () => {
@@ -954,7 +948,7 @@ describe('TelegramAdapter (Telegram Bot API Integration)', () => {
         } as any;
       };
 
-      await assert.rejects(
+      await expectReject(
         async () => adapter.getChannelInfo(mockChannelContext),
         /Telegram API getMe error: \[401\] Unauthorized: invalid token/,
       );
@@ -976,7 +970,7 @@ describe('TelegramAdapter (Telegram Bot API Integration)', () => {
           }) as any;
 
         const url = await adapter.getTelegramFileUrl(token, 'file_123');
-        assert.strictEqual(url, `https://api.telegram.org/file/bot${token}/documents/contract.pdf`);
+        expect(url).toBe(`https://api.telegram.org/file/bot${token}/documents/contract.pdf`);
       });
 
       it('should return null when getFile fails', async () => {
@@ -987,7 +981,7 @@ describe('TelegramAdapter (Telegram Bot API Integration)', () => {
           }) as any;
 
         const url = await adapter.getTelegramFileUrl(token, 'invalid_file');
-        assert.strictEqual(url, null);
+        expect(url).toBe(null);
       });
     });
 
@@ -1009,10 +1003,10 @@ describe('TelegramAdapter (Telegram Bot API Integration)', () => {
           'secret_token_abc',
         );
 
-        assert.strictEqual(res.ok, true);
-        assert.strictEqual(requestedBody.url, 'https://salescopilot.io/webhooks/telegram/chan_1');
-        assert.strictEqual(requestedBody.secret_token, 'secret_token_abc');
-        assert.deepStrictEqual(requestedBody.allowed_updates, [
+        expect(res.ok).toBe(true);
+        expect(requestedBody.url).toBe('https://salescopilot.io/webhooks/telegram/chan_1');
+        expect(requestedBody.secret_token).toBe('secret_token_abc');
+        expect(requestedBody.allowed_updates).toEqual([
           'message',
           'edited_message',
           'callback_query',
@@ -1035,8 +1029,8 @@ describe('TelegramAdapter (Telegram Bot API Integration)', () => {
         };
 
         const res = await adapter.deleteWebhook(token);
-        assert.strictEqual(called, true);
-        assert.strictEqual(res.ok, true);
+        expect(called).toBe(true);
+        expect(res.ok).toBe(true);
       });
     });
 
@@ -1056,9 +1050,9 @@ describe('TelegramAdapter (Telegram Bot API Integration)', () => {
           }) as any;
 
         const info = await adapter.getWebhookInfo(token);
-        assert.ok(info);
-        assert.strictEqual(info?.url, 'https://salescopilot.io/webhooks/telegram/chan_1');
-        assert.strictEqual(info?.pending_update_count, 0);
+        assertDefined(info);
+        expect(info?.url).toBe('https://salescopilot.io/webhooks/telegram/chan_1');
+        expect(info?.pending_update_count).toBe(0);
       });
     });
   });

@@ -1,5 +1,4 @@
-import { describe, it, beforeEach } from 'node:test';
-import * as assert from 'node:assert';
+import { assertDefined, expectReject } from '../../../../../test/test-assertions';
 import {
   DomainEvent,
   InventoryTransactionType,
@@ -18,33 +17,33 @@ import { PaymentReconciliationService } from '../payment-reconciliation.service'
 describe('CommerceReconciliation (Bank Reconciliation Engine & Safe Inventory Machine)', () => {
   describe('Memo Regex Parser (parseOrderDisplayId & parseOrderNumber)', () => {
     it('should parse display ID from various memo formats', () => {
-      assert.strictEqual(parseOrderDisplayId('ORD 1004'), 1004);
-      assert.strictEqual(parseOrderDisplayId('ORD-1004'), 1004);
-      assert.strictEqual(parseOrderDisplayId('ORD_1004'), 1004);
-      assert.strictEqual(parseOrderDisplayId('ORD1004'), 1004);
-      assert.strictEqual(parseOrderDisplayId('DH 2025 chuyen khoan'), 2025);
-      assert.strictEqual(parseOrderDisplayId('DH-2025-tien-hang'), 2025);
-      assert.strictEqual(parseOrderDisplayId('SO 3001'), 3001);
-      assert.strictEqual(parseOrderDisplayId('Nguyen Van A CK SO_5555'), 5555);
+      expect(parseOrderDisplayId('ORD 1004')).toBe(1004);
+      expect(parseOrderDisplayId('ORD-1004')).toBe(1004);
+      expect(parseOrderDisplayId('ORD_1004')).toBe(1004);
+      expect(parseOrderDisplayId('ORD1004')).toBe(1004);
+      expect(parseOrderDisplayId('DH 2025 chuyen khoan')).toBe(2025);
+      expect(parseOrderDisplayId('DH-2025-tien-hang')).toBe(2025);
+      expect(parseOrderDisplayId('SO 3001')).toBe(3001);
+      expect(parseOrderDisplayId('Nguyen Van A CK SO_5555')).toBe(5555);
     });
 
     it('should correctly parse display ID from full order numbers containing date prefix', () => {
-      assert.strictEqual(parseOrderDisplayId('ORD-20260909-1004'), 1004);
-      assert.strictEqual(parseOrderDisplayId('ORD 20260909 1004'), 1004);
-      assert.strictEqual(parseOrderDisplayId('ORD_20260909_1004'), 1004);
-      assert.strictEqual(parseOrderDisplayId('DH-20260909-2025'), 2025);
+      expect(parseOrderDisplayId('ORD-20260909-1004')).toBe(1004);
+      expect(parseOrderDisplayId('ORD 20260909 1004')).toBe(1004);
+      expect(parseOrderDisplayId('ORD_20260909_1004')).toBe(1004);
+      expect(parseOrderDisplayId('DH-20260909-2025')).toBe(2025);
     });
 
     it('should extract full order number with parseOrderNumber', () => {
-      assert.strictEqual(parseOrderNumber('ORD-20260909-1004 thanh toan'), 'ORD-20260909-1004');
-      assert.strictEqual(parseOrderNumber('Chuyen tien ORD-20260909-1004'), 'ORD-20260909-1004');
-      assert.strictEqual(parseOrderNumber('No order number here'), null);
+      expect(parseOrderNumber('ORD-20260909-1004 thanh toan')).toBe('ORD-20260909-1004');
+      expect(parseOrderNumber('Chuyen tien ORD-20260909-1004')).toBe('ORD-20260909-1004');
+      expect(parseOrderNumber('No order number here')).toBe(null);
     });
 
     it('should return null for memos without order reference', () => {
-      assert.strictEqual(parseOrderDisplayId('Chuyen tien ban than'), null);
-      assert.strictEqual(parseOrderDisplayId(''), null);
-      assert.strictEqual(parseOrderDisplayId('TK 123456'), null);
+      expect(parseOrderDisplayId('Chuyen tien ban than')).toBe(null);
+      expect(parseOrderDisplayId('')).toBe(null);
+      expect(parseOrderDisplayId('TK 123456')).toBe(null);
     });
   });
 
@@ -257,36 +256,36 @@ describe('CommerceReconciliation (Bank Reconciliation Engine & Safe Inventory Ma
         transferContent: 'ORD 1004',
       });
 
-      assert.strictEqual(result.processed, true);
-      assert.strictEqual(result.status, 'PAID');
-      assert.strictEqual(result.stockCommitted, true);
-      assert.strictEqual(result.totalPaid, 500000);
+      expect(result.processed).toBe(true);
+      expect(result.status).toBe('PAID');
+      expect(result.stockCommitted).toBe(true);
+      expect(result.totalPaid).toBe(500000);
 
       // Verify DB Order state
       const updatedOrder = ordersDb.get(orderId);
-      assert.strictEqual(updatedOrder.status, OrderStatus.PAID);
-      assert.strictEqual(updatedOrder.paymentStatus, PaymentStatus.PAID);
-      assert.strictEqual(updatedOrder.paidAmount, 500000);
+      expect(updatedOrder.status).toBe(OrderStatus.PAID);
+      expect(updatedOrder.paymentStatus).toBe(PaymentStatus.PAID);
+      expect(updatedOrder.paidAmount).toBe(500000);
 
       // Verify inventory transactions
-      assert.strictEqual(inventoryTxsDb.length, 1);
-      assert.strictEqual(inventoryTxsDb[0].type, InventoryTransactionType.COMMIT_SALE);
-      assert.strictEqual(inventoryTxsDb[0].quantity, 2);
+      expect(inventoryTxsDb.length).toBe(1);
+      expect(inventoryTxsDb[0].type).toBe(InventoryTransactionType.COMMIT_SALE);
+      expect(inventoryTxsDb[0].quantity).toBe(2);
 
       // Verify emitted domain events and order payload
       const orderPaidEvent = emittedEvents.find(e => e.event === DomainEvent.ORDER_PAID);
-      assert.ok(orderPaidEvent);
-      assert.strictEqual(orderPaidEvent.payload.orderId, orderId);
-      assert.strictEqual(orderPaidEvent.payload.paidAmount, 500000);
-      assert.strictEqual(orderPaidEvent.payload.isOverpaid, false);
-      assert.ok(orderPaidEvent.payload.order);
-      assert.strictEqual(orderPaidEvent.payload.order.status, OrderStatus.PAID);
-      assert.strictEqual(orderPaidEvent.payload.order.orderNumber, 'ORD-20260909-1004');
+      assertDefined(orderPaidEvent);
+      expect(orderPaidEvent.payload.orderId).toBe(orderId);
+      expect(orderPaidEvent.payload.paidAmount).toBe(500000);
+      expect(orderPaidEvent.payload.isOverpaid).toBe(false);
+      expect(orderPaidEvent.payload.order).toBeTruthy();
+      expect(orderPaidEvent.payload.order.status).toBe(OrderStatus.PAID);
+      expect(orderPaidEvent.payload.order.orderNumber).toBe('ORD-20260909-1004');
 
       // Verify payment transaction record contains rawWebhookPayload
       const savedTx = Array.from(paymentTxsDb.values())[0];
-      assert.ok(savedTx);
-      assert.ok('rawWebhookPayload' in savedTx);
+      assertDefined(savedTx);
+      expect('rawWebhookPayload' in savedTx).toBeTruthy();
     });
 
     it('should handle partial payment: mark PARTIALLY_PAID, do NOT commit stock', async () => {
@@ -300,25 +299,25 @@ describe('CommerceReconciliation (Bank Reconciliation Engine & Safe Inventory Ma
         transferContent: 'ORD 1004 dat coc',
       });
 
-      assert.strictEqual(result.processed, true);
-      assert.strictEqual(result.status, 'PARTIALLY_PAID');
-      assert.strictEqual(result.stockCommitted, false);
-      assert.strictEqual(result.totalPaid, 200000);
-      assert.strictEqual(result.remainingAmount, 300000);
+      expect(result.processed).toBe(true);
+      expect(result.status).toBe('PARTIALLY_PAID');
+      expect(result.stockCommitted).toBe(false);
+      expect(result.totalPaid).toBe(200000);
+      expect(result.remainingAmount).toBe(300000);
 
       const updatedOrder = ordersDb.get(orderId);
-      assert.strictEqual(updatedOrder.status, OrderStatus.CONFIRMED);
-      assert.strictEqual(updatedOrder.paymentStatus, PaymentStatus.PARTIALLY_PAID);
+      expect(updatedOrder.status).toBe(OrderStatus.CONFIRMED);
+      expect(updatedOrder.paymentStatus).toBe(PaymentStatus.PARTIALLY_PAID);
 
       // No COMMIT_SALE should be recorded
-      assert.strictEqual(inventoryTxsDb.length, 0);
+      expect(inventoryTxsDb.length).toBe(0);
 
       const partialPaidEvent = emittedEvents.find(
         e => e.event === DomainEvent.ORDER_PARTIALLY_PAID,
       );
-      assert.ok(partialPaidEvent);
-      assert.strictEqual(partialPaidEvent.payload.paidAmount, 200000);
-      assert.strictEqual(partialPaidEvent.payload.remainingAmount, 300000);
+      assertDefined(partialPaidEvent);
+      expect(partialPaidEvent.payload.paidAmount).toBe(200000);
+      expect(partialPaidEvent.payload.remainingAmount).toBe(300000);
     });
 
     it('should prevent duplicate stock deduction when order is already PAID (second payment)', async () => {
@@ -338,18 +337,18 @@ describe('CommerceReconciliation (Bank Reconciliation Engine & Safe Inventory Ma
         transferContent: 'ORD 1004 chuyen them',
       });
 
-      assert.strictEqual(result.processed, true);
-      assert.strictEqual(result.status, 'OVERPAID');
-      assert.strictEqual(result.stockCommitted, false); // ABSOLUTELY NO DUPLICATE STOCK DEDUCTION
-      assert.strictEqual(result.totalPaid, 600000);
+      expect(result.processed).toBe(true);
+      expect(result.status).toBe('OVERPAID');
+      expect(result.stockCommitted).toBe(false); // ABSOLUTELY NO DUPLICATE STOCK DEDUCTION
+      expect(result.totalPaid).toBe(600000);
 
       // Inventory should NOT have any commit sale recorded
-      assert.strictEqual(inventoryTxsDb.length, 0);
+      expect(inventoryTxsDb.length).toBe(0);
 
       const orderPaidEvent = emittedEvents.find(e => e.event === DomainEvent.ORDER_PAID);
-      assert.ok(orderPaidEvent);
-      assert.strictEqual(orderPaidEvent.payload.isOverpaid, true);
-      assert.strictEqual(orderPaidEvent.payload.overpaidAmount, 100000);
+      assertDefined(orderPaidEvent);
+      expect(orderPaidEvent.payload.isOverpaid).toBe(true);
+      expect(orderPaidEvent.payload.overpaidAmount).toBe(100000);
     });
 
     it('should NOT revive CANCELLED orders to PAID and NOT deduct stock', async () => {
@@ -366,14 +365,14 @@ describe('CommerceReconciliation (Bank Reconciliation Engine & Safe Inventory Ma
         transferContent: 'ORD 1004',
       });
 
-      assert.strictEqual(result.processed, true);
-      assert.strictEqual(result.status, 'CANCELLED_NEEDS_REFUND');
-      assert.strictEqual(result.stockCommitted, false);
+      expect(result.processed).toBe(true);
+      expect(result.status).toBe('CANCELLED_NEEDS_REFUND');
+      expect(result.stockCommitted).toBe(false);
 
       // Order status MUST remain CANCELLED
-      assert.strictEqual(ord.status, OrderStatus.CANCELLED);
+      expect(ord.status).toBe(OrderStatus.CANCELLED);
       // No stock deduction
-      assert.strictEqual(inventoryTxsDb.length, 0);
+      expect(inventoryTxsDb.length).toBe(0);
     });
 
     it('should NOT regress status or touch stock when reconciling SHIPPING order', async () => {
@@ -392,23 +391,23 @@ describe('CommerceReconciliation (Bank Reconciliation Engine & Safe Inventory Ma
         transferContent: 'ORD 1004',
       });
 
-      assert.strictEqual(result.processed, true);
-      assert.strictEqual(result.status, 'PAID');
-      assert.strictEqual(result.stockCommitted, false);
-      assert.strictEqual(result.totalPaid, 500000);
+      expect(result.processed).toBe(true);
+      expect(result.status).toBe('PAID');
+      expect(result.stockCommitted).toBe(false);
+      expect(result.totalPaid).toBe(500000);
 
       // Order status MUST remain SHIPPING, NOT regress to PAID
-      assert.strictEqual(ord.status, OrderStatus.SHIPPING);
-      assert.strictEqual(ord.paymentStatus, PaymentStatus.PAID);
-      assert.strictEqual(ord.paidAmount, 500000);
+      expect(ord.status).toBe(OrderStatus.SHIPPING);
+      expect(ord.paymentStatus).toBe(PaymentStatus.PAID);
+      expect(ord.paidAmount).toBe(500000);
 
       // No double stock deduction
-      assert.strictEqual(inventoryTxsDb.length, 0);
+      expect(inventoryTxsDb.length).toBe(0);
 
       // Domain event ORDER_PAID should be emitted
       const orderPaidEvent = emittedEvents.find(e => e.event === DomainEvent.ORDER_PAID);
-      assert.ok(orderPaidEvent);
-      assert.strictEqual(orderPaidEvent.payload.orderId, orderId);
+      assertDefined(orderPaidEvent);
+      expect(orderPaidEvent.payload.orderId).toBe(orderId);
     });
 
     it('should NOT regress status or touch stock when reconciling COMPLETED order', async () => {
@@ -427,18 +426,18 @@ describe('CommerceReconciliation (Bank Reconciliation Engine & Safe Inventory Ma
         transferContent: 'ORD 1004',
       });
 
-      assert.strictEqual(result.processed, true);
-      assert.strictEqual(result.status, 'PAID');
-      assert.strictEqual(result.stockCommitted, false);
-      assert.strictEqual(result.totalPaid, 500000);
+      expect(result.processed).toBe(true);
+      expect(result.status).toBe('PAID');
+      expect(result.stockCommitted).toBe(false);
+      expect(result.totalPaid).toBe(500000);
 
       // Order status MUST remain COMPLETED
-      assert.strictEqual(ord.status, OrderStatus.COMPLETED);
-      assert.strictEqual(ord.paymentStatus, PaymentStatus.PAID);
-      assert.strictEqual(ord.paidAmount, 500000);
+      expect(ord.status).toBe(OrderStatus.COMPLETED);
+      expect(ord.paymentStatus).toBe(PaymentStatus.PAID);
+      expect(ord.paidAmount).toBe(500000);
 
       // No double stock deduction
-      assert.strictEqual(inventoryTxsDb.length, 0);
+      expect(inventoryTxsDb.length).toBe(0);
     });
 
     it('should return DUPLICATE if transaction has already been reconciled (Idempotency)', async () => {
@@ -464,12 +463,12 @@ describe('CommerceReconciliation (Bank Reconciliation Engine & Safe Inventory Ma
         transferContent: 'ORD 1004',
       });
 
-      assert.strictEqual(duplicateResult.processed, false);
-      assert.strictEqual(duplicateResult.status, 'DUPLICATE');
+      expect(duplicateResult.processed).toBe(false);
+      expect(duplicateResult.status).toBe('DUPLICATE');
     });
 
     it('should throw BadRequestException if amount is less than or equal to zero', async () => {
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.reconcileTransaction({
             workspaceId: wsId,
@@ -482,8 +481,8 @@ describe('CommerceReconciliation (Bank Reconciliation Engine & Safe Inventory Ma
           });
         },
         (err: any) => {
-          assert.strictEqual(err.name, 'BadRequestException');
-          assert.strictEqual(err.response?.code, 'INVALID_PAYMENT_AMOUNT');
+          expect(err.name).toBe('BadRequestException');
+          expect(err.response?.code).toBe('INVALID_PAYMENT_AMOUNT');
           return true;
         },
       );
@@ -499,7 +498,7 @@ describe('CommerceReconciliation (Bank Reconciliation Engine & Safe Inventory Ma
     let releasedLocks: string[];
 
     it('should export PosReconciliationProcessor as an alias to CommerceReconciliationProcessor', () => {
-      assert.strictEqual(PosReconciliationProcessor, CommerceReconciliationProcessor);
+      expect(PosReconciliationProcessor).toBe(CommerceReconciliationProcessor);
     });
 
     const wsId = 'ws-processor-test';
@@ -588,15 +587,15 @@ describe('CommerceReconciliation (Bank Reconciliation Engine & Safe Inventory Ma
 
       const result = await processor.process(jobMock);
 
-      assert.strictEqual(result.processed, true);
-      assert.strictEqual(result.status, 'PAID');
+      expect(result.processed).toBe(true);
+      expect(result.status).toBe('PAID');
 
       // Verify Redlock was acquired and released with correct lock key
       const expectedLockKey = `ws:${wsId}:order:${orderId}:reconcile`;
-      assert.strictEqual(acquiredLocks.length, 1);
-      assert.strictEqual(acquiredLocks[0], expectedLockKey);
-      assert.strictEqual(releasedLocks.length, 1);
-      assert.strictEqual(releasedLocks[0], expectedLockKey);
+      expect(acquiredLocks.length).toBe(1);
+      expect(acquiredLocks[0]).toBe(expectedLockKey);
+      expect(releasedLocks.length).toBe(1);
+      expect(releasedLocks[0]).toBe(expectedLockKey);
     });
 
     it('should return UNMATCHED_MEMO when memo has no recognizable order id', async () => {
@@ -612,8 +611,8 @@ describe('CommerceReconciliation (Bank Reconciliation Engine & Safe Inventory Ma
       };
 
       const result = await processor.process(jobMock);
-      assert.strictEqual(result.status, 'UNMATCHED_MEMO');
-      assert.strictEqual(acquiredLocks.length, 0);
+      expect(result.status).toBe('UNMATCHED_MEMO');
+      expect(acquiredLocks.length).toBe(0);
     });
 
     it('should reconcile transaction when memo contains full order number with date prefix', async () => {
@@ -632,8 +631,8 @@ describe('CommerceReconciliation (Bank Reconciliation Engine & Safe Inventory Ma
 
       const result = await processor.process(jobMock);
 
-      assert.strictEqual(result.processed, true);
-      assert.strictEqual(result.status, 'PAID');
+      expect(result.processed).toBe(true);
+      expect(result.status).toBe('PAID');
     });
 
     it('should skip job if amount is non-positive', async () => {
@@ -649,8 +648,8 @@ describe('CommerceReconciliation (Bank Reconciliation Engine & Safe Inventory Ma
       };
 
       const result = await processor.process(jobMock);
-      assert.strictEqual(result.status, 'INVALID_AMOUNT');
-      assert.strictEqual(acquiredLocks.length, 0);
+      expect(result.status).toBe('INVALID_AMOUNT');
+      expect(acquiredLocks.length).toBe(0);
     });
   });
 });

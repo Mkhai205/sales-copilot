@@ -1,5 +1,3 @@
-import { describe, it, before } from 'node:test';
-import * as assert from 'node:assert';
 import {
   ensureDivisionsLoaded,
   parseAddressHierarchyWithDivisions,
@@ -13,7 +11,7 @@ describe('AddressParserUtil (vietnam-divisions-js Address Parser)', () => {
   let districts: DivisionDistrict[];
   let communes: DivisionCommune[];
 
-  before(async () => {
+  beforeAll(async () => {
     const divisions = await ensureDivisionsLoaded();
     provinces = divisions.provinces;
     districts = divisions.districts;
@@ -21,9 +19,9 @@ describe('AddressParserUtil (vietnam-divisions-js Address Parser)', () => {
   });
 
   it('should load all 63 provinces and division datasets', () => {
-    assert.strictEqual(provinces.length, 63);
-    assert.ok(districts.length > 600);
-    assert.ok(communes.length > 9000);
+    expect(provinces.length).toBe(63);
+    expect(districts.length > 600).toBeTruthy();
+    expect(communes.length > 9000).toBeTruthy();
   });
 
   it('should parse 3-level address and extract clean streetAddress', () => {
@@ -34,10 +32,10 @@ describe('AddressParserUtil (vietnam-divisions-js Address Parser)', () => {
       communes,
     );
 
-    assert.strictEqual(result.province, 'Thành phố Hà Nội');
-    assert.strictEqual(result.district, 'Quận Đống Đa');
-    assert.strictEqual(result.ward, 'Phường Phương Mai');
-    assert.strictEqual(result.streetAddress, 'Số 45 ngõ 120 Trường Chinh');
+    expect(result.province).toBe('Thành phố Hà Nội');
+    expect(result.district).toBe('Quận Đống Đa');
+    expect(result.ward).toBe('Phường Phương Mai');
+    expect(result.streetAddress).toBe('Số 45 ngõ 120 Trường Chinh');
   });
 
   it('should not duplicate ward or district into streetAddress when address starts with an administrative unit', () => {
@@ -48,10 +46,10 @@ describe('AddressParserUtil (vietnam-divisions-js Address Parser)', () => {
       communes,
     );
 
-    assert.strictEqual(result.province, 'Thành phố Hà Nội');
-    assert.strictEqual(result.district, 'Quận Ba Đình');
-    assert.strictEqual(result.ward, 'Phường Phúc Xá');
-    assert.strictEqual(result.streetAddress, undefined);
+    expect(result.province).toBe('Thành phố Hà Nội');
+    expect(result.district).toBe('Quận Ba Đình');
+    expect(result.ward).toBe('Phường Phúc Xá');
+    expect(result.streetAddress).toBe(undefined);
   });
 
   it('should backfill district and province when only ward and province are provided', () => {
@@ -62,10 +60,10 @@ describe('AddressParserUtil (vietnam-divisions-js Address Parser)', () => {
       communes,
     );
 
-    assert.strictEqual(result.province, 'Thành phố Hồ Chí Minh');
-    assert.strictEqual(result.district, 'Quận 1');
-    assert.strictEqual(result.ward, 'Phường Bến Nghé');
-    assert.strictEqual(result.streetAddress, 'Số 45 Lê Duẩn');
+    expect(result.province).toBe('Thành phố Hồ Chí Minh');
+    expect(result.district).toBe('Quận 1');
+    expect(result.ward).toBe('Phường Bến Nghé');
+    expect(result.streetAddress).toBe('Số 45 Lê Duẩn');
   });
 
   it('should backfill province when only district is provided', () => {
@@ -76,9 +74,9 @@ describe('AddressParserUtil (vietnam-divisions-js Address Parser)', () => {
       communes,
     );
 
-    assert.strictEqual(result.province, 'Thành phố Hà Nội');
-    assert.strictEqual(result.district, 'Quận Hoàng Mai');
-    assert.strictEqual(result.streetAddress, '18 Tam Trinh');
+    expect(result.province).toBe('Thành phố Hà Nội');
+    expect(result.district).toBe('Quận Hoàng Mai');
+    expect(result.streetAddress).toBe('18 Tam Trinh');
   });
 
   it('should correctly disambiguate when street name coincides with a district or province name', () => {
@@ -89,10 +87,10 @@ describe('AddressParserUtil (vietnam-divisions-js Address Parser)', () => {
       communes,
     );
 
-    assert.strictEqual(result.province, 'Thành phố Hà Nội');
-    assert.strictEqual(result.district, 'Quận Ba Đình');
-    assert.strictEqual(result.ward, 'Phường Cống Vị');
-    assert.strictEqual(result.streetAddress, 'Đường Ba Đình');
+    expect(result.province).toBe('Thành phố Hà Nội');
+    expect(result.district).toBe('Quận Ba Đình');
+    expect(result.ward).toBe('Phường Cống Vị');
+    expect(result.streetAddress).toBe('Đường Ba Đình');
   });
 
   it('should handle numbered districts and wards in HCMC', () => {
@@ -103,30 +101,26 @@ describe('AddressParserUtil (vietnam-divisions-js Address Parser)', () => {
       communes,
     );
 
-    assert.strictEqual(result.province, 'Thành phố Hồ Chí Minh');
-    assert.strictEqual(result.district, 'Quận 1');
-    assert.strictEqual(result.streetAddress, '123 Nguyễn Huệ');
+    expect(result.province).toBe('Thành phố Hồ Chí Minh');
+    expect(result.district).toBe('Quận 1');
+    expect(result.streetAddress).toBe('123 Nguyễn Huệ');
   });
 
   it('should safely handle empty, whitespace, or non-address inputs', () => {
-    assert.deepStrictEqual(
-      parseAddressHierarchyWithDivisions('', provinces, districts, communes),
-      {},
-    );
-    assert.strictEqual(
+    expect(parseAddressHierarchyWithDivisions('', provinces, districts, communes)).toEqual({});
+    expect(
       parseAddressHierarchyWithDivisions('   ', provinces, districts, communes).streetAddress,
-      undefined,
-    );
+    ).toBe(undefined);
     const nonAddress = parseAddressHierarchyWithDivisions(
       'Xin chào shop mình muốn mua đồ',
       provinces,
       districts,
       communes,
     );
-    assert.strictEqual(nonAddress.province, undefined);
-    assert.strictEqual(nonAddress.district, undefined);
-    assert.strictEqual(nonAddress.ward, undefined);
-    assert.strictEqual(nonAddress.streetAddress, 'Xin chào shop mình muốn mua đồ');
+    expect(nonAddress.province).toBe(undefined);
+    expect(nonAddress.district).toBe(undefined);
+    expect(nonAddress.ward).toBe(undefined);
+    expect(nonAddress.streetAddress).toBe('Xin chào shop mình muốn mua đồ');
   });
 
   it('should execute parsing in less than 15ms (deterministic tier-1 SLA)', () => {
@@ -138,6 +132,6 @@ describe('AddressParserUtil (vietnam-divisions-js Address Parser)', () => {
       communes,
     );
     const duration = performance.now() - start;
-    assert.ok(duration < 15, `Expected < 15ms, took ${duration}ms`);
+    expect(duration < 15).toBeTruthy();
   });
 });

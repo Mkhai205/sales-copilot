@@ -1,5 +1,3 @@
-import { describe, it, beforeEach, afterEach } from 'node:test';
-import * as assert from 'node:assert';
 import { LinkPreviewService } from '../link-preview.service';
 
 describe('LinkPreviewService', () => {
@@ -17,8 +15,8 @@ describe('LinkPreviewService', () => {
 
   it('should return raw url for non-http/https strings', async () => {
     const res = await service.getPreview('not-a-url');
-    assert.strictEqual(res.url, 'not-a-url');
-    assert.strictEqual(res.title, undefined);
+    expect(res.url).toBe('not-a-url');
+    expect(res.title).toBe(undefined);
   });
 
   it('should extract og:title, og:description, og:image, and og:site_name', async () => {
@@ -44,11 +42,11 @@ describe('LinkPreviewService', () => {
       });
 
     const preview = await service.getPreview('https://giavang.org/gia-vang-sjc');
-    assert.strictEqual(preview.url, 'https://giavang.org/gia-vang-sjc');
-    assert.strictEqual(preview.title, 'Giá Vàng Hôm Nay - Cập Nhật 24/7');
-    assert.strictEqual(preview.description, 'Bảng giá vàng SJC, 9999, DOJI mới nhất');
-    assert.strictEqual(preview.image, 'https://giavang.org/static/gold-thumbnail.png');
-    assert.strictEqual(preview.siteName, 'Giá Vàng Việt Nam');
+    expect(preview.url).toBe('https://giavang.org/gia-vang-sjc');
+    expect(preview.title).toBe('Giá Vàng Hôm Nay - Cập Nhật 24/7');
+    expect(preview.description).toBe('Bảng giá vàng SJC, 9999, DOJI mới nhất');
+    expect(preview.image).toBe('https://giavang.org/static/gold-thumbnail.png');
+    expect(preview.siteName).toBe('Giá Vàng Việt Nam');
   });
 
   it('should fallback to standard <title> and meta description when OG tags are absent', async () => {
@@ -73,10 +71,10 @@ describe('LinkPreviewService', () => {
       });
 
     const preview = await service.getPreview('https://example.com/page');
-    assert.strictEqual(preview.title, 'Standard Page Title');
-    assert.strictEqual(preview.description, 'Standard page description text');
-    assert.strictEqual(preview.image, 'https://example.com/favicon.ico');
-    assert.strictEqual(preview.siteName, 'example.com');
+    expect(preview.title).toBe('Standard Page Title');
+    expect(preview.description).toBe('Standard page description text');
+    expect(preview.image).toBe('https://example.com/favicon.ico');
+    expect(preview.siteName).toBe('example.com');
   });
 
   it('should decode HTML entities in title and description', async () => {
@@ -97,8 +95,8 @@ describe('LinkPreviewService', () => {
       });
 
     const preview = await service.getPreview('https://example.com/entities');
-    assert.strictEqual(preview.title, `Gold & Silver "Prices" 'Today'`);
-    assert.strictEqual(preview.description, '<New> update on 24k gold');
+    expect(preview.title).toBe(`Gold & Silver "Prices" 'Today'`);
+    expect(preview.description).toBe('<New> update on 24k gold');
   });
 
   it('should handle fetch errors gracefully and return siteName fallback', async () => {
@@ -107,9 +105,9 @@ describe('LinkPreviewService', () => {
     };
 
     const preview = await service.getPreview('https://timeout-site.org/news');
-    assert.strictEqual(preview.url, 'https://timeout-site.org/news');
-    assert.strictEqual(preview.siteName, 'timeout-site.org');
-    assert.strictEqual(preview.title, undefined);
+    expect(preview.url).toBe('https://timeout-site.org/news');
+    expect(preview.siteName).toBe('timeout-site.org');
+    expect(preview.title).toBe(undefined);
   });
 
   it('should cache previews and avoid subsequent fetch calls', async () => {
@@ -125,8 +123,8 @@ describe('LinkPreviewService', () => {
     const res1 = await service.getPreview('https://cache-test.com');
     const res2 = await service.getPreview('https://cache-test.com');
 
-    assert.strictEqual(callCount, 1);
-    assert.strictEqual(res1.title, 'Cached Title');
-    assert.strictEqual(res2.title, 'Cached Title');
+    expect(callCount).toBe(1);
+    expect(res1.title).toBe('Cached Title');
+    expect(res2.title).toBe('Cached Title');
   });
 });

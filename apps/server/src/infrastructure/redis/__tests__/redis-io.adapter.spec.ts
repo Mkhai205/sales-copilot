@@ -1,5 +1,3 @@
-import { describe, it, beforeEach } from 'node:test';
-import * as assert from 'node:assert';
 import { RedisIoAdapter } from '../redis-io.adapter';
 
 describe('RedisIoAdapter (WebSocket Multi-Instance Redis Adapter)', () => {
@@ -32,8 +30,8 @@ describe('RedisIoAdapter (WebSocket Multi-Instance Redis Adapter)', () => {
     };
 
     const server = adapter.createIOServer(3000);
-    assert.strictEqual(server, mockServer);
-    assert.strictEqual((adapter as any).adapterConstructor, undefined);
+    expect(server).toBe(mockServer);
+    expect((adapter as any).adapterConstructor).toBe(undefined);
   });
 
   it('should attach adapterConstructor to server when adapterConstructor is present', () => {
@@ -51,12 +49,12 @@ describe('RedisIoAdapter (WebSocket Multi-Instance Redis Adapter)', () => {
       mockServer.adapter((adapter as any).adapterConstructor);
     }
 
-    assert.strictEqual(attachedAdapter, dummyAdapter);
+    expect(attachedAdapter).toBe(dummyAdapter);
   });
 
   it('should handle close() gracefully without throwing even when clients are uninitialized', async () => {
-    await assert.doesNotReject(async () => {
+    await await expect(async () => {
       await adapter.close();
-    });
+    }).resolves.not.toThrow();
   });
 });

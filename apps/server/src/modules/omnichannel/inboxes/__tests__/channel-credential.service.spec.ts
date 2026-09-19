@@ -1,5 +1,4 @@
-import { describe, it, beforeEach } from 'node:test';
-import * as assert from 'node:assert';
+import { expectThrow } from '../../../../../test/test-assertions';
 import { ChannelCredentialService } from '../channel-credential.service';
 import { ConfigService } from '@nestjs/config';
 import { InternalServerErrorException } from '@nestjs/common';
@@ -32,19 +31,15 @@ describe('ChannelCredentialService (AES-256-GCM Credential Encryption & Security
       };
 
       const encrypted = service.encrypt(credentials);
-      assert.ok(typeof encrypted === 'string');
-      assert.ok(encrypted.length > 0);
+      expect(typeof encrypted === 'string').toBeTruthy();
+      expect(encrypted.length > 0).toBeTruthy();
 
       // Verify format is iv:authTag:ciphertext
       const parts = encrypted.split(':');
-      assert.strictEqual(
-        parts.length,
-        3,
-        'Ciphertext must contain exactly 3 colon-separated parts',
-      );
+      expect(parts.length).toBe(3);
 
       const decrypted = service.decrypt<typeof credentials>(encrypted);
-      assert.deepStrictEqual(decrypted, credentials);
+      expect(decrypted).toEqual(credentials);
     });
 
     it('should handle complex nested structures with arrays, unicode and numbers', () => {
@@ -67,7 +62,7 @@ describe('ChannelCredentialService (AES-256-GCM Credential Encryption & Security
       const encrypted = service.encrypt(complexCredentials);
       const decrypted = service.decrypt<typeof complexCredentials>(encrypted);
 
-      assert.deepStrictEqual(decrypted, complexCredentials);
+      expect(decrypted).toEqual(complexCredentials);
     });
 
     it('should encrypt and decrypt empty object payload', () => {
@@ -75,7 +70,7 @@ describe('ChannelCredentialService (AES-256-GCM Credential Encryption & Security
       const encrypted = service.encrypt(emptyPayload);
       const decrypted = service.decrypt<Record<string, unknown>>(encrypted);
 
-      assert.deepStrictEqual(decrypted, emptyPayload);
+      expect(decrypted).toEqual(emptyPayload);
     });
   });
 
@@ -87,21 +82,21 @@ describe('ChannelCredentialService (AES-256-GCM Credential Encryption & Security
       const encrypted2 = service.encrypt(payload);
       const encrypted3 = service.encrypt(payload);
 
-      assert.notStrictEqual(encrypted1, encrypted2);
-      assert.notStrictEqual(encrypted2, encrypted3);
-      assert.notStrictEqual(encrypted1, encrypted3);
+      expect(encrypted1).not.toBe(encrypted2);
+      expect(encrypted2).not.toBe(encrypted3);
+      expect(encrypted1).not.toBe(encrypted3);
 
       const [iv1] = encrypted1.split(':');
       const [iv2] = encrypted2.split(':');
       const [iv3] = encrypted3.split(':');
 
-      assert.notStrictEqual(iv1, iv2);
-      assert.notStrictEqual(iv2, iv3);
+      expect(iv1).not.toBe(iv2);
+      expect(iv2).not.toBe(iv3);
 
       // All must decrypt to the original payload
-      assert.deepStrictEqual(service.decrypt(encrypted1), payload);
-      assert.deepStrictEqual(service.decrypt(encrypted2), payload);
-      assert.deepStrictEqual(service.decrypt(encrypted3), payload);
+      expect(service.decrypt(encrypted1)).toEqual(payload);
+      expect(service.decrypt(encrypted2)).toEqual(payload);
+      expect(service.decrypt(encrypted3)).toEqual(payload);
     });
   });
 
@@ -116,14 +111,11 @@ describe('ChannelCredentialService (AES-256-GCM Credential Encryption & Security
         ciphertext.slice(0, -2) + (ciphertext.slice(-2) === 'AA' ? 'BB' : 'AA');
       const tamperedEncrypted = `${iv}:${authTag}:${tamperedCiphertext}`;
 
-      assert.throws(
+      expectThrow(
         () => service.decrypt(tamperedEncrypted),
         (err: any) => {
-          assert.ok(err instanceof InternalServerErrorException);
-          assert.strictEqual(
-            (err.getResponse() as any).code,
-            'CHANNEL_CREDENTIAL_DECRYPTION_FAILED',
-          );
+          expect(err instanceof InternalServerErrorException).toBeTruthy();
+          expect((err.getResponse() as any).code).toBe('CHANNEL_CREDENTIAL_DECRYPTION_FAILED');
           return true;
         },
       );
@@ -138,14 +130,11 @@ describe('ChannelCredentialService (AES-256-GCM Credential Encryption & Security
       const tamperedAuthTag = authTag.slice(0, -2) + (authTag.slice(-2) === '11' ? '22' : '11');
       const tamperedEncrypted = `${iv}:${tamperedAuthTag}:${ciphertext}`;
 
-      assert.throws(
+      expectThrow(
         () => service.decrypt(tamperedEncrypted),
         (err: any) => {
-          assert.ok(err instanceof InternalServerErrorException);
-          assert.strictEqual(
-            (err.getResponse() as any).code,
-            'CHANNEL_CREDENTIAL_DECRYPTION_FAILED',
-          );
+          expect(err instanceof InternalServerErrorException).toBeTruthy();
+          expect((err.getResponse() as any).code).toBe('CHANNEL_CREDENTIAL_DECRYPTION_FAILED');
           return true;
         },
       );
@@ -160,14 +149,11 @@ describe('ChannelCredentialService (AES-256-GCM Credential Encryption & Security
       const tamperedIv = iv.slice(0, -2) + (iv.slice(-2) === '99' ? '88' : '99');
       const tamperedEncrypted = `${tamperedIv}:${authTag}:${ciphertext}`;
 
-      assert.throws(
+      expectThrow(
         () => service.decrypt(tamperedEncrypted),
         (err: any) => {
-          assert.ok(err instanceof InternalServerErrorException);
-          assert.strictEqual(
-            (err.getResponse() as any).code,
-            'CHANNEL_CREDENTIAL_DECRYPTION_FAILED',
-          );
+          expect(err instanceof InternalServerErrorException).toBeTruthy();
+          expect((err.getResponse() as any).code).toBe('CHANNEL_CREDENTIAL_DECRYPTION_FAILED');
           return true;
         },
       );
@@ -183,14 +169,11 @@ describe('ChannelCredentialService (AES-256-GCM Credential Encryption & Security
       ];
 
       for (const input of malformedInputs) {
-        assert.throws(
+        expectThrow(
           () => service.decrypt(input),
           (err: any) => {
-            assert.ok(err instanceof InternalServerErrorException);
-            assert.strictEqual(
-              (err.getResponse() as any).code,
-              'CHANNEL_CREDENTIAL_DECRYPTION_FAILED',
-            );
+            expect(err instanceof InternalServerErrorException).toBeTruthy();
+            expect((err.getResponse() as any).code).toBe('CHANNEL_CREDENTIAL_DECRYPTION_FAILED');
             return true;
           },
         );
@@ -209,14 +192,11 @@ describe('ChannelCredentialService (AES-256-GCM Credential Encryption & Security
         otherConfigService as unknown as ConfigService,
       );
 
-      assert.throws(
+      expectThrow(
         () => otherService.decrypt(encrypted),
         (err: any) => {
-          assert.ok(err instanceof InternalServerErrorException);
-          assert.strictEqual(
-            (err.getResponse() as any).code,
-            'CHANNEL_CREDENTIAL_DECRYPTION_FAILED',
-          );
+          expect(err instanceof InternalServerErrorException).toBeTruthy();
+          expect((err.getResponse() as any).code).toBe('CHANNEL_CREDENTIAL_DECRYPTION_FAILED');
           return true;
         },
       );
@@ -237,7 +217,7 @@ describe('ChannelCredentialService (AES-256-GCM Credential Encryption & Security
       const encrypted = utf8Service.encrypt(payload);
       const decrypted = utf8Service.decrypt(encrypted);
 
-      assert.deepStrictEqual(decrypted, payload);
+      expect(decrypted).toEqual(payload);
     });
 
     it('should work with 32-byte Base64 key', () => {
@@ -253,7 +233,7 @@ describe('ChannelCredentialService (AES-256-GCM Credential Encryption & Security
       const encrypted = base64Service.encrypt(payload);
       const decrypted = base64Service.decrypt(encrypted);
 
-      assert.deepStrictEqual(decrypted, payload);
+      expect(decrypted).toEqual(payload);
     });
 
     it('should derive 32-byte key via SHA-256 fallback when given arbitrary passphrase', () => {
@@ -269,7 +249,7 @@ describe('ChannelCredentialService (AES-256-GCM Credential Encryption & Security
       const encrypted = fallbackService.encrypt(payload);
       const decrypted = fallbackService.decrypt(encrypted);
 
-      assert.deepStrictEqual(decrypted, payload);
+      expect(decrypted).toEqual(payload);
     });
 
     it('should throw InternalServerErrorException when ConfigService returns empty/undefined', () => {
@@ -277,11 +257,11 @@ describe('ChannelCredentialService (AES-256-GCM Credential Encryption & Security
         get: () => undefined,
       };
 
-      assert.throws(
+      expectThrow(
         () => new ChannelCredentialService(emptyConfigService as unknown as ConfigService),
         (err: any) => {
-          assert.ok(err instanceof InternalServerErrorException);
-          assert.strictEqual((err.getResponse() as any).code, 'CHANNEL_ENCRYPTION_KEY_MISSING');
+          expect(err instanceof InternalServerErrorException).toBeTruthy();
+          expect((err.getResponse() as any).code).toBe('CHANNEL_ENCRYPTION_KEY_MISSING');
           return true;
         },
       );
@@ -304,7 +284,7 @@ describe('ChannelCredentialService (AES-256-GCM Credential Encryption & Security
       const hexCiphertext = `${iv.toString('hex')}:${authTag.toString('hex')}:${encrypted.toString('hex')}`;
       const decrypted = service.decrypt(hexCiphertext);
 
-      assert.deepStrictEqual(decrypted, payload);
+      expect(decrypted).toEqual(payload);
     });
   });
 });

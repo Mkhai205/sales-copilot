@@ -1,5 +1,3 @@
-import { describe, it, beforeEach } from 'node:test';
-import * as assert from 'node:assert';
 import {
   ChannelType,
   DeliveryStatus,
@@ -198,18 +196,15 @@ describe('OutboundMessageListener (Task S-3: Event-driven Outbound Delivery)', (
     await listener.handleOutboundMessage(eventPayload);
 
     // 1. Adapter received message
-    assert.strictEqual(deliveredMessages.length, 1);
-    assert.strictEqual(deliveredMessages[0].message.recipientExternalId, 'psid_user_777');
-    assert.strictEqual(deliveredMessages[0].message.content, 'Hello customer! How can I help you?');
-    assert.strictEqual(
-      deliveredMessages[0].channel.credentials.pageAccessToken,
-      'EAAB_PAGE_TOKEN_123',
-    );
+    expect(deliveredMessages.length).toBe(1);
+    expect(deliveredMessages[0].message.recipientExternalId).toBe('psid_user_777');
+    expect(deliveredMessages[0].message.content).toBe('Hello customer! How can I help you?');
+    expect(deliveredMessages[0].channel.credentials.pageAccessToken).toBe('EAAB_PAGE_TOKEN_123');
 
     // 2. Message record updated in database
     const updated = messagesDb.get(msgId);
-    assert.strictEqual(updated.externalId, 'mid.fb.outbound.999');
-    assert.strictEqual(updated.deliveryStatus, DeliveryStatus.SENT);
+    expect(updated.externalId).toBe('mid.fb.outbound.999');
+    expect(updated.deliveryStatus).toBe(DeliveryStatus.SENT);
   });
 
   it('should skip incoming messages (MessageType.INCOMING)', async () => {
@@ -229,7 +224,7 @@ describe('OutboundMessageListener (Task S-3: Event-driven Outbound Delivery)', (
 
     await listener.handleOutboundMessage(eventPayload);
 
-    assert.strictEqual(deliveredMessages.length, 0);
+    expect(deliveredMessages.length).toBe(0);
   });
 
   it('should skip private notes (isPrivate = true)', async () => {
@@ -263,7 +258,7 @@ describe('OutboundMessageListener (Task S-3: Event-driven Outbound Delivery)', (
 
     await listener.handleOutboundMessage(eventPayload);
 
-    assert.strictEqual(deliveredMessages.length, 0);
+    expect(deliveredMessages.length).toBe(0);
   });
 
   it('should skip messages originating from contacts (SenderType.CONTACT)', async () => {
@@ -283,7 +278,7 @@ describe('OutboundMessageListener (Task S-3: Event-driven Outbound Delivery)', (
 
     await listener.handleOutboundMessage(eventPayload);
 
-    assert.strictEqual(deliveredMessages.length, 0);
+    expect(deliveredMessages.length).toBe(0);
   });
 
   it('should skip when no adapter is registered for channelType', async () => {
@@ -318,7 +313,7 @@ describe('OutboundMessageListener (Task S-3: Event-driven Outbound Delivery)', (
 
     await listener.handleOutboundMessage(eventPayload);
 
-    assert.strictEqual(deliveredMessages.length, 0);
+    expect(deliveredMessages.length).toBe(0);
   });
 
   it('should mark message as FAILED when no recipient external ID is found', async () => {
@@ -355,9 +350,9 @@ describe('OutboundMessageListener (Task S-3: Event-driven Outbound Delivery)', (
     await listener.handleOutboundMessage(eventPayload);
 
     const updated = messagesDb.get(msgId);
-    assert.strictEqual(updated.deliveryStatus, DeliveryStatus.FAILED);
-    assert.strictEqual(updated.metadata?.deliveryError, 'NO_RECIPIENT_EXTERNAL_ID');
-    assert.strictEqual(deliveredMessages.length, 0);
+    expect(updated.deliveryStatus).toBe(DeliveryStatus.FAILED);
+    expect(updated.metadata?.deliveryError).toBe('NO_RECIPIENT_EXTERNAL_ID');
+    expect(deliveredMessages.length).toBe(0);
   });
 
   it('should mark message as FAILED when adapter.sendMessage throws an error', async () => {
@@ -399,7 +394,9 @@ describe('OutboundMessageListener (Task S-3: Event-driven Outbound Delivery)', (
     await listener.handleOutboundMessage(eventPayload);
 
     const updated = messagesDb.get(msgId);
-    assert.strictEqual(updated.deliveryStatus, DeliveryStatus.FAILED);
-    assert.ok(updated.metadata?.deliveryError?.includes('Facebook Graph API error (#100)'));
+    expect(updated.deliveryStatus).toBe(DeliveryStatus.FAILED);
+    expect(
+      updated.metadata?.deliveryError?.includes('Facebook Graph API error (#100)'),
+    ).toBeTruthy();
   });
 });

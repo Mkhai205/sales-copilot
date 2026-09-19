@@ -1,5 +1,3 @@
-import { describe, it, beforeEach } from 'node:test';
-import * as assert from 'node:assert';
 import { OrderStatus } from '@sales-copilot/shared-contracts';
 import { CommerceToolRegistry } from '../commerce-tool.registry';
 import { DiscountGuardService } from '../../services/discount-guard.service';
@@ -265,27 +263,23 @@ describe('CommerceToolRegistry & 2 AM Customer Journey', () => {
 
     // 1. Exactly 9 tools built
     const toolNames = Object.keys(tools);
-    assert.strictEqual(toolNames.length, 9);
-    assert.ok(toolNames.includes('searchProducts'));
-    assert.ok(toolNames.includes('getProductDetails'));
-    assert.ok(toolNames.includes('checkInventory'));
-    assert.ok(toolNames.includes('extractShippingInfo'));
-    assert.ok(toolNames.includes('evaluateDiscount'));
-    assert.ok(toolNames.includes('createDraftOrder'));
-    assert.ok(toolNames.includes('confirmAndGenerateQR'));
-    assert.ok(toolNames.includes('updateContactInfo'));
-    assert.ok(toolNames.includes('escalateToHuman'));
+    expect(toolNames.length).toBe(9);
+    expect(toolNames.includes('searchProducts')).toBeTruthy();
+    expect(toolNames.includes('getProductDetails')).toBeTruthy();
+    expect(toolNames.includes('checkInventory')).toBeTruthy();
+    expect(toolNames.includes('extractShippingInfo')).toBeTruthy();
+    expect(toolNames.includes('evaluateDiscount')).toBeTruthy();
+    expect(toolNames.includes('createDraftOrder')).toBeTruthy();
+    expect(toolNames.includes('confirmAndGenerateQR')).toBeTruthy();
+    expect(toolNames.includes('updateContactInfo')).toBeTruthy();
+    expect(toolNames.includes('escalateToHuman')).toBeTruthy();
 
     // 2. Strict Multi-tenancy check: none of the tool schemas should leak workspaceId
     for (const name of toolNames) {
       const toolObj: any = tools[name];
       const shape = toolObj?.inputSchema?._def?.shape();
       if (shape) {
-        assert.strictEqual(
-          shape.workspaceId,
-          undefined,
-          `Security violation: tool '${name}' has exposed workspaceId in inputSchema!`,
-        );
+        expect(shape.workspaceId).toBe(undefined);
       }
     }
   });
@@ -298,13 +292,13 @@ describe('CommerceToolRegistry & 2 AM Customer Journey', () => {
       { query: 'Lụa' },
       {} as any,
     );
-    assert.strictEqual(searchResult.length, 0);
+    expect(searchResult.length).toBe(0);
 
     const orderResult: any = await (toolsA.createDraftOrder as any).execute(
       { items: [{ variantId: 'var-polo-beta', quantity: 1 }] },
       {} as any,
     );
-    assert.strictEqual(orderResult.error, 'VARIANT_NOT_FOUND');
+    expect(orderResult.error).toBe('VARIANT_NOT_FOUND');
   });
 
   it('should complete the 2 AM End-to-End User Journey smoothly', async () => {
@@ -319,21 +313,21 @@ describe('CommerceToolRegistry & 2 AM Customer Journey', () => {
       { query: 'áo polo' },
       {} as any,
     );
-    assert.strictEqual(searchRes.length, 1);
-    assert.strictEqual(searchRes[0].name, 'Áo Polo Cotton');
-    assert.strictEqual(searchRes[0].variants[0].name, 'Trắng / L');
-    assert.strictEqual(searchRes[0].variants[0].price, 150000);
-    assert.strictEqual(searchRes[0].variants[0].availableStock, 23);
+    expect(searchRes.length).toBe(1);
+    expect(searchRes[0].name).toBe('Áo Polo Cotton');
+    expect(searchRes[0].variants[0].name).toBe('Trắng / L');
+    expect(searchRes[0].variants[0].price).toBe(150000);
+    expect(searchRes[0].variants[0].availableStock).toBe(23);
 
     // Step 2: Customer sends address: "15 ngõ 45 Vọng, Đồng Tâm, HBT, HN. SĐT 0988123456"
     const extractRes: any = await (tools.extractShippingInfo as any).execute(
       { text: '15 ngõ 45 Vọng, Đồng Tâm, Hai Bà Trưng, Hà Nội. SĐT 0988123456' },
       {} as any,
     );
-    assert.strictEqual(extractRes.phoneNumber, '0988123456');
-    assert.strictEqual(extractRes.province, 'Thành phố Hà Nội');
-    assert.strictEqual(extractRes.district, 'Quận Hai Bà Trưng');
-    assert.strictEqual(extractRes.ward, 'Phường Đồng Tâm');
+    expect(extractRes.phoneNumber).toBe('0988123456');
+    expect(extractRes.province).toBe('Thành phố Hà Nội');
+    expect(extractRes.district).toBe('Quận Hai Bà Trưng');
+    expect(extractRes.ward).toBe('Phường Đồng Tâm');
 
     // Step 3: AI updates contact info
     const contactRes: any = await (tools.updateContactInfo as any).execute(
@@ -343,8 +337,8 @@ describe('CommerceToolRegistry & 2 AM Customer Journey', () => {
       },
       {} as any,
     );
-    assert.strictEqual(contactRes.updated, true);
-    assert.strictEqual(contactRes.phoneNumber, '+84988123456');
+    expect(contactRes.updated).toBe(true);
+    expect(contactRes.phoneNumber).toBe('+84988123456');
 
     // Step 4: AI creates Draft Order (#DH1042, total 180k = 150k + 30k ship)
     const orderRes: any = await (tools.createDraftOrder as any).execute(
@@ -362,28 +356,28 @@ describe('CommerceToolRegistry & 2 AM Customer Journey', () => {
       },
       {} as any,
     );
-    assert.strictEqual(orderRes.orderId, 'ord-1042');
-    assert.strictEqual(orderRes.displayId, 1042);
-    assert.strictEqual(orderRes.status, 'DRAFT');
-    assert.strictEqual(orderRes.totalAmount, 180000);
+    expect(orderRes.orderId).toBe('ord-1042');
+    expect(orderRes.displayId).toBe(1042);
+    expect(orderRes.status).toBe('DRAFT');
+    expect(orderRes.totalAmount).toBe(180000);
 
     // Step 5: AI confirms order and generates VietQR
     const qrRes: any = await (tools.confirmAndGenerateQR as any).execute(
       { orderId: orderRes.orderId },
       {} as any,
     );
-    assert.strictEqual(qrRes.orderId, 'ord-1042');
-    assert.strictEqual(qrRes.displayId, 1042);
-    assert.strictEqual(qrRes.transferContent, 'DH1042');
-    assert.ok(qrRes.qrImageUrl.includes('img.vietqr.io'));
+    expect(qrRes.orderId).toBe('ord-1042');
+    expect(qrRes.displayId).toBe(1042);
+    expect(qrRes.transferContent).toBe('DH1042');
+    expect(qrRes.qrImageUrl.includes('img.vietqr.io')).toBeTruthy();
 
     // Check that order status transitioned to CONFIRMED
     const updatedOrder = ordersDb.get('ord-1042');
-    assert.strictEqual(updatedOrder.status, OrderStatus.CONFIRMED);
+    expect(updatedOrder.status).toBe(OrderStatus.CONFIRMED);
 
     // Check that VietQR interactive card message was posted to conversation
     const qrMessage = messagesDb.find(m => m.metadata?.type === 'VIETQR_PAYMENT');
-    assert.ok(qrMessage, 'Expected VIETQR_PAYMENT interactive card message in conversation');
-    assert.strictEqual(qrMessage.metadata.qrData.amount, 180000);
+    expect(qrMessage).toBeTruthy();
+    expect(qrMessage.metadata.qrData.amount).toBe(180000);
   });
 });

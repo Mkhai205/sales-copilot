@@ -1,5 +1,3 @@
-import { describe, it, beforeEach } from 'node:test';
-import * as assert from 'node:assert';
 import { createUpdateContactInfoTool } from '../update-contact-info.tool';
 
 describe('updateContactInfo Tool (T8)', () => {
@@ -83,15 +81,15 @@ describe('updateContactInfo Tool (T8)', () => {
       {} as any,
     );
 
-    assert.strictEqual(result.updated, true);
-    assert.strictEqual(result.name, 'Nguyễn Văn Nam');
-    assert.strictEqual(result.phoneNumber, '+84988123456');
-    assert.strictEqual(result.address, '15 ngõ 45 Vọng, Đồng Tâm, Hai Bà Trưng, Hà Nội');
+    expect(result.updated).toBe(true);
+    expect(result.name).toBe('Nguyễn Văn Nam');
+    expect(result.phoneNumber).toBe('+84988123456');
+    expect(result.address).toBe('15 ngõ 45 Vọng, Đồng Tâm, Hai Bà Trưng, Hà Nội');
 
     // Check payload sent to ContactsService
-    assert.strictEqual(updatePayloads.length, 1);
-    assert.strictEqual(updatePayloads[0].payload.phoneNumber, '+84988123456');
-    assert.deepStrictEqual(updatePayloads[0].payload.customAttributes, {
+    expect(updatePayloads.length).toBe(1);
+    expect(updatePayloads[0].payload.phoneNumber).toBe('+84988123456');
+    expect(updatePayloads[0].payload.customAttributes).toEqual({
       address: '15 ngõ 45 Vọng, Đồng Tâm, Hai Bà Trưng, Hà Nội',
     });
   });
@@ -105,7 +103,7 @@ describe('updateContactInfo Tool (T8)', () => {
     });
 
     const result = await tool.execute!({}, {} as any);
-    assert.strictEqual(result.updated, false);
-    assert.strictEqual(updatePayloads.length, 0);
+    expect(result.updated).toBe(false);
+    expect(updatePayloads.length).toBe(0);
   });
 });

@@ -1,5 +1,4 @@
-import { describe, it, beforeEach } from 'node:test';
-import * as assert from 'node:assert';
+import { expectReject } from '../../../../../test/test-assertions';
 import * as crypto from 'crypto';
 import { PaymentWebhooksGuard } from '../payment-webhooks.guard';
 import { PaymentWebhooksController } from '../payment-webhooks.controller';
@@ -62,7 +61,7 @@ describe('PaymentWebhooks (SePay & Casso Webhook Controller & Guard)', () => {
         { 'secure-token': secretKey },
       );
       const allowed = await guard.canActivate(ctx);
-      assert.strictEqual(allowed, true);
+      expect(allowed).toBe(true);
     });
 
     it('should allow access when x-api-key matches webhook secret', async () => {
@@ -71,7 +70,7 @@ describe('PaymentWebhooks (SePay & Casso Webhook Controller & Guard)', () => {
         { 'x-api-key': secretKey },
       );
       const allowed = await guard.canActivate(ctx);
-      assert.strictEqual(allowed, true);
+      expect(allowed).toBe(true);
     });
 
     it('should allow access when Authorization: Apikey matches secret', async () => {
@@ -80,7 +79,7 @@ describe('PaymentWebhooks (SePay & Casso Webhook Controller & Guard)', () => {
         { authorization: `Apikey ${secretKey}` },
       );
       const allowed = await guard.canActivate(ctx);
-      assert.strictEqual(allowed, true);
+      expect(allowed).toBe(true);
     });
 
     it('should allow access when HMAC SHA256 signature is valid', async () => {
@@ -94,7 +93,7 @@ describe('PaymentWebhooks (SePay & Casso Webhook Controller & Guard)', () => {
         body,
       );
       const allowed = await guard.canActivate(ctx);
-      assert.strictEqual(allowed, true);
+      expect(allowed).toBe(true);
     });
 
     it('should allow access when rawBody is a Buffer and signature has sha256= prefix and uppercase hex', async () => {
@@ -114,7 +113,7 @@ describe('PaymentWebhooks (SePay & Casso Webhook Controller & Guard)', () => {
       } as any;
 
       const allowed = await guard.canActivate(ctx);
-      assert.strictEqual(allowed, true);
+      expect(allowed).toBe(true);
     });
 
     it('should reject when secret is incorrect (401 Unauthorized)', async () => {
@@ -122,13 +121,13 @@ describe('PaymentWebhooks (SePay & Casso Webhook Controller & Guard)', () => {
         { workspaceId: wsId, gateway: 'sepay' },
         { 'secure-token': 'wrong_secret' },
       );
-      await assert.rejects(
+      await expectReject(
         async () => {
           await guard.canActivate(ctx);
         },
         (err: any) => {
-          assert.strictEqual(err.name, 'UnauthorizedException');
-          assert.strictEqual(err.response?.code, 'INVALID_PAYMENT_WEBHOOK_SIGNATURE');
+          expect(err.name).toBe('UnauthorizedException');
+          expect(err.response?.code).toBe('INVALID_PAYMENT_WEBHOOK_SIGNATURE');
           return true;
         },
       );
@@ -144,13 +143,13 @@ describe('PaymentWebhooks (SePay & Casso Webhook Controller & Guard)', () => {
         { workspaceId: wsId, gateway: 'sepay' },
         { 'secure-token': secretKey },
       );
-      await assert.rejects(
+      await expectReject(
         async () => {
           await guard.canActivate(ctx);
         },
         (err: any) => {
-          assert.strictEqual(err.name, 'UnauthorizedException');
-          assert.strictEqual(err.response?.code, 'PAYMENT_WEBHOOK_UNCONFIGURED');
+          expect(err.name).toBe('UnauthorizedException');
+          expect(err.response?.code).toBe('PAYMENT_WEBHOOK_UNCONFIGURED');
           return true;
         },
       );
@@ -190,19 +189,19 @@ describe('PaymentWebhooks (SePay & Casso Webhook Controller & Guard)', () => {
 
       const res = await controller.handleWebhook(wsId, 'sepay', sePayPayload);
 
-      assert.strictEqual(res.success, true);
-      assert.strictEqual(res.queued, true);
-      assert.strictEqual(res.count, 1);
+      expect(res.success).toBe(true);
+      expect(res.queued).toBe(true);
+      expect(res.count).toBe(1);
 
-      assert.strictEqual(enqueuedJobs.length, 1);
+      expect(enqueuedJobs.length).toBe(1);
       const job = enqueuedJobs[0];
-      assert.strictEqual(job.name, 'reconcile');
-      assert.strictEqual(job.opts.jobId, 'sepay:92704');
-      assert.strictEqual(job.data.workspaceId, wsId);
-      assert.strictEqual(job.data.gateway, 'sepay');
-      assert.strictEqual(job.data.amount, 450000);
-      assert.strictEqual(job.data.accountNumber, '0987654321');
-      assert.strictEqual(job.data.transferContent, 'ORD 1004 thanh toan giay the thao');
+      expect(job.name).toBe('reconcile');
+      expect(job.opts.jobId).toBe('sepay:92704');
+      expect(job.data.workspaceId).toBe(wsId);
+      expect(job.data.gateway).toBe('sepay');
+      expect(job.data.amount).toBe(450000);
+      expect(job.data.accountNumber).toBe('0987654321');
+      expect(job.data.transferContent).toBe('ORD 1004 thanh toan giay the thao');
     });
 
     it('should fast-ACK and enqueue Casso array payload { error: 0, data: [...] }', async () => {
@@ -233,15 +232,15 @@ describe('PaymentWebhooks (SePay & Casso Webhook Controller & Guard)', () => {
 
       const res = await controller.handleWebhook(wsId, 'casso', cassoPayload);
 
-      assert.strictEqual(res.success, true);
-      assert.strictEqual(res.queued, true);
-      assert.strictEqual(res.count, 2);
+      expect(res.success).toBe(true);
+      expect(res.queued).toBe(true);
+      expect(res.count).toBe(2);
 
-      assert.strictEqual(enqueuedJobs.length, 2);
-      assert.strictEqual(enqueuedJobs[0].opts.jobId, 'casso:8812');
-      assert.strictEqual(enqueuedJobs[0].data.amount, 250000);
-      assert.strictEqual(enqueuedJobs[1].opts.jobId, 'casso:8813');
-      assert.strictEqual(enqueuedJobs[1].data.amount, 300000);
+      expect(enqueuedJobs.length).toBe(2);
+      expect(enqueuedJobs[0].opts.jobId).toBe('casso:8812');
+      expect(enqueuedJobs[0].data.amount).toBe(250000);
+      expect(enqueuedJobs[1].opts.jobId).toBe('casso:8813');
+      expect(enqueuedJobs[1].data.amount).toBe(300000);
     });
 
     it('should skip outgoing/debit transfer items (transferType === "out")', async () => {
@@ -253,9 +252,9 @@ describe('PaymentWebhooks (SePay & Casso Webhook Controller & Guard)', () => {
       };
 
       const res = await controller.handleWebhook(wsId, 'sepay', outgoingPayload);
-      assert.strictEqual(res.success, true);
-      assert.strictEqual(res.count, 0);
-      assert.strictEqual(enqueuedJobs.length, 0);
+      expect(res.success).toBe(true);
+      expect(res.count).toBe(0);
+      expect(enqueuedJobs.length).toBe(0);
     });
 
     it('should skip items with non-positive amount (amount <= 0)', async () => {
@@ -267,9 +266,9 @@ describe('PaymentWebhooks (SePay & Casso Webhook Controller & Guard)', () => {
       };
 
       const res = await controller.handleWebhook(wsId, 'sepay', zeroAmountPayload);
-      assert.strictEqual(res.success, true);
-      assert.strictEqual(res.count, 0);
-      assert.strictEqual(enqueuedJobs.length, 0);
+      expect(res.success).toBe(true);
+      expect(res.count).toBe(0);
+      expect(enqueuedJobs.length).toBe(0);
     });
   });
 });

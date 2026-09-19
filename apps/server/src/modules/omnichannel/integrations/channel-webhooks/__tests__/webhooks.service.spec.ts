@@ -1,5 +1,4 @@
-import { describe, it, beforeEach } from 'node:test';
-import * as assert from 'node:assert';
+import { expectReject } from '../../../../../../test/test-assertions';
 import { NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { ChannelType, DeliveryStatus } from '@sales-copilot/shared-contracts';
 import { WebhooksService } from '../webhooks.service';
@@ -190,11 +189,11 @@ describe('Inbound Webhook Ingestion Pipeline (Feature F-1.3.4 & BullMQ Stub)', (
         {},
       );
 
-      assert.strictEqual(result, challenge);
+      expect(result).toBe(challenge);
     });
 
     it('should throw UnauthorizedException when hub.verify_token does not match', async () => {
-      await assert.rejects(
+      await expectReject(
         () =>
           webhooksService.verifyChallenge(
             mockChannelId,
@@ -206,19 +205,19 @@ describe('Inbound Webhook Ingestion Pipeline (Feature F-1.3.4 & BullMQ Stub)', (
             {},
           ),
         (err: any) => {
-          assert.ok(err instanceof UnauthorizedException);
-          assert.strictEqual((err.getResponse() as any).code, 'INVALID_VERIFY_TOKEN');
+          expect(err instanceof UnauthorizedException).toBeTruthy();
+          expect((err.getResponse() as any).code).toBe('INVALID_VERIFY_TOKEN');
           return true;
         },
       );
     });
 
     it('should throw NotFoundException when channel does not exist', async () => {
-      await assert.rejects(
+      await expectReject(
         () => webhooksService.verifyChallenge('non_existent_channel', {}, {}),
         (err: any) => {
-          assert.ok(err instanceof NotFoundException);
-          assert.strictEqual((err.getResponse() as any).code, 'CHANNEL_NOT_FOUND');
+          expect(err instanceof NotFoundException).toBeTruthy();
+          expect((err.getResponse() as any).code).toBe('CHANNEL_NOT_FOUND');
           return true;
         },
       );
@@ -245,24 +244,24 @@ describe('Inbound Webhook Ingestion Pipeline (Feature F-1.3.4 & BullMQ Stub)', (
         'x-hub-signature-256': 'valid-signature',
       });
 
-      assert.strictEqual(result.success, true);
-      assert.strictEqual(result.duplicated, false);
-      assert.ok(result.eventId);
+      expect(result.success).toBe(true);
+      expect(result.duplicated).toBe(false);
+      expect(result.eventId).toBeTruthy();
 
       // Verify ChannelEvent stored
-      assert.strictEqual(channelEventsDb.size, 1);
+      expect(channelEventsDb.size).toBe(1);
       const storedEvent = channelEventsDb.get(result.eventId!);
-      assert.ok(storedEvent);
-      assert.strictEqual(storedEvent.channelId, mockChannelId);
-      assert.strictEqual(storedEvent.externalEventId, 'mid.fb.message.999');
+      expect(storedEvent).toBeTruthy();
+      expect(storedEvent.channelId).toBe(mockChannelId);
+      expect(storedEvent.externalEventId).toBe('mid.fb.message.999');
 
       // Verify BullMQ job dispatched
-      assert.strictEqual(dispatchedJobs.length, 1);
-      assert.strictEqual(dispatchedJobs[0].name, 'process-channel-event');
-      assert.strictEqual(dispatchedJobs[0].data.channelId, mockChannelId);
-      assert.strictEqual(dispatchedJobs[0].data.channelEventId, result.eventId);
-      assert.strictEqual(dispatchedJobs[0].opts.jobId, `${mockChannelId}_${result.eventId}`);
-      assert.strictEqual(dispatchedJobs[0].opts.attempts, 3);
+      expect(dispatchedJobs.length).toBe(1);
+      expect(dispatchedJobs[0].name).toBe('process-channel-event');
+      expect(dispatchedJobs[0].data.channelId).toBe(mockChannelId);
+      expect(dispatchedJobs[0].data.channelEventId).toBe(result.eventId);
+      expect(dispatchedJobs[0].opts.jobId).toBe(`${mockChannelId}_${result.eventId}`);
+      expect(dispatchedJobs[0].opts.attempts).toBe(3);
     });
 
     it('should forward x-request-id as requestId in job data (FINDING-P8-02)', async () => {
@@ -277,8 +276,8 @@ describe('Inbound Webhook Ingestion Pipeline (Feature F-1.3.4 & BullMQ Stub)', (
       });
 
       const job = dispatchedJobs.find(j => (j.data.payload as any)?.event_id === 'evt_trace_101');
-      assert.ok(job);
-      assert.strictEqual(job.data.requestId, 'req-trace-uuid-12345');
+      expect(job).toBeTruthy();
+      expect(job.data.requestId).toBe('req-trace-uuid-12345');
     });
 
     it('should deduplicate repeated webhook delivery and skip BullMQ queue dispatch', async () => {
@@ -291,20 +290,20 @@ describe('Inbound Webhook Ingestion Pipeline (Feature F-1.3.4 & BullMQ Stub)', (
       const firstResult = await webhooksService.handleInboundWebhook(mockChannelId, payload, {
         'x-hub-signature-256': 'valid-signature',
       });
-      assert.strictEqual(firstResult.success, true);
-      assert.strictEqual(firstResult.duplicated, false);
-      assert.strictEqual(dispatchedJobs.length, 1);
+      expect(firstResult.success).toBe(true);
+      expect(firstResult.duplicated).toBe(false);
+      expect(dispatchedJobs.length).toBe(1);
 
       // 2nd delivery with identical event_id
       const secondResult = await webhooksService.handleInboundWebhook(mockChannelId, payload, {
         'x-hub-signature-256': 'valid-signature',
       });
-      assert.strictEqual(secondResult.success, true);
-      assert.strictEqual(secondResult.duplicated, true);
-      assert.strictEqual(secondResult.eventId, firstResult.eventId);
+      expect(secondResult.success).toBe(true);
+      expect(secondResult.duplicated).toBe(true);
+      expect(secondResult.eventId).toBe(firstResult.eventId);
 
       // Job should NOT be dispatched again
-      assert.strictEqual(dispatchedJobs.length, 1);
+      expect(dispatchedJobs.length).toBe(1);
     });
 
     it('should catch P2002 unique constraint collision during concurrent create and return duplicated: true', async () => {
@@ -336,9 +335,9 @@ describe('Inbound Webhook Ingestion Pipeline (Feature F-1.3.4 & BullMQ Stub)', (
           'x-hub-signature-256': 'valid-signature',
         });
 
-        assert.strictEqual(result.success, true);
-        assert.strictEqual(result.duplicated, true);
-        assert.strictEqual(result.eventId, 'evt_first_arrival');
+        expect(result.success).toBe(true);
+        expect(result.duplicated).toBe(true);
+        expect(result.eventId).toBe('evt_first_arrival');
       } finally {
         (webhooksService as any).prisma.getClient().channelEvent.create = originalCreate;
       }
@@ -351,10 +350,10 @@ describe('Inbound Webhook Ingestion Pipeline (Feature F-1.3.4 & BullMQ Stub)', (
         'x-hub-signature-256': 'valid-signature',
       });
 
-      assert.strictEqual(result.success, true);
+      expect(result.success).toBe(true);
       const storedEvent = channelEventsDb.get(result.eventId!);
-      assert.ok(storedEvent.externalEventId);
-      assert.strictEqual(storedEvent.externalEventId.length, 64); // 64 hex characters SHA-256
+      expect(storedEvent.externalEventId).toBeTruthy();
+      expect(storedEvent.externalEventId.length).toBe(64); // 64 hex characters SHA-256
     });
 
     it('should reject invalid signature with UnauthorizedException (INVALID_WEBHOOK_SIGNATURE)', async () => {
@@ -369,25 +368,25 @@ describe('Inbound Webhook Ingestion Pipeline (Feature F-1.3.4 & BullMQ Stub)', (
       };
       adapterRegistry.register(failingAdapter);
 
-      await assert.rejects(
+      await expectReject(
         () =>
           webhooksService.handleInboundWebhook(mockChannelId, payload, {
             'x-hub-signature-256': 'invalid',
           }),
         (err: any) => {
-          assert.ok(err instanceof UnauthorizedException);
-          assert.strictEqual((err.getResponse() as any).code, 'INVALID_WEBHOOK_SIGNATURE');
+          expect(err instanceof UnauthorizedException).toBeTruthy();
+          expect((err.getResponse() as any).code).toBe('INVALID_WEBHOOK_SIGNATURE');
           return true;
         },
       );
     });
 
     it('should throw NotFoundException when channel does not exist', async () => {
-      await assert.rejects(
+      await expectReject(
         () => webhooksService.handleInboundWebhook('invalid_channel', {}, {}),
         (err: any) => {
-          assert.ok(err instanceof NotFoundException);
-          assert.strictEqual((err.getResponse() as any).code, 'CHANNEL_NOT_FOUND');
+          expect(err instanceof NotFoundException).toBeTruthy();
+          expect((err.getResponse() as any).code).toBe('CHANNEL_NOT_FOUND');
           return true;
         },
       );
@@ -420,7 +419,7 @@ describe('Inbound Webhook Ingestion Pipeline (Feature F-1.3.4 & BullMQ Stub)', (
       await processor.process(mockJob);
 
       const updated = channelEventsDb.get(event.id);
-      assert.ok(updated.processedAt instanceof Date);
+      expect(updated.processedAt instanceof Date).toBeTruthy();
     });
   });
 
@@ -434,8 +433,8 @@ describe('Inbound Webhook Ingestion Pipeline (Feature F-1.3.4 & BullMQ Stub)', (
         {},
       );
 
-      assert.strictEqual(res.success, true);
-      assert.strictEqual(res.duplicated, false);
+      expect(res.success).toBe(true);
+      expect(res.duplicated).toBe(false);
     });
 
     it('should delegate verifyWebhook request', async () => {
@@ -458,7 +457,7 @@ describe('Inbound Webhook Ingestion Pipeline (Feature F-1.3.4 & BullMQ Stub)', (
         mockRes,
       );
 
-      assert.strictEqual(sentText, 'challenge_received');
+      expect(sentText).toBe('challenge_received');
     });
   });
 });

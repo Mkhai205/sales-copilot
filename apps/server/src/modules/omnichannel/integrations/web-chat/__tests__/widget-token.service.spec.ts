@@ -1,5 +1,4 @@
-import { describe, it, beforeEach } from 'node:test';
-import * as assert from 'node:assert';
+import { expectThrow } from '../../../../../../test/test-assertions';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { WidgetTokenPayload, WidgetTokenService } from '../widget-token.service';
@@ -35,25 +34,25 @@ describe('WidgetTokenService (Visitor JWT Token Issuance & Verification)', () =>
     it('should generate a valid JWT token and verify it accurately', () => {
       const token = service.generateToken(mockPayload);
 
-      assert.strictEqual(typeof token, 'string');
-      assert.ok(token.split('.').length === 3);
+      expect(typeof token).toBe('string');
+      expect(token.split('.').length === 3).toBeTruthy();
 
       const decoded = service.verifyToken(token);
 
-      assert.strictEqual(decoded.contactId, mockPayload.contactId);
-      assert.strictEqual(decoded.workspaceId, mockPayload.workspaceId);
-      assert.strictEqual(decoded.channelId, mockPayload.channelId);
-      assert.strictEqual(decoded.inboxId, mockPayload.inboxId);
-      assert.strictEqual(decoded.externalContactId, mockPayload.externalContactId);
-      assert.strictEqual(decoded.widgetToken, mockPayload.widgetToken);
-      assert.strictEqual(decoded.identifier, mockPayload.identifier);
+      expect(decoded.contactId).toBe(mockPayload.contactId);
+      expect(decoded.workspaceId).toBe(mockPayload.workspaceId);
+      expect(decoded.channelId).toBe(mockPayload.channelId);
+      expect(decoded.inboxId).toBe(mockPayload.inboxId);
+      expect(decoded.externalContactId).toBe(mockPayload.externalContactId);
+      expect(decoded.widgetToken).toBe(mockPayload.widgetToken);
+      expect(decoded.identifier).toBe(mockPayload.identifier);
     });
 
     it('should support Bearer prefix during verification', () => {
       const token = service.generateToken(mockPayload);
       const decoded = service.verifyToken(`Bearer ${token}`);
 
-      assert.strictEqual(decoded.contactId, mockPayload.contactId);
+      expect(decoded.contactId).toBe(mockPayload.contactId);
     });
 
     it('should work with JwtService if injected', () => {
@@ -66,7 +65,7 @@ describe('WidgetTokenService (Visitor JWT Token Issuance & Verification)', () =>
       const token = serviceWithJwt.generateToken(mockPayload);
       const decoded = serviceWithJwt.verifyToken(token);
 
-      assert.strictEqual(decoded.contactId, mockPayload.contactId);
+      expect(decoded.contactId).toBe(mockPayload.contactId);
     });
 
     it('should support configurable expiration via WIDGET_TOKEN_EXPIRY_SECONDS', () => {
@@ -80,14 +79,14 @@ describe('WidgetTokenService (Visitor JWT Token Issuance & Verification)', () =>
       const customService = new WidgetTokenService(customConfig as ConfigService);
       const token = customService.generateToken(mockPayload);
       const decoded = customService.verifyToken(token);
-      assert.strictEqual(decoded.contactId, mockPayload.contactId);
+      expect(decoded.contactId).toBe(mockPayload.contactId);
     });
 
     it('should throw UnauthorizedException when token is missing or empty', () => {
-      assert.throws(() => service.verifyToken(''), {
+      expectThrow(() => service.verifyToken(''), {
         name: 'UnauthorizedException',
       });
-      assert.throws(() => service.verifyToken(undefined), {
+      expectThrow(() => service.verifyToken(undefined), {
         name: 'UnauthorizedException',
       });
     });
@@ -95,7 +94,7 @@ describe('WidgetTokenService (Visitor JWT Token Issuance & Verification)', () =>
     it('should throw UnauthorizedException when token signature is invalid', () => {
       const invalidToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e30.invalid_signature';
 
-      assert.throws(() => service.verifyToken(invalidToken), {
+      expectThrow(() => service.verifyToken(invalidToken), {
         name: 'UnauthorizedException',
       });
     });
@@ -104,7 +103,7 @@ describe('WidgetTokenService (Visitor JWT Token Issuance & Verification)', () =>
       // Generate token expiring immediately (-10 seconds)
       const token = service.generateToken(mockPayload, -10);
 
-      assert.throws(() => service.verifyToken(token), {
+      expectThrow(() => service.verifyToken(token), {
         name: 'UnauthorizedException',
       });
     });
@@ -115,33 +114,33 @@ describe('WidgetTokenService (Visitor JWT Token Issuance & Verification)', () =>
       const headers = { authorization: 'Bearer token_from_bearer' };
       const extracted = service.extractToken(headers);
 
-      assert.strictEqual(extracted, 'token_from_bearer');
+      expect(extracted).toBe('token_from_bearer');
     });
 
     it('should extract token from x-auth-token header', () => {
       const headers = { 'x-auth-token': 'token_from_x_auth' };
       const extracted = service.extractToken(headers);
 
-      assert.strictEqual(extracted, 'token_from_x_auth');
+      expect(extracted).toBe('token_from_x_auth');
     });
 
     it('should extract token from query parameters', () => {
       const query = { token: 'token_from_query' };
       const extracted = service.extractToken({}, query);
 
-      assert.strictEqual(extracted, 'token_from_query');
+      expect(extracted).toBe('token_from_query');
     });
 
     it('should extract cw_conversation token from query parameters', () => {
       const query = { cw_conversation: 'token_from_cw' };
       const extracted = service.extractToken({}, query);
 
-      assert.strictEqual(extracted, 'token_from_cw');
+      expect(extracted).toBe('token_from_cw');
     });
 
     it('should return undefined when no token is present', () => {
       const extracted = service.extractToken({}, {});
-      assert.strictEqual(extracted, undefined);
+      expect(extracted).toBe(undefined);
     });
   });
 
@@ -151,34 +150,31 @@ describe('WidgetTokenService (Visitor JWT Token Issuance & Verification)', () =>
 
     it('should generate valid HMAC-SHA256 signature', () => {
       const signature = service.generateHmacSignature(identifier, secret);
-      assert.strictEqual(signature.length, 64);
-      assert.match(signature, /^[0-9a-f]+$/);
+      expect(signature.length).toBe(64);
+      expect(signature).toMatch(/^[0-9a-f]+$/);
     });
 
     it('should return true for matching signature', () => {
       const signature = service.generateHmacSignature(identifier, secret);
-      assert.strictEqual(service.verifyHmacSignature(identifier, signature, secret), true);
+      expect(service.verifyHmacSignature(identifier, signature, secret)).toBe(true);
     });
 
     it('should strip sha256= prefix during verification', () => {
       const signature = service.generateHmacSignature(identifier, secret);
-      assert.strictEqual(
-        service.verifyHmacSignature(identifier, `sha256=${signature}`, secret),
-        true,
-      );
+      expect(service.verifyHmacSignature(identifier, `sha256=${signature}`, secret)).toBe(true);
     });
 
     it('should return false for mismatched signature or secret', () => {
       const signature = service.generateHmacSignature(identifier, secret);
-      assert.strictEqual(service.verifyHmacSignature(identifier, 'invalid_sig', secret), false);
-      assert.strictEqual(service.verifyHmacSignature(identifier, signature, 'wrong_secret'), false);
-      assert.strictEqual(service.verifyHmacSignature('different_user', signature, secret), false);
+      expect(service.verifyHmacSignature(identifier, 'invalid_sig', secret)).toBe(false);
+      expect(service.verifyHmacSignature(identifier, signature, 'wrong_secret')).toBe(false);
+      expect(service.verifyHmacSignature('different_user', signature, secret)).toBe(false);
     });
 
     it('should return false when arguments are missing or empty', () => {
-      assert.strictEqual(service.verifyHmacSignature('', 'sig', secret), false);
-      assert.strictEqual(service.verifyHmacSignature(identifier, '', secret), false);
-      assert.strictEqual(service.verifyHmacSignature(identifier, 'sig', ''), false);
+      expect(service.verifyHmacSignature('', 'sig', secret)).toBe(false);
+      expect(service.verifyHmacSignature(identifier, '', secret)).toBe(false);
+      expect(service.verifyHmacSignature(identifier, 'sig', '')).toBe(false);
     });
   });
 });

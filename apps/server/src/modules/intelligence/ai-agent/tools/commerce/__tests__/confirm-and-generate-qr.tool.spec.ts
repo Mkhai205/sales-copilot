@@ -1,5 +1,3 @@
-import { describe, it, beforeEach } from 'node:test';
-import * as assert from 'node:assert';
 import { OrderStatus } from '@sales-copilot/shared-contracts';
 import { createConfirmAndGenerateQrTool } from '../confirm-and-generate-qr.tool';
 
@@ -112,16 +110,16 @@ describe('confirmAndGenerateQR Tool (T7)', () => {
 
     const result = await tool.execute!({ orderId: 'ord-draft' }, {} as any);
 
-    assert.strictEqual(confirmCalls.length, 1);
-    assert.strictEqual(confirmCalls[0], 'ord-draft');
-    assert.strictEqual(result.orderId, 'ord-draft');
-    assert.strictEqual(result.displayId, 1042);
-    assert.strictEqual(result.bankName, 'MBBank');
-    assert.ok(result.qrImageUrl.includes('img.vietqr.io'));
+    expect(confirmCalls.length).toBe(1);
+    expect(confirmCalls[0]).toBe('ord-draft');
+    expect(result.orderId).toBe('ord-draft');
+    expect(result.displayId).toBe(1042);
+    expect(result.bankName).toBe('MBBank');
+    expect(result.qrImageUrl.includes('img.vietqr.io')).toBeTruthy();
 
     // Check that interactive card message was dispatched
-    assert.strictEqual(sentMessages.length, 1);
-    assert.strictEqual(sentMessages[0].metadata?.type, 'VIETQR_PAYMENT');
+    expect(sentMessages.length).toBe(1);
+    expect(sentMessages[0].metadata?.type).toBe('VIETQR_PAYMENT');
   });
 
   it('should be idempotent and skip confirmOrder if already CONFIRMED', async () => {
@@ -137,9 +135,9 @@ describe('confirmAndGenerateQR Tool (T7)', () => {
     const result = await tool.execute!({ orderId: 'ord-confirmed' }, {} as any);
 
     // confirmOrder should NOT have been called again (avoid double-reserving stock!)
-    assert.strictEqual(confirmCalls.length, 0);
-    assert.strictEqual(result.orderId, 'ord-confirmed');
-    assert.strictEqual(result.displayId, 1043);
+    expect(confirmCalls.length).toBe(0);
+    expect(result.orderId).toBe('ord-confirmed');
+    expect(result.displayId).toBe(1043);
   });
 
   it('should reject when order is already PAID', async () => {
@@ -153,7 +151,7 @@ describe('confirmAndGenerateQR Tool (T7)', () => {
     });
 
     const result = await tool.execute!({ orderId: 'ord-paid' }, {} as any);
-    assert.strictEqual(result.error, 'ORDER_ALREADY_PAID');
+    expect(result.error).toBe('ORDER_ALREADY_PAID');
   });
 
   it('should reject when order is not found in workspace', async () => {
@@ -166,6 +164,6 @@ describe('confirmAndGenerateQR Tool (T7)', () => {
     });
 
     const result = await tool.execute!({ orderId: 'non-existent' }, {} as any);
-    assert.strictEqual(result.error, 'ORDER_NOT_FOUND');
+    expect(result.error).toBe('ORDER_NOT_FOUND');
   });
 });

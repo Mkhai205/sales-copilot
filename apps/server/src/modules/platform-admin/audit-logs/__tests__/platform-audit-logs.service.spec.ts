@@ -1,5 +1,4 @@
-import { describe, it, beforeEach } from 'node:test';
-import * as assert from 'node:assert';
+import { expectReject } from '../../../../../test/test-assertions';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { PlatformAuditAction, PlatformAuditTargetType } from '@sales-copilot/shared-contracts';
 import {
@@ -122,38 +121,38 @@ describe('PlatformAuditLogsService (Super Admin Security Tracing)', () => {
   describe('getAuditLogs', () => {
     it('should return paginated audit logs ordered descending by createdAt', async () => {
       const res = await service.getAuditLogs({});
-      assert.strictEqual(res.items.length, 3);
-      assert.strictEqual(res.meta.total, 3);
-      assert.strictEqual(res.meta.page, 1);
-      assert.strictEqual(res.meta.limit, 20);
-      assert.strictEqual(res.meta.totalPages, 1);
+      expect(res.items.length).toBe(3);
+      expect(res.meta.total).toBe(3);
+      expect(res.meta.page).toBe(1);
+      expect(res.meta.limit).toBe(20);
+      expect(res.meta.totalPages).toBe(1);
       // Descending order: log_3 (March 10), log_2 (March 5), log_1 (March 1)
-      assert.strictEqual(res.items[0].id, 'log_3');
-      assert.strictEqual(res.items[1].id, 'log_2');
-      assert.strictEqual(res.items[2].id, 'log_1');
+      expect(res.items[0].id).toBe('log_3');
+      expect(res.items[1].id).toBe('log_2');
+      expect(res.items[2].id).toBe('log_1');
     });
 
     it('should paginate correctly with custom page and limit', async () => {
       const res = await service.getAuditLogs({ page: 2, limit: 1 });
-      assert.strictEqual(res.items.length, 1);
-      assert.strictEqual(res.items[0].id, 'log_2');
-      assert.strictEqual(res.meta.page, 2);
-      assert.strictEqual(res.meta.limit, 1);
-      assert.strictEqual(res.meta.total, 3);
-      assert.strictEqual(res.meta.totalPages, 3);
+      expect(res.items.length).toBe(1);
+      expect(res.items[0].id).toBe('log_2');
+      expect(res.meta.page).toBe(2);
+      expect(res.meta.limit).toBe(1);
+      expect(res.meta.total).toBe(3);
+      expect(res.meta.totalPages).toBe(3);
     });
 
     it('should clamp invalid pagination inputs safely', async () => {
       const res = await service.getAuditLogs({ page: -5, limit: 500 });
-      assert.strictEqual(res.meta.page, 1);
-      assert.strictEqual(res.meta.limit, 100);
+      expect(res.meta.page).toBe(1);
+      expect(res.meta.limit).toBe(100);
     });
 
     it('should filter logs by action', async () => {
       const res = await service.getAuditLogs({ action: PlatformAuditAction.WORKSPACE_SUSPENDED });
-      assert.strictEqual(res.items.length, 1);
-      assert.strictEqual(res.items[0].id, 'log_1');
-      assert.strictEqual(res.items[0].action, PlatformAuditAction.WORKSPACE_SUSPENDED);
+      expect(res.items.length).toBe(1);
+      expect(res.items[0].id).toBe('log_1');
+      expect(res.items[0].action).toBe(PlatformAuditAction.WORKSPACE_SUSPENDED);
     });
 
     it('should filter logs by targetType and targetId', async () => {
@@ -161,16 +160,16 @@ describe('PlatformAuditLogsService (Super Admin Security Tracing)', () => {
         targetType: PlatformAuditTargetType.WORKSPACE,
         targetId: 'ws_beta',
       });
-      assert.strictEqual(res.items.length, 1);
-      assert.strictEqual(res.items[0].id, 'log_2');
-      assert.strictEqual(res.items[0].targetId, 'ws_beta');
+      expect(res.items.length).toBe(1);
+      expect(res.items[0].id).toBe('log_2');
+      expect(res.items[0].targetId).toBe('ws_beta');
     });
 
     it('should filter logs by actorEmail (case-insensitive substring)', async () => {
       const res = await service.getAuditLogs({ actorEmail: 'SECURITY' });
-      assert.strictEqual(res.items.length, 1);
-      assert.strictEqual(res.items[0].id, 'log_2');
-      assert.strictEqual(res.items[0].actorEmail, 'security@platform.com');
+      expect(res.items.length).toBe(1);
+      expect(res.items[0].id).toBe('log_2');
+      expect(res.items[0].actorEmail).toBe('security@platform.com');
     });
 
     it('should filter logs by date range (startDate and endDate)', async () => {
@@ -178,8 +177,8 @@ describe('PlatformAuditLogsService (Super Admin Security Tracing)', () => {
         startDate: '2026-03-02T00:00:00Z',
         endDate: '2026-03-06T23:59:59Z',
       });
-      assert.strictEqual(res.items.length, 1);
-      assert.strictEqual(res.items[0].id, 'log_2');
+      expect(res.items.length).toBe(1);
+      expect(res.items[0].id).toBe('log_2');
     });
 
     it('should expand plain YYYY-MM-DD endDate to end of day and capture events created on endDate', async () => {
@@ -189,43 +188,43 @@ describe('PlatformAuditLogsService (Super Admin Security Tracing)', () => {
         startDate: '2026-03-05',
         endDate: '2026-03-05',
       });
-      assert.strictEqual(res.items.length, 1);
-      assert.strictEqual(res.items[0].id, 'log_2');
+      expect(res.items.length).toBe(1);
+      expect(res.items[0].id).toBe('log_2');
     });
   });
 
   describe('getAuditLogById', () => {
     it('should return log entry when found', async () => {
       const log = await service.getAuditLogById('log_1');
-      assert.strictEqual(log.id, 'log_1');
-      assert.strictEqual(log.actorEmail, 'admin@platform.com');
-      assert.strictEqual(log.action, PlatformAuditAction.WORKSPACE_SUSPENDED);
-      assert.deepStrictEqual(log.metadata, { reason: 'Terms violation' });
+      expect(log.id).toBe('log_1');
+      expect(log.actorEmail).toBe('admin@platform.com');
+      expect(log.action).toBe(PlatformAuditAction.WORKSPACE_SUSPENDED);
+      expect(log.metadata).toEqual({ reason: 'Terms violation' });
     });
 
     it('should throw NotFoundException when log entry is not found', async () => {
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.getAuditLogById('non_existent_id');
         },
         (err: any) => {
-          assert.ok(err instanceof NotFoundException);
+          expect(err instanceof NotFoundException).toBeTruthy();
           const response = err.getResponse() as Record<string, unknown>;
-          assert.strictEqual(response?.code, 'AUDIT_LOG_NOT_FOUND');
+          expect(response?.code).toBe('AUDIT_LOG_NOT_FOUND');
           return true;
         },
       );
     });
 
     it('should throw NotFoundException when id is empty or whitespace', async () => {
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.getAuditLogById('   ');
         },
         (err: any) => {
-          assert.ok(err instanceof NotFoundException);
+          expect(err instanceof NotFoundException).toBeTruthy();
           const response = err.getResponse() as Record<string, unknown>;
-          assert.strictEqual(response?.code, 'AUDIT_LOG_NOT_FOUND');
+          expect(response?.code).toBe('AUDIT_LOG_NOT_FOUND');
           return true;
         },
       );
@@ -246,11 +245,11 @@ describe('PlatformAuditLogsService (Super Admin Security Tracing)', () => {
       };
 
       const created = await service.logAction(entry);
-      assert.ok(created.id);
-      assert.strictEqual(created.actorEmail, 'superadmin@salescopilot.io');
-      assert.strictEqual(created.action, PlatformAuditAction.QUOTA_UPDATED);
-      assert.strictEqual(created.targetId, 'ws_gamma');
-      assert.deepStrictEqual(created.metadata, { maxAgents: 10 });
+      expect(created.id).toBeTruthy();
+      expect(created.actorEmail).toBe('superadmin@salescopilot.io');
+      expect(created.action).toBe(PlatformAuditAction.QUOTA_UPDATED);
+      expect(created.targetId).toBe('ws_gamma');
+      expect(created.metadata).toEqual({ maxAgents: 10 });
     });
 
     it('should create audit log entry inside explicit transaction client', async () => {
@@ -275,13 +274,13 @@ describe('PlatformAuditLogsService (Super Admin Security Tracing)', () => {
       };
 
       const created = await service.logAction(entry, mockTx);
-      assert.strictEqual(created.id, 'log_tx_1');
-      assert.strictEqual(txLogs.length, 1);
-      assert.strictEqual(txLogs[0].targetId, 'ws_delta');
+      expect(created.id).toBe('log_tx_1');
+      expect(txLogs.length).toBe(1);
+      expect(txLogs[0].targetId).toBe('ws_delta');
     });
 
     it('should throw BadRequestException when mandatory fields are missing', async () => {
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.logAction({
             actorId: '',
@@ -291,9 +290,9 @@ describe('PlatformAuditLogsService (Super Admin Security Tracing)', () => {
           });
         },
         (err: any) => {
-          assert.ok(err instanceof BadRequestException);
+          expect(err instanceof BadRequestException).toBeTruthy();
           const response = err.getResponse() as Record<string, unknown>;
-          assert.strictEqual(response?.code, 'INVALID_AUDIT_LOG_ENTRY');
+          expect(response?.code).toBe('INVALID_AUDIT_LOG_ENTRY');
           return true;
         },
       );

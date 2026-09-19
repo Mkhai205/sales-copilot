@@ -1,5 +1,4 @@
-import { describe, it, beforeEach } from 'node:test';
-import * as assert from 'node:assert';
+import { expectReject } from '../../../../../../test/test-assertions';
 import { Job } from 'bullmq';
 import {
   DEFAULT_COMMENT_GUARD_PRIVATE_REPLY,
@@ -225,42 +224,42 @@ describe('CommentGuardProcessor', () => {
 
     const result = await processor.process(job);
 
-    assert.strictEqual(result.success, true);
-    assert.strictEqual(result.commentId, '123456_789012');
-    assert.strictEqual(result.phoneExtracted, '0912345678');
-    assert.strictEqual(result.hidden, true);
-    assert.strictEqual(result.privateReplyId, 'm_pr_123456_789012');
-    assert.strictEqual(result.publicReplyId, 'c_reply_123456_789012');
+    expect(result.success).toBe(true);
+    expect(result.commentId).toBe('123456_789012');
+    expect(result.phoneExtracted).toBe('0912345678');
+    expect(result.hidden).toBe(true);
+    expect(result.privateReplyId).toBe('m_pr_123456_789012');
+    expect(result.publicReplyId).toBe('c_reply_123456_789012');
 
     // 1. Hide comment called
-    assert.strictEqual(hideCommentCalls.length, 1);
-    assert.strictEqual(hideCommentCalls[0].commentId, '123456_789012');
+    expect(hideCommentCalls.length).toBe(1);
+    expect(hideCommentCalls[0].commentId).toBe('123456_789012');
 
     // 2. Private reply sent with custom template
-    assert.strictEqual(sendPrivateReplyCalls.length, 1);
-    assert.strictEqual(sendPrivateReplyCalls[0].commentId, '123456_789012');
-    assert.strictEqual(sendPrivateReplyCalls[0].message, 'Custom private reply');
+    expect(sendPrivateReplyCalls.length).toBe(1);
+    expect(sendPrivateReplyCalls[0].commentId).toBe('123456_789012');
+    expect(sendPrivateReplyCalls[0].message).toBe('Custom private reply');
 
     // 3. Public comment reply posted with custom template
-    assert.strictEqual(sendPublicCommentReplyCalls.length, 1);
-    assert.strictEqual(sendPublicCommentReplyCalls[0].commentId, '123456_789012');
-    assert.strictEqual(sendPublicCommentReplyCalls[0].message, 'Custom public reply');
+    expect(sendPublicCommentReplyCalls.length).toBe(1);
+    expect(sendPublicCommentReplyCalls[0].commentId).toBe('123456_789012');
+    expect(sendPublicCommentReplyCalls[0].message).toBe('Custom public reply');
 
     // 4. Contact resolved with phone number
     const contact = contactsDb.get('contact_psid_user_99');
-    assert.ok(contact);
-    assert.strictEqual(contact.phoneNumber, '0912345678');
+    expect(contact).toBeTruthy();
+    expect(contact.phoneNumber).toBe('0912345678');
 
     // 5. Message created
-    assert.strictEqual(messagesDb.length, 1);
-    assert.strictEqual(messagesDb[0].content, jobData.message);
-    assert.strictEqual(messagesDb[0].senderType, SenderType.CONTACT);
-    assert.strictEqual(messagesDb[0].metadata.source, 'comment_guard');
-    assert.strictEqual(messagesDb[0].metadata.extractedPhone, '0912345678');
+    expect(messagesDb.length).toBe(1);
+    expect(messagesDb[0].content).toBe(jobData.message);
+    expect(messagesDb[0].senderType).toBe(SenderType.CONTACT);
+    expect(messagesDb[0].metadata.source).toBe('comment_guard');
+    expect(messagesDb[0].metadata.extractedPhone).toBe('0912345678');
 
     // 6. ChannelEvent marked processed
     const evt = channelEventsDb.get('evt_cg_1');
-    assert.ok(evt.processedAt);
+    expect(evt.processedAt).toBeTruthy();
   });
 
   it('should support default templates when custom templates are not configured', async () => {
@@ -289,8 +288,8 @@ describe('CommentGuardProcessor', () => {
     const job = { id: 'job_2', data: jobData } as Job<CommentGuardJobData>;
     await processor.process(job);
 
-    assert.strictEqual(sendPrivateReplyCalls[0].message, DEFAULT_COMMENT_GUARD_PRIVATE_REPLY);
-    assert.strictEqual(sendPublicCommentReplyCalls[0].message, DEFAULT_COMMENT_GUARD_PUBLIC_REPLY);
+    expect(sendPrivateReplyCalls[0].message).toBe(DEFAULT_COMMENT_GUARD_PRIVATE_REPLY);
+    expect(sendPublicCommentReplyCalls[0].message).toBe(DEFAULT_COMMENT_GUARD_PUBLIC_REPLY);
   });
 
   it('should fail-safe proceed when hideComment throws permission or API error', async () => {
@@ -312,14 +311,14 @@ describe('CommentGuardProcessor', () => {
     const job = { id: 'job_3', data: jobData } as Job<CommentGuardJobData>;
     const result = await processor.process(job);
 
-    assert.strictEqual(result.success, true);
-    assert.strictEqual(result.hidden, false);
+    expect(result.success).toBe(true);
+    expect(result.hidden).toBe(false);
     // Private reply & public reply should still execute!
-    assert.strictEqual(sendPrivateReplyCalls.length, 1);
-    assert.strictEqual(sendPublicCommentReplyCalls.length, 1);
+    expect(sendPrivateReplyCalls.length).toBe(1);
+    expect(sendPublicCommentReplyCalls.length).toBe(1);
     // Message should still be created
-    assert.strictEqual(messagesDb.length, 1);
-    assert.strictEqual(messagesDb[0].metadata.hidden, false);
+    expect(messagesDb.length).toBe(1);
+    expect(messagesDb[0].metadata.hidden).toBe(false);
   });
 
   it('should skip job when no phone number is found in comment text', async () => {
@@ -336,12 +335,12 @@ describe('CommentGuardProcessor', () => {
     const job = { id: 'job_4', data: jobData } as Job<CommentGuardJobData>;
     const result = await processor.process(job);
 
-    assert.strictEqual(result.skipped, true);
-    assert.strictEqual(result.reason, 'NO_PHONE_DETECTED');
-    assert.strictEqual(hideCommentCalls.length, 0);
-    assert.strictEqual(sendPrivateReplyCalls.length, 0);
-    assert.strictEqual(sendPublicCommentReplyCalls.length, 0);
-    assert.strictEqual(messagesDb.length, 0);
+    expect(result.skipped).toBe(true);
+    expect(result.reason).toBe('NO_PHONE_DETECTED');
+    expect(hideCommentCalls.length).toBe(0);
+    expect(sendPrivateReplyCalls.length).toBe(0);
+    expect(sendPublicCommentReplyCalls.length).toBe(0);
+    expect(messagesDb.length).toBe(0);
   });
 
   it('should skip job when Comment Guard is disabled on channel', async () => {
@@ -367,9 +366,9 @@ describe('CommentGuardProcessor', () => {
     const job = { id: 'job_5', data: jobData } as Job<CommentGuardJobData>;
     const result = await processor.process(job);
 
-    assert.strictEqual(result.skipped, true);
-    assert.strictEqual(result.reason, 'GUARD_DISABLED');
-    assert.strictEqual(hideCommentCalls.length, 0);
+    expect(result.skipped).toBe(true);
+    expect(result.reason).toBe('GUARD_DISABLED');
+    expect(hideCommentCalls.length).toBe(0);
   });
 
   it('should not post public reply when publicReplyEnabled is false', async () => {
@@ -396,12 +395,12 @@ describe('CommentGuardProcessor', () => {
     const job = { id: 'job_6', data: jobData } as Job<CommentGuardJobData>;
     const result = await processor.process(job);
 
-    assert.strictEqual(result.success, true);
-    assert.strictEqual(result.phoneExtracted, '0901234567');
-    assert.strictEqual(hideCommentCalls.length, 1);
-    assert.strictEqual(sendPrivateReplyCalls.length, 1);
-    assert.strictEqual(sendPublicCommentReplyCalls.length, 0);
-    assert.strictEqual(result.publicReplyId, undefined);
+    expect(result.success).toBe(true);
+    expect(result.phoneExtracted).toBe('0901234567');
+    expect(hideCommentCalls.length).toBe(1);
+    expect(sendPrivateReplyCalls.length).toBe(1);
+    expect(sendPublicCommentReplyCalls.length).toBe(0);
+    expect(result.publicReplyId).toBe(undefined);
   });
 
   it('should handle channels not found gracefully with skipped: true', async () => {
@@ -418,8 +417,8 @@ describe('CommentGuardProcessor', () => {
     const job = { id: 'job_7', data: jobData } as Job<CommentGuardJobData>;
     const result = await processor.process(job);
 
-    assert.strictEqual(result.skipped, true);
-    assert.strictEqual(result.reason, 'CHANNEL_NOT_FOUND');
+    expect(result.skipped).toBe(true);
+    expect(result.reason).toBe('CHANNEL_NOT_FOUND');
   });
 
   it('should rethrow FacebookRateLimitError when hideComment encounters HTTP 429 for BullMQ retry', async () => {
@@ -439,13 +438,13 @@ describe('CommentGuardProcessor', () => {
 
     const job = { id: 'job_rl_1', data: jobData } as Job<CommentGuardJobData>;
 
-    await assert.rejects(
+    await expectReject(
       async () => {
         await processor.process(job);
       },
       (err: any) => {
-        assert.ok(err instanceof FacebookRateLimitError);
-        assert.strictEqual(err.status, 429);
+        expect(err instanceof FacebookRateLimitError).toBeTruthy();
+        expect(err.status).toBe(429);
         return true;
       },
     );
@@ -468,13 +467,13 @@ describe('CommentGuardProcessor', () => {
 
     const job = { id: 'job_rl_2', data: jobData } as Job<CommentGuardJobData>;
 
-    await assert.rejects(
+    await expectReject(
       async () => {
         await processor.process(job);
       },
       (err: any) => {
-        assert.ok(err instanceof FacebookRateLimitError);
-        assert.strictEqual(err.status, 429);
+        expect(err instanceof FacebookRateLimitError).toBeTruthy();
+        expect(err.status).toBe(429);
         return true;
       },
     );
@@ -495,10 +494,10 @@ describe('CommentGuardProcessor', () => {
     const job = { id: 'job_edit_1', data: jobData } as Job<CommentGuardJobData>;
     const result = await processor.process(job);
 
-    assert.strictEqual(result.success, true);
-    assert.strictEqual(result.phoneExtracted, '0912345678');
-    assert.strictEqual(messagesDb.length, 1);
-    assert.strictEqual(messagesDb[0].metadata.verb, 'edited');
-    assert.ok(messagesDb[0].externalId.startsWith('fb_comment_comm_edited_1_edit_'));
+    expect(result.success).toBe(true);
+    expect(result.phoneExtracted).toBe('0912345678');
+    expect(messagesDb.length).toBe(1);
+    expect(messagesDb[0].metadata.verb).toBe('edited');
+    expect(messagesDb[0].externalId.startsWith('fb_comment_comm_edited_1_edit_')).toBeTruthy();
   });
 });

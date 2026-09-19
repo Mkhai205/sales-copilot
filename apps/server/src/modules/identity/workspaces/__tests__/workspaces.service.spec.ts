@@ -1,5 +1,4 @@
-import { describe, it, beforeEach } from 'node:test';
-import * as assert from 'node:assert';
+import { assertDefined, expectReject } from '../../../../../test/test-assertions';
 import { BillingPlanType, WorkspaceRole } from '@sales-copilot/shared-contracts';
 import { WorkspacesService } from '../workspaces.service';
 import { PrismaService } from '../../../../infrastructure/database';
@@ -258,16 +257,16 @@ describe('WorkspacesService (Provisioning, Tenant Queries & Member RBAC)', () =>
         name: 'Beta Global Tech',
       });
 
-      assert.ok(result.id);
-      assert.strictEqual(result.name, 'Beta Global Tech');
-      assert.strictEqual(result.slug, 'beta-global-tech');
-      assert.strictEqual(result.billingPlan, BillingPlanType.FREE);
-      assert.strictEqual(result.timezone, 'Asia/Ho_Chi_Minh');
-      assert.strictEqual(result.defaultLanguage, 'vi');
+      assertDefined(result.id);
+      expect(result.name).toBe('Beta Global Tech');
+      expect(result.slug).toBe('beta-global-tech');
+      expect(result.billingPlan).toBe(BillingPlanType.FREE);
+      expect(result.timezone).toBe('Asia/Ho_Chi_Minh');
+      expect(result.defaultLanguage).toBe('vi');
 
       const member = await service.findMember(result.id, 'usr_new_creator');
-      assert.ok(member);
-      assert.strictEqual(member.role, WorkspaceRole.OWNER);
+      assertDefined(member);
+      expect(member.role).toBe(WorkspaceRole.OWNER);
     });
 
     it('should resolve slug collision when creating workspace with existing slug', async () => {
@@ -275,38 +274,38 @@ describe('WorkspacesService (Provisioning, Tenant Queries & Member RBAC)', () =>
         name: 'Alpha Corp',
       });
 
-      assert.ok(result.id);
-      assert.strictEqual(result.slug, 'alpha-corp-2');
+      assertDefined(result.id);
+      expect(result.slug).toBe('alpha-corp-2');
     });
 
     it('should list all workspaces user belongs to with their roles', async () => {
       const workspaces = await service.findWorkspacesByUserId('usr_owner_1');
 
-      assert.strictEqual(workspaces.length, 1);
-      assert.strictEqual(workspaces[0].id, 'ws_test_1');
-      assert.strictEqual(workspaces[0].name, 'Alpha Corp');
-      assert.strictEqual(workspaces[0].role, WorkspaceRole.OWNER);
+      expect(workspaces.length).toBe(1);
+      expect(workspaces[0].id).toBe('ws_test_1');
+      expect(workspaces[0].name).toBe('Alpha Corp');
+      expect(workspaces[0].role).toBe(WorkspaceRole.OWNER);
     });
 
     it('should return empty list for user with no workspaces', async () => {
       const workspaces = await service.findWorkspacesByUserId('usr_without_workspaces');
-      assert.deepStrictEqual(workspaces, []);
+      expect(workspaces).toEqual([]);
     });
 
     it('should get workspace by id successfully (via context accessor)', async () => {
       const ws = await service.getWorkspaceForContext('ws_test_1');
-      assert.strictEqual(ws.id, 'ws_test_1');
-      assert.strictEqual(ws.name, 'Alpha Corp');
-      assert.strictEqual(ws.slug, 'alpha-corp');
+      expect(ws.id).toBe('ws_test_1');
+      expect(ws.name).toBe('Alpha Corp');
+      expect(ws.slug).toBe('alpha-corp');
     });
 
     it('should throw NotFoundException when getting non-existent workspace', async () => {
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.getWorkspaceForContext('ws_non_existent');
         },
         (err: any) => {
-          assert.strictEqual(err.response?.code, 'WORKSPACE_NOT_FOUND');
+          expect(err.response?.code).toBe('WORKSPACE_NOT_FOUND');
           return true;
         },
       );
@@ -319,20 +318,20 @@ describe('WorkspacesService (Provisioning, Tenant Queries & Member RBAC)', () =>
         defaultLanguage: 'en',
       });
 
-      assert.strictEqual(updated.name, 'Alpha Corp Renamed');
-      assert.strictEqual(updated.timezone, 'UTC');
-      assert.strictEqual(updated.defaultLanguage, 'en');
+      expect(updated.name).toBe('Alpha Corp Renamed');
+      expect(updated.timezone).toBe('UTC');
+      expect(updated.defaultLanguage).toBe('en');
     });
 
     it('should throw NotFoundException when updating non-existent workspace', async () => {
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.updateWorkspace('ws_non_existent', {
             name: 'Does Not Exist',
           });
         },
         (err: any) => {
-          assert.strictEqual(err.response?.code, 'WORKSPACE_NOT_FOUND');
+          expect(err.response?.code).toBe('WORKSPACE_NOT_FOUND');
           return true;
         },
       );
@@ -343,14 +342,14 @@ describe('WorkspacesService (Provisioning, Tenant Queries & Member RBAC)', () =>
     it('should list all members of a workspace with their user profile info', async () => {
       const members = await service.findMembersByWorkspaceId('ws_test_1');
 
-      assert.strictEqual(members.length, 1);
-      assert.strictEqual(members[0].id, 'wm_test_1');
-      assert.strictEqual(members[0].userId, 'usr_owner_1');
-      assert.strictEqual(members[0].role, WorkspaceRole.OWNER);
-      assert.ok(members[0].user);
-      assert.strictEqual(members[0].user?.email, 'owner@alphacorp.com');
-      assert.strictEqual(members[0].user?.name, 'Owner User');
-      assert.strictEqual(members[0].user?.avatarUrl, 'https://avatar.com/owner.png');
+      expect(members.length).toBe(1);
+      expect(members[0].id).toBe('wm_test_1');
+      expect(members[0].userId).toBe('usr_owner_1');
+      expect(members[0].role).toBe(WorkspaceRole.OWNER);
+      expect(members[0].user).toBeTruthy();
+      expect(members[0].user?.email).toBe('owner@alphacorp.com');
+      expect(members[0].user?.name).toBe('Owner User');
+      expect(members[0].user?.avatarUrl).toBe('https://avatar.com/owner.png');
     });
 
     it('should add an existing user by email as AGENT successfully', async () => {
@@ -364,12 +363,12 @@ describe('WorkspacesService (Provisioning, Tenant Queries & Member RBAC)', () =>
         },
       );
 
-      assert.ok(member.id);
-      assert.strictEqual(member.workspaceId, 'ws_test_1');
-      assert.strictEqual(member.userId, 'usr_agent_1');
-      assert.strictEqual(member.role, WorkspaceRole.AGENT);
-      assert.strictEqual(member.user?.email, 'agent@alphacorp.com');
-      assert.strictEqual(member.user?.name, 'Agent User');
+      assertDefined(member.id);
+      expect(member.workspaceId).toBe('ws_test_1');
+      expect(member.userId).toBe('usr_agent_1');
+      expect(member.role).toBe(WorkspaceRole.AGENT);
+      expect(member.user?.email).toBe('agent@alphacorp.com');
+      expect(member.user?.name).toBe('Agent User');
     });
 
     it('should auto-provision user account when adding non-existent user email (TASK-3A-05)', async () => {
@@ -383,14 +382,14 @@ describe('WorkspacesService (Provisioning, Tenant Queries & Member RBAC)', () =>
         },
       );
 
-      assert.ok(member.id);
-      assert.strictEqual(member.user?.email, 'unknown@external.com');
-      assert.strictEqual(member.user?.name, 'unknown');
-      assert.strictEqual(member.role, WorkspaceRole.AGENT);
+      assertDefined(member.id);
+      expect(member.user?.email).toBe('unknown@external.com');
+      expect(member.user?.name).toBe('unknown');
+      expect(member.role).toBe(WorkspaceRole.AGENT);
     });
 
     it('should throw BadRequestException (USER_INACTIVE) when adding deactivated user', async () => {
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.addMemberByEmail('ws_test_1', 'usr_owner_1', WorkspaceRole.OWNER, {
             email: 'inactive@alphacorp.com',
@@ -398,14 +397,14 @@ describe('WorkspacesService (Provisioning, Tenant Queries & Member RBAC)', () =>
           });
         },
         (err: any) => {
-          assert.strictEqual(err.response?.code, 'USER_INACTIVE');
+          expect(err.response?.code).toBe('USER_INACTIVE');
           return true;
         },
       );
     });
 
     it('should throw ConflictException (MEMBER_ALREADY_EXISTS) when user is already a member', async () => {
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.addMemberByEmail('ws_test_1', 'usr_owner_1', WorkspaceRole.OWNER, {
             email: 'owner@alphacorp.com',
@@ -413,7 +412,7 @@ describe('WorkspacesService (Provisioning, Tenant Queries & Member RBAC)', () =>
           });
         },
         (err: any) => {
-          assert.strictEqual(err.response?.code, 'MEMBER_ALREADY_EXISTS');
+          expect(err.response?.code).toBe('MEMBER_ALREADY_EXISTS');
           return true;
         },
       );
@@ -442,12 +441,12 @@ describe('WorkspacesService (Provisioning, Tenant Queries & Member RBAC)', () =>
         },
       );
 
-      assert.strictEqual(updated.id, agentMember.id);
-      assert.strictEqual(updated.role, WorkspaceRole.ADMIN);
+      expect(updated.id).toBe(agentMember.id);
+      expect(updated.role).toBe(WorkspaceRole.ADMIN);
     });
 
     it('should throw NotFoundException (MEMBER_NOT_FOUND) when updating non-existent member', async () => {
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.updateMemberRole(
             'ws_test_1',
@@ -460,14 +459,14 @@ describe('WorkspacesService (Provisioning, Tenant Queries & Member RBAC)', () =>
           );
         },
         (err: any) => {
-          assert.strictEqual(err.response?.code, 'MEMBER_NOT_FOUND');
+          expect(err.response?.code).toBe('MEMBER_NOT_FOUND');
           return true;
         },
       );
     });
 
     it('should throw BadRequestException (CANNOT_DEMOTE_LAST_OWNER) when attempting to demote the only OWNER', async () => {
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.updateMemberRole(
             'ws_test_1',
@@ -480,14 +479,14 @@ describe('WorkspacesService (Provisioning, Tenant Queries & Member RBAC)', () =>
           );
         },
         (err: any) => {
-          assert.strictEqual(err.response?.code, 'CANNOT_DEMOTE_LAST_OWNER');
+          expect(err.response?.code).toBe('CANNOT_DEMOTE_LAST_OWNER');
           return true;
         },
       );
     });
 
     it('should throw ForbiddenException (CANNOT_MODIFY_OWNER) when ADMIN attempts to modify OWNER', async () => {
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.updateMemberRole(
             'ws_test_1',
@@ -500,7 +499,7 @@ describe('WorkspacesService (Provisioning, Tenant Queries & Member RBAC)', () =>
           );
         },
         (err: any) => {
-          assert.strictEqual(err.response?.code, 'CANNOT_MODIFY_OWNER');
+          expect(err.response?.code).toBe('CANNOT_MODIFY_OWNER');
           return true;
         },
       );
@@ -524,14 +523,14 @@ describe('WorkspacesService (Provisioning, Tenant Queries & Member RBAC)', () =>
         WorkspaceRole.OWNER,
       );
 
-      assert.deepStrictEqual(result, { success: true });
+      expect(result).toEqual({ success: true });
 
       const members = await service.findMembersByWorkspaceId('ws_test_1');
-      assert.strictEqual(members.length, 1); // Only owner left
+      expect(members.length).toBe(1); // Only owner left
     });
 
     it('should throw NotFoundException (MEMBER_NOT_FOUND) when removing non-existent member', async () => {
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.removeMember(
             'ws_test_1',
@@ -541,14 +540,14 @@ describe('WorkspacesService (Provisioning, Tenant Queries & Member RBAC)', () =>
           );
         },
         (err: any) => {
-          assert.strictEqual(err.response?.code, 'MEMBER_NOT_FOUND');
+          expect(err.response?.code).toBe('MEMBER_NOT_FOUND');
           return true;
         },
       );
     });
 
     it('should throw BadRequestException (CANNOT_REMOVE_LAST_OWNER) when attempting to remove the only OWNER', async () => {
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.removeMember(
             'ws_test_1',
@@ -558,14 +557,14 @@ describe('WorkspacesService (Provisioning, Tenant Queries & Member RBAC)', () =>
           );
         },
         (err: any) => {
-          assert.strictEqual(err.response?.code, 'CANNOT_REMOVE_LAST_OWNER');
+          expect(err.response?.code).toBe('CANNOT_REMOVE_LAST_OWNER');
           return true;
         },
       );
     });
 
     it('should throw ForbiddenException (CANNOT_REMOVE_OWNER) when ADMIN attempts to remove OWNER', async () => {
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.removeMember(
             'ws_test_1',
@@ -575,14 +574,14 @@ describe('WorkspacesService (Provisioning, Tenant Queries & Member RBAC)', () =>
           );
         },
         (err: any) => {
-          assert.strictEqual(err.response?.code, 'CANNOT_REMOVE_OWNER');
+          expect(err.response?.code).toBe('CANNOT_REMOVE_OWNER');
           return true;
         },
       );
     });
 
     it('should enforce tenant isolation (cannot access/modify members of another workspace)', async () => {
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.updateMemberRole(
             'ws_other_workspace',
@@ -595,7 +594,7 @@ describe('WorkspacesService (Provisioning, Tenant Queries & Member RBAC)', () =>
           );
         },
         (err: any) => {
-          assert.strictEqual(err.response?.code, 'MEMBER_NOT_FOUND');
+          expect(err.response?.code).toBe('MEMBER_NOT_FOUND');
           return true;
         },
       );
@@ -619,38 +618,38 @@ describe('WorkspacesService (Provisioning, Tenant Queries & Member RBAC)', () =>
       await service.removeMember('ws_test_1', member.id, 'usr_owner_1', WorkspaceRole.OWNER);
 
       const addedEvent = emittedEvents.find(e => e.event === 'workspace_member.added');
-      assert.ok(addedEvent);
-      assert.strictEqual(addedEvent.payload.workspaceId, 'ws_test_1');
-      assert.strictEqual(addedEvent.payload.role, WorkspaceRole.AGENT);
+      assertDefined(addedEvent);
+      expect(addedEvent.payload.workspaceId).toBe('ws_test_1');
+      expect(addedEvent.payload.role).toBe(WorkspaceRole.AGENT);
 
       const updatedEvent = emittedEvents.find(e => e.event === 'workspace_member.role_updated');
-      assert.ok(updatedEvent);
-      assert.strictEqual(updatedEvent.payload.newRole, WorkspaceRole.ADMIN);
+      assertDefined(updatedEvent);
+      expect(updatedEvent.payload.newRole).toBe(WorkspaceRole.ADMIN);
 
       const removedEvent = emittedEvents.find(e => e.event === 'workspace_member.removed');
-      assert.ok(removedEvent);
-      assert.strictEqual(removedEvent.payload.memberId, member.id);
+      assertDefined(removedEvent);
+      expect(removedEvent.payload.memberId).toBe(member.id);
     });
 
     it('should return true for isMember when user is an active workspace member (T10.6.1)', async () => {
       const isMember = await service.isMember('ws_test_1', 'usr_owner_1');
-      assert.strictEqual(isMember, true);
+      expect(isMember).toBe(true);
 
       const nonMember = await service.isMember('ws_test_1', 'usr_stranger');
-      assert.strictEqual(nonMember, false);
+      expect(nonMember).toBe(false);
     });
 
     it('should verify membership and throw ForbiddenException when user is not a member (T10.6.1)', async () => {
-      await assert.doesNotReject(async () => {
+      await await expect(async () => {
         await service.verifyMembership('ws_test_1', 'usr_owner_1');
-      });
+      }).resolves.not.toThrow();
 
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.verifyMembership('ws_test_1', 'usr_stranger');
         },
         (err: any) => {
-          assert.strictEqual(err.response?.code, 'FORBIDDEN');
+          expect(err.response?.code).toBe('FORBIDDEN');
           return true;
         },
       );

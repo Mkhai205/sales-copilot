@@ -1,5 +1,4 @@
-import { describe, it, beforeEach } from 'node:test';
-import * as assert from 'node:assert';
+import { assertDefined, expectReject } from '../../../../../test/test-assertions';
 import { ConversationStatus } from '@sales-copilot/shared-contracts';
 import { ContactsService } from '../contacts.service';
 import { PrismaService } from '../../../../infrastructure/database';
@@ -408,14 +407,14 @@ describe('ContactsService (Profile Management, Dynamic Attributes, Atomic Merge 
         customAttributes: { tier: 'gold' },
       });
 
-      assert.strictEqual(contact.name, 'Nguyen Van A');
-      assert.strictEqual(contact.email, 'van.a@example.com');
-      assert.strictEqual(contact.phoneNumber, '+84901234567');
-      assert.strictEqual((contact.customAttributes as any).tier, 'gold');
+      expect(contact.name).toBe('Nguyen Van A');
+      expect(contact.email).toBe('van.a@example.com');
+      expect(contact.phoneNumber).toBe('+84901234567');
+      expect((contact.customAttributes as any).tier).toBe('gold');
 
       const createdEvent = emittedEvents.find(e => e.event === 'contact.created');
-      assert.ok(createdEvent);
-      assert.strictEqual(createdEvent.payload.workspaceId, 'ws_alpha');
+      assertDefined(createdEvent);
+      expect(createdEvent.payload.workspaceId).toBe('ws_alpha');
     });
 
     it('should throw ConflictException if identifier already exists in same workspace', async () => {
@@ -424,7 +423,7 @@ describe('ContactsService (Profile Management, Dynamic Attributes, Atomic Merge 
         identifier: 'ID_100',
       });
 
-      await assert.rejects(
+      await expectReject(
         () =>
           service.create('ws_alpha', {
             name: 'User 2',
@@ -440,7 +439,7 @@ describe('ContactsService (Profile Management, Dynamic Attributes, Atomic Merge 
         email: 'test@example.com',
       });
 
-      await assert.rejects(
+      await expectReject(
         () =>
           service.create('ws_alpha', {
             name: 'User 2',
@@ -473,18 +472,18 @@ describe('ContactsService (Profile Management, Dynamic Attributes, Atomic Merge 
 
     it('should return contacts only for the requested workspace', async () => {
       const result = await service.findAll('ws_alpha', { page: 1, limit: 10 });
-      assert.strictEqual(result.items.length, 2);
-      assert.strictEqual(result.meta.total, 2);
+      expect(result.items.length).toBe(2);
+      expect(result.meta.total).toBe(2);
     });
 
     it('should search contacts across name, email, phone, and identifier', async () => {
       const byName = await service.search('ws_alpha', { q: 'Tran' });
-      assert.strictEqual(byName.items.length, 1);
-      assert.strictEqual(byName.items[0].name, 'Tran Thi B');
+      expect(byName.items.length).toBe(1);
+      expect(byName.items[0].name).toBe('Tran Thi B');
 
       const byPhone = await service.search('ws_alpha', { q: '090123' });
-      assert.strictEqual(byPhone.items.length, 1);
-      assert.strictEqual(byPhone.items[0].name, 'Nguyen Van A');
+      expect(byPhone.items.length).toBe(1);
+      expect(byPhone.items[0].name).toBe('Nguyen Van A');
     });
   });
 
@@ -492,8 +491,8 @@ describe('ContactsService (Profile Management, Dynamic Attributes, Atomic Merge 
     it('should find contact by ID', async () => {
       const created = await service.create('ws_alpha', { name: 'Direct Lookup' });
       const found = await service.findById('ws_alpha', created.id);
-      assert.strictEqual(found.id, created.id);
-      assert.strictEqual(found.name, 'Direct Lookup');
+      expect(found.id).toBe(created.id);
+      expect(found.name).toBe('Direct Lookup');
     });
 
     it('should deep merge customAttributes on update', async () => {
@@ -508,8 +507,8 @@ describe('ContactsService (Profile Management, Dynamic Attributes, Atomic Merge 
         additionalAttributes: { city: 'Hanoi' },
       });
 
-      assert.deepStrictEqual(updated.customAttributes, { a: 1, b: 20, c: 30 });
-      assert.deepStrictEqual(updated.additionalAttributes, { country: 'VN', city: 'Hanoi' });
+      expect(updated.customAttributes).toEqual({ a: 1, b: 20, c: 30 });
+      expect(updated.additionalAttributes).toEqual({ country: 'VN', city: 'Hanoi' });
     });
 
     it('should throw EMAIL_ALREADY_EXISTS when updating contact email to an existing email in same workspace', async () => {
@@ -523,7 +522,7 @@ describe('ContactsService (Profile Management, Dynamic Attributes, Atomic Merge 
         email: 'other@alphacorp.com',
       });
 
-      await assert.rejects(
+      await expectReject(
         () =>
           service.update('ws_alpha', contactB.id, {
             email: 'collision@alphacorp.com',
@@ -546,7 +545,7 @@ describe('ContactsService (Profile Management, Dynamic Attributes, Atomic Merge 
         throw err;
       };
 
-      await assert.rejects(
+      await expectReject(
         () =>
           service.update('ws_alpha', contact.id, {
             email: 'race2@alphacorp.com',
@@ -567,10 +566,7 @@ describe('ContactsService (Profile Management, Dynamic Attributes, Atomic Merge 
         contactId: created.id,
       });
 
-      await assert.rejects(
-        () => service.delete('ws_alpha', created.id),
-        /CONTACT_HAS_CONVERSATIONS/,
-      );
+      await expectReject(() => service.delete('ws_alpha', created.id), /CONTACT_HAS_CONVERSATIONS/);
     });
 
     it('should prevent deleting contact with existing orders', async () => {
@@ -581,17 +577,17 @@ describe('ContactsService (Profile Management, Dynamic Attributes, Atomic Merge 
         contactId: created.id,
       });
 
-      await assert.rejects(() => service.delete('ws_alpha', created.id), /CONTACT_HAS_ORDERS/);
+      await expectReject(() => service.delete('ws_alpha', created.id), /CONTACT_HAS_ORDERS/);
     });
 
     it('should delete contact and emit contact.deleted event', async () => {
       const created = await service.create('ws_alpha', { name: 'Lonely Contact' });
       const res = await service.delete('ws_alpha', created.id);
-      assert.strictEqual(res.success, true);
+      expect(res.success).toBe(true);
 
       const deletedEvent = emittedEvents.find(e => e.event === 'contact.deleted');
-      assert.ok(deletedEvent);
-      assert.strictEqual(deletedEvent.payload.contactId, created.id);
+      assertDefined(deletedEvent);
+      expect(deletedEvent.payload.contactId).toBe(created.id);
     });
   });
 
@@ -654,7 +650,7 @@ describe('ContactsService (Profile Management, Dynamic Attributes, Atomic Merge 
 
     it('should return base contact immediately for self-merge', async () => {
       const result = await service.merge('ws_alpha', baseContact.id, baseContact.id);
-      assert.strictEqual(result.id, baseContact.id);
+      expect(result.id).toBe(baseContact.id);
     });
 
     it('should atomically merge mergee into base, transferring identities, conversations, orders, and attributes', async () => {
@@ -662,42 +658,42 @@ describe('ContactsService (Profile Management, Dynamic Attributes, Atomic Merge 
         performedByUserId: 'usr_admin',
       });
 
-      assert.strictEqual(merged.id, baseContact.id);
-      assert.strictEqual(merged.name, 'Base Primary'); // Base name preserved
-      assert.strictEqual(merged.phoneNumber, '+84988888888'); // Mergee phone merged
-      assert.strictEqual((merged.customAttributes as any).plan, 'enterprise'); // Base attribute takes precedence
-      assert.strictEqual((merged.customAttributes as any).source, 'fb'); // Mergee attribute merged
-      assert.strictEqual((merged.additionalAttributes as any).city, 'Da Nang');
+      expect(merged.id).toBe(baseContact.id);
+      expect(merged.name).toBe('Base Primary'); // Base name preserved
+      expect(merged.phoneNumber).toBe('+84988888888'); // Mergee phone merged
+      expect((merged.customAttributes as any).plan).toBe('enterprise'); // Base attribute takes precedence
+      expect((merged.customAttributes as any).source).toBe('fb'); // Mergee attribute merged
+      expect((merged.additionalAttributes as any).city).toBe('Da Nang');
 
       // Check mergee contact deleted
-      assert.strictEqual(contactsDb.has(mergeeContact.id), false);
+      expect(contactsDb.has(mergeeContact.id)).toBe(false);
 
       // Check identity transferred
       const identity = identitiesDb.get('ident_mergee');
-      assert.strictEqual(identity.contactId, baseContact.id);
+      expect(identity.contactId).toBe(baseContact.id);
 
       // Check conversation transferred
       const conv = conversationsDb.get('conv_mergee_1');
-      assert.strictEqual(conv.contactId, baseContact.id);
+      expect(conv.contactId).toBe(baseContact.id);
 
       // Check message transferred
       const msg = messagesDb.get('msg_mergee_1');
-      assert.strictEqual(msg.senderId, baseContact.id);
+      expect(msg.senderId).toBe(baseContact.id);
 
       // Check orders transferred
       const order = ordersDb.get('ord_mergee_1');
-      assert.strictEqual(order.contactId, baseContact.id);
+      expect(order.contactId).toBe(baseContact.id);
 
       // Check audit log recorded
-      assert.strictEqual(auditLogsDb.length, 1);
-      assert.strictEqual(auditLogsDb[0].action, 'CONTACT_MERGED');
-      assert.strictEqual(auditLogsDb[0].userId, 'usr_admin');
+      expect(auditLogsDb.length).toBe(1);
+      expect(auditLogsDb[0].action).toBe('CONTACT_MERGED');
+      expect(auditLogsDb[0].userId).toBe('usr_admin');
 
       // Check contact.merged event emitted
       const mergeEvent = emittedEvents.find(e => e.event === 'contact.merged');
-      assert.ok(mergeEvent);
-      assert.strictEqual(mergeEvent.payload.primaryContactId, baseContact.id);
-      assert.strictEqual(mergeEvent.payload.mergedContactId, mergeeContact.id);
+      assertDefined(mergeEvent);
+      expect(mergeEvent.payload.primaryContactId).toBe(baseContact.id);
+      expect(mergeEvent.payload.mergedContactId).toBe(mergeeContact.id);
     });
   });
 
@@ -715,12 +711,12 @@ describe('ContactsService (Profile Management, Dynamic Attributes, Atomic Merge 
         username: 'John Doe',
       });
 
-      assert.strictEqual(identity.contactId, contact.id);
-      assert.strictEqual(identity.externalContactId, 'fb_psid_999');
+      expect(identity.contactId).toBe(contact.id);
+      expect(identity.externalContactId).toBe('fb_psid_999');
 
       const list = await service.findIdentitiesByContactId('ws_alpha', contact.id);
-      assert.strictEqual(list.length, 1);
-      assert.strictEqual(list[0].id, identity.id);
+      expect(list.length).toBe(1);
+      expect(list[0].id).toBe(identity.id);
     });
 
     it('should unlink channel identity and emit channel_identity.deleted', async () => {
@@ -730,11 +726,11 @@ describe('ContactsService (Profile Management, Dynamic Attributes, Atomic Merge 
       });
 
       const res = await service.unlinkIdentity('ws_alpha', contact.id, identity.id);
-      assert.strictEqual(res.success, true);
-      assert.strictEqual(identitiesDb.has(identity.id), false);
+      expect(res.success).toBe(true);
+      expect(identitiesDb.has(identity.id)).toBe(false);
 
       const unlinkedEvent = emittedEvents.find(e => e.event === 'channel_identity.deleted');
-      assert.ok(unlinkedEvent);
+      assertDefined(unlinkedEvent);
     });
   });
 });

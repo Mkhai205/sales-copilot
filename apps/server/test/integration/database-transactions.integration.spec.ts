@@ -1,5 +1,4 @@
-import { describe, it, before, after } from 'node:test';
-import * as assert from 'node:assert';
+import { expectReject } from '../test-assertions';
 import { Pool } from 'pg';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient, Prisma } from '../../src/infrastructure/database/generated/client';
@@ -15,7 +14,7 @@ describe('Database & Transaction Integration Tests (PostgreSQL — FINDING-P9-01
   let createdUserId: string;
   const createdWorkspaceIds: string[] = [];
 
-  before(async () => {
+  beforeAll(async () => {
     const databaseUrl = process.env.DATABASE_URL;
     if (!databaseUrl) {
       throw new Error('DATABASE_URL environment variable is required for integration tests');
@@ -38,7 +37,7 @@ describe('Database & Transaction Integration Tests (PostgreSQL — FINDING-P9-01
     createdUserId = user.id;
   });
 
-  after(async () => {
+  afterAll(async () => {
     try {
       // Cleanup all created workspaces (cascades related records)
       if (createdWorkspaceIds.length > 0) {
@@ -72,7 +71,7 @@ describe('Database & Transaction Integration Tests (PostgreSQL — FINDING-P9-01
     createdWorkspaceIds.push(ws1.id);
 
     // 2. Attempt to create second workspace with identical slug -> must fail with P2002
-    await assert.rejects(
+    await expectReject(
       async () => {
         await prisma.workspace.create({
           data: {
@@ -82,8 +81,8 @@ describe('Database & Transaction Integration Tests (PostgreSQL — FINDING-P9-01
         });
       },
       (err: any) => {
-        assert.strictEqual(err instanceof Prisma.PrismaClientKnownRequestError, true);
-        assert.strictEqual(err.code, 'P2002');
+        expect(err instanceof Prisma.PrismaClientKnownRequestError).toBe(true);
+        expect(err.code).toBe('P2002');
         return true;
       },
     );
@@ -125,8 +124,8 @@ describe('Database & Transaction Integration Tests (PostgreSQL — FINDING-P9-01
       }
     }
 
-    assert.ok(ws2);
-    assert.strictEqual(ws2.slug, `${slug}-2`);
+    expect(ws2).toBeTruthy();
+    expect(ws2.slug).toBe(`${slug}-2`);
   });
 
   it('should enforce multi-tenant isolation on contact identifiers across different workspaces', async () => {
@@ -159,14 +158,14 @@ describe('Database & Transaction Integration Tests (PostgreSQL — FINDING-P9-01
       },
     });
 
-    assert.ok(contactA.id);
-    assert.ok(contactB.id);
-    assert.notStrictEqual(contactA.id, contactB.id);
-    assert.strictEqual(contactA.workspaceId, wsA.id);
-    assert.strictEqual(contactB.workspaceId, wsB.id);
+    expect(contactA.id).toBeTruthy();
+    expect(contactB.id).toBeTruthy();
+    expect(contactA.id).not.toBe(contactB.id);
+    expect(contactA.workspaceId).toBe(wsA.id);
+    expect(contactB.workspaceId).toBe(wsB.id);
 
     // 4. Duplicate identifier within the SAME workspace -> must FAIL with P2002
-    await assert.rejects(
+    await expectReject(
       async () => {
         await prisma.contact.create({
           data: {
@@ -177,8 +176,8 @@ describe('Database & Transaction Integration Tests (PostgreSQL — FINDING-P9-01
         });
       },
       (err: any) => {
-        assert.strictEqual(err instanceof Prisma.PrismaClientKnownRequestError, true);
-        assert.strictEqual(err.code, 'P2002');
+        expect(err instanceof Prisma.PrismaClientKnownRequestError).toBe(true);
+        expect(err.code).toBe('P2002');
         return true;
       },
     );
@@ -214,15 +213,15 @@ describe('Database & Transaction Integration Tests (PostgreSQL — FINDING-P9-01
     });
 
     // Attempting to delete contact while it has conversations must fail with P2003 (ForeignKeyConstraintViolation)
-    await assert.rejects(
+    await expectReject(
       async () => {
         await prisma.contact.delete({
           where: { id: contact.id },
         });
       },
       (err: any) => {
-        assert.strictEqual(err instanceof Prisma.PrismaClientKnownRequestError, true);
-        assert.strictEqual(err.code, 'P2003'); // Foreign key constraint failed
+        expect(err instanceof Prisma.PrismaClientKnownRequestError).toBe(true);
+        expect(err.code).toBe('P2003'); // Foreign key constraint failed
         return true;
       },
     );
@@ -235,7 +234,7 @@ describe('Database & Transaction Integration Tests (PostgreSQL — FINDING-P9-01
     createdWorkspaceIds.push(ws.id);
 
     // Run transaction that creates a contact and then deliberately fails
-    await assert.rejects(
+    await expectReject(
       async () => {
         await prisma.$transaction(async tx => {
           await tx.contact.create({
@@ -251,7 +250,7 @@ describe('Database & Transaction Integration Tests (PostgreSQL — FINDING-P9-01
         });
       },
       (err: any) => {
-        assert.strictEqual(err.message, 'SIMULATED_TRANSACTION_FAILURE');
+        expect(err.message).toBe('SIMULATED_TRANSACTION_FAILURE');
         return true;
       },
     );
@@ -263,6 +262,6 @@ describe('Database & Transaction Integration Tests (PostgreSQL — FINDING-P9-01
         email: `temp-${testRunId}@example.com`,
       },
     });
-    assert.strictEqual(contactsCount, 0);
+    expect(contactsCount).toBe(0);
   });
 });

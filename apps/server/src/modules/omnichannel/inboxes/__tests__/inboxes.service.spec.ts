@@ -1,5 +1,4 @@
-import { describe, it, beforeEach } from 'node:test';
-import * as assert from 'node:assert';
+import { assertDefined, expectReject } from '../../../../../test/test-assertions';
 import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
 import { ChannelType } from '@sales-copilot/shared-contracts';
 import { InboxesService } from '../inboxes.service';
@@ -164,24 +163,24 @@ describe('InboxesService (Inbox & Channel 1:1 CRUD & Security)', () => {
         providerAccountId: 'bot_support_xyz',
       });
 
-      assert.ok(result.id);
-      assert.strictEqual(result.name, 'Telegram Support Inbox');
-      assert.strictEqual(result.channelType, ChannelType.TELEGRAM);
-      assert.strictEqual(result.greetingMessage, 'Xin chào! Chúng tôi có thể giúp gì cho bạn?');
-      assert.strictEqual(result.isAutoAssignmentEnabled, true);
-      assert.strictEqual(result.memberCount, 0);
+      assertDefined(result.id);
+      expect(result.name).toBe('Telegram Support Inbox');
+      expect(result.channelType).toBe(ChannelType.TELEGRAM);
+      expect(result.greetingMessage).toBe('Xin chào! Chúng tôi có thể giúp gì cho bạn?');
+      expect(result.isAutoAssignmentEnabled).toBe(true);
+      expect(result.memberCount).toBe(0);
 
       // Verify channel info and masked credentials in response
-      assert.ok(result.channel);
-      assert.strictEqual(result.channel.providerAccountId, 'bot_support_xyz');
-      assert.deepStrictEqual(result.channel.credentials, { isConfigured: true, hasSecret: true });
+      assertDefined(result.channel);
+      expect(result.channel.providerAccountId).toBe('bot_support_xyz');
+      expect(result.channel.credentials).toEqual({ isConfigured: true, hasSecret: true });
 
       // Verify raw database state: credentials MUST be encrypted
       const storedChannel = Array.from(channelsDb.values()).find(c => c.inboxId === result.id);
-      assert.ok(storedChannel);
-      assert.ok(storedChannel.credentials.encrypted, 'Database must store encrypted credentials');
-      assert.notStrictEqual(storedChannel.credentials.encrypted, JSON.stringify(plainCredentials));
-      assert.strictEqual(storedChannel.credentials.encrypted.split(':').length, 3);
+      assertDefined(storedChannel);
+      expect(storedChannel.credentials.encrypted).toBeTruthy();
+      expect(storedChannel.credentials.encrypted).not.toBe(JSON.stringify(plainCredentials));
+      expect(storedChannel.credentials.encrypted.split(':').length).toBe(3);
     });
 
     it('should throw ConflictException (CHANNEL_ALREADY_EXISTS) when duplicate providerAccountId in same workspace', async () => {
@@ -191,7 +190,7 @@ describe('InboxesService (Inbox & Channel 1:1 CRUD & Security)', () => {
         providerAccountId: 'page_123456',
       });
 
-      await assert.rejects(
+      await expectReject(
         () =>
           service.createInbox(wsAlpha, {
             name: 'Duplicate Facebook Page',
@@ -199,8 +198,8 @@ describe('InboxesService (Inbox & Channel 1:1 CRUD & Security)', () => {
             providerAccountId: 'page_123456',
           }),
         (err: any) => {
-          assert.ok(err instanceof ConflictException);
-          assert.strictEqual((err.getResponse() as any).code, 'CHANNEL_ALREADY_EXISTS');
+          expect(err instanceof ConflictException).toBeTruthy();
+          expect((err.getResponse() as any).code).toBe('CHANNEL_ALREADY_EXISTS');
           return true;
         },
       );
@@ -219,9 +218,9 @@ describe('InboxesService (Inbox & Channel 1:1 CRUD & Security)', () => {
         providerAccountId: 'shared_page_id',
       });
 
-      assert.ok(inboxAlpha.id);
-      assert.ok(inboxBeta.id);
-      assert.notStrictEqual(inboxAlpha.id, inboxBeta.id);
+      assertDefined(inboxAlpha.id);
+      assertDefined(inboxBeta.id);
+      expect(inboxAlpha.id).not.toBe(inboxBeta.id);
     });
   });
 
@@ -240,15 +239,11 @@ describe('InboxesService (Inbox & Channel 1:1 CRUD & Security)', () => {
       });
 
       const inboxes = await service.listInboxes(wsAlpha);
-      assert.strictEqual(inboxes.length, 2);
+      expect(inboxes.length).toBe(2);
 
       for (const inbox of inboxes) {
-        assert.ok(inbox.channel);
-        assert.strictEqual(
-          (inbox.channel as any).credentials,
-          undefined,
-          'List endpoint must NEVER expose credentials in channel summary',
-        );
+        assertDefined(inbox.channel);
+        expect((inbox.channel as any).credentials).toBe(undefined);
       }
     });
 
@@ -266,11 +261,11 @@ describe('InboxesService (Inbox & Channel 1:1 CRUD & Security)', () => {
       const alphaList = await service.listInboxes(wsAlpha);
       const betaList = await service.listInboxes(wsBeta);
 
-      assert.strictEqual(alphaList.length, 1);
-      assert.strictEqual(alphaList[0].name, 'Alpha Inbox 1');
+      expect(alphaList.length).toBe(1);
+      expect(alphaList[0].name).toBe('Alpha Inbox 1');
 
-      assert.strictEqual(betaList.length, 1);
-      assert.strictEqual(betaList[0].name, 'Beta Inbox 1');
+      expect(betaList.length).toBe(1);
+      expect(betaList[0].name).toBe('Beta Inbox 1');
     });
   });
 
@@ -284,18 +279,18 @@ describe('InboxesService (Inbox & Channel 1:1 CRUD & Security)', () => {
       });
 
       const detail = await service.getInboxById(wsAlpha, created.id);
-      assert.strictEqual(detail.id, created.id);
-      assert.strictEqual(detail.name, 'Support Line');
-      assert.ok(detail.channel);
-      assert.deepStrictEqual(detail.channel.credentials, { isConfigured: true, hasSecret: true });
+      expect(detail.id).toBe(created.id);
+      expect(detail.name).toBe('Support Line');
+      assertDefined(detail.channel);
+      expect(detail.channel.credentials).toEqual({ isConfigured: true, hasSecret: true });
     });
 
     it('should throw NotFoundException (INBOX_NOT_FOUND) when inbox does not exist', async () => {
-      await assert.rejects(
+      await expectReject(
         () => service.getInboxById(wsAlpha, 'non_existent_inbox_id'),
         (err: any) => {
-          assert.ok(err instanceof NotFoundException);
-          assert.strictEqual((err.getResponse() as any).code, 'INBOX_NOT_FOUND');
+          expect(err instanceof NotFoundException).toBeTruthy();
+          expect((err.getResponse() as any).code).toBe('INBOX_NOT_FOUND');
           return true;
         },
       );
@@ -307,11 +302,11 @@ describe('InboxesService (Inbox & Channel 1:1 CRUD & Security)', () => {
         channelType: ChannelType.WEB_CHAT,
       });
 
-      await assert.rejects(
+      await expectReject(
         () => service.getInboxById(wsBeta, createdInAlpha.id),
         (err: any) => {
-          assert.ok(err instanceof NotFoundException);
-          assert.strictEqual((err.getResponse() as any).code, 'INBOX_NOT_FOUND');
+          expect(err instanceof NotFoundException).toBeTruthy();
+          expect((err.getResponse() as any).code).toBe('INBOX_NOT_FOUND');
           return true;
         },
       );
@@ -335,19 +330,16 @@ describe('InboxesService (Inbox & Channel 1:1 CRUD & Security)', () => {
         channelCredentials: updatedCreds,
       });
 
-      assert.strictEqual(updated.name, 'New Inbox Name');
-      assert.strictEqual(updated.greetingMessage, 'New greeting message!');
-      assert.strictEqual(updated.isAutoAssignmentEnabled, true);
-      assert.deepStrictEqual(updated.channel?.credentials, { isConfigured: true, hasSecret: true });
+      expect(updated.name).toBe('New Inbox Name');
+      expect(updated.greetingMessage).toBe('New greeting message!');
+      expect(updated.isAutoAssignmentEnabled).toBe(true);
+      expect(updated.channel?.credentials).toEqual({ isConfigured: true, hasSecret: true });
 
       // Verify database credentials updated with encryption
       const storedChannel = Array.from(channelsDb.values()).find(c => c.inboxId === created.id);
-      assert.ok(storedChannel);
-      assert.ok(storedChannel.credentials.encrypted);
-      assert.deepStrictEqual(
-        credentialService.decrypt(storedChannel.credentials.encrypted),
-        updatedCreds,
-      );
+      assertDefined(storedChannel);
+      expect(storedChannel.credentials.encrypted).toBeTruthy();
+      expect(credentialService.decrypt(storedChannel.credentials.encrypted)).toEqual(updatedCreds);
     });
 
     it('should throw ConflictException if updating providerAccountId causes conflict in same workspace', async () => {
@@ -363,25 +355,25 @@ describe('InboxesService (Inbox & Channel 1:1 CRUD & Security)', () => {
         providerAccountId: 'telegram_bot_2',
       });
 
-      await assert.rejects(
+      await expectReject(
         () =>
           service.updateInbox(wsAlpha, inbox2.id, {
             providerAccountId: 'telegram_bot_1',
           }),
         (err: any) => {
-          assert.ok(err instanceof ConflictException);
-          assert.strictEqual((err.getResponse() as any).code, 'CHANNEL_ALREADY_EXISTS');
+          expect(err instanceof ConflictException).toBeTruthy();
+          expect((err.getResponse() as any).code).toBe('CHANNEL_ALREADY_EXISTS');
           return true;
         },
       );
     });
 
     it('should throw NotFoundException when updating non-existent inbox or in wrong workspace', async () => {
-      await assert.rejects(
+      await expectReject(
         () => service.updateInbox(wsAlpha, 'unknown_id', { name: 'Test' }),
         (err: any) => {
-          assert.ok(err instanceof NotFoundException);
-          assert.strictEqual((err.getResponse() as any).code, 'INBOX_NOT_FOUND');
+          expect(err instanceof NotFoundException).toBeTruthy();
+          expect((err.getResponse() as any).code).toBe('INBOX_NOT_FOUND');
           return true;
         },
       );
@@ -395,24 +387,24 @@ describe('InboxesService (Inbox & Channel 1:1 CRUD & Security)', () => {
         channelType: ChannelType.WEB_CHAT,
       });
 
-      assert.strictEqual(inboxesDb.has(created.id), true);
+      expect(inboxesDb.has(created.id)).toBe(true);
       const channelId = created.channel?.id;
-      assert.ok(channelId);
-      assert.strictEqual(channelsDb.has(channelId), true);
+      assertDefined(channelId);
+      expect(channelsDb.has(channelId)).toBe(true);
 
       const deleteResult = await service.deleteInbox(wsAlpha, created.id);
-      assert.strictEqual(deleteResult.success, true);
+      expect(deleteResult.success).toBe(true);
 
-      assert.strictEqual(inboxesDb.has(created.id), false);
-      assert.strictEqual(channelsDb.has(channelId), false);
+      expect(inboxesDb.has(created.id)).toBe(false);
+      expect(channelsDb.has(channelId)).toBe(false);
     });
 
     it('should throw NotFoundException when deleting non-existent inbox', async () => {
-      await assert.rejects(
+      await expectReject(
         () => service.deleteInbox(wsAlpha, 'unknown_id'),
         (err: any) => {
-          assert.ok(err instanceof NotFoundException);
-          assert.strictEqual((err.getResponse() as any).code, 'INBOX_NOT_FOUND');
+          expect(err instanceof NotFoundException).toBeTruthy();
+          expect((err.getResponse() as any).code).toBe('INBOX_NOT_FOUND');
           return true;
         },
       );
@@ -424,17 +416,17 @@ describe('InboxesService (Inbox & Channel 1:1 CRUD & Security)', () => {
         channelType: ChannelType.WEB_CHAT,
       });
 
-      await assert.rejects(
+      await expectReject(
         () => service.deleteInbox(wsBeta, createdInAlpha.id),
         (err: any) => {
-          assert.ok(err instanceof NotFoundException);
-          assert.strictEqual((err.getResponse() as any).code, 'INBOX_NOT_FOUND');
+          expect(err instanceof NotFoundException).toBeTruthy();
+          expect((err.getResponse() as any).code).toBe('INBOX_NOT_FOUND');
           return true;
         },
       );
 
       // Verify not deleted
-      assert.strictEqual(inboxesDb.has(createdInAlpha.id), true);
+      expect(inboxesDb.has(createdInAlpha.id)).toBe(true);
     });
   });
 
@@ -491,12 +483,12 @@ describe('InboxesService (Inbox & Channel 1:1 CRUD & Security)', () => {
         channelType: ChannelType.TELEGRAM,
       });
 
-      assert.strictEqual(emittedEvents.length, 1);
-      assert.strictEqual(emittedEvents[0].event, 'channel.created');
-      assert.strictEqual(emittedEvents[0].payload.workspaceId, wsAlpha);
-      assert.strictEqual(emittedEvents[0].payload.inboxId, 'ib_event_1');
-      assert.strictEqual(emittedEvents[0].payload.channelId, 'chan_event_1');
-      assert.strictEqual(emittedEvents[0].payload.channelType, ChannelType.TELEGRAM);
+      expect(emittedEvents.length).toBe(1);
+      expect(emittedEvents[0].event).toBe('channel.created');
+      expect(emittedEvents[0].payload.workspaceId).toBe(wsAlpha);
+      expect(emittedEvents[0].payload.inboxId).toBe('ib_event_1');
+      expect(emittedEvents[0].payload.channelId).toBe('chan_event_1');
+      expect(emittedEvents[0].payload.channelType).toBe(ChannelType.TELEGRAM);
     });
 
     it('should emit channel.updated event when updating an inbox', async () => {
@@ -560,9 +552,9 @@ describe('InboxesService (Inbox & Channel 1:1 CRUD & Security)', () => {
         name: 'Updated Name',
       });
 
-      assert.strictEqual(emittedEvents.length, 1);
-      assert.strictEqual(emittedEvents[0].event, 'channel.updated');
-      assert.strictEqual(emittedEvents[0].payload.channelId, 'chan_upd_1');
+      expect(emittedEvents.length).toBe(1);
+      expect(emittedEvents[0].event).toBe('channel.updated');
+      expect(emittedEvents[0].payload.channelId).toBe('chan_upd_1');
     });
 
     it('should emit channel.deleted event when deleting an inbox', async () => {
@@ -600,9 +592,9 @@ describe('InboxesService (Inbox & Channel 1:1 CRUD & Security)', () => {
 
       await serviceWithEvents.deleteInbox(wsAlpha, 'ib_del_1');
 
-      assert.strictEqual(emittedEvents.length, 1);
-      assert.strictEqual(emittedEvents[0].event, 'channel.deleted');
-      assert.strictEqual(emittedEvents[0].payload.channelId, 'chan_del_1');
+      expect(emittedEvents.length).toBe(1);
+      expect(emittedEvents[0].event).toBe('channel.deleted');
+      expect(emittedEvents[0].payload.channelId).toBe('chan_del_1');
     });
   });
 
@@ -631,9 +623,11 @@ describe('InboxesService (Inbox & Channel 1:1 CRUD & Security)', () => {
       };
 
       const result = await serviceWithStorage.uploadAvatar(wsAlpha, file);
-      assert.ok(result.avatarUrl.includes('http://minio:9000/bucket/avatars/inboxes/ws_alpha_1/'));
-      assert.ok(result.avatarUrl.endsWith('.png'));
-      assert.ok(uploadedKey.startsWith('avatars/inboxes/ws_alpha_1/'));
+      expect(
+        result.avatarUrl.includes('http://minio:9000/bucket/avatars/inboxes/ws_alpha_1/'),
+      ).toBeTruthy();
+      expect(result.avatarUrl.endsWith('.png')).toBeTruthy();
+      expect(uploadedKey.startsWith('avatars/inboxes/ws_alpha_1/')).toBeTruthy();
     });
 
     it('should reject non-image file uploads', async () => {
@@ -656,11 +650,11 @@ describe('InboxesService (Inbox & Channel 1:1 CRUD & Security)', () => {
         buffer: Buffer.from('binary-data'),
       };
 
-      await assert.rejects(
+      await expectReject(
         () => serviceWithStorage.uploadAvatar(wsAlpha, file),
         (err: any) => {
-          assert.ok(err instanceof BadRequestException);
-          assert.strictEqual((err.getResponse() as any).code, 'INVALID_IMAGE_TYPE');
+          expect(err instanceof BadRequestException).toBeTruthy();
+          expect((err.getResponse() as any).code).toBe('INVALID_IMAGE_TYPE');
           return true;
         },
       );
@@ -686,11 +680,11 @@ describe('InboxesService (Inbox & Channel 1:1 CRUD & Security)', () => {
         buffer: Buffer.from('huge-data'),
       };
 
-      await assert.rejects(
+      await expectReject(
         () => serviceWithStorage.uploadAvatar(wsAlpha, file),
         (err: any) => {
-          assert.ok(err instanceof BadRequestException);
-          assert.strictEqual((err.getResponse() as any).code, 'FILE_TOO_LARGE');
+          expect(err instanceof BadRequestException).toBeTruthy();
+          expect((err.getResponse() as any).code).toBe('FILE_TOO_LARGE');
           return true;
         },
       );

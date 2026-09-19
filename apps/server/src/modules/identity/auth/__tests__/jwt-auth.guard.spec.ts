@@ -1,5 +1,4 @@
-import { describe, it, beforeEach } from 'node:test';
-import * as assert from 'node:assert';
+import { expectReject } from '../../../../../test/test-assertions';
 import { ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { PlatformRole } from '@sales-copilot/shared-contracts';
@@ -68,8 +67,8 @@ describe('JwtAuthGuard (Authentication & Request Context Injection)', () => {
 
     const result = await guard.canActivate(context);
 
-    assert.strictEqual(result, true);
-    assert.deepStrictEqual(request.user, {
+    expect(result).toBe(true);
+    expect(request.user).toEqual({
       userId: 'usr_valid_123',
       email: 'agent@salescopilot.io',
       role: PlatformRole.USER,
@@ -86,8 +85,8 @@ describe('JwtAuthGuard (Authentication & Request Context Injection)', () => {
 
     const result = await guard.canActivate(context);
 
-    assert.strictEqual(result, true);
-    assert.deepStrictEqual(request.user, {
+    expect(result).toBe(true);
+    expect(request.user).toEqual({
       userId: 'usr_valid_123',
       email: 'agent@salescopilot.io',
       role: PlatformRole.USER,
@@ -100,7 +99,7 @@ describe('JwtAuthGuard (Authentication & Request Context Injection)', () => {
 
     const result = await guard.canActivate(context);
 
-    assert.strictEqual(result, true);
+    expect(result).toBe(true);
   });
 
   it('should attach user context on public route if valid token is provided', async () => {
@@ -111,8 +110,8 @@ describe('JwtAuthGuard (Authentication & Request Context Injection)', () => {
 
     const result = await guard.canActivate(context);
 
-    assert.strictEqual(result, true);
-    assert.deepStrictEqual(request.user, {
+    expect(result).toBe(true);
+    expect(request.user).toEqual({
       userId: 'usr_valid_123',
       email: 'agent@salescopilot.io',
       role: PlatformRole.USER,
@@ -122,12 +121,12 @@ describe('JwtAuthGuard (Authentication & Request Context Injection)', () => {
   it('should throw UnauthorizedException when no token is provided on non-public route', async () => {
     const { context } = createMockExecutionContext();
 
-    await assert.rejects(
+    await expectReject(
       async () => {
         await guard.canActivate(context);
       },
       (err: any) => {
-        assert.strictEqual(err.response?.code, 'UNAUTHORIZED');
+        expect(err.response?.code).toBe('UNAUTHORIZED');
         return true;
       },
     );
@@ -138,7 +137,7 @@ describe('JwtAuthGuard (Authentication & Request Context Injection)', () => {
       authorization: 'Bearer invalid.or.expired.token',
     });
 
-    await assert.rejects(async () => {
+    await expectReject(async () => {
       await guard.canActivate(context);
     });
   });

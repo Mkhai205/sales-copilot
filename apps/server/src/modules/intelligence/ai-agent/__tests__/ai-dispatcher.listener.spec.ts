@@ -1,5 +1,3 @@
-import { describe, it, beforeEach } from 'node:test';
-import * as assert from 'node:assert';
 import { MessageType, SenderType } from '@sales-copilot/shared-contracts';
 import { AiDispatcherListener } from '../ai-dispatcher.listener';
 import { AI_AGENT_CONSTANTS, getAiDebounceKey } from '../ai-agent.constants';
@@ -60,7 +58,7 @@ describe('AiDispatcherListener', () => {
       },
     });
 
-    assert.strictEqual(queuedJobs.length, 0);
+    expect(queuedJobs.length).toBe(0);
   });
 
   it('should ignore private notes or non-incoming messages', async () => {
@@ -86,7 +84,7 @@ describe('AiDispatcherListener', () => {
       },
     });
 
-    assert.strictEqual(queuedJobs.length, 0);
+    expect(queuedJobs.length).toBe(0);
   });
 
   it('should ignore if conversation is paused (Human Takeover)', async () => {
@@ -109,7 +107,7 @@ describe('AiDispatcherListener', () => {
       },
     });
 
-    assert.strictEqual(queuedJobs.length, 0);
+    expect(queuedJobs.length).toBe(0);
   });
 
   it('should ignore if inbox has no aiCommercePolicy or enabled is false', async () => {
@@ -132,7 +130,7 @@ describe('AiDispatcherListener', () => {
       },
     });
 
-    assert.strictEqual(queuedJobs.length, 0);
+    expect(queuedJobs.length).toBe(0);
   });
 
   it('should set Redis debounce and enqueue BullMQ job when message is valid', async () => {
@@ -157,20 +155,17 @@ describe('AiDispatcherListener', () => {
 
     // Check Redis debounce
     const debounceKey = getAiDebounceKey(workspaceId, conversationId);
-    assert.ok(redisStore.has(debounceKey));
-    assert.strictEqual(
-      redisStore.get(debounceKey)?.ttl,
-      AI_AGENT_CONSTANTS.DEBOUNCE_KEY_TTL_SECONDS,
-    );
+    expect(redisStore.has(debounceKey)).toBeTruthy();
+    expect(redisStore.get(debounceKey)?.ttl).toBe(AI_AGENT_CONSTANTS.DEBOUNCE_KEY_TTL_SECONDS);
 
     // Check BullMQ job enqueued
-    assert.strictEqual(queuedJobs.length, 1);
+    expect(queuedJobs.length).toBe(1);
     const job = queuedJobs[0];
-    assert.strictEqual(job.name, 'process-message');
-    assert.strictEqual(job.data.workspaceId, workspaceId);
-    assert.strictEqual(job.data.conversationId, conversationId);
-    assert.strictEqual(job.data.messageId, 'msg-contact-1');
-    assert.strictEqual(job.opts.delay, AI_AGENT_CONSTANTS.DEFAULT_DEBOUNCE_DELAY_MS);
-    assert.strictEqual(job.opts.attempts, 2);
+    expect(job.name).toBe('process-message');
+    expect(job.data.workspaceId).toBe(workspaceId);
+    expect(job.data.conversationId).toBe(conversationId);
+    expect(job.data.messageId).toBe('msg-contact-1');
+    expect(job.opts.delay).toBe(AI_AGENT_CONSTANTS.DEFAULT_DEBOUNCE_DELAY_MS);
+    expect(job.opts.attempts).toBe(2);
   });
 });

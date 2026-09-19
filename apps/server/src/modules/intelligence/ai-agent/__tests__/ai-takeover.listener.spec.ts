@@ -1,5 +1,3 @@
-import { describe, it, beforeEach } from 'node:test';
-import * as assert from 'node:assert';
 import { ConversationStatus, SenderType } from '@sales-copilot/shared-contracts';
 import { AiTakeoverListener } from '../ai-takeover.listener';
 import { getAiDebounceKey } from '../ai-agent.constants';
@@ -67,8 +65,8 @@ describe('AiTakeoverListener', () => {
     });
 
     const conv = conversationsDb.get(conversationId);
-    assert.strictEqual(conv.isAiPaused, true);
-    assert.ok(deletedRedisKeys.includes(getAiDebounceKey(workspaceId, conversationId)));
+    expect(conv.isAiPaused).toBe(true);
+    expect(deletedRedisKeys.includes(getAiDebounceKey(workspaceId, conversationId))).toBeTruthy();
   });
 
   it('should NOT trigger takeover if agent message is a private note', async () => {
@@ -90,8 +88,8 @@ describe('AiTakeoverListener', () => {
     });
 
     const conv = conversationsDb.get(conversationId);
-    assert.strictEqual(conv.isAiPaused, false);
-    assert.strictEqual(deletedRedisKeys.length, 0);
+    expect(conv.isAiPaused).toBe(false);
+    expect(deletedRedisKeys.length).toBe(0);
   });
 
   it('should NOT trigger takeover if message is from CONTACT or SYSTEM', async () => {
@@ -111,7 +109,7 @@ describe('AiTakeoverListener', () => {
       },
     });
 
-    assert.strictEqual(conversationsDb.get(conversationId).isAiPaused, false);
+    expect(conversationsDb.get(conversationId).isAiPaused).toBe(false);
   });
 
   it('should reset isAiPaused to false when conversation status is RESOLVED', async () => {
@@ -129,7 +127,7 @@ describe('AiTakeoverListener', () => {
     });
 
     const conv = conversationsDb.get(conversationId);
-    assert.strictEqual(conv.isAiPaused, false);
-    assert.ok(deletedRedisKeys.includes(getAiDebounceKey(workspaceId, conversationId)));
+    expect(conv.isAiPaused).toBe(false);
+    expect(deletedRedisKeys.includes(getAiDebounceKey(workspaceId, conversationId))).toBeTruthy();
   });
 });

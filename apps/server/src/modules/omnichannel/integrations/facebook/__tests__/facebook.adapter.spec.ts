@@ -1,5 +1,4 @@
-import { describe, it, beforeEach, afterEach } from 'node:test';
-import * as assert from 'node:assert';
+import { expectReject } from '../../../../../../test/test-assertions';
 import * as crypto from 'crypto';
 import { ChannelType, DeliveryStatus, MessageContentType } from '@sales-copilot/shared-contracts';
 import { FacebookAdapter, FacebookRateLimitError } from '../facebook.adapter';
@@ -50,7 +49,7 @@ describe('FacebookAdapter (Facebook Messenger Platform Integration)', () => {
 
   describe('Adapter Configuration', () => {
     it('should declare channelType as FACEBOOK_MESSENGER', () => {
-      assert.strictEqual(adapter.channelType, ChannelType.FACEBOOK_MESSENGER);
+      expect(adapter.channelType).toBe(ChannelType.FACEBOOK_MESSENGER);
     });
   });
 
@@ -67,7 +66,7 @@ describe('FacebookAdapter (Facebook Messenger Platform Integration)', () => {
       };
 
       const credentials = { appSecret: mockAppSecret };
-      assert.strictEqual(adapter.verifyWebhook(request, credentials), true);
+      expect(adapter.verifyWebhook(request, credentials)).toBe(true);
     });
 
     it('should verify signature when rawBody is a Buffer', () => {
@@ -82,7 +81,7 @@ describe('FacebookAdapter (Facebook Messenger Platform Integration)', () => {
       };
 
       const credentials = { appSecret: mockAppSecret };
-      assert.strictEqual(adapter.verifyWebhook(request, credentials), true);
+      expect(adapter.verifyWebhook(request, credentials)).toBe(true);
     });
 
     it('should verify signature when rawBody is a parsed object', () => {
@@ -97,7 +96,7 @@ describe('FacebookAdapter (Facebook Messenger Platform Integration)', () => {
       };
 
       const credentials = { app_secret: mockAppSecret };
-      assert.strictEqual(adapter.verifyWebhook(request, credentials), true);
+      expect(adapter.verifyWebhook(request, credentials)).toBe(true);
     });
 
     it('should support array header values for X-Hub-Signature-256', () => {
@@ -111,7 +110,7 @@ describe('FacebookAdapter (Facebook Messenger Platform Integration)', () => {
         rawBody,
       };
 
-      assert.strictEqual(adapter.verifyWebhook(request, { clientSecret: mockAppSecret }), true);
+      expect(adapter.verifyWebhook(request, { clientSecret: mockAppSecret })).toBe(true);
     });
 
     it('should support fallback SHA-1 signature (x-hub-signature)', () => {
@@ -126,7 +125,7 @@ describe('FacebookAdapter (Facebook Messenger Platform Integration)', () => {
         rawBody,
       };
 
-      assert.strictEqual(adapter.verifyWebhook(request, { appSecret: mockAppSecret }), true);
+      expect(adapter.verifyWebhook(request, { appSecret: mockAppSecret })).toBe(true);
     });
 
     it('should return false when HMAC signature does not match (tampered payload)', () => {
@@ -141,7 +140,7 @@ describe('FacebookAdapter (Facebook Messenger Platform Integration)', () => {
         rawBody: tamperedBody,
       };
 
-      assert.strictEqual(adapter.verifyWebhook(request, { appSecret: mockAppSecret }), false);
+      expect(adapter.verifyWebhook(request, { appSecret: mockAppSecret })).toBe(false);
     });
 
     it('should return false when wrong secret is used', () => {
@@ -155,7 +154,7 @@ describe('FacebookAdapter (Facebook Messenger Platform Integration)', () => {
         rawBody,
       };
 
-      assert.strictEqual(adapter.verifyWebhook(request, { appSecret: mockAppSecret }), false);
+      expect(adapter.verifyWebhook(request, { appSecret: mockAppSecret })).toBe(false);
     });
 
     it('should return false when signature header is missing', () => {
@@ -164,7 +163,7 @@ describe('FacebookAdapter (Facebook Messenger Platform Integration)', () => {
         rawBody: '{"object":"page"}',
       };
 
-      assert.strictEqual(adapter.verifyWebhook(request, { appSecret: mockAppSecret }), false);
+      expect(adapter.verifyWebhook(request, { appSecret: mockAppSecret })).toBe(false);
     });
 
     it('should return false when app secret is not provided in credentials or request', () => {
@@ -175,7 +174,7 @@ describe('FacebookAdapter (Facebook Messenger Platform Integration)', () => {
         rawBody: '{"object":"page"}',
       };
 
-      assert.strictEqual(adapter.verifyWebhook(request, {}), false);
+      expect(adapter.verifyWebhook(request, {})).toBe(false);
     });
 
     it('should return false when rawBody is undefined or null', () => {
@@ -186,7 +185,7 @@ describe('FacebookAdapter (Facebook Messenger Platform Integration)', () => {
         rawBody: undefined,
       };
 
-      assert.strictEqual(adapter.verifyWebhook(request, { appSecret: mockAppSecret }), false);
+      expect(adapter.verifyWebhook(request, { appSecret: mockAppSecret })).toBe(false);
     });
 
     it('should verify GET challenge verification handshake (hub.mode=subscribe)', () => {
@@ -199,28 +198,19 @@ describe('FacebookAdapter (Facebook Messenger Platform Integration)', () => {
         },
       };
 
-      assert.strictEqual(
-        adapter.verifyWebhook(request, { verifyToken: 'my_verify_token_123' }),
-        true,
-      );
-      assert.strictEqual(
-        adapter.verifyWebhook(request, { verify_token: 'my_verify_token_123' }),
-        true,
-      );
-      assert.strictEqual(
-        adapter.verifyWebhook(request, { webhookSecret: 'my_verify_token_123' }),
-        true,
-      );
-      assert.strictEqual(adapter.verifyWebhook(request, { verifyToken: 'wrong_token' }), false);
+      expect(adapter.verifyWebhook(request, { verifyToken: 'my_verify_token_123' })).toBe(true);
+      expect(adapter.verifyWebhook(request, { verify_token: 'my_verify_token_123' })).toBe(true);
+      expect(adapter.verifyWebhook(request, { webhookSecret: 'my_verify_token_123' })).toBe(true);
+      expect(adapter.verifyWebhook(request, { verifyToken: 'wrong_token' })).toBe(false);
     });
   });
 
   describe('parseInboundPayload()', () => {
     it('should return empty array for non-JSON or invalid rawBody', () => {
-      assert.deepStrictEqual(adapter.parseInboundPayload('not a json'), []);
-      assert.deepStrictEqual(adapter.parseInboundPayload(null), []);
-      assert.deepStrictEqual(adapter.parseInboundPayload(undefined), []);
-      assert.deepStrictEqual(adapter.parseInboundPayload(12345), []);
+      expect(adapter.parseInboundPayload('not a json')).toEqual([]);
+      expect(adapter.parseInboundPayload(null)).toEqual([]);
+      expect(adapter.parseInboundPayload(undefined)).toEqual([]);
+      expect(adapter.parseInboundPayload(12345)).toEqual([]);
     });
 
     it('should return empty array for non-page webhook objects', () => {
@@ -228,7 +218,7 @@ describe('FacebookAdapter (Facebook Messenger Platform Integration)', () => {
         object: 'user',
         entry: [{ id: '123', time: Date.now() }],
       };
-      assert.deepStrictEqual(adapter.parseInboundPayload(payload), []);
+      expect(adapter.parseInboundPayload(payload)).toEqual([]);
     });
 
     it('should return empty array for empty entry list', () => {
@@ -236,7 +226,7 @@ describe('FacebookAdapter (Facebook Messenger Platform Integration)', () => {
         object: 'page',
         entry: [],
       };
-      assert.deepStrictEqual(adapter.parseInboundPayload(payload), []);
+      expect(adapter.parseInboundPayload(payload)).toEqual([]);
     });
 
     it('should parse inbound text message correctly', () => {
@@ -263,16 +253,16 @@ describe('FacebookAdapter (Facebook Messenger Platform Integration)', () => {
       };
 
       const results = adapter.parseInboundPayload(payload);
-      assert.strictEqual(results.length, 1);
+      expect(results.length).toBe(1);
 
       const msg = results[0];
-      assert.strictEqual(msg.eventKind, 'message');
-      assert.strictEqual(msg.externalContactId, 'psid_user_123');
-      assert.strictEqual(msg.externalMessageId, 'mid.1457764197618:41d102a3e1');
-      assert.strictEqual(msg.content, 'Xin chào, tôi muốn hỏi về sản phẩm');
-      assert.strictEqual(msg.contentType, MessageContentType.TEXT);
-      assert.strictEqual(msg.attachments, undefined);
-      assert.strictEqual(msg.timestamp.getTime(), timestamp);
+      expect(msg.eventKind).toBe('message');
+      expect(msg.externalContactId).toBe('psid_user_123');
+      expect(msg.externalMessageId).toBe('mid.1457764197618:41d102a3e1');
+      expect(msg.content).toBe('Xin chào, tôi muốn hỏi về sản phẩm');
+      expect(msg.contentType).toBe(MessageContentType.TEXT);
+      expect(msg.attachments).toBe(undefined);
+      expect(msg.timestamp.getTime()).toBe(timestamp);
     });
 
     it('should parse inbound text message from serialized JSON string', () => {
@@ -299,8 +289,8 @@ describe('FacebookAdapter (Facebook Messenger Platform Integration)', () => {
       });
 
       const results = adapter.parseInboundPayload(payloadString);
-      assert.strictEqual(results.length, 1);
-      assert.strictEqual(results[0].content, 'Hello from string payload');
+      expect(results.length).toBe(1);
+      expect(results[0].content).toBe('Hello from string payload');
     });
 
     it('should parse message with quick reply button payload', () => {
@@ -328,8 +318,8 @@ describe('FacebookAdapter (Facebook Messenger Platform Integration)', () => {
       };
 
       const results = adapter.parseInboundPayload(payload);
-      assert.strictEqual(results.length, 1);
-      assert.strictEqual(results[0].content, 'PRICING_INQUIRY');
+      expect(results.length).toBe(1);
+      expect(results[0].content).toBe('PRICING_INQUIRY');
     });
 
     it('should parse inbound image attachment message', () => {
@@ -364,17 +354,14 @@ describe('FacebookAdapter (Facebook Messenger Platform Integration)', () => {
       };
 
       const results = adapter.parseInboundPayload(payload);
-      assert.strictEqual(results.length, 1);
+      expect(results.length).toBe(1);
 
       const msg = results[0];
-      assert.strictEqual(msg.contentType, MessageContentType.IMAGE);
-      assert.strictEqual(msg.attachments?.length, 1);
-      assert.strictEqual(
-        msg.attachments?.[0].fileUrl,
-        'https://cdn.facebook.com/images/photo_123.jpg',
-      );
-      assert.strictEqual(msg.attachments?.[0].contentType, MessageContentType.IMAGE);
-      assert.strictEqual(msg.attachments?.[0].fileName, 'photo_123.jpg');
+      expect(msg.contentType).toBe(MessageContentType.IMAGE);
+      expect(msg.attachments?.length).toBe(1);
+      expect(msg.attachments?.[0].fileUrl).toBe('https://cdn.facebook.com/images/photo_123.jpg');
+      expect(msg.attachments?.[0].contentType).toBe(MessageContentType.IMAGE);
+      expect(msg.attachments?.[0].fileName).toBe('photo_123.jpg');
     });
 
     it('should parse inbound video, audio, and file attachments', () => {
@@ -430,12 +417,12 @@ describe('FacebookAdapter (Facebook Messenger Platform Integration)', () => {
       };
 
       const results = adapter.parseInboundPayload(payload);
-      assert.strictEqual(results.length, 3);
+      expect(results.length).toBe(3);
 
-      assert.strictEqual(results[0].attachments?.[0].contentType, MessageContentType.VIDEO);
-      assert.strictEqual(results[1].attachments?.[0].contentType, MessageContentType.AUDIO);
-      assert.strictEqual(results[2].attachments?.[0].contentType, MessageContentType.FILE);
-      assert.strictEqual(results[2].attachments?.[0].fileName, 'contract.pdf');
+      expect(results[0].attachments?.[0].contentType).toBe(MessageContentType.VIDEO);
+      expect(results[1].attachments?.[0].contentType).toBe(MessageContentType.AUDIO);
+      expect(results[2].attachments?.[0].contentType).toBe(MessageContentType.FILE);
+      expect(results[2].attachments?.[0].fileName).toBe('contract.pdf');
     });
 
     it('should parse location coordinates attachment', () => {
@@ -469,9 +456,9 @@ describe('FacebookAdapter (Facebook Messenger Platform Integration)', () => {
       };
 
       const results = adapter.parseInboundPayload(payload);
-      assert.strictEqual(results.length, 1);
-      assert.strictEqual(results[0].contentType, MessageContentType.TEXT);
-      assert.strictEqual(results[0].content, '📍 Location: 10.7769, 106.7009');
+      expect(results.length).toBe(1);
+      expect(results[0].contentType).toBe(MessageContentType.TEXT);
+      expect(results[0].content).toBe('📍 Location: 10.7769, 106.7009');
     });
 
     it('should skip echo messages (is_echo: true)', () => {
@@ -497,7 +484,7 @@ describe('FacebookAdapter (Facebook Messenger Platform Integration)', () => {
       };
 
       const results = adapter.parseInboundPayload(payload);
-      assert.strictEqual(results.length, 0);
+      expect(results.length).toBe(0);
     });
 
     it('should parse Postback events (Get Started / Persistent Menu)', () => {
@@ -525,14 +512,14 @@ describe('FacebookAdapter (Facebook Messenger Platform Integration)', () => {
       };
 
       const results = adapter.parseInboundPayload(payload);
-      assert.strictEqual(results.length, 1);
+      expect(results.length).toBe(1);
 
       const msg = results[0];
-      assert.strictEqual(msg.eventKind, 'message');
-      assert.strictEqual(msg.externalContactId, 'psid_postback_user');
-      assert.strictEqual(msg.externalMessageId, 'mid.postback_1');
-      assert.strictEqual(msg.content, 'Bắt đầu');
-      assert.strictEqual(msg.contentType, MessageContentType.TEXT);
+      expect(msg.eventKind).toBe('message');
+      expect(msg.externalContactId).toBe('psid_postback_user');
+      expect(msg.externalMessageId).toBe('mid.postback_1');
+      expect(msg.content).toBe('Bắt đầu');
+      expect(msg.contentType).toBe(MessageContentType.TEXT);
     });
 
     it('should parse Delivery Receipts with mids into delivery_status events', () => {
@@ -557,16 +544,16 @@ describe('FacebookAdapter (Facebook Messenger Platform Integration)', () => {
       };
 
       const results = adapter.parseInboundPayload(payload);
-      assert.strictEqual(results.length, 2);
+      expect(results.length).toBe(2);
 
-      assert.strictEqual(results[0].eventKind, 'delivery_status');
-      assert.strictEqual(results[0].externalMessageId, 'mid.1');
-      assert.strictEqual(results[0].deliveryStatusInfo?.status, DeliveryStatus.DELIVERED);
-      assert.strictEqual(results[0].deliveryStatusInfo?.externalMessageId, 'mid.1');
+      expect(results[0].eventKind).toBe('delivery_status');
+      expect(results[0].externalMessageId).toBe('mid.1');
+      expect(results[0].deliveryStatusInfo?.status).toBe(DeliveryStatus.DELIVERED);
+      expect(results[0].deliveryStatusInfo?.externalMessageId).toBe('mid.1');
 
-      assert.strictEqual(results[1].eventKind, 'delivery_status');
-      assert.strictEqual(results[1].externalMessageId, 'mid.2');
-      assert.strictEqual(results[1].deliveryStatusInfo?.status, DeliveryStatus.DELIVERED);
+      expect(results[1].eventKind).toBe('delivery_status');
+      expect(results[1].externalMessageId).toBe('mid.2');
+      expect(results[1].deliveryStatusInfo?.status).toBe(DeliveryStatus.DELIVERED);
     });
 
     it('should parse Delivery Receipts without mids using watermark', () => {
@@ -590,10 +577,10 @@ describe('FacebookAdapter (Facebook Messenger Platform Integration)', () => {
       };
 
       const results = adapter.parseInboundPayload(payload);
-      assert.strictEqual(results.length, 1);
-      assert.strictEqual(results[0].eventKind, 'delivery_status');
-      assert.strictEqual(results[0].externalMessageId, `watermark_${watermark}`);
-      assert.strictEqual(results[0].deliveryStatusInfo?.status, DeliveryStatus.DELIVERED);
+      expect(results.length).toBe(1);
+      expect(results[0].eventKind).toBe('delivery_status');
+      expect(results[0].externalMessageId).toBe(`watermark_${watermark}`);
+      expect(results[0].deliveryStatusInfo?.status).toBe(DeliveryStatus.DELIVERED);
     });
 
     it('should parse Read Receipts into delivery_status events', () => {
@@ -618,13 +605,13 @@ describe('FacebookAdapter (Facebook Messenger Platform Integration)', () => {
       };
 
       const results = adapter.parseInboundPayload(payload);
-      assert.strictEqual(results.length, 1);
+      expect(results.length).toBe(1);
 
       const res = results[0];
-      assert.strictEqual(res.eventKind, 'delivery_status');
-      assert.strictEqual(res.externalMessageId, 'mid.read_msg_1');
-      assert.strictEqual(res.deliveryStatusInfo?.status, DeliveryStatus.READ);
-      assert.strictEqual(res.deliveryStatusInfo?.externalMessageId, 'mid.read_msg_1');
+      expect(res.eventKind).toBe('delivery_status');
+      expect(res.externalMessageId).toBe('mid.read_msg_1');
+      expect(res.deliveryStatusInfo?.status).toBe(DeliveryStatus.READ);
+      expect(res.deliveryStatusInfo?.externalMessageId).toBe('mid.read_msg_1');
     });
 
     it('should parse multiple entries and standby events correctly', () => {
@@ -655,9 +642,9 @@ describe('FacebookAdapter (Facebook Messenger Platform Integration)', () => {
       };
 
       const results = adapter.parseInboundPayload(payload);
-      assert.strictEqual(results.length, 2);
-      assert.strictEqual(results[0].content, 'Msg 1');
-      assert.strictEqual(results[1].content, 'Standby Msg');
+      expect(results.length).toBe(2);
+      expect(results[0].content).toBe('Msg 1');
+      expect(results[1].content).toBe('Standby Msg');
     });
   });
 
@@ -690,17 +677,14 @@ describe('FacebookAdapter (Facebook Messenger Platform Integration)', () => {
 
       const result = await adapter.sendMessage(mockChannelContext, outboundPayload);
 
-      assert.strictEqual(interceptedUrl, 'https://graph.facebook.com/v26.0/me/messages');
-      assert.strictEqual(interceptedHeaders['Authorization'], `Bearer ${mockPageAccessToken}`);
-      assert.strictEqual(interceptedBody.recipient.id, 'psid_recipient_1');
-      assert.strictEqual(
-        interceptedBody.message.text,
-        'Xin chào, chúng tôi có thể hỗ trợ gì cho bạn?',
-      );
-      assert.strictEqual(interceptedBody.messaging_type, 'RESPONSE');
+      expect(interceptedUrl).toBe('https://graph.facebook.com/v26.0/me/messages');
+      expect(interceptedHeaders['Authorization']).toBe(`Bearer ${mockPageAccessToken}`);
+      expect(interceptedBody.recipient.id).toBe('psid_recipient_1');
+      expect(interceptedBody.message.text).toBe('Xin chào, chúng tôi có thể hỗ trợ gì cho bạn?');
+      expect(interceptedBody.messaging_type).toBe('RESPONSE');
 
-      assert.strictEqual(result.externalMessageId, 'mid.sent_outbound_123');
-      assert.strictEqual(result.deliveryStatus, DeliveryStatus.SENT);
+      expect(result.externalMessageId).toBe('mid.sent_outbound_123');
+      expect(result.deliveryStatus).toBe(DeliveryStatus.SENT);
     });
 
     it('should send outbound image attachment message via Graph API', async () => {
@@ -732,12 +716,11 @@ describe('FacebookAdapter (Facebook Messenger Platform Integration)', () => {
 
       const result = await adapter.sendMessage(mockChannelContext, outboundPayload);
 
-      assert.strictEqual(interceptedBody.message.attachment.type, 'image');
-      assert.strictEqual(
-        interceptedBody.message.attachment.payload.url,
+      expect(interceptedBody.message.attachment.type).toBe('image');
+      expect(interceptedBody.message.attachment.payload.url).toBe(
         'https://minio.salescopilot.com/images/catalog.png',
       );
-      assert.strictEqual(result.externalMessageId, 'mid.attachment_sent_456');
+      expect(result.externalMessageId).toBe('mid.attachment_sent_456');
     });
 
     it('should send outbound video and file attachment with correct type', async () => {
@@ -766,7 +749,7 @@ describe('FacebookAdapter (Facebook Messenger Platform Integration)', () => {
         ],
       });
 
-      assert.strictEqual(interceptedBody.message.attachment.type, 'video');
+      expect(interceptedBody.message.attachment.type).toBe('video');
     });
 
     it('should support HUMAN_AGENT tag for 24h window bypass', async () => {
@@ -794,12 +777,12 @@ describe('FacebookAdapter (Facebook Messenger Platform Integration)', () => {
         content: 'Agent response after 24 hours',
       });
 
-      assert.strictEqual(interceptedBody.messaging_type, 'MESSAGE_TAG');
-      assert.strictEqual(interceptedBody.tag, 'HUMAN_AGENT');
+      expect(interceptedBody.messaging_type).toBe('MESSAGE_TAG');
+      expect(interceptedBody.tag).toBe('HUMAN_AGENT');
     });
 
     it('should throw error when recipientExternalId is missing', async () => {
-      await assert.rejects(async () => {
+      await expectReject(async () => {
         await adapter.sendMessage(mockChannelContext, {
           recipientExternalId: '',
           content: 'Hello',
@@ -813,7 +796,7 @@ describe('FacebookAdapter (Facebook Messenger Platform Integration)', () => {
         credentials: {},
       };
 
-      await assert.rejects(async () => {
+      await expectReject(async () => {
         await adapter.sendMessage(emptyCredsContext, {
           recipientExternalId: 'psid_1',
           content: 'Hello',
@@ -836,7 +819,7 @@ describe('FacebookAdapter (Facebook Messenger Platform Integration)', () => {
         }),
       })) as unknown as typeof globalThis.fetch;
 
-      await assert.rejects(async () => {
+      await expectReject(async () => {
         await adapter.sendMessage(mockChannelContext, {
           recipientExternalId: 'psid_1',
           content: 'Hello',
@@ -849,8 +832,8 @@ describe('FacebookAdapter (Facebook Messenger Platform Integration)', () => {
     it('should fetch Page metadata via Graph API /me', async () => {
       globalThis.fetch = (async (url: string | URL | Request) => {
         const urlStr = String(url);
-        assert.ok(urlStr.includes('https://graph.facebook.com/v26.0/me'));
-        assert.ok(urlStr.includes('fields=id,name,picture.type(large)'));
+        expect(urlStr.includes('https://graph.facebook.com/v26.0/me')).toBeTruthy();
+        expect(urlStr.includes('fields=id,name,picture.type(large)')).toBeTruthy();
 
         return {
           ok: true,
@@ -871,10 +854,10 @@ describe('FacebookAdapter (Facebook Messenger Platform Integration)', () => {
 
       const channelInfo = await adapter.getChannelInfo(mockChannelContext);
 
-      assert.strictEqual(channelInfo.providerAccountId, mockPageId);
-      assert.strictEqual(channelInfo.name, 'Alpha Global Store');
-      assert.strictEqual(channelInfo.avatarUrl, 'https://cdn.facebook.com/pages/avatar_1098.png');
-      assert.strictEqual(channelInfo.metadata?.pageId, mockPageId);
+      expect(channelInfo.providerAccountId).toBe(mockPageId);
+      expect(channelInfo.name).toBe('Alpha Global Store');
+      expect(channelInfo.avatarUrl).toBe('https://cdn.facebook.com/pages/avatar_1098.png');
+      expect(channelInfo.metadata?.pageId).toBe(mockPageId);
     });
 
     it('should throw error when getChannelInfo API call fails', async () => {
@@ -890,7 +873,7 @@ describe('FacebookAdapter (Facebook Messenger Platform Integration)', () => {
         }),
       })) as unknown as typeof globalThis.fetch;
 
-      await assert.rejects(async () => {
+      await expectReject(async () => {
         await adapter.getChannelInfo(mockChannelContext);
       }, /Facebook API getChannelInfo error: \[190\] Session has expired\./);
     });
@@ -901,7 +884,7 @@ describe('FacebookAdapter (Facebook Messenger Platform Integration)', () => {
       it('should fetch user profile data for PSID', async () => {
         globalThis.fetch = (async (url: string | URL | Request) => {
           const urlStr = String(url);
-          assert.ok(urlStr.includes('psid_12345'));
+          expect(urlStr.includes('psid_12345')).toBeTruthy();
 
           return {
             ok: true,
@@ -917,9 +900,9 @@ describe('FacebookAdapter (Facebook Messenger Platform Integration)', () => {
         }) as typeof globalThis.fetch;
 
         const profile = await adapter.fetchUserProfile(mockPageAccessToken, 'psid_12345');
-        assert.ok(profile);
-        assert.strictEqual(profile?.name, 'Nguyễn Văn A');
-        assert.strictEqual(profile?.avatarUrl, 'https://cdn.facebook.com/profile/12345.jpg');
+        expect(profile).toBeTruthy();
+        expect(profile?.name).toBe('Nguyễn Văn A');
+        expect(profile?.avatarUrl).toBe('https://cdn.facebook.com/profile/12345.jpg');
       });
 
       it('should return null when profile fetch fails gracefully', async () => {
@@ -930,7 +913,7 @@ describe('FacebookAdapter (Facebook Messenger Platform Integration)', () => {
         })) as unknown as typeof globalThis.fetch;
 
         const profile = await adapter.fetchUserProfile(mockPageAccessToken, 'invalid_psid');
-        assert.strictEqual(profile, null);
+        expect(profile).toBe(null);
       });
     });
 
@@ -950,14 +933,14 @@ describe('FacebookAdapter (Facebook Messenger Platform Integration)', () => {
         }) as typeof globalThis.fetch;
 
         const res = await adapter.subscribeApps(mockPageAccessToken);
-        assert.strictEqual(interceptedMethod, 'POST');
-        assert.deepStrictEqual(interceptedBody.subscribed_fields, [
+        expect(interceptedMethod).toBe('POST');
+        expect(interceptedBody.subscribed_fields).toEqual([
           'messages',
           'messaging_postbacks',
           'message_deliveries',
           'message_reads',
         ]);
-        assert.strictEqual(res.success, true);
+        expect(res.success).toBe(true);
       });
 
       it('should unsubscribe page from webhook events via DELETE /me/subscribed_apps', async () => {
@@ -973,8 +956,8 @@ describe('FacebookAdapter (Facebook Messenger Platform Integration)', () => {
         }) as typeof globalThis.fetch;
 
         const res = await adapter.unsubscribeApps(mockPageAccessToken);
-        assert.strictEqual(interceptedMethod, 'DELETE');
-        assert.strictEqual(res.success, true);
+        expect(interceptedMethod).toBe('DELETE');
+        expect(res.success).toBe(true);
       });
     });
 
@@ -997,9 +980,9 @@ describe('FacebookAdapter (Facebook Messenger Platform Integration)', () => {
           'typing_on',
         );
 
-        assert.strictEqual(success, true);
-        assert.strictEqual(interceptedBody.recipient.id, 'psid_recipient_1');
-        assert.strictEqual(interceptedBody.sender_action, 'typing_on');
+        expect(success).toBe(true);
+        expect(interceptedBody.recipient.id).toBe('psid_recipient_1');
+        expect(interceptedBody.sender_action).toBe('typing_on');
       });
 
       it('should return false when sendSenderAction fails', async () => {
@@ -1015,7 +998,7 @@ describe('FacebookAdapter (Facebook Messenger Platform Integration)', () => {
           'typing_off',
         );
 
-        assert.strictEqual(success, false);
+        expect(success).toBe(false);
       });
 
       it('should return false when sendSenderAction throws network error', async () => {
@@ -1029,7 +1012,7 @@ describe('FacebookAdapter (Facebook Messenger Platform Integration)', () => {
           'mark_seen',
         );
 
-        assert.strictEqual(success, false);
+        expect(success).toBe(false);
       });
     });
 
@@ -1048,8 +1031,8 @@ describe('FacebookAdapter (Facebook Messenger Platform Integration)', () => {
         })) as unknown as typeof globalThis.fetch;
 
         const res = await adapter.subscribeApps(mockPageAccessToken, ['invalid_field']);
-        assert.strictEqual(res.success, false);
-        assert.strictEqual(res.description, '[100] Invalid field specified');
+        expect(res.success).toBe(false);
+        expect(res.description).toBe('[100] Invalid field specified');
       });
 
       it('should return error description when unsubscribeApps API returns error object', async () => {
@@ -1066,8 +1049,8 @@ describe('FacebookAdapter (Facebook Messenger Platform Integration)', () => {
         })) as unknown as typeof globalThis.fetch;
 
         const res = await adapter.unsubscribeApps(mockPageAccessToken);
-        assert.strictEqual(res.success, false);
-        assert.strictEqual(res.description, '[200] Permission denied');
+        expect(res.success).toBe(false);
+        expect(res.description).toBe('[200] Permission denied');
       });
     });
 
@@ -1099,8 +1082,10 @@ describe('FacebookAdapter (Facebook Messenger Platform Integration)', () => {
           content: 'Hello v21.0',
         });
 
-        assert.ok(interceptedUrl.includes('https://graph.facebook.com/v21.0/me/messages'));
-        assert.strictEqual(result.externalMessageId, 'mid.custom_version_1');
+        expect(
+          interceptedUrl.includes('https://graph.facebook.com/v21.0/me/messages'),
+        ).toBeTruthy();
+        expect(result.externalMessageId).toBe('mid.custom_version_1');
       });
 
       it('should use custom graphApiVersion from channel settings for getChannelInfo', async () => {
@@ -1126,8 +1111,8 @@ describe('FacebookAdapter (Facebook Messenger Platform Integration)', () => {
         };
 
         const info = await adapter.getChannelInfo(contextWithCustomVersion);
-        assert.ok(interceptedUrl.includes('https://graph.facebook.com/v21.0/me'));
-        assert.strictEqual(info.name, 'Store v21');
+        expect(interceptedUrl.includes('https://graph.facebook.com/v21.0/me')).toBeTruthy();
+        expect(info.name).toBe('Store v21');
       });
     });
 
@@ -1154,20 +1139,20 @@ describe('FacebookAdapter (Facebook Messenger Platform Integration)', () => {
 
           const result = await adapter.hideComment(mockCreds, commentId);
 
-          assert.strictEqual(result, true);
-          assert.ok(interceptedUrl.includes(`/v26.0/${commentId}`));
-          assert.strictEqual(interceptedHeaders.Authorization, 'Bearer EAA_test_token_123');
-          assert.strictEqual(interceptedBody.is_hidden, true);
+          expect(result).toBe(true);
+          expect(interceptedUrl.includes(`/v26.0/${commentId}`)).toBeTruthy();
+          expect(interceptedHeaders.Authorization).toBe('Bearer EAA_test_token_123');
+          expect(interceptedBody.is_hidden).toBe(true);
         });
 
         it('should throw error when commentId is empty', async () => {
-          await assert.rejects(async () => {
+          await expectReject(async () => {
             await adapter.hideComment(mockCreds, '');
           }, /Comment ID is required to hide comment/);
         });
 
         it('should throw error when pageAccessToken is missing', async () => {
-          await assert.rejects(async () => {
+          await expectReject(async () => {
             await adapter.hideComment({}, commentId);
           }, /Facebook Page Access Token is missing/);
         });
@@ -1186,7 +1171,7 @@ describe('FacebookAdapter (Facebook Messenger Platform Integration)', () => {
             }),
           })) as unknown as typeof globalThis.fetch;
 
-          await assert.rejects(async () => {
+          await expectReject(async () => {
             await adapter.hideComment(mockCreds, commentId);
           }, /Facebook API hideComment error: \[200\]/);
         });
@@ -1204,15 +1189,15 @@ describe('FacebookAdapter (Facebook Messenger Platform Integration)', () => {
             }),
           })) as unknown as typeof globalThis.fetch;
 
-          await assert.rejects(
+          await expectReject(
             async () => {
               await adapter.hideComment(mockCreds, commentId);
             },
             (err: any) => {
-              assert.ok(err instanceof FacebookRateLimitError);
-              assert.strictEqual(err.isRateLimit, true);
-              assert.strictEqual(err.status, 429);
-              assert.strictEqual(err.code, 4);
+              expect(err instanceof FacebookRateLimitError).toBeTruthy();
+              expect(err.isRateLimit).toBe(true);
+              expect(err.status).toBe(429);
+              expect(err.code).toBe(4);
               return true;
             },
           );
@@ -1238,18 +1223,18 @@ describe('FacebookAdapter (Facebook Messenger Platform Integration)', () => {
 
           const result = await adapter.sendPrivateReply(mockCreds, commentId, 'Shop chào bạn!');
 
-          assert.strictEqual(result.id, 'm_pr_123456');
-          assert.ok(interceptedUrl.includes(`/v26.0/${commentId}/private_replies`));
-          assert.strictEqual(interceptedHeaders.Authorization, 'Bearer EAA_test_token_123');
-          assert.strictEqual(interceptedBody.message, 'Shop chào bạn!');
+          expect(result.id).toBe('m_pr_123456');
+          expect(interceptedUrl.includes(`/v26.0/${commentId}/private_replies`)).toBeTruthy();
+          expect(interceptedHeaders.Authorization).toBe('Bearer EAA_test_token_123');
+          expect(interceptedBody.message).toBe('Shop chào bạn!');
         });
 
         it('should throw error when commentId or message is empty', async () => {
-          await assert.rejects(async () => {
+          await expectReject(async () => {
             await adapter.sendPrivateReply(mockCreds, '', 'Hello');
           }, /Comment ID is required to send private reply/);
 
-          await assert.rejects(async () => {
+          await expectReject(async () => {
             await adapter.sendPrivateReply(mockCreds, commentId, '   ');
           }, /Message content is required to send private reply/);
         });
@@ -1267,7 +1252,7 @@ describe('FacebookAdapter (Facebook Messenger Platform Integration)', () => {
             }),
           })) as unknown as typeof globalThis.fetch;
 
-          await assert.rejects(async () => {
+          await expectReject(async () => {
             await adapter.sendPrivateReply(mockCreds, commentId, 'Hello');
           }, /Facebook API sendPrivateReply error: \[100\]/);
         });
@@ -1285,15 +1270,15 @@ describe('FacebookAdapter (Facebook Messenger Platform Integration)', () => {
             }),
           })) as unknown as typeof globalThis.fetch;
 
-          await assert.rejects(
+          await expectReject(
             async () => {
               await adapter.sendPrivateReply(mockCreds, commentId, 'Hello');
             },
             (err: any) => {
-              assert.ok(err instanceof FacebookRateLimitError);
-              assert.strictEqual(err.isRateLimit, true);
-              assert.strictEqual(err.status, 429);
-              assert.strictEqual(err.code, 32);
+              expect(err instanceof FacebookRateLimitError).toBeTruthy();
+              expect(err.isRateLimit).toBe(true);
+              expect(err.status).toBe(429);
+              expect(err.code).toBe(32);
               return true;
             },
           );
@@ -1323,18 +1308,18 @@ describe('FacebookAdapter (Facebook Messenger Platform Integration)', () => {
             'Đã inbox bạn nhé!',
           );
 
-          assert.strictEqual(result.id, 'comm_reply_999');
-          assert.ok(interceptedUrl.includes(`/v26.0/${commentId}/comments`));
-          assert.strictEqual(interceptedHeaders.Authorization, 'Bearer EAA_test_token_123');
-          assert.strictEqual(interceptedBody.message, 'Đã inbox bạn nhé!');
+          expect(result.id).toBe('comm_reply_999');
+          expect(interceptedUrl.includes(`/v26.0/${commentId}/comments`)).toBeTruthy();
+          expect(interceptedHeaders.Authorization).toBe('Bearer EAA_test_token_123');
+          expect(interceptedBody.message).toBe('Đã inbox bạn nhé!');
         });
 
         it('should throw error when commentId or message is empty', async () => {
-          await assert.rejects(async () => {
+          await expectReject(async () => {
             await adapter.sendPublicCommentReply(mockCreds, '', 'Hello');
           }, /Comment ID is required to send public comment reply/);
 
-          await assert.rejects(async () => {
+          await expectReject(async () => {
             await adapter.sendPublicCommentReply(mockCreds, commentId, '');
           }, /Message content is required to send public comment reply/);
         });
@@ -1352,7 +1337,7 @@ describe('FacebookAdapter (Facebook Messenger Platform Integration)', () => {
             }),
           })) as unknown as typeof globalThis.fetch;
 
-          await assert.rejects(async () => {
+          await expectReject(async () => {
             await adapter.sendPublicCommentReply(mockCreds, commentId, 'Hello');
           }, /Facebook API sendPublicCommentReply error: \[100\]/);
         });
@@ -1370,15 +1355,15 @@ describe('FacebookAdapter (Facebook Messenger Platform Integration)', () => {
             }),
           })) as unknown as typeof globalThis.fetch;
 
-          await assert.rejects(
+          await expectReject(
             async () => {
               await adapter.sendPublicCommentReply(mockCreds, commentId, 'Hello');
             },
             (err: any) => {
-              assert.ok(err instanceof FacebookRateLimitError);
-              assert.strictEqual(err.isRateLimit, true);
-              assert.strictEqual(err.status, 429);
-              assert.strictEqual(err.code, 613);
+              expect(err instanceof FacebookRateLimitError).toBeTruthy();
+              expect(err.isRateLimit).toBe(true);
+              expect(err.status).toBe(429);
+              expect(err.code).toBe(613);
               return true;
             },
           );

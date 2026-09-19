@@ -1,5 +1,3 @@
-import { describe, it, beforeEach } from 'node:test';
-import * as assert from 'node:assert';
 import { CommercePresenceService } from '../commerce-presence.service';
 
 describe('CommercePresenceService (Redis 30s Sliding Collision Lock)', () => {
@@ -51,66 +49,66 @@ describe('CommercePresenceService (Redis 30s Sliding Collision Lock)', () => {
   it('should successfully acquire editing lock for conversation', async () => {
     const result = await service.startEditing(ws1, conv1, agent1);
 
-    assert.strictEqual(result.success, true);
-    assert.strictEqual(result.isLocked, false);
-    assert.strictEqual(result.lockedBy, null);
-    assert.strictEqual(result.remainingTtlSeconds, 30);
+    expect(result.success).toBe(true);
+    expect(result.isLocked).toBe(false);
+    expect(result.lockedBy).toBe(null);
+    expect(result.remainingTtlSeconds).toBe(30);
 
     const status = await service.getEditingStatus(ws1, conv1);
-    assert.strictEqual(status.isLocked, true);
-    assert.strictEqual(status.lockedBy?.userId, agent1.userId);
+    expect(status.isLocked).toBe(true);
+    expect(status.lockedBy?.userId).toBe(agent1.userId);
   });
 
   it('should block collision when second agent attempts to acquire lock', async () => {
     await service.startEditing(ws1, conv1, agent1);
 
     const collision = await service.startEditing(ws1, conv1, agent2);
-    assert.strictEqual(collision.success, false);
-    assert.strictEqual(collision.isLocked, true);
-    assert.strictEqual(collision.lockedBy?.userId, agent1.userId);
-    assert.strictEqual(collision.remainingTtlSeconds, 30);
+    expect(collision.success).toBe(false);
+    expect(collision.isLocked).toBe(true);
+    expect(collision.lockedBy?.userId).toBe(agent1.userId);
+    expect(collision.remainingTtlSeconds).toBe(30);
   });
 
   it('should allow same agent to re-acquire and refresh lock idempotently', async () => {
     await service.startEditing(ws1, conv1, agent1);
 
     const reacquire = await service.startEditing(ws1, conv1, agent1);
-    assert.strictEqual(reacquire.success, true);
-    assert.strictEqual(reacquire.isLocked, false);
+    expect(reacquire.success).toBe(true);
+    expect(reacquire.isLocked).toBe(false);
   });
 
   it('should refresh heartbeat for lock holder and reject non-holder', async () => {
     await service.startEditing(ws1, conv1, agent1);
 
     const hbSuccess = await service.refreshHeartbeat(ws1, conv1, agent1.userId);
-    assert.strictEqual(hbSuccess.success, true);
-    assert.strictEqual(hbSuccess.remainingTtlSeconds, 30);
+    expect(hbSuccess.success).toBe(true);
+    expect(hbSuccess.remainingTtlSeconds).toBe(30);
 
     const hbFail = await service.refreshHeartbeat(ws1, conv1, agent2.userId);
-    assert.strictEqual(hbFail.success, false);
+    expect(hbFail.success).toBe(false);
   });
 
   it('should release lock when current agent stops editing', async () => {
     await service.startEditing(ws1, conv1, agent1);
 
     const released = await service.stopEditing(ws1, conv1, agent1.userId);
-    assert.strictEqual(released, true);
+    expect(released).toBe(true);
 
     const status = await service.getEditingStatus(ws1, conv1);
-    assert.strictEqual(status.isLocked, false);
-    assert.strictEqual(status.lockedBy, null);
+    expect(status.isLocked).toBe(false);
+    expect(status.lockedBy).toBe(null);
   });
 
   it('should allow takeover by second agent', async () => {
     await service.startEditing(ws1, conv1, agent1);
 
     const takeover = await service.takeoverEditing(ws1, conv1, agent2);
-    assert.strictEqual(takeover.success, true);
-    assert.strictEqual(takeover.previousLockedBy?.userId, agent1.userId);
+    expect(takeover.success).toBe(true);
+    expect(takeover.previousLockedBy?.userId).toBe(agent1.userId);
 
     const status = await service.getEditingStatus(ws1, conv1);
-    assert.strictEqual(status.isLocked, true);
-    assert.strictEqual(status.lockedBy?.userId, agent2.userId);
+    expect(status.isLocked).toBe(true);
+    expect(status.lockedBy?.userId).toBe(agent2.userId);
   });
 
   it('should cleanup user locks on disconnect', async () => {
@@ -124,8 +122,8 @@ describe('CommercePresenceService (Redis 30s Sliding Collision Lock)', () => {
     const status2 = await service.getEditingStatus(ws1, 'conv-2');
     const status3 = await service.getEditingStatus(ws1, 'conv-3');
 
-    assert.strictEqual(status1.isLocked, false);
-    assert.strictEqual(status2.isLocked, false);
-    assert.strictEqual(status3.isLocked, true);
+    expect(status1.isLocked).toBe(false);
+    expect(status2.isLocked).toBe(false);
+    expect(status3.isLocked).toBe(true);
   });
 });

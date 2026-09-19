@@ -1,5 +1,3 @@
-import { describe, it, beforeEach } from 'node:test';
-import * as assert from 'node:assert';
 import { createGetProductDetailsTool } from '../get-product-details.tool';
 
 describe('getProductDetails Tool (T2)', () => {
@@ -63,24 +61,24 @@ describe('getProductDetails Tool (T2)', () => {
 
   it('should return full details for an active product', async () => {
     const result = await tool.execute({ productId: 'prod-active' }, {} as any);
-    assert.ok(result);
-    assert.strictEqual(result.productId, 'prod-active');
-    assert.strictEqual(result.name, 'Áo Khoác Gió');
-    assert.strictEqual(result.basePrice, 350000);
-    assert.strictEqual(result.images.length, 2);
+    expect(result).toBeTruthy();
+    expect(result.productId).toBe('prod-active');
+    expect(result.name).toBe('Áo Khoác Gió');
+    expect(result.basePrice).toBe(350000);
+    expect(result.images.length).toBe(2);
     // Inactive variant excluded
-    assert.strictEqual(result.variants.length, 1);
-    assert.strictEqual(result.variants[0].variantId, 'var-10');
-    assert.strictEqual(result.variants[0].price, 380000);
+    expect(result.variants.length).toBe(1);
+    expect(result.variants[0].variantId).toBe('var-10');
+    expect(result.variants[0].price).toBe(380000);
   });
 
   it('should return null when product is not found', async () => {
     const result = await tool.execute({ productId: 'non-existent' }, {} as any);
-    assert.strictEqual(result, null);
+    expect(result).toBe(null);
   });
 
   it('should return null when product is inactive', async () => {
     const result = await tool.execute({ productId: 'prod-inactive' }, {} as any);
-    assert.strictEqual(result, null);
+    expect(result).toBe(null);
   });
 });

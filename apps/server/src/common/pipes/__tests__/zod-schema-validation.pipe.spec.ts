@@ -1,5 +1,4 @@
-import { describe, it } from 'node:test';
-import * as assert from 'node:assert';
+import { expectThrow } from '../../../../test/test-assertions';
 import { z } from 'zod';
 import { BadRequestException } from '@nestjs/common';
 import { ZodSchemaValidationPipe } from '../zod-schema-validation.pipe';
@@ -23,7 +22,7 @@ describe('ZodSchemaValidationPipe (Common Pipe — FINDING-P9-02)', () => {
     };
 
     const result = pipe.transform(validPayload);
-    assert.deepStrictEqual(result, validPayload);
+    expect(result).toEqual(validPayload);
   });
 
   it('should throw BadRequestException with VALIDATION_FAILED when payload is invalid', () => {
@@ -33,26 +32,26 @@ describe('ZodSchemaValidationPipe (Common Pipe — FINDING-P9-02)', () => {
       profile: { bio: 'hi' },
     };
 
-    assert.throws(
+    expectThrow(
       () => pipe.transform(invalidPayload),
       (err: any) => {
-        assert.strictEqual(err instanceof BadRequestException, true);
+        expect(err instanceof BadRequestException).toBe(true);
         const response = err.getResponse();
-        assert.strictEqual(response.code, 'VALIDATION_FAILED');
-        assert.strictEqual(response.message, 'Validation failed');
-        assert.strictEqual(response.errors.length, 3);
+        expect(response.code).toBe('VALIDATION_FAILED');
+        expect(response.message).toBe('Validation failed');
+        expect(response.errors.length).toBe(3);
 
         const emailErr = response.errors.find((e: any) => e.field === 'email');
-        assert.ok(emailErr);
-        assert.strictEqual(emailErr.message, 'Invalid email address');
+        expect(emailErr).toBeTruthy();
+        expect(emailErr.message).toBe('Invalid email address');
 
         const ageErr = response.errors.find((e: any) => e.field === 'age');
-        assert.ok(ageErr);
-        assert.strictEqual(ageErr.message, 'Must be at least 18 years old');
+        expect(ageErr).toBeTruthy();
+        expect(ageErr.message).toBe('Must be at least 18 years old');
 
         const bioErr = response.errors.find((e: any) => e.field === 'profile.bio');
-        assert.ok(bioErr);
-        assert.strictEqual(bioErr.message, 'Bio must be at least 5 characters');
+        expect(bioErr).toBeTruthy();
+        expect(bioErr.message).toBe('Bio must be at least 5 characters');
 
         return true;
       },
@@ -63,13 +62,13 @@ describe('ZodSchemaValidationPipe (Common Pipe — FINDING-P9-02)', () => {
     const stringOnlySchema = z.string({ message: 'Root payload must be a string' });
     const stringPipe = new ZodSchemaValidationPipe(stringOnlySchema);
 
-    assert.throws(
+    expectThrow(
       () => stringPipe.transform(12345),
       (err: any) => {
-        assert.strictEqual(err instanceof BadRequestException, true);
+        expect(err instanceof BadRequestException).toBe(true);
         const response = err.getResponse();
-        assert.strictEqual(response.code, 'VALIDATION_FAILED');
-        assert.strictEqual(response.errors[0].field, 'payload');
+        expect(response.code).toBe('VALIDATION_FAILED');
+        expect(response.errors[0].field).toBe('payload');
         return true;
       },
     );

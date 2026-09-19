@@ -1,5 +1,3 @@
-import { describe, it, beforeEach } from 'node:test';
-import * as assert from 'node:assert';
 import { createEvaluateDiscountTool } from '../evaluate-discount.tool';
 import { DiscountGuardService } from '../../../services/discount-guard.service';
 
@@ -17,8 +15,8 @@ describe('evaluateDiscount Tool (T5)', () => {
     });
 
     const result = await tool.execute!({ orderTotal: 200000, requestedDiscount: 15000 }, {} as any);
-    assert.strictEqual(result.approved, true);
-    assert.strictEqual(result.allowedDiscount, 15000);
+    expect(result.approved).toBe(true);
+    expect(result.allowedDiscount).toBe(15000);
   });
 
   it('should reject discount exceeding policy limit and return maximum allowed', async () => {
@@ -29,9 +27,9 @@ describe('evaluateDiscount Tool (T5)', () => {
 
     // 10% of 200,000 = 20,000
     const result = await tool.execute!({ orderTotal: 200000, requestedDiscount: 35000 }, {} as any);
-    assert.strictEqual(result.approved, false);
-    assert.strictEqual(result.allowedDiscount, 20000);
-    assert.ok(result.reason?.includes('vượt quá'));
+    expect(result.approved).toBe(false);
+    expect(result.allowedDiscount).toBe(20000);
+    expect(result.reason?.includes('vượt quá')).toBeTruthy();
   });
 
   it('should reject when shop policy does not allow discounts', async () => {
@@ -41,7 +39,7 @@ describe('evaluateDiscount Tool (T5)', () => {
     });
 
     const result = await tool.execute!({ orderTotal: 200000, requestedDiscount: 10000 }, {} as any);
-    assert.strictEqual(result.approved, false);
-    assert.strictEqual(result.allowedDiscount, 0);
+    expect(result.approved).toBe(false);
+    expect(result.allowedDiscount).toBe(0);
   });
 });

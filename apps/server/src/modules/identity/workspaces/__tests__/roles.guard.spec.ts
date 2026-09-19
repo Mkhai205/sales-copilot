@@ -1,5 +1,4 @@
-import { describe, it, beforeEach } from 'node:test';
-import * as assert from 'node:assert';
+import { expectThrow } from '../../../../../test/test-assertions';
 import { ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { WorkspaceRole } from '@sales-copilot/shared-contracts';
@@ -44,7 +43,7 @@ describe('RolesGuard (RBAC Permission Control)', () => {
     reflector.getAllAndOverride = () => undefined;
 
     const result = guard.canActivate(context);
-    assert.strictEqual(result, true);
+    expect(result).toBe(true);
   });
 
   it('should allow access when empty roles array is provided', () => {
@@ -52,7 +51,7 @@ describe('RolesGuard (RBAC Permission Control)', () => {
     reflector.getAllAndOverride = () => [];
 
     const result = guard.canActivate(context);
-    assert.strictEqual(result, true);
+    expect(result).toBe(true);
   });
 
   it('should allow access when user role matches one of the required roles (OWNER in [OWNER, ADMIN])', () => {
@@ -60,7 +59,7 @@ describe('RolesGuard (RBAC Permission Control)', () => {
     reflector.getAllAndOverride = () => [WorkspaceRole.OWNER, WorkspaceRole.ADMIN];
 
     const result = guard.canActivate(context);
-    assert.strictEqual(result, true);
+    expect(result).toBe(true);
   });
 
   it('should allow access when user is ADMIN and ADMIN is in required roles', () => {
@@ -68,19 +67,19 @@ describe('RolesGuard (RBAC Permission Control)', () => {
     reflector.getAllAndOverride = () => [WorkspaceRole.OWNER, WorkspaceRole.ADMIN];
 
     const result = guard.canActivate(context);
-    assert.strictEqual(result, true);
+    expect(result).toBe(true);
   });
 
   it('should throw ForbiddenException (INSUFFICIENT_PERMISSIONS) when user role is not in required roles', () => {
     const context = createMockExecutionContext(WorkspaceRole.AGENT);
     reflector.getAllAndOverride = () => [WorkspaceRole.OWNER, WorkspaceRole.ADMIN];
 
-    assert.throws(
+    expectThrow(
       () => {
         guard.canActivate(context);
       },
       (err: any) => {
-        assert.strictEqual(err.response?.code, 'INSUFFICIENT_PERMISSIONS');
+        expect(err.response?.code).toBe('INSUFFICIENT_PERMISSIONS');
         return true;
       },
     );
@@ -90,12 +89,12 @@ describe('RolesGuard (RBAC Permission Control)', () => {
     const context = createMockExecutionContext(WorkspaceRole.AGENT);
     reflector.getAllAndOverride = () => [WorkspaceRole.OWNER];
 
-    assert.throws(
+    expectThrow(
       () => {
         guard.canActivate(context);
       },
       (err: any) => {
-        assert.strictEqual(err.response?.code, 'INSUFFICIENT_PERMISSIONS');
+        expect(err.response?.code).toBe('INSUFFICIENT_PERMISSIONS');
         return true;
       },
     );
@@ -105,12 +104,12 @@ describe('RolesGuard (RBAC Permission Control)', () => {
     const context = createMockExecutionContext(undefined);
     reflector.getAllAndOverride = () => [WorkspaceRole.OWNER];
 
-    assert.throws(
+    expectThrow(
       () => {
         guard.canActivate(context);
       },
       (err: any) => {
-        assert.strictEqual(err.response?.code, 'WORKSPACE_CONTEXT_REQUIRED');
+        expect(err.response?.code).toBe('WORKSPACE_CONTEXT_REQUIRED');
         return true;
       },
     );
@@ -120,12 +119,12 @@ describe('RolesGuard (RBAC Permission Control)', () => {
     const context = createMockExecutionContext(WorkspaceRole.OWNER, 'ws');
     reflector.getAllAndOverride = () => [WorkspaceRole.OWNER];
 
-    assert.throws(
+    expectThrow(
       () => {
         guard.canActivate(context);
       },
       (err: any) => {
-        assert.strictEqual(err.response?.code, 'UNSUPPORTED_CONTEXT');
+        expect(err.response?.code).toBe('UNSUPPORTED_CONTEXT');
         return true;
       },
     );

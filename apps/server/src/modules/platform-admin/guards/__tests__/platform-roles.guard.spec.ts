@@ -1,5 +1,4 @@
-import { describe, it, beforeEach } from 'node:test';
-import * as assert from 'node:assert';
+import { expectThrow } from '../../../../../test/test-assertions';
 import { ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { PlatformRole } from '@sales-copilot/shared-contracts';
@@ -43,7 +42,7 @@ describe('PlatformRolesGuard (Super Admin Platform Security)', () => {
     reflector.getAllAndOverride = () => undefined;
 
     const result = guard.canActivate(context);
-    assert.strictEqual(result, true);
+    expect(result).toBe(true);
   });
 
   it('should allow access when empty roles array is configured', () => {
@@ -55,7 +54,7 @@ describe('PlatformRolesGuard (Super Admin Platform Security)', () => {
     reflector.getAllAndOverride = () => [];
 
     const result = guard.canActivate(context);
-    assert.strictEqual(result, true);
+    expect(result).toBe(true);
   });
 
   it('should allow access when user role matches required role (SUPER_ADMIN)', () => {
@@ -67,7 +66,7 @@ describe('PlatformRolesGuard (Super Admin Platform Security)', () => {
     reflector.getAllAndOverride = () => [PlatformRole.SUPER_ADMIN];
 
     const result = guard.canActivate(context);
-    assert.strictEqual(result, true);
+    expect(result).toBe(true);
   });
 
   it('should throw ForbiddenException (INSUFFICIENT_PLATFORM_PERMISSIONS) when user has role USER', () => {
@@ -78,13 +77,13 @@ describe('PlatformRolesGuard (Super Admin Platform Security)', () => {
     });
     reflector.getAllAndOverride = () => [PlatformRole.SUPER_ADMIN];
 
-    assert.throws(
+    expectThrow(
       () => {
         guard.canActivate(context);
       },
       (err: any) => {
-        assert.strictEqual(err.response?.code, 'INSUFFICIENT_PLATFORM_PERMISSIONS');
-        assert.match(err.response?.message, /Super administrator privileges required/i);
+        expect(err.response?.code).toBe('INSUFFICIENT_PLATFORM_PERMISSIONS');
+        expect(err.response?.message).toMatch(/Super administrator privileges required/i);
         return true;
       },
     );
@@ -94,13 +93,13 @@ describe('PlatformRolesGuard (Super Admin Platform Security)', () => {
     const context = createMockExecutionContext(null);
     reflector.getAllAndOverride = () => [PlatformRole.SUPER_ADMIN];
 
-    assert.throws(
+    expectThrow(
       () => {
         guard.canActivate(context);
       },
       (err: any) => {
-        assert.strictEqual(err.response?.code, 'PLATFORM_AUTH_REQUIRED');
-        assert.match(err.response?.message, /Platform authentication required/i);
+        expect(err.response?.code).toBe('PLATFORM_AUTH_REQUIRED');
+        expect(err.response?.message).toMatch(/Platform authentication required/i);
         return true;
       },
     );
@@ -113,12 +112,12 @@ describe('PlatformRolesGuard (Super Admin Platform Security)', () => {
     });
     reflector.getAllAndOverride = () => [PlatformRole.SUPER_ADMIN];
 
-    assert.throws(
+    expectThrow(
       () => {
         guard.canActivate(context);
       },
       (err: any) => {
-        assert.strictEqual(err.response?.code, 'PLATFORM_AUTH_REQUIRED');
+        expect(err.response?.code).toBe('PLATFORM_AUTH_REQUIRED');
         return true;
       },
     );
@@ -135,13 +134,13 @@ describe('PlatformRolesGuard (Super Admin Platform Security)', () => {
     );
     reflector.getAllAndOverride = () => [PlatformRole.SUPER_ADMIN];
 
-    assert.throws(
+    expectThrow(
       () => {
         guard.canActivate(context);
       },
       (err: any) => {
-        assert.strictEqual(err.response?.code, 'UNSUPPORTED_CONTEXT');
-        assert.match(err.response?.message, /HTTP context/i);
+        expect(err.response?.code).toBe('UNSUPPORTED_CONTEXT');
+        expect(err.response?.message).toMatch(/HTTP context/i);
         return true;
       },
     );
@@ -156,7 +155,7 @@ describe('PlatformRolesGuard (Super Admin Platform Security)', () => {
     reflector.getAllAndOverride = () => [PlatformRole.SUPER_ADMIN, PlatformRole.USER];
 
     const result = guard.canActivate(context);
-    assert.strictEqual(result, true);
+    expect(result).toBe(true);
   });
 
   it('should throw ForbiddenException when user has workspace role ADMIN instead of SUPER_ADMIN', () => {
@@ -167,12 +166,12 @@ describe('PlatformRolesGuard (Super Admin Platform Security)', () => {
     });
     reflector.getAllAndOverride = () => [PlatformRole.SUPER_ADMIN];
 
-    assert.throws(
+    expectThrow(
       () => {
         guard.canActivate(context);
       },
       (err: any) => {
-        assert.strictEqual(err.response?.code, 'INSUFFICIENT_PLATFORM_PERMISSIONS');
+        expect(err.response?.code).toBe('INSUFFICIENT_PLATFORM_PERMISSIONS');
         return true;
       },
     );

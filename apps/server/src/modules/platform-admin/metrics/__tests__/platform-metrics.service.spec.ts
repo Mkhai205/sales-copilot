@@ -1,5 +1,3 @@
-import { describe, it, beforeEach } from 'node:test';
-import * as assert from 'node:assert';
 import { PlatformMetricsService } from '../platform-metrics.service';
 
 describe('PlatformMetricsService (System Overview & Health Metrics)', () => {
@@ -40,11 +38,11 @@ describe('PlatformMetricsService (System Overview & Health Metrics)', () => {
     const service = new PlatformMetricsService(mockPrisma, mockRedis, mockStorage);
     const result = await service.getMetricsOverview();
 
-    assert.strictEqual(result.totalWorkspaces, 10);
-    assert.strictEqual(result.activeWorkspaces, 8);
-    assert.strictEqual(result.suspendedWorkspaces, 2);
-    assert.strictEqual(result.totalUsers, 45);
-    assert.deepStrictEqual(result.systemHealth, {
+    expect(result.totalWorkspaces).toBe(10);
+    expect(result.activeWorkspaces).toBe(8);
+    expect(result.suspendedWorkspaces).toBe(2);
+    expect(result.totalUsers).toBe(45);
+    expect(result.systemHealth).toEqual({
       postgres: 'HEALTHY',
       redis: 'HEALTHY',
       storage: 'HEALTHY',
@@ -57,13 +55,13 @@ describe('PlatformMetricsService (System Overview & Health Metrics)', () => {
     const service = new PlatformMetricsService(mockPrisma, mockRedis, mockStorage);
     const result = await service.getMetricsOverview();
 
-    assert.strictEqual(result.totalWorkspaces, 10);
-    assert.strictEqual(result.activeWorkspaces, 8);
-    assert.strictEqual(result.suspendedWorkspaces, 2);
-    assert.strictEqual(result.totalUsers, 45);
-    assert.strictEqual(result.systemHealth.postgres, 'HEALTHY');
-    assert.strictEqual(result.systemHealth.redis, 'DOWN');
-    assert.strictEqual(result.systemHealth.storage, 'HEALTHY');
+    expect(result.totalWorkspaces).toBe(10);
+    expect(result.activeWorkspaces).toBe(8);
+    expect(result.suspendedWorkspaces).toBe(2);
+    expect(result.totalUsers).toBe(45);
+    expect(result.systemHealth.postgres).toBe('HEALTHY');
+    expect(result.systemHealth.redis).toBe('DOWN');
+    expect(result.systemHealth.storage).toBe('HEALTHY');
   });
 
   it('should report Redis as DOWN when Redis ping throws an unhandled exception', async () => {
@@ -74,8 +72,8 @@ describe('PlatformMetricsService (System Overview & Health Metrics)', () => {
     const service = new PlatformMetricsService(mockPrisma, mockRedis, mockStorage);
     const result = await service.getMetricsOverview();
 
-    assert.strictEqual(result.systemHealth.redis, 'DOWN');
-    assert.strictEqual(result.systemHealth.postgres, 'HEALTHY');
+    expect(result.systemHealth.redis).toBe('DOWN');
+    expect(result.systemHealth.postgres).toBe('HEALTHY');
   });
 
   it('should fallback counts to 0 and report Postgres DOWN when Postgres ping is down', async () => {
@@ -84,12 +82,12 @@ describe('PlatformMetricsService (System Overview & Health Metrics)', () => {
     const service = new PlatformMetricsService(mockPrisma, mockRedis, mockStorage);
     const result = await service.getMetricsOverview();
 
-    assert.strictEqual(result.totalWorkspaces, 0);
-    assert.strictEqual(result.activeWorkspaces, 0);
-    assert.strictEqual(result.suspendedWorkspaces, 0);
-    assert.strictEqual(result.totalUsers, 0);
-    assert.strictEqual(result.systemHealth.postgres, 'DOWN');
-    assert.strictEqual(result.systemHealth.redis, 'HEALTHY');
+    expect(result.totalWorkspaces).toBe(0);
+    expect(result.activeWorkspaces).toBe(0);
+    expect(result.suspendedWorkspaces).toBe(0);
+    expect(result.totalUsers).toBe(0);
+    expect(result.systemHealth.postgres).toBe('DOWN');
+    expect(result.systemHealth.redis).toBe('HEALTHY');
   });
 
   it('should report Postgres as DOWN and fallback counts to 0 when Postgres ping throws an unhandled exception', async () => {
@@ -100,23 +98,23 @@ describe('PlatformMetricsService (System Overview & Health Metrics)', () => {
     const service = new PlatformMetricsService(mockPrisma, mockRedis, mockStorage);
     const result = await service.getMetricsOverview();
 
-    assert.strictEqual(result.totalWorkspaces, 0);
-    assert.strictEqual(result.activeWorkspaces, 0);
-    assert.strictEqual(result.suspendedWorkspaces, 0);
-    assert.strictEqual(result.totalUsers, 0);
-    assert.strictEqual(result.systemHealth.postgres, 'DOWN');
-    assert.strictEqual(result.systemHealth.redis, 'HEALTHY');
+    expect(result.totalWorkspaces).toBe(0);
+    expect(result.activeWorkspaces).toBe(0);
+    expect(result.suspendedWorkspaces).toBe(0);
+    expect(result.totalUsers).toBe(0);
+    expect(result.systemHealth.postgres).toBe('DOWN');
+    expect(result.systemHealth.redis).toBe('HEALTHY');
   });
 
   it('should omit storage property from systemHealth when StorageService is not provided', async () => {
     const service = new PlatformMetricsService(mockPrisma, mockRedis);
     const result = await service.getMetricsOverview();
 
-    assert.strictEqual(result.totalWorkspaces, 10);
-    assert.strictEqual(result.systemHealth.postgres, 'HEALTHY');
-    assert.strictEqual(result.systemHealth.redis, 'HEALTHY');
-    assert.strictEqual(result.systemHealth.storage, undefined);
-    assert.strictEqual('storage' in result.systemHealth, false);
+    expect(result.totalWorkspaces).toBe(10);
+    expect(result.systemHealth.postgres).toBe('HEALTHY');
+    expect(result.systemHealth.redis).toBe('HEALTHY');
+    expect(result.systemHealth.storage).toBe(undefined);
+    expect('storage' in result.systemHealth).toBe(false);
   });
 
   it('should report storage as DOWN when storage ping fails or throws', async () => {
@@ -129,7 +127,7 @@ describe('PlatformMetricsService (System Overview & Health Metrics)', () => {
     const service = new PlatformMetricsService(mockPrisma, mockRedis, mockStorage);
     const result = await service.getMetricsOverview();
 
-    assert.strictEqual(result.systemHealth.storage, 'DOWN');
+    expect(result.systemHealth.storage).toBe('DOWN');
   });
 
   it('should gracefully handle database query runtime exceptions during count retrieval', async () => {
@@ -140,10 +138,10 @@ describe('PlatformMetricsService (System Overview & Health Metrics)', () => {
     const service = new PlatformMetricsService(mockPrisma, mockRedis, mockStorage);
     const result = await service.getMetricsOverview();
 
-    assert.strictEqual(result.totalWorkspaces, 0);
-    assert.strictEqual(result.activeWorkspaces, 0);
-    assert.strictEqual(result.suspendedWorkspaces, 0);
-    assert.strictEqual(result.totalUsers, 0);
-    assert.strictEqual(result.systemHealth.postgres, 'DOWN');
+    expect(result.totalWorkspaces).toBe(0);
+    expect(result.activeWorkspaces).toBe(0);
+    expect(result.suspendedWorkspaces).toBe(0);
+    expect(result.totalUsers).toBe(0);
+    expect(result.systemHealth.postgres).toBe('DOWN');
   });
 });

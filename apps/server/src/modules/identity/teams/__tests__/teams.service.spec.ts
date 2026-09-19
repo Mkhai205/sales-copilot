@@ -1,5 +1,4 @@
-import { describe, it, beforeEach } from 'node:test';
-import * as assert from 'node:assert';
+import { expectReject } from '../../../../../test/test-assertions';
 import { TeamsService } from '../teams.service';
 import { PrismaService } from '../../../../infrastructure/database';
 
@@ -234,10 +233,10 @@ describe('TeamsService (Team Management & Member Assignment)', () => {
         description: 'Handles incoming sales inquiries',
       });
 
-      assert.ok(result.id);
-      assert.strictEqual(result.name, 'Sales Inbound');
-      assert.strictEqual(result.description, 'Handles incoming sales inquiries');
-      assert.strictEqual(result.memberCount, 0);
+      expect(result.id).toBeTruthy();
+      expect(result.name).toBe('Sales Inbound');
+      expect(result.description).toBe('Handles incoming sales inquiries');
+      expect(result.memberCount).toBe(0);
     });
 
     it('should throw ConflictException (TEAM_NAME_ALREADY_EXISTS) when creating team with duplicate name in same workspace', async () => {
@@ -245,14 +244,14 @@ describe('TeamsService (Team Management & Member Assignment)', () => {
         name: 'Support Team',
       });
 
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.createTeam('ws_test_1', {
             name: 'Support Team',
           });
         },
         (err: any) => {
-          assert.strictEqual(err.response?.code, 'TEAM_NAME_ALREADY_EXISTS');
+          expect(err.response?.code).toBe('TEAM_NAME_ALREADY_EXISTS');
           return true;
         },
       );
@@ -267,9 +266,9 @@ describe('TeamsService (Team Management & Member Assignment)', () => {
         name: 'Support Team',
       });
 
-      assert.ok(result.id);
-      assert.strictEqual(result.workspaceId, 'ws_other_workspace');
-      assert.strictEqual(result.name, 'Support Team');
+      expect(result.id).toBeTruthy();
+      expect(result.workspaceId).toBe('ws_other_workspace');
+      expect(result.name).toBe('Support Team');
     });
 
     it('should list all teams in the workspace', async () => {
@@ -277,7 +276,7 @@ describe('TeamsService (Team Management & Member Assignment)', () => {
       await service.createTeam('ws_test_1', { name: 'Beta Sales' });
 
       const teams = await service.listTeams('ws_test_1');
-      assert.strictEqual(teams.length, 2);
+      expect(teams.length).toBe(2);
     });
 
     it('should get a team by id with members and counts', async () => {
@@ -285,19 +284,19 @@ describe('TeamsService (Team Management & Member Assignment)', () => {
       await service.addTeamMembers('ws_test_1', created.id, ['usr_1']);
 
       const team = await service.getTeamById('ws_test_1', created.id);
-      assert.strictEqual(team.id, created.id);
-      assert.strictEqual(team.memberCount, 1);
-      assert.strictEqual(team.members?.length, 1);
-      assert.strictEqual(team.members?.[0].user?.email, 'agent1@alphacorp.com');
+      expect(team.id).toBe(created.id);
+      expect(team.memberCount).toBe(1);
+      expect(team.members?.length).toBe(1);
+      expect(team.members?.[0].user?.email).toBe('agent1@alphacorp.com');
     });
 
     it('should throw NotFoundException (TEAM_NOT_FOUND) when getting non-existent team', async () => {
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.getTeamById('ws_test_1', 'team_non_existent');
         },
         (err: any) => {
-          assert.strictEqual(err.response?.code, 'TEAM_NOT_FOUND');
+          expect(err.response?.code).toBe('TEAM_NOT_FOUND');
           return true;
         },
       );
@@ -310,22 +309,22 @@ describe('TeamsService (Team Management & Member Assignment)', () => {
         description: 'First response level',
       });
 
-      assert.strictEqual(updated.name, 'Tier 1 Support');
-      assert.strictEqual(updated.description, 'First response level');
+      expect(updated.name).toBe('Tier 1 Support');
+      expect(updated.description).toBe('First response level');
     });
 
     it('should throw ConflictException (TEAM_NAME_ALREADY_EXISTS) when updating to existing team name', async () => {
       await service.createTeam('ws_test_1', { name: 'Team A' });
       const teamB = await service.createTeam('ws_test_1', { name: 'Team B' });
 
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.updateTeam('ws_test_1', teamB.id, {
             name: 'Team A',
           });
         },
         (err: any) => {
-          assert.strictEqual(err.response?.code, 'TEAM_NAME_ALREADY_EXISTS');
+          expect(err.response?.code).toBe('TEAM_NAME_ALREADY_EXISTS');
           return true;
         },
       );
@@ -336,24 +335,24 @@ describe('TeamsService (Team Management & Member Assignment)', () => {
       await service.addTeamMembers('ws_test_1', created.id, ['usr_1']);
 
       const deleteResult = await service.deleteTeam('ws_test_1', created.id);
-      assert.deepStrictEqual(deleteResult, { success: true });
+      expect(deleteResult).toEqual({ success: true });
 
       // Verify team no longer exists
-      await assert.rejects(async () => {
+      await expectReject(async () => {
         await service.getTeamById('ws_test_1', created.id);
       });
 
       // Verify user was NOT deleted
-      assert.ok(usersDb.has('usr_1'));
+      expect(usersDb.has('usr_1')).toBeTruthy();
     });
 
     it('should throw NotFoundException (TEAM_NOT_FOUND) when deleting non-existent team', async () => {
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.deleteTeam('ws_test_1', 'team_non_existent');
         },
         (err: any) => {
-          assert.strictEqual(err.response?.code, 'TEAM_NOT_FOUND');
+          expect(err.response?.code).toBe('TEAM_NOT_FOUND');
           return true;
         },
       );
@@ -365,21 +364,21 @@ describe('TeamsService (Team Management & Member Assignment)', () => {
       const team = await service.createTeam('ws_test_1', { name: 'VIP Support' });
       const members = await service.addTeamMembers('ws_test_1', team.id, ['usr_1', 'usr_2']);
 
-      assert.strictEqual(members.length, 2);
-      assert.ok(members.some(m => m.userId === 'usr_1' && m.user?.name === 'Agent One'));
-      assert.ok(members.some(m => m.userId === 'usr_2' && m.user?.name === 'Agent Two'));
+      expect(members.length).toBe(2);
+      expect(members.some(m => m.userId === 'usr_1' && m.user?.name === 'Agent One')).toBeTruthy();
+      expect(members.some(m => m.userId === 'usr_2' && m.user?.name === 'Agent Two')).toBeTruthy();
     });
 
     it('should throw BadRequestException (INVALID_TEAM_MEMBERS) when adding user who is NOT a workspace member', async () => {
       const team = await service.createTeam('ws_test_1', { name: 'VIP Support' });
 
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.addTeamMembers('ws_test_1', team.id, ['usr_1', 'usr_external_99']);
         },
         (err: any) => {
-          assert.strictEqual(err.response?.code, 'INVALID_TEAM_MEMBERS');
-          assert.deepStrictEqual(err.response?.details?.invalidUserIds, ['usr_external_99']);
+          expect(err.response?.code).toBe('INVALID_TEAM_MEMBERS');
+          expect(err.response?.details?.invalidUserIds).toEqual(['usr_external_99']);
           return true;
         },
       );
@@ -390,32 +389,32 @@ describe('TeamsService (Team Management & Member Assignment)', () => {
       await service.addTeamMembers('ws_test_1', team.id, ['usr_1', 'usr_2']);
 
       const removeResult = await service.removeTeamMembers('ws_test_1', team.id, ['usr_1']);
-      assert.deepStrictEqual(removeResult, { success: true });
+      expect(removeResult).toEqual({ success: true });
 
       const remaining = await service.listTeamMembers('ws_test_1', team.id);
-      assert.strictEqual(remaining.length, 1);
-      assert.strictEqual(remaining[0].userId, 'usr_2');
+      expect(remaining.length).toBe(1);
+      expect(remaining[0].userId).toBe('usr_2');
     });
 
     it('should enforce tenant isolation (cannot query/modify team in another workspace)', async () => {
       const team = await service.createTeam('ws_test_1', { name: 'Private Team' });
 
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.getTeamById('ws_other_workspace', team.id);
         },
         (err: any) => {
-          assert.strictEqual(err.response?.code, 'TEAM_NOT_FOUND');
+          expect(err.response?.code).toBe('TEAM_NOT_FOUND');
           return true;
         },
       );
 
-      await assert.rejects(
+      await expectReject(
         async () => {
           await service.addTeamMembers('ws_other_workspace', team.id, ['usr_1']);
         },
         (err: any) => {
-          assert.strictEqual(err.response?.code, 'TEAM_NOT_FOUND');
+          expect(err.response?.code).toBe('TEAM_NOT_FOUND');
           return true;
         },
       );

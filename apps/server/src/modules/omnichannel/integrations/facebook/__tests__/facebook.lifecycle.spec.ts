@@ -1,5 +1,3 @@
-import { describe, it, beforeEach, afterEach } from 'node:test';
-import * as assert from 'node:assert';
 import { ConfigService } from '@nestjs/config';
 import { ChannelType } from '@sales-copilot/shared-contracts';
 import { FacebookLifecycleService } from '../facebook.lifecycle';
@@ -190,21 +188,21 @@ describe('FacebookLifecycleService (Page Webhook Subscription Management)', () =
         channelType: ChannelType.FACEBOOK_MESSENGER,
       });
 
-      assert.strictEqual(getMeCalled, true);
-      assert.strictEqual(subscribedAppsCalled, true);
+      expect(getMeCalled).toBe(true);
+      expect(subscribedAppsCalled).toBe(true);
 
       // Verify updated channel in DB
       const updatedChannel = channelsDb.get(chanId);
-      assert.strictEqual(updatedChannel.isConnected, true);
-      assert.strictEqual(updatedChannel.providerAccountId, mockPageId);
-      assert.strictEqual(updatedChannel.settings.pageName, 'Alpha Official Facebook Page');
-      assert.strictEqual(updatedChannel.settings.pageId, mockPageId);
-      assert.ok(updatedChannel.settings.subscribedAt);
-      assert.strictEqual(updatedChannel.settings.lastSyncError, null);
+      expect(updatedChannel.isConnected).toBe(true);
+      expect(updatedChannel.providerAccountId).toBe(mockPageId);
+      expect(updatedChannel.settings.pageName).toBe('Alpha Official Facebook Page');
+      expect(updatedChannel.settings.pageId).toBe(mockPageId);
+      expect(updatedChannel.settings.subscribedAt).toBeTruthy();
+      expect(updatedChannel.settings.lastSyncError).toBe(null);
 
       // Verify Inbox avatar updated
       const updatedInbox = inboxesDb.get(inboxId);
-      assert.strictEqual(updatedInbox.avatarUrl, 'https://cdn.facebook.com/pages/alpha_avatar.jpg');
+      expect(updatedInbox.avatarUrl).toBe('https://cdn.facebook.com/pages/alpha_avatar.jpg');
     });
 
     it('should ignore channel.created events for non-Facebook channels', async () => {
@@ -221,7 +219,7 @@ describe('FacebookLifecycleService (Page Webhook Subscription Management)', () =
         channelType: ChannelType.TELEGRAM,
       });
 
-      assert.strictEqual(fetchCalled, false);
+      expect(fetchCalled).toBe(false);
     });
 
     it('should handle missing pageAccessToken gracefully', async () => {
@@ -236,11 +234,11 @@ describe('FacebookLifecycleService (Page Webhook Subscription Management)', () =
       });
 
       const success = await service.setupPageSubscription(wsId, chanId);
-      assert.strictEqual(success, false);
+      expect(success).toBe(false);
 
       const channel = channelsDb.get(chanId);
-      assert.strictEqual(channel.isConnected, false);
-      assert.strictEqual(channel.settings.lastSyncError, 'MISSING_PAGE_ACCESS_TOKEN');
+      expect(channel.isConnected).toBe(false);
+      expect(channel.settings.lastSyncError).toBe('MISSING_PAGE_ACCESS_TOKEN');
     });
 
     it('should handle Facebook Graph API errors during setup gracefully', async () => {
@@ -271,20 +269,20 @@ describe('FacebookLifecycleService (Page Webhook Subscription Management)', () =
       })) as unknown as typeof globalThis.fetch;
 
       const success = await service.setupPageSubscription(wsId, chanId);
-      assert.strictEqual(success, false);
+      expect(success).toBe(false);
 
       const channel = channelsDb.get(chanId);
-      assert.strictEqual(channel.isConnected, false);
-      assert.ok(
+      expect(channel.isConnected).toBe(false);
+      expect(
         channel.settings.lastSyncError.includes(
           'Error validating access token: Session has expired',
         ),
-      );
+      ).toBeTruthy();
     });
 
     it('should return false if channel does not exist in workspace', async () => {
       const success = await service.setupPageSubscription(wsId, 'non_existent_chan');
-      assert.strictEqual(success, false);
+      expect(success).toBe(false);
     });
 
     it('should support plain credentials objects', async () => {
@@ -320,7 +318,7 @@ describe('FacebookLifecycleService (Page Webhook Subscription Management)', () =
       }) as typeof globalThis.fetch;
 
       const success = await service.setupPageSubscription(wsId, chanId);
-      assert.strictEqual(success, true);
+      expect(success).toBe(true);
     });
   });
 
@@ -359,7 +357,7 @@ describe('FacebookLifecycleService (Page Webhook Subscription Management)', () =
         channelType: ChannelType.FACEBOOK_MESSENGER,
       });
 
-      assert.strictEqual(deleteSubscribedAppsCalled, true);
+      expect(deleteSubscribedAppsCalled).toBe(true);
     });
 
     it('should ignore channel.deleted for non-Facebook channels', async () => {
@@ -376,12 +374,12 @@ describe('FacebookLifecycleService (Page Webhook Subscription Management)', () =
         channelType: ChannelType.TELEGRAM,
       });
 
-      assert.strictEqual(deleteCalled, false);
+      expect(deleteCalled).toBe(false);
     });
 
     it('should return false if channel does not exist when removing page subscription', async () => {
       const result = await service.removePageSubscription(wsId, 'non_existent_chan');
-      assert.strictEqual(result, false);
+      expect(result).toBe(false);
     });
   });
 
@@ -403,8 +401,8 @@ describe('FacebookLifecycleService (Page Webhook Subscription Management)', () =
       });
 
       const channel = channelsDb.get(chanId);
-      assert.strictEqual(channel.isConnected, true);
-      assert.strictEqual(channel.settings.reauthorizationRequired, undefined);
+      expect(channel.isConnected).toBe(true);
+      expect(channel.settings.reauthorizationRequired).toBe(undefined);
     });
 
     it('should mark channel as requiring reauthorization when error threshold (2) is reached', async () => {
@@ -432,11 +430,10 @@ describe('FacebookLifecycleService (Page Webhook Subscription Management)', () =
       });
 
       const channel = channelsDb.get(chanId);
-      assert.strictEqual(channel.isConnected, false);
-      assert.strictEqual(channel.settings.reauthorizationRequired, true);
-      assert.ok(channel.settings.reauthorizationRequestedAt);
-      assert.strictEqual(
-        channel.settings.lastAuthError,
+      expect(channel.isConnected).toBe(false);
+      expect(channel.settings.reauthorizationRequired).toBe(true);
+      expect(channel.settings.reauthorizationRequestedAt).toBeTruthy();
+      expect(channel.settings.lastAuthError).toBe(
         'Error validating access token: Session has expired',
       );
     });

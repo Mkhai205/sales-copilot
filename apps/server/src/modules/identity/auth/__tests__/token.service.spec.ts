@@ -1,5 +1,4 @@
-import { describe, it, beforeEach } from 'node:test';
-import * as assert from 'node:assert';
+import { expectReject } from '../../../../../test/test-assertions';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { PlatformRole } from '@sales-copilot/shared-contracts';
@@ -80,19 +79,19 @@ describe('TokenService (JWT & Refresh Token Rotation)', () => {
 
     const tokens = await tokenService.generateTokens(user);
 
-    assert.ok(tokens.accessToken);
-    assert.ok(tokens.refreshToken);
-    assert.strictEqual(tokens.expiresIn, 900);
+    expect(tokens.accessToken).toBeTruthy();
+    expect(tokens.refreshToken).toBeTruthy();
+    expect(tokens.expiresIn).toBe(900);
 
     // Verify Identity-Only JWT payload
     const decoded = await tokenService.verifyAccessToken(tokens.accessToken);
-    assert.strictEqual(decoded.sub, user.id);
-    assert.strictEqual(decoded.email, user.email);
-    assert.strictEqual(decoded.role, user.role);
+    expect(decoded.sub).toBe(user.id);
+    expect(decoded.email).toBe(user.email);
+    expect(decoded.role).toBe(user.role);
 
     // Check refresh token in storage
     const [tokenId] = tokens.refreshToken.split('.');
-    assert.ok(mockRedisStorage.has(`auth:refresh_token:${tokenId}`));
+    expect(mockRedisStorage.has(`auth:refresh_token:${tokenId}`)).toBeTruthy();
   });
 
   it('should verify valid access token correctly', async () => {
@@ -105,18 +104,18 @@ describe('TokenService (JWT & Refresh Token Rotation)', () => {
     const tokens = await tokenService.generateTokens(user);
     const payload = await tokenService.verifyAccessToken(tokens.accessToken);
 
-    assert.strictEqual(payload.sub, 'usr_456');
-    assert.strictEqual(payload.email, 'admin@salescopilot.io');
-    assert.strictEqual(payload.role, 'SUPER_ADMIN');
+    expect(payload.sub).toBe('usr_456');
+    expect(payload.email).toBe('admin@salescopilot.io');
+    expect(payload.role).toBe('SUPER_ADMIN');
   });
 
   it('should reject invalid or tampered access token', async () => {
-    await assert.rejects(
+    await expectReject(
       async () => {
         await tokenService.verifyAccessToken('invalid.jwt.token');
       },
       (err: any) => {
-        assert.strictEqual(err.response?.code, 'UNAUTHORIZED');
+        expect(err.response?.code).toBe('UNAUTHORIZED');
         return true;
       },
     );
@@ -135,21 +134,14 @@ describe('TokenService (JWT & Refresh Token Rotation)', () => {
     // Perform rotation
     const rotated = await tokenService.rotateRefreshToken(initialTokens.refreshToken);
 
-    assert.ok(rotated.tokens.accessToken);
-    assert.ok(rotated.tokens.refreshToken);
-    assert.notStrictEqual(rotated.tokens.refreshToken, initialTokens.refreshToken);
-    assert.strictEqual(rotated.userId, user.id);
+    expect(rotated.tokens.accessToken).toBeTruthy();
+    expect(rotated.tokens.refreshToken).toBeTruthy();
+    expect(rotated.tokens.refreshToken).not.toBe(initialTokens.refreshToken);
+    expect(rotated.userId).toBe(user.id);
 
     // Old token should be deleted (GETDEL) and a revoked marker should exist
-    assert.strictEqual(
-      mockRedisStorage.has(`auth:refresh_token:${oldTokenId}`),
-      false,
-      'Old token must be deleted after rotation',
-    );
-    assert.ok(
-      mockRedisStorage.has(`auth:refresh_token:${oldTokenId}:revoked`),
-      'Revoked marker must exist to catch replay',
-    );
+    expect(mockRedisStorage.has(`auth:refresh_token:${oldTokenId}`)).toBe(false);
+    expect(mockRedisStorage.has(`auth:refresh_token:${oldTokenId}:revoked`)).toBeTruthy();
   });
 
   it('should detect token reuse (Replay Attack) and revoke entire token family', async () => {
@@ -163,48 +155,48 @@ describe('TokenService (JWT & Refresh Token Rotation)', () => {
 
     // Legitimate rotation 1
     const rotation1 = await tokenService.rotateRefreshToken(initialTokens.refreshToken);
-    assert.ok(rotation1.tokens.refreshToken);
+    expect(rotation1.tokens.refreshToken).toBeTruthy();
 
     // Attacker tries to use the old (already rotated) initial refresh token
-    await assert.rejects(
+    await expectReject(
       async () => {
         await tokenService.rotateRefreshToken(initialTokens.refreshToken);
       },
       (err: any) => {
-        assert.strictEqual(err.response?.code, 'REFRESH_TOKEN_REUSED');
+        expect(err.response?.code).toBe('REFRESH_TOKEN_REUSED');
         return true;
       },
     );
 
     // Valid rotated token should now also be revoked due to family revocation
-    await assert.rejects(
+    await expectReject(
       async () => {
         await tokenService.rotateRefreshToken(rotation1.tokens.refreshToken);
       },
       (err: any) => {
-        assert.strictEqual(err.response?.code, 'INVALID_REFRESH_TOKEN');
+        expect(err.response?.code).toBe('INVALID_REFRESH_TOKEN');
         return true;
       },
     );
   });
 
   it('should reject non-existent or malformed refresh token', async () => {
-    await assert.rejects(
+    await expectReject(
       async () => {
         await tokenService.rotateRefreshToken('');
       },
       (err: any) => {
-        assert.strictEqual(err.response?.code, 'INVALID_REFRESH_TOKEN');
+        expect(err.response?.code).toBe('INVALID_REFRESH_TOKEN');
         return true;
       },
     );
 
-    await assert.rejects(
+    await expectReject(
       async () => {
         await tokenService.rotateRefreshToken('non_existent_token_id.secret');
       },
       (err: any) => {
-        assert.strictEqual(err.response?.code, 'INVALID_REFRESH_TOKEN');
+        expect(err.response?.code).toBe('INVALID_REFRESH_TOKEN');
         return true;
       },
     );
@@ -220,9 +212,9 @@ describe('TokenService (JWT & Refresh Token Rotation)', () => {
     const tokens = await tokenService.generateTokens(user);
     const [tokenId] = tokens.refreshToken.split('.');
 
-    assert.ok(mockRedisStorage.has(`auth:refresh_token:${tokenId}`));
+    expect(mockRedisStorage.has(`auth:refresh_token:${tokenId}`)).toBeTruthy();
 
     await tokenService.revokeRefreshToken(tokens.refreshToken);
-    assert.strictEqual(mockRedisStorage.has(`auth:refresh_token:${tokenId}`), false);
+    expect(mockRedisStorage.has(`auth:refresh_token:${tokenId}`)).toBe(false);
   });
 });

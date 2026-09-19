@@ -1,5 +1,3 @@
-import { describe, it, beforeEach } from 'node:test';
-import * as assert from 'node:assert';
 import { ConfigService } from '@nestjs/config';
 import { StorageService } from '../storage.service';
 
@@ -60,44 +58,44 @@ describe('StorageService (S3 / MinIO Storage Operations)', () => {
 
   it('should generate correct public URLs', () => {
     const url = storageService.getPublicUrl('avatars/usr_123.png');
-    assert.strictEqual(url, 'http://cdn.example.com/test-bucket/avatars/usr_123.png');
+    expect(url).toBe('http://cdn.example.com/test-bucket/avatars/usr_123.png');
   });
 
   it('should upload buffer/body to bucket', async () => {
     const buffer = Buffer.from('test content');
     await storageService.upload(buffer, 'text/plain', 'test/doc.txt');
 
-    assert.strictEqual(commandsSent.length, 1);
-    assert.strictEqual(commandsSent[0].input.Bucket, 'test-bucket');
-    assert.strictEqual(commandsSent[0].input.Key, 'test/doc.txt');
-    assert.strictEqual(commandsSent[0].input.ContentType, 'text/plain');
+    expect(commandsSent.length).toBe(1);
+    expect(commandsSent[0].input.Bucket).toBe('test-bucket');
+    expect(commandsSent[0].input.Key).toBe('test/doc.txt');
+    expect(commandsSent[0].input.ContentType).toBe('text/plain');
   });
 
   it('should delete object from bucket', async () => {
     await storageService.delete('test/doc.txt');
 
-    assert.strictEqual(commandsSent.length, 1);
-    assert.strictEqual(commandsSent[0].input.Bucket, 'test-bucket');
-    assert.strictEqual(commandsSent[0].input.Key, 'test/doc.txt');
+    expect(commandsSent.length).toBe(1);
+    expect(commandsSent[0].input.Bucket).toBe('test-bucket');
+    expect(commandsSent[0].input.Key).toBe('test/doc.txt');
   });
 
   it('should check if object exists in bucket', async () => {
     const exists = await storageService.exists('existing_key.png');
-    assert.strictEqual(exists, true);
+    expect(exists).toBe(true);
 
     const notExists = await storageService.exists('non_existing_key.png');
-    assert.strictEqual(notExists, false);
+    expect(notExists).toBe(false);
   });
 
   it('should retrieve object stream', async () => {
     const stream = await storageService.getObjectStream('test/doc.txt');
-    assert.strictEqual(stream, 'mock_stream' as any);
+    expect(stream).toBe('mock_stream' as any);
   });
 
   it('should respond to ping healthcheck with status up', async () => {
     const health = await storageService.ping();
-    assert.strictEqual(health.status, 'up');
-    assert.ok(typeof health.latencyMs === 'number');
+    expect(health.status).toBe('up');
+    expect(typeof health.latencyMs === 'number').toBeTruthy();
   });
 
   it('should report status down when S3 ping fails', async () => {
@@ -108,7 +106,7 @@ describe('StorageService (S3 / MinIO Storage Operations)', () => {
     };
 
     const health = await storageService.ping();
-    assert.strictEqual(health.status, 'down');
-    assert.strictEqual(health.error, 'S3 connection timeout');
+    expect(health.status).toBe('down');
+    expect(health.error).toBe('S3 connection timeout');
   });
 });

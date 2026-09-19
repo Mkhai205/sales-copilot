@@ -1,5 +1,4 @@
-import { describe, it, beforeEach } from 'node:test';
-import * as assert from 'node:assert';
+import { expectReject } from '../../../../../test/test-assertions';
 import { PlatformRole } from '@sales-copilot/shared-contracts';
 import { AuthService } from '../auth.service';
 import { PasswordService } from '../password.service';
@@ -155,15 +154,15 @@ describe('AuthService (Login, Refresh & Session Use Cases)', () => {
         workspaceName: 'New Brand Shop',
       });
 
-      assert.strictEqual(result.user.email, 'founder@newshop.com');
-      assert.strictEqual(result.user.name, 'Shop Founder');
-      assert.strictEqual(result.workspace.name, 'New Brand Shop');
-      assert.strictEqual(result.workspace.slug, 'new-brand-shop');
-      assert.ok(result.tokens.accessToken);
+      expect(result.user.email).toBe('founder@newshop.com');
+      expect(result.user.name).toBe('Shop Founder');
+      expect(result.workspace.name).toBe('New Brand Shop');
+      expect(result.workspace.slug).toBe('new-brand-shop');
+      expect(result.tokens.accessToken).toBeTruthy();
     });
 
     it('should throw ConflictException if user email already exists', async () => {
-      await assert.rejects(
+      await expectReject(
         async () => {
           await authService.register({
             email: 'agent@salescopilot.io',
@@ -172,7 +171,7 @@ describe('AuthService (Login, Refresh & Session Use Cases)', () => {
           });
         },
         (err: any) => {
-          assert.strictEqual(err.response?.code, 'EMAIL_ALREADY_EXISTS');
+          expect(err.response?.code).toBe('EMAIL_ALREADY_EXISTS');
           return true;
         },
       );
@@ -185,21 +184,17 @@ describe('AuthService (Login, Refresh & Session Use Cases)', () => {
       password: 'CorrectPassword123!',
     });
 
-    assert.ok(result.tokens);
-    assert.strictEqual(result.user.id, mockActiveUser.id);
-    assert.strictEqual(result.user.email, mockActiveUser.email);
-    assert.strictEqual(result.user.name, mockActiveUser.name);
-    assert.strictEqual(result.user.role, PlatformRole.USER);
-    assert.strictEqual(result.user.isActive, true);
-    assert.strictEqual(
-      (result.user as any).passwordHash,
-      undefined,
-      'Password hash must never be returned',
-    );
+    expect(result.tokens).toBeTruthy();
+    expect(result.user.id).toBe(mockActiveUser.id);
+    expect(result.user.email).toBe(mockActiveUser.email);
+    expect(result.user.name).toBe(mockActiveUser.name);
+    expect(result.user.role).toBe(PlatformRole.USER);
+    expect(result.user.isActive).toBe(true);
+    expect((result.user as any).passwordHash).toBe(undefined);
   });
 
   it('should throw UnauthorizedException on non-existent email', async () => {
-    await assert.rejects(
+    await expectReject(
       async () => {
         await authService.login({
           email: 'unknown@example.com',
@@ -207,14 +202,14 @@ describe('AuthService (Login, Refresh & Session Use Cases)', () => {
         });
       },
       (err: any) => {
-        assert.strictEqual(err.response?.code, 'INVALID_CREDENTIALS');
+        expect(err.response?.code).toBe('INVALID_CREDENTIALS');
         return true;
       },
     );
   });
 
   it('should throw UnauthorizedException on incorrect password', async () => {
-    await assert.rejects(
+    await expectReject(
       async () => {
         await authService.login({
           email: 'agent@salescopilot.io',
@@ -222,14 +217,14 @@ describe('AuthService (Login, Refresh & Session Use Cases)', () => {
         });
       },
       (err: any) => {
-        assert.strictEqual(err.response?.code, 'INVALID_CREDENTIALS');
+        expect(err.response?.code).toBe('INVALID_CREDENTIALS');
         return true;
       },
     );
   });
 
   it('should throw ForbiddenException when user account is deactivated', async () => {
-    await assert.rejects(
+    await expectReject(
       async () => {
         await authService.login({
           email: 'inactive@salescopilot.io',
@@ -237,7 +232,7 @@ describe('AuthService (Login, Refresh & Session Use Cases)', () => {
         });
       },
       (err: any) => {
-        assert.strictEqual(err.response?.code, 'ACCOUNT_DEACTIVATED');
+        expect(err.response?.code).toBe('ACCOUNT_DEACTIVATED');
         return true;
       },
     );
@@ -248,19 +243,19 @@ describe('AuthService (Login, Refresh & Session Use Cases)', () => {
       refreshToken: 'valid.refresh.token',
     });
 
-    assert.strictEqual(tokens.accessToken, 'mock.new.access.token');
-    assert.strictEqual(tokens.refreshToken, 'mock.new.refresh.token');
+    expect(tokens.accessToken).toBe('mock.new.access.token');
+    expect(tokens.refreshToken).toBe('mock.new.refresh.token');
   });
 
   it('should reject refresh token if user account was deactivated', async () => {
-    await assert.rejects(
+    await expectReject(
       async () => {
         await authService.refreshToken({
           refreshToken: 'inactive.refresh.token',
         });
       },
       (err: any) => {
-        assert.strictEqual(err.response?.code, 'ACCOUNT_DEACTIVATED');
+        expect(err.response?.code).toBe('ACCOUNT_DEACTIVATED');
         return true;
       },
     );
@@ -268,35 +263,31 @@ describe('AuthService (Login, Refresh & Session Use Cases)', () => {
 
   it('should return user profile for active user', async () => {
     const profile = await authService.getProfile(mockActiveUser.id);
-    assert.strictEqual(profile.id, mockActiveUser.id);
-    assert.strictEqual(profile.email, mockActiveUser.email);
-    assert.strictEqual(profile.role, PlatformRole.USER);
-    assert.strictEqual(
-      (profile as any).platformRole,
-      undefined,
-      'platformRole must not exist in response',
-    );
+    expect(profile.id).toBe(mockActiveUser.id);
+    expect(profile.email).toBe(mockActiveUser.email);
+    expect(profile.role).toBe(PlatformRole.USER);
+    expect((profile as any).platformRole).toBe(undefined);
   });
 
   it('should throw NotFoundException if user profile not found', async () => {
-    await assert.rejects(
+    await expectReject(
       async () => {
         await authService.getProfile('non_existent_user_id');
       },
       (err: any) => {
-        assert.strictEqual(err.response?.code, 'USER_NOT_FOUND');
+        expect(err.response?.code).toBe('USER_NOT_FOUND');
         return true;
       },
     );
   });
 
   it('should throw ForbiddenException on getProfile when user is deactivated', async () => {
-    await assert.rejects(
+    await expectReject(
       async () => {
         await authService.getProfile(mockInactiveUser.id);
       },
       (err: any) => {
-        assert.strictEqual(err.response?.code, 'ACCOUNT_DEACTIVATED');
+        expect(err.response?.code).toBe('ACCOUNT_DEACTIVATED');
         return true;
       },
     );
@@ -304,7 +295,7 @@ describe('AuthService (Login, Refresh & Session Use Cases)', () => {
 
   it('should logout by revoking specific refreshToken when provided', async () => {
     const result = await authService.logout(mockActiveUser.id, 'some.refresh.token');
-    assert.deepStrictEqual(result, { loggedOut: true });
+    expect(result).toEqual({ loggedOut: true });
   });
 
   it('should logout by revoking all user tokens when no refreshToken provided', async () => {
@@ -319,8 +310,8 @@ describe('AuthService (Login, Refresh & Session Use Cases)', () => {
     );
 
     const result = await authService.logout(mockActiveUser.id, undefined);
-    assert.deepStrictEqual(result, { loggedOut: true });
-    assert.strictEqual(revokeAllCalled, true);
+    expect(result).toEqual({ loggedOut: true });
+    expect(revokeAllCalled).toBe(true);
   });
 
   describe('updateProfile', () => {
@@ -329,29 +320,29 @@ describe('AuthService (Login, Refresh & Session Use Cases)', () => {
         name: 'New Agent Name',
         avatarUrl: 'https://example.com/avatar.jpg',
       });
-      assert.strictEqual(updated.name, 'New Agent Name');
-      assert.strictEqual(updated.avatarUrl, 'https://example.com/avatar.jpg');
+      expect(updated.name).toBe('New Agent Name');
+      expect(updated.avatarUrl).toBe('https://example.com/avatar.jpg');
     });
 
     it('should throw NotFoundException when user does not exist', async () => {
-      await assert.rejects(
+      await expectReject(
         async () => {
           await authService.updateProfile('unknown_user_id', { name: 'Name' });
         },
         (err: any) => {
-          assert.strictEqual(err.response?.code, 'USER_NOT_FOUND');
+          expect(err.response?.code).toBe('USER_NOT_FOUND');
           return true;
         },
       );
     });
 
     it('should throw ForbiddenException when user is inactive', async () => {
-      await assert.rejects(
+      await expectReject(
         async () => {
           await authService.updateProfile(mockInactiveUser.id, { name: 'Name' });
         },
         (err: any) => {
-          assert.strictEqual(err.response?.code, 'ACCOUNT_DEACTIVATED');
+          expect(err.response?.code).toBe('ACCOUNT_DEACTIVATED');
           return true;
         },
       );

@@ -1,5 +1,4 @@
-import { describe, it, beforeEach } from 'node:test';
-import * as assert from 'node:assert';
+import { assertDefined } from '../../../../../test/test-assertions';
 import { ContactResolutionService } from '../contact-resolution.service';
 import { ContactsService } from '../contacts.service';
 import { PrismaService } from '../../../../infrastructure/database';
@@ -309,9 +308,9 @@ describe('ContactResolutionService (3NF Multi-Channel Identity Resolution Engine
         externalContactId: 'fb_user_100',
       });
 
-      assert.strictEqual(result.isNewContact, false);
-      assert.strictEqual(result.contact.id, 'cnt_existing');
-      assert.strictEqual(result.channelIdentity.externalContactId, 'fb_user_100');
+      expect(result.isNewContact).toBe(false);
+      expect(result.contact.id).toBe('cnt_existing');
+      expect(result.channelIdentity.externalContactId).toBe('fb_user_100');
     });
 
     it('should match existing contact by email and link new ChannelIdentity', async () => {
@@ -336,10 +335,10 @@ describe('ContactResolutionService (3NF Multi-Channel Identity Resolution Engine
         },
       });
 
-      assert.strictEqual(result.isNewContact, false);
-      assert.strictEqual(result.contact.id, 'cnt_by_email');
-      assert.strictEqual(result.channelIdentity.externalContactId, 'fb_user_200');
-      assert.strictEqual(result.channelIdentity.contactId, 'cnt_by_email');
+      expect(result.isNewContact).toBe(false);
+      expect(result.contact.id).toBe('cnt_by_email');
+      expect(result.channelIdentity.externalContactId).toBe('fb_user_200');
+      expect(result.channelIdentity.contactId).toBe('cnt_by_email');
     });
 
     it('should atomically create new Contact and link ChannelIdentity when no match exists', async () => {
@@ -353,11 +352,11 @@ describe('ContactResolutionService (3NF Multi-Channel Identity Resolution Engine
         },
       });
 
-      assert.strictEqual(result.isNewContact, true);
-      assert.strictEqual(result.contact.name, 'Zalo Stranger');
-      assert.strictEqual(result.contact.phoneNumber, '+84977111222');
-      assert.strictEqual(result.channelIdentity.externalContactId, 'zalo_user_999');
-      assert.strictEqual(result.channelIdentity.contactId, result.contact.id);
+      expect(result.isNewContact).toBe(true);
+      expect(result.contact.name).toBe('Zalo Stranger');
+      expect(result.contact.phoneNumber).toBe('+84977111222');
+      expect(result.channelIdentity.externalContactId).toBe('zalo_user_999');
+      expect(result.channelIdentity.contactId).toBe(result.contact.id);
     });
 
     it('should recover gracefully when P2002 race condition occurs during concurrent resolution', async () => {
@@ -394,9 +393,9 @@ describe('ContactResolutionService (3NF Multi-Channel Identity Resolution Engine
         username: 'Concurrent Winner',
       });
 
-      assert.strictEqual(result.isNewContact, false);
-      assert.strictEqual(result.contact.id, wonContact.id);
-      assert.strictEqual(result.channelIdentity.externalContactId, 'zalo_race_user');
+      expect(result.isNewContact).toBe(false);
+      expect(result.contact.id).toBe(wonContact.id);
+      expect(result.channelIdentity.externalContactId).toBe('zalo_race_user');
       clientMock.channelIdentity.create = origCreate;
     });
 
@@ -409,14 +408,14 @@ describe('ContactResolutionService (3NF Multi-Channel Identity Resolution Engine
         username: 'Auto User',
       });
 
-      assert.strictEqual(identity.externalContactId, 'zalo_autoprovision_1');
+      expect(identity.externalContactId).toBe('zalo_autoprovision_1');
       const contactCreated = emittedEvents.find(e => e.event === 'contact.created');
-      assert.ok(contactCreated);
-      assert.strictEqual(contactCreated.payload.contact.name, 'Auto User');
-      assert.strictEqual(contactCreated.payload.workspaceId, 'ws_alpha');
+      assertDefined(contactCreated);
+      expect(contactCreated.payload.contact.name).toBe('Auto User');
+      expect(contactCreated.payload.workspaceId).toBe('ws_alpha');
 
       const identityCreated = emittedEvents.find(e => e.event === 'channel_identity.created');
-      assert.ok(identityCreated);
+      assertDefined(identityCreated);
     });
   });
 
@@ -437,8 +436,8 @@ describe('ContactResolutionService (3NF Multi-Channel Identity Resolution Engine
         { identifier: 'CRM_001', name: 'Visitor Current' },
       );
 
-      assert.strictEqual(identified.id, existing.id);
-      assert.strictEqual(contactsDb.has(current.id), false); // merged and deleted
+      expect(identified.id).toBe(existing.id);
+      expect(contactsDb.has(current.id)).toBe(false); // merged and deleted
     });
 
     it('should respect identifier conflict guard when matching email', async () => {
@@ -462,8 +461,8 @@ describe('ContactResolutionService (3NF Multi-Channel Identity Resolution Engine
       );
 
       // Contact was NOT merged into alice
-      assert.strictEqual(result.id, current.id);
-      assert.strictEqual(contactsDb.has(existingWithEmail.id), true);
+      expect(result.id).toBe(current.id);
+      expect(contactsDb.has(existingWithEmail.id)).toBe(true);
     });
   });
 });
