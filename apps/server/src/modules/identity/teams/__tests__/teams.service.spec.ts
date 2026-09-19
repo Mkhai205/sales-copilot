@@ -138,24 +138,26 @@ describe('TeamsService (Team Management & Member Assignment)', () => {
           teamsDb.set(created.id, created);
           return created;
         },
-        update: async ({ where, data }: { where: { id: string }; data: any }) => {
-          const existing = teamsDb.get(where.id);
+        update: async ({ where, data }: { where: any; data: any }) => {
+          const id = where.id ?? where.workspaceId_id?.id;
+          const existing = teamsDb.get(id);
           if (!existing) return null;
           const updated = { ...existing, ...data, updatedAt: new Date() };
-          teamsDb.set(where.id, updated);
-          const members = Array.from(teamMembersDb.values()).filter(tm => tm.teamId === where.id);
+          teamsDb.set(id, updated);
+          const members = Array.from(teamMembersDb.values()).filter(tm => tm.teamId === id);
           return {
             ...updated,
             _count: { members: members.length },
           };
         },
-        delete: async ({ where }: { where: { id: string } }) => {
-          const existing = teamsDb.get(where.id);
+        delete: async ({ where }: { where: any }) => {
+          const id = where.id ?? where.workspaceId_id?.id;
+          const existing = teamsDb.get(id);
           if (existing) {
-            teamsDb.delete(where.id);
+            teamsDb.delete(id);
             // Cascade delete team members
             for (const [key, tm] of teamMembersDb.entries()) {
-              if (tm.teamId === where.id) {
+              if (tm.teamId === id) {
                 teamMembersDb.delete(key);
               }
             }

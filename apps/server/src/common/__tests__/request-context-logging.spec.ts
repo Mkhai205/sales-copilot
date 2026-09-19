@@ -4,10 +4,6 @@ import { EventEmitter } from 'node:events';
 import { Writable } from 'node:stream';
 import pinoHttp from 'pino-http';
 import { randomUUID } from 'node:crypto';
-import {
-  WebhookDeliveryProcessor,
-  WebhookDeliveryJobData,
-} from '../../infrastructure/queue/webhook-delivery.processor';
 
 describe('Request ID Correlation & Context Enrichment (Task 5 — Feature F-1.11.3)', () => {
   describe('Pino HTTP Context Enrichment', () => {
@@ -161,80 +157,6 @@ describe('Request ID Correlation & Context Enrichment (Task 5 — Feature F-1.11
       assert.strictEqual(logs[0].requestId, 'req_header_123');
       assert.strictEqual(logs[0].workspaceId, 'ws_from_header_999');
       assert.strictEqual(logs[0].userId, undefined);
-    });
-  });
-
-  describe('BullMQ Queue Processor Trace Context', () => {
-    let originalFetch: typeof global.fetch;
-
-    beforeEach(() => {
-      originalFetch = global.fetch;
-    });
-
-    afterEach(() => {
-      global.fetch = originalFetch;
-    });
-
-    it('should include [requestId] prefix in WebhookDeliveryProcessor logs when requestId is provided', async () => {
-      const loggedMessages: string[] = [];
-      const mockPrismaService = {
-        getClient: () => ({
-          webhookDelivery: {
-            update: async (args: any) => ({
-              id: args.where.id,
-              ...args.data,
-            }),
-          },
-        }),
-      };
-
-      global.fetch = async () =>
-        new Response(JSON.stringify({ received: true }), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
-        });
-
-      const processor = new WebhookDeliveryProcessor(mockPrismaService as any);
-
-      // Spy on logger.log
-      const originalLoggerLog = (processor as any).logger.log.bind((processor as any).logger);
-      (processor as any).logger.log = (message: string) => {
-        loggedMessages.push(message);
-        originalLoggerLog(message);
-      };
-
-      const testRequestId = 'req_trace_test_xyz';
-      const jobData: WebhookDeliveryJobData = {
-        deliveryId: 'del_trace_1',
-        subscriptionId: 'sub_trace_1',
-        workspaceId: 'ws_trace_1',
-        url: 'https://example.com/webhook',
-        eventType: 'conversation.created',
-        payload: {
-          event: 'conversation.created',
-          data: { id: 'conv_1' },
-          timestamp: new Date().toISOString(),
-          workspaceId: 'ws_trace_1',
-        },
-        requestId: testRequestId,
-      };
-
-      const mockJob: any = {
-        id: 'job_trace_1',
-        data: jobData,
-        attemptsMade: 0,
-        opts: { attempts: 3 },
-      };
-
-      await processor.process(mockJob);
-
-      assert.ok(loggedMessages.length >= 2);
-      for (const msg of loggedMessages) {
-        assert.ok(
-          msg.includes(`[${testRequestId}]`),
-          `Expected log message to contain [${testRequestId}], but got: ${msg}`,
-        );
-      }
     });
   });
 });

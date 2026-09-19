@@ -200,8 +200,7 @@ export async function cleanupTestData(
       where: { conversation: { workspaceId } },
     });
 
-    // Clean up operations & automation
-    await client.automationRule.deleteMany({ where: { workspaceId } });
+    // Clean up operations
     await client.auditLog.deleteMany({ where: { workspaceId } });
     await client.label.deleteMany({ where: { workspaceId } });
 
@@ -219,7 +218,6 @@ export async function cleanupTestData(
     await client.inventoryTransaction.deleteMany({ where: { workspaceId } }).catch(() => {});
     await client.paymentTransaction.deleteMany({ where: { workspaceId } }).catch(() => {});
     await client.orderItem.deleteMany({ where: { workspaceId } }).catch(() => {});
-    await client.shippingAddress.deleteMany({ where: { workspaceId } }).catch(() => {});
     await client.order.deleteMany({ where: { workspaceId } }).catch(() => {});
     await client.productVariant.deleteMany({ where: { workspaceId } }).catch(() => {});
     await client.product.deleteMany({ where: { workspaceId } }).catch(() => {});

@@ -30,7 +30,7 @@ import { RolesGuard, WorkspaceGuard } from '../../../identity/workspaces/guards'
 import type { WorkspaceContext } from '../../../identity/workspaces/types/workspace-context.type';
 import { PrismaService } from '../../../../infrastructure/database';
 import { ChannelCredentialService } from '../../../omnichannel/inboxes/channel-credential.service';
-import { WebhooksService } from '../../../automation/webhooks/webhooks.service';
+import { WebhooksService } from '../channel-webhooks/webhooks.service';
 import { FacebookService } from './facebook.service';
 import { FacebookAdapter } from './facebook.adapter';
 import {

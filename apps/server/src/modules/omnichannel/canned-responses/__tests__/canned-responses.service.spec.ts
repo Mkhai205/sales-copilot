@@ -107,24 +107,26 @@ describe('CannedResponsesService (Feature F-1.8.3)', () => {
           return { ...newRecord };
         },
 
-        update: async ({ where, data }: { where: { id: string }; data: any }) => {
-          const existing = cannedResponsesDb.get(where.id);
+        update: async ({ where, data }: { where: any; data: any }) => {
+          const id = where.id ?? where.workspaceId_id?.id;
+          const existing = cannedResponsesDb.get(id);
           if (!existing) {
-            throw new Error(`Canned response with id ${where.id} not found`);
+            throw new Error(`Canned response with id ${id} not found`);
           }
           const updated = {
             ...existing,
             ...data,
             updatedAt: new Date(),
           };
-          cannedResponsesDb.set(where.id, updated);
+          cannedResponsesDb.set(id, updated);
           return { ...updated };
         },
 
-        delete: async ({ where }: { where: { id: string } }) => {
-          const existing = cannedResponsesDb.get(where.id);
+        delete: async ({ where }: { where: any }) => {
+          const id = where.id ?? where.workspaceId_id?.id;
+          const existing = cannedResponsesDb.get(id);
           if (existing) {
-            cannedResponsesDb.delete(where.id);
+            cannedResponsesDb.delete(id);
           }
           return existing;
         },

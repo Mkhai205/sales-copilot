@@ -17,7 +17,6 @@ enum WorkspaceRole {
   OWNER
   ADMIN
   AGENT
-  VIEWER
 }
 
 enum BillingPlanType {
@@ -75,14 +74,6 @@ enum SenderType {
   CONTACT
   USER
   SYSTEM
-}
-
-enum WebhookDeliveryStatus {
-  PENDING
-  DELIVERED
-  FAILED
-  RETRYING
-  EXHAUSTED
 }
 
 enum FileType {
@@ -151,14 +142,6 @@ enum PaymentTransactionStatus {
   CANCELLED
 }
 
-enum CarrierProvider {
-  GHTK
-  GHN
-  VIETTEL_POST
-  AHAMOVE
-  CUSTOM
-}
-
 enum InventoryTransactionType {
   STOCK_IN
   STOCK_OUT
@@ -215,14 +198,11 @@ model Workspace {
   messages              Message[]
   cannedResponses       CannedResponse[]
   labels                Label[]
-  automationRules       AutomationRule[]
-  webhookSubscriptions  WebhookSubscription[]
   auditLogs             AuditLog[]
   products              Product[]
   productVariants       ProductVariant[]
   orders                Order[]
   orderItems            OrderItem[]
-  shippingAddresses     ShippingAddress[]
   paymentTransactions   PaymentTransaction[]
   inventoryTransactions InventoryTransaction[]
 
@@ -241,6 +221,7 @@ model WorkspaceMember {
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@unique([workspaceId, id])
   @@unique([workspaceId, userId])
   @@index([userId])
   @@map("workspace_members")
@@ -258,6 +239,7 @@ model Team {
   members       TeamMember[]
   conversations Conversation[]
 
+  @@unique([workspaceId, id])
   @@unique([workspaceId, name])
   @@map("teams")
 }
@@ -293,8 +275,8 @@ model Contact {
   identities        ChannelIdentity[]
   conversations     Conversation[]
   orders            Order[]
-  shippingAddresses ShippingAddress[]
 
+  @@unique([workspaceId, id])
   @@unique([workspaceId, identifier])
   @@index([workspaceId, email])
   @@index([workspaceId, phoneNumber])
@@ -318,6 +300,7 @@ model ChannelIdentity {
   channel       Channel        @relation(fields: [channelId], references: [id], onDelete: Cascade)
   conversations Conversation[]
 
+  @@unique([workspaceId, id])
   @@unique([channelId, externalContactId])
   @@index([contactId])
   @@index([workspaceId])
@@ -339,6 +322,7 @@ model Inbox {
   members       InboxMember[]
   conversations Conversation[]
 
+  @@unique([workspaceId, id])
   @@index([workspaceId])
   @@map("inboxes")
 }
@@ -374,6 +358,7 @@ model Channel {
   identities ChannelIdentity[]
   events     ChannelEvent[]
 
+  @@unique([workspaceId, id])
   @@unique([workspaceId, channelType, providerAccountId])
   @@index([workspaceId, channelType])
   @@map("channels")
@@ -427,6 +412,7 @@ model Conversation {
   labels          ConversationLabel[]
   orders          Order[]
 
+  @@unique([workspaceId, id])
   @@unique([workspaceId, displayId])
   @@index([workspaceId, status])
   @@index([workspaceId, assigneeId])
@@ -470,6 +456,7 @@ model Message {
   workspace    Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   attachments  Attachment[]
 
+  @@unique([workspaceId, id])
   @@unique([conversationId, externalId])
   @@index([conversationId, createdAt])
   @@index([workspaceId, externalId])
@@ -503,6 +490,7 @@ model CannedResponse {
 
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
+  @@unique([workspaceId, id])
   @@unique([workspaceId, shortCode])
   @@index([workspaceId])
   @@map("canned_responses")
@@ -521,67 +509,10 @@ model Label {
   workspace     Workspace           @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   conversations ConversationLabel[]
 
+  @@unique([workspaceId, id])
   @@unique([workspaceId, title])
   @@index([workspaceId])
   @@map("labels")
-}
-
-model AutomationRule {
-  id           String   @id @default(uuid())
-  workspaceId  String
-  name         String
-  description  String?
-  eventTrigger String
-  conditions   Json     @default("[]")
-  actions      Json     @default("[]")
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-
-  @@index([workspaceId, isActive])
-  @@map("automation_rules")
-}
-
-model WebhookSubscription {
-  id            String   @id @default(uuid())
-  workspaceId   String
-  url           String
-  secretKey     String?
-  subscriptions Json     @default("[]")
-  isActive      Boolean  @default(true)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  workspace  Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  deliveries WebhookDelivery[]
-
-  @@index([workspaceId, isActive])
-  @@map("webhook_subscriptions")
-}
-
-model WebhookDelivery {
-  id             String                @id @default(uuid())
-  subscriptionId String
-  eventId        String
-  eventType      String
-  payload        Json
-  status         WebhookDeliveryStatus @default(PENDING)
-  attemptCount   Int                   @default(0)
-  responseStatus Int?
-  responseBody   String?
-  lastAttemptAt  DateTime?
-  nextRetryAt    DateTime?
-  deliveredAt    DateTime?
-  createdAt      DateTime              @default(now())
-  updatedAt      DateTime              @updatedAt
-
-  subscription WebhookSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
-
-  @@unique([subscriptionId, eventId])
-  @@index([subscriptionId, createdAt])
-  @@map("webhook_deliveries")
 }
 
 model AuditLog {
@@ -697,6 +628,14 @@ model Order {
   internalNotes String? @db.Text
   cancelReason  String? @db.Text
 
+  recipientName     String?
+  recipientPhone    String?
+  recipientAddress  String?
+  recipientWard     String?
+  recipientDistrict String?
+  recipientProvince String?
+  shippingNotes     String?   @db.Text
+
   confirmedAt DateTime?
   paidAt      DateTime?
   shippedAt   DateTime?
@@ -713,7 +652,6 @@ model Order {
   createdBy    User?         @relation("UserCreatedOrders", fields: [createdById], references: [id], onDelete: SetNull)
 
   items                 OrderItem[]
-  shippingAddress       ShippingAddress?
   paymentTransactions   PaymentTransaction[]
   inventoryTransactions InventoryTransaction[]
 
@@ -756,37 +694,6 @@ model OrderItem {
   @@index([workspaceId, productId])
   @@index([workspaceId, variantId])
   @@map("order_items")
-}
-
-model ShippingAddress {
-  id              String          @id @default(uuid())
-  workspaceId     String
-  orderId         String          @unique
-  contactId       String?
-  recipientName   String
-  phoneNumber     String
-  streetAddress   String // e.g., "Số 45 ngõ 120 Trường Chinh"
-  ward            String // Phường / Xã
-  district        String // Quận / Huyện
-  province        String // Tỉnh / Thành phố
-  country         String          @default("VN")
-  postalCode      String?
-  shippingCarrier CarrierProvider @default(CUSTOM)
-  trackingCode    String?
-  shippingNotes   String?         @db.Text
-  carrierMetadata Json?           @default("{}")
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
-
-  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  order     Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  contact   Contact?  @relation(fields: [contactId], references: [id], onDelete: SetNull)
-
-  @@unique([workspaceId, id])
-  @@index([workspaceId, trackingCode])
-  @@index([workspaceId, phoneNumber])
-  @@index([workspaceId, province, district])
-  @@map("shipping_addresses")
 }
 
 model PaymentTransaction {

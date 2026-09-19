@@ -307,7 +307,7 @@ export class ContactsService {
 
     try {
       const updated = await client.contact.update({
-        where: { id: contactId },
+        where: { workspaceId_id: { workspaceId, id: contactId } },
         data: {
           ...(dto.name !== undefined && { name: dto.name.trim() }),
           ...(email !== undefined && { email }),
@@ -412,7 +412,7 @@ export class ContactsService {
     const snapshot = this.mapToDto(existing);
 
     await client.contact.delete({
-      where: { id: contactId },
+      where: { workspaceId_id: { workspaceId, id: contactId } },
     });
 
     this.eventEmitter.emit('contact.deleted', {
@@ -544,12 +544,6 @@ export class ContactsService {
         data: { contactId: baseContactId },
       });
 
-      // Transfer ShippingAddresses from mergee to base
-      await tx.shippingAddress.updateMany({
-        where: { contactId: mergeeContactId, workspaceId },
-        data: { contactId: baseContactId },
-      });
-
       // 4. Transfer Messages sent by mergee to base
       await tx.message.updateMany({
         where: {
@@ -596,12 +590,12 @@ export class ContactsService {
 
       // 6. Delete mergee contact
       await tx.contact.delete({
-        where: { id: mergeeContactId },
+        where: { workspaceId_id: { workspaceId, id: mergeeContactId } },
       });
 
       // 7. Update base contact with merged attributes
       const updatedBase = await tx.contact.update({
-        where: { id: baseContactId },
+        where: { workspaceId_id: { workspaceId, id: baseContactId } },
         data: {
           name: mergedName,
           email: mergedEmail,
@@ -823,7 +817,7 @@ export class ContactsService {
     const snapshot = mapIdentityToDto(existing);
 
     await client.channelIdentity.delete({
-      where: { id: identityId },
+      where: { workspaceId_id: { workspaceId, id: identityId } },
     });
 
     this.eventEmitter.emit('channel_identity.deleted', {
@@ -838,32 +832,6 @@ export class ContactsService {
     );
 
     return { success: true };
-  }
-
-  /**
-   * Transfers a batch of channel identities to a target contact (used in merge operations).
-   */
-  async transferIdentities(
-    identityIds: string[],
-    targetContactId: string,
-    tx?: Prisma.TransactionClient,
-  ): Promise<{ count: number }> {
-    if (identityIds.length === 0) {
-      return { count: 0 };
-    }
-
-    const client = tx || this.prisma.getClient();
-
-    const result = await client.channelIdentity.updateMany({
-      where: {
-        id: { in: identityIds },
-      },
-      data: {
-        contactId: targetContactId,
-      },
-    });
-
-    return { count: result.count };
   }
 
   /**

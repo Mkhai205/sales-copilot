@@ -1,4 +1,4 @@
-﻿import {
+import {
   BadRequestException,
   ForbiddenException,
   Injectable,
@@ -300,7 +300,7 @@ export class MessagesService {
       }
 
       await trx.conversation.update({
-        where: { id: conversationId },
+        where: { workspaceId_id: { workspaceId, id: conversationId } },
         data: conversationUpdate,
       });
 
@@ -498,7 +498,7 @@ export class MessagesService {
     const previousStatus = message.deliveryStatus;
 
     const updated = await client.message.update({
-      where: { id: messageId },
+      where: { workspaceId_id: { workspaceId, id: messageId } },
       data: { deliveryStatus: dto.deliveryStatus },
       include: { attachments: true },
     });
@@ -542,7 +542,7 @@ export class MessagesService {
     await this.attachmentsService.deleteByMessageId(messageId);
 
     await client.message.delete({
-      where: { id: messageId },
+      where: { workspaceId_id: { workspaceId, id: messageId } },
     });
 
     this.eventEmitter.emit('message.deleted', {

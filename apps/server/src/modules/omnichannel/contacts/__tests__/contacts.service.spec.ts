@@ -17,7 +17,6 @@ describe('ContactsService (Profile Management, Dynamic Attributes, Atomic Merge 
   let conversationsDb: Map<string, any>;
   let messagesDb: Map<string, any>;
   let ordersDb: Map<string, any>;
-  let shippingAddressesDb: Map<string, any>;
   let auditLogsDb: Array<any>;
   let clientMock: any;
 
@@ -28,7 +27,6 @@ describe('ContactsService (Profile Management, Dynamic Attributes, Atomic Merge 
     conversationsDb = new Map();
     messagesDb = new Map();
     ordersDb = new Map();
-    shippingAddressesDb = new Map();
     auditLogsDb = [];
     emittedEvents = [];
 
@@ -192,7 +190,8 @@ describe('ContactsService (Profile Management, Dynamic Attributes, Atomic Merge 
         },
 
         update: async ({ where, data, include }: { where: any; data: any; include?: any }) => {
-          const existing = contactsDb.get(where.id);
+          const id = where.id ?? where.workspaceId_id?.id;
+          const existing = contactsDb.get(id);
           if (!existing) throw new Error('Contact not found');
 
           const updated = {
@@ -200,20 +199,21 @@ describe('ContactsService (Profile Management, Dynamic Attributes, Atomic Merge 
             ...data,
             updatedAt: new Date(),
           };
-          contactsDb.set(where.id, updated);
+          contactsDb.set(id, updated);
 
           const result = { ...updated };
           if (include?.identities) {
             result.identities = Array.from(identitiesDb.values()).filter(
-              (i: any) => i.contactId === where.id,
+              (i: any) => i.contactId === id,
             );
           }
           return result;
         },
 
         delete: async ({ where }: { where: any }) => {
-          const deleted = contactsDb.get(where.id);
-          contactsDb.delete(where.id);
+          const id = where.id ?? where.workspaceId_id?.id;
+          const deleted = contactsDb.get(id);
+          contactsDb.delete(id);
           return deleted;
         },
       },
@@ -292,8 +292,9 @@ describe('ContactsService (Profile Management, Dynamic Attributes, Atomic Merge 
           return { count };
         },
         delete: async ({ where }: { where: any }) => {
-          const deleted = identitiesDb.get(where.id);
-          identitiesDb.delete(where.id);
+          const id = where.id ?? where.workspaceId_id?.id;
+          const deleted = identitiesDb.get(id);
+          identitiesDb.delete(id);
           return deleted;
         },
       },
@@ -370,20 +371,6 @@ describe('ContactsService (Profile Management, Dynamic Attributes, Atomic Merge 
             if (where.workspaceId && ord.workspaceId !== where.workspaceId) continue;
             ord.contactId = data.contactId;
             ordersDb.set(ord.id, ord);
-            count++;
-          }
-          return { count };
-        },
-      },
-
-      shippingAddress: {
-        updateMany: async ({ where, data }: { where: any; data: any }) => {
-          let count = 0;
-          for (const addr of shippingAddressesDb.values()) {
-            if (where.contactId && addr.contactId !== where.contactId) continue;
-            if (where.workspaceId && addr.workspaceId !== where.workspaceId) continue;
-            addr.contactId = data.contactId;
-            shippingAddressesDb.set(addr.id, addr);
             count++;
           }
           return { count };
@@ -657,15 +644,9 @@ describe('ContactsService (Profile Management, Dynamic Attributes, Atomic Merge 
         senderId: mergeeContact.id,
       });
 
-      // Link orders & shipping addresses to mergee
+      // Link orders to mergee
       ordersDb.set('ord_mergee_1', {
         id: 'ord_mergee_1',
-        workspaceId: 'ws_alpha',
-        contactId: mergeeContact.id,
-      });
-
-      shippingAddressesDb.set('sa_mergee_1', {
-        id: 'sa_mergee_1',
         workspaceId: 'ws_alpha',
         contactId: mergeeContact.id,
       });
@@ -703,12 +684,9 @@ describe('ContactsService (Profile Management, Dynamic Attributes, Atomic Merge 
       const msg = messagesDb.get('msg_mergee_1');
       assert.strictEqual(msg.senderId, baseContact.id);
 
-      // Check orders & shipping addresses transferred
+      // Check orders transferred
       const order = ordersDb.get('ord_mergee_1');
       assert.strictEqual(order.contactId, baseContact.id);
-
-      const sa = shippingAddressesDb.get('sa_mergee_1');
-      assert.strictEqual(sa.contactId, baseContact.id);
 
       // Check audit log recorded
       assert.strictEqual(auditLogsDb.length, 1);

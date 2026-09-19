@@ -11,7 +11,7 @@ import {
   type CreateOrderItemDto,
 } from '@sales-copilot/shared-contracts';
 import { toast } from 'sonner';
-import { ShoppingBag, CheckCircle2, ArrowLeft, Printer, RotateCcw } from 'lucide-react';
+import { ShoppingBag, CheckCircle2, ArrowLeft, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCommerceOrders } from '../hooks/use-commerce-orders';
 import { useCommerceCollision } from '../hooks/use-commerce-collision';
@@ -21,7 +21,6 @@ import type { FlatProductVariant } from '../hooks/use-commerce-products';
 import { LineItemsTable, type PosLineItem } from './line-items-table';
 import { RecipientInfoForm } from './recipient-info-form';
 import { OrderFinancialSummary } from './order-financial-summary';
-import { ThermalPrintDialog } from './thermal-print-dialog';
 import { commerceApi } from '../api/commerce-client';
 
 export interface CommerceOrderFormProps {
@@ -56,7 +55,6 @@ export function CommerceOrderForm({
   const [shippingFee, setShippingFee] = React.useState<number>(0);
   const [paymentMethod, setPaymentMethod] = React.useState<PaymentMethod>(PaymentMethod.COD);
   const [customerNotes, setCustomerNotes] = React.useState<string>('');
-  const [printDialogOpen, setPrintDialogOpen] = React.useState<boolean>(false);
 
   const { createOrder, updateOrder, confirmOrder, isCreating, isUpdating, isConfirming } =
     useCommerceOrders(workspaceId);
@@ -325,18 +323,6 @@ export function CommerceOrderForm({
         </div>
 
         <div className="flex items-center gap-1.5 shrink-0">
-          {initialOrder && (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="h-6 px-1.5 text-[11px] gap-1 cursor-pointer"
-              onClick={() => setPrintDialogOpen(true)}
-            >
-              <Printer className="size-3" />
-              {'In'}
-            </Button>
-          )}
           <kbd className="hidden sm:inline-flex items-center font-mono text-[9px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded border">
             {'Ctrl+↵ lưu'}
           </kbd>
@@ -490,15 +476,6 @@ export function CommerceOrderForm({
           )}
         </div>
       </div>
-
-      {initialOrder && (
-        <ThermalPrintDialog
-          open={printDialogOpen}
-          onOpenChange={setPrintDialogOpen}
-          workspaceId={workspaceId}
-          orderId={initialOrder.id}
-        />
-      )}
     </div>
   );
 }

@@ -1,4 +1,4 @@
-﻿import {
+import {
   Body,
   Controller,
   Delete,
@@ -57,7 +57,7 @@ export class MessagesController {
 
   @Get('conversations/:conversationId/messages')
   @HttpCode(HttpStatus.OK)
-  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.AGENT, WorkspaceRole.VIEWER)
+  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.AGENT)
   @ApiOperation({ summary: 'List all messages for a specific conversation' })
   @ApiResponse({ status: 200, description: 'Messages list retrieved successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
@@ -68,7 +68,7 @@ export class MessagesController {
     @Param('conversationId') conversationId: string,
     @ZodQuery(messageListQuerySchema) query?: MessageListQueryDto,
   ): Promise<{ items: MessageResponseDto[]; meta: PaginationMeta }> {
-    const isAgent = context.role !== WorkspaceRole.VIEWER;
+    const isAgent = true;
     return this.messagesService.list(context.workspaceId, conversationId, query, isAgent);
   }
 
@@ -135,7 +135,7 @@ export class MessagesController {
 
   @Get('messages/:id')
   @HttpCode(HttpStatus.OK)
-  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.AGENT, WorkspaceRole.VIEWER)
+  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.AGENT)
   @ApiOperation({ summary: 'Get message details by ID' })
   @ApiResponse({ status: 200, description: 'Message detail retrieved successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
@@ -145,7 +145,7 @@ export class MessagesController {
     @CurrentWorkspace() context: WorkspaceContext,
     @Param('id') id: string,
   ): Promise<MessageResponseDto> {
-    const isAgent = context.role !== WorkspaceRole.VIEWER;
+    const isAgent = true;
     return this.messagesService.getById(context.workspaceId, id, isAgent);
   }
 

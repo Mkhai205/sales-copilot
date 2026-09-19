@@ -1,35 +1,22 @@
 import { describe, it, beforeEach } from 'node:test';
 import * as assert from 'node:assert';
 import { NotFoundException } from '@nestjs/common';
-import {
-  CarrierProvider,
-  FulfillmentStatus,
-  OrderStatus,
-  PaymentStatus,
-} from '@sales-copilot/shared-contracts';
-import { CustomCarrierAdapter } from '../../shipping/adapters/custom.adapter';
-import { GhnCarrierAdapter } from '../../shipping/adapters/ghn.adapter';
-import { GhtkCarrierAdapter } from '../../shipping/adapters/ghtk.adapter';
-import { ShippingService } from '../../shipping/shipping.service';
+import { FulfillmentStatus, OrderStatus, PaymentStatus } from '@sales-copilot/shared-contracts';
 import { InventoryLedgerService } from '../../inventory/inventory-ledger.service';
 import { OrdersService } from '../orders.service';
 
 describe('In-Chat Commerce Multi-Tenancy Isolation Suite', () => {
   let ordersService: OrdersService;
-  let shippingService: ShippingService;
   let mockPrismaService: any;
   let mockEventEmitter: any;
-  let mockCredentialService: any;
 
   let ordersDb: Map<string, any>;
   let orderItemsDb: Map<string, any>;
-  let shippingAddressesDb: Map<string, any>;
   let contactsDb: Map<string, any>;
   let workspacesDb: Map<string, any>;
 
   const wsA = 'ws_alpha_tenant';
   const wsB = 'ws_beta_tenant';
-  const userId = 'usr_agent_tenant_b';
 
   const orderAId = 'ord-alpha-1111-4111-8111-111111111111';
   const contactAId = 'contact-alpha-1';
@@ -37,7 +24,6 @@ describe('In-Chat Commerce Multi-Tenancy Isolation Suite', () => {
   beforeEach(() => {
     ordersDb = new Map();
     orderItemsDb = new Map();
-    shippingAddressesDb = new Map();
     contactsDb = new Map();
     workspacesDb = new Map();
 
@@ -64,6 +50,12 @@ describe('In-Chat Commerce Multi-Tenancy Isolation Suite', () => {
       totalAmount: 500000,
       paidAmount: 0,
       contactId: contactAId,
+      recipientName: 'Khách hàng Alpha',
+      recipientPhone: '0988111222',
+      recipientAddress: '10 Cầu Giấy',
+      recipientWard: 'Dịch Vọng',
+      recipientDistrict: 'Cầu Giấy',
+      recipientProvince: 'Hà Nội',
       createdAt: new Date(),
       updatedAt: new Date(),
     });
@@ -81,22 +73,7 @@ describe('In-Chat Commerce Multi-Tenancy Isolation Suite', () => {
       totalPrice: 500000,
     });
 
-    shippingAddressesDb.set(orderAId, {
-      id: 'addr-alpha-1',
-      workspaceId: wsA,
-      orderId: orderAId,
-      recipientName: 'Khách hàng Alpha',
-      phoneNumber: '0988111222',
-      streetAddress: '10 Cầu Giấy',
-      ward: 'Dịch Vọng',
-      district: 'Cầu Giấy',
-      province: 'Hà Nội',
-      shippingCarrier: CarrierProvider.CUSTOM,
-      trackingCode: 'INTERNAL-3001-ALPHA',
-    });
-
     mockEventEmitter = { emit: () => {} };
-    mockCredentialService = { decrypt: () => ({}) };
 
     const clientMock: any = {
       order: {
@@ -107,9 +84,6 @@ describe('In-Chat Commerce Multi-Tenancy Isolation Suite', () => {
             const res = { ...o };
             if (include?.items) {
               res.items = Array.from(orderItemsDb.values()).filter(i => i.orderId === o.id);
-            }
-            if (include?.shippingAddress) {
-              res.shippingAddress = shippingAddressesDb.get(o.id) || null;
             }
             return res;
           }
@@ -138,15 +112,6 @@ describe('In-Chat Commerce Multi-Tenancy Isolation Suite', () => {
       inventoryLedgerService,
       {} as any,
     );
-
-    shippingService = new ShippingService(
-      mockPrismaService,
-      mockEventEmitter as any,
-      mockCredentialService,
-      new CustomCarrierAdapter(),
-      new GhtkCarrierAdapter(),
-      new GhnCarrierAdapter(),
-    );
   });
 
   it('should reject getOrderById when requesting order belonging to another workspace', async () => {
@@ -160,54 +125,5 @@ describe('In-Chat Commerce Multi-Tenancy Isolation Suite', () => {
         return true;
       },
     );
-  });
-
-  it('should reject getShippingLabelData for cross-tenant order', async () => {
-    await assert.rejects(
-      async () => {
-        await ordersService.getShippingLabelData(wsB, orderAId);
-      },
-      (err: any) => {
-        assert.strictEqual(err instanceof NotFoundException, true);
-        assert.strictEqual(err.getResponse().code, 'ORDER_NOT_FOUND');
-        return true;
-      },
-    );
-  });
-
-  it('should reject dispatchOrder for cross-tenant order in ShippingService', async () => {
-    await assert.rejects(
-      async () => {
-        await shippingService.dispatchOrder(
-          wsB,
-          orderAId,
-          { carrier: CarrierProvider.CUSTOM },
-          userId,
-        );
-      },
-      (err: any) => {
-        assert.strictEqual(err instanceof NotFoundException, true);
-        assert.strictEqual(err.getResponse().code, 'ORDER_NOT_FOUND');
-        return true;
-      },
-    );
-  });
-
-  it('should reject trackOrder for cross-tenant order in ShippingService', async () => {
-    await assert.rejects(
-      async () => {
-        await shippingService.trackOrder(wsB, orderAId);
-      },
-      (err: any) => {
-        assert.strictEqual(err instanceof NotFoundException, true);
-        assert.strictEqual(err.getResponse().code, 'ORDER_NOT_FOUND');
-        return true;
-      },
-    );
-  });
-
-  it('should return false when cancelling shipment of cross-tenant order', async () => {
-    const res = await shippingService.cancelOrderShipment(wsB, orderAId);
-    assert.strictEqual(res, false);
   });
 });

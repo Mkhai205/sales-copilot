@@ -1,4 +1,5 @@
 import {
+  ConflictException,
   ForbiddenException,
   Injectable,
   Logger,
@@ -10,10 +11,13 @@ import type {
   LoginDto,
   LoginResponseDto,
   RefreshTokenDto,
+  RegisterDto,
+  RegisterResponseDto,
   UpdateUserProfileDto,
   UserDto,
 } from '@sales-copilot/shared-contracts';
 import { PrismaService } from '../../../infrastructure/database';
+import { generateSlug } from '../workspaces/utils/slug.util';
 import { PasswordService } from './password.service';
 import { TokenService } from './token.service';
 
@@ -26,6 +30,119 @@ export class AuthService {
     private readonly passwordService: PasswordService,
     private readonly tokenService: TokenService,
   ) {}
+
+  /**
+   * Registers a new user and provisions their default workspace atomically (TASK-3A-05).
+   * Creates User + Workspace + Member (OWNER) + Primary Inbox in a single transaction.
+   */
+  async register(dto: RegisterDto): Promise<RegisterResponseDto> {
+    const normalizedEmail = dto.email.trim().toLowerCase();
+
+    const existingUser = await this.prisma.client.user.findUnique({
+      where: { email: normalizedEmail },
+    });
+
+    if (existingUser) {
+      throw new ConflictException({
+        code: 'EMAIL_ALREADY_EXISTS',
+        message: 'A user with this email address already exists',
+      });
+    }
+
+    const passwordHash = await this.passwordService.hash(dto.password);
+    const workspaceName = dto.workspaceName?.trim() || `${dto.name.trim()}'s Workspace`;
+
+    const result = await this.prisma.runInTransaction(async txCtx => {
+      const client = this.prisma.client;
+
+      const user = await client.user.create({
+        data: {
+          email: normalizedEmail,
+          passwordHash,
+          name: dto.name.trim(),
+          role: 'USER',
+          isActive: true,
+        },
+      });
+
+      let candidateSlug = generateSlug(workspaceName);
+      const existingSlug = await client.workspace.findUnique({
+        where: { slug: candidateSlug },
+      });
+      if (existingSlug) {
+        candidateSlug = `${candidateSlug}-${Math.random().toString(36).slice(2, 6)}`;
+      }
+
+      const workspace = await client.workspace.create({
+        data: {
+          name: workspaceName,
+          slug: candidateSlug,
+          billingPlan: 'FREE',
+          timezone: 'Asia/Ho_Chi_Minh',
+          defaultLanguage: 'vi',
+        },
+      });
+
+      await client.workspaceMember.create({
+        data: {
+          workspaceId: workspace.id,
+          userId: user.id,
+          role: 'OWNER',
+        },
+      });
+
+      const inbox = await client.inbox.create({
+        data: {
+          workspaceId: workspace.id,
+          name: 'Hộp thư chính',
+        },
+      });
+
+      await client.inboxMember.create({
+        data: {
+          inboxId: inbox.id,
+          userId: user.id,
+        },
+      });
+
+      return { user, workspace };
+    });
+
+    const tokens = await this.tokenService.generateTokens({
+      id: result.user.id,
+      email: result.user.email,
+      role: result.user.role,
+    });
+
+    this.logger.log(
+      `Registered user '${result.user.email}' (${result.user.id}) with default workspace '${result.workspace.name}' (${result.workspace.id})`,
+    );
+
+    return {
+      user: {
+        id: result.user.id,
+        email: result.user.email,
+        name: result.user.name,
+        role: result.user.role,
+        avatarUrl: result.user.avatarUrl,
+        isActive: result.user.isActive,
+        createdAt: result.user.createdAt.toISOString(),
+        updatedAt: result.user.updatedAt.toISOString(),
+      },
+      workspace: {
+        id: result.workspace.id,
+        name: result.workspace.name,
+        slug: result.workspace.slug,
+        billingPlan: result.workspace.billingPlan,
+        timezone: result.workspace.timezone,
+        defaultLanguage: result.workspace.defaultLanguage,
+        settings: (result.workspace.settings as Record<string, unknown>) || null,
+        createdAt: result.workspace.createdAt.toISOString(),
+        updatedAt: result.workspace.updatedAt.toISOString(),
+      },
+      tokens,
+    };
+  }
 
   /**
    * Authenticates a user with email and password.

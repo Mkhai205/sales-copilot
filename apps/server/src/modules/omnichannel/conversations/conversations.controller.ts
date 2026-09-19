@@ -53,7 +53,7 @@ export class ConversationsController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.AGENT, WorkspaceRole.VIEWER)
+  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.AGENT)
   @ApiOperation({
     summary: 'List all conversations in the workspace with filtering and pagination',
   })
@@ -70,7 +70,7 @@ export class ConversationsController {
 
   @Get('counts')
   @HttpCode(HttpStatus.OK)
-  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.AGENT, WorkspaceRole.VIEWER)
+  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.AGENT)
   @ApiOperation({ summary: 'Get conversation counts for tabs (mine, unassigned, all)' })
   @ApiResponse({ status: 200, description: 'Conversation counts retrieved successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
@@ -101,7 +101,7 @@ export class ConversationsController {
 
   @Get(':id')
   @HttpCode(HttpStatus.OK)
-  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.AGENT, WorkspaceRole.VIEWER)
+  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.AGENT)
   @ApiOperation({ summary: 'Get a conversation detail by ID' })
   @ApiResponse({ status: 200, description: 'Conversation detail retrieved successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
@@ -168,7 +168,7 @@ export class ConversationsController {
 
   @Post(':id/reset-unread')
   @HttpCode(HttpStatus.OK)
-  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.AGENT, WorkspaceRole.VIEWER)
+  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.AGENT)
   @ApiOperation({ summary: 'Reset unread messages counter to 0' })
   @ApiResponse({ status: 200, description: 'Unread counter reset successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
@@ -183,7 +183,7 @@ export class ConversationsController {
 
   @Get(':id/labels')
   @HttpCode(HttpStatus.OK)
-  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.AGENT, WorkspaceRole.VIEWER)
+  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.AGENT)
   @ApiOperation({ summary: 'List all labels assigned to a conversation' })
   @ApiResponse({ status: 200, description: 'Labels list retrieved successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })

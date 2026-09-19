@@ -37,6 +37,32 @@ describe('AuthController (Presentation Layer Endpoints)', () => {
     controller = new AuthController(mockAuthService as AuthService);
   });
 
+  it('should handle register request and return RegisterResponseDto', async () => {
+    mockAuthService.register = async dto => ({
+      user: mockUserDto,
+      workspace: {
+        id: 'ws_new_1',
+        name: `${dto.name}'s Workspace`,
+        slug: 'test-user-s-workspace',
+        billingPlan: 'FREE',
+        timezone: 'Asia/Ho_Chi_Minh',
+        defaultLanguage: 'vi',
+        createdAt: new Date().toISOString(),
+      },
+      tokens: mockTokens,
+    });
+
+    const result = await controller.register({
+      email: 'newuser@salescopilot.io',
+      password: 'Password123!',
+      name: 'New User',
+    });
+
+    assert.strictEqual(result.user.id, mockUserDto.id);
+    assert.strictEqual(result.workspace.id, 'ws_new_1');
+    assert.deepStrictEqual(result.tokens, mockTokens);
+  });
+
   it('should handle login request and return LoginResponseDto', async () => {
     const result = await controller.login({
       email: 'agent@salescopilot.io',

@@ -1,4 +1,4 @@
-﻿import { ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import type {
   CreateLabelDto,
@@ -180,7 +180,7 @@ export class LabelsService {
 
     try {
       const updated = await client.label.update({
-        where: { id },
+        where: { workspaceId_id: { workspaceId, id } },
         data: updateData,
       });
 
@@ -227,7 +227,7 @@ export class LabelsService {
     const snapshot = mapLabelToDto(existing);
 
     await client.label.delete({
-      where: { id },
+      where: { workspaceId_id: { workspaceId, id } },
     });
 
     this.eventEmitter.emit('label.deleted', {

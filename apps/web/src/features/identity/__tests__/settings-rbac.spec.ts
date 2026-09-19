@@ -9,8 +9,8 @@ import {
 } from '../settings-nav-items';
 
 describe('Settings Navigation & RBAC (Task 27)', () => {
-  it('should define all 9 settings items with correct categories and segments', () => {
-    assert.strictEqual(SETTINGS_NAV_ITEMS.length, 9);
+  it('should define all 7 settings items with correct categories and segments', () => {
+    assert.strictEqual(SETTINGS_NAV_ITEMS.length, 7);
 
     const segments = SETTINGS_NAV_ITEMS.map(item => item.segment);
     assert.deepStrictEqual(segments, [
@@ -20,8 +20,6 @@ describe('Settings Navigation & RBAC (Task 27)', () => {
       'members',
       'labels',
       'canned-responses',
-      'automation-rules',
-      'webhooks',
       'bank',
     ]);
 
@@ -29,7 +27,7 @@ describe('Settings Navigation & RBAC (Task 27)', () => {
     assert.strictEqual(workspaceItems.length, 4);
 
     const operationsItems = SETTINGS_NAV_ITEMS.filter(item => item.category === 'operations');
-    assert.strictEqual(operationsItems.length, 5);
+    assert.strictEqual(operationsItems.length, 3);
   });
 
   describe('getPermittedSettingsNavItems', () => {
@@ -38,14 +36,14 @@ describe('Settings Navigation & RBAC (Task 27)', () => {
       assert.deepStrictEqual(getPermittedSettingsNavItems(undefined), []);
     });
 
-    it('should return all 9 items for OWNER', () => {
+    it('should return all 7 items for OWNER', () => {
       const permitted = getPermittedSettingsNavItems(WorkspaceRole.OWNER);
-      assert.strictEqual(permitted.length, 9);
+      assert.strictEqual(permitted.length, 7);
     });
 
-    it('should return all 9 items for ADMIN', () => {
+    it('should return all 7 items for ADMIN', () => {
       const permitted = getPermittedSettingsNavItems(WorkspaceRole.ADMIN);
-      assert.strictEqual(permitted.length, 9);
+      assert.strictEqual(permitted.length, 7);
     });
 
     it('should return 4 operational items for AGENT (excluding admin-only)', () => {
@@ -58,17 +56,7 @@ describe('Settings Navigation & RBAC (Task 27)', () => {
       // Admin only items must not be included
       assert.strictEqual(segments.includes('general'), false);
       assert.strictEqual(segments.includes('members'), false);
-      assert.strictEqual(segments.includes('automation-rules'), false);
-      assert.strictEqual(segments.includes('webhooks'), false);
       assert.strictEqual(segments.includes('bank'), false);
-    });
-
-    it('should return 4 items for VIEWER', () => {
-      const permitted = getPermittedSettingsNavItems(WorkspaceRole.VIEWER);
-      assert.strictEqual(permitted.length, 4);
-
-      const segments = permitted.map(item => item.segment);
-      assert.deepStrictEqual(segments, ['inboxes', 'teams', 'labels', 'canned-responses']);
     });
   });
 
@@ -78,30 +66,19 @@ describe('Settings Navigation & RBAC (Task 27)', () => {
       assert.strictEqual(isSettingsSectionAllowed('general', WorkspaceRole.OWNER), true);
       assert.strictEqual(isSettingsSectionAllowed('general', WorkspaceRole.ADMIN), true);
       assert.strictEqual(isSettingsSectionAllowed('general', WorkspaceRole.AGENT), false);
-      assert.strictEqual(isSettingsSectionAllowed('general', WorkspaceRole.VIEWER), false);
 
       // Inboxes is accessible by all roles
       assert.strictEqual(isSettingsSectionAllowed('inboxes', WorkspaceRole.OWNER), true);
       assert.strictEqual(isSettingsSectionAllowed('inboxes', WorkspaceRole.AGENT), true);
-      assert.strictEqual(isSettingsSectionAllowed('inboxes', WorkspaceRole.VIEWER), true);
 
       // Members is admin-only
       assert.strictEqual(isSettingsSectionAllowed('members', WorkspaceRole.ADMIN), true);
       assert.strictEqual(isSettingsSectionAllowed('members', WorkspaceRole.AGENT), false);
 
-      // Automation Rules is admin-only
-      assert.strictEqual(isSettingsSectionAllowed('automation-rules', WorkspaceRole.ADMIN), true);
-      assert.strictEqual(isSettingsSectionAllowed('automation-rules', WorkspaceRole.AGENT), false);
-
-      // Webhooks is admin-only
-      assert.strictEqual(isSettingsSectionAllowed('webhooks', WorkspaceRole.ADMIN), true);
-      assert.strictEqual(isSettingsSectionAllowed('webhooks', WorkspaceRole.AGENT), false);
-
       // Bank is admin-only
       assert.strictEqual(isSettingsSectionAllowed('bank', WorkspaceRole.OWNER), true);
       assert.strictEqual(isSettingsSectionAllowed('bank', WorkspaceRole.ADMIN), true);
       assert.strictEqual(isSettingsSectionAllowed('bank', WorkspaceRole.AGENT), false);
-      assert.strictEqual(isSettingsSectionAllowed('bank', WorkspaceRole.VIEWER), false);
 
       // Invalid segment or null role
       assert.strictEqual(isSettingsSectionAllowed('non-existent', WorkspaceRole.ADMIN), false);
@@ -121,13 +98,9 @@ describe('Settings Navigation & RBAC (Task 27)', () => {
       );
     });
 
-    it('should return /settings/inboxes for AGENT and VIEWER', () => {
+    it('should return /settings/inboxes for AGENT', () => {
       assert.strictEqual(
         getDefaultSettingsRoute('acme-corp', WorkspaceRole.AGENT),
-        '/acme-corp/settings/inboxes',
-      );
-      assert.strictEqual(
-        getDefaultSettingsRoute('acme-corp', WorkspaceRole.VIEWER),
         '/acme-corp/settings/inboxes',
       );
     });

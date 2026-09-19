@@ -31,7 +31,7 @@ describe('Workspace Members Management (Task 29)', () => {
     it('should trim and validate email formatting', () => {
       const payload = {
         email: '  charlie@company.com  ',
-        role: WorkspaceRole.VIEWER,
+        role: WorkspaceRole.AGENT,
       };
       const parsed = addWorkspaceMemberSchema.parse(payload);
       assert.strictEqual(parsed.email, 'charlie@company.com');
@@ -58,7 +58,7 @@ describe('Workspace Members Management (Task 29)', () => {
   });
 
   describe('updateWorkspaceMemberRoleSchema validation', () => {
-    it('should allow assignable roles: ADMIN, AGENT, VIEWER', () => {
+    it('should allow assignable roles: ADMIN, AGENT', () => {
       assert.strictEqual(
         updateWorkspaceMemberRoleSchema.parse({ role: WorkspaceRole.ADMIN }).role,
         WorkspaceRole.ADMIN,
@@ -67,10 +67,12 @@ describe('Workspace Members Management (Task 29)', () => {
         updateWorkspaceMemberRoleSchema.parse({ role: WorkspaceRole.AGENT }).role,
         WorkspaceRole.AGENT,
       );
-      assert.strictEqual(
-        updateWorkspaceMemberRoleSchema.parse({ role: WorkspaceRole.VIEWER }).role,
-        WorkspaceRole.VIEWER,
-      );
+    });
+
+    it('should reject VIEWER as an assignable role', () => {
+      assert.throws(() => updateWorkspaceMemberRoleSchema.parse({ role: 'VIEWER' as any }), {
+        name: 'ZodError',
+      });
     });
 
     it('should reject OWNER in member role updates', () => {
@@ -122,7 +124,7 @@ describe('Workspace Members Management (Task 29)', () => {
         id: 'wm_4',
         workspaceId: 'ws_1',
         userId: 'usr_4',
-        role: WorkspaceRole.VIEWER,
+        role: WorkspaceRole.AGENT,
         user: {
           id: 'usr_4',
           name: 'Miles Dyson',
@@ -169,8 +171,11 @@ describe('Workspace Members Management (Task 29)', () => {
       assert.strictEqual(admins[0].user?.name, 'John Connor');
 
       const agents = filterMembers(mockMembers, '', WorkspaceRole.AGENT);
-      assert.strictEqual(agents.length, 1);
-      assert.strictEqual(agents[0].user?.name, 'Kyle Reese');
+      assert.strictEqual(agents.length, 2);
+      assert.deepStrictEqual(
+        agents.map(a => a.user?.name),
+        ['Kyle Reese', 'Miles Dyson'],
+      );
     });
 
     it('should combine search query and role filter', () => {

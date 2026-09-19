@@ -1,11 +1,11 @@
-﻿import { describe, it } from 'node:test';
+import { describe, it } from 'node:test';
 import * as assert from 'node:assert';
 import { ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ThrottlerStorageService, ThrottlerException } from '@nestjs/throttler';
 import { THROTTLER_LIMIT, THROTTLER_TTL } from '@nestjs/throttler/dist/throttler.constants';
 import { ThrottlerBehindProxyGuard } from '../guards/throttler-behind-proxy.guard';
-import { WebhooksController } from '../../modules/automation/webhooks/webhooks.controller';
+import { WebhooksController } from '../../modules/omnichannel/integrations/channel-webhooks/webhooks.controller';
 import { FacebookController } from '../../modules/omnichannel/integrations/facebook/facebook.controller';
 import { MessagesController } from '../../modules/omnichannel/messages/messages.controller';
 import { AuthController } from '../../modules/identity/auth/auth.controller';

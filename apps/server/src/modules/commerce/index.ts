@@ -8,5 +8,3 @@ export * from './presence/commerce-presence.module';
 export * from './presence/commerce-presence.service';
 export * from './payments/vietqr.module';
 export * from './payments/vietqr.service';
-export * from './shipping/shipping.module';
-export * from './shipping/shipping.service';

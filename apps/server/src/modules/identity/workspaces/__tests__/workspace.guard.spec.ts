@@ -84,7 +84,56 @@ describe('WorkspaceGuard (Tenant Isolation & Context Injection)', () => {
     assert.strictEqual(request.workspace.workspace.name, 'Acme Corp');
   });
 
-  it('should throw BadRequestException when X-Workspace-Id header is missing', async () => {
+  it('should throw BadRequestException when X-Workspace-Id header is missing and user has no workspaces', async () => {
+    const { context } = createMockExecutionContext(
+      {},
+      { userId: 'usr_valid_123', email: 'owner@acme.com', role: 'USER' },
+    );
+
+    await assert.rejects(
+      async () => {
+        await guard.canActivate(context);
+      },
+      (err: any) => {
+        assert.strictEqual(err.response?.code, 'WORKSPACE_ID_REQUIRED');
+        return true;
+      },
+    );
+  });
+
+  it('should auto-resolve workspaceId when header is omitted and user belongs to exactly one workspace (TASK-3A-05)', async () => {
+    mockWorkspacesService.findWorkspacesByUserId = async (userId: string) => {
+      if (userId === 'usr_valid_123') {
+        return [
+          {
+            id: 'ws_tenant_123',
+            name: 'Acme Corp',
+            slug: 'acme-corp',
+            role: WorkspaceRole.OWNER,
+          } as any,
+        ];
+      }
+      return [];
+    };
+
+    const { context, request } = createMockExecutionContext(
+      {},
+      { userId: 'usr_valid_123', email: 'owner@acme.com', role: 'USER' },
+    );
+
+    const result = await guard.canActivate(context);
+
+    assert.strictEqual(result, true);
+    assert.ok(request.workspace);
+    assert.strictEqual(request.workspace.workspaceId, 'ws_tenant_123');
+  });
+
+  it('should throw BadRequestException when header is omitted and user belongs to multiple workspaces (TASK-3A-05)', async () => {
+    mockWorkspacesService.findWorkspacesByUserId = async () => [
+      { id: 'ws_1' } as any,
+      { id: 'ws_2' } as any,
+    ];
+
     const { context } = createMockExecutionContext(
       {},
       { userId: 'usr_valid_123', email: 'owner@acme.com', role: 'USER' },

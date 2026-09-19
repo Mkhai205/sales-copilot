@@ -1,4 +1,4 @@
-﻿import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { OnEvent } from '@nestjs/event-emitter';
 import { ChannelType } from '@sales-copilot/shared-contracts';
@@ -123,7 +123,7 @@ export class TelegramLifecycleService {
     if (!botToken) {
       this.logger.warn(`No bot token found in credentials for Telegram channel '${channelId}'`);
       await client.channel.update({
-        where: { id: channelId },
+        where: { workspaceId_id: { workspaceId, id: channelId } },
         data: {
           isConnected: false,
           settings: {
@@ -177,7 +177,7 @@ export class TelegramLifecycleService {
       };
 
       await client.channel.update({
-        where: { id: channelId },
+        where: { workspaceId_id: { workspaceId, id: channelId } },
         data: {
           providerAccountId: botInfo.providerAccountId || String(botInfo.metadata?.id || ''),
           isConnected,
@@ -188,7 +188,7 @@ export class TelegramLifecycleService {
       // Optionally update Inbox avatar if empty and bot has avatar
       if (botInfo.avatarUrl && channel.inbox && !channel.inbox.avatarUrl) {
         await client.inbox.update({
-          where: { id: channel.inboxId },
+          where: { workspaceId_id: { workspaceId, id: channel.inboxId } },
           data: { avatarUrl: botInfo.avatarUrl },
         });
       }
@@ -206,7 +206,7 @@ export class TelegramLifecycleService {
       );
 
       await client.channel.update({
-        where: { id: channelId },
+        where: { workspaceId_id: { workspaceId, id: channelId } },
         data: {
           isConnected: false,
           settings: {

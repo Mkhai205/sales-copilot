@@ -7,7 +7,7 @@ import { FacebookService } from '../facebook.service';
 import { FacebookAdapter } from '../facebook.adapter';
 import { ChannelCredentialService } from '../../../../omnichannel/inboxes/channel-credential.service';
 import { PrismaService } from '../../../../../infrastructure/database';
-import { WebhooksService } from '../../../../automation/webhooks/webhooks.service';
+import { WebhooksService } from '../../channel-webhooks/webhooks.service';
 
 describe('FacebookController (REST & Central Webhook Endpoints)', () => {
   let controller: FacebookController;

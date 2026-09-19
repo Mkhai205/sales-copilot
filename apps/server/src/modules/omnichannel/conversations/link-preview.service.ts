@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
+import { RedisService } from '../../../infrastructure/redis/redis.service';
 
 export interface LinkPreviewData {
   url: string;
@@ -11,8 +12,62 @@ export interface LinkPreviewData {
 @Injectable()
 export class LinkPreviewService {
   private readonly logger = new Logger(LinkPreviewService.name);
-  private readonly cache = new Map<string, { data: LinkPreviewData; expiresAt: number }>();
+  private readonly REDIS_PREFIX = 'link_preview:';
+  private readonly REDIS_TTL_SEC = 24 * 60 * 60; // 24 hours
+  private readonly MAX_LRU_ENTRIES = 500;
+  private readonly lruCache = new Map<string, { data: LinkPreviewData; expiresAt: number }>();
   private readonly ttlMs = 24 * 60 * 60 * 1000; // 24 hours
+
+  constructor(@Optional() private readonly redisService?: RedisService) {}
+
+  private getFromLru(key: string): LinkPreviewData | null {
+    const entry = this.lruCache.get(key);
+    if (!entry) return null;
+    if (entry.expiresAt < Date.now()) {
+      this.lruCache.delete(key);
+      return null;
+    }
+    // Refresh LRU order
+    this.lruCache.delete(key);
+    this.lruCache.set(key, entry);
+    return entry.data;
+  }
+
+  private setInLru(key: string, data: LinkPreviewData, ttlMs: number): void {
+    if (this.lruCache.size >= this.MAX_LRU_ENTRIES) {
+      const oldestKey = this.lruCache.keys().next().value;
+      if (oldestKey) {
+        this.lruCache.delete(oldestKey);
+      }
+    }
+    this.lruCache.set(key, { data, expiresAt: Date.now() + ttlMs });
+  }
+
+  private async getCached(url: string): Promise<LinkPreviewData | null> {
+    if (this.redisService?.getClient()) {
+      try {
+        const raw = await this.redisService.get(`${this.REDIS_PREFIX}${url}`);
+        if (raw) {
+          return JSON.parse(raw);
+        }
+      } catch (err) {
+        this.logger.debug(`Redis get error: ${(err as Error).message}`);
+      }
+    }
+    return this.getFromLru(url);
+  }
+
+  private async setCached(url: string, data: LinkPreviewData, ttlMs = this.ttlMs): Promise<void> {
+    this.setInLru(url, data, ttlMs);
+    if (this.redisService?.getClient()) {
+      try {
+        const ttlSec = Math.max(1, Math.floor(ttlMs / 1000));
+        await this.redisService.set(`${this.REDIS_PREFIX}${url}`, JSON.stringify(data), ttlSec);
+      } catch (err) {
+        this.logger.debug(`Redis set error: ${(err as Error).message}`);
+      }
+    }
+  }
 
   /**
    * Scrapes Open Graph / HTML metadata for a given URL.
@@ -23,10 +78,10 @@ export class LinkPreviewService {
       return { url: trimmed };
     }
 
-    // Check in-memory cache
-    const cached = this.cache.get(trimmed);
-    if (cached && cached.expiresAt > Date.now()) {
-      return cached.data;
+    // Check cache (Redis or LRU fallback)
+    const cached = await this.getCached(trimmed);
+    if (cached) {
+      return cached;
     }
 
     let hostname: string;
@@ -53,14 +108,14 @@ export class LinkPreviewService {
 
       if (!response.ok) {
         const fallback = { url: trimmed, siteName: hostname };
-        this.cache.set(trimmed, { data: fallback, expiresAt: Date.now() + this.ttlMs });
+        await this.setCached(trimmed, fallback);
         return fallback;
       }
 
       const contentType = response.headers.get('content-type') || '';
       if (!contentType.includes('text/html') && !contentType.includes('application/xhtml+xml')) {
         const fallback = { url: trimmed, siteName: hostname };
-        this.cache.set(trimmed, { data: fallback, expiresAt: Date.now() + this.ttlMs });
+        await this.setCached(trimmed, fallback);
         return fallback;
       }
 
@@ -68,12 +123,12 @@ export class LinkPreviewService {
       const text = await this.readPartialHtml(response, 128 * 1024);
       const preview = this.parseOpenGraph(text, trimmed, hostname);
 
-      this.cache.set(trimmed, { data: preview, expiresAt: Date.now() + this.ttlMs });
+      await this.setCached(trimmed, preview);
       return preview;
     } catch (err) {
       this.logger.debug(`Could not scrape preview for '${trimmed}': ${(err as Error).message}`);
       const fallback = { url: trimmed, siteName: hostname };
-      this.cache.set(trimmed, { data: fallback, expiresAt: Date.now() + 60 * 1000 }); // Retry faster on error
+      await this.setCached(trimmed, fallback, 60 * 1000); // Retry faster on error
       return fallback;
     }
   }

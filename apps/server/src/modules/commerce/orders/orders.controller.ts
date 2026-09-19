@@ -25,7 +25,6 @@ import {
   type ManualPayOrderDto,
   type OrderResponseDto,
   type PaginationMeta,
-  type ShippingLabelDataDto,
 } from '@sales-copilot/shared-contracts';
 import { ZodBody, ZodQuery } from '../../../common/pipes';
 import { CurrentUser, type JwtUserPayload } from '../../identity/auth';
@@ -48,7 +47,7 @@ export class OrdersController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.AGENT, WorkspaceRole.VIEWER)
+  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.AGENT)
   @ApiOperation({ summary: 'List and filter orders in workspace' })
   @ApiResponse({ status: 200, description: 'Orders retrieved successfully' })
   async listOrders(
@@ -60,7 +59,7 @@ export class OrdersController {
 
   @Get(':id')
   @HttpCode(HttpStatus.OK)
-  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.AGENT, WorkspaceRole.VIEWER)
+  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.AGENT)
   @ApiOperation({ summary: 'Get order details by ID' })
   @ApiResponse({ status: 200, description: 'Order details retrieved successfully' })
   @ApiResponse({ status: 404, description: 'Order not found' })
@@ -69,19 +68,6 @@ export class OrdersController {
     @Param('id') id: string,
   ): Promise<OrderResponseDto> {
     return this.ordersService.getOrderById(context.workspaceId, id);
-  }
-
-  @Get(':id/shipping-label')
-  @HttpCode(HttpStatus.OK)
-  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.AGENT, WorkspaceRole.VIEWER)
-  @ApiOperation({ summary: 'Get shipping label printable data for thermal printer' })
-  @ApiResponse({ status: 200, description: 'Shipping label data retrieved successfully' })
-  @ApiResponse({ status: 404, description: 'Order not found' })
-  async getShippingLabel(
-    @CurrentWorkspace() context: WorkspaceContext,
-    @Param('id') id: string,
-  ): Promise<ShippingLabelDataDto> {
-    return this.ordersService.getShippingLabelData(context.workspaceId, id);
   }
 
   @Post()

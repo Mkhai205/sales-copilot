@@ -353,19 +353,20 @@ describe('ConversationsService (Core & State Machine)', () => {
           conversationsDb.set(id, newConv);
           return { ...newConv };
         },
-        update: async ({ where, data }: { where: { id: string }; data: any }) => {
-          const existing = conversationsDb.get(where.id);
+        update: async ({ where, data }: { where: any; data: any }) => {
+          const id = where.id ?? where.workspaceId_id?.id;
+          const existing = conversationsDb.get(id);
           if (!existing) {
-            throw new Error(`Conversation ${where.id} not found`);
+            throw new Error(`Conversation ${id} not found`);
           }
           const updated = {
             ...existing,
             ...data,
             updatedAt: new Date(),
           };
-          conversationsDb.set(where.id, updated);
+          conversationsDb.set(id, updated);
           const labels = Array.from(conversationLabelsDb.values())
-            .filter(cl => cl.conversationId === where.id)
+            .filter(cl => cl.conversationId === id)
             .map(cl => ({ label: labelsDb.get(cl.labelId) }));
           return { ...updated, labels };
         },

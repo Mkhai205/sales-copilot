@@ -2,12 +2,9 @@ import { buildQueryString, fetchApi, workspaceHeaders } from '@/lib/api/client';
 import type {
   AdjustInventoryDto,
   CancelOrderDto,
-  CarrierQuoteResultDto,
-  CarrierRateQuoteDto,
   CompleteOrderDto,
   CreateOrderDto,
   CreateProductDto,
-  DispatchOrderDto,
   GenerateVietQrDto,
   InventoryTransactionResponseDto,
   InventoryVariantItemDto,
@@ -18,8 +15,6 @@ import type {
   ManualPayOrderDto,
   OrderResponseDto,
   ProductResponseDto,
-  ShippingLabelDataDto,
-  TrackingStatusDto,
   UpdateOrderDto,
   UpdateProductDto,
   PaginationMeta,
@@ -188,36 +183,5 @@ export const commerceApi = {
       method: 'POST',
       headers: workspaceHeaders(workspaceId),
       body: dto ? JSON.stringify(dto) : undefined,
-    }),
-
-  // Shipping & Thermal Waybill
-  getShippingLabel: (workspaceId: string, id: string) =>
-    fetchApi<ShippingLabelDataDto>(`/workspaces/${workspaceId}/orders/${id}/shipping-label`, {
-      headers: workspaceHeaders(workspaceId),
-    }),
-
-  calculateShippingQuote: (workspaceId: string, dto: CarrierRateQuoteDto) =>
-    fetchApi<CarrierQuoteResultDto>(`/workspaces/${workspaceId}/shipping/quote`, {
-      method: 'POST',
-      headers: workspaceHeaders(workspaceId),
-      body: JSON.stringify(dto),
-    }),
-
-  dispatchOrder: (workspaceId: string, id: string, dto: DispatchOrderDto) =>
-    fetchApi<OrderResponseDto>(`/workspaces/${workspaceId}/shipping/orders/${id}/dispatch`, {
-      method: 'POST',
-      headers: workspaceHeaders(workspaceId),
-      body: JSON.stringify(dto),
-    }),
-
-  trackOrder: (workspaceId: string, id: string) =>
-    fetchApi<TrackingStatusDto>(`/workspaces/${workspaceId}/shipping/orders/${id}/track`, {
-      headers: workspaceHeaders(workspaceId),
-    }),
-
-  cancelShipment: (workspaceId: string, id: string) =>
-    fetchApi<{ success: boolean }>(`/workspaces/${workspaceId}/shipping/orders/${id}/cancel`, {
-      method: 'POST',
-      headers: workspaceHeaders(workspaceId),
     }),
 };

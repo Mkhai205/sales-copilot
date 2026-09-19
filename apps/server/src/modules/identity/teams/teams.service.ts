@@ -174,7 +174,7 @@ export class TeamsService {
     }
 
     const updated = await client.team.update({
-      where: { id: teamId },
+      where: { workspaceId_id: { workspaceId, id: teamId } },
       data: {
         ...(dto.name !== undefined && { name: dto.name }),
         ...(dto.description !== undefined && { description: dto.description }),
@@ -217,7 +217,7 @@ export class TeamsService {
     }
 
     await client.team.delete({
-      where: { id: teamId },
+      where: { workspaceId_id: { workspaceId, id: teamId } },
     });
 
     this.logger.log(`Deleted team '${teamId}' from workspace '${workspaceId}'`);

@@ -50,11 +50,7 @@ export interface UserWorkspaceDto extends WorkspaceDto {
   role: WorkspaceRole;
 }
 
-export const assignableWorkspaceRoleSchema = z.enum([
-  WorkspaceRole.ADMIN,
-  WorkspaceRole.AGENT,
-  WorkspaceRole.VIEWER,
-]);
+export const assignableWorkspaceRoleSchema = z.enum([WorkspaceRole.ADMIN, WorkspaceRole.AGENT]);
 export type AssignableWorkspaceRole = z.infer<typeof assignableWorkspaceRoleSchema>;
 
 export const addWorkspaceMemberSchema = z.object({

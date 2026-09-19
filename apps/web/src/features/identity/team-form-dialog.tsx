@@ -300,9 +300,7 @@ export function TeamFormDialog({
                                       ? 'Quản trị'
                                       : member.role === 'AGENT'
                                         ? 'Nhân viên'
-                                        : member.role === 'VIEWER'
-                                          ? 'Người xem'
-                                          : member.role}
+                                        : member.role}
                                 </Badge>
                                 <div
                                   className={`flex size-4 items-center justify-center rounded border transition-colors ${

@@ -375,16 +375,26 @@ export class WorkspacesService {
   ): Promise<WorkspaceMemberDto> {
     const client = this.prisma.getClient();
 
-    // 1. Verify target user exists
-    const user = await client.user.findUnique({
+    // 1. Verify target user exists, or auto-provision account if not found (TASK-3A-05)
+    let user = await client.user.findUnique({
       where: { email: dto.email.toLowerCase() },
     });
 
     if (!user) {
-      throw new NotFoundException({
-        code: 'USER_NOT_FOUND',
-        message: `User with email '${dto.email}' does not exist`,
+      const generatedName = dto.email.split('@')[0];
+      const placeholderHash = '$argon2id$v=19$m=65536,t=3,p=4$placeholder';
+      user = await client.user.create({
+        data: {
+          email: dto.email.toLowerCase(),
+          name: generatedName,
+          passwordHash: placeholderHash,
+          role: 'USER',
+          isActive: true,
+        },
       });
+      this.logger.log(
+        `Auto-provisioned user account '${user.email}' (${user.id}) for workspace member addition`,
+      );
     }
 
     if (!user.isActive) {
@@ -503,7 +513,7 @@ export class WorkspacesService {
 
     // 4. Update member role
     const updated = await client.workspaceMember.update({
-      where: { id: memberId },
+      where: { workspaceId_id: { workspaceId, id: memberId } },
       data: { role: dto.role },
       include: {
         user: {
@@ -583,7 +593,7 @@ export class WorkspacesService {
 
     // 4. Delete member
     await client.workspaceMember.delete({
-      where: { id: memberId },
+      where: { workspaceId_id: { workspaceId, id: memberId } },
     });
 
     this.logger.log(

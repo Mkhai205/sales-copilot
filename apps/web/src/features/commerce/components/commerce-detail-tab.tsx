@@ -12,13 +12,11 @@ import {
   MapPin,
   Package,
   QrCode,
-  Printer,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { OrderStatusBadge, PaymentStatusBadge } from './order-status-badge';
 import { OrderHistoryList } from './order-history-list';
-import { ThermalPrintDialog } from './thermal-print-dialog';
 import { CommerceOrderForm } from './commerce-order-form';
 import { useActiveConversationOrder } from '../hooks/use-active-conversation-order';
 import { useCommerceOrders } from '../hooks/use-commerce-orders';
@@ -56,8 +54,6 @@ export function CommerceDetailTab({
   const { confirmOrder, payOrder, cancelOrder, isConfirming, isPaying, isCancelling } =
     useCommerceOrders(workspaceId);
   const [isSendingQr, setIsSendingQr] = React.useState(false);
-  const [printDialogOpen, setPrintDialogOpen] = React.useState(false);
-  const [printFormat, setPrintFormat] = React.useState<'K80' | 'K58'>('K80');
 
   // React to external newOrderTrigger (F4 hotkey)
   React.useEffect(() => {
@@ -310,19 +306,6 @@ export function CommerceDetailTab({
                   </Button>
                   <Button
                     type="button"
-                    variant="outline"
-                    size="sm"
-                    className="h-7 text-xs px-2 gap-1 cursor-pointer"
-                    onClick={() => {
-                      setPrintFormat('K80');
-                      setPrintDialogOpen(true);
-                    }}
-                  >
-                    <Printer className="size-3.5" />
-                    In K80
-                  </Button>
-                  <Button
-                    type="button"
                     variant="default"
                     size="sm"
                     className="h-7 text-xs px-2.5 gap-1 font-semibold cursor-pointer"
@@ -342,32 +325,6 @@ export function CommerceDetailTab({
                     <CheckCircle className="size-3.5" />
                     {activeOrder.status === OrderStatus.SHIPPING ? 'Đang giao' : 'Đã thanh toán'}
                   </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="h-7 text-xs px-2 gap-1 cursor-pointer"
-                    onClick={() => {
-                      setPrintFormat('K80');
-                      setPrintDialogOpen(true);
-                    }}
-                  >
-                    <Printer className="size-3.5" />
-                    {'In phiếu K80'}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="h-7 text-xs px-2 gap-1 cursor-pointer"
-                    onClick={() => {
-                      setPrintFormat('K58');
-                      setPrintDialogOpen(true);
-                    }}
-                  >
-                    <Printer className="size-3.5" />
-                    {'In K58'}
-                  </Button>
                 </div>
               )}
             </div>
@@ -416,16 +373,6 @@ export function CommerceDetailTab({
             />
           </div>
         </div>
-      )}
-
-      {activeOrder && (
-        <ThermalPrintDialog
-          open={printDialogOpen}
-          onOpenChange={setPrintDialogOpen}
-          workspaceId={workspaceId}
-          orderId={activeOrder.id}
-          defaultFormat={printFormat}
-        />
       )}
     </div>
   );

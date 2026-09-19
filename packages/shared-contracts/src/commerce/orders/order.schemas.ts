@@ -6,11 +6,38 @@ import {
   PaymentMethod,
   PaymentStatus,
 } from '../enums';
-import { shippingAddressInputSchema, type ShippingAddressResponseDto } from '../shipping';
+import { VIETNAMESE_PHONE_REGEX } from '../../common/phone';
 
 // ============================================================================
-// Order Item Schemas
+// Recipient & Shipping Schemas
 // ============================================================================
+
+export const shippingAddressInputSchema = z.object({
+  recipientName: z.string().trim().min(2, 'Tên người nhận tối thiểu 2 ký tự'),
+  phoneNumber: z
+    .string()
+    .trim()
+    .regex(VIETNAMESE_PHONE_REGEX, 'Số điện thoại không hợp lệ')
+    .optional()
+    .nullable(),
+  streetAddress: z.string().trim().optional().nullable(),
+  ward: z.string().trim().optional().nullable(),
+  district: z.string().trim().optional().nullable(),
+  province: z.string().trim().optional().nullable(),
+  shippingNotes: z.string().optional().nullable(),
+});
+
+export type ShippingAddressInputDto = z.input<typeof shippingAddressInputSchema>;
+
+export interface ShippingAddressResponseDto {
+  recipientName: string;
+  phoneNumber: string;
+  streetAddress: string;
+  ward: string;
+  district: string;
+  province: string;
+  shippingNotes?: string | null;
+}
 
 export const createOrderItemSchema = z.object({
   productId: z.string().uuid('Product ID không hợp lệ'),
@@ -60,6 +87,13 @@ export const createOrderSchema = z.object({
   customerNotes: z.string().optional().nullable(),
   internalNotes: z.string().optional().nullable(),
   items: z.array(createOrderItemSchema).min(1, 'Đơn hàng phải có ít nhất 1 sản phẩm'),
+  recipientName: z.string().optional().nullable(),
+  recipientPhone: z.string().optional().nullable(),
+  recipientAddress: z.string().optional().nullable(),
+  recipientWard: z.string().optional().nullable(),
+  recipientDistrict: z.string().optional().nullable(),
+  recipientProvince: z.string().optional().nullable(),
+  shippingNotes: z.string().optional().nullable(),
   shippingAddress: shippingAddressInputSchema.optional().nullable(),
   metadata: z.record(z.any()).default({}),
 });
@@ -75,6 +109,13 @@ export const updateOrderSchema = z.object({
   customerNotes: z.string().optional().nullable(),
   internalNotes: z.string().optional().nullable(),
   items: z.array(createOrderItemSchema).min(1).optional(),
+  recipientName: z.string().optional().nullable(),
+  recipientPhone: z.string().optional().nullable(),
+  recipientAddress: z.string().optional().nullable(),
+  recipientWard: z.string().optional().nullable(),
+  recipientDistrict: z.string().optional().nullable(),
+  recipientProvince: z.string().optional().nullable(),
+  shippingNotes: z.string().optional().nullable(),
   shippingAddress: shippingAddressInputSchema.optional().nullable(),
   metadata: z.record(z.any()).optional(),
 });
@@ -151,6 +192,13 @@ export interface OrderResponseDto {
   completedAt: Date | string | null;
   cancelledAt: Date | string | null;
   metadata: Record<string, any>;
+  recipientName?: string | null;
+  recipientPhone?: string | null;
+  recipientAddress?: string | null;
+  recipientWard?: string | null;
+  recipientDistrict?: string | null;
+  recipientProvince?: string | null;
+  shippingNotes?: string | null;
   items?: OrderItemResponseDto[];
   shippingAddress?: ShippingAddressResponseDto | null;
   paymentTransactions?: any[];

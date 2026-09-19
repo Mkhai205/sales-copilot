@@ -1,2 +1,3 @@
 -- DropEnum
-DROP TYPE "LlmProvider";
+DROP TYPE "LlmProvider" CASCADE;
+

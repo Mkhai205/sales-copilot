@@ -43,3 +43,28 @@ export interface LoginResponseDto {
   user: UserDto;
   tokens: AuthTokensDto;
 }
+
+export const registerSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(6),
+  name: z.string().min(1).max(100),
+  workspaceName: z.string().min(1).max(100).optional(),
+});
+
+export type RegisterDto = z.infer<typeof registerSchema>;
+
+export interface RegisterResponseDto {
+  user: UserDto;
+  workspace: {
+    id: string;
+    name: string;
+    slug: string;
+    billingPlan: string;
+    timezone: string;
+    defaultLanguage: string;
+    settings?: Record<string, unknown> | null;
+    createdAt: string;
+    updatedAt?: string;
+  };
+  tokens: AuthTokensDto;
+}

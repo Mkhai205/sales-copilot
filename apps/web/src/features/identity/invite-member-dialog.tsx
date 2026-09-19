@@ -141,14 +141,6 @@ export function InviteMemberDialog({ open, onOpenChange, workspaceId }: InviteMe
                       </span>
                     </div>
                   </SelectItem>
-                  <SelectItem value={WorkspaceRole.VIEWER} className="text-xs">
-                    <div className="flex flex-col">
-                      <span className="font-medium text-foreground">Người xem (Viewer)</span>
-                      <span className="text-[11px] text-muted-foreground">
-                        Quyền chỉ xem các cuộc hội thoại và thông tin khách hàng.
-                      </span>
-                    </div>
-                  </SelectItem>
                 </SelectContent>
               </Select>
               <FieldDescription>

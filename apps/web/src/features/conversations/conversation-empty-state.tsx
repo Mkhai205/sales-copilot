@@ -2,7 +2,6 @@
 
 import * as React from 'react';
 import Image from 'next/image';
-import { Inbox, ShieldCheck } from 'lucide-react';
 
 export function ConversationEmptyState() {
   return (

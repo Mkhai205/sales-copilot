@@ -8,7 +8,6 @@ export const WorkspaceRole = {
   OWNER: 'OWNER',
   ADMIN: 'ADMIN',
   AGENT: 'AGENT',
-  VIEWER: 'VIEWER',
 } as const;
 export type WorkspaceRole = (typeof WorkspaceRole)[keyof typeof WorkspaceRole];
 

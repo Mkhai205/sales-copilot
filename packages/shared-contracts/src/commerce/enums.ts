@@ -55,14 +55,6 @@ export enum PaymentTransactionStatus {
   CANCELLED = 'CANCELLED',
 }
 
-export enum CarrierProvider {
-  GHTK = 'GHTK',
-  GHN = 'GHN',
-  VIETTEL_POST = 'VIETTEL_POST',
-  AHAMOVE = 'AHAMOVE',
-  CUSTOM = 'CUSTOM',
-}
-
 export enum InventoryTransactionType {
   STOCK_IN = 'STOCK_IN',
   STOCK_OUT = 'STOCK_OUT',
@@ -80,7 +72,6 @@ export const discountTypeSchema = z.nativeEnum(DiscountType);
 export const paymentMethodSchema = z.nativeEnum(PaymentMethod);
 export const paymentGatewaySchema = z.nativeEnum(PaymentGateway);
 export const paymentTransactionStatusSchema = z.nativeEnum(PaymentTransactionStatus);
-export const carrierProviderSchema = z.nativeEnum(CarrierProvider);
 export const inventoryTransactionTypeSchema = z.nativeEnum(InventoryTransactionType);
 
 export const COMMERCE_RECONCILIATION_QUEUE = 'commerce-reconciliation';

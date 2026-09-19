@@ -368,7 +368,7 @@ export class ContactResolutionService {
       }
 
       const updated = await tx.contact.update({
-        where: { id: activeContact.id },
+        where: { workspaceId_id: { workspaceId, id: activeContact.id } },
         data: updateData,
         include: { identities: true },
       });

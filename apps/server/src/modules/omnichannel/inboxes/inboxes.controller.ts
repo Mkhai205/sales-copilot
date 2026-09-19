@@ -1,4 +1,4 @@
-﻿import {
+import {
   Controller,
   Delete,
   Get,
@@ -49,7 +49,7 @@ export class InboxesController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.AGENT, WorkspaceRole.VIEWER)
+  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.AGENT)
   @ApiOperation({ summary: 'List all inboxes in the workspace (credentials omitted)' })
   @ApiResponse({ status: 200, description: 'Inboxes list retrieved successfully' })
   @ApiResponse({ status: 400, description: 'Missing X-Workspace-Id header' })
@@ -94,7 +94,7 @@ export class InboxesController {
 
   @Get(':id')
   @HttpCode(HttpStatus.OK)
-  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.AGENT, WorkspaceRole.VIEWER)
+  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.AGENT)
   @ApiOperation({ summary: 'Get detailed inbox information with masked credentials' })
   @ApiResponse({ status: 200, description: 'Inbox details retrieved successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })

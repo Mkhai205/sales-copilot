@@ -4,7 +4,7 @@ import { Queue } from 'bullmq';
 import { PrismaService } from '../../infrastructure/database';
 import { RedisService } from '../../infrastructure/redis';
 import { StorageService } from '../../infrastructure/storage';
-import { CHANNEL_INGESTION_QUEUE, WEBHOOK_DELIVERY_QUEUE } from '../../infrastructure/queue';
+import { CHANNEL_INGESTION_QUEUE, COMMENT_GUARD_QUEUE } from '../../infrastructure/queue';
 import {
   DependencyCheckResult,
   HealthCheckResponse,
@@ -22,8 +22,8 @@ export class HealthService {
     private readonly storage: StorageService,
     @InjectQueue(CHANNEL_INGESTION_QUEUE)
     private readonly channelIngestionQueue: Queue,
-    @InjectQueue(WEBHOOK_DELIVERY_QUEUE)
-    private readonly webhookDeliveryQueue: Queue,
+    @InjectQueue(COMMENT_GUARD_QUEUE)
+    private readonly commentGuardQueue: Queue,
   ) {}
 
   private async checkQueueHealth(queue: Queue): Promise<QueueCheckResult> {
@@ -53,13 +53,13 @@ export class HealthService {
   }
 
   async getHealth(): Promise<HealthCheckResponse> {
-    const [dbResult, redisResult, storageResult, channelQueueResult, webhookQueueResult] =
+    const [dbResult, redisResult, storageResult, channelQueueResult, commentGuardQueueResult] =
       await Promise.allSettled([
         this.prisma.ping(),
         this.redis.ping(),
         this.storage.ping(),
         this.checkQueueHealth(this.channelIngestionQueue),
-        this.checkQueueHealth(this.webhookDeliveryQueue),
+        this.checkQueueHealth(this.commentGuardQueue),
       ]);
 
     const database: DependencyCheckResult =
@@ -98,16 +98,17 @@ export class HealthService {
             error: (channelQueueResult.reason as Error)?.message || 'Channel ingestion queue error',
           };
 
-    const webhookDelivery: QueueCheckResult =
-      webhookQueueResult.status === 'fulfilled'
-        ? webhookQueueResult.value
+    const commentGuard: QueueCheckResult =
+      commentGuardQueueResult.status === 'fulfilled'
+        ? commentGuardQueueResult.value
         : {
             status: 'down',
             latencyMs: 0,
-            error: (webhookQueueResult.reason as Error)?.message || 'Webhook delivery queue error',
+            error:
+              (commentGuardQueueResult.reason as Error)?.message || 'Comment guard queue error',
           };
 
-    const areQueuesHealthy = channelIngestion.status === 'ok' && webhookDelivery.status === 'ok';
+    const areQueuesHealthy = channelIngestion.status === 'ok' && commentGuard.status === 'ok';
 
     const isHealthy =
       database.status === 'up' &&
@@ -134,7 +135,7 @@ export class HealthService {
         storage,
         queues: {
           channelIngestion,
-          webhookDelivery,
+          commentGuard,
         },
       },
     };
@@ -156,14 +157,14 @@ export class HealthService {
       redisResult,
       storageResult,
       channelQueueResult,
-      webhookQueueResult,
+      commentGuardQueueResult,
     ] = await Promise.allSettled([
       this.prisma.ping(),
       this.prisma.checkMigrations(),
       this.redis.ping(),
       this.storage.ping(),
       this.checkQueueHealth(this.channelIngestionQueue),
-      this.checkQueueHealth(this.webhookDeliveryQueue),
+      this.checkQueueHealth(this.commentGuardQueue),
     ]);
 
     const database: DependencyCheckResult =
@@ -210,19 +211,20 @@ export class HealthService {
             error: (channelQueueResult.reason as Error)?.message || 'Channel ingestion queue error',
           };
 
-    const webhookDelivery: QueueCheckResult =
-      webhookQueueResult.status === 'fulfilled'
-        ? webhookQueueResult.value
+    const commentGuard: QueueCheckResult =
+      commentGuardQueueResult.status === 'fulfilled'
+        ? commentGuardQueueResult.value
         : {
             status: 'down',
             latencyMs: 0,
-            error: (webhookQueueResult.reason as Error)?.message || 'Webhook delivery queue error',
+            error:
+              (commentGuardQueueResult.reason as Error)?.message || 'Comment guard queue error',
           };
 
     const isDatabaseReady = database.status === 'up' && migrations.applied;
     const isRedisReady = redis.status === 'up';
     const isStorageReady = storage.status === 'up';
-    const areQueuesReady = channelIngestion.status === 'ok' && webhookDelivery.status === 'ok';
+    const areQueuesReady = channelIngestion.status === 'ok' && commentGuard.status === 'ok';
 
     const isReady = isDatabaseReady && isRedisReady && isStorageReady && areQueuesReady;
 
@@ -250,7 +252,7 @@ export class HealthService {
         storage,
         queues: {
           channelIngestion,
-          webhookDelivery,
+          commentGuard,
         },
       },
     };

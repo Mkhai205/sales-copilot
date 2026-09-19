@@ -9,21 +9,12 @@ import {
   SeedTestContext,
   TestWebSocketClient,
 } from './helpers';
-import {
-  AutomationActionType,
-  AutomationAttribute,
-  AutomationEventTrigger,
-  AutomationOperator,
-  MessageType,
-  SenderType,
-  WsServerEvent,
-} from '@sales-copilot/shared-contracts';
+import { MessageType, SenderType, WsServerEvent } from '@sales-copilot/shared-contracts';
 import { PresenceService } from '../../src/modules/realtime/presence.service';
 import { ConversationsService } from '../../src/modules/omnichannel/conversations/conversations.service';
-import { AutomationRulesService } from '../../src/modules/automation/automation-rules/automation-rules.service';
 import { MessagesService } from '../../src/modules/omnichannel/messages/messages.service';
 
-describe('E2E Scenario 3 & 4 — Auto-Assignment & Automation Rule Flow (Task 17 — Feature F-1.11.1)', () => {
+describe('E2E Scenario 3 — Auto-Assignment Flow (Task 17 — Feature F-1.11.1)', () => {
   let ctx: TestAppContext;
   let seedCtx: SeedTestContext;
   let agent2User: any;
@@ -212,135 +203,6 @@ describe('E2E Scenario 3 & 4 — Auto-Assignment & Automation Rule Flow (Task 17
         firstAssignedAgentId === seedCtx.agentUser.id ? agent2User.id : seedCtx.agentUser.id;
 
       expect(conv2InDb?.assigneeId).toBe(expectedSecondAgentId);
-    });
-  });
-
-  describe('Scenario 4: Automation Rule Execution & Audit Logging (Feature F-1.7.1)', () => {
-    let createdRuleId: string;
-    let targetConversationId: string;
-
-    it('should evaluate automation rule on message creation, execute ADD_LABEL action, and record AuditLog', async () => {
-      const prisma = ctx.prisma.client;
-      const rulesService = ctx.app.get(AutomationRulesService);
-      const messagesService = ctx.app.get(MessagesService);
-      const conversationsService = ctx.app.get(ConversationsService);
-
-      // 1. Create a dedicated conversation for the automation rule test
-      const conv = await conversationsService.create(seedCtx.workspace.id, {
-        inboxId: seedCtx.inbox.id,
-        contactId: seedCtx.contact.id,
-      });
-      targetConversationId = conv.id;
-
-      // 2. Create Automation Rule triggered on MESSAGE_CREATED matching "VIP"
-      const rule = await rulesService.create(seedCtx.workspace.id, {
-        name: 'VIP Enterprise Auto-Tagger',
-        description: 'Auto-tags conversation with VIP Customer label on keyword match',
-        eventTrigger: AutomationEventTrigger.MESSAGE_CREATED,
-        conditions: [
-          {
-            attribute: AutomationAttribute.CONTENT,
-            operator: AutomationOperator.CONTAINS,
-            values: ['VIP', 'Enterprise'],
-          },
-        ],
-        actions: [
-          {
-            type: AutomationActionType.ADD_LABEL,
-            params: {
-              labelTitle: 'VIP Customer',
-            },
-          },
-        ],
-        isActive: true,
-      });
-      createdRuleId = rule.id;
-
-      // 3. Create inbound customer message with matching keyword
-      await messagesService.create(seedCtx.workspace.id, targetConversationId, {
-        content: 'Hello, we represent a VIP Enterprise account requiring priority SLA.',
-        senderType: SenderType.CONTACT,
-        senderId: seedCtx.contact.id,
-        messageType: MessageType.INCOMING,
-      });
-
-      // 4. Poll database for applied ConversationLabel (async event processing)
-      let conversationLabel = null;
-      const startTime = Date.now();
-      while (Date.now() - startTime < 8000) {
-        conversationLabel = await prisma.conversationLabel.findFirst({
-          where: {
-            conversationId: targetConversationId,
-            label: { title: 'VIP Customer' },
-          },
-          include: { label: true },
-        });
-        if (conversationLabel) break;
-        await new Promise(r => setTimeout(r, 150));
-      }
-
-      expect(conversationLabel).toBeDefined();
-      expect(conversationLabel?.label.title).toBe('VIP Customer');
-
-      // 5. Verify immutable AuditLog record
-      let auditLog = null;
-      const auditStartTime = Date.now();
-      while (Date.now() - auditStartTime < 8000) {
-        auditLog = await prisma.auditLog.findFirst({
-          where: {
-            workspaceId: seedCtx.workspace.id,
-            action: 'AUTOMATION_RULE_EXECUTED',
-            resourceType: 'AUTOMATION_RULE',
-            resourceId: createdRuleId,
-          },
-        });
-        if (auditLog) break;
-        await new Promise(r => setTimeout(r, 150));
-      }
-
-      expect(auditLog).toBeDefined();
-      expect(auditLog?.action).toBe('AUTOMATION_RULE_EXECUTED');
-      expect(auditLog?.resourceType).toBe('AUTOMATION_RULE');
-      expect(auditLog?.resourceId).toBe(createdRuleId);
-
-      const payload = auditLog?.payload as any;
-      expect(payload?.ruleName).toBe('VIP Enterprise Auto-Tagger');
-      expect(payload?.conversationId).toBe(targetConversationId);
-      expect(payload?.results).toBeDefined();
-      expect(payload?.results[0]?.type).toBe(AutomationActionType.ADD_LABEL);
-      expect(payload?.results[0]?.success).toBe(true);
-    });
-
-    it('should NOT trigger automation action when message content does not match rule condition', async () => {
-      const prisma = ctx.prisma.client;
-      const messagesService = ctx.app.get(MessagesService);
-      const conversationsService = ctx.app.get(ConversationsService);
-
-      // 1. Create another conversation
-      const nonMatchingConv = await conversationsService.create(seedCtx.workspace.id, {
-        inboxId: seedCtx.inbox.id,
-        contactId: seedCtx.contact.id,
-      });
-
-      // 2. Send message that does NOT contain "VIP" or "Enterprise"
-      await messagesService.create(seedCtx.workspace.id, nonMatchingConv.id, {
-        content: 'Just general inquiry about office location and opening hours.',
-        senderType: SenderType.CONTACT,
-        senderId: seedCtx.contact.id,
-        messageType: MessageType.INCOMING,
-      });
-
-      // Wait 500ms to allow any async processing
-      await new Promise(r => setTimeout(r, 500));
-
-      // 3. Verify that NO "VIP Customer" label was assigned to this conversation
-      const labelInDb = await prisma.conversationLabel.findFirst({
-        where: {
-          conversationId: nonMatchingConv.id,
-          label: { title: 'VIP Customer' },
-        },
-      });
-      expect(labelInDb).toBeNull();
     });
   });
 });

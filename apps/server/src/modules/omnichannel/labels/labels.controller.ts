@@ -1,4 +1,4 @@
-﻿import {
+import {
   Controller,
   Delete,
   Get,
@@ -40,7 +40,7 @@ export class LabelsController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.AGENT, WorkspaceRole.VIEWER)
+  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.AGENT)
   @ApiOperation({ summary: 'List all labels in the workspace' })
   @ApiResponse({ status: 200, description: 'Labels list retrieved successfully' })
   @ApiResponse({
@@ -77,7 +77,7 @@ export class LabelsController {
 
   @Get(':id')
   @HttpCode(HttpStatus.OK)
-  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.AGENT, WorkspaceRole.VIEWER)
+  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.AGENT)
   @ApiOperation({ summary: 'Get a label by ID in the workspace' })
   @ApiResponse({ status: 200, description: 'Label detail retrieved successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })

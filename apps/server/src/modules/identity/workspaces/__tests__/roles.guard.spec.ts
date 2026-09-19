@@ -48,7 +48,7 @@ describe('RolesGuard (RBAC Permission Control)', () => {
   });
 
   it('should allow access when empty roles array is provided', () => {
-    const context = createMockExecutionContext(WorkspaceRole.VIEWER);
+    const context = createMockExecutionContext(WorkspaceRole.AGENT);
     reflector.getAllAndOverride = () => [];
 
     const result = guard.canActivate(context);
@@ -86,13 +86,9 @@ describe('RolesGuard (RBAC Permission Control)', () => {
     );
   });
 
-  it('should throw ForbiddenException (INSUFFICIENT_PERMISSIONS) when VIEWER attempts to access AGENT/ADMIN/OWNER endpoint', () => {
-    const context = createMockExecutionContext(WorkspaceRole.VIEWER);
-    reflector.getAllAndOverride = () => [
-      WorkspaceRole.OWNER,
-      WorkspaceRole.ADMIN,
-      WorkspaceRole.AGENT,
-    ];
+  it('should throw ForbiddenException (INSUFFICIENT_PERMISSIONS) when AGENT attempts to access OWNER-only endpoint', () => {
+    const context = createMockExecutionContext(WorkspaceRole.AGENT);
+    reflector.getAllAndOverride = () => [WorkspaceRole.OWNER];
 
     assert.throws(
       () => {

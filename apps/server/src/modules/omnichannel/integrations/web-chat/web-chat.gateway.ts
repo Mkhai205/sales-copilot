@@ -529,45 +529,16 @@ export class WebChatGateway
   private async resolveChannelByToken(widgetToken: string) {
     const client = this.prisma.getClient();
 
-    // 1. Direct query by providerAccountId
-    const directChannel = await client.channel.findFirst({
+    // Direct indexed query by providerAccountId or inboxId to eliminate cross-tenant scanning (TASK-3A-06)
+    return client.channel.findFirst({
       where: {
         channelType: ChannelType.WEB_CHAT,
-        providerAccountId: widgetToken,
+        OR: [{ providerAccountId: widgetToken }, { inboxId: widgetToken }],
       },
       include: {
         inbox: true,
       },
     });
-
-    if (directChannel) {
-      return directChannel;
-    }
-
-    // 2. Query all WEB_CHAT channels and decrypt credentials to find matching token
-    const webChatChannels = await client.channel.findMany({
-      where: {
-        channelType: ChannelType.WEB_CHAT,
-      },
-      include: {
-        inbox: true,
-      },
-    });
-
-    for (const chan of webChatChannels) {
-      const creds = this.decryptCredentials(chan.credentials);
-      const chanToken =
-        (creds.widgetToken as string) ||
-        (creds.website_token as string) ||
-        (creds.token as string) ||
-        chan.providerAccountId;
-
-      if (chanToken === widgetToken) {
-        return chan;
-      }
-    }
-
-    return null;
   }
 
   private decryptCredentials(rawCredentials: unknown): Record<string, unknown> {

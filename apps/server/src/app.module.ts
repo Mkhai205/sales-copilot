@@ -14,7 +14,6 @@ import { StorageModule } from './infrastructure/storage/storage.module';
 import { IdentityModule, JwtAuthGuard } from './modules/identity';
 import { OmnichannelModule } from './modules/omnichannel';
 import { CommerceModule } from './modules/commerce';
-import { AutomationModule } from './modules/automation';
 import { IntelligenceModule } from './modules/intelligence';
 import { PlatformAdminModule } from './modules/platform-admin';
 import { RealtimeModule } from './modules/realtime';
@@ -120,7 +119,6 @@ import { pinoRedactConfig } from './common/logging';
     IdentityModule,
     OmnichannelModule,
     CommerceModule,
-    AutomationModule,
     IntelligenceModule,
     PlatformAdminModule,
     RealtimeModule,

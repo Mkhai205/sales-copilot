@@ -112,21 +112,23 @@ describe('ContactResolutionService (3NF Multi-Channel Identity Resolution Engine
           return res;
         },
         update: async ({ where, data, include }: { where: any; data: any; include?: any }) => {
-          const existing = contactsDb.get(where.id);
+          const id = where.id ?? where.workspaceId_id?.id;
+          const existing = contactsDb.get(id);
           if (!existing) throw new Error('Contact not found');
           const updated = { ...existing, ...data, updatedAt: new Date() };
-          contactsDb.set(where.id, updated);
+          contactsDb.set(id, updated);
           const res = { ...updated };
           if (include?.identities) {
             res.identities = Array.from(identitiesDb.values()).filter(
-              (i: any) => i.contactId === where.id,
+              (i: any) => i.contactId === id,
             );
           }
           return res;
         },
         delete: async ({ where }: { where: any }) => {
-          const deleted = contactsDb.get(where.id);
-          contactsDb.delete(where.id);
+          const id = where.id ?? where.workspaceId_id?.id;
+          const deleted = contactsDb.get(id);
+          contactsDb.delete(id);
           return deleted;
         },
       },

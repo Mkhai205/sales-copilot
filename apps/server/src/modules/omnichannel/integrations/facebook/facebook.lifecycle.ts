@@ -1,4 +1,4 @@
-﻿import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { ChannelType } from '@sales-copilot/shared-contracts';
 import { PrismaService } from '../../../../infrastructure/database';
@@ -128,7 +128,7 @@ export class FacebookLifecycleService {
         `No Page Access Token found in credentials for Facebook channel '${channelId}'`,
       );
       await client.channel.update({
-        where: { id: channelId },
+        where: { workspaceId_id: { workspaceId, id: channelId } },
         data: {
           isConnected: false,
           settings: {
@@ -173,7 +173,7 @@ export class FacebookLifecycleService {
       };
 
       await client.channel.update({
-        where: { id: channelId },
+        where: { workspaceId_id: { workspaceId, id: channelId } },
         data: {
           providerAccountId: pageInfo.providerAccountId || channel.providerAccountId,
           isConnected,
@@ -184,7 +184,7 @@ export class FacebookLifecycleService {
       // 4. Optionally update Inbox avatar if empty and Page has avatar
       if (pageInfo.avatarUrl && channel.inbox && !channel.inbox.avatarUrl) {
         await client.inbox.update({
-          where: { id: channel.inboxId },
+          where: { workspaceId_id: { workspaceId, id: channel.inboxId } },
           data: { avatarUrl: pageInfo.avatarUrl },
         });
       }
@@ -202,7 +202,7 @@ export class FacebookLifecycleService {
       );
 
       await client.channel.update({
-        where: { id: channelId },
+        where: { workspaceId_id: { workspaceId, id: channelId } },
         data: {
           isConnected: false,
           settings: {
@@ -307,7 +307,7 @@ export class FacebookLifecycleService {
     const channelSettings = (channel.settings as Record<string, unknown>) || {};
 
     await client.channel.update({
-      where: { id: channelId },
+      where: { workspaceId_id: { workspaceId, id: channelId } },
       data: {
         isConnected: false,
         settings: {

@@ -80,11 +80,12 @@ describe('OutboundMessageListener (Task S-3: Event-driven Outbound Delivery)', (
         },
       },
       message: {
-        update: async ({ where, data }: { where: { id: string }; data: any }) => {
-          const msg = messagesDb.get(where.id);
+        update: async ({ where, data }: { where: any; data: any }) => {
+          const id = where.workspaceId_id ? where.workspaceId_id.id : where.id;
+          const msg = messagesDb.get(id);
           if (msg) {
             const updated = { ...msg, ...data };
-            messagesDb.set(where.id, updated);
+            messagesDb.set(id, updated);
             return { ...updated };
           }
           return null;

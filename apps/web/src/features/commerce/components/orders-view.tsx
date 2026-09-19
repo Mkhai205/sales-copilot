@@ -19,7 +19,6 @@ import { useCommerceRealtimeSync } from '../hooks/use-commerce-realtime-sync';
 import { OrdersTable } from './orders-table';
 import { OrderDetailSheet } from './order-detail-sheet';
 import { CreateOrderDialog } from './create-order-dialog';
-import { ThermalPrintDialog } from './thermal-print-dialog';
 import { OrderStatus, PaymentStatus, type OrderResponseDto } from '@sales-copilot/shared-contracts';
 import { ChevronLeft, ChevronRight, Plus, RefreshCw, Search, ShoppingBag, X } from 'lucide-react';
 
@@ -47,9 +46,6 @@ export function OrdersView({ workspaceSlug }: OrdersViewProps) {
   const [createDialogOpen, setCreateDialogOpen] = React.useState<boolean>(false);
   const [selectedOrder, setSelectedOrder] = React.useState<OrderResponseDto | null>(null);
   const [sheetOpen, setSheetOpen] = React.useState<boolean>(false);
-  const [printDialogOpen, setPrintDialogOpen] = React.useState<boolean>(false);
-  const [printOrder, setPrintOrder] = React.useState<OrderResponseDto | null>(null);
-  const [printFormat, setPrintFormat] = React.useState<'K80' | 'K58'>('K80');
 
   const { completeOrder } = useCommerceOrders(workspaceId);
 
@@ -96,12 +92,6 @@ export function OrdersView({ workspaceSlug }: OrdersViewProps) {
   const handleSelectOrder = (order: OrderResponseDto) => {
     setSelectedOrder(order);
     setSheetOpen(true);
-  };
-
-  const handlePrintOrder = (order: OrderResponseDto, format: 'K80' | 'K58' = 'K80') => {
-    setPrintOrder(order);
-    setPrintFormat(format);
-    setPrintDialogOpen(true);
   };
 
   const handleCompleteOrder = async (order: OrderResponseDto) => {
@@ -247,7 +237,6 @@ export function OrdersView({ workspaceSlug }: OrdersViewProps) {
           workspaceId={workspaceId}
           workspaceSlug={workspaceSlug}
           onSelectOrder={handleSelectOrder}
-          onPrintOrder={handlePrintOrder}
           onCompleteOrder={handleCompleteOrder}
           onCancelOrder={handleCancelOrder}
         />
@@ -309,17 +298,6 @@ export function OrdersView({ workspaceSlug }: OrdersViewProps) {
             setSelectedOrder(newOrder);
             setSheetOpen(true);
           }}
-        />
-      )}
-
-      {/* Thermal Print Dialog */}
-      {workspaceId && printOrder && (
-        <ThermalPrintDialog
-          open={printDialogOpen}
-          onOpenChange={setPrintDialogOpen}
-          workspaceId={workspaceId}
-          orderId={printOrder.id}
-          defaultFormat={printFormat}
         />
       )}
     </div>

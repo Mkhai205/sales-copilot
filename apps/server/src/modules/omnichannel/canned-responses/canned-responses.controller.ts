@@ -1,4 +1,4 @@
-﻿import {
+import {
   Controller,
   Delete,
   Get,
@@ -40,7 +40,7 @@ export class CannedResponsesController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.AGENT, WorkspaceRole.VIEWER)
+  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.AGENT)
   @ApiOperation({ summary: 'List all canned responses in the workspace with optional search' })
   @ApiResponse({ status: 200, description: 'Canned responses retrieved successfully' })
   @ApiResponse({ status: 400, description: 'Missing X-Workspace-Id header or invalid query' })
@@ -71,7 +71,7 @@ export class CannedResponsesController {
 
   @Get(':id')
   @HttpCode(HttpStatus.OK)
-  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.AGENT, WorkspaceRole.VIEWER)
+  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.AGENT)
   @ApiOperation({ summary: 'Get a canned response detail by ID' })
   @ApiResponse({ status: 200, description: 'Canned response detail retrieved successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })

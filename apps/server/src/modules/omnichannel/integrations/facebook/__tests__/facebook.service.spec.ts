@@ -1,4 +1,4 @@
-﻿import { describe, it, beforeEach, afterEach } from 'node:test';
+import { describe, it, beforeEach, afterEach } from 'node:test';
 import * as assert from 'node:assert';
 import { ConfigService } from '@nestjs/config';
 import { ChannelType } from '@sales-copilot/shared-contracts';
@@ -93,16 +93,18 @@ describe('FacebookService (OAuth Provisioning & Page Connection)', () => {
           channelsDb.set(id, created);
           return created;
         },
-        update: async ({ where, data }: { where: { id: string }; data: any }) => {
-          const c = channelsDb.get(where.id);
+        update: async ({ where, data }: { where: any; data: any }) => {
+          const id = where.workspaceId_id ? where.workspaceId_id.id : where.id;
+          const c = channelsDb.get(id);
           if (!c) throw new Error('Channel not found');
           const updated = { ...c, ...data, updatedAt: new Date() };
-          channelsDb.set(where.id, updated);
+          channelsDb.set(id, updated);
           return updated;
         },
-        delete: async ({ where }: { where: { id: string } }) => {
-          const c = channelsDb.get(where.id);
-          channelsDb.delete(where.id);
+        delete: async ({ where }: { where: any }) => {
+          const id = where.workspaceId_id ? where.workspaceId_id.id : where.id;
+          const c = channelsDb.get(id);
+          channelsDb.delete(id);
           return c;
         },
       },
@@ -113,16 +115,18 @@ describe('FacebookService (OAuth Provisioning & Page Connection)', () => {
           inboxesDb.set(id, created);
           return created;
         },
-        update: async ({ where, data }: { where: { id: string }; data: any }) => {
-          const inbox = inboxesDb.get(where.id);
+        update: async ({ where, data }: { where: any; data: any }) => {
+          const id = where.workspaceId_id ? where.workspaceId_id.id : where.id;
+          const inbox = inboxesDb.get(id);
           if (!inbox) throw new Error('Inbox not found');
           const updated = { ...inbox, ...data, updatedAt: new Date() };
-          inboxesDb.set(where.id, updated);
+          inboxesDb.set(id, updated);
           return updated;
         },
-        delete: async ({ where }: { where: { id: string } }) => {
-          const inbox = inboxesDb.get(where.id);
-          inboxesDb.delete(where.id);
+        delete: async ({ where }: { where: any }) => {
+          const id = where.workspaceId_id ? where.workspaceId_id.id : where.id;
+          const inbox = inboxesDb.get(id);
+          inboxesDb.delete(id);
           return inbox;
         },
       },
@@ -388,6 +392,26 @@ describe('FacebookService (OAuth Provisioning & Page Connection)', () => {
             userAccessToken: 'user_token',
           }),
         /already connected in this workspace/,
+      );
+    });
+
+    it('should reject connection when page is already connected in a different workspace (cross-tenant collision - TASK-3A-10)', async () => {
+      channelsDb.set('other_chan', {
+        id: 'other_chan',
+        workspaceId: 'other_workspace_123',
+        channelType: 'FACEBOOK_MESSENGER',
+        providerAccountId: 'page_connected_elsewhere',
+      });
+
+      await assert.rejects(
+        () =>
+          service.connectPage(wsId, {
+            pageId: 'page_connected_elsewhere',
+            pageName: 'Other Shop Page',
+            pageAccessToken: 'token',
+            userAccessToken: 'user_token',
+          }),
+        /đã được kết nối với một workspace khác/,
       );
     });
   });

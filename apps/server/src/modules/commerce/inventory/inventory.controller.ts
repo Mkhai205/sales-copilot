@@ -33,7 +33,7 @@ export class InventoryController {
 
   @Get('transactions')
   @HttpCode(HttpStatus.OK)
-  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.AGENT, WorkspaceRole.VIEWER)
+  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.AGENT)
   @ApiOperation({
     summary: 'List immutable inventory ledger transactions with filtering and pagination',
   })
@@ -47,7 +47,7 @@ export class InventoryController {
 
   @Get('variants')
   @HttpCode(HttpStatus.OK)
-  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.AGENT, WorkspaceRole.VIEWER)
+  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.AGENT)
   @ApiOperation({
     summary: 'List flat inventory variants for warehouse operations with stock levels',
   })
@@ -61,7 +61,7 @@ export class InventoryController {
 
   @Get('summary')
   @HttpCode(HttpStatus.OK)
-  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.AGENT, WorkspaceRole.VIEWER)
+  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.AGENT)
   @ApiOperation({ summary: 'Get workspace inventory summary metrics and KPI cards' })
   @ApiResponse({ status: 200, description: 'Inventory summary retrieved successfully' })
   async getSummary(@CurrentWorkspace() context: WorkspaceContext) {

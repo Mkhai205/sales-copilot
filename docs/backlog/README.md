@@ -6,17 +6,29 @@ Chào mừng bạn đến với **Trung tâm Quản trị Kế hoạch & Điều
 
 ## 📌 1. Lộ Trình Phân Kỳ & Ma Trận Tiến Độ (Master Tracking Matrix)
 
-Toàn bộ các yêu cầu của **Phase 2: D2C Conversational Commerce, Inventory & AI Auto-pilot** được tổ chức thành 3 Milestone chiến lược với 7 Epics độc lập:
+### Tầm nhìn sản phẩm sau tái cấu trúc (09/2026):
+> **Nền tảng SaaS đơn giản giúp shop nhỏ bán hàng tự động qua chat đa kênh với AI Copilot.**
+> - 1 account = 1 shop (ẩn khái niệm workspace)
+> - AI Copilot là trái tim sản phẩm
+> - 3 kênh: Web Chat, Facebook Messenger, Telegram (+ Zalo OA tương lai)
 
-| Milestone | Epic ID | Tên Epic (Tài liệu chi tiết) | Phạm vi & Trọng tâm kỹ thuật | Độ phức tạp | Trạng thái |
-| :--- | :--- | :--- | :--- | :---: | :---: |
-| **Milestone 2A**<br>*(Commerce Core - Ưu tiên 1)* | **[Epic 2.1](./epic-2.1-inventory-and-catalog.md)** | **Quản Lý Kho & Biến Thể SKU** | CRUD Sản phẩm, Biến thể SKU (Màu/Size), Tồn kho 3 trạng thái (`Available = Physical - Reserved`), Phiếu nhập/kiểm kho, Sổ cái `InventoryTransaction`. | 🔴 High | ⏳ Sẵn sàng |
-| | **[Epic 2.2](./epic-2.2-commerce-and-orders.md)** | **Khung Lên Đơn & Quản Trị OMS** | Tạo đơn, Tìm kiếm SKU < 50ms, Order State Machine, Khóa kho nguyên tử 2 tầng (`$transaction`), Redis 30s lock chống va chạm nhân viên. | 🔴 High | ⏳ Sẵn sàng |
-| | **[Epic 2.3](./epic-2.3-vietqr-and-reconciliation.md)** | **Dynamic VietQR & Gạch Nợ Tự Động** | Dynamic VietQR NAPAS 247 (EMVCo Tag 00-63 CRC-16, memo `DH{code}`), Webhook Casso/SePay xử lý idempotency, gạch nợ `PAID` < 1s, Bắn realtime `order.paid`. | 🔴 High | ⏳ Sẵn sàng |
-| **Milestone 2B**<br>*(Super Admin - Ưu tiên 2)* | **[Epic 2.4](./epic-2.4-super-admin-portal.md)** | **Cổng Super Admin & Cấu Hình Động** | Layout `/admin`, `PlatformRolesGuard`, Quản lý Workspaces, Hạn mức Quota, Feature Flags, 2-tier Cache Redis, Platform Audit Log. | 🟡 Medium | ⏳ Sẵn sàng |
-| **Milestone 2C**<br>*(AI Automation - Ưu tiên 3)* | **[Epic 2.5](./epic-2.5-ai-address-ner.md)** | **AI NER Bóc Tách Địa Chỉ 3 Cấp** | Regex bóc tách SĐT 10 số, Chuẩn hóa Tỉnh - Huyện - Xã theo CSDL Tổng cục Thống kê kết hợp Trie cache, Điền đơn hàng. | 🟡 Medium | ⏳ Chờ M2A |
-| | **[Epic 2.6](./epic-2.6-ai-autopilot-discount.md)** | **AI Auto-pilot 24/7 & Discount Engine** | 4 chế độ AI (`ALWAYS_ON`, `OFF_HOURS`, `OVERFLOW`, `MANUAL`), Đàm phán giảm giá có kiểm soát qua `DiscountPolicyEngine`, Chốt đơn nửa đêm (Midnight Checkout). | 🔴 High | ⏳ Chờ M2A |
-| | **[Epic 2.7](./epic-2.7-comment-guard.md)** | **Ẩn Bình Luận Chống Cướp Khách** | Webhook Facebook/TikTok, Quét SĐT < 1s, Tự động ẩn bình luận công khai, Gửi tin nhắn riêng (Private Message) kéo khách vào hộp thư. | 🟡 Medium | ⏳ Chờ M2A |
+### Lịch sử phân kỳ:
+
+| Phase | Trạng thái | Mô tả |
+|:------|:---:|:------|
+| **Phase 1: Omnichannel Baseline** | ✅ Hoàn tất | Hội thoại, tin nhắn, kênh, liên hệ & WebSocket |
+| **Phase 2: Commerce & AI** | ✅ Hoàn tất | Kho & SKU, OMS, VietQR, Super Admin, AI Autopilot, Comment Guard |
+| **Phase 3A: Dọn dẹp & Ổn định** | ✅ Hoàn tất | Xoá Shipping/Automation/Webhooks/VIEWER, sửa 106 Prisma queries, đơn giản hoá workspace |
+| **Phase 3B: Hoàn thiện Lõi** | ⏳ Sẵn sàng | Dashboard Overview, Contacts CRM UI, Đối soát Ngân hàng UI, Luồng đăng ký shop |
+| **Phase 3C: Mở rộng** | ⏳ Chờ 3B | Thiết kế lại Shipping module, Zalo OA integration |
+
+### Bảng nhiệm vụ Phase 3 (Tái cấu trúc):
+
+| Milestone | Epic ID | Tên Epic (Tài liệu chi tiết) | Phạm vi & Trọng tâm | Trạng thái |
+|:---|:---|:---|:---|:---:|
+| **Phase 3A**<br>*(Dọn dẹp - Ưu tiên 1)* | **[Phase 3A](./phase-3a-cleanup-and-stabilization.md)** | **Dọn Dẹp & Ổn Định** | Xoá module thừa (Shipping, Automation, Webhooks), bỏ VIEWER, đơn giản hoá workspace, vá 106 lỗ hổng multi-tenancy, fix memory leak | ✅ Hoàn tất |
+| **Phase 3B**<br>*(Hoàn thiện - Ưu tiên 2)* | **[Phase 3B](./phase-3b-core-feature-completion.md)** | **Hoàn Thiện Tính Năng Lõi** | Dashboard Overview, Contacts CRM UI, Đối soát Ngân hàng UI, Luồng đăng ký shop & tạo nhân viên | ⏳ Sẵn sàng |
+| **Phase 3C**<br>*(Mở rộng - Ưu tiên 3)* | **[Phase 3C](./phase-3c-expansion.md)** | **Mở Rộng & Nâng Cao** | Thiết kế lại Shipping module từ đầu, Tích hợp Zalo OA | ⏳ Chờ 3B |
 
 ---
 
@@ -24,42 +36,45 @@ Toàn bộ các yêu cầu của **Phase 2: D2C Conversational Commerce, Invento
 
 ```mermaid
 graph TD
-    classDef baseline fill:#0f172a,stroke:#64748b,stroke-width:1px,stroke-dasharray: 5 5,color:#94a3b8;
-    classDef m2a fill:#14532d,stroke:#4ade80,stroke-width:2px,color:#f8fafc;
-    classDef m2b fill:#1e293b,stroke:#38bdf8,stroke-width:2px,color:#f8fafc;
-    classDef m2c fill:#701a75,stroke:#f472b6,stroke-width:2px,color:#f8fafc;
+    classDef completed fill:#14532d,stroke:#4ade80,stroke-width:2px,color:#f8fafc;
+    classDef p3a fill:#7f1d1d,stroke:#f87171,stroke-width:2px,color:#f8fafc;
+    classDef p3b fill:#1e293b,stroke:#38bdf8,stroke-width:2px,color:#f8fafc;
+    classDef p3c fill:#701a75,stroke:#f472b6,stroke-width:2px,color:#f8fafc;
 
-    subgraph P1["Phase 1: Omnichannel Baseline (Hoàn thành 100% - Đóng băng)"]
-        P1_CORE["Hội thoại, Tin nhắn, Kênh, Liên hệ & WebSocket"]
-    end
-    class P1_CORE baseline;
-
-    subgraph M2A["Milestone 2A: Commerce Core (Ưu tiên số 1)"]
-        E21["Epic 2.1: Kho & SKU Biến thể"]:::m2a
-        E22["Epic 2.2: Lên đơn & Quản trị OMS"]:::m2a
-        E23["Epic 2.3: Dynamic VietQR & Gạch nợ"]:::m2a
+    subgraph DONE["Phase 1 & 2 (Hoàn tất - Đóng băng)"]
+        P1["Phase 1: Omnichannel Baseline"]:::completed
+        P2["Phase 2: Commerce, AI & Super Admin"]:::completed
     end
 
-    subgraph M2B["Milestone 2B: Super Admin Portal (Ưu tiên số 2)"]
-        E24["Epic 2.4: Super Admin, Quota & Flags"]:::m2b
+    subgraph P3A["Phase 3A: Dọn Dẹp & Ổn Định (Tuần 1-2)"]
+        A01["3A-01: Xoá Shipping"]:::p3a
+        A02["3A-02: Xoá Automation"]:::p3a
+        A03["3A-03: Xoá Webhooks"]:::p3a
+        A04["3A-04: Bỏ VIEWER"]:::p3a
+        A05["3A-05: Đơn giản hoá Workspace"]:::p3a
+        A06["3A-06/07: Vá WebChat Security"]:::p3a
+        A08["3A-08: Compound Keys"]:::p3a
+        A09["3A-09: Refactor 54 Mutations"]:::p3a
+        A11["3A-11: Fix Memory Leak"]:::p3a
+        A12["3A-12/13: Dọn Dead Code"]:::p3a
+        A08 --> A09
     end
 
-    subgraph M2C["Milestone 2C: AI Automation (Ưu tiên số 3)"]
-        E25["Epic 2.5: AI Bóc tách Địa chỉ 3 cấp"]:::m2c
-        E26["Epic 2.6: AI Auto-pilot & Giảm giá"]:::m2c
-        E27["Epic 2.7: Ẩn bình luận chống cướp"]:::m2c
+    subgraph P3B["Phase 3B: Hoàn Thiện Lõi (Tuần 3-5)"]
+        B01["3B-01: Dashboard Overview"]:::p3b
+        B02["3B-02: Contacts CRM UI"]:::p3b
+        B03["3B-03: Đối soát Ngân hàng UI"]:::p3b
+        B04["3B-04: Luồng Đăng ký Shop"]:::p3b
     end
 
-    %% Dependencies
-    P1_CORE --> E21
-    E21 --> E22
-    E22 --> E23
-    P1_CORE --> E24
+    subgraph P3C["Phase 3C: Mở Rộng (Tuần 6-9)"]
+        C01["3C-01: Shipping Module Redesign"]:::p3c
+        C02["3C-02: Zalo OA Integration"]:::p3c
+    end
 
-    E22 --> E25
-    E22 --> E26
-    E21 --> E26
-    P1_CORE --> E27
+    P2 --> P3A
+    P3A --> P3B
+    P3B --> P3C
 ```
 
 ---
@@ -81,7 +96,7 @@ sequenceDiagram
     participant Code as Codebase & Tests
     participant Git as Git Version Control
 
-    User->>Backlog: 1. Chọn Feature cần làm (VD: Feature 2.1.1)
+    User->>Backlog: 1. Chọn Feature cần làm (VD: Feature 3A.1)
     User->>Agent: 2. Giao việc bằng Mẫu Prompt chuẩn (hoặc dùng /boost)
     Agent->>Code: Tự động khảo sát codebase hiện hữu
     Agent->>Plan: Tạo implementation_plan.md (Target Files, DTO, API, UI)
@@ -106,23 +121,23 @@ Mỗi Feature trong Backlog được chuẩn hóa thành 5 đề mục sắc bé
 ### 📋 3.3. Mẫu Prompt Chuẩn Giao Việc:
 
 #### 1. Mẫu Giao Feature Mới (Khép kín Lát cắt dọc End-to-End):
-> *"Hãy thực thi **Feature 2.1.X** trong tài liệu `docs/backlog/epic-2.1-inventory-and-catalog.md`.
+> *"Hãy thực thi **Feature 3A.X** trong tài liệu `docs/backlog/phase-3a-cleanup-and-stabilization.md`.
 > - Đây là lát cắt dọc khép kín: bao gồm từ Schema Prisma, Contracts DTO, NestJS API đến giao diện Next.js UI và Kiểm thử.
 > - Tuân thủ nghiêm ngặt các nguyên tắc trong `AGENTS.md` (KISS, YAGNI, tenant scoping `workspaceId`, không tạo interface đơn lẻ, không chia nhỏ micro-folder).
 > - Hãy khảo sát codebase hiện hữu, đối chiếu với Business Rules và Out-of-Scope trong tài liệu.
 > - Lập `implementation_plan.md` chi tiết (bao gồm Target Files, Schema, DTO, Test Plan) và dừng lại chờ tôi phê duyệt trước khi sửa code."*
 
-#### 2. Mẫu Kết Hợp Lệnh `/boost` (Lập Kế Hoạch Đa Chiều & Phân Tích Sâu):
-> *"/boost Hãy phân tích và lập kế hoạch triển khai cho **Feature 2.2.1: Khung Lên Đơn Nhanh & Khóa Kho Nguyên Tử** trong `docs/backlog/epic-2.2-commerce-and-orders.md`. Hãy đánh giá kỹ lưỡng các góc nhìn: kiến trúc CSDL & transaction, tính toàn vẹn đa luồng (race condition/deadlock), trải nghiệm phím tắt UX của nhân viên chat, và các ca kiểm thử biên. Xuất kết quả vào `implementation_plan.md` để tôi duyệt."*
+#### 2. Mẫu Kết Hợp Lệnh `/boost`:
+> *"/boost Hãy phân tích và lập kế hoạch triển khai cho **Feature 3B.2: Hoàn thiện Contacts CRM UI** trong `docs/backlog/phase-3b-core-feature-completion.md`. Xuất kết quả vào `implementation_plan.md` để tôi duyệt."*
 
-#### 3. Mẫu Kết Hợp Lệnh `/teamwork-preview` (Phân Công Nhiều Subagents Chạy Song Song):
-> *"/teamwork-preview Tôi muốn triển khai đồng thời **Feature 2.1.1** (Quản lý Danh mục & Biến thể) và **Feature 2.4.1** (Quản trị Workspaces Super Admin). Đây là 2 lát cắt dọc độc lập. Hãy lên kế hoạch phân chia cho 2 subagents phụ trách độc lập và preview cách điều phối."*
+#### 3. Mẫu Kết Hợp Lệnh `/teamwork-preview`:
+> *"/teamwork-preview Tôi muốn triển khai đồng thời **Feature 3A.1** (Xoá Shipping) và **Feature 3A.2** (Xoá Automation). Đây là 2 lát cắt dọc độc lập."*
 
 #### 4. Mẫu Sửa Lỗi / Điều Chỉnh:
-> *"Khi kiểm tra Feature 2.1.X trên UI, phát sinh vấn đề: [Mô tả lỗi hoặc hành vi mong muốn]. Hãy phân tích nguyên nhân gốc rễ, cập nhật `implementation_plan.md` và chờ tôi xác nhận."*
+> *"Khi kiểm tra Feature 3A.X trên UI, phát sinh vấn đề: [Mô tả lỗi]. Hãy phân tích nguyên nhân gốc rễ, cập nhật `implementation_plan.md` và chờ tôi xác nhận."*
 
-#### 5. Mẫu Yêu Cầu Tự Kiểm Tra (Self-Verification):
-> *"Hãy tự động chạy bộ kiểm tra toàn diện (`pnpm typecheck`, `pnpm nx run server:test`, `pnpm nx run web:test`), sau đó cập nhật kết quả vào `walkthrough.md` và đánh dấu `[x]` vào các tiêu chí nghiệm thu của Feature tương ứng trong backlog."*
+#### 5. Mẫu Yêu Cầu Tự Kiểm Tra:
+> *"Hãy tự động chạy bộ kiểm tra toàn diện (`pnpm typecheck`, `pnpm nx run server:test`, `pnpm nx run web:test`), sau đó cập nhật kết quả vào `walkthrough.md`."*
 
 ---
 
@@ -130,14 +145,20 @@ Mỗi Feature trong Backlog được chuẩn hóa thành 5 đề mục sắc bé
 
 ```text
 docs/backlog/
-├── README.md                              # Master Hub & AI Playbook này
-├── epic-2.1-inventory-and-catalog.md      # Epic Quản lý Kho & SKU
-├── epic-2.2-commerce-and-orders.md     # Epic Lên đơn & Quản trị OMS
-├── epic-2.3-vietqr-and-reconciliation.md  # Epic VietQR & Đối soát ngân hàng
-├── epic-2.4-super-admin-portal.md         # Epic Super Admin & Dynamic Settings
-├── epic-2.5-ai-address-ner.md             # Epic AI bóc tách địa chỉ 3 cấp
-├── epic-2.6-ai-autopilot-discount.md      # Epic AI Auto-pilot 24/7 & Giảm giá
-├── epic-2.7-comment-guard.md              # Epic Ẩn bình luận chống cướp khách
-└── archive/                               # Kho lưu trữ lịch sử
-    └── phase-1/                           # 12 Epics Phase 1 đã hoàn tất 100%
+├── README.md                                     # Master Hub & AI Playbook này
+├── phase-3a-cleanup-and-stabilization.md         # Phase 3A: Dọn dẹp & Ổn định
+├── phase-3b-core-feature-completion.md           # Phase 3B: Hoàn thiện tính năng lõi
+├── phase-3c-expansion.md                         # Phase 3C: Mở rộng & Nâng cao
+├── archive/                                       # Kho lưu trữ lịch sử
+│   ├── phase-1/                                   # 12 Epics Phase 1 đã hoàn tất 100%
+│   └── phase-2/                                   # Epics Phase 2 (sẽ chuyển vào khi Phase 3 bắt đầu)
+├── epic-2.1-inventory-and-catalog.md             # (Sẽ archive)
+├── epic-2.2-commerce-and-orders.md               # (Sẽ archive)
+├── epic-2.3-vietqr-and-reconciliation.md         # (Sẽ archive)
+├── epic-2.4-super-admin-portal.md                # (Sẽ archive)
+├── epic-3.0-ai-legacy-cleanup.md                 # (Sẽ archive)
+├── epic-3.1-ai-agent-core.md                     # (Sẽ archive)
+├── epic-3.2-commerce-tool-registry.md            # (Sẽ archive)
+├── epic-3.3-comment-guard.md                     # (Sẽ archive)
+└── epic-3.4-ai-settings-ui.md                    # (Sẽ archive)
 ```

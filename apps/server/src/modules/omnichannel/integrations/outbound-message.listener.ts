@@ -159,7 +159,7 @@ export class OutboundMessageListener {
         `Cannot deliver outbound message '${message.id}': no externalContactId found for contact '${conversation.contactId}' on channel '${channel.id}'`,
       );
       await client.message.update({
-        where: { id: message.id },
+        where: { workspaceId_id: { workspaceId, id: message.id } },
         data: {
           deliveryStatus: DeliveryStatus.FAILED,
           metadata: {
@@ -224,7 +224,7 @@ export class OutboundMessageListener {
       const result = await adapter.sendMessage(channelContext, outboundPayload);
 
       await client.message.update({
-        where: { id: message.id },
+        where: { workspaceId_id: { workspaceId, id: message.id } },
         data: {
           externalId: result.externalMessageId || message.externalId,
           deliveryStatus: result.deliveryStatus || DeliveryStatus.SENT,
@@ -242,7 +242,7 @@ export class OutboundMessageListener {
       );
 
       await client.message.update({
-        where: { id: message.id },
+        where: { workspaceId_id: { workspaceId, id: message.id } },
         data: {
           deliveryStatus: DeliveryStatus.FAILED,
           metadata: {

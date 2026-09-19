@@ -49,7 +49,7 @@ export class ContactsController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.AGENT, WorkspaceRole.VIEWER)
+  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.AGENT)
   @ApiOperation({
     summary: 'List contacts in the workspace with pagination, filtering, and sorting',
   })
@@ -66,7 +66,7 @@ export class ContactsController {
 
   @Get('search')
   @HttpCode(HttpStatus.OK)
-  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.AGENT, WorkspaceRole.VIEWER)
+  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.AGENT)
   @ApiOperation({ summary: 'Search contacts across name, email, phone, and identifier' })
   @ApiResponse({ status: 200, description: 'Matching contacts retrieved successfully' })
   @ApiResponse({ status: 400, description: 'Invalid search query' })
@@ -119,7 +119,7 @@ export class ContactsController {
 
   @Get(':id')
   @HttpCode(HttpStatus.OK)
-  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.AGENT, WorkspaceRole.VIEWER)
+  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.AGENT)
   @ApiOperation({ summary: 'Get contact details and identities by ID' })
   @ApiResponse({ status: 200, description: 'Contact details retrieved successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
@@ -171,7 +171,7 @@ export class ContactsController {
 
   @Get(':contactId/identities')
   @HttpCode(HttpStatus.OK)
-  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.AGENT, WorkspaceRole.VIEWER)
+  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.AGENT)
   @ApiOperation({ summary: 'List all channel identities linked to a specific contact' })
   @ApiResponse({ status: 200, description: 'Channel identities retrieved successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })

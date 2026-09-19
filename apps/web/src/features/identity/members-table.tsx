@@ -9,7 +9,6 @@ import {
   UserCheck,
   Shield,
   ShieldCheck,
-  Eye,
   Crown,
   X,
 } from 'lucide-react';
@@ -116,8 +115,6 @@ export function MembersTable({ workspaceId, currentUserId, currentUserRole }: Me
         return <ShieldCheck className="size-3 text-primary" />;
       case WorkspaceRole.AGENT:
         return <UserCheck className="size-3 text-emerald-500" />;
-      case WorkspaceRole.VIEWER:
-        return <Eye className="size-3 text-muted-foreground" />;
       default:
         return <Shield className="size-3 text-muted-foreground" />;
     }
@@ -181,9 +178,6 @@ export function MembersTable({ workspaceId, currentUserId, currentUserRole }: Me
               </SelectItem>
               <SelectItem value={WorkspaceRole.AGENT} className="text-xs">
                 Nhân viên
-              </SelectItem>
-              <SelectItem value={WorkspaceRole.VIEWER} className="text-xs">
-                Người xem
               </SelectItem>
             </SelectContent>
           </Select>
@@ -349,12 +343,6 @@ export function MembersTable({ workspaceId, currentUserId, currentUserRole }: Me
                                 Nhân viên
                               </span>
                             </SelectItem>
-                            <SelectItem value={WorkspaceRole.VIEWER} className="text-xs">
-                              <span className="flex items-center gap-1.5">
-                                <Eye className="size-3 text-muted-foreground" />
-                                Người xem
-                              </span>
-                            </SelectItem>
                           </SelectContent>
                         </Select>
                       ) : (
@@ -367,9 +355,7 @@ export function MembersTable({ workspaceId, currentUserId, currentUserRole }: Me
                             ? 'Quản trị viên'
                             : member.role === WorkspaceRole.AGENT
                               ? 'Nhân viên'
-                              : member.role === WorkspaceRole.VIEWER
-                                ? 'Người xem'
-                                : member.role}
+                              : member.role}
                         </Badge>
                       )}
                     </TableCell>

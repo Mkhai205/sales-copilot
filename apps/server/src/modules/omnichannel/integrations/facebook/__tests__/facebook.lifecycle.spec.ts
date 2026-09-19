@@ -47,23 +47,26 @@ describe('FacebookLifecycleService (Page Webhook Subscription Management)', () =
           const inbox = inboxesDb.get(c.inboxId);
           return { ...c, inbox: inbox || null };
         },
-        update: async ({ where, data }: { where: { id: string }; data: any }) => {
-          const c = channelsDb.get(where.id);
+        update: async ({ where, data }: { where: any; data: any }) => {
+          const id = where.workspaceId_id ? where.workspaceId_id.id : where.id;
+          const c = channelsDb.get(id);
           if (!c) throw new Error('Channel not found');
           const updated = { ...c, ...data };
-          channelsDb.set(where.id, updated);
+          channelsDb.set(id, updated);
           return updated;
         },
       },
       inbox: {
-        findFirst: async ({ where }: { where: { id: string } }) => {
-          return inboxesDb.get(where.id) || null;
+        findFirst: async ({ where }: { where: any }) => {
+          const id = where.workspaceId_id ? where.workspaceId_id.id : where.id;
+          return inboxesDb.get(id) || null;
         },
-        update: async ({ where, data }: { where: { id: string }; data: any }) => {
-          const inbox = inboxesDb.get(where.id);
+        update: async ({ where, data }: { where: any; data: any }) => {
+          const id = where.workspaceId_id ? where.workspaceId_id.id : where.id;
+          const inbox = inboxesDb.get(id);
           if (!inbox) throw new Error('Inbox not found');
           const updated = { ...inbox, ...data };
-          inboxesDb.set(where.id, updated);
+          inboxesDb.set(id, updated);
           return updated;
         },
       },

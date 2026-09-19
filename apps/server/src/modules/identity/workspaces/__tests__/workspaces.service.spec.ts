@@ -127,6 +127,17 @@ describe('WorkspacesService (Provisioning, Tenant Queries & Member RBAC)', () =>
           if (where.email) return usersDb.get(`email:${where.email.toLowerCase()}`) || null;
           return null;
         },
+        create: async ({ data }: { data: any }) => {
+          const created = {
+            id: `usr_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+            ...data,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          };
+          usersDb.set(created.id, created);
+          usersDb.set(`email:${created.email.toLowerCase()}`, created);
+          return created;
+        },
       },
       workspaceMember: {
         findUnique: async ({
@@ -201,18 +212,20 @@ describe('WorkspacesService (Provisioning, Tenant Queries & Member RBAC)', () =>
           membersDb.set(`${data.workspaceId}:${data.userId}`, created);
           return created;
         },
-        update: async ({ where, data }: { where: { id: string }; data: any }) => {
-          const existing = membersDb.get(where.id);
+        update: async ({ where, data }: { where: any; data: any }) => {
+          const id = where.id ?? where.workspaceId_id?.id;
+          const existing = membersDb.get(id);
           if (!existing) return null;
           const updated = { ...existing, ...data, updatedAt: new Date() };
-          membersDb.set(where.id, updated);
+          membersDb.set(id, updated);
           membersDb.set(`${existing.workspaceId}:${existing.userId}`, updated);
           return updated;
         },
-        delete: async ({ where }: { where: { id: string } }) => {
-          const existing = membersDb.get(where.id);
+        delete: async ({ where }: { where: any }) => {
+          const id = where.id ?? where.workspaceId_id?.id;
+          const existing = membersDb.get(id);
           if (existing) {
-            membersDb.delete(where.id);
+            membersDb.delete(id);
             membersDb.delete(`${existing.workspaceId}:${existing.userId}`);
           }
           return existing;
@@ -359,19 +372,21 @@ describe('WorkspacesService (Provisioning, Tenant Queries & Member RBAC)', () =>
       assert.strictEqual(member.user?.name, 'Agent User');
     });
 
-    it('should throw NotFoundException (USER_NOT_FOUND) when adding non-existent user email', async () => {
-      await assert.rejects(
-        async () => {
-          await service.addMemberByEmail('ws_test_1', 'usr_owner_1', WorkspaceRole.OWNER, {
-            email: 'unknown@external.com',
-            role: WorkspaceRole.AGENT,
-          });
-        },
-        (err: any) => {
-          assert.strictEqual(err.response?.code, 'USER_NOT_FOUND');
-          return true;
+    it('should auto-provision user account when adding non-existent user email (TASK-3A-05)', async () => {
+      const member = await service.addMemberByEmail(
+        'ws_test_1',
+        'usr_owner_1',
+        WorkspaceRole.OWNER,
+        {
+          email: 'unknown@external.com',
+          role: WorkspaceRole.AGENT,
         },
       );
+
+      assert.ok(member.id);
+      assert.strictEqual(member.user?.email, 'unknown@external.com');
+      assert.strictEqual(member.user?.name, 'unknown');
+      assert.strictEqual(member.role, WorkspaceRole.AGENT);
     });
 
     it('should throw BadRequestException (USER_INACTIVE) when adding deactivated user', async () => {

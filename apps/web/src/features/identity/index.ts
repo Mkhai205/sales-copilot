@@ -14,4 +14,3 @@ export * from './members-table';
 export * from './team-form-dialog';
 export * from './teams-list';
 export * from './hooks/use-workspaces';
-export * from './create-workspace-dialog';

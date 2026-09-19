@@ -112,10 +112,11 @@ describe('AutoAssignmentService (Round-Robin & Least-Loaded Assignment)', () => 
           return null;
         },
         update: async ({ where, data }: any) => {
-          const conv = conversationsDb.get(where.id);
+          const id = where.id ?? where.workspaceId_id?.id;
+          const conv = conversationsDb.get(id);
           if (!conv) throw new Error('Not found');
           const updated = { ...conv, ...data, updatedAt: new Date() };
-          conversationsDb.set(where.id, updated);
+          conversationsDb.set(id, updated);
           const inbox = inboxesDb.get(updated.inboxId);
           return {
             ...updated,

@@ -1,4 +1,4 @@
-﻿import {
+import {
   BadRequestException,
   ConflictException,
   Injectable,
@@ -222,7 +222,7 @@ export class CannedResponsesService {
 
     try {
       const updated = await client.cannedResponse.update({
-        where: { id },
+        where: { workspaceId_id: { workspaceId, id } },
         data: updateData,
       });
 
@@ -266,7 +266,7 @@ export class CannedResponsesService {
     }
 
     await client.cannedResponse.delete({
-      where: { id },
+      where: { workspaceId_id: { workspaceId, id } },
     });
 
     this.eventEmitter.emit('canned_response.deleted', {

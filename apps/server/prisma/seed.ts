@@ -488,61 +488,6 @@ async function seed() {
     });
   }
 
-  const existingRule = await prisma.automationRule.findFirst({
-    where: { workspaceId: workspace.id, name: 'Auto-assign Enterprise Conversations' },
-  });
-  if (!existingRule) {
-    await prisma.automationRule.create({
-      data: {
-        workspaceId: workspace.id,
-        name: 'Auto-assign Enterprise Conversations',
-        description:
-          'Tự động gán nhãn Enterprise và chuyển cho Support Team khi khách hỏi số lượng lớn',
-        eventTrigger: 'MESSAGE_CREATED',
-        conditions: [
-          {
-            attribute: 'message_content',
-            filterOperator: 'contains',
-            values: ['50 nhân sự', 'enterprise', 'báo giá'],
-          },
-        ],
-        actions: [
-          { actionName: 'add_label', actionParams: ['Enterprise', 'VIP'] },
-          { actionName: 'assign_team', actionParams: [team.id] },
-        ],
-        isActive: true,
-      },
-    });
-  }
-
-  const existingWebhook = await prisma.webhookSubscription.findFirst({
-    where: { workspaceId: workspace.id, url: 'https://webhook.site/sample-conversation-event' },
-  });
-  if (!existingWebhook) {
-    const webhook = await prisma.webhookSubscription.create({
-      data: {
-        workspaceId: workspace.id,
-        url: 'https://webhook.site/sample-conversation-event',
-        subscriptions: ['conversation.created', 'message.created', 'conversation.status_updated'],
-        isActive: true,
-      },
-    });
-
-    await prisma.webhookDelivery.create({
-      data: {
-        subscriptionId: webhook.id,
-        eventId: 'evt_sample_001',
-        eventType: 'conversation.created',
-        payload: { conversationId: conversation.id, status: 'OPEN' },
-        status: 'DELIVERED',
-        attemptCount: 1,
-        responseStatus: 200,
-        responseBody: '{"received": true}',
-        deliveredAt: new Date(),
-      },
-    });
-  }
-
   // 10. Seed Commerce Products and Variants
   const sampleProducts = [
     {

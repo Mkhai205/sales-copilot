@@ -100,24 +100,26 @@ describe('LabelsService (Label CRUD & Workspace Scoping)', () => {
           return { ...newLabel };
         },
 
-        update: async ({ where, data }: { where: { id: string }; data: any }) => {
-          const existing = labelsDb.get(where.id);
+        update: async ({ where, data }: { where: any; data: any }) => {
+          const id = where.workspaceId_id ? where.workspaceId_id.id : where.id;
+          const existing = labelsDb.get(id);
           if (!existing) {
-            throw new Error(`Label with id ${where.id} not found`);
+            throw new Error(`Label with id ${id} not found`);
           }
           const updated = {
             ...existing,
             ...data,
             updatedAt: new Date(),
           };
-          labelsDb.set(where.id, updated);
+          labelsDb.set(id, updated);
           return { ...updated };
         },
 
-        delete: async ({ where }: { where: { id: string } }) => {
-          const existing = labelsDb.get(where.id);
+        delete: async ({ where }: { where: any }) => {
+          const id = where.workspaceId_id ? where.workspaceId_id.id : where.id;
+          const existing = labelsDb.get(id);
           if (existing) {
-            labelsDb.delete(where.id);
+            labelsDb.delete(id);
           }
           return existing;
         },

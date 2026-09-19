@@ -27,7 +27,7 @@ export interface HealthCheckResponse {
     storage: DependencyCheckResult;
     queues: {
       channelIngestion: QueueCheckResult;
-      webhookDelivery: QueueCheckResult;
+      commentGuard: QueueCheckResult;
     };
   };
 }
@@ -57,7 +57,7 @@ export interface ReadinessResponse {
     storage: DependencyCheckResult;
     queues: {
       channelIngestion: QueueCheckResult;
-      webhookDelivery: QueueCheckResult;
+      commentGuard: QueueCheckResult;
     };
   };
 }

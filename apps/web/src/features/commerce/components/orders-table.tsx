@@ -23,7 +23,6 @@ import { formatVND } from '@/features/commerce/lib/currency';
 import {
   Eye,
   MoreHorizontal,
-  Printer,
   CheckCircle2,
   XCircle,
   MessageSquare,
@@ -51,7 +50,7 @@ export interface OrdersTableProps {
   workspaceId: string;
   workspaceSlug: string;
   onSelectOrder: (order: OrderResponseDto) => void;
-  onPrintOrder: (order: OrderResponseDto, format?: 'K80' | 'K58') => void;
+  onPrintOrder?: (order: OrderResponseDto, format?: 'K80' | 'K58') => void;
   onCompleteOrder: (order: OrderResponseDto) => void;
   onCancelOrder: (order: OrderResponseDto) => void;
 }
@@ -62,7 +61,7 @@ export function OrdersTable({
   workspaceId: _workspaceId,
   workspaceSlug,
   onSelectOrder,
-  onPrintOrder,
+  onPrintOrder: _onPrintOrder,
   onCompleteOrder,
   onCancelOrder,
 }: OrdersTableProps) {
@@ -229,22 +228,6 @@ export function OrdersTable({
                       >
                         <Eye className="size-3.5 text-muted-foreground" />
                         <span>{'Xem chi tiết'}</span>
-                      </DropdownMenuItem>
-
-                      <DropdownMenuItem
-                        onClick={() => onPrintOrder(order, 'K80')}
-                        className="gap-2 cursor-pointer"
-                      >
-                        <Printer className="size-3.5 text-muted-foreground" />
-                        <span>{'In phiếu gửi (K80)'}</span>
-                      </DropdownMenuItem>
-
-                      <DropdownMenuItem
-                        onClick={() => onPrintOrder(order, 'K58')}
-                        className="gap-2 cursor-pointer"
-                      >
-                        <Printer className="size-3.5 text-muted-foreground" />
-                        <span>{'In hóa đơn (K58)'}</span>
                       </DropdownMenuItem>
 
                       {order.conversationId && (

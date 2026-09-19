@@ -58,7 +58,7 @@ describe('HealthController (Health Check Endpoint)', () => {
           storage: { status: 'up' },
           queues: {
             channelIngestion: { status: 'ok' },
-            webhookDelivery: { status: 'ok' },
+            commentGuard: { status: 'ok' },
           },
         },
       }),
@@ -85,7 +85,7 @@ describe('HealthController (Health Check Endpoint)', () => {
           storage: { status: 'up' },
           queues: {
             channelIngestion: { status: 'ok' },
-            webhookDelivery: { status: 'ok' },
+            commentGuard: { status: 'ok' },
           },
         },
       }),
@@ -130,7 +130,7 @@ describe('HealthController (Health Check Endpoint)', () => {
           storage: { status: 'up', latencyMs: 5 },
           queues: {
             channelIngestion: { status: 'ok' },
-            webhookDelivery: { status: 'ok' },
+            commentGuard: { status: 'ok' },
           },
         },
       }),
@@ -157,7 +157,7 @@ describe('HealthController (Health Check Endpoint)', () => {
           storage: { status: 'up', latencyMs: 5 },
           queues: {
             channelIngestion: { status: 'ok' },
-            webhookDelivery: { status: 'ok' },
+            commentGuard: { status: 'ok' },
           },
         },
       }),
@@ -184,7 +184,7 @@ describe('HealthController (Health Check Endpoint)', () => {
           storage: { status: 'up', latencyMs: 5 },
           queues: {
             channelIngestion: { status: 'ok' },
-            webhookDelivery: { status: 'ok' },
+            commentGuard: { status: 'ok' },
           },
         },
       }),

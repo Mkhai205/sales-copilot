@@ -1,4 +1,4 @@
-﻿import {
+import {
   BadRequestException,
   ConflictException,
   Injectable,
@@ -358,7 +358,7 @@ export class InboxesService {
       const tx = txCtx.tx;
 
       await tx.inbox.update({
-        where: { id: inboxId },
+        where: { workspaceId_id: { workspaceId, id: inboxId } },
         data: {
           ...(dto.name !== undefined ? { name: dto.name } : {}),
           ...(dto.avatarUrl !== undefined ? { avatarUrl: dto.avatarUrl } : {}),
@@ -378,7 +378,7 @@ export class InboxesService {
         };
 
         await tx.channel.update({
-          where: { id: existing.channel.id },
+          where: { workspaceId_id: { workspaceId, id: existing.channel.id } },
           data: {
             ...(dto.providerAccountId !== undefined
               ? { providerAccountId: dto.providerAccountId }
@@ -434,7 +434,7 @@ export class InboxesService {
     }
 
     await client.inbox.delete({
-      where: { id: inboxId },
+      where: { workspaceId_id: { workspaceId, id: inboxId } },
     });
 
     this.logger.log(`Deleted inbox '${inboxId}' from workspace ${workspaceId}`);

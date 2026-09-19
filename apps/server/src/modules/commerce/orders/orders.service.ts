@@ -8,7 +8,6 @@ import {
 } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import {
-  CarrierProvider,
   DiscountType,
   DomainEvent,
   FulfillmentStatus,
@@ -25,15 +24,12 @@ import {
   type OrderItemResponseDto,
   type OrderResponseDto,
   type PaginationMeta,
-  type ShippingAddressResponseDto,
-  type ShippingLabelDataDto,
   type UpdateOrderDto,
 } from '@sales-copilot/shared-contracts';
 import { PrismaService } from '../../../infrastructure/database/prisma.service';
 import { InventoryLedgerService } from '../inventory/inventory-ledger.service';
 import { MessagesService } from '../../omnichannel/messages/messages.service';
 import { RedisService } from '../../../infrastructure/redis/redis.service';
-import { ShippingService } from '../shipping/shipping.service';
 
 @Injectable()
 export class OrdersService {
@@ -45,7 +41,6 @@ export class OrdersService {
     private readonly inventoryLedgerService: InventoryLedgerService,
     private readonly messagesService: MessagesService,
     @Optional() private readonly redisService?: RedisService,
-    @Optional() private readonly shippingService?: ShippingService,
   ) {}
 
   /**
@@ -183,6 +178,13 @@ export class OrdersService {
           currency: 'VND',
           customerNotes: dto.customerNotes || null,
           internalNotes: dto.internalNotes || null,
+          recipientName: dto.recipientName ?? dto.shippingAddress?.recipientName ?? null,
+          recipientPhone: dto.recipientPhone ?? dto.shippingAddress?.phoneNumber ?? null,
+          recipientAddress: dto.recipientAddress ?? dto.shippingAddress?.streetAddress ?? null,
+          recipientWard: dto.recipientWard ?? dto.shippingAddress?.ward ?? null,
+          recipientDistrict: dto.recipientDistrict ?? dto.shippingAddress?.district ?? null,
+          recipientProvince: dto.recipientProvince ?? dto.shippingAddress?.province ?? null,
+          shippingNotes: dto.shippingNotes ?? dto.shippingAddress?.shippingNotes ?? null,
           metadata: {
             ...(dto.metadata || {}),
             paymentMethod: resolvedPaymentMethod,
@@ -243,35 +245,11 @@ export class OrdersService {
         });
       }
 
-      // 8. Create ShippingAddress if provided
-      if (dto.shippingAddress) {
-        await tx.shippingAddress.create({
-          data: {
-            workspaceId,
-            orderId: createdOrder.id,
-            contactId: dto.contactId,
-            recipientName: dto.shippingAddress.recipientName,
-            phoneNumber: dto.shippingAddress.phoneNumber,
-            streetAddress: dto.shippingAddress.streetAddress,
-            ward: dto.shippingAddress.ward,
-            district: dto.shippingAddress.district,
-            province: dto.shippingAddress.province,
-            country: dto.shippingAddress.country || 'VN',
-            postalCode: dto.shippingAddress.postalCode || null,
-            shippingCarrier: dto.shippingAddress.shippingCarrier,
-            trackingCode: dto.shippingAddress.trackingCode || null,
-            shippingNotes: dto.shippingAddress.shippingNotes || null,
-            carrierMetadata: dto.shippingAddress.carrierMetadata || {},
-          },
-        });
-      }
-
-      // 9. Fetch complete order with relations
+      // 8. Fetch complete order with relations
       const order = await tx.order.findFirstOrThrow({
         where: { id: createdOrder.id, workspaceId },
         include: {
           items: true,
-          shippingAddress: true,
           paymentTransactions: true,
         },
       });
@@ -323,7 +301,7 @@ export class OrdersService {
       // 1. Fetch current order with line items strictly scoped to workspaceId
       const order = await tx.order.findFirst({
         where: { id: orderId, workspaceId },
-        include: { items: true, shippingAddress: true },
+        include: { items: true },
       });
 
       if (!order) {
@@ -449,36 +427,7 @@ export class OrdersService {
         dto.shippingFee !== undefined ? dto.shippingFee : Number(order.shippingFee);
       const totalAmount = Math.max(0, subtotal - discountAmount + shippingFee);
 
-      // 4. Update Shipping Address if provided
-      if (dto.shippingAddress !== undefined) {
-        await tx.shippingAddress.deleteMany({
-          where: { orderId: order.id, workspaceId },
-        });
-
-        if (dto.shippingAddress) {
-          await tx.shippingAddress.create({
-            data: {
-              workspaceId,
-              orderId: order.id,
-              contactId: order.contactId,
-              recipientName: dto.shippingAddress.recipientName,
-              phoneNumber: dto.shippingAddress.phoneNumber,
-              streetAddress: dto.shippingAddress.streetAddress,
-              ward: dto.shippingAddress.ward,
-              district: dto.shippingAddress.district,
-              province: dto.shippingAddress.province,
-              country: dto.shippingAddress.country || 'VN',
-              postalCode: dto.shippingAddress.postalCode || null,
-              shippingCarrier: dto.shippingAddress.shippingCarrier,
-              trackingCode: dto.shippingAddress.trackingCode || null,
-              shippingNotes: dto.shippingAddress.shippingNotes || null,
-              carrierMetadata: dto.shippingAddress.carrierMetadata || {},
-            },
-          });
-        }
-      }
-
-      // 5. Update Order Record
+      // 4. Update Order Record
       const updateData: any = {
         subtotal,
         discountAmount,
@@ -487,6 +436,47 @@ export class OrdersService {
         totalAmount,
         updatedAt: new Date(),
       };
+
+      if (dto.recipientName !== undefined || dto.shippingAddress?.recipientName !== undefined) {
+        updateData.recipientName =
+          dto.recipientName !== undefined
+            ? dto.recipientName
+            : (dto.shippingAddress?.recipientName ?? null);
+      }
+      if (dto.recipientPhone !== undefined || dto.shippingAddress?.phoneNumber !== undefined) {
+        updateData.recipientPhone =
+          dto.recipientPhone !== undefined
+            ? dto.recipientPhone
+            : (dto.shippingAddress?.phoneNumber ?? null);
+      }
+      if (dto.recipientAddress !== undefined || dto.shippingAddress?.streetAddress !== undefined) {
+        updateData.recipientAddress =
+          dto.recipientAddress !== undefined
+            ? dto.recipientAddress
+            : (dto.shippingAddress?.streetAddress ?? null);
+      }
+      if (dto.recipientWard !== undefined || dto.shippingAddress?.ward !== undefined) {
+        updateData.recipientWard =
+          dto.recipientWard !== undefined ? dto.recipientWard : (dto.shippingAddress?.ward ?? null);
+      }
+      if (dto.recipientDistrict !== undefined || dto.shippingAddress?.district !== undefined) {
+        updateData.recipientDistrict =
+          dto.recipientDistrict !== undefined
+            ? dto.recipientDistrict
+            : (dto.shippingAddress?.district ?? null);
+      }
+      if (dto.recipientProvince !== undefined || dto.shippingAddress?.province !== undefined) {
+        updateData.recipientProvince =
+          dto.recipientProvince !== undefined
+            ? dto.recipientProvince
+            : (dto.shippingAddress?.province ?? null);
+      }
+      if (dto.shippingNotes !== undefined || dto.shippingAddress?.shippingNotes !== undefined) {
+        updateData.shippingNotes =
+          dto.shippingNotes !== undefined
+            ? dto.shippingNotes
+            : (dto.shippingAddress?.shippingNotes ?? null);
+      }
 
       if (dto.discountReason !== undefined) updateData.discountReason = dto.discountReason;
       if (dto.customerNotes !== undefined) updateData.customerNotes = dto.customerNotes;
@@ -499,12 +489,11 @@ export class OrdersService {
         data: updateData,
       });
 
-      // 6. Fetch complete updated order
+      // 5. Fetch complete updated order
       const updatedOrder = await tx.order.findFirstOrThrow({
         where: { id: order.id, workspaceId },
         include: {
           items: true,
-          shippingAddress: true,
           paymentTransactions: true,
         },
       });
@@ -543,7 +532,7 @@ export class OrdersService {
       // 1. Fetch order with line items strictly scoped to workspaceId
       const order = await tx.order.findFirst({
         where: { id: orderId, workspaceId },
-        include: { items: true, shippingAddress: true },
+        include: { items: true },
       });
 
       if (!order) {
@@ -606,7 +595,6 @@ export class OrdersService {
         where: { id: order.id, workspaceId },
         include: {
           items: true,
-          shippingAddress: true,
           paymentTransactions: true,
         },
       });
@@ -657,7 +645,7 @@ export class OrdersService {
 
         const order = await tx.order.findFirst({
           where: { id: orderId, workspaceId },
-          include: { items: true, shippingAddress: true, paymentTransactions: true },
+          include: { items: true, paymentTransactions: true },
         });
 
         if (!order) {
@@ -783,7 +771,7 @@ export class OrdersService {
 
         const updated = await tx.order.findFirstOrThrow({
           where: { id: order.id, workspaceId },
-          include: { items: true, shippingAddress: true, paymentTransactions: true },
+          include: { items: true, paymentTransactions: true },
         });
 
         const formatted = this.formatOrder(updated);
@@ -844,7 +832,7 @@ export class OrdersService {
       // 1. Fetch current order
       const order = await tx.order.findFirst({
         where: { id: orderId, workspaceId },
-        include: { items: true, shippingAddress: true, paymentTransactions: true },
+        include: { items: true, paymentTransactions: true },
       });
 
       if (!order) {
@@ -905,17 +893,6 @@ export class OrdersService {
         });
       }
 
-      // If order was SHIPPING, cancel 3PL shipment
-      if (order.status === OrderStatus.SHIPPING && this.shippingService) {
-        try {
-          await this.shippingService.cancelOrderShipment(workspaceId, order.id);
-        } catch (error: any) {
-          this.logger.warn(
-            `Failed to cancel shipment for order ${order.id}: ${error?.message || error}`,
-          );
-        }
-      }
-
       // 2. Transition order status to CANCELLED
       await tx.order.updateMany({
         where: { id: orderId, workspaceId },
@@ -968,7 +945,7 @@ export class OrdersService {
 
       const updated = await tx.order.findFirstOrThrow({
         where: { id: orderId, workspaceId },
-        include: { items: true, shippingAddress: true, paymentTransactions: true },
+        include: { items: true, paymentTransactions: true },
       });
 
       const formatted = this.formatOrder(updated);
@@ -1008,7 +985,7 @@ export class OrdersService {
 
       const order = await tx.order.findFirst({
         where: { id: orderId, workspaceId },
-        include: { items: true, shippingAddress: true, paymentTransactions: true },
+        include: { items: true, paymentTransactions: true },
       });
 
       if (!order) {
@@ -1140,7 +1117,6 @@ export class OrdersService {
         where: { id: order.id, workspaceId },
         include: {
           items: true,
-          shippingAddress: true,
           paymentTransactions: true,
           inventoryTransactions: true,
         },
@@ -1202,8 +1178,8 @@ export class OrdersService {
       where.OR = [
         { orderNumber: { contains: query.search, mode: 'insensitive' } },
         { customerNotes: { contains: query.search, mode: 'insensitive' } },
-        { shippingAddress: { recipientName: { contains: query.search, mode: 'insensitive' } } },
-        { shippingAddress: { phoneNumber: { contains: query.search, mode: 'insensitive' } } },
+        { recipientName: { contains: query.search, mode: 'insensitive' } },
+        { recipientPhone: { contains: query.search, mode: 'insensitive' } },
         { contact: { name: { contains: query.search, mode: 'insensitive' } } },
         { contact: { phoneNumber: { contains: query.search, mode: 'insensitive' } } },
       ];
@@ -1225,7 +1201,6 @@ export class OrdersService {
         orderBy,
         include: {
           items: true,
-          shippingAddress: true,
           paymentTransactions: true,
         },
       }),
@@ -1263,7 +1238,6 @@ export class OrdersService {
       where,
       include: {
         items: true,
-        shippingAddress: true,
         paymentTransactions: true,
         inventoryTransactions: true,
       },
@@ -1278,79 +1252,6 @@ export class OrdersService {
     }
 
     return this.formatOrder(order);
-  }
-
-  /**
-   * Retrieves data needed to print a thermal shipping label (K80 / K58).
-   */
-  async getShippingLabelData(workspaceId: string, orderId: string): Promise<ShippingLabelDataDto> {
-    const client = this.prisma.getClient();
-    const order = await client.order.findFirst({
-      where: { id: orderId, workspaceId },
-      include: {
-        items: true,
-        shippingAddress: true,
-        contact: true,
-        workspace: true,
-      },
-    });
-
-    if (!order) {
-      throw new NotFoundException({
-        code: 'ORDER_NOT_FOUND',
-        message: 'Order not found in this workspace',
-        details: { orderId, workspaceId },
-      });
-    }
-
-    const isPaid = order.paymentStatus === PaymentStatus.PAID;
-    const totalAmount = Number(order.totalAmount);
-    const paidAmount = Number(order.paidAmount);
-    const codAmount = isPaid ? 0 : Math.max(0, totalAmount - paidAmount);
-
-    const trackingCode = order.shippingAddress?.trackingCode || `INTERNAL-${order.displayId}`;
-
-    const carrier =
-      (order.shippingAddress?.shippingCarrier as CarrierProvider) || CarrierProvider.CUSTOM;
-
-    const totalWeightInGrams =
-      order.items.reduce((sum: number, it: any) => sum + it.quantity * 250, 0) || 500;
-
-    return {
-      orderId: order.id,
-      orderNumber: order.orderNumber,
-      displayId: order.displayId,
-      trackingCode,
-      carrier,
-      sender: {
-        name: order.workspace?.name || 'Cửa hàng',
-        phone: '1900 6868',
-        address: 'Kho hàng trung tâm',
-        province: 'Hà Nội',
-        district: 'Hoàng Mai',
-        ward: 'Hoàng Văn Thụ',
-      },
-      recipient: {
-        name: order.shippingAddress?.recipientName || order.contact?.name || 'Khách hàng',
-        phone: order.shippingAddress?.phoneNumber || order.contact?.phoneNumber || '',
-        address: order.shippingAddress?.streetAddress || 'Địa chỉ nhận hàng',
-        province: order.shippingAddress?.province || 'Hà Nội',
-        district: order.shippingAddress?.district || 'Hoàng Mai',
-        ward: order.shippingAddress?.ward || 'Hoàng Văn Thụ',
-      },
-      codAmount,
-      isPaid,
-      items: (order.items || []).map((it: any) => ({
-        productName: it.productName,
-        variantName: it.variantName,
-        sku: it.sku,
-        quantity: it.quantity,
-        price: Number(it.unitPrice),
-      })),
-      totalWeightInGrams,
-      shippingNotes: order.shippingAddress?.shippingNotes || order.customerNotes,
-      createdAt: order.createdAt,
-    };
   }
 
   /**
@@ -1376,30 +1277,18 @@ export class OrdersService {
       updatedAt: item.updatedAt,
     }));
 
-    let shippingAddress: ShippingAddressResponseDto | null = null;
-    if (order.shippingAddress) {
-      const sa = order.shippingAddress;
-      shippingAddress = {
-        id: sa.id,
-        workspaceId: sa.workspaceId,
-        orderId: sa.orderId,
-        contactId: sa.contactId,
-        recipientName: sa.recipientName,
-        phoneNumber: sa.phoneNumber,
-        streetAddress: sa.streetAddress,
-        ward: sa.ward,
-        district: sa.district,
-        province: sa.province,
-        country: sa.country,
-        postalCode: sa.postalCode,
-        shippingCarrier: sa.shippingCarrier,
-        trackingCode: sa.trackingCode,
-        shippingNotes: sa.shippingNotes,
-        carrierMetadata: sa.carrierMetadata || {},
-        createdAt: sa.createdAt,
-        updatedAt: sa.updatedAt,
-      };
-    }
+    const shippingAddress =
+      order.recipientName || order.recipientPhone || order.recipientAddress
+        ? {
+            recipientName: order.recipientName || '',
+            phoneNumber: order.recipientPhone || '',
+            streetAddress: order.recipientAddress || '',
+            ward: order.recipientWard || '',
+            district: order.recipientDistrict || '',
+            province: order.recipientProvince || '',
+            shippingNotes: order.shippingNotes || null,
+          }
+        : null;
 
     return {
       id: order.id,
@@ -1434,6 +1323,13 @@ export class OrdersService {
       completedAt: order.completedAt,
       cancelledAt: order.cancelledAt,
       metadata: order.metadata || {},
+      recipientName: order.recipientName || null,
+      recipientPhone: order.recipientPhone || null,
+      recipientAddress: order.recipientAddress || null,
+      recipientWard: order.recipientWard || null,
+      recipientDistrict: order.recipientDistrict || null,
+      recipientProvince: order.recipientProvince || null,
+      shippingNotes: order.shippingNotes || null,
       items,
       shippingAddress,
       paymentTransactions: order.paymentTransactions || [],

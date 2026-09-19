@@ -106,8 +106,9 @@ describe('MessagesService (Task T-1.5.6: Message Threading & Polymorphic Senders
           }
           return null;
         },
-        update: async ({ where, data }: { where: { id: string }; data: any }) => {
-          const existing = conversationsDb.get(where.id);
+        update: async ({ where, data }: { where: any; data: any }) => {
+          const id = where.workspaceId_id ? where.workspaceId_id.id : where.id;
+          const existing = conversationsDb.get(id);
           if (!existing) throw new Error('Conversation not found');
 
           const unread =
@@ -123,7 +124,7 @@ describe('MessagesService (Task T-1.5.6: Message Threading & Polymorphic Senders
             unreadMessagesCount: unread,
             updatedAt: new Date(),
           };
-          conversationsDb.set(where.id, updated);
+          conversationsDb.set(id, updated);
           return { ...updated };
         },
       },
@@ -223,23 +224,16 @@ describe('MessagesService (Task T-1.5.6: Message Threading & Polymorphic Senders
           messagesDb.set(id, record);
           return { ...record };
         },
-        update: async ({
-          where,
-          data,
-          include,
-        }: {
-          where: { id: string };
-          data: any;
-          include?: any;
-        }) => {
-          const existing = messagesDb.get(where.id);
+        update: async ({ where, data, include }: { where: any; data: any; include?: any }) => {
+          const id = where.workspaceId_id ? where.workspaceId_id.id : where.id;
+          const existing = messagesDb.get(id);
           if (!existing) throw new Error('Message not found');
           const updated = {
             ...existing,
             ...data,
             updatedAt: new Date(),
           };
-          messagesDb.set(where.id, updated);
+          messagesDb.set(id, updated);
           const copy = { ...updated };
           if (include?.attachments) {
             copy.attachments = Array.from(attachmentsDb.values()).filter(
@@ -248,9 +242,10 @@ describe('MessagesService (Task T-1.5.6: Message Threading & Polymorphic Senders
           }
           return copy;
         },
-        delete: async ({ where }: { where: { id: string } }) => {
-          const existing = messagesDb.get(where.id);
-          if (existing) messagesDb.delete(where.id);
+        delete: async ({ where }: { where: any }) => {
+          const id = where.workspaceId_id ? where.workspaceId_id.id : where.id;
+          const existing = messagesDb.get(id);
+          if (existing) messagesDb.delete(id);
           return existing;
         },
       },

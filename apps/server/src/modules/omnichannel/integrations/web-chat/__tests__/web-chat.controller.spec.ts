@@ -77,7 +77,15 @@ describe('WebChatController (Widget REST API Endpoints)', () => {
       getClient: () => ({
         channel: {
           findFirst: async (query: any) => {
-            if (query.where?.providerAccountId === 'wt_sample_token_123') {
+            const or = query.where?.OR;
+            const matchesToken =
+              query.where?.providerAccountId === 'wt_sample_token_123' ||
+              or?.some(
+                (c: any) =>
+                  c.providerAccountId === 'wt_sample_token_123' ||
+                  c.inboxId === 'wt_sample_token_123',
+              );
+            if (matchesToken) {
               return mockChannel;
             }
             return null;

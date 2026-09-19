@@ -51,20 +51,38 @@ export class WorkspaceGuard implements CanActivate {
       });
     }
 
-    const workspaceId = (paramWorkspaceId || headerWorkspaceId) as string | undefined;
-
-    if (!workspaceId || typeof workspaceId !== 'string' || workspaceId.trim() === '') {
-      throw new BadRequestException({
-        code: 'WORKSPACE_ID_REQUIRED',
-        message: 'Workspace ID is required (via route param or X-Workspace-Id header)',
-      });
-    }
-
     const user = request.user;
     if (!user || !user.userId) {
       throw new UnauthorizedException({
         code: 'UNAUTHORIZED',
         message: 'Authentication is required before accessing workspace resources',
+      });
+    }
+
+    let workspaceId = (paramWorkspaceId || headerWorkspaceId) as string | undefined;
+
+    if (!workspaceId || typeof workspaceId !== 'string' || workspaceId.trim() === '') {
+      // Auto-resolve workspaceId if user belongs to exactly one active workspace (TASK-3A-05)
+      const listFn =
+        this.workspacesService.findWorkspacesByUserId ||
+        (this.workspacesService as any).getUserWorkspaces;
+      if (typeof listFn === 'function') {
+        const userWorkspaces = await listFn.call(this.workspacesService, user.userId);
+        if (userWorkspaces && userWorkspaces.length === 1) {
+          workspaceId = userWorkspaces[0].id;
+        } else if (userWorkspaces && userWorkspaces.length > 1) {
+          throw new BadRequestException({
+            code: 'WORKSPACE_ID_REQUIRED',
+            message: 'Workspace ID is required (user belongs to multiple workspaces)',
+          });
+        }
+      }
+    }
+
+    if (!workspaceId || typeof workspaceId !== 'string' || workspaceId.trim() === '') {
+      throw new BadRequestException({
+        code: 'WORKSPACE_ID_REQUIRED',
+        message: 'Workspace ID is required (via route param or X-Workspace-Id header)',
       });
     }
 

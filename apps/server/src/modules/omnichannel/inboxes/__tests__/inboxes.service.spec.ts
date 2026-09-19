@@ -74,26 +74,28 @@ describe('InboxesService (Inbox & Channel 1:1 CRUD & Security)', () => {
           inboxesDb.set(newInbox.id, newInbox);
           return newInbox;
         },
-        update: async ({ where, data }: { where: { id: string }; data: any }) => {
-          const existing = inboxesDb.get(where.id);
+        update: async ({ where, data }: { where: any; data: any }) => {
+          const id = where.id ?? where.workspaceId_id?.id;
+          const existing = inboxesDb.get(id);
           if (!existing) throw new Error('Not found');
           const updated = {
             ...existing,
             ...data,
             updatedAt: new Date(),
           };
-          inboxesDb.set(where.id, updated);
+          inboxesDb.set(id, updated);
           return updated;
         },
-        delete: async ({ where }: { where: { id: string } }) => {
-          const existing = inboxesDb.get(where.id);
-          inboxesDb.delete(where.id);
+        delete: async ({ where }: { where: any }) => {
+          const id = where.id ?? where.workspaceId_id?.id;
+          const existing = inboxesDb.get(id);
+          inboxesDb.delete(id);
           // Cascade delete channel and members
-          for (const [id, ch] of channelsDb.entries()) {
-            if (ch.inboxId === where.id) channelsDb.delete(id);
+          for (const [chId, ch] of channelsDb.entries()) {
+            if (ch.inboxId === id) channelsDb.delete(chId);
           }
-          for (const [id, m] of inboxMembersDb.entries()) {
-            if (m.inboxId === where.id) inboxMembersDb.delete(id);
+          for (const [mId, m] of inboxMembersDb.entries()) {
+            if (m.inboxId === id) inboxMembersDb.delete(mId);
           }
           return existing;
         },
@@ -121,15 +123,16 @@ describe('InboxesService (Inbox & Channel 1:1 CRUD & Security)', () => {
           channelsDb.set(newChannel.id, newChannel);
           return newChannel;
         },
-        update: async ({ where, data }: { where: { id: string }; data: any }) => {
-          const existing = channelsDb.get(where.id);
+        update: async ({ where, data }: { where: any; data: any }) => {
+          const id = where.id ?? where.workspaceId_id?.id;
+          const existing = channelsDb.get(id);
           if (!existing) throw new Error('Not found');
           const updated = {
             ...existing,
             ...data,
             updatedAt: new Date(),
           };
-          channelsDb.set(where.id, updated);
+          channelsDb.set(id, updated);
           return updated;
         },
       },

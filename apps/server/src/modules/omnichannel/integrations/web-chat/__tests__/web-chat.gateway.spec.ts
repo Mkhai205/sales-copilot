@@ -97,8 +97,15 @@ describe('WebChatGateway (Widget WebSocket Namespace /widget)', () => {
       getClient: () => ({
         channel: {
           findFirst: async (query: any) => {
-            const providerAccountId = query.where?.providerAccountId;
-            if (providerAccountId === 'wt_valid_token_123') {
+            const or = query.where?.OR;
+            const matchesToken =
+              query.where?.providerAccountId === 'wt_valid_token_123' ||
+              or?.some(
+                (c: any) =>
+                  c.providerAccountId === 'wt_valid_token_123' ||
+                  c.inboxId === 'wt_valid_token_123',
+              );
+            if (matchesToken) {
               return mockChannel;
             }
             return null;
@@ -241,22 +248,30 @@ describe('WebChatGateway (Widget WebSocket Namespace /widget)', () => {
       assert.strictEqual(socket._getEmitted()[0].event, 'widget:connected');
     });
 
-    it('should resolve channel by decrypting credentials when providerAccountId is not direct match', async () => {
-      const channelWithEncryptedCreds = {
+    it('should resolve channel by inboxId when providerAccountId is not direct match (TASK-3A-06)', async () => {
+      const channelWithInboxMatch = {
         ...mockChannel,
+        inboxId: 'inbox_direct_token_456',
         providerAccountId: null,
-        credentials: { encrypted: 'encrypted_wt_token' },
       };
 
       mockPrisma.getClient = () => ({
         channel: {
-          findFirst: async () => null,
-          findMany: async () => [channelWithEncryptedCreds],
+          findFirst: async ({ where }: any) => {
+            const or = where?.OR;
+            if (
+              where?.providerAccountId === 'inbox_direct_token_456' ||
+              or?.some((c: any) => c.inboxId === 'inbox_direct_token_456')
+            ) {
+              return channelWithInboxMatch;
+            }
+            return null;
+          },
         },
       });
 
       const socket = createMockSocket({
-        auth: { widget_token: 'wt_from_creds_456' },
+        auth: { widget_token: 'inbox_direct_token_456' },
       });
 
       await gateway.handleConnection(socket);

@@ -18,6 +18,9 @@ import {
   logoutSchema,
   type RefreshTokenDto,
   refreshTokenSchema,
+  type RegisterDto,
+  type RegisterResponseDto,
+  registerSchema,
   type UpdateUserProfileDto,
   updateUserProfileSchema,
   type UserDto,
@@ -31,6 +34,18 @@ import { JwtUserPayload } from './types/jwt-payload.type';
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
+
+  @Public()
+  @Post('register')
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Register a new user and provision default workspace' })
+  @ApiResponse({ status: 201, description: 'User registered successfully' })
+  @ApiResponse({ status: 400, description: 'Validation failed' })
+  @ApiResponse({ status: 409, description: 'Email already exists' })
+  async register(@ZodBody(registerSchema) dto: RegisterDto): Promise<RegisterResponseDto> {
+    return this.authService.register(dto);
+  }
 
   @Public()
   @Post('login')

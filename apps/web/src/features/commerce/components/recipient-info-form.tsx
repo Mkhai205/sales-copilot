@@ -139,9 +139,9 @@ export function RecipientInfoForm({ value, onChange, disabled = false }: Recipie
 
       {/* 3-Tier Administrative Cascader */}
       <AddressCascader
-        province={value.province}
-        district={value.district}
-        ward={value.ward}
+        province={value.province ?? undefined}
+        district={value.district ?? undefined}
+        ward={value.ward ?? undefined}
         onChange={({ province, district, ward }) => {
           onChange({
             ...value,

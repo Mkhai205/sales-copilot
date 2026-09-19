@@ -48,7 +48,7 @@ describe('HealthService (Healthcheck Aggregator)', () => {
     assert.strictEqual(health.dependencies.redis.status, 'up');
     assert.strictEqual(health.dependencies.storage.status, 'up');
     assert.strictEqual(health.dependencies.queues.channelIngestion.status, 'ok');
-    assert.strictEqual(health.dependencies.queues.webhookDelivery.status, 'ok');
+    assert.strictEqual(health.dependencies.queues.commentGuard.status, 'ok');
   });
 
   it('should return status degraded when one dependency is down', async () => {
@@ -169,9 +169,9 @@ describe('HealthService (Healthcheck Aggregator)', () => {
     const health = await healthService.getHealth();
 
     assert.strictEqual(health.status, 'degraded');
-    assert.strictEqual(health.dependencies.queues.webhookDelivery.status, 'down');
+    assert.strictEqual(health.dependencies.queues.commentGuard.status, 'down');
     assert.strictEqual(
-      health.dependencies.queues.webhookDelivery.error,
+      health.dependencies.queues.commentGuard.error,
       'Webhook delivery queue timeout',
     );
   });
@@ -239,7 +239,7 @@ describe('HealthService (Healthcheck Aggregator)', () => {
       health.dependencies.queues.channelIngestion.error,
       'Channel queue Redis connection error',
     );
-    assert.strictEqual(health.dependencies.queues.webhookDelivery.status, 'ok');
+    assert.strictEqual(health.dependencies.queues.commentGuard.status, 'ok');
   });
 
   describe('getLiveness', () => {
@@ -300,7 +300,7 @@ describe('HealthService (Healthcheck Aggregator)', () => {
       assert.strictEqual(readiness.checks.redis.status, 'up');
       assert.strictEqual(readiness.checks.storage.status, 'up');
       assert.strictEqual(readiness.checks.queues.channelIngestion.status, 'ok');
-      assert.strictEqual(readiness.checks.queues.webhookDelivery.status, 'ok');
+      assert.strictEqual(readiness.checks.queues.commentGuard.status, 'ok');
     });
 
     it('should return status down when database is down', async () => {
@@ -520,8 +520,8 @@ describe('HealthService (Healthcheck Aggregator)', () => {
       const readiness = await healthService.getReadiness();
 
       assert.strictEqual(readiness.status, 'degraded');
-      assert.strictEqual(readiness.checks.queues.webhookDelivery.status, 'down');
-      assert.strictEqual(readiness.checks.queues.webhookDelivery.error, 'Webhook queue not ready');
+      assert.strictEqual(readiness.checks.queues.commentGuard.status, 'down');
+      assert.strictEqual(readiness.checks.queues.commentGuard.error, 'Webhook queue not ready');
     });
   });
 });

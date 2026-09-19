@@ -18,10 +18,8 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
   let mockPrismaService: any;
   let mockEventEmitter: any;
   let mockRedisService: any;
-  let mockShippingService: any;
   let acquiredLocks: string[];
   let releasedLocks: string[];
-  let cancelledShipments: Array<{ workspaceId: string; orderId: string }>;
   let clientMock: any;
   let emittedEvents: Array<{ event: string; payload: any }>;
 
@@ -263,6 +261,13 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
             currency: data.currency,
             customerNotes: data.customerNotes,
             internalNotes: data.internalNotes,
+            recipientName: data.recipientName,
+            recipientPhone: data.recipientPhone,
+            recipientAddress: data.recipientAddress,
+            recipientWard: data.recipientWard,
+            recipientDistrict: data.recipientDistrict,
+            recipientProvince: data.recipientProvince,
+            shippingNotes: data.shippingNotes,
             paymentMethod: data.paymentMethod || data.metadata?.paymentMethod || PaymentMethod.COD,
             metadata: data.metadata || {},
             createdAt: new Date(),
@@ -437,7 +442,6 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
 
     acquiredLocks = [];
     releasedLocks = [];
-    cancelledShipments = [];
 
     mockRedisService = {
       acquireLock: async (key: string, _ttl: number) => {
@@ -450,13 +454,6 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
       },
     };
 
-    mockShippingService = {
-      cancelOrderShipment: async (workspaceId: string, orderId: string) => {
-        cancelledShipments.push({ workspaceId, orderId });
-        return true;
-      },
-    };
-
     const inventoryLedgerService = new InventoryLedgerService(mockPrismaService, mockEventEmitter);
     service = new OrdersService(
       mockPrismaService,
@@ -464,7 +461,6 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
       inventoryLedgerService,
       {} as any,
       mockRedisService,
-      mockShippingService,
     );
   });
 
@@ -1464,30 +1460,6 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
       assert.strictEqual(refundTx.amount, -350000);
       assert.strictEqual(refundTx.status, PaymentTransactionStatus.SUCCESS);
       assert.strictEqual(refundTx.transactionCode, `REFUND-${order.displayId}`);
-    });
-
-    it('should call shippingService.cancelOrderShipment when cancelling SHIPPING order', async () => {
-      const order = await service.createOrder(ws1, {
-        contactId: contact1,
-        items: [{ productId: prod1, variantId: varA, quantity: 1, unitPrice: 350000 }],
-      });
-      await service.confirmOrder(ws1, order.id, userId);
-
-      // Simulate order in SHIPPING status
-      const ordRecord = ordersDb.get(order.id);
-      ordRecord.status = OrderStatus.SHIPPING;
-
-      const cancelled = await service.cancelOrder(
-        ws1,
-        order.id,
-        { cancelReason: 'Package damaged' },
-        userId,
-      );
-
-      assert.strictEqual(cancelled.status, OrderStatus.CANCELLED);
-      assert.strictEqual(cancelledShipments.length, 1);
-      assert.strictEqual(cancelledShipments[0].workspaceId, ws1);
-      assert.strictEqual(cancelledShipments[0].orderId, order.id);
     });
   });
 });

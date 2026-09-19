@@ -19,12 +19,10 @@ import {
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { OrderStatusBadge, PaymentStatusBadge } from './order-status-badge';
-import { ThermalPrintDialog } from './thermal-print-dialog';
 import { useCommerceOrders } from '../hooks/use-commerce-orders';
 import { formatVND } from '@/features/commerce/lib/currency';
 import { OrderStatus, type OrderResponseDto } from '@sales-copilot/shared-contracts';
 import {
-  Printer,
   CheckCircle2,
   XCircle,
   MessageSquare,
@@ -69,9 +67,6 @@ export function OrderDetailSheet({
   onOrderUpdated,
 }: OrderDetailSheetProps) {
   const { completeOrder, cancelOrder, isCompleting, isCancelling } = useCommerceOrders(workspaceId);
-
-  const [printOpen, setPrintOpen] = React.useState(false);
-  const [printFormat, setPrintFormat] = React.useState<'K80' | 'K58'>('K80');
 
   // Cancel dialog state
   const [cancelDialogOpen, setCancelDialogOpen] = React.useState(false);
@@ -141,34 +136,6 @@ export function OrderDetailSheet({
 
           {/* Action Bar */}
           <div className="flex items-center gap-2 px-4 py-2 border-b border-border/60 bg-card/60 flex-wrap">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="h-7 text-xs gap-1.5 cursor-pointer"
-              onClick={() => {
-                setPrintFormat('K80');
-                setPrintOpen(true);
-              }}
-            >
-              <Printer className="size-3.5" />
-              {'In phiếu gửi (K80)'}
-            </Button>
-
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="h-7 text-xs gap-1.5 cursor-pointer"
-              onClick={() => {
-                setPrintFormat('K58');
-                setPrintOpen(true);
-              }}
-            >
-              <Printer className="size-3.5" />
-              {'In hóa đơn (K58)'}
-            </Button>
-
             {order.conversationId && (
               <Button
                 asChild
@@ -473,15 +440,6 @@ export function OrderDetailSheet({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* Thermal Print Dialog */}
-      <ThermalPrintDialog
-        open={printOpen}
-        onOpenChange={setPrintOpen}
-        workspaceId={workspaceId}
-        orderId={order.id}
-        defaultFormat={printFormat}
-      />
     </>
   );
 }

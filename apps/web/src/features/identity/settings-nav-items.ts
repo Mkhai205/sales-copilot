@@ -1,15 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
-import {
-  FileText,
-  Inbox,
-  Settings,
-  Tag,
-  UserCheck,
-  Users2,
-  Webhook,
-  Zap,
-  Landmark,
-} from 'lucide-react';
+import { FileText, Inbox, Settings, Tag, UserCheck, Users2, Landmark } from 'lucide-react';
 import { WorkspaceRole } from '@sales-copilot/shared-contracts';
 
 export type SettingsCategory = 'workspace' | 'operations';
@@ -44,12 +34,7 @@ export const SETTINGS_NAV_ITEMS: SettingsNavItem[] = [
     icon: Inbox,
     segment: 'inboxes',
     category: 'workspace',
-    allowedRoles: [
-      WorkspaceRole.OWNER,
-      WorkspaceRole.ADMIN,
-      WorkspaceRole.AGENT,
-      WorkspaceRole.VIEWER,
-    ],
+    allowedRoles: [WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.AGENT],
   },
   {
     id: 'teams',
@@ -58,12 +43,7 @@ export const SETTINGS_NAV_ITEMS: SettingsNavItem[] = [
     icon: Users2,
     segment: 'teams',
     category: 'workspace',
-    allowedRoles: [
-      WorkspaceRole.OWNER,
-      WorkspaceRole.ADMIN,
-      WorkspaceRole.AGENT,
-      WorkspaceRole.VIEWER,
-    ],
+    allowedRoles: [WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.AGENT],
   },
   {
     id: 'members',
@@ -84,12 +64,7 @@ export const SETTINGS_NAV_ITEMS: SettingsNavItem[] = [
     icon: Tag,
     segment: 'labels',
     category: 'operations',
-    allowedRoles: [
-      WorkspaceRole.OWNER,
-      WorkspaceRole.ADMIN,
-      WorkspaceRole.AGENT,
-      WorkspaceRole.VIEWER,
-    ],
+    allowedRoles: [WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.AGENT],
   },
   {
     id: 'canned-responses',
@@ -98,32 +73,7 @@ export const SETTINGS_NAV_ITEMS: SettingsNavItem[] = [
     icon: FileText,
     segment: 'canned-responses',
     category: 'operations',
-    allowedRoles: [
-      WorkspaceRole.OWNER,
-      WorkspaceRole.ADMIN,
-      WorkspaceRole.AGENT,
-      WorkspaceRole.VIEWER,
-    ],
-  },
-  {
-    id: 'automation-rules',
-    title: 'Automation Rules',
-    description: 'Event-triggered workflows, conditions, and auto-assignment actions',
-    icon: Zap,
-    segment: 'automation-rules',
-    category: 'operations',
-    allowedRoles: [WorkspaceRole.OWNER, WorkspaceRole.ADMIN],
-    adminOnly: true,
-  },
-  {
-    id: 'webhooks',
-    title: 'Webhooks',
-    description: 'Outbound HTTP event webhooks and delivery attempt audit logs',
-    icon: Webhook,
-    segment: 'webhooks',
-    category: 'operations',
-    allowedRoles: [WorkspaceRole.OWNER, WorkspaceRole.ADMIN],
-    adminOnly: true,
+    allowedRoles: [WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.AGENT],
   },
   {
     id: 'bank',

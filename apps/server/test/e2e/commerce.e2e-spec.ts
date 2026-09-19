@@ -8,7 +8,6 @@ import {
   SeedTestContext,
 } from './helpers';
 import {
-  CarrierProvider,
   FulfillmentStatus,
   InventoryTransactionType,
   OrderStatus,
@@ -97,7 +96,6 @@ describe('E2E Scenario — Commerce Order Closing, Inventory Reservation & Logis
           ward: 'Kim Mã',
           district: 'Ba Đình',
           province: 'Hà Nội',
-          shippingCarrier: CarrierProvider.CUSTOM,
         },
       });
 
@@ -189,22 +187,17 @@ describe('E2E Scenario — Commerce Order Closing, Inventory Reservation & Logis
     expect(commitTx?.quantity).toBe(2);
   });
 
-  it('4. should dispatch order with CUSTOM carrier and PREVENT DOUBLE COMMIT of stock', async () => {
-    const dispatchRes = await request(ctx.httpServer)
-      .post(`/api/v1/shipping/orders/${createdOrderId}/dispatch`)
+  it('4. should complete order and transition fulfillmentStatus to DELIVERED', async () => {
+    const completeRes = await request(ctx.httpServer)
+      .post(`/api/v1/orders/${createdOrderId}/complete`)
       .set('Authorization', `Bearer ${agentToken}`)
       .set('X-Workspace-Id', seedCtx.workspace.id)
-      .send({
-        carrier: CarrierProvider.CUSTOM,
-        notes: 'Giao trong giờ hành chính',
-      });
+      .send({});
 
-    expect(dispatchRes.status).toBe(200);
-    const order = dispatchRes.body.data;
-    expect(order.status).toBe(OrderStatus.SHIPPING);
-    expect(order.fulfillmentStatus).toBe(FulfillmentStatus.SHIPPED);
-    expect(order.shippingAddress?.trackingCode).toBeDefined();
-    expect(order.shippingAddress.trackingCode).toMatch(/^INTERNAL-/);
+    expect(completeRes.status).toBe(200);
+    const order = completeRes.body.data;
+    expect(order.status).toBe(OrderStatus.COMPLETED);
+    expect(order.fulfillmentStatus).toBe(FulfillmentStatus.DELIVERED);
 
     // CRITICAL ANTI-DOUBLE-COMMIT INVARIANT:
     // Stock must remain 8, reserved must remain 0 (NOT deducted a second time to 6!)
@@ -225,43 +218,7 @@ describe('E2E Scenario — Commerce Order Closing, Inventory Reservation & Logis
     expect(commitTxs).toHaveLength(1);
   });
 
-  it('5. should retrieve K80 shipping label with codAmount=0 (prepaid order) and Code128 barcode', async () => {
-    const labelRes = await request(ctx.httpServer)
-      .get(`/api/v1/orders/${createdOrderId}/shipping-label`)
-      .set('Authorization', `Bearer ${agentToken}`)
-      .set('X-Workspace-Id', seedCtx.workspace.id);
-
-    expect(labelRes.status).toBe(200);
-    const labelData = labelRes.body.data;
-    expect(labelData).toBeDefined();
-    expect(labelData.recipient.name).toBe('Nguyễn Văn Commerce');
-    expect(labelData.recipient.phone).toBe('0988223344');
-    expect(labelData.recipient.address).toContain('123 Đường Kim Mã');
-    expect(labelData.carrier).toBe(CarrierProvider.CUSTOM);
-    expect(labelData.codAmount).toBe(0); // Prepaid order has 0 COD
-    expect(labelData.trackingCode).toBeDefined();
-    expect(labelData.trackingCode).toMatch(/^INTERNAL-/);
-    expect(labelData.items).toHaveLength(1);
-    expect(labelData.items[0].quantity).toBe(2);
-  });
-
-  it('6. should track order shipment with carrier and return timeline status', async () => {
-    const trackRes = await request(ctx.httpServer)
-      .get(`/api/v1/shipping/orders/${createdOrderId}/track`)
-      .set('Authorization', `Bearer ${agentToken}`)
-      .set('X-Workspace-Id', seedCtx.workspace.id);
-
-    expect(trackRes.status).toBe(200);
-    const trackData = trackRes.body.data;
-    expect(trackData).toBeDefined();
-    expect(trackData.carrier).toBe(CarrierProvider.CUSTOM);
-    expect(trackData.trackingCode).toMatch(/^INTERNAL-/);
-    expect(trackData.status).toBeDefined();
-    expect(Array.isArray(trackData.timeline)).toBe(true);
-    expect(trackData.timeline.length).toBeGreaterThan(0);
-  });
-
-  it('7. should enforce tenant isolation: reject operations from an unauthorized workspace', async () => {
+  it('5. should enforce tenant isolation: reject operations from an unauthorized workspace', async () => {
     const randomWorkspaceId = '00000000-0000-0000-0000-000000000000';
 
     const getRes = await request(ctx.httpServer)

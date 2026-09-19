@@ -33,6 +33,7 @@ describe('AuthService (Login, Refresh & Session Use Cases)', () => {
 
   beforeEach(() => {
     mockPasswordService = {
+      hash: async (plain: string) => `$argon2id$mockhash_${plain}`,
       verify: async (hash: string, plain: string) => {
         return plain === 'CorrectPassword123!';
       },
@@ -76,6 +77,7 @@ describe('AuthService (Login, Refresh & Session Use Cases)', () => {
     };
 
     mockPrismaService = {
+      runInTransaction: async (cb: any) => cb(),
       client: {
         user: {
           findUnique: async ({ where }: { where: { id?: string; email?: string } }) => {
@@ -87,12 +89,52 @@ describe('AuthService (Login, Refresh & Session Use Cases)', () => {
             }
             return null;
           },
+          create: async ({ data }: any) => ({
+            id: 'usr_new_999',
+            ...data,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          }),
           update: async ({ where, data }: { where: { id: string }; data: any }) => {
             if (where.id === mockActiveUser.id) {
               return { ...mockActiveUser, ...data, updatedAt: new Date() };
             }
             return null;
           },
+        },
+        workspace: {
+          findUnique: async () => null,
+          create: async ({ data }: any) => ({
+            id: 'ws_new_999',
+            ...data,
+            settings: null,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          }),
+        },
+        workspaceMember: {
+          create: async ({ data }: any) => ({
+            id: 'wm_new_999',
+            ...data,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          }),
+        },
+        inbox: {
+          create: async ({ data }: any) => ({
+            id: 'inb_new_999',
+            ...data,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          }),
+        },
+        inboxMember: {
+          create: async ({ data }: any) => ({
+            id: 'im_new_999',
+            ...data,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          }),
         },
       },
     };
@@ -102,6 +144,39 @@ describe('AuthService (Login, Refresh & Session Use Cases)', () => {
       mockPasswordService as PasswordService,
       mockTokenService as TokenService,
     );
+  });
+
+  describe('register (TASK-3A-05 Atomic Registration)', () => {
+    it('should atomically register a new user and provision default workspace with inbox', async () => {
+      const result = await authService.register({
+        email: 'founder@newshop.com',
+        password: 'SecurePassword123!',
+        name: 'Shop Founder',
+        workspaceName: 'New Brand Shop',
+      });
+
+      assert.strictEqual(result.user.email, 'founder@newshop.com');
+      assert.strictEqual(result.user.name, 'Shop Founder');
+      assert.strictEqual(result.workspace.name, 'New Brand Shop');
+      assert.strictEqual(result.workspace.slug, 'new-brand-shop');
+      assert.ok(result.tokens.accessToken);
+    });
+
+    it('should throw ConflictException if user email already exists', async () => {
+      await assert.rejects(
+        async () => {
+          await authService.register({
+            email: 'agent@salescopilot.io',
+            password: 'SecurePassword123!',
+            name: 'Existing User',
+          });
+        },
+        (err: any) => {
+          assert.strictEqual(err.response?.code, 'EMAIL_ALREADY_EXISTS');
+          return true;
+        },
+      );
+    });
   });
 
   it('should authenticate user and return tokens on valid credentials', async () => {

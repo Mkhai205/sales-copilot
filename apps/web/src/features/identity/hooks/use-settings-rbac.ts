@@ -33,7 +33,6 @@ export function useSettingsRbac(workspaceSlug: string) {
   const isAdmin = currentRole === WorkspaceRole.OWNER || currentRole === WorkspaceRole.ADMIN;
   const isOwner = currentRole === WorkspaceRole.OWNER;
   const isAgent = currentRole === WorkspaceRole.AGENT;
-  const isViewer = currentRole === WorkspaceRole.VIEWER;
 
   const accessibleNavItems = React.useMemo(() => {
     return getPermittedSettingsNavItems(currentRole);
@@ -65,7 +64,6 @@ export function useSettingsRbac(workspaceSlug: string) {
     isAdmin,
     isOwner,
     isAgent,
-    isViewer,
     isLoading: isLoadingWorkspaces || isLoadingUser,
     accessibleNavItems,
     groupedNavItems,

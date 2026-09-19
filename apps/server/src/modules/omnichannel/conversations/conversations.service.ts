@@ -248,7 +248,7 @@ export class ConversationsService {
     }
 
     const updated = await client.conversation.update({
-      where: { id },
+      where: { workspaceId_id: { workspaceId, id } },
       data: {
         status: targetStatus,
         snoozedUntil: snoozedUntilDate,
@@ -357,7 +357,7 @@ export class ConversationsService {
     }
 
     const updated = await client.conversation.update({
-      where: { id },
+      where: { workspaceId_id: { workspaceId, id } },
       data: updateData,
       include: CONVERSATION_STANDARD_INCLUDE,
     });
@@ -414,7 +414,7 @@ export class ConversationsService {
     }
 
     const updated = await client.conversation.update({
-      where: { id },
+      where: { workspaceId_id: { workspaceId, id } },
       data: { priority: currentPriority },
       include: CONVERSATION_STANDARD_INCLUDE,
     });
@@ -439,6 +439,7 @@ export class ConversationsService {
 
   /**
    * Resets unread messages counter to 0 (BR-4.3) when agent views conversation.
+   * Emits `conversation.updated` domain event for realtime sync.
    */
   async resetUnreadCount(
     workspaceId: string,
@@ -449,6 +450,7 @@ export class ConversationsService {
 
     const existing = await client.conversation.findFirst({
       where: { id, workspaceId },
+      select: { id: true, unreadMessagesCount: true },
     });
 
     if (!existing) {
@@ -467,7 +469,7 @@ export class ConversationsService {
     }
 
     const updated = await client.conversation.update({
-      where: { id },
+      where: { workspaceId_id: { workspaceId, id } },
       data: { unreadMessagesCount: 0 },
       include: CONVERSATION_STANDARD_INCLUDE,
     });
@@ -888,7 +890,7 @@ export class ConversationsService {
     }
 
     const updated = await client.conversation.update({
-      where: { id },
+      where: { workspaceId_id: { workspaceId, id } },
       data: { isAiPaused: isPaused },
       include: CONVERSATION_STANDARD_INCLUDE,
     });

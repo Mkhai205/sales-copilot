@@ -1,4 +1,4 @@
-﻿import {
+import {
   BadRequestException,
   ConflictException,
   Injectable,
@@ -354,21 +354,29 @@ export class FacebookService {
       });
     }
 
-    // 2. Check if this page is already connected in the workspace
+    // 2. Check if this page is already connected in ANY workspace across the system (Cross-tenant collision prevention - TASK-3A-10)
     const existingChannel = await client.channel.findFirst({
       where: {
-        workspaceId,
         channelType: 'FACEBOOK_MESSENGER',
         providerAccountId: dto.pageId,
       },
     });
 
     if (existingChannel) {
-      throw new ConflictException({
-        code: 'FACEBOOK_PAGE_ALREADY_CONNECTED',
-        message: `Facebook Page '${dto.pageName}' is already connected in this workspace`,
-        details: { pageId: dto.pageId },
-      });
+      if (existingChannel.workspaceId === workspaceId) {
+        throw new ConflictException({
+          code: 'FACEBOOK_PAGE_ALREADY_CONNECTED',
+          message: `Facebook Page '${dto.pageName}' is already connected in this workspace`,
+          details: { pageId: dto.pageId },
+        });
+      } else {
+        throw new ConflictException({
+          code: 'FACEBOOK_PAGE_ALREADY_CONNECTED',
+          message:
+            'Trang Facebook này đã được kết nối với một workspace khác. Vui lòng ngắt kết nối ở workspace cũ trước.',
+          details: { pageId: dto.pageId },
+        });
+      }
     }
 
     // 3. Encrypt credentials
@@ -428,7 +436,7 @@ export class FacebookService {
     // 5. Set inbox avatar from Page picture
     const avatarUrl = `https://graph.facebook.com/${dto.pageId}/picture?type=large`;
     await client.inbox.update({
-      where: { id: result.inboxId },
+      where: { workspaceId_id: { workspaceId, id: result.inboxId } },
       data: { avatarUrl },
     });
 
@@ -507,10 +515,9 @@ export class FacebookService {
         continue;
       }
 
-      // Check if page is already connected in this workspace
+      // Check if page is already connected in any workspace across the system (Cross-tenant collision prevention - TASK-3A-10)
       const existing = await client.channel.findFirst({
         where: {
-          workspaceId,
           channelType: 'FACEBOOK_MESSENGER',
           providerAccountId: pageId,
         },
@@ -699,7 +706,7 @@ export class FacebookService {
     const encryptedString = this.credentialService.encrypt(newCredentials);
 
     await client.channel.update({
-      where: { id: channelId },
+      where: { workspaceId_id: { workspaceId, id: channelId } },
       data: {
         credentials: { encrypted: encryptedString } as any,
         isConnected: true,
