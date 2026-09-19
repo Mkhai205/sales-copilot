@@ -22,6 +22,8 @@ export default tseslint.config(
       '**/.agents/**',
       'public/**',
       '**/public/**',
+      'tmp/**',
+      '**/tmp/**',
       '**/*.min.js',
     ],
   },

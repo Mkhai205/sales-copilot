@@ -38,10 +38,10 @@
 - State Management: TanStack Query `useQuery` cho việc fetch dữ liệu dashboard (có thể set polling nếu cần).
 
 ### 5. Tiêu chí nghiệm thu (Acceptance Criteria & Definition of Done)
-- [ ] Truy cập `/[slug]/dashboard` bằng account OWNER/ADMIN sẽ hiển thị đầy đủ các KPI cards.
-- [ ] Truy cập bằng account AGENT sẽ bị redirect sang `/[slug]/conversations`.
-- [ ] API `GET /dashboard/summary` hoạt động ổn định và trả về DTO đúng chuẩn Zod schema.
-- [ ] Giao diện responsive trên Desktop.
+- [x] Truy cập `/[slug]/dashboard` bằng account OWNER/ADMIN sẽ hiển thị đầy đủ các KPI cards.
+- [x] Truy cập bằng account AGENT sẽ bị redirect sang `/[slug]/conversations`.
+- [x] API `GET /dashboard/summary` hoạt động ổn định và trả về DTO đúng chuẩn Zod schema.
+- [x] Giao diện responsive trên Desktop.
 
 ---
 

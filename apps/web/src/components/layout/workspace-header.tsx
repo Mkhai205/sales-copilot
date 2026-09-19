@@ -4,7 +4,15 @@ import * as React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LogOut, MessageSquare, Moon, Settings, ShoppingBag, Sun } from 'lucide-react';
+import {
+  LayoutDashboard,
+  LogOut,
+  MessageSquare,
+  Moon,
+  Settings,
+  ShoppingBag,
+  Sun,
+} from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -59,6 +67,10 @@ export function WorkspaceHeader({ workspaceSlug }: WorkspaceHeaderProps) {
   };
 
   // Determine active navigation module
+  const isDashboardActive =
+    pathname === `/${workspaceSlug}/dashboard` ||
+    pathname.startsWith(`/${workspaceSlug}/dashboard/`);
+
   const isConversationsActive =
     pathname.startsWith(`/${workspaceSlug}/conversations`) ||
     pathname.startsWith(`/${workspaceSlug}/contacts`);
@@ -71,7 +83,19 @@ export function WorkspaceHeader({ workspaceSlug }: WorkspaceHeaderProps) {
 
   const isSettingsActive = pathname.startsWith(`/${workspaceSlug}/settings`);
 
+  const canAccessDashboard = activeWorkspace?.role === 'OWNER' || activeWorkspace?.role === 'ADMIN';
+
   const navItems = [
+    ...(canAccessDashboard
+      ? [
+          {
+            label: 'Tổng quan',
+            href: `/${workspaceSlug}/dashboard`,
+            icon: LayoutDashboard,
+            isActive: isDashboardActive,
+          },
+        ]
+      : []),
     {
       label: 'Hội thoại',
       href: `/${workspaceSlug}/conversations`,

@@ -18,6 +18,7 @@ import { IntelligenceModule } from './modules/intelligence';
 import { PlatformAdminModule } from './modules/platform-admin';
 import { RealtimeModule } from './modules/realtime';
 import { HealthModule } from './modules/health';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { validateEnv } from './config';
 import { RequestIdMiddleware } from './common/middlewares';
@@ -123,6 +124,7 @@ import { pinoRedactConfig } from './common/logging';
     PlatformAdminModule,
     RealtimeModule,
     HealthModule,
+    DashboardModule,
   ],
   controllers: [],
   providers: [

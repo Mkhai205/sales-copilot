@@ -1,4 +1,4 @@
-﻿import { cookies } from 'next/headers';
+import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { API_BASE } from '@/lib/api/client';
 import type { UserWorkspaceDto } from '@sales-copilot/shared-contracts';
@@ -14,6 +14,7 @@ export default async function Home() {
   }
 
   let targetSlug = 'default-workspace';
+  let isAgent = false;
 
   try {
     const workspaceRes = await fetch(`${API_BASE}/workspaces`, {
@@ -34,7 +35,9 @@ export default async function Home() {
         data?: UserWorkspaceDto[];
       };
       if (workspaceData.success && workspaceData.data && workspaceData.data.length > 0) {
-        targetSlug = workspaceData.data[0].slug;
+        const firstWs = workspaceData.data[0];
+        targetSlug = firstWs.slug;
+        isAgent = firstWs.role === 'AGENT';
       }
     }
   } catch (err: any) {
@@ -43,5 +46,9 @@ export default async function Home() {
     }
   }
 
-  redirect(`/${targetSlug}/conversations`);
+  if (isAgent) {
+    redirect(`/${targetSlug}/conversations`);
+  } else {
+    redirect(`/${targetSlug}/dashboard`);
+  }
 }

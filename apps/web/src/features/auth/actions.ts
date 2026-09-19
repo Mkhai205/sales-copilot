@@ -49,6 +49,7 @@ export async function loginAction(
   formData: LoginDto,
 ): Promise<ActionResult<LoginResponseDto> | void> {
   let targetSlug = 'default';
+  let isAgent = false;
 
   try {
     const res = await fetch(`${API_BASE}/auth/login`, {
@@ -103,7 +104,9 @@ export async function loginAction(
           data: UserWorkspaceDto[];
         };
         if (workspaceData.success && workspaceData.data?.length > 0) {
-          targetSlug = workspaceData.data[0].slug;
+          const firstWs = workspaceData.data[0];
+          targetSlug = firstWs.slug;
+          isAgent = firstWs.role === 'AGENT';
         }
       }
     } catch {
@@ -119,8 +122,12 @@ export async function loginAction(
     };
   }
 
-  // Redirect to dashboard conversations
-  redirect(`/${targetSlug}/conversations`);
+  // Redirect based on role (TASK-3B-01: OWNER/ADMIN -> dashboard, AGENT -> conversations)
+  if (isAgent) {
+    redirect(`/${targetSlug}/conversations`);
+  } else {
+    redirect(`/${targetSlug}/dashboard`);
+  }
 }
 
 export async function getSocketTokenAction(): Promise<string | null> {

@@ -4,9 +4,10 @@
     "rootDir": "../..",
     "outDir": "../../dist/apps/server",
     "module": "commonjs",
-    "types": ["node", "jest"],
+    "types": ["node"],
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*"],
+  "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts", "test/**/*"]
 }

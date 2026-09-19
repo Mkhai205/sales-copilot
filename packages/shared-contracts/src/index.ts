@@ -5,3 +5,4 @@ export * from './commerce';
 export * from './intelligence';
 export * from './realtime';
 export * from './platform-admin';
+export * from './dashboard';
