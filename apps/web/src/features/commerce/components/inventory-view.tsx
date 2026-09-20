@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Spinner } from '@/components/ui/spinner';
-import { useWorkspaces } from '@/features/identity';
+import { useWorkspaces } from '@/features/settings';
 import { useInventoryVariants, useInventorySummary } from '../hooks/use-inventory';
 import { InventorySummaryCards } from './inventory-summary-cards';
 import { InventoryVariantsTable } from './inventory-variants-table';
@@ -13,6 +13,7 @@ import { StockAdjustmentDialog, TargetVariantForAdjustment } from './stock-adjus
 import { StockLedgerDrawer } from './stock-ledger-drawer';
 import { Boxes, ChevronLeft, ChevronRight, RefreshCw, Search, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { PageHeader } from '@/components/layout/page-header';
 
 interface InventoryViewProps {
   workspaceSlug: string;
@@ -117,34 +118,27 @@ export function InventoryView({ workspaceSlug }: InventoryViewProps) {
 
   return (
     <div className="flex flex-col flex-1 h-full overflow-hidden p-6 gap-5">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-border/70">
-        <div className="flex flex-col">
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold tracking-tight text-foreground flex items-center gap-2">
-              <Boxes className="size-5 text-primary" />
-              <span>Quản Trị Tồn Kho & Sổ Kho</span>
-            </h1>
+      <PageHeader
+        title="Quản Trị Tồn Kho & Sổ Kho"
+        description="Theo dõi tồn kho 3 trạng thái (Vật lý, Tạm giữ đơn chat, Khả dụng) và sổ cái biến động bất biến."
+        icon={Boxes}
+        actions={
+          <div className="flex items-center gap-2 self-start sm:self-auto">
             <Badge variant="outline" className="text-xs px-2 py-0.5 border-primary/30 text-primary">
               Kho trung tâm
             </Badge>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRefresh}
+              className="h-9 gap-1.5 text-xs"
+            >
+              <RefreshCw className="size-3.5" />
+              Làm mới dữ liệu
+            </Button>
           </div>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Theo dõi tồn kho 3 trạng thái (Vật lý, Tạm giữ đơn chat, Khả dụng) và sổ cái biến động
-            bất biến.
-          </p>
-        </div>
-
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleRefresh}
-          className="h-9 gap-1.5 text-xs self-start sm:self-auto"
-        >
-          <RefreshCw className="size-3.5" />
-          Làm mới dữ liệu
-        </Button>
-      </div>
+        }
+      />
 
       {/* KPI Metric Cards */}
       <InventorySummaryCards summary={summary} isLoading={isSummaryLoading} />

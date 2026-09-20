@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useQuery } from '@tanstack/react-query';
 import { conversationsApi } from '../api/conversations';
@@ -6,7 +6,7 @@ import type {
   ConversationStatus,
   ConversationCountsResponseDto,
 } from '@sales-copilot/shared-contracts';
-import { useWorkspaces } from '@/features/identity';
+import { useWorkspaces } from '@/features/settings';
 
 interface UseConversationCountsOptions {
   workspaceSlug?: string;

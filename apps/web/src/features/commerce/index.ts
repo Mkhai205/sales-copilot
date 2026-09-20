@@ -32,6 +32,5 @@ export * from './components/orders-view';
 export * from './hooks/use-product-mutations';
 export * from './hooks/use-inventory';
 export * from './components/commerce-sidebar';
-export * from './components/commerce-module-layout';
 export * from './lib/code128-svg';
 export * from './lib/currency';

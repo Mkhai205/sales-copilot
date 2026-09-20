@@ -1,9 +1,8 @@
-﻿'use client';
+'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { cannedResponsesApi } from '@/features/omnichannel';
+import { cannedResponsesApi, useWorkspaces } from '@/features/settings';
 import type { CannedResponseDto } from '@sales-copilot/shared-contracts';
-import { useWorkspaces } from '@/features/identity';
 
 export interface UseCannedResponsesOptions {
   workspaceId?: string;

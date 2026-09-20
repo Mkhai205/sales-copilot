@@ -58,7 +58,7 @@ import { conversationsApi } from './api/conversations';
 import { updateConversationInList } from '@/lib/socket/cache-helpers';
 import { useConversation } from './hooks/use-conversation';
 import { useMessages } from './hooks/use-messages';
-import { useWorkspaces } from '@/features/identity';
+import { useWorkspaces } from '@/features/settings';
 import { MessageThreadHeader } from './message-thread-header';
 import { TypingIndicator } from './typing-indicator';
 import { ChatComposer } from './composer';

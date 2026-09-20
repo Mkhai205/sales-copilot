@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useMutation, useQueryClient, type InfiniteData } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -15,7 +15,7 @@ import {
   type MessageResponseDto,
 } from '@sales-copilot/shared-contracts';
 import { useCurrentUser } from '@/features/auth';
-import { useWorkspaces } from '@/features/identity';
+import { useWorkspaces } from '@/features/settings';
 import {
   bubbleConversationToTop,
   markMessageFailedInInfiniteData,

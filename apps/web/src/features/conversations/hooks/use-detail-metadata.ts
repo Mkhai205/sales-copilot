@@ -1,9 +1,7 @@
-﻿'use client';
+'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { workspacesApi, teamsApi } from '@/features/identity';
-import { labelsApi } from '@/features/omnichannel';
-import { useWorkspaces } from '@/features/identity';
+import { workspacesApi, teamsApi, labelsApi, useWorkspaces } from '@/features/settings';
 import type { LabelDto, TeamDto, WorkspaceMemberDto } from '@sales-copilot/shared-contracts';
 
 interface MetadataOptions {
@@ -96,4 +94,4 @@ export function useWorkspaceLabels(options: MetadataOptions = {}) {
   };
 }
 
-export { useContactIdentities, type UseContactIdentitiesOptions } from '@/features/contacts';
+export { useContactIdentities, type UseContactIdentitiesOptions } from '../contacts';

@@ -5,8 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { CommerceOrderForm } from './commerce-order-form';
-import { useContacts } from '@/features/contacts/hooks/use-contacts';
-import { contactsApi } from '@/features/contacts/api/contacts';
+import { useContacts, contactsApi } from '@/features/conversations';
 import type { ContactDto, OrderResponseDto } from '@sales-copilot/shared-contracts';
 import { User, Search, Plus, ArrowLeft, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';

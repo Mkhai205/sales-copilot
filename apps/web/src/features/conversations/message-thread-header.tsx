@@ -20,7 +20,7 @@ import {
   type ConversationResponseDto,
 } from '@sales-copilot/shared-contracts';
 import { getChannelMeta } from '@/lib/channels';
-import { useInbox } from '@/features/omnichannel/hooks/use-inboxes';
+import { useInbox } from '@/features/settings';
 import { useTakeoverConversation } from './hooks/use-takeover-conversation';
 
 interface MessageThreadHeaderProps {

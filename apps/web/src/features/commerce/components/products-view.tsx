@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Spinner } from '@/components/ui/spinner';
-import { useWorkspaces } from '@/features/identity';
+import { useWorkspaces } from '@/features/settings';
 import { commerceApi } from '../api/commerce-client';
 import { useProductMutations } from '../hooks/use-product-mutations';
 import { ProductsTable } from './products-table';
@@ -16,6 +16,7 @@ import { StockLedgerDrawer } from './stock-ledger-drawer';
 import type { ProductResponseDto } from '@sales-copilot/shared-contracts';
 import { AlertTriangle, ChevronLeft, ChevronRight, Plus, Search, Tag, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { PageHeader } from '@/components/layout/page-header';
 
 interface ProductsViewProps {
   workspaceSlug: string;
@@ -152,32 +153,24 @@ export function ProductsView({ workspaceSlug }: ProductsViewProps) {
 
   return (
     <div className="flex flex-col flex-1 h-full overflow-hidden p-6 gap-5">
-      {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-border/70">
-        <div className="flex flex-col">
+      <PageHeader
+        title="Danh Mục Sản Phẩm"
+        description="Quản lý bảng giá bán lẻ, giá vốn, danh mục và cấu hình ma trận biến thể SKU."
+        icon={Tag}
+        actions={
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold tracking-tight text-foreground flex items-center gap-2">
-              <Tag className="size-5 text-primary" />
-              <span>Danh Mục Sản Phẩm</span>
-            </h1>
             {meta?.total !== undefined && (
               <Badge variant="secondary" className="text-xs font-mono px-2 py-0.5">
                 {meta.total} sản phẩm
               </Badge>
             )}
+            <Button size="sm" onClick={handleCreateNew} className="h-9 gap-1.5 text-xs font-medium">
+              <Plus className="size-4" />
+              Thêm sản phẩm
+            </Button>
           </div>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Quản lý bảng giá bán lẻ, giá vốn, danh mục và cấu hình ma trận biến thể SKU.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Button size="sm" onClick={handleCreateNew} className="h-9 gap-1.5 text-xs font-medium">
-            <Plus className="size-4" />
-            Thêm sản phẩm
-          </Button>
-        </div>
-      </div>
+        }
+      />
 
       {/* Filter & Search Bar */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3 rounded-lg border bg-card/60">

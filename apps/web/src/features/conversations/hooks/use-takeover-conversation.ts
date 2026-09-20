@@ -3,7 +3,7 @@
 import { useMutation, useQueryClient, type InfiniteData } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { conversationsApi } from '../api/conversations';
-import { useWorkspaces } from '@/features/identity';
+import { useWorkspaces } from '@/features/settings';
 import type { ConversationResponseDto } from '@sales-copilot/shared-contracts';
 import { updateConversationInList } from '@/lib/socket/cache-helpers';
 import type { ApiResponse } from '@/lib/api/client';

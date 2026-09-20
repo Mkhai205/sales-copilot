@@ -18,8 +18,7 @@ import {
 } from 'lucide-react';
 import { ConversationStatus, Priority } from '@sales-copilot/shared-contracts';
 import type { ConversationFilters, StatusFilter } from './hooks/use-conversation-filters';
-import { useInboxes, useLabels } from '@/features/omnichannel';
-import { useWorkspaceMembers } from '@/features/identity';
+import { useInboxes, useLabels, useWorkspaceMembers } from '@/features/settings';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';

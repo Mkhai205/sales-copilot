@@ -4,8 +4,7 @@ import * as React from 'react';
 import { X, RotateCcw } from 'lucide-react';
 import { ConversationStatus, Priority } from '@sales-copilot/shared-contracts';
 import type { ConversationFilters, StatusFilter } from './hooks/use-conversation-filters';
-import { useInboxes, useLabels } from '@/features/omnichannel';
-import { useWorkspaceMembers } from '@/features/identity';
+import { useInboxes, useLabels, useWorkspaceMembers } from '@/features/settings';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 

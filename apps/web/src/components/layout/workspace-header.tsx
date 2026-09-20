@@ -30,7 +30,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useWorkspaces } from '@/features/identity';
+import { useWorkspaces } from '@/features/settings';
 import { useCurrentUser, logoutAction } from '@/features/auth';
 import { disconnectSocketClient } from '@/lib/socket/socket-client';
 
@@ -103,7 +103,7 @@ export function WorkspaceHeader({ workspaceSlug }: WorkspaceHeaderProps) {
       isActive: isConversationsActive,
     },
     {
-      label: 'Quản lý bán hàng',
+      label: 'Bán hàng',
       href: `/${workspaceSlug}/orders`,
       icon: ShoppingBag,
       isActive: isCommerceActive,

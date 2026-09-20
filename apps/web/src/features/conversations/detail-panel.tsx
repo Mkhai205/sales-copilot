@@ -6,14 +6,13 @@ import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { useWorkspaces } from '@/features/identity';
+import { useWorkspaces, useInbox } from '@/features/settings';
 import { CommerceDetailTab } from '@/features/commerce';
 
 import type { OrderResponseDto } from '@sales-copilot/shared-contracts';
 import { useConversation } from './hooks/use-conversation';
 import { useMessages } from './hooks/use-messages';
-import { useInbox } from '@/features/omnichannel/hooks/use-inboxes';
-import { ContactInfo, ContactIdentities } from '@/features/contacts';
+import { ContactInfo, ContactIdentities } from './contacts';
 import { ConversationActions } from './conversation-actions';
 import { LabelManager } from './label-manager';
 

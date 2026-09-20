@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useWorkspaces } from '@/features/identity';
+import { useWorkspaces } from '@/features/settings';
 import { commerceApi } from '../api/commerce-client';
 import { useCommerceOrders } from '../hooks/use-commerce-orders';
 import { useCommerceRealtimeSync } from '../hooks/use-commerce-realtime-sync';
@@ -21,6 +21,7 @@ import { OrderDetailSheet } from './order-detail-sheet';
 import { CreateOrderDialog } from './create-order-dialog';
 import { OrderStatus, PaymentStatus, type OrderResponseDto } from '@sales-copilot/shared-contracts';
 import { ChevronLeft, ChevronRight, Plus, RefreshCw, Search, ShoppingBag, X } from 'lucide-react';
+import { PageHeader } from '@/components/layout/page-header';
 
 interface OrdersViewProps {
   workspaceSlug: string;
@@ -110,45 +111,39 @@ export function OrdersView({ workspaceSlug }: OrdersViewProps) {
 
   return (
     <div className="flex flex-col flex-1 h-full overflow-y-auto bg-background p-6 gap-5">
-      {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-border/70">
-        <div>
-          <h1 className="text-xl font-bold tracking-tight text-foreground flex items-center gap-2">
-            <ShoppingBag className="size-5 text-primary" />
-            <span>{'Quản lý Đơn hàng'}</span>
-          </h1>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            {'Theo dõi toàn bộ đơn hàng đa kênh, trạng thái giữ kho và vận chuyển'}
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2 self-start sm:self-auto">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => refetch()}
-            disabled={isFetching}
-            className="h-8 text-xs gap-1.5 cursor-pointer"
-          >
-            <RefreshCw className={`size-3.5 ${isFetching ? 'animate-spin' : ''}`} />
-            <span>{'Làm mới'}</span>
-          </Button>
-
-          {workspaceId && (
+      <PageHeader
+        title="Quản lý Đơn hàng"
+        description="Theo dõi toàn bộ đơn hàng đa kênh, trạng thái giữ kho và vận chuyển"
+        icon={ShoppingBag}
+        actions={
+          <div className="flex items-center gap-2 self-start sm:self-auto">
             <Button
               type="button"
-              variant="default"
+              variant="outline"
               size="sm"
-              onClick={() => setCreateDialogOpen(true)}
-              className="h-8 text-xs font-semibold gap-1.5 shadow-xs cursor-pointer"
+              onClick={() => refetch()}
+              disabled={isFetching}
+              className="h-8 text-xs gap-1.5 cursor-pointer"
             >
-              <Plus className="size-3.5" />
-              <span>{'Tạo đơn hàng mới'}</span>
+              <RefreshCw className={`size-3.5 ${isFetching ? 'animate-spin' : ''}`} />
+              <span>Làm mới</span>
             </Button>
-          )}
-        </div>
-      </div>
+
+            {workspaceId && (
+              <Button
+                type="button"
+                variant="default"
+                size="sm"
+                onClick={() => setCreateDialogOpen(true)}
+                className="h-8 text-xs font-semibold gap-1.5 shadow-xs cursor-pointer"
+              >
+                <Plus className="size-3.5" />
+                <span>Tạo đơn hàng mới</span>
+              </Button>
+            )}
+          </div>
+        }
+      />
 
       {/* Lifecycle Status Tabs */}
       <div className="flex items-center overflow-x-auto pb-1">

@@ -1,9 +1,9 @@
-﻿'use client';
+'use client';
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { conversationsApi } from '../api/conversations';
-import { useWorkspaces } from '@/features/identity';
+import { useWorkspaces } from '@/features/settings';
 import type {
   AssignConversationDto,
   AssignLabelsDto,
@@ -197,4 +197,4 @@ export function useRemoveConversationLabel(
   });
 }
 
-export { useUpdateContact } from '@/features/contacts';
+export { useUpdateContact } from '../contacts';

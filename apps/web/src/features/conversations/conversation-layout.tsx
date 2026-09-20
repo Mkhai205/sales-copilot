@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { useCommerceRealtimeSync } from '@/features/commerce';
-import { useWorkspaces } from '@/features/identity';
+import { useWorkspaces } from '@/features/settings';
 
 import { ConversationEmptyState } from './conversation-empty-state';
 import { ConversationList } from './conversation-list';

@@ -1,11 +1,11 @@
-﻿'use client';
+'use client';
 
 import * as React from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { format, isToday, isYesterday, isThisYear, parseISO, isValid } from 'date-fns';
 import { messagesApi } from '../api/messages';
 import type { MessageResponseDto } from '@sales-copilot/shared-contracts';
-import { useWorkspaces } from '@/features/identity';
+import { useWorkspaces } from '@/features/settings';
 
 export interface UseMessagesOptions {
   conversationId?: string | null;

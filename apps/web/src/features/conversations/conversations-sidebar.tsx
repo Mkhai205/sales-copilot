@@ -50,8 +50,7 @@ import {
   SidebarRail,
   SidebarTrigger,
 } from '@/components/ui/sidebar';
-import { useInboxes } from '@/features/omnichannel';
-import { useWorkspaces } from '@/features/identity';
+import { useInboxes, useWorkspaces } from '@/features/settings';
 import { useConversationCounts } from './hooks/use-conversation-counts';
 import { useConversationFilters } from './hooks/use-conversation-filters';
 import { ConversationStatus } from '@sales-copilot/shared-contracts';
