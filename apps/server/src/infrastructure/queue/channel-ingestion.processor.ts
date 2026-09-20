@@ -1,4 +1,4 @@
-﻿import { Processor, WorkerHost } from '@nestjs/bullmq';
+import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Injectable, Logger, Optional } from '@nestjs/common';
 import { Job } from 'bullmq';
 import { randomUUID } from 'node:crypto';
@@ -227,7 +227,12 @@ export class ChannelIngestionProcessor extends WorkerHost {
 
             if (existingMessage) {
               await client.message.update({
-                where: { id: existingMessage.id },
+                where: {
+                  workspaceId_id: {
+                    workspaceId,
+                    id: existingMessage.id,
+                  },
+                },
                 data: {
                   deliveryStatus: newStatus,
                 },
@@ -387,8 +392,8 @@ export class ChannelIngestionProcessor extends WorkerHost {
     // 4. Mark ChannelEvent as processed in database
     if (channelEventId) {
       try {
-        await client.channelEvent.update({
-          where: { id: channelEventId },
+        await client.channelEvent.updateMany({
+          where: { id: channelEventId, channelId },
           data: { processedAt: new Date() },
         });
       } catch (err) {

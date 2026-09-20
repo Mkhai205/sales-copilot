@@ -26,9 +26,9 @@ export const createProductVariantSchema = z.object({
   name: z.string().trim().min(1, 'Tên biến thể bắt buộc'),
   sku: z.string().trim().min(1, 'SKU biến thể bắt buộc'),
   barcode: z.string().trim().optional().nullable(),
-  price: z.coerce.number().positive('Giá biến thể phải lớn hơn 0'),
-  costPrice: z.coerce.number().min(0, 'Giá vốn không được âm').default(0),
-  stockQuantity: z.coerce
+  price: z.number().positive('Giá biến thể phải lớn hơn 0'),
+  costPrice: z.number().min(0, 'Giá vốn không được âm').default(0),
+  stockQuantity: z
     .number()
     .int('Tồn kho phải là số nguyên')
     .min(0, 'Tồn kho không được âm')
@@ -44,9 +44,9 @@ export const updateProductVariantSchema = z.object({
   name: z.string().trim().min(1).optional(),
   sku: z.string().trim().min(1).optional(),
   barcode: z.string().trim().optional().nullable(),
-  price: z.coerce.number().positive('Giá biến thể phải lớn hơn 0').optional(),
-  costPrice: z.coerce.number().min(0).optional(),
-  stockQuantity: z.coerce.number().int().min(0).optional(),
+  price: z.number().positive('Giá biến thể phải lớn hơn 0').optional(),
+  costPrice: z.number().min(0).optional(),
+  stockQuantity: z.number().int().min(0).optional(),
   attributes: z.record(z.any()).optional(),
   imageUrl: z.string().url().optional().nullable().or(z.literal('')),
   isActive: z.boolean().optional(),
@@ -82,8 +82,8 @@ export const createProductSchema = z.object({
   slug: z.string().trim().optional(),
   description: z.string().optional().nullable(),
   category: z.string().trim().optional().nullable(),
-  basePrice: z.coerce.number().positive('Giá bán phải lớn hơn 0'),
-  costPrice: z.coerce.number().min(0, 'Giá vốn không được âm').default(0),
+  basePrice: z.number().positive('Giá bán phải lớn hơn 0'),
+  costPrice: z.number().min(0, 'Giá vốn không được âm').default(0),
   sku: z.string().trim().min(1, 'SKU là bắt buộc'),
   barcode: z.string().trim().optional().nullable(),
   imageUrl: z.string().url('URL hình ảnh không hợp lệ').optional().nullable().or(z.literal('')),
@@ -100,8 +100,8 @@ export const updateProductSchema = z.object({
   slug: z.string().trim().optional(),
   description: z.string().optional().nullable(),
   category: z.string().trim().optional().nullable(),
-  basePrice: z.coerce.number().positive('Giá bán phải lớn hơn 0').optional(),
-  costPrice: z.coerce.number().min(0).optional(),
+  basePrice: z.number().positive('Giá bán phải lớn hơn 0').optional(),
+  costPrice: z.number().min(0).optional(),
   sku: z.string().trim().min(1).optional(),
   barcode: z.string().trim().optional().nullable(),
   imageUrl: z.string().url().optional().nullable().or(z.literal('')),

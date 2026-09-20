@@ -21,6 +21,12 @@ import type { ConversationFilters, StatusFilter } from './hooks/use-conversation
 import { useInboxes, useLabels, useWorkspaceMembers } from '@/features/settings';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from '@/components/ui/input-group';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { getChannelMeta } from '@/lib/channels';
 import { cn } from '@/lib/utils';
@@ -76,8 +82,8 @@ const PRIORITY_ITEMS: Array<{
   {
     value: Priority.LOW,
     label: 'Thấp',
-    dotColor: 'bg-slate-400',
-    textColor: 'text-slate-600 dark:text-slate-400',
+    dotColor: 'bg-muted-foreground/50',
+    textColor: 'text-muted-foreground',
   },
 ];
 
@@ -452,26 +458,31 @@ export function ConversationFilterPopover({
 
             {/* Instant Search Bar */}
             <div className="border-b border-border/50 p-2">
-              <div className="flex items-center gap-1.5 rounded-md bg-muted/40 px-2 py-1 text-xs border border-border/60 focus-within:border-ring">
-                <Search className="size-3 text-muted-foreground shrink-0" />
-                <input
+              <InputGroup className="h-8 bg-muted/40 border-border/60">
+                <InputGroupAddon align="inline-start">
+                  <Search className="size-3 text-muted-foreground shrink-0" />
+                </InputGroupAddon>
+                <InputGroupInput
                   type="text"
                   placeholder={'Tìm theo tên kênh hoặc loại...'}
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
-                  className="w-full bg-transparent text-xs text-foreground placeholder:text-muted-foreground/70 focus:outline-none"
+                  className="text-xs"
                   autoFocus
                 />
                 {searchQuery && (
-                  <button
-                    type="button"
-                    onClick={() => setSearchQuery('')}
-                    className="text-muted-foreground hover:text-foreground cursor-pointer"
-                  >
-                    <X className="size-3" />
-                  </button>
+                  <InputGroupAddon align="inline-end">
+                    <InputGroupButton
+                      size="icon-xs"
+                      variant="ghost"
+                      onClick={() => setSearchQuery('')}
+                      className="cursor-pointer text-muted-foreground hover:text-foreground"
+                    >
+                      <X className="size-3" />
+                    </InputGroupButton>
+                  </InputGroupAddon>
                 )}
-              </div>
+              </InputGroup>
             </div>
 
             {/* List with single vertical scrollbar */}
@@ -620,26 +631,31 @@ export function ConversationFilterPopover({
 
             {/* Instant Search Bar */}
             <div className="border-b border-border/50 p-2">
-              <div className="flex items-center gap-1.5 rounded-md bg-muted/40 px-2 py-1 text-xs border border-border/60 focus-within:border-ring">
-                <Search className="size-3 text-muted-foreground shrink-0" />
-                <input
+              <InputGroup className="h-8 bg-muted/40 border-border/60">
+                <InputGroupAddon align="inline-start">
+                  <Search className="size-3 text-muted-foreground shrink-0" />
+                </InputGroupAddon>
+                <InputGroupInput
                   type="text"
                   placeholder={'Tìm kiếm nhãn...'}
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
-                  className="w-full bg-transparent text-xs text-foreground placeholder:text-muted-foreground/70 focus:outline-none"
+                  className="text-xs"
                   autoFocus
                 />
                 {searchQuery && (
-                  <button
-                    type="button"
-                    onClick={() => setSearchQuery('')}
-                    className="text-muted-foreground hover:text-foreground cursor-pointer"
-                  >
-                    <X className="size-3" />
-                  </button>
+                  <InputGroupAddon align="inline-end">
+                    <InputGroupButton
+                      size="icon-xs"
+                      variant="ghost"
+                      onClick={() => setSearchQuery('')}
+                      className="cursor-pointer text-muted-foreground hover:text-foreground"
+                    >
+                      <X className="size-3" />
+                    </InputGroupButton>
+                  </InputGroupAddon>
                 )}
-              </div>
+              </InputGroup>
             </div>
 
             {/* Single scrollbar list */}
@@ -726,26 +742,31 @@ export function ConversationFilterPopover({
 
             {/* Instant Search Bar */}
             <div className="border-b border-border/50 p-2">
-              <div className="flex items-center gap-1.5 rounded-md bg-muted/40 px-2 py-1 text-xs border border-border/60 focus-within:border-ring">
-                <Search className="size-3 text-muted-foreground shrink-0" />
-                <input
+              <InputGroup className="h-8 bg-muted/40 border-border/60">
+                <InputGroupAddon align="inline-start">
+                  <Search className="size-3 text-muted-foreground shrink-0" />
+                </InputGroupAddon>
+                <InputGroupInput
                   type="text"
                   placeholder={'Tìm nhân viên theo tên, email...'}
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
-                  className="w-full bg-transparent text-xs text-foreground placeholder:text-muted-foreground/70 focus:outline-none"
+                  className="text-xs"
                   autoFocus
                 />
                 {searchQuery && (
-                  <button
-                    type="button"
-                    onClick={() => setSearchQuery('')}
-                    className="text-muted-foreground hover:text-foreground cursor-pointer"
-                  >
-                    <X className="size-3" />
-                  </button>
+                  <InputGroupAddon align="inline-end">
+                    <InputGroupButton
+                      size="icon-xs"
+                      variant="ghost"
+                      onClick={() => setSearchQuery('')}
+                      className="cursor-pointer text-muted-foreground hover:text-foreground"
+                    >
+                      <X className="size-3" />
+                    </InputGroupButton>
+                  </InputGroupAddon>
                 )}
-              </div>
+              </InputGroup>
             </div>
 
             {/* Single scrollbar list */}

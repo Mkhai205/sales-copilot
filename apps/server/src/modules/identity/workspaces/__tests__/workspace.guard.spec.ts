@@ -294,4 +294,30 @@ describe('WorkspaceGuard (Tenant Isolation & Context Injection)', () => {
       },
     );
   });
+
+  it('should resolve workspace slug and synchronize canonical ID to request.params.workspaceId', async () => {
+    mockWorkspacesService.findMember = async (workspaceIdOrSlug: string, userId: string) => {
+      if (workspaceIdOrSlug === 'acme-corp' && userId === 'usr_valid_123') {
+        return {
+          id: 'wm_123',
+          role: WorkspaceRole.OWNER,
+          workspace: mockWorkspace,
+        };
+      }
+      return null;
+    };
+
+    const { context, request } = createMockExecutionContext(
+      {},
+      { userId: 'usr_valid_123', email: 'owner@acme.com', role: 'USER' },
+      'http',
+      { workspaceId: 'acme-corp' },
+    );
+
+    const result = await guard.canActivate(context);
+
+    expect(result).toBe(true);
+    expect(request.workspace.workspaceId).toBe('ws_tenant_123');
+    expect(request.params.workspaceId).toBe('ws_tenant_123');
+  });
 });

@@ -4,7 +4,7 @@ import { InventoryTransactionType } from '../enums';
 export const adjustInventorySchema = z
   .object({
     type: z.nativeEnum(InventoryTransactionType),
-    quantity: z.coerce.number().int('Số lượng phải là số nguyên'),
+    quantity: z.number().int('Số lượng phải là số nguyên'),
     reason: z.string().trim().min(2, 'Lý do điều chỉnh là bắt buộc'),
   })
   .superRefine((data, ctx) => {

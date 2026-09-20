@@ -123,6 +123,10 @@ export class WorkspaceGuard implements CanActivate {
       },
     };
 
+    if (request.params && request.params.workspaceId) {
+      request.params.workspaceId = member.workspace.id;
+    }
+
     return true;
   }
 }

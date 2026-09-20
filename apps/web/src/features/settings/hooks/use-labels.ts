@@ -9,10 +9,11 @@ import type {
   UpdateLabelDto,
 } from '@sales-copilot/shared-contracts';
 import { labelsApi } from '../api/labels';
+import { labelKeys } from '@/lib/query-keys';
 
 export function useLabels(workspaceId?: string, query?: LabelListQueryDto) {
   return useQuery<LabelDto[]>({
-    queryKey: ['workspaces', workspaceId, 'labels', query],
+    queryKey: labelKeys.list(workspaceId, query),
     queryFn: async () => {
       if (!workspaceId) {
         throw new Error('Workspace ID is required');
@@ -37,16 +38,13 @@ export function useCreateLabel(workspaceId?: string) {
       return res.data;
     },
     onSuccess: newLabel => {
-      queryClient.setQueriesData<LabelDto[]>(
-        { queryKey: ['workspaces', workspaceId, 'labels'] },
-        old => {
-          if (!old) return [newLabel];
-          if (old.some(l => l.id === newLabel.id)) return old;
-          return [...old, newLabel];
-        },
-      );
+      queryClient.setQueriesData<LabelDto[]>({ queryKey: labelKeys.list(workspaceId) }, old => {
+        if (!old) return [newLabel];
+        if (old.some(l => l.id === newLabel.id)) return old;
+        return [...old, newLabel];
+      });
       queryClient.invalidateQueries({
-        queryKey: ['workspaces', workspaceId, 'labels'],
+        queryKey: labelKeys.list(workspaceId),
       });
       toast.success('Label created successfully');
     },
@@ -68,15 +66,12 @@ export function useUpdateLabel(workspaceId?: string) {
       return res.data;
     },
     onSuccess: updatedLabel => {
-      queryClient.setQueriesData<LabelDto[]>(
-        { queryKey: ['workspaces', workspaceId, 'labels'] },
-        old => {
-          if (!old) return old;
-          return old.map(l => (l.id === updatedLabel.id ? updatedLabel : l));
-        },
-      );
+      queryClient.setQueriesData<LabelDto[]>({ queryKey: labelKeys.list(workspaceId) }, old => {
+        if (!old) return old;
+        return old.map(l => (l.id === updatedLabel.id ? updatedLabel : l));
+      });
       queryClient.invalidateQueries({
-        queryKey: ['workspaces', workspaceId, 'labels'],
+        queryKey: labelKeys.list(workspaceId),
       });
       toast.success('Label updated successfully');
     },
@@ -98,13 +93,13 @@ export function useDeleteLabel(workspaceId?: string) {
       return { labelId, success: res.success };
     },
     onSuccess: ({ labelId }) => {
-      queryClient.setQueriesData<LabelDto[]>(
-        { queryKey: ['workspaces', workspaceId, 'labels'] },
-        old => {
-          if (!old) return old;
-          return old.filter(l => l.id !== labelId);
-        },
-      );
+      queryClient.setQueriesData<LabelDto[]>({ queryKey: labelKeys.list(workspaceId) }, old => {
+        if (!old) return old;
+        return old.filter(l => l.id !== labelId);
+      });
+      queryClient.invalidateQueries({
+        queryKey: labelKeys.list(workspaceId),
+      });
       toast.success('Label deleted successfully');
     },
     onError: (error: Error) => {

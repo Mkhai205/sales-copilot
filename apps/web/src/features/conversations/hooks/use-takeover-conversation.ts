@@ -4,9 +4,10 @@ import { useMutation, useQueryClient, type InfiniteData } from '@tanstack/react-
 import { toast } from 'sonner';
 import { conversationsApi } from '../api/conversations';
 import { useWorkspaces } from '@/features/settings';
-import type { ConversationResponseDto } from '@sales-copilot/shared-contracts';
 import { updateConversationInList } from '@/lib/socket/cache-helpers';
 import type { ApiResponse } from '@/lib/api/client';
+import { conversationKeys } from '@/lib/query-keys';
+import type { ConversationResponseDto } from '@sales-copilot/shared-contracts';
 
 interface UseTakeoverConversationOptions {
   workspaceSlug?: string;
@@ -53,7 +54,7 @@ export function useTakeoverConversation(
 
       // 2. Optimistically update conversation list caches for instantaneous UI response
       queryClient.setQueriesData<InfiniteData<ApiResponse<ConversationResponseDto[]>>>(
-        { queryKey: ['conversations'] },
+        { queryKey: conversationKeys.all },
         old =>
           updateConversationInList(old, updatedConversation.id, prev => ({
             ...prev,
@@ -64,7 +65,7 @@ export function useTakeoverConversation(
 
       // 3. Invalidate lists to maintain server parity
       queryClient.invalidateQueries({
-        queryKey: ['conversations'],
+        queryKey: conversationKeys.all,
       });
 
       toast.success('Đã tiếp quản từ AI thành công');

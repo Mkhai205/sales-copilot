@@ -5,6 +5,7 @@ import {
   updateProductSchema,
   listProductsQuerySchema,
   createOrderSchema,
+  updateOrderSchema,
   cancelOrderSchema,
   completeOrderSchema,
   manualPayOrderSchema,
@@ -102,6 +103,21 @@ describe('Shared Contracts — Commerce Context Schemas', () => {
       }
     });
 
+    it('should reject string or null prices in createProductSchema and updateProductSchema (no coerce)', () => {
+      // createProductSchema
+      const invalidCreate = {
+        name: 'Sản phẩm lỗi type',
+        sku: 'ERR-TYPE-01',
+        basePrice: '199000', // string should be rejected
+        costPrice: null, // null should be rejected
+      };
+      assert.strictEqual(createProductSchema.safeParse(invalidCreate).success, false);
+
+      // updateProductSchema
+      assert.strictEqual(updateProductSchema.safeParse({ basePrice: '200000' }).success, false);
+      assert.strictEqual(updateProductSchema.safeParse({ costPrice: null }).success, false);
+    });
+
     it('should parse query parameters in listProductsQuerySchema with defaults and coercion', () => {
       const query = {
         page: '2',
@@ -193,6 +209,17 @@ describe('Shared Contracts — Commerce Context Schemas', () => {
 
       const result = createOrderSchema.safeParse(payload);
       assert.strictEqual(result.success, false);
+    });
+
+    it('should reject string or null discountAmount/shippingFee in updateOrderSchema (no coerce)', () => {
+      assert.strictEqual(updateOrderSchema.safeParse({ discountAmount: '50000' }).success, false);
+      assert.strictEqual(updateOrderSchema.safeParse({ shippingFee: '30000' }).success, false);
+      assert.strictEqual(updateOrderSchema.safeParse({ discountAmount: null }).success, false);
+      assert.strictEqual(updateOrderSchema.safeParse({ shippingFee: null }).success, false);
+      assert.strictEqual(
+        updateOrderSchema.safeParse({ discountAmount: 50000, shippingFee: 30000 }).success,
+        true,
+      );
     });
 
     it('should validate cancelOrderSchema requiring a non-empty reason of at least 3 chars', () => {

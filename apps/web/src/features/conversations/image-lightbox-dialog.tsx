@@ -1,10 +1,11 @@
-﻿'use client';
+'use client';
 
 import * as React from 'react';
 import { Dialog as DialogPrimitive } from 'radix-ui';
 import { X, ChevronLeft, ChevronRight, Download, Copy, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 import type { AttachmentDto } from '@sales-copilot/shared-contracts';
 
 interface ImageLightboxDialogProps {
@@ -125,14 +126,16 @@ export function ImageLightboxDialog({
           <div className="relative z-10 flex items-center justify-between px-4 py-3 bg-gradient-to-b from-black/80 via-black/40 to-transparent">
             {/* Left: Close & Counter */}
             <div className="flex items-center gap-3">
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon"
                 onClick={onClose}
-                className="flex size-9 items-center justify-center rounded-full bg-white/10 text-white/90 hover:bg-white/20 hover:text-white transition-colors cursor-pointer"
+                className="size-9 rounded-full bg-white/10 text-white/90 hover:bg-white/20 hover:text-white transition-colors cursor-pointer"
                 title={'Đóng (Esc)'}
               >
                 <X className="size-5" />
-              </button>
+              </Button>
               {images.length > 1 && (
                 <span className="text-xs font-medium text-white/80 tracking-wider">
                   {currentIndex + 1} / {images.length}
@@ -142,23 +145,27 @@ export function ImageLightboxDialog({
 
             {/* Right: Actions */}
             <div className="flex items-center gap-1.5">
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon"
                 onClick={handleCopyImage}
-                className="flex size-9 items-center justify-center rounded-full bg-white/10 text-white/90 hover:bg-white/20 hover:text-white transition-colors cursor-pointer"
+                className="size-9 rounded-full bg-white/10 text-white/90 hover:bg-white/20 hover:text-white transition-colors cursor-pointer"
                 title={'Sao chép ảnh'}
               >
                 <Copy className="size-4" />
-              </button>
+              </Button>
 
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon"
                 onClick={handleDownload}
-                className="flex size-9 items-center justify-center rounded-full bg-white/10 text-white/90 hover:bg-white/20 hover:text-white transition-colors cursor-pointer"
+                className="size-9 rounded-full bg-white/10 text-white/90 hover:bg-white/20 hover:text-white transition-colors cursor-pointer"
                 title={'Tải xuống ảnh'}
               >
                 <Download className="size-4" />
-              </button>
+              </Button>
 
               <a
                 href={currentImage.fileUrl}
@@ -180,14 +187,16 @@ export function ImageLightboxDialog({
           >
             {/* Prev Button */}
             {images.length > 1 && (
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon"
                 onClick={handlePrev}
-                className="absolute left-4 top-1/2 -translate-y-1/2 z-20 flex size-11 items-center justify-center rounded-full bg-black/60 text-white/90 hover:bg-white/20 hover:text-white transition-all cursor-pointer border border-white/10 shadow-lg"
+                className="absolute left-4 top-1/2 -translate-y-1/2 z-20 size-11 rounded-full bg-black/60 text-white/90 hover:bg-white/20 hover:text-white transition-all cursor-pointer border border-white/10 shadow-lg"
                 title={'Ảnh trước (Mũi tên trái)'}
               >
                 <ChevronLeft className="size-6" />
-              </button>
+              </Button>
             )}
 
             {/* Active Image */}
@@ -204,14 +213,16 @@ export function ImageLightboxDialog({
 
             {/* Next Button */}
             {images.length > 1 && (
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon"
                 onClick={handleNext}
-                className="absolute right-4 top-1/2 -translate-y-1/2 z-20 flex size-11 items-center justify-center rounded-full bg-black/60 text-white/90 hover:bg-white/20 hover:text-white transition-all cursor-pointer border border-white/10 shadow-lg"
+                className="absolute right-4 top-1/2 -translate-y-1/2 z-20 size-11 rounded-full bg-black/60 text-white/90 hover:bg-white/20 hover:text-white transition-all cursor-pointer border border-white/10 shadow-lg"
                 title={'Ảnh tiếp theo (Mũi tên phải)'}
               >
                 <ChevronRight className="size-6" />
-              </button>
+              </Button>
             )}
           </div>
 

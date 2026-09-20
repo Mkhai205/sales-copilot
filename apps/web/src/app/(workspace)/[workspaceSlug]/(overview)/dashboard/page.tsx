@@ -1,47 +1,55 @@
-'use client';
-
-import * as React from 'react';
-import { useRouter } from 'next/navigation';
-import { WorkspaceRole } from '@sales-copilot/shared-contracts';
-import { useWorkspaces } from '@/features/settings';
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
+import { API_BASE } from '@/lib/api/client';
+import type { UserWorkspaceDto } from '@sales-copilot/shared-contracts';
 import { DashboardView } from '@/features/dashboard';
-import { Skeleton } from '@/components/ui/skeleton';
 
-export default function DashboardPage({ params }: { params: Promise<{ workspaceSlug: string }> }) {
-  const { workspaceSlug } = React.use(params);
-  const router = useRouter();
-  const { data: workspaces, isLoading } = useWorkspaces();
+export const dynamic = 'force-dynamic';
 
-  const currentWorkspace = workspaces?.find(w => w.slug === workspaceSlug);
+export default async function DashboardPage({
+  params,
+}: {
+  params: Promise<{ workspaceSlug: string }>;
+}) {
+  const { workspaceSlug } = await params;
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get('access_token')?.value;
 
-  React.useEffect(() => {
-    if (!isLoading && currentWorkspace) {
-      if (currentWorkspace.role === WorkspaceRole.AGENT) {
-        router.replace(`/${workspaceSlug}/conversations`);
-      }
-    }
-  }, [isLoading, currentWorkspace, router, workspaceSlug]);
-
-  if (isLoading || !currentWorkspace) {
-    return (
-      <div className="flex flex-1 flex-col gap-6 p-6 bg-background">
-        <div className="mx-auto w-full max-w-7xl space-y-6">
-          <div className="space-y-2">
-            <Skeleton className="h-8 w-64" />
-            <Skeleton className="h-4 w-48" />
-          </div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <Skeleton key={i} className="h-28 rounded-xl" />
-            ))}
-          </div>
-        </div>
-      </div>
-    );
+  if (!accessToken) {
+    redirect('/login');
   }
 
-  if (currentWorkspace.role === WorkspaceRole.AGENT) {
-    return null;
+  let currentWorkspace: UserWorkspaceDto | undefined;
+
+  try {
+    const res = await fetch(`${API_BASE}/workspaces`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      cache: 'no-store',
+    });
+
+    if (res.status === 401) {
+      redirect('/login');
+    }
+
+    if (res.ok) {
+      const json = (await res.json()) as { success: boolean; data?: UserWorkspaceDto[] };
+      currentWorkspace = json.data?.find(w => w.slug === workspaceSlug);
+    }
+  } catch (err: any) {
+    if (err?.digest?.startsWith('NEXT_REDIRECT')) {
+      throw err;
+    }
+  }
+
+  if (!currentWorkspace) {
+    redirect('/login');
+  }
+
+  if (currentWorkspace.role === 'AGENT') {
+    redirect(`/${workspaceSlug}/conversations`);
   }
 
   return (

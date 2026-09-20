@@ -30,6 +30,6 @@ export interface CannedResponseDto {
   workspaceId: string;
   shortCode: string;
   content: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: string | Date;
+  updatedAt: string | Date;
 }

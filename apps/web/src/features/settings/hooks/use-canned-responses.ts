@@ -9,10 +9,11 @@ import type {
   UpdateCannedResponseDto,
 } from '@sales-copilot/shared-contracts';
 import { cannedResponsesApi } from '../api/canned-responses';
+import { cannedResponseKeys } from '@/lib/query-keys';
 
 export function useCannedResponses(workspaceId?: string, query?: CannedResponseListQueryDto) {
   return useQuery<CannedResponseDto[]>({
-    queryKey: ['workspaces', workspaceId, 'canned-responses', query],
+    queryKey: cannedResponseKeys.list(workspaceId, query),
     queryFn: async () => {
       if (!workspaceId) {
         throw new Error('Workspace ID is required');
@@ -38,7 +39,7 @@ export function useCreateCannedResponse(workspaceId?: string) {
     },
     onSuccess: newItem => {
       queryClient.setQueriesData<CannedResponseDto[]>(
-        { queryKey: ['workspaces', workspaceId, 'canned-responses'] },
+        { queryKey: cannedResponseKeys.list(workspaceId) },
         old => {
           if (!old) return [newItem];
           if (old.some(i => i.id === newItem.id)) return old;
@@ -46,7 +47,7 @@ export function useCreateCannedResponse(workspaceId?: string) {
         },
       );
       queryClient.invalidateQueries({
-        queryKey: ['workspaces', workspaceId, 'canned-responses'],
+        queryKey: cannedResponseKeys.list(workspaceId),
       });
       toast.success('Canned response created successfully');
     },
@@ -69,14 +70,14 @@ export function useUpdateCannedResponse(workspaceId?: string) {
     },
     onSuccess: updatedItem => {
       queryClient.setQueriesData<CannedResponseDto[]>(
-        { queryKey: ['workspaces', workspaceId, 'canned-responses'] },
+        { queryKey: cannedResponseKeys.list(workspaceId) },
         old => {
           if (!old) return old;
           return old.map(i => (i.id === updatedItem.id ? updatedItem : i));
         },
       );
       queryClient.invalidateQueries({
-        queryKey: ['workspaces', workspaceId, 'canned-responses'],
+        queryKey: cannedResponseKeys.list(workspaceId),
       });
       toast.success('Canned response updated successfully');
     },
@@ -99,12 +100,15 @@ export function useDeleteCannedResponse(workspaceId?: string) {
     },
     onSuccess: ({ id }) => {
       queryClient.setQueriesData<CannedResponseDto[]>(
-        { queryKey: ['workspaces', workspaceId, 'canned-responses'] },
+        { queryKey: cannedResponseKeys.list(workspaceId) },
         old => {
           if (!old) return old;
           return old.filter(i => i.id !== id);
         },
       );
+      queryClient.invalidateQueries({
+        queryKey: cannedResponseKeys.list(workspaceId),
+      });
       toast.success('Canned response deleted successfully');
     },
     onError: (error: Error) => {

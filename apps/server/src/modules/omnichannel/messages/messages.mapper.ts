@@ -1,4 +1,4 @@
-﻿import type {
+import type {
   Attachment,
   Message,
   Contact,
@@ -7,11 +7,11 @@
 import type { MessageResponseDto } from '@sales-copilot/shared-contracts';
 import {
   DeliveryStatus,
+  FileType,
   MessageContentType,
   MessageType,
   SenderType,
 } from '@sales-copilot/shared-contracts';
-import { mapAttachmentToDto } from './attachments.mapper';
 
 export interface MessageWithRelations extends Message {
   attachments?: Attachment[];
@@ -61,8 +61,14 @@ export function mapMessageToDto(
   }
 
   const attachments = (message.attachments || []).map(att => {
-    const fileUrl = options?.attachmentUrls?.get(att.id);
-    return mapAttachmentToDto(att, fileUrl);
+    const fileUrl =
+      options?.attachmentUrls?.get(att.id) ??
+      (att.storagePath && att.storagePath.startsWith('http') ? att.storagePath : undefined);
+    return {
+      ...att,
+      fileType: att.fileType as unknown as FileType,
+      fileUrl,
+    };
   });
 
   return {

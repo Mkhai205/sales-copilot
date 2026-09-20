@@ -1,5 +1,3 @@
-'use client';
-
 import { FeaturePlaceholder } from '@/components/placeholder/feature-placeholder';
 import { QrCode } from 'lucide-react';
 

@@ -8,10 +8,11 @@ import type {
   WorkspaceMemberDto,
 } from '@sales-copilot/shared-contracts';
 import { workspacesApi } from '../api/workspaces';
+import { memberKeys } from '@/lib/query-keys';
 
 export function useWorkspaceMembers(workspaceId?: string) {
   return useQuery<WorkspaceMemberDto[]>({
-    queryKey: ['workspaces', workspaceId, 'members'],
+    queryKey: memberKeys.list(workspaceId),
     queryFn: async () => {
       if (!workspaceId) {
         throw new Error('Workspace ID is required');
@@ -36,17 +37,14 @@ export function useAddWorkspaceMember(workspaceId?: string) {
       return res.data;
     },
     onSuccess: (newMember: WorkspaceMemberDto) => {
-      queryClient.setQueryData<WorkspaceMemberDto[]>(
-        ['workspaces', workspaceId, 'members'],
-        old => {
-          if (!old) return [newMember];
-          // Check if already in list
-          if (old.some(m => m.id === newMember.id)) return old;
-          return [...old, newMember];
-        },
-      );
+      queryClient.setQueryData<WorkspaceMemberDto[]>(memberKeys.list(workspaceId), old => {
+        if (!old) return [newMember];
+        // Check if already in list
+        if (old.some(m => m.id === newMember.id)) return old;
+        return [...old, newMember];
+      });
       queryClient.invalidateQueries({
-        queryKey: ['workspaces', workspaceId, 'members'],
+        queryKey: memberKeys.list(workspaceId),
       });
       toast.success('Member invited successfully');
     },
@@ -74,13 +72,13 @@ export function useUpdateMemberRole(workspaceId?: string) {
       return res.data;
     },
     onSuccess: (updatedMember: WorkspaceMemberDto) => {
-      queryClient.setQueryData<WorkspaceMemberDto[]>(
-        ['workspaces', workspaceId, 'members'],
-        old => {
-          if (!old) return old;
-          return old.map(m => (m.id === updatedMember.id ? updatedMember : m));
-        },
-      );
+      queryClient.setQueryData<WorkspaceMemberDto[]>(memberKeys.list(workspaceId), old => {
+        if (!old) return old;
+        return old.map(m => (m.id === updatedMember.id ? updatedMember : m));
+      });
+      queryClient.invalidateQueries({
+        queryKey: memberKeys.list(workspaceId),
+      });
       toast.success('Member role updated');
     },
     onError: (error: Error) => {
@@ -101,13 +99,13 @@ export function useRemoveWorkspaceMember(workspaceId?: string) {
       return { memberId, success: res.success };
     },
     onSuccess: ({ memberId }) => {
-      queryClient.setQueryData<WorkspaceMemberDto[]>(
-        ['workspaces', workspaceId, 'members'],
-        old => {
-          if (!old) return old;
-          return old.filter(m => m.id !== memberId);
-        },
-      );
+      queryClient.setQueryData<WorkspaceMemberDto[]>(memberKeys.list(workspaceId), old => {
+        if (!old) return old;
+        return old.filter(m => m.id !== memberId);
+      });
+      queryClient.invalidateQueries({
+        queryKey: memberKeys.list(workspaceId),
+      });
       toast.success('Member removed from workspace');
     },
     onError: (error: Error) => {

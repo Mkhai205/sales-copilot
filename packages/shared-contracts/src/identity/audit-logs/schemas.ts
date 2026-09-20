@@ -30,8 +30,8 @@ export interface AuditLogDto {
   action: string;
   resourceType: string;
   resourceId: string | null;
-  payload: Record<string, unknown> | null;
+  payload: Record<string, unknown> | any | null;
   ipAddress: string | null;
-  createdAt: string;
+  createdAt: string | Date;
   user?: AuditLogUserSummaryDto | null;
 }

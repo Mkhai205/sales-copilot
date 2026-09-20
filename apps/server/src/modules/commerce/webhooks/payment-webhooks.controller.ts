@@ -104,8 +104,8 @@ export class PaymentWebhooksController {
         new Date().toISOString()
       ).toString();
 
-      // Native BullMQ deduplication: jobId = `${gateway}:${txId}`
-      const jobId = `${gateway}:${txId}`;
+      // Native BullMQ deduplication: jobId = `${workspaceId}:${gateway}:${txId}`
+      const jobId = `${workspaceId}:${gateway}:${txId}`;
 
       try {
         await this.reconciliationQueue.add(

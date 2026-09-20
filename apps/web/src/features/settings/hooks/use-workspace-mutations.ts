@@ -8,10 +8,11 @@ import type {
   UserWorkspaceDto,
 } from '@sales-copilot/shared-contracts';
 import { workspacesApi } from '../api/workspaces';
+import { workspaceKeys } from '@/lib/query-keys';
 
 export function useCurrentWorkspaceDetails(workspaceId?: string) {
   return useQuery<WorkspaceDto>({
-    queryKey: ['workspaces', 'current', workspaceId],
+    queryKey: workspaceKeys.current(workspaceId),
     queryFn: async () => {
       if (!workspaceId) {
         throw new Error('Workspace ID is required');
@@ -37,16 +38,16 @@ export function useUpdateWorkspace(workspaceId?: string) {
     },
     onSuccess: (updatedWorkspace: WorkspaceDto) => {
       // 1. Update current workspace query data
-      queryClient.setQueryData(['workspaces', 'current', workspaceId], updatedWorkspace);
+      queryClient.setQueryData(workspaceKeys.current(workspaceId), updatedWorkspace);
 
       // 2. Update list in 'workspaces' query
-      queryClient.setQueryData<UserWorkspaceDto[]>(['workspaces'], old => {
+      queryClient.setQueryData<UserWorkspaceDto[]>(workspaceKeys.all, old => {
         if (!old) return old;
         return old.map(ws => (ws.id === updatedWorkspace.id ? { ...ws, ...updatedWorkspace } : ws));
       });
 
       // 3. Invalidate to ensure freshness
-      queryClient.invalidateQueries({ queryKey: ['workspaces'] });
+      queryClient.invalidateQueries({ queryKey: workspaceKeys.all });
 
       toast.success('Workspace settings updated successfully');
     },

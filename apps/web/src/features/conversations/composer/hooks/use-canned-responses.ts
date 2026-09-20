@@ -3,6 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { cannedResponsesApi, useWorkspaces } from '@/features/settings';
 import type { CannedResponseDto } from '@sales-copilot/shared-contracts';
+import { cannedResponseKeys } from '@/lib/query-keys';
 
 export interface UseCannedResponsesOptions {
   workspaceId?: string;
@@ -24,7 +25,7 @@ export function useCannedResponses(options?: UseCannedResponsesOptions) {
   const isQueryEnabled = Boolean(enabled && resolvedWorkspaceId);
 
   return useQuery<CannedResponseDto[]>({
-    queryKey: ['canned-responses', resolvedWorkspaceId, search || ''],
+    queryKey: cannedResponseKeys.list(resolvedWorkspaceId, search || ''),
     queryFn: async () => {
       if (!resolvedWorkspaceId) {
         throw new Error('Workspace ID is required to fetch canned responses');

@@ -1,13 +1,14 @@
 'use client';
 
 import * as React from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { normalizeVietnameseText } from '@sales-copilot/shared-contracts';
 import {
   fetchProvinces,
   fetchDistricts,
   fetchWards,
   type DivisionItem,
-} from '../lib/vietnam-address';
+} from '../lib/address-parser';
 import {
   Select,
   SelectContent,
@@ -43,20 +44,11 @@ export function AddressCascader({
   onChange,
   disabled = false,
 }: AddressCascaderProps) {
-  const [provinces, setProvinces] = React.useState<DivisionItem[]>([]);
-  const [districts, setDistricts] = React.useState<DivisionItem[]>([]);
-  const [wards, setWards] = React.useState<DivisionItem[]>([]);
-
-  // Load provinces on mount
-  React.useEffect(() => {
-    let active = true;
-    fetchProvinces().then(res => {
-      if (active) setProvinces(res);
-    });
-    return () => {
-      active = false;
-    };
-  }, []);
+  const { data: provinces = [] } = useQuery({
+    queryKey: ['geo-provinces'],
+    queryFn: fetchProvinces,
+    staleTime: Infinity,
+  });
 
   // 1. Resolve active Province object
   const currentProvince = React.useMemo<DivisionItem | undefined>(() => {
@@ -66,20 +58,13 @@ export function AddressCascader({
     );
   }, [province, provinces]);
 
-  // Load districts when active province changes
-  React.useEffect(() => {
-    let active = true;
-    if (currentProvince?.name) {
-      fetchDistricts(currentProvince.name).then(res => {
-        if (active) setDistricts(res);
-      });
-    } else {
-      setDistricts([]);
-    }
-    return () => {
-      active = false;
-    };
-  }, [currentProvince]);
+  const { data: districts = [] } = useQuery({
+    queryKey: ['geo-districts', currentProvince?.name],
+    queryFn: () =>
+      currentProvince?.name ? fetchDistricts(currentProvince.name) : Promise.resolve([]),
+    enabled: !!currentProvince?.name,
+    staleTime: Infinity,
+  });
 
   // 2. Resolve active District object
   const currentDistrict = React.useMemo<DivisionItem | undefined>(() => {
@@ -87,20 +72,12 @@ export function AddressCascader({
     return districts.find(d => d.name === district || matchUnit(d.name, district));
   }, [district, districts, currentProvince]);
 
-  // Load wards when active district changes
-  React.useEffect(() => {
-    let active = true;
-    if (currentDistrict?.name) {
-      fetchWards(currentDistrict.name).then(res => {
-        if (active) setWards(res);
-      });
-    } else {
-      setWards([]);
-    }
-    return () => {
-      active = false;
-    };
-  }, [currentDistrict]);
+  const { data: wards = [] } = useQuery({
+    queryKey: ['geo-wards', currentDistrict?.name],
+    queryFn: () => (currentDistrict?.name ? fetchWards(currentDistrict.name) : Promise.resolve([])),
+    enabled: !!currentDistrict?.name,
+    staleTime: Infinity,
+  });
 
   // 3. Resolve active Ward object
   const currentWard = React.useMemo<DivisionItem | undefined>(() => {

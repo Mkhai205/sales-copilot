@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { conversationsApi } from '../api/conversations';
 import type { ConversationResponseDto } from '@sales-copilot/shared-contracts';
 import { useWorkspaces } from '@/features/settings';
+import { conversationKeys } from '@/lib/query-keys';
 
 export interface UseConversationOptions {
   conversationId?: string | null;
@@ -45,7 +46,7 @@ export function useConversation(
   const isQueryEnabled = Boolean(enabled && resolvedWorkspaceId && conversationId);
 
   const query = useQuery({
-    queryKey: ['conversation', resolvedWorkspaceId, conversationId],
+    queryKey: conversationKeys.detail(resolvedWorkspaceId, conversationId ?? undefined),
     queryFn: async () => {
       if (!resolvedWorkspaceId || !conversationId) {
         throw new Error('Workspace ID and Conversation ID are required');

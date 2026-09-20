@@ -8,6 +8,7 @@ import type {
   ConversationResponseDto,
 } from '@sales-copilot/shared-contracts';
 import { useWorkspaces } from '@/features/settings';
+import { conversationKeys } from '@/lib/query-keys';
 
 interface UseConversationsOptions {
   workspaceSlug?: string;
@@ -35,7 +36,7 @@ export function useConversations({
   const isQueryEnabled = Boolean(enabled && resolvedWorkspaceId);
 
   const query = useInfiniteQuery({
-    queryKey: ['conversations', resolvedWorkspaceId, filters, limit],
+    queryKey: conversationKeys.list(resolvedWorkspaceId, filters, limit),
     queryFn: async ({ pageParam = 1 }) => {
       if (!resolvedWorkspaceId) {
         throw new Error('Workspace ID is required to fetch conversations');

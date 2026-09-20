@@ -612,6 +612,7 @@ model Order {
 
   status            OrderStatus       @default(DRAFT)
   paymentStatus     PaymentStatus     @default(UNPAID)
+  paymentMethod     PaymentMethod     @default(COD)
   fulfillmentStatus FulfillmentStatus @default(UNFULFILLED)
 
   subtotal       Decimal      @db.Decimal(15, 2)
@@ -660,6 +661,7 @@ model Order {
   @@unique([workspaceId, orderNumber])
   @@index([workspaceId, status])
   @@index([workspaceId, paymentStatus])
+  @@index([workspaceId, paymentMethod])
   @@index([workspaceId, contactId])
   @@index([workspaceId, conversationId])
   @@index([workspaceId, createdAt])

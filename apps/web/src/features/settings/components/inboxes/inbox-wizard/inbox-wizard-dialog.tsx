@@ -20,6 +20,7 @@ import { type ChannelConfigState, StepChannelConfig } from './step-channel-confi
 import { StepMembersReview } from './step-members-review';
 import { useCreateInbox } from '../../../hooks/use-inboxes';
 import { facebookApi } from '../../../api/facebook';
+import { inboxKeys } from '@/lib/query-keys';
 
 interface InboxWizardDialogProps {
   open: boolean;
@@ -117,7 +118,7 @@ export function InboxWizardDialog({ open, onOpenChange, workspaceId }: InboxWiza
           },
           config.facebookSessionId,
         );
-        queryClient.invalidateQueries({ queryKey: ['workspaces', workspaceId, 'inboxes'] });
+        queryClient.invalidateQueries({ queryKey: inboxKeys.list(workspaceId) });
         toast.success('Đã kết nối Facebook Page thành công');
         onOpenChange(false);
       } catch (err: any) {

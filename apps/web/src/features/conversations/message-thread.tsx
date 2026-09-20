@@ -58,6 +58,7 @@ import { conversationsApi } from './api/conversations';
 import { updateConversationInList } from '@/lib/socket/cache-helpers';
 import { useConversation } from './hooks/use-conversation';
 import { useMessages } from './hooks/use-messages';
+import { useResetUnreadMutation } from './hooks/use-conversation-mutations';
 import { useWorkspaces } from '@/features/settings';
 import { MessageThreadHeader } from './message-thread-header';
 import { TypingIndicator } from './typing-indicator';
@@ -788,7 +789,7 @@ export function MessageThread({
     (workspaceSlug ? workspaces?.find(w => w.slug === workspaceSlug)?.id : undefined) ||
     workspaces?.[0]?.id;
 
-  const queryClient = useQueryClient();
+  const resetUnreadMutation = useResetUnreadMutation();
   const unreadCount = conversation?.unreadMessagesCount ?? 0;
 
   // Mark conversation as read on view/open (BR-4.3)
@@ -797,29 +798,8 @@ export function MessageThread({
       return;
     }
 
-    // Optimistically zero unread count in both detail and list caches
-    queryClient.setQueriesData<ConversationResponseDto>(
-      {
-        predicate: query =>
-          query.queryKey[0] === 'conversation' && query.queryKey.includes(conversationId),
-      },
-      old => (old ? { ...old, unreadMessagesCount: 0 } : old),
-    );
-
-    queryClient.setQueriesData<InfiniteData<ApiResponse<ConversationResponseDto[]>>>(
-      { queryKey: ['conversations'] },
-      old =>
-        updateConversationInList(old, conversationId, prev => ({
-          ...prev,
-          unreadMessagesCount: 0,
-        })),
-    );
-
-    // Call backend API to persist resetUnread in database
-    conversationsApi.resetUnread(activeWorkspaceId, conversationId).catch(err => {
-      console.error('Failed to reset unread count on view:', err);
-    });
-  }, [conversationId, activeWorkspaceId, unreadCount, queryClient]);
+    resetUnreadMutation.mutate({ workspaceId: activeWorkspaceId, conversationId });
+  }, [conversationId, activeWorkspaceId, unreadCount, resetUnreadMutation]);
 
   const isLoading = isConversationLoading || isMessagesLoading;
   const contact = conversation?.contact;

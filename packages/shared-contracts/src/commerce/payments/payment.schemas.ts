@@ -5,7 +5,7 @@ export const createPaymentTransactionSchema = z.object({
   orderId: z.string().uuid('Order ID không hợp lệ'),
   paymentMethod: z.nativeEnum(PaymentMethod).default(PaymentMethod.VIETQR),
   gateway: z.nativeEnum(PaymentGateway).default(PaymentGateway.MANUAL),
-  amount: z.coerce.number().positive('Số tiền phải lớn hơn 0'),
+  amount: z.number().positive('Số tiền phải lớn hơn 0'),
   currency: z.string().default('VND'),
   status: z.nativeEnum(PaymentTransactionStatus).default(PaymentTransactionStatus.PENDING),
   transactionCode: z.string().trim().optional().nullable(),

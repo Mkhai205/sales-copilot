@@ -538,7 +538,12 @@ export class ContactsService {
               : [baseConv, mergeeConv];
 
           await tx.conversation.update({
-            where: { id: older.id },
+            where: {
+              workspaceId_id: {
+                workspaceId,
+                id: older.id,
+              },
+            },
             data: {
               status: ConversationStatus.RESOLVED,
               unreadMessagesCount: 0,

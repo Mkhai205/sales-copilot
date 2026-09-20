@@ -16,7 +16,6 @@ import {
 } from '@sales-copilot/shared-contracts';
 import { PrismaService } from '../../../infrastructure/database';
 import { mapConversationToDto } from './conversations.mapper';
-import { mapLabelToDto } from '../labels/labels.mapper';
 
 /**
  * Standard Conversation includes for full DTO reconstruction.
@@ -831,7 +830,7 @@ export class ConversationsService {
       orderBy: { label: { title: 'asc' } },
     });
 
-    return junctionList.map(j => mapLabelToDto(j.label));
+    return junctionList.map(j => j.label);
   }
 
   /**

@@ -10,10 +10,11 @@ import type {
   UpdateInboxDto,
 } from '@sales-copilot/shared-contracts';
 import { inboxesApi } from '../api/inboxes';
+import { inboxKeys } from '@/lib/query-keys';
 
 export function useInboxes(workspaceId?: string) {
   return useQuery<InboxDto[]>({
-    queryKey: ['workspaces', workspaceId, 'inboxes'],
+    queryKey: inboxKeys.list(workspaceId),
     queryFn: async () => {
       if (!workspaceId) {
         throw new Error('Workspace ID is required');
@@ -30,7 +31,7 @@ export function useInbox(workspaceId?: string, inboxId?: string) {
   const queryClient = useQueryClient();
 
   return useQuery<InboxDetailDto>({
-    queryKey: ['workspaces', workspaceId, 'inboxes', inboxId],
+    queryKey: inboxKeys.detail(workspaceId, inboxId),
     queryFn: async () => {
       if (!workspaceId || !inboxId) {
         throw new Error('Workspace ID and Inbox ID are required');
@@ -39,7 +40,7 @@ export function useInbox(workspaceId?: string, inboxId?: string) {
       return res.data;
     },
     initialData: () => {
-      const list = queryClient.getQueryData<InboxDto[]>(['workspaces', workspaceId, 'inboxes']);
+      const list = queryClient.getQueryData<InboxDto[]>(inboxKeys.list(workspaceId));
       const match = list?.find(i => i.id === inboxId);
       return match ? (match as unknown as InboxDetailDto) : undefined;
     },
@@ -81,13 +82,13 @@ export function useCreateInbox(workspaceId?: string) {
       return newInbox;
     },
     onSuccess: newInbox => {
-      queryClient.setQueryData<InboxDto[]>(['workspaces', workspaceId, 'inboxes'], old => {
+      queryClient.setQueryData<InboxDto[]>(inboxKeys.list(workspaceId), old => {
         if (!old) return [newInbox as unknown as InboxDto];
         if (old.some(i => i.id === newInbox.id)) return old;
         return [newInbox as unknown as InboxDto, ...old];
       });
       queryClient.invalidateQueries({
-        queryKey: ['workspaces', workspaceId, 'inboxes'],
+        queryKey: inboxKeys.list(workspaceId),
       });
       toast.success('Đã tạo hộp thư thành công');
     },
@@ -117,20 +118,20 @@ export function useUpdateInbox(workspaceId?: string) {
     },
     onSuccess: (updatedInbox, variables) => {
       // 1. Update list cache safely (exact match only, never fuzzy-match detail query)
-      queryClient.setQueryData<InboxDto[]>(['workspaces', workspaceId, 'inboxes'], old => {
+      queryClient.setQueryData<InboxDto[]>(inboxKeys.list(workspaceId), old => {
         if (!old || !Array.isArray(old)) return old;
         return old.map(i => (i.id === updatedInbox.id ? (updatedInbox as unknown as InboxDto) : i));
       });
 
       // 2. Update detail cache safely
       queryClient.setQueryData<InboxDetailDto>(
-        ['workspaces', workspaceId, 'inboxes', updatedInbox.id],
+        inboxKeys.detail(workspaceId, updatedInbox.id),
         old => (old ? { ...old, ...updatedInbox } : (updatedInbox as unknown as InboxDetailDto)),
       );
 
       // 3. Invalidate to refetch fresh data
       queryClient.invalidateQueries({
-        queryKey: ['workspaces', workspaceId, 'inboxes'],
+        queryKey: inboxKeys.list(workspaceId),
       });
 
       if (!variables.silent) {
@@ -163,16 +164,16 @@ export function useDeleteInbox(workspaceId?: string) {
     },
     onSuccess: ({ inboxId }, variables) => {
       // Exact list update
-      queryClient.setQueryData<InboxDto[]>(['workspaces', workspaceId, 'inboxes'], old => {
+      queryClient.setQueryData<InboxDto[]>(inboxKeys.list(workspaceId), old => {
         if (!old || !Array.isArray(old)) return old;
         return old.filter(i => i.id !== inboxId);
       });
       // Remove detail query
       queryClient.removeQueries({
-        queryKey: ['workspaces', workspaceId, 'inboxes', inboxId],
+        queryKey: inboxKeys.detail(workspaceId, inboxId),
       });
       queryClient.invalidateQueries({
-        queryKey: ['workspaces', workspaceId, 'inboxes'],
+        queryKey: inboxKeys.list(workspaceId),
       });
 
       const silent = typeof variables === 'object' && variables.silent;
@@ -189,7 +190,7 @@ export function useDeleteInbox(workspaceId?: string) {
 
 export function useInboxMembers(workspaceId?: string, inboxId?: string) {
   return useQuery<InboxMemberDto[]>({
-    queryKey: ['workspaces', workspaceId, 'inboxes', inboxId, 'members'],
+    queryKey: inboxKeys.members(workspaceId, inboxId),
     queryFn: async () => {
       if (!workspaceId || !inboxId) {
         throw new Error('Workspace ID and Inbox ID are required');
@@ -214,25 +215,21 @@ export function useAddInboxMember(workspaceId?: string, inboxId?: string) {
       return res.data;
     },
     onSuccess: newMember => {
-      queryClient.setQueryData<InboxMemberDto[]>(
-        ['workspaces', workspaceId, 'inboxes', inboxId, 'members'],
-        old => {
-          if (!old || !Array.isArray(old)) return [newMember];
-          if (old.some(m => m.userId === newMember.userId)) return old;
-          return [...old, newMember];
-        },
+      queryClient.setQueryData<InboxMemberDto[]>(inboxKeys.members(workspaceId, inboxId), old => {
+        if (!old || !Array.isArray(old)) return [newMember];
+        if (old.some(m => m.userId === newMember.userId)) return old;
+        return [...old, newMember];
+      });
+      queryClient.setQueryData<InboxDetailDto>(inboxKeys.detail(workspaceId, inboxId), old =>
+        old ? { ...old, memberCount: (old.memberCount ?? 0) + 1 } : old,
       );
-      queryClient.setQueryData<InboxDetailDto>(
-        ['workspaces', workspaceId, 'inboxes', inboxId],
-        old => (old ? { ...old, memberCount: (old.memberCount ?? 0) + 1 } : old),
-      );
-      queryClient.setQueryData<InboxDto[]>(['workspaces', workspaceId, 'inboxes'], old =>
+      queryClient.setQueryData<InboxDto[]>(inboxKeys.list(workspaceId), old =>
         old && Array.isArray(old)
           ? old.map(i => (i.id === inboxId ? { ...i, memberCount: (i.memberCount ?? 0) + 1 } : i))
           : old,
       );
       queryClient.invalidateQueries({
-        queryKey: ['workspaces', workspaceId, 'inboxes'],
+        queryKey: inboxKeys.list(workspaceId),
       });
       toast.success('Đã thêm nhân viên vào hộp thư');
     },
@@ -254,18 +251,14 @@ export function useRemoveInboxMember(workspaceId?: string, inboxId?: string) {
       return { userId, success: res.success };
     },
     onSuccess: ({ userId }) => {
-      queryClient.setQueryData<InboxMemberDto[]>(
-        ['workspaces', workspaceId, 'inboxes', inboxId, 'members'],
-        old => {
-          if (!old || !Array.isArray(old)) return old;
-          return old.filter(m => m.userId !== userId);
-        },
+      queryClient.setQueryData<InboxMemberDto[]>(inboxKeys.members(workspaceId, inboxId), old => {
+        if (!old || !Array.isArray(old)) return old;
+        return old.filter(m => m.userId !== userId);
+      });
+      queryClient.setQueryData<InboxDetailDto>(inboxKeys.detail(workspaceId, inboxId), old =>
+        old ? { ...old, memberCount: Math.max(0, (old.memberCount ?? 1) - 1) } : old,
       );
-      queryClient.setQueryData<InboxDetailDto>(
-        ['workspaces', workspaceId, 'inboxes', inboxId],
-        old => (old ? { ...old, memberCount: Math.max(0, (old.memberCount ?? 1) - 1) } : old),
-      );
-      queryClient.setQueryData<InboxDto[]>(['workspaces', workspaceId, 'inboxes'], old =>
+      queryClient.setQueryData<InboxDto[]>(inboxKeys.list(workspaceId), old =>
         old && Array.isArray(old)
           ? old.map(i =>
               i.id === inboxId ? { ...i, memberCount: Math.max(0, (i.memberCount ?? 1) - 1) } : i,
@@ -273,7 +266,7 @@ export function useRemoveInboxMember(workspaceId?: string, inboxId?: string) {
           : old,
       );
       queryClient.invalidateQueries({
-        queryKey: ['workspaces', workspaceId, 'inboxes'],
+        queryKey: inboxKeys.list(workspaceId),
       });
       toast.success('Đã xóa nhân viên khỏi hộp thư');
     },

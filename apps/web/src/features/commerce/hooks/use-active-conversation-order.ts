@@ -4,6 +4,7 @@ import * as React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { OrderStatus, type OrderResponseDto } from '@sales-copilot/shared-contracts';
 import { commerceApi } from '../api/commerce-client';
+import { commerceKeys } from '@/lib/query-keys';
 
 export function useActiveConversationOrder({
   workspaceId,
@@ -15,7 +16,7 @@ export function useActiveConversationOrder({
   contactId?: string;
 }) {
   const query = useQuery({
-    queryKey: ['active-conversation-order', workspaceId, conversationId, contactId],
+    queryKey: commerceKeys.activeOrder(workspaceId, conversationId, contactId),
     queryFn: async () => {
       if (!workspaceId) throw new Error('Workspace ID is required');
 

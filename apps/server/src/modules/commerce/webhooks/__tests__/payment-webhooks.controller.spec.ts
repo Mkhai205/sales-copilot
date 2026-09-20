@@ -196,7 +196,7 @@ describe('PaymentWebhooks (SePay & Casso Webhook Controller & Guard)', () => {
       expect(enqueuedJobs.length).toBe(1);
       const job = enqueuedJobs[0];
       expect(job.name).toBe('reconcile');
-      expect(job.opts.jobId).toBe('sepay:92704');
+      expect(job.opts.jobId).toBe(`${wsId}:sepay:92704`);
       expect(job.data.workspaceId).toBe(wsId);
       expect(job.data.gateway).toBe('sepay');
       expect(job.data.amount).toBe(450000);
@@ -237,9 +237,9 @@ describe('PaymentWebhooks (SePay & Casso Webhook Controller & Guard)', () => {
       expect(res.count).toBe(2);
 
       expect(enqueuedJobs.length).toBe(2);
-      expect(enqueuedJobs[0].opts.jobId).toBe('casso:8812');
+      expect(enqueuedJobs[0].opts.jobId).toBe(`${wsId}:casso:8812`);
       expect(enqueuedJobs[0].data.amount).toBe(250000);
-      expect(enqueuedJobs[1].opts.jobId).toBe('casso:8813');
+      expect(enqueuedJobs[1].opts.jobId).toBe(`${wsId}:casso:8813`);
       expect(enqueuedJobs[1].data.amount).toBe(300000);
     });
 

@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useParams, useRouter } from 'next/navigation';
 import { useQueryClient, type InfiniteData } from '@tanstack/react-query';
@@ -21,6 +21,7 @@ import {
   updateMessageInInfiniteData,
 } from './cache-helpers';
 import { useSocketEvent } from './use-socket';
+import { conversationKeys, commerceKeys } from '@/lib/query-keys';
 
 /**
  * Central hook that listens to all realtime WebSocket events from the backend gateway
@@ -49,7 +50,10 @@ export function useRealtimeSync(): void {
 
       if (!message || !message.conversationId) return;
 
-      // 1. Reconcile or append message to the message query cache for this conversation
+      const isCurrentActive = currentActiveConversationId === message.conversationId;
+      const isIncoming = message.senderType === SenderType.CONTACT;
+
+      // 1. Reconcile / append into message infinite query cache
       queryClient.setQueriesData<InfiniteData<ApiResponse<MessageResponseDto[]>>>(
         {
           predicate: query =>
@@ -58,10 +62,8 @@ export function useRealtimeSync(): void {
         old => reconcileOrAppendMessage(old, message),
       );
 
-      const isCurrentActive = currentActiveConversationId === message.conversationId;
-      const isIncoming = message.messageType === MessageType.INCOMING;
-
-      // If incoming message belongs to active conversation currently viewed on screen,
+      // SILENT READ RECEIPT / UNREAD AUTO-RESET:
+      // If the agent is currently viewing THIS conversation and receives an incoming message,
       // silently call resetUnread in backend to ensure DB unreadMessagesCount stays 0.
       if (isCurrentActive && isIncoming && message.workspaceId) {
         conversationsApi.resetUnread(message.workspaceId, message.conversationId).catch(() => {});
@@ -70,7 +72,7 @@ export function useRealtimeSync(): void {
       // 2. Update and bubble conversation to top in conversation lists
       let foundInList = false;
       queryClient.setQueriesData<InfiniteData<ApiResponse<ConversationResponseDto[]>>>(
-        { queryKey: ['conversations'] },
+        { queryKey: conversationKeys.all },
         old => {
           if (!old) return old;
           const { updatedData, found } = bubbleConversationToTop(
@@ -102,7 +104,7 @@ export function useRealtimeSync(): void {
 
       // If conversation wasn't found in current list cache (e.g. newly created conversation), refetch
       if (!foundInList) {
-        queryClient.invalidateQueries({ queryKey: ['conversations'] });
+        queryClient.invalidateQueries({ queryKey: conversationKeys.all });
       }
 
       // 3. Update single conversation detail query if viewed
@@ -178,7 +180,7 @@ export function useRealtimeSync(): void {
 
       // Also update lastMessage in conversation list if applicable
       queryClient.setQueriesData<InfiniteData<ApiResponse<ConversationResponseDto[]>>>(
-        { queryKey: ['conversations'] },
+        { queryKey: conversationKeys.all },
         old =>
           updateConversationInList(old, message.conversationId, prev => {
             if (prev.lastMessage?.id === message.id) {
@@ -238,7 +240,7 @@ export function useRealtimeSync(): void {
   useSocketEvent<ConversationResponseDto | { conversation: ConversationResponseDto }>(
     WsServerEvent.CONVERSATION_CREATED,
     () => {
-      queryClient.invalidateQueries({ queryKey: ['conversations'] });
+      queryClient.invalidateQueries({ queryKey: conversationKeys.all });
     },
   );
 
@@ -263,7 +265,7 @@ export function useRealtimeSync(): void {
       );
 
       queryClient.setQueriesData<InfiniteData<ApiResponse<ConversationResponseDto[]>>>(
-        { queryKey: ['conversations'] },
+        { queryKey: conversationKeys.all },
         old =>
           updateConversationInList(old, conversationId, prev => ({
             ...prev,
@@ -292,7 +294,7 @@ export function useRealtimeSync(): void {
 
     // Update list item
     queryClient.setQueriesData<InfiniteData<ApiResponse<ConversationResponseDto[]>>>(
-      { queryKey: ['conversations'] },
+      { queryKey: conversationKeys.all },
       old =>
         updateConversationInList(old, conversationId, {
           status: newStatus,
@@ -300,8 +302,8 @@ export function useRealtimeSync(): void {
     );
 
     // Invalidate conversations to preserve tab grouping (e.g. Open vs. Resolved)
-    queryClient.invalidateQueries({ queryKey: ['conversations'] });
-    queryClient.invalidateQueries({ queryKey: ['conversation-counts'] });
+    queryClient.invalidateQueries({ queryKey: conversationKeys.all });
+    queryClient.invalidateQueries({ queryKey: conversationKeys.counts() });
   };
 
   useSocketEvent(WsServerEvent.CONVERSATION_STATUS_UPDATED, handleStatusUpdate);
@@ -334,7 +336,7 @@ export function useRealtimeSync(): void {
     );
 
     queryClient.setQueriesData<InfiniteData<ApiResponse<ConversationResponseDto[]>>>(
-      { queryKey: ['conversations'] },
+      { queryKey: conversationKeys.all },
       old =>
         updateConversationInList(old, conversationId, prev => ({
           ...prev,
@@ -344,8 +346,8 @@ export function useRealtimeSync(): void {
         })),
     );
 
-    queryClient.invalidateQueries({ queryKey: ['conversations'] });
-    queryClient.invalidateQueries({ queryKey: ['conversation-counts'] });
+    queryClient.invalidateQueries({ queryKey: conversationKeys.all });
+    queryClient.invalidateQueries({ queryKey: conversationKeys.counts() });
   });
 
   // conversation.priority_updated
@@ -365,7 +367,7 @@ export function useRealtimeSync(): void {
     );
 
     queryClient.setQueriesData<InfiniteData<ApiResponse<ConversationResponseDto[]>>>(
-      { queryKey: ['conversations'] },
+      { queryKey: conversationKeys.all },
       old =>
         updateConversationInList(old, conversationId, {
           priority,
@@ -390,7 +392,7 @@ export function useRealtimeSync(): void {
     );
 
     queryClient.setQueriesData<InfiniteData<ApiResponse<ConversationResponseDto[]>>>(
-      { queryKey: ['conversations'] },
+      { queryKey: conversationKeys.all },
       old =>
         updateConversationInList(old, conversationId, {
           labels,
@@ -412,20 +414,23 @@ export function useRealtimeSync(): void {
     if (!contact || !contact.id) return;
 
     // Update contact in single conversation cache
-    queryClient.setQueriesData<ConversationResponseDto>({ queryKey: ['conversation'] }, old => {
-      if (!old || old.contactId !== contact.id) return old;
-      return {
-        ...old,
-        contact: {
-          ...old.contact,
-          ...contact,
-        },
-      };
-    });
+    queryClient.setQueriesData<ConversationResponseDto>(
+      { queryKey: conversationKeys.detail() },
+      old => {
+        if (!old || old.contactId !== contact.id) return old;
+        return {
+          ...old,
+          contact: {
+            ...old.contact,
+            ...contact,
+          },
+        };
+      },
+    );
 
     // Update contact in conversation list
     queryClient.setQueriesData<InfiniteData<ApiResponse<ConversationResponseDto[]>>>(
-      { queryKey: ['conversations'] },
+      { queryKey: conversationKeys.all },
       old => {
         if (!old || !old.pages) return old;
         return {
@@ -453,21 +458,15 @@ export function useRealtimeSync(): void {
 
   const handleOrderEvent = (payload: any) => {
     const order = payload?.order || payload;
-    const conversationId = order?.conversationId;
-    const contactId = order?.contactId;
 
-    queryClient.invalidateQueries({ queryKey: ['commerce-orders'] });
-    queryClient.invalidateQueries({ queryKey: ['commerce-orders'] });
-    queryClient.invalidateQueries({ queryKey: ['active-conversation-order'] });
-    if (conversationId) {
-      queryClient.invalidateQueries({
-        queryKey: ['active-conversation-order', conversationId],
-      });
-    }
-    if (contactId) {
-      queryClient.invalidateQueries({
-        queryKey: ['active-conversation-order', contactId],
-      });
+    queryClient.invalidateQueries({ queryKey: commerceKeys.orders() });
+    queryClient.invalidateQueries({ queryKey: commerceKeys.activeOrder() });
+    queryClient.invalidateQueries({ queryKey: commerceKeys.products() });
+    queryClient.invalidateQueries({ queryKey: commerceKeys.inventoryVariants() });
+    queryClient.invalidateQueries({ queryKey: commerceKeys.inventorySummary() });
+    queryClient.invalidateQueries({ queryKey: commerceKeys.inventoryTransactions() });
+    if (order?.id) {
+      queryClient.invalidateQueries({ queryKey: commerceKeys.order() });
     }
   };
 
@@ -479,7 +478,9 @@ export function useRealtimeSync(): void {
   useSocketEvent(WsServerEvent.ORDER_CANCELLED, handleOrderEvent);
 
   useSocketEvent(WsServerEvent.INVENTORY_UPDATED, () => {
-    queryClient.invalidateQueries({ queryKey: ['commerce-products'] });
-    queryClient.invalidateQueries({ queryKey: ['commerce-products'] });
+    queryClient.invalidateQueries({ queryKey: commerceKeys.products() });
+    queryClient.invalidateQueries({ queryKey: commerceKeys.inventoryVariants() });
+    queryClient.invalidateQueries({ queryKey: commerceKeys.inventorySummary() });
+    queryClient.invalidateQueries({ queryKey: commerceKeys.inventoryTransactions() });
   });
 }

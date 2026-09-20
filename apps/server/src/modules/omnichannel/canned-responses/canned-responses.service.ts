@@ -13,7 +13,6 @@ import type {
   UpdateCannedResponseDto,
 } from '@sales-copilot/shared-contracts';
 import { PrismaService } from '../../../infrastructure/database';
-import { mapCannedResponseToDto } from './canned-responses.mapper';
 
 /**
  * Normalizes a canned response shortcode:
@@ -79,18 +78,16 @@ export class CannedResponsesService {
         },
       });
 
-      const responseDto = mapCannedResponseToDto(created);
-
       this.eventEmitter.emit('canned_response.created', {
         workspaceId,
-        cannedResponse: responseDto,
+        cannedResponse: created,
       });
 
       this.logger.log(
-        `Created canned response '/${responseDto.shortCode}' (${responseDto.id}) in workspace '${workspaceId}'`,
+        `Created canned response '/${created.shortCode}' (${created.id}) in workspace '${workspaceId}'`,
       );
 
-      return responseDto;
+      return created;
     } catch (err: any) {
       if (err?.code === 'P2002') {
         throw new ConflictException({
@@ -137,7 +134,7 @@ export class CannedResponsesService {
       });
     }
 
-    return items.map(mapCannedResponseToDto);
+    return items;
   }
 
   /**
@@ -156,7 +153,7 @@ export class CannedResponsesService {
       });
     }
 
-    return mapCannedResponseToDto(found);
+    return found;
   }
 
   /**
@@ -226,18 +223,16 @@ export class CannedResponsesService {
         data: updateData,
       });
 
-      const responseDto = mapCannedResponseToDto(updated);
-
       this.eventEmitter.emit('canned_response.updated', {
         workspaceId,
-        cannedResponse: responseDto,
+        cannedResponse: updated,
       });
 
       this.logger.log(
-        `Updated canned response '/${responseDto.shortCode}' (${responseDto.id}) in workspace '${workspaceId}'`,
+        `Updated canned response '/${updated.shortCode}' (${updated.id}) in workspace '${workspaceId}'`,
       );
 
-      return responseDto;
+      return updated;
     } catch (err: any) {
       if (err?.code === 'P2002') {
         throw new ConflictException({

@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto';
 import {
   BadRequestException,
   ForbiddenException,
@@ -210,11 +211,30 @@ export class MessagesService {
       }
     }
 
-    // 6. Execute Message Creation + Attachments + Conversation Side-effects
+    // 6. Pre-upload files to S3/MinIO outside of the database transaction to prevent pool starvation
+    const preallocatedMessageId = randomUUID();
+    const uploadedAttachments: Array<{
+      storageKey: string;
+      validated: any;
+    }> = [];
+
+    if (hasFiles && files) {
+      for (const file of files) {
+        const uploaded = await this.attachmentsService.uploadFileOnly(
+          workspaceId,
+          preallocatedMessageId,
+          file,
+        );
+        uploadedAttachments.push(uploaded);
+      }
+    }
+
+    // 7. Execute Message Creation + Attachments + Conversation Side-effects in DB transaction
     const executeInTransaction = async (trx: any) => {
-      // 6a. Insert Message record
+      // 7a. Insert Message record
       const message = await trx.message.create({
         data: {
+          id: preallocatedMessageId,
           conversationId,
           workspaceId,
           senderType,
@@ -232,14 +252,19 @@ export class MessagesService {
         },
       });
 
-      // 6b. Process Uploaded Files
-      if (hasFiles && files) {
-        for (const file of files) {
-          await this.attachmentsService.uploadAndCreate(workspaceId, message.id, file, trx);
+      // 7b. Insert Attachment records for pre-uploaded files
+      if (uploadedAttachments.length > 0) {
+        for (const uploaded of uploadedAttachments) {
+          await this.attachmentsService.createAttachmentRecord(
+            message.id,
+            uploaded.storageKey,
+            uploaded.validated,
+            trx,
+          );
         }
       }
 
-      // 6c. Process External Attachments (if provided in DTO)
+      // 7c. Process External Attachments (if provided in DTO)
       if (hasExternalAttachments && dto.attachments) {
         for (const att of dto.attachments) {
           await this.attachmentsService.createFromExternalUrl(
@@ -257,7 +282,7 @@ export class MessagesService {
         }
       }
 
-      // 6d. Update Conversation Side-effects
+      // 7d. Update Conversation Side-effects
       const now = new Date();
       const conversationUpdate: Record<string, unknown> = {
         lastActivityAt: now,
@@ -318,9 +343,18 @@ export class MessagesService {
       };
     };
 
-    const result = tx
-      ? await executeInTransaction(tx)
-      : await client.$transaction(executeInTransaction);
+    let result;
+    try {
+      result = tx
+        ? await executeInTransaction(tx)
+        : await client.$transaction(executeInTransaction);
+    } catch (dbError) {
+      // Clean up orphaned storage files if the database transaction failed
+      for (const uploaded of uploadedAttachments) {
+        await this.attachmentsService.deleteFromStorage(uploaded.storageKey);
+      }
+      throw dbError;
+    }
 
     // 7. Enrich with sender profile and emit domain events
     const responseDto = await this.enrichAndMapMessage(result.message, workspaceId);

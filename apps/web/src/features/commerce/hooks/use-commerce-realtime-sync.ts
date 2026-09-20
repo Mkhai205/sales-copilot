@@ -13,6 +13,7 @@ import {
 } from '@sales-copilot/shared-contracts';
 import { toast } from 'sonner';
 import { useSocketEvent } from '@/lib/socket/use-socket';
+import { commerceKeys, conversationKeys } from '@/lib/query-keys';
 
 export interface UseCommerceRealtimeSyncOptions {
   workspaceId?: string;
@@ -34,21 +35,27 @@ export function useCommerceRealtimeSync({
   const invalidateCommerceQueries = React.useCallback(
     (orderId?: string) => {
       if (workspaceId) {
-        queryClient.invalidateQueries({ queryKey: ['commerce-orders', workspaceId] });
-        queryClient.invalidateQueries({ queryKey: ['commerce-orders', workspaceId] });
-        queryClient.invalidateQueries({ queryKey: ['active-conversation-order', workspaceId] });
-        queryClient.invalidateQueries({ queryKey: ['commerce-products', workspaceId] });
-        queryClient.invalidateQueries({ queryKey: ['commerce-products', workspaceId] });
+        queryClient.invalidateQueries({ queryKey: commerceKeys.orders(workspaceId) });
+        queryClient.invalidateQueries({ queryKey: commerceKeys.activeOrder(workspaceId) });
+        queryClient.invalidateQueries({ queryKey: commerceKeys.products(workspaceId) });
+        queryClient.invalidateQueries({ queryKey: commerceKeys.inventoryVariants(workspaceId) });
+        queryClient.invalidateQueries({ queryKey: commerceKeys.inventorySummary(workspaceId) });
+        queryClient.invalidateQueries({
+          queryKey: commerceKeys.inventoryTransactions(workspaceId),
+        });
       }
 
       if (orderId && workspaceId) {
-        queryClient.invalidateQueries({ queryKey: ['commerce-order', workspaceId, orderId] });
-        queryClient.invalidateQueries({ queryKey: ['commerce-order', workspaceId, orderId] });
+        queryClient.invalidateQueries({ queryKey: commerceKeys.order(workspaceId, orderId) });
       }
 
       if (conversationId) {
-        queryClient.invalidateQueries({ queryKey: ['messages', conversationId] });
-        queryClient.invalidateQueries({ queryKey: ['active-order', conversationId] });
+        queryClient.invalidateQueries({
+          queryKey: workspaceId
+            ? conversationKeys.messages(workspaceId, conversationId)
+            : ['messages'],
+        });
+        queryClient.invalidateQueries({ queryKey: commerceKeys.activeOrder(workspaceId) });
       }
     },
     [queryClient, workspaceId, conversationId],

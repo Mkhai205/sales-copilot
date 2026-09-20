@@ -131,6 +131,25 @@ describe('Inbound Webhook Ingestion Pipeline (Feature F-1.3.4 & BullMQ Stub)', (
           channelEventsDb.set(where.id, updated);
           return updated;
         },
+        updateMany: async ({
+          where,
+          data,
+        }: {
+          where: { id?: string; channelId?: string };
+          data: any;
+        }) => {
+          let count = 0;
+          for (const [id, ev] of channelEventsDb.entries()) {
+            if (
+              (!where.id || ev.id === where.id) &&
+              (!where.channelId || ev.channelId === where.channelId)
+            ) {
+              channelEventsDb.set(id, { ...ev, ...data });
+              count++;
+            }
+          }
+          return { count };
+        },
       },
     };
 

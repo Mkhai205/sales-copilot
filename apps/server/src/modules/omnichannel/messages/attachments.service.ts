@@ -1,11 +1,10 @@
-﻿import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import * as path from 'node:path';
 import type { AttachmentDto } from '@sales-copilot/shared-contracts';
 import { FileType } from '@sales-copilot/shared-contracts';
 import { PrismaService } from '../../../infrastructure/database';
 import { StorageService } from '../../../infrastructure/storage/storage.service';
-import { mapAttachmentToDto } from './attachments.mapper';
 
 /**
  * Supported MIME type mapping to FileType enum.
@@ -139,21 +138,32 @@ export class AttachmentsService {
   }
 
   /**
-   * Uploads file buffer to MinIO / S3 storage and creates an Attachment record in database.
+   * Uploads file buffer to MinIO / S3 storage without touching the database.
    */
-  async uploadAndCreate(
+  async uploadFileOnly(
     workspaceId: string,
     messageId: string,
     file: UploadedFile,
-    tx?: any,
-  ): Promise<AttachmentDto> {
+  ): Promise<{
+    storageKey: string;
+    validated: ReturnType<AttachmentsService['validateFile']>;
+  }> {
     const validated = this.validateFile(file);
-
     const storageKey = this.generateStorageKey(workspaceId, messageId, validated.fileName);
 
-    // Upload buffer to S3 / MinIO
     await this.storageService.upload(file.buffer, validated.contentType, storageKey);
+    return { storageKey, validated };
+  }
 
+  /**
+   * Creates an Attachment record in database for a previously uploaded file.
+   */
+  async createAttachmentRecord(
+    messageId: string,
+    storageKey: string,
+    validated: ReturnType<AttachmentsService['validateFile']>,
+    tx?: any,
+  ): Promise<AttachmentDto> {
     const client = tx ?? this.prisma.getClient();
     const attachment = await client.attachment.create({
       data: {
@@ -172,7 +182,33 @@ export class AttachmentsService {
       `Created attachment ${attachment.id} for message ${messageId} at path ${storageKey}`,
     );
 
-    return mapAttachmentToDto(attachment, fileUrl);
+    return { ...attachment, fileUrl } as AttachmentDto;
+  }
+
+  /**
+   * Cleans up orphaned file from storage if transaction fails.
+   */
+  async deleteFromStorage(storageKey: string): Promise<void> {
+    try {
+      await this.storageService.delete(storageKey);
+    } catch (err) {
+      this.logger.warn(
+        `Failed to cleanup orphaned storage file '${storageKey}': ${(err as Error).message}`,
+      );
+    }
+  }
+
+  /**
+   * Uploads file buffer to MinIO / S3 storage and creates an Attachment record in database.
+   */
+  async uploadAndCreate(
+    workspaceId: string,
+    messageId: string,
+    file: UploadedFile,
+    tx?: any,
+  ): Promise<AttachmentDto> {
+    const { storageKey, validated } = await this.uploadFileOnly(workspaceId, messageId, file);
+    return this.createAttachmentRecord(messageId, storageKey, validated, tx);
   }
 
   /**
@@ -202,7 +238,7 @@ export class AttachmentsService {
         ? data.storagePath
         : this.storageService.getPublicUrl(data.storagePath));
 
-    return mapAttachmentToDto(attachment, fileUrl);
+    return { ...attachment, fileUrl } as AttachmentDto;
   }
 
   /**
@@ -334,7 +370,7 @@ export class AttachmentsService {
       ? attachment.storagePath
       : this.storageService.getPublicUrl(attachment.storagePath);
 
-    return mapAttachmentToDto(attachment, fileUrl);
+    return { ...attachment, fileUrl } as AttachmentDto;
   }
 
   /**
@@ -359,7 +395,7 @@ export class AttachmentsService {
       const fileUrl = att.storagePath.startsWith('http')
         ? att.storagePath
         : this.storageService.getPublicUrl(att.storagePath);
-      return mapAttachmentToDto(att, fileUrl);
+      return { ...att, fileUrl } as AttachmentDto;
     });
   }
 

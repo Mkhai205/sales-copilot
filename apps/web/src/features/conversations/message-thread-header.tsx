@@ -124,7 +124,7 @@ export function MessageThreadHeader({
         return (
           <Badge
             variant="outline"
-            className="text-[10px] text-slate-400 border-slate-500/30 bg-slate-500/10 py-0 px-1.5 font-medium"
+            className="text-[10px] text-muted-foreground border-border bg-muted/40 py-0 px-1.5 font-medium"
           >
             {'Thấp'}
           </Badge>

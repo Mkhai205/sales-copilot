@@ -4,6 +4,7 @@ import * as React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { normalizeVietnameseText } from '@sales-copilot/shared-contracts';
 import { commerceApi } from '../api/commerce-client';
+import { commerceKeys } from '@/lib/query-keys';
 
 export interface FlatProductVariant {
   variantId: string;
@@ -22,7 +23,7 @@ export interface FlatProductVariant {
 
 export function useCommerceProducts(workspaceId?: string) {
   const query = useQuery({
-    queryKey: ['commerce-products', workspaceId],
+    queryKey: commerceKeys.products(workspaceId),
     queryFn: async () => {
       if (!workspaceId) throw new Error('Workspace ID is required');
       const res = await commerceApi.listProducts(workspaceId, {

@@ -16,6 +16,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { SettingsGuard } from '../settings-guard';
 import { useWorkspaces } from '../../hooks/use-workspaces';
 import { workspacesApi } from '../../api/workspaces';
+import { workspaceKeys } from '@/lib/query-keys';
 
 interface BankSettingsViewProps {
   workspaceSlug: string;
@@ -36,7 +37,7 @@ export function BankSettingsView({ workspaceSlug }: BankSettingsViewProps) {
   });
 
   const { data: bankConfig, isLoading } = useQuery<WorkspacePaymentSettings>({
-    queryKey: ['workspace', currentWorkspace?.id, 'bank-config'],
+    queryKey: workspaceKeys.bankConfig(currentWorkspace?.id),
     queryFn: () => workspacesApi.getBankConfig(currentWorkspace!.id).then(res => res.data),
     enabled: !!currentWorkspace?.id,
     retry: false,
@@ -63,7 +64,7 @@ export function BankSettingsView({ workspaceSlug }: BankSettingsViewProps) {
     onSuccess: () => {
       toast.success('Cập nhật cấu hình ngân hàng thành công');
       queryClient.invalidateQueries({
-        queryKey: ['workspace', currentWorkspace?.id, 'bank-config'],
+        queryKey: workspaceKeys.bankConfig(currentWorkspace?.id),
       });
     },
     onError: (error: any) => {

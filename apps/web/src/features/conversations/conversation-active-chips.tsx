@@ -6,6 +6,7 @@ import { ConversationStatus, Priority } from '@sales-copilot/shared-contracts';
 import type { ConversationFilters, StatusFilter } from './hooks/use-conversation-filters';
 import { useInboxes, useLabels, useWorkspaceMembers } from '@/features/settings';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
 interface ConversationActiveChipsProps {
@@ -99,41 +100,54 @@ export function ConversationActiveChips({
       <div className="flex items-center gap-1.5 flex-wrap">
         {/* Status Chip */}
         {filters.status !== ConversationStatus.OPEN && (
-          <span className="inline-flex items-center gap-1 rounded-md bg-background px-2 py-0.5 font-medium text-foreground border border-border/60 shadow-2xs">
+          <Badge
+            variant="outline"
+            className="h-6 gap-1 rounded-md px-2 py-0 text-[11px] font-medium text-foreground border-border/60 bg-background shadow-2xs"
+          >
             <span className="text-muted-foreground">{'Trạng thái'}:</span>
             <span className="font-semibold text-primary">{getStatusLabel(filters.status)}</span>
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="icon-xs"
               onClick={() => setStatus(ConversationStatus.OPEN)}
-              className="ml-0.5 rounded-xs p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer"
+              className="size-3.5 p-0 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer ml-0.5"
               aria-label="Xóa bộ lọc trạng thái"
             >
-              <X className="size-3" />
-            </button>
-          </span>
+              <X className="size-2.5" />
+            </Button>
+          </Badge>
         )}
 
         {/* Inbox / Channel Chip */}
         {filters.inboxId && (
-          <span className="inline-flex items-center gap-1 rounded-md bg-background px-2 py-0.5 font-medium text-foreground border border-border/60 shadow-2xs">
+          <Badge
+            variant="outline"
+            className="h-6 gap-1 rounded-md px-2 py-0 text-[11px] font-medium text-foreground border-border/60 bg-background shadow-2xs"
+          >
             <span className="text-muted-foreground">{'Kênh:'}</span>
             <span className="font-semibold text-primary">
               {activeInbox ? activeInbox.name : 'Hộp thư'}
             </span>
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="icon-xs"
               onClick={() => setInbox(undefined)}
-              className="ml-0.5 rounded-xs p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer"
+              className="size-3.5 p-0 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer ml-0.5"
               aria-label="Xóa bộ lọc hộp thư"
             >
-              <X className="size-3" />
-            </button>
-          </span>
+              <X className="size-2.5" />
+            </Button>
+          </Badge>
         )}
 
         {/* Priority Chip */}
         {filters.priority && (
-          <span className="inline-flex items-center gap-1 rounded-md bg-background px-2 py-0.5 font-medium text-foreground border border-border/60 shadow-2xs">
+          <Badge
+            variant="outline"
+            className="h-6 gap-1 rounded-md px-2 py-0 text-[11px] font-medium text-foreground border-border/60 bg-background shadow-2xs"
+          >
             <span className="text-muted-foreground">{'Độ ưu tiên'}:</span>
             <span
               className={cn(
@@ -141,25 +155,30 @@ export function ConversationActiveChips({
                 filters.priority === Priority.URGENT && 'text-rose-600 dark:text-rose-400',
                 filters.priority === Priority.HIGH && 'text-amber-600 dark:text-amber-400',
                 filters.priority === Priority.MEDIUM && 'text-blue-600 dark:text-blue-400',
-                filters.priority === Priority.LOW && 'text-slate-600 dark:text-slate-400',
+                filters.priority === Priority.LOW && 'text-muted-foreground',
               )}
             >
               {getPriorityLabel(filters.priority)}
             </span>
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="icon-xs"
               onClick={() => setPriority(undefined)}
-              className="ml-0.5 rounded-xs p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer"
+              className="size-3.5 p-0 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer ml-0.5"
               aria-label="Xóa bộ lọc độ ưu tiên"
             >
-              <X className="size-3" />
-            </button>
-          </span>
+              <X className="size-2.5" />
+            </Button>
+          </Badge>
         )}
 
         {/* Label Chip */}
         {filters.labelId && (
-          <span className="inline-flex items-center gap-1 rounded-md bg-background px-2 py-0.5 font-medium text-foreground border border-border/60 shadow-2xs">
+          <Badge
+            variant="outline"
+            className="h-6 gap-1 rounded-md px-2 py-0 text-[11px] font-medium text-foreground border-border/60 bg-background shadow-2xs"
+          >
             <span className="text-muted-foreground">{'Nhãn:'}</span>
             {activeLabel && (
               <span
@@ -170,33 +189,40 @@ export function ConversationActiveChips({
             <span className="font-semibold text-primary">
               {activeLabel ? activeLabel.title : 'Nhãn'}
             </span>
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="icon-xs"
               onClick={() => setLabel(undefined)}
-              className="ml-0.5 rounded-xs p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer"
+              className="size-3.5 p-0 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer ml-0.5"
               aria-label="Xóa bộ lọc nhãn"
             >
-              <X className="size-3" />
-            </button>
-          </span>
+              <X className="size-2.5" />
+            </Button>
+          </Badge>
         )}
 
         {/* Assignee Chip */}
         {filters.assigneeId && (
-          <span className="inline-flex items-center gap-1 rounded-md bg-background px-2 py-0.5 font-medium text-foreground border border-border/60 shadow-2xs">
+          <Badge
+            variant="outline"
+            className="h-6 gap-1 rounded-md px-2 py-0 text-[11px] font-medium text-foreground border-border/60 bg-background shadow-2xs"
+          >
             <span className="text-muted-foreground">{'Phụ trách:'}</span>
             <span className="font-semibold text-primary">
               {activeMember?.user?.name || activeMember?.user?.email || 'Thành viên'}
             </span>
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="icon-xs"
               onClick={() => setAssignee(undefined)}
-              className="ml-0.5 rounded-xs p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer"
+              className="size-3.5 p-0 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer ml-0.5"
               aria-label="Xóa bộ lọc người phụ trách"
             >
-              <X className="size-3" />
-            </button>
-          </span>
+              <X className="size-2.5" />
+            </Button>
+          </Badge>
         )}
 
         {/* Clear All Button */}

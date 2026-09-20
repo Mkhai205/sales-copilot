@@ -6,7 +6,6 @@ import type {
   PaginationMeta,
 } from '@sales-copilot/shared-contracts';
 import { PrismaService } from '../../../infrastructure/database';
-import { mapAuditLogToDto } from './audit-logs.mapper';
 
 export interface CreateAuditLogParams {
   workspaceId?: string | null;
@@ -55,13 +54,11 @@ export class AuditLogService {
       },
     });
 
-    const dto = mapAuditLogToDto(created);
-
     this.logger.log(
-      `AuditLog [${dto.action}] on ${dto.resourceType}${dto.resourceId ? `:${dto.resourceId}` : ''} in workspace '${dto.workspaceId}' by actor '${dto.userId}'`,
+      `AuditLog [${created.action}] on ${created.resourceType}${created.resourceId ? `:${created.resourceId}` : ''} in workspace '${created.workspaceId}' by actor '${created.userId}'`,
     );
 
-    return dto;
+    return created as unknown as AuditLogDto;
   }
 
   /**
@@ -127,7 +124,7 @@ export class AuditLogService {
     ]);
 
     return {
-      items: items.map(mapAuditLogToDto),
+      items: items as unknown as AuditLogDto[],
       meta: {
         page,
         limit,

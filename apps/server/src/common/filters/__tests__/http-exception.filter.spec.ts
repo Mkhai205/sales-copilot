@@ -1,6 +1,7 @@
 import { ArgumentsHost, BadRequestException, HttpStatus, NotFoundException } from '@nestjs/common';
 import { z, ZodError } from 'zod';
 import { HttpExceptionFilter } from '../http-exception.filter';
+import { Prisma } from '../../../infrastructure/database';
 
 describe('HttpExceptionFilter (Global Exception Normalization)', () => {
   let filter: HttpExceptionFilter;
@@ -139,5 +140,72 @@ describe('HttpExceptionFilter (Global Exception Normalization)', () => {
     expect(responseBody.success).toBe(false);
     expect(responseBody.error.code).toBe('INTERNAL_SERVER_ERROR');
     expect(responseBody.error.message).toBe('Debug stack info');
+  });
+
+  describe('Prisma Known Request Errors', () => {
+    it('should map P2002 to 409 RESOURCE_ALREADY_EXISTS', () => {
+      const prismaError = new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
+        code: 'P2002',
+        clientVersion: '5.x',
+        meta: { target: ['workspaceId', 'email'] },
+      });
+
+      filter.catch(prismaError, mockHost);
+
+      expect(responseStatusCode).toBe(HttpStatus.CONFLICT);
+      expect(responseBody.success).toBe(false);
+      expect(responseBody.error.code).toBe('RESOURCE_ALREADY_EXISTS');
+      expect(responseBody.error.message).toContain(
+        'Dữ liệu bị trùng lặp ở trường: workspaceId, email',
+      );
+      expect(responseBody.error.details).toEqual({ target: ['workspaceId', 'email'] });
+    });
+
+    it('should map P2025 to 404 NOT_FOUND', () => {
+      const prismaError = new Prisma.PrismaClientKnownRequestError('Record not found', {
+        code: 'P2025',
+        clientVersion: '5.x',
+        meta: { cause: 'Record to update not found.' },
+      });
+
+      filter.catch(prismaError, mockHost);
+
+      expect(responseStatusCode).toBe(HttpStatus.NOT_FOUND);
+      expect(responseBody.success).toBe(false);
+      expect(responseBody.error.code).toBe('NOT_FOUND');
+      expect(responseBody.error.message).toContain('Không tìm thấy tài nguyên');
+    });
+
+    it('should map P2003 to 400 FOREIGN_KEY_VIOLATION', () => {
+      const prismaError = new Prisma.PrismaClientKnownRequestError(
+        'Foreign key constraint failed',
+        {
+          code: 'P2003',
+          clientVersion: '5.x',
+          meta: { field_name: 'contactId' },
+        },
+      );
+
+      filter.catch(prismaError, mockHost);
+
+      expect(responseStatusCode).toBe(HttpStatus.BAD_REQUEST);
+      expect(responseBody.success).toBe(false);
+      expect(responseBody.error.code).toBe('FOREIGN_KEY_VIOLATION');
+      expect(responseBody.error.message).toContain('Dữ liệu liên kết không hợp lệ');
+    });
+
+    it('should map P2024 to 503 DATABASE_TIMEOUT', () => {
+      const prismaError = new Prisma.PrismaClientKnownRequestError('Connection pool timeout', {
+        code: 'P2024',
+        clientVersion: '5.x',
+      });
+
+      filter.catch(prismaError, mockHost);
+
+      expect(responseStatusCode).toBe(HttpStatus.SERVICE_UNAVAILABLE);
+      expect(responseBody.success).toBe(false);
+      expect(responseBody.error.code).toBe('DATABASE_TIMEOUT');
+      expect(responseBody.error.message).toContain('Kết nối cơ sở dữ liệu bị quá tải');
+    });
   });
 });

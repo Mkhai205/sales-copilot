@@ -7,31 +7,9 @@ export interface DivisionItem {
   code?: string;
 }
 
-let cachedProvinces: any[] | null = null;
-let cachedDistricts: any[] | null = null;
-let cachedCommunes: any[] | null = null;
-let preloadPromise: Promise<void> | null = null;
-
-async function preloadAll() {
-  if (cachedProvinces && cachedDistricts && cachedCommunes) return;
-  if (!preloadPromise) {
-    preloadPromise = (async () => {
-      const [p, d, c] = await Promise.all([
-        (vd as any).Provinces.getAllProvince(),
-        (vd as any).Districts.getAllDistricts(),
-        (vd as any).Communes.getAllCommunes(),
-      ]);
-      cachedProvinces = p;
-      cachedDistricts = d;
-      cachedCommunes = c;
-    })();
-  }
-  await preloadPromise;
-}
-
 export async function fetchProvinces(): Promise<DivisionItem[]> {
-  await preloadAll();
-  return (cachedProvinces || []).map((p: any) => ({
+  const provinces = await (vd as any).Provinces.getAllProvince();
+  return (provinces || []).map((p: any) => ({
     id: p.idProvince,
     name: p.name,
     code: p.idProvince,
@@ -40,15 +18,14 @@ export async function fetchProvinces(): Promise<DivisionItem[]> {
 
 export async function fetchDistricts(provinceNameOrId?: string): Promise<DivisionItem[]> {
   if (!provinceNameOrId) return [];
-  await preloadAll();
-
-  const prov = (cachedProvinces || []).find(
+  const provinces = await (vd as any).Provinces.getAllProvince();
+  const prov = (provinces || []).find(
     (p: any) => p.idProvince === provinceNameOrId || p.name === provinceNameOrId,
   );
   if (!prov) return [];
 
-  const list = (cachedDistricts || []).filter((d: any) => d.idProvince === prov.idProvince);
-  return list.map((d: any) => ({
+  const districts = await (vd as any).Provinces.getDistrictsByProvinceId(prov.idProvince);
+  return (districts || []).map((d: any) => ({
     id: d.idDistrict,
     name: d.name,
   }));
@@ -56,15 +33,14 @@ export async function fetchDistricts(provinceNameOrId?: string): Promise<Divisio
 
 export async function fetchWards(districtNameOrId?: string): Promise<DivisionItem[]> {
   if (!districtNameOrId) return [];
-  await preloadAll();
-
-  const dist = (cachedDistricts || []).find(
+  const districts = await (vd as any).Districts.getAllDistricts();
+  const dist = (districts || []).find(
     (d: any) => d.idDistrict === districtNameOrId || d.name === districtNameOrId,
   );
   if (!dist) return [];
 
-  const list = (cachedCommunes || []).filter((c: any) => c.idDistrict === dist.idDistrict);
-  return list.map((c: any) => ({
+  const communes = await (vd as any).Districts.getCommunesByDistrictId(dist.idDistrict);
+  return (communes || []).map((c: any) => ({
     id: c.idCommune,
     name: c.name,
   }));
@@ -72,12 +48,14 @@ export async function fetchWards(districtNameOrId?: string): Promise<DivisionIte
 
 export async function parseAddressText(addressText: string): Promise<AddressHierarchyDto> {
   if (!addressText) return {};
-  await preloadAll();
+
+  const [provinces, districts, communes] = await Promise.all([
+    (vd as any).Provinces.getAllProvince(),
+    (vd as any).Districts.getAllDistricts(),
+    (vd as any).Communes.getAllCommunes(),
+  ]);
 
   const norm = normalizeVietnameseText(addressText);
-  const provinces = cachedProvinces || [];
-  const districts = cachedDistricts || [];
-  const communes = cachedCommunes || [];
 
   // 1. Province (search right-to-left)
   let bestProvince: any = null;
@@ -119,8 +97,8 @@ export async function parseAddressText(addressText: string): Promise<AddressHier
   let dIsFull = false;
 
   const candidateDistricts = bestProvince
-    ? districts.filter((d: any) => d.idProvince === bestProvince.idProvince)
-    : districts;
+    ? (districts as any[]).filter((d: any) => d.idProvince === bestProvince.idProvince)
+    : (districts as any[]);
 
   for (const d of candidateDistricts) {
     const dNorm = normalizeVietnameseText(d.name);
@@ -164,7 +142,8 @@ export async function parseAddressText(addressText: string): Promise<AddressHier
   }
 
   if (bestDistrict && !bestProvince) {
-    bestProvince = provinces.find((p: any) => p.idProvince === bestDistrict.idProvince) || null;
+    bestProvince =
+      (provinces as any[]).find((p: any) => p.idProvince === bestDistrict.idProvince) || null;
   }
 
   // 3. Commune/Ward
@@ -176,14 +155,18 @@ export async function parseAddressText(addressText: string): Promise<AddressHier
 
   let candidateCommunes: any[] = [];
   if (bestDistrict) {
-    candidateCommunes = communes.filter((c: any) => c.idDistrict === bestDistrict.idDistrict);
+    candidateCommunes = (communes as any[]).filter(
+      (c: any) => c.idDistrict === bestDistrict.idDistrict,
+    );
   } else if (bestProvince) {
     const provinceDistrictIds = new Set(
-      districts
+      (districts as any[])
         .filter((d: any) => d.idProvince === bestProvince.idProvince)
         .map((d: any) => d.idDistrict),
     );
-    candidateCommunes = communes.filter((c: any) => provinceDistrictIds.has(c.idDistrict));
+    candidateCommunes = (communes as any[]).filter((c: any) =>
+      provinceDistrictIds.has(c.idDistrict),
+    );
   }
 
   for (const c of candidateCommunes) {
@@ -229,10 +212,12 @@ export async function parseAddressText(addressText: string): Promise<AddressHier
   }
 
   if (!bestDistrict && bestCommune) {
-    bestDistrict = districts.find((d: any) => d.idDistrict === bestCommune.idDistrict) || null;
+    bestDistrict =
+      (districts as any[]).find((d: any) => d.idDistrict === bestCommune.idDistrict) || null;
   }
   if (bestDistrict && !bestProvince) {
-    bestProvince = provinces.find((p: any) => p.idProvince === bestDistrict.idProvince) || null;
+    bestProvince =
+      (provinces as any[]).find((p: any) => p.idProvince === bestDistrict.idProvince) || null;
   }
 
   // 4. Street address

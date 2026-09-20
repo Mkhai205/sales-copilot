@@ -18,13 +18,13 @@ export type CreateAttachmentInputDto = z.input<typeof createAttachmentInputSchem
 export interface AttachmentDto {
   id: string;
   messageId: string;
-  fileType: FileType;
+  fileType: FileType | string;
   fileName: string;
   fileSize: number;
   storagePath: string;
   contentType: string;
   fileUrl?: string;
-  createdAt: string;
+  createdAt: string | Date;
 }
 
 // ==========================================

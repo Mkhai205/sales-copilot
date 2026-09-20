@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { useWorkspaces } from '@/features/settings';
 import { contactsApi } from '../api/contacts';
 import type { ChannelIdentityDto, CreateChannelIdentityDto } from '@sales-copilot/shared-contracts';
+import { contactKeys } from '@/lib/query-keys';
 
 export interface UseContactIdentitiesOptions {
   workspaceSlug?: string;
@@ -27,7 +28,7 @@ export function useContactIdentities(
   const isEnabled = Boolean((options.enabled ?? true) && resolvedWorkspaceId && contactId);
 
   const query = useQuery({
-    queryKey: ['contact-identities', resolvedWorkspaceId, contactId],
+    queryKey: contactKeys.identities(resolvedWorkspaceId, contactId || undefined),
     queryFn: async () => {
       if (!resolvedWorkspaceId || !contactId) {
         throw new Error('Workspace ID and Contact ID are required');
@@ -66,13 +67,13 @@ export function useLinkContactIdentity(
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ['contact-identities', resolvedWorkspaceId, contactId],
+        queryKey: contactKeys.identities(resolvedWorkspaceId, contactId),
       });
       queryClient.invalidateQueries({
-        queryKey: ['contact', resolvedWorkspaceId, contactId],
+        queryKey: contactKeys.detail(resolvedWorkspaceId, contactId),
       });
       queryClient.invalidateQueries({
-        queryKey: ['contacts', resolvedWorkspaceId],
+        queryKey: contactKeys.list(resolvedWorkspaceId),
       });
       toast.success('Đã liên kết kênh thành công');
     },
@@ -103,13 +104,13 @@ export function useUnlinkContactIdentity(
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ['contact-identities', resolvedWorkspaceId, contactId],
+        queryKey: contactKeys.identities(resolvedWorkspaceId, contactId),
       });
       queryClient.invalidateQueries({
-        queryKey: ['contact', resolvedWorkspaceId, contactId],
+        queryKey: contactKeys.detail(resolvedWorkspaceId, contactId),
       });
       queryClient.invalidateQueries({
-        queryKey: ['contacts', resolvedWorkspaceId],
+        queryKey: contactKeys.list(resolvedWorkspaceId),
       });
       toast.success('Đã hủy liên kết kênh');
     },

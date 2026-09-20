@@ -11,19 +11,20 @@ import type {
   UpdateOrderDto,
 } from '@sales-copilot/shared-contracts';
 import { commerceApi } from '../api/commerce-client';
+import { commerceKeys } from '@/lib/query-keys';
 
 export function useCommerceOrders(workspaceId?: string) {
   const queryClient = useQueryClient();
 
   const invalidateOrderQueries = (orderId?: string) => {
-    queryClient.invalidateQueries({ queryKey: ['commerce-orders', workspaceId] });
-    queryClient.invalidateQueries({ queryKey: ['commerce-orders', workspaceId] });
-    queryClient.invalidateQueries({ queryKey: ['active-conversation-order', workspaceId] });
-    queryClient.invalidateQueries({ queryKey: ['commerce-products', workspaceId] });
-    queryClient.invalidateQueries({ queryKey: ['commerce-products', workspaceId] });
+    queryClient.invalidateQueries({ queryKey: commerceKeys.orders(workspaceId) });
+    queryClient.invalidateQueries({ queryKey: commerceKeys.activeOrder(workspaceId) });
+    queryClient.invalidateQueries({ queryKey: commerceKeys.products(workspaceId) });
+    queryClient.invalidateQueries({ queryKey: commerceKeys.inventoryVariants(workspaceId) });
+    queryClient.invalidateQueries({ queryKey: commerceKeys.inventorySummary(workspaceId) });
+    queryClient.invalidateQueries({ queryKey: commerceKeys.inventoryTransactions(workspaceId) });
     if (orderId) {
-      queryClient.invalidateQueries({ queryKey: ['commerce-order', workspaceId, orderId] });
-      queryClient.invalidateQueries({ queryKey: ['commerce-order', workspaceId, orderId] });
+      queryClient.invalidateQueries({ queryKey: commerceKeys.order(workspaceId, orderId) });
     }
   };
 
@@ -155,7 +156,7 @@ export const usePosOrders = useCommerceOrders;
 
 export function useCommerceOrdersList(workspaceId?: string, query?: ListOrdersQueryDto) {
   return useQuery({
-    queryKey: ['commerce-orders', workspaceId, query],
+    queryKey: commerceKeys.orders(workspaceId, query),
     queryFn: async () => {
       if (!workspaceId) throw new Error('Workspace ID is required');
       const res = await commerceApi.listOrders(workspaceId, query);
@@ -168,7 +169,7 @@ export function useCommerceOrdersList(workspaceId?: string, query?: ListOrdersQu
 
 export function useCommerceOrder(workspaceId?: string, orderId?: string) {
   return useQuery({
-    queryKey: ['commerce-order', workspaceId, orderId],
+    queryKey: commerceKeys.order(workspaceId, orderId),
     queryFn: async () => {
       if (!workspaceId || !orderId) throw new Error('Workspace ID and Order ID are required');
       const res = await commerceApi.getOrder(workspaceId, orderId);

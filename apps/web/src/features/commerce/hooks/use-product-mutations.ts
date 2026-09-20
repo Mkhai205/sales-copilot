@@ -3,6 +3,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { commerceApi } from '../api/commerce-client';
+import { commerceKeys } from '@/lib/query-keys';
 import type {
   AdjustInventoryDto,
   CreateProductDto,
@@ -14,10 +15,10 @@ export function useProductMutations(workspaceId?: string) {
 
   const invalidateCommerceQueries = () => {
     if (!workspaceId) return;
-    queryClient.invalidateQueries({ queryKey: ['commerce-products', workspaceId] });
-    queryClient.invalidateQueries({ queryKey: ['inventory-variants', workspaceId] });
-    queryClient.invalidateQueries({ queryKey: ['inventory-summary', workspaceId] });
-    queryClient.invalidateQueries({ queryKey: ['inventory-transactions', workspaceId] });
+    queryClient.invalidateQueries({ queryKey: commerceKeys.products(workspaceId) });
+    queryClient.invalidateQueries({ queryKey: commerceKeys.inventoryVariants(workspaceId) });
+    queryClient.invalidateQueries({ queryKey: commerceKeys.inventorySummary(workspaceId) });
+    queryClient.invalidateQueries({ queryKey: commerceKeys.inventoryTransactions(workspaceId) });
   };
 
   const createProductMutation = useMutation({

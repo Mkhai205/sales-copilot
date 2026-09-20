@@ -28,7 +28,6 @@ import { Public } from '../../../identity/auth';
 import { CurrentWorkspace, Roles } from '../../../identity/workspaces/decorators';
 import { RolesGuard, WorkspaceGuard } from '../../../identity/workspaces/guards';
 import type { WorkspaceContext } from '../../../identity/workspaces/types/workspace-context.type';
-import { PrismaService } from '../../../../infrastructure/database';
 import { ChannelCredentialService } from '../../../omnichannel/inboxes/channel-credential.service';
 import { WebhooksService } from '../channel-webhooks/webhooks.service';
 import { FacebookService } from './facebook.service';
@@ -57,7 +56,6 @@ export class FacebookController {
   constructor(
     private readonly facebookService: FacebookService,
     private readonly configService: ConfigService,
-    private readonly prisma: PrismaService,
     private readonly credentialService: ChannelCredentialService,
     @Inject(forwardRef(() => WebhooksService))
     private readonly webhooksService: WebhooksService,
@@ -444,7 +442,6 @@ export class FacebookController {
       return { success: true };
     }
 
-    const client = this.prisma.getClient();
     const requestId = headers['x-request-id'] || headers['x-correlation-id'];
 
     for (const entry of body.entry) {
@@ -452,12 +449,7 @@ export class FacebookController {
 
       // Find channel by providerAccountId (page_id)
       // Reference: Chatwoot ChatwootFbProvider.access_token_for(page_id)
-      const channel = await client.channel.findFirst({
-        where: {
-          channelType: 'FACEBOOK_MESSENGER',
-          providerAccountId: pageId,
-        },
-      });
+      const channel = await this.facebookService.findChannelByPageId(pageId);
 
       if (!channel) {
         this.logger.warn(
@@ -513,42 +505,17 @@ export class FacebookController {
 
             const channelSettings = (channel.settings as any) || {};
             if (channelSettings.commentGuard?.enabled === true) {
-              // Deduplicate via ChannelEvent (idempotency key: [channelId, externalEventId])
-              const existingEvent = await client.channelEvent.findUnique({
-                where: {
-                  channelId_externalEventId: {
-                    channelId: channel.id,
-                    externalEventId,
-                  },
-                },
-              });
+              const { isDuplicate, event: channelEvent } =
+                await this.facebookService.recordChannelEvent(
+                  channel.id,
+                  externalEventId,
+                  `feed_comment_${verb}`,
+                  change,
+                );
 
-              if (existingEvent) {
+              if (isDuplicate || !channelEvent) {
                 this.logger.log(
                   `Duplicate feed comment '${externalEventId}' received for channel '${channel.id}'. Skipping.`,
-                );
-                continue;
-              }
-
-              let channelEvent;
-              try {
-                channelEvent = await client.channelEvent.create({
-                  data: {
-                    channelId: channel.id,
-                    externalEventId,
-                    eventType: `feed_comment_${verb}`,
-                    payload: change as any,
-                  },
-                });
-              } catch (err: any) {
-                if (err?.code === 'P2002') {
-                  this.logger.log(
-                    `Concurrent duplicate feed comment '${externalEventId}' caught for channel '${channel.id}'. Skipping.`,
-                  );
-                  continue;
-                }
-                this.logger.error(
-                  `Failed to persist channelEvent for comment '${externalEventId}': ${err.message}`,
                 );
                 continue;
               }

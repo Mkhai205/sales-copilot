@@ -120,10 +120,23 @@ export class WorkspacesService {
     userId: string,
   ): Promise<{ id: string; role: WorkspaceRole; workspace: Workspace } | null> {
     const client = this.prisma.getClient();
-    const member = await client.workspaceMember.findUnique({
+    let member = await client.workspaceMember.findUnique({
       where: { workspaceId_userId: { workspaceId, userId } },
       include: { workspace: true },
     });
+
+    if (!member) {
+      const ws = await client.workspace.findUnique({
+        where: { slug: workspaceId },
+        select: { id: true },
+      });
+      if (ws) {
+        member = await client.workspaceMember.findUnique({
+          where: { workspaceId_userId: { workspaceId: ws.id, userId } },
+          include: { workspace: true },
+        });
+      }
+    }
 
     if (!member) return null;
 

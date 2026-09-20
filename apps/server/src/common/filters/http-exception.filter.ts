@@ -9,6 +9,7 @@ import {
 import { Request, Response } from 'express';
 import { ZodError } from 'zod';
 import type { ApiErrorResponse, ErrorCode } from '@sales-copilot/shared-contracts';
+import { Prisma } from '../../infrastructure/database';
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
@@ -38,6 +39,47 @@ export class HttpExceptionFilter implements ExceptionFilter {
         message: issue.message,
         code: issue.code,
       }));
+    } else if (exception instanceof Prisma.PrismaClientKnownRequestError) {
+      switch (exception.code) {
+        case 'P2002': {
+          statusCode = HttpStatus.CONFLICT;
+          code = 'RESOURCE_ALREADY_EXISTS';
+          const target = Array.isArray(exception.meta?.target)
+            ? (exception.meta?.target as string[]).join(', ')
+            : 'record';
+          message = `Dữ liệu bị trùng lặp ở trường: ${target}`;
+          details = { target: exception.meta?.target };
+          break;
+        }
+        case 'P2025': {
+          statusCode = HttpStatus.NOT_FOUND;
+          code = 'NOT_FOUND';
+          message = 'Không tìm thấy tài nguyên yêu cầu hoặc bản ghi đã bị xóa';
+          details = exception.meta?.cause || null;
+          break;
+        }
+        case 'P2003': {
+          statusCode = HttpStatus.BAD_REQUEST;
+          code = 'FOREIGN_KEY_VIOLATION';
+          message = 'Dữ liệu liên kết không hợp lệ hoặc không tồn tại';
+          details = { field: exception.meta?.field_name };
+          break;
+        }
+        case 'P2024': {
+          statusCode = HttpStatus.SERVICE_UNAVAILABLE;
+          code = 'DATABASE_TIMEOUT';
+          message = 'Kết nối cơ sở dữ liệu bị quá tải, vui lòng thử lại sau';
+          details = null;
+          break;
+        }
+        default: {
+          statusCode = HttpStatus.BAD_REQUEST;
+          code = 'DATABASE_ERROR';
+          message = 'Yêu cầu cơ sở dữ liệu không hợp lệ';
+          details = process.env.NODE_ENV === 'production' ? null : { prismaCode: exception.code };
+          break;
+        }
+      }
     } else if (exception instanceof HttpException) {
       statusCode = exception.getStatus();
       code = this.deriveErrorCode(exception);

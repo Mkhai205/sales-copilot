@@ -29,6 +29,7 @@ import { ChannelType } from '@sales-copilot/shared-contracts';
 import { InboxVerticalStepper } from './inbox-wizard/inbox-vertical-stepper';
 import { facebookApi, type FacebookPageInfo } from '../../api/facebook';
 import { inboxesApi } from '../../api/inboxes';
+import { inboxKeys } from '@/lib/query-keys';
 import { SettingsGuard } from '../settings-guard';
 import { useSettingsRbac } from '../../hooks/use-settings-rbac';
 import { useWorkspaceMembers } from '../../hooks/use-workspace-members';
@@ -288,7 +289,7 @@ function NewInboxPageContent({ initialWorkspaceSlug }: { initialWorkspaceSlug?: 
 
       const count = res.data.inboxes.length;
       toast.success(`Đã kết nối thành công ${count} Fanpage Facebook!`);
-      queryClient.invalidateQueries({ queryKey: ['inboxes', currentWorkspace.id] });
+      queryClient.invalidateQueries({ queryKey: inboxKeys.list(currentWorkspace.id) });
 
       const firstInbox = res.data.inboxes[0];
       setCreatedResult({
@@ -325,7 +326,7 @@ function NewInboxPageContent({ initialWorkspaceSlug }: { initialWorkspaceSlug?: 
       });
 
       toast.success('Đã kết nối Facebook Page thành công!');
-      queryClient.invalidateQueries({ queryKey: ['inboxes', currentWorkspace.id] });
+      queryClient.invalidateQueries({ queryKey: inboxKeys.list(currentWorkspace.id) });
 
       setCreatedResult({
         id: res.data.inboxId,
@@ -418,7 +419,7 @@ function NewInboxPageContent({ initialWorkspaceSlug }: { initialWorkspaceSlug?: 
       }
 
       toast.success(`Đã tạo hộp thư ${selectedChannel.title} thành công!`);
-      queryClient.invalidateQueries({ queryKey: ['inboxes', currentWorkspace.id] });
+      queryClient.invalidateQueries({ queryKey: inboxKeys.list(currentWorkspace.id) });
 
       setCreatedResult({
         id: newInbox.id,

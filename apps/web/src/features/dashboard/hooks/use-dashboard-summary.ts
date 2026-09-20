@@ -2,10 +2,11 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { dashboardApi } from '../api/dashboard-client';
+import { dashboardKeys } from '@/lib/query-keys';
 
 export function useDashboardSummary(workspaceId?: string) {
   return useQuery({
-    queryKey: ['dashboard-summary', workspaceId],
+    queryKey: dashboardKeys.summary(workspaceId),
     queryFn: async () => {
       if (!workspaceId) {
         throw new Error('Workspace ID is required');

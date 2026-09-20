@@ -50,6 +50,25 @@ describe('ChannelIngestionProcessor (Task T-1.5.7: Inbound Ingestion Pipeline In
           }
           return null;
         },
+        updateMany: async ({
+          where,
+          data,
+        }: {
+          where: { id?: string; channelId?: string };
+          data: any;
+        }) => {
+          let count = 0;
+          for (const [id, evt] of channelEventsDb.entries()) {
+            if (
+              (!where.id || id === where.id) &&
+              (!where.channelId || evt.channelId === where.channelId)
+            ) {
+              channelEventsDb.set(id, { ...evt, ...data });
+              count++;
+            }
+          }
+          return { count };
+        },
       },
       message: {
         findFirst: async ({
@@ -65,11 +84,18 @@ describe('ChannelIngestionProcessor (Task T-1.5.7: Inbound Ingestion Pipeline In
           );
           return msg ? { ...msg } : null;
         },
-        update: async ({ where, data }: { where: { id: string }; data: any }) => {
-          const msg = messagesDb.get(where.id);
+        update: async ({
+          where,
+          data,
+        }: {
+          where: { id?: string; workspaceId_id?: { workspaceId: string; id: string } };
+          data: any;
+        }) => {
+          const targetId = where.id || where.workspaceId_id?.id;
+          const msg = targetId ? messagesDb.get(targetId) : null;
           if (msg) {
             const updated = { ...msg, ...data };
-            messagesDb.set(where.id, updated);
+            messagesDb.set(targetId!, updated);
             return { ...updated };
           }
           return null;

@@ -30,6 +30,13 @@ import { PrismaService } from '../../../infrastructure/database/prisma.service';
 import { InventoryLedgerService } from '../inventory/inventory-ledger.service';
 import { MessagesService } from '../../omnichannel/messages/messages.service';
 import { RedisService } from '../../../infrastructure/redis/redis.service';
+import { calculateLineItemTotals, calculateOrderFinancialTotals } from './orders-calculator';
+import {
+  assertCanCancel,
+  assertCanComplete,
+  assertCanConfirm,
+  assertCanUpdate,
+} from './order-status-guard';
 
 @Injectable()
 export class OrdersService {
@@ -113,11 +120,13 @@ export class OrdersService {
           });
         }
 
-        const itemSubtotal = item.unitPrice * item.quantity;
-        const itemDiscount = item.discountAmount || 0;
-        const itemTotalPrice = Math.max(0, itemSubtotal - itemDiscount);
+        const itemCalc = calculateLineItemTotals({
+          unitPrice: item.unitPrice,
+          quantity: item.quantity,
+          discountAmount: item.discountAmount,
+        });
 
-        subtotal += itemSubtotal;
+        subtotal += itemCalc.subtotal;
 
         lineItemSnapshots.push({
           productId: variant.productId,
@@ -128,23 +137,22 @@ export class OrdersService {
           unitPrice: item.unitPrice,
           costPrice: Number(variant.costPrice || 0),
           quantity: item.quantity,
-          discountAmount: itemDiscount,
-          totalPrice: itemTotalPrice,
+          discountAmount: itemCalc.discountAmount,
+          totalPrice: itemCalc.totalPrice,
           metadata: item.metadata || {},
         });
       }
 
       // 4. Calculate Financials
-      const discountAmount =
-        dto.discountType === DiscountType.PERCENTAGE
-          ? Math.min(
-              subtotal,
-              Math.round((subtotal * Math.min(100, dto.discountAmount || 0)) / 100),
-            )
-          : Math.min(subtotal, dto.discountAmount || 0);
-
-      const shippingFee = dto.shippingFee || 0;
-      const totalAmount = Math.max(0, subtotal - discountAmount + shippingFee);
+      const financialTotals = calculateOrderFinancialTotals({
+        subtotal,
+        discountType: dto.discountType,
+        discountAmount: dto.discountAmount,
+        shippingFee: dto.shippingFee,
+      });
+      const discountAmount = financialTotals.discountAmount;
+      const shippingFee = financialTotals.shippingFee;
+      const totalAmount = financialTotals.totalAmount;
 
       // Temporary orderNumber until displayId is assigned by PostgreSQL autoincrement
       const datePrefix = new Date().toISOString().slice(0, 10).replace(/-/g, '');
@@ -165,6 +173,7 @@ export class OrdersService {
           createdById: userId || null,
           status: OrderStatus.DRAFT,
           paymentStatus: PaymentStatus.UNPAID,
+          paymentMethod: resolvedPaymentMethod,
           fulfillmentStatus: FulfillmentStatus.UNFULFILLED,
           subtotal,
           discountAmount,
@@ -311,13 +320,7 @@ export class OrdersService {
         });
       }
 
-      if (order.status !== OrderStatus.DRAFT) {
-        throw new BadRequestException({
-          code: 'INVALID_STATUS_FOR_UPDATE',
-          message: `Only DRAFT orders can be updated. Current status: ${order.status}`,
-          details: { currentStatus: order.status },
-        });
-      }
+      assertCanUpdate(order);
 
       let subtotal = Number(order.subtotal);
 
@@ -359,11 +362,13 @@ export class OrdersService {
             });
           }
 
-          const itemSubtotal = item.unitPrice * item.quantity;
-          const itemDiscount = item.discountAmount || 0;
-          const itemTotalPrice = Math.max(0, itemSubtotal - itemDiscount);
+          const itemCalc = calculateLineItemTotals({
+            unitPrice: item.unitPrice,
+            quantity: item.quantity,
+            discountAmount: item.discountAmount,
+          });
 
-          subtotal += itemSubtotal;
+          subtotal += itemCalc.subtotal;
 
           lineItemSnapshots.push({
             productId: variant.productId,
@@ -374,8 +379,8 @@ export class OrdersService {
             unitPrice: item.unitPrice,
             costPrice: Number(variant.costPrice || 0),
             quantity: item.quantity,
-            discountAmount: itemDiscount,
-            totalPrice: itemTotalPrice,
+            discountAmount: itemCalc.discountAmount,
+            totalPrice: itemCalc.totalPrice,
             metadata: item.metadata || {},
           });
         }
@@ -400,31 +405,18 @@ export class OrdersService {
       }
 
       // 3. Recalculate Financials
-      const discountType = dto.discountType !== undefined ? dto.discountType : order.discountType;
-      let discountAmount: number;
-
-      if (dto.discountAmount !== undefined) {
-        discountAmount =
-          discountType === DiscountType.PERCENTAGE
-            ? Math.min(subtotal, Math.round((subtotal * Math.min(100, dto.discountAmount)) / 100))
-            : Math.min(subtotal, dto.discountAmount);
-      } else {
-        if (discountType === DiscountType.PERCENTAGE) {
-          const originalSubtotal = Number(order.subtotal);
-          const originalPct =
-            originalSubtotal > 0 ? (Number(order.discountAmount) * 100) / originalSubtotal : 0;
-          discountAmount = Math.min(
-            subtotal,
-            Math.round((subtotal * Math.min(100, originalPct)) / 100),
-          );
-        } else {
-          discountAmount = Math.min(subtotal, Number(order.discountAmount));
-        }
-      }
-
-      const shippingFee =
-        dto.shippingFee !== undefined ? dto.shippingFee : Number(order.shippingFee);
-      const totalAmount = Math.max(0, subtotal - discountAmount + shippingFee);
+      const financialTotals = calculateOrderFinancialTotals({
+        subtotal,
+        discountType: dto.discountType !== undefined ? dto.discountType : order.discountType,
+        discountAmount: dto.discountAmount,
+        shippingFee: dto.shippingFee !== undefined ? dto.shippingFee : Number(order.shippingFee),
+        existingDiscountAmount: Number(order.discountAmount),
+        existingSubtotal: Number(order.subtotal),
+      });
+      const discountType = financialTotals.discountType;
+      const discountAmount = financialTotals.discountAmount;
+      const shippingFee = financialTotals.shippingFee;
+      const totalAmount = financialTotals.totalAmount;
 
       // 4. Update Order Record
       const updateData: any = {
@@ -480,6 +472,9 @@ export class OrdersService {
       if (dto.discountReason !== undefined) updateData.discountReason = dto.discountReason;
       if (dto.customerNotes !== undefined) updateData.customerNotes = dto.customerNotes;
       if (dto.internalNotes !== undefined) updateData.internalNotes = dto.internalNotes;
+      if (dto.paymentMethod !== undefined) {
+        updateData.paymentMethod = dto.paymentMethod;
+      }
       if (dto.paymentMethod !== undefined || dto.metadata !== undefined) {
         updateData.metadata = {
           ...((order.metadata as Record<string, unknown>) || {}),
@@ -547,20 +542,7 @@ export class OrdersService {
         });
       }
 
-      if (order.status !== OrderStatus.DRAFT) {
-        throw new BadRequestException({
-          code: 'INVALID_STATUS_TRANSITION',
-          message: `Only DRAFT orders can be confirmed. Current status: ${order.status}`,
-          details: { currentStatus: order.status, targetStatus: OrderStatus.CONFIRMED },
-        });
-      }
-
-      if (!order.items || order.items.length === 0) {
-        throw new BadRequestException({
-          code: 'EMPTY_ORDER',
-          message: 'Cannot confirm an order with no line items',
-        });
-      }
+      assertCanConfirm(order);
 
       // 2. Atomically reserve inventory for line items via InventoryLedgerService (Model A Anti-Overselling)
       const reserveItems = order.items.map(item => ({
@@ -847,26 +829,7 @@ export class OrdersService {
         });
       }
 
-      if (order.status === OrderStatus.COMPLETED) {
-        throw new ConflictException({
-          code: 'ORDER_ALREADY_COMPLETED',
-          message: 'Không thể hủy đơn hàng đã hoàn tất (COMPLETED).',
-          details: { orderId, status: order.status },
-        });
-      }
-
-      if (
-        order.status !== OrderStatus.DRAFT &&
-        order.status !== OrderStatus.CONFIRMED &&
-        order.status !== OrderStatus.PAID &&
-        order.status !== OrderStatus.SHIPPING
-      ) {
-        throw new ConflictException({
-          code: 'ORDER_NOT_CANCELLABLE',
-          message: `Cannot cancel order in status '${order.status}'. Only DRAFT, CONFIRMED, PAID, and SHIPPING orders can be cancelled.`,
-          details: { orderId, status: order.status },
-        });
-      }
+      assertCanCancel(order);
 
       const wasConfirmed = order.status === OrderStatus.CONFIRMED;
       const wasPaidOrShipped =
@@ -1000,25 +963,7 @@ export class OrdersService {
         });
       }
 
-      if (order.status === OrderStatus.COMPLETED) {
-        throw new ConflictException({
-          code: 'ORDER_ALREADY_COMPLETED',
-          message: 'Đơn hàng đã được hoàn tất trước đó.',
-          details: { orderId, status: order.status },
-        });
-      }
-
-      if (
-        order.status !== OrderStatus.SHIPPING &&
-        order.status !== OrderStatus.PAID &&
-        order.status !== OrderStatus.CONFIRMED
-      ) {
-        throw new BadRequestException({
-          code: 'INVALID_STATUS_FOR_COMPLETION',
-          message: `Cannot complete order in status '${order.status}'. Only SHIPPING, PAID, or CONFIRMED orders can be completed.`,
-          details: { currentStatus: order.status },
-        });
-      }
+      assertCanComplete(order);
 
       const orderTotal = Number(order.totalAmount);
       const paidAmount = Number(order.paidAmount);
@@ -1305,6 +1250,7 @@ export class OrdersService {
       status: order.status,
       paymentStatus: order.paymentStatus,
       paymentMethod:
+        (order.paymentMethod as PaymentMethod) ||
         ((order.metadata as Record<string, any>)?.paymentMethod as PaymentMethod) ||
         (order.paymentTransactions?.[0]?.paymentMethod as PaymentMethod) ||
         PaymentMethod.COD,

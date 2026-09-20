@@ -267,6 +267,7 @@ export class VietQrService {
       orderId: order.id,
       orderNumber: order.orderNumber,
       transferContent: memo,
+      conversationId: order.conversationId,
     };
   }
 }

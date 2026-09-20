@@ -21,6 +21,7 @@ import {
   markMessageFailedInInfiniteData,
   reconcileOrAppendMessage,
 } from '@/lib/socket';
+import { conversationKeys } from '@/lib/query-keys';
 
 export interface UseSendMessageOptions {
   conversationId: string;
@@ -110,7 +111,7 @@ export function useSendMessage(options: UseSendMessageOptions) {
       if (!resolvedWorkspaceId || !conversationId) return;
 
       const messageQueryFilter = {
-        queryKey: ['messages', resolvedWorkspaceId, conversationId],
+        queryKey: conversationKeys.messages(resolvedWorkspaceId, conversationId),
       };
 
       // 1. Cancel any outgoing refetches
@@ -214,7 +215,7 @@ export function useSendMessage(options: UseSendMessageOptions) {
 
       // 5. Update conversation list with optimistic lastMessage
       queryClient.setQueriesData<InfiniteData<ApiResponse<any[]>>>(
-        { queryKey: ['conversations'] },
+        { queryKey: conversationKeys.all },
         old => {
           if (!old) return old;
           const { updatedData } = bubbleConversationToTop(old, conversationId, {
@@ -234,7 +235,7 @@ export function useSendMessage(options: UseSendMessageOptions) {
       // Mark the optimistic message as FAILED rather than silently removing it
       if (context?.tempId) {
         queryClient.setQueriesData<InfiniteData<ApiResponse<MessageResponseDto[]>>>(
-          { queryKey: ['messages', resolvedWorkspaceId, conversationId] },
+          { queryKey: conversationKeys.messages(resolvedWorkspaceId, conversationId) },
           old => markMessageFailedInInfiniteData(old, context.tempId),
         );
       }
@@ -260,7 +261,7 @@ export function useSendMessage(options: UseSendMessageOptions) {
       };
 
       const messageQueryFilter = {
-        queryKey: ['messages', resolvedWorkspaceId, conversationId],
+        queryKey: conversationKeys.messages(resolvedWorkspaceId, conversationId),
       };
 
       // Reconcile optimistic message with actual created message from server
@@ -271,7 +272,7 @@ export function useSendMessage(options: UseSendMessageOptions) {
 
       // Update conversation in list
       queryClient.setQueriesData<InfiniteData<ApiResponse<any[]>>>(
-        { queryKey: ['conversations'] },
+        { queryKey: conversationKeys.all },
         old => {
           if (!old) return old;
           const { updatedData } = bubbleConversationToTop(old, conversationId, {

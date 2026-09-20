@@ -89,7 +89,7 @@ export function ConversationActions({ conversation, workspaceSlug }: Conversatio
                 </SelectItem>
                 <SelectItem value={ConversationStatus.RESOLVED}>
                   <span className="flex items-center gap-2">
-                    <span className="size-2 rounded-full bg-slate-400" />
+                    <span className="size-2 rounded-full bg-muted-foreground/50" />
                     {'Đã giải quyết'}
                   </span>
                 </SelectItem>
@@ -137,7 +137,7 @@ export function ConversationActions({ conversation, workspaceSlug }: Conversatio
                 </SelectItem>
                 <SelectItem value={Priority.LOW}>
                   <span className="flex items-center gap-2">
-                    <span className="size-2 rounded-full bg-slate-400" />
+                    <span className="size-2 rounded-full bg-muted-foreground/50" />
                     {'Thấp'}
                   </span>
                 </SelectItem>

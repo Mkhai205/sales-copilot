@@ -630,8 +630,8 @@ export class FacebookService {
     // Delete channel and inbox
     await this.prisma.runInTransaction(async txCtx => {
       const tx = txCtx.tx;
-      await tx.channel.delete({ where: { id: channelId } });
-      await tx.inbox.delete({ where: { id: channel.inboxId } });
+      await tx.channel.delete({ where: { workspaceId_id: { workspaceId, id: channelId } } });
+      await tx.inbox.delete({ where: { workspaceId_id: { workspaceId, id: channel.inboxId } } });
     });
 
     this.logger.log(`Disconnected Facebook channel '${channelId}' from workspace '${workspaceId}'`);
@@ -733,5 +733,55 @@ export class FacebookService {
     this.logger.log(`Re-authorized Facebook channel '${channelId}'`);
 
     return { success: true };
+  }
+
+  /**
+   * Finds a Facebook Messenger channel by its providerAccountId (Facebook Page ID).
+   */
+  async findChannelByPageId(pageId: string) {
+    return this.prisma.getClient().channel.findFirst({
+      where: {
+        channelType: ChannelType.FACEBOOK_MESSENGER,
+        providerAccountId: pageId,
+      },
+    });
+  }
+
+  /**
+   * Records a channel event for deduplication (idempotency).
+   */
+  async recordChannelEvent(
+    channelId: string,
+    externalEventId: string,
+    eventType: string,
+    payload: any,
+  ) {
+    const client = this.prisma.getClient();
+    const existing = await client.channelEvent.findUnique({
+      where: {
+        channelId_externalEventId: {
+          channelId,
+          externalEventId,
+        },
+      },
+    });
+
+    if (existing) {
+      return { isDuplicate: true, event: existing };
+    }
+
+    try {
+      const created = await client.channelEvent.create({
+        data: {
+          channelId,
+          externalEventId,
+          eventType,
+          payload: payload as any,
+        },
+      });
+      return { isDuplicate: false, event: created };
+    } catch {
+      return { isDuplicate: true, event: null };
+    }
   }
 }

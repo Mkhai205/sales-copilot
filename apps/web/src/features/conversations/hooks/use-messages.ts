@@ -6,6 +6,7 @@ import { format, isToday, isYesterday, isThisYear, parseISO, isValid } from 'dat
 import { messagesApi } from '../api/messages';
 import type { MessageResponseDto } from '@sales-copilot/shared-contracts';
 import { useWorkspaces } from '@/features/settings';
+import { conversationKeys } from '@/lib/query-keys';
 
 export interface UseMessagesOptions {
   conversationId?: string | null;
@@ -44,18 +45,17 @@ export function groupMessagesByDate(messages: MessageResponseDto[]): MessageDate
   for (const message of messages) {
     const date = parseISO(message.createdAt);
     const dateKey = isValid(date) ? format(date, 'yyyy-MM-dd') : 'unknown';
-    const dateLabel = isValid(date) ? formatMessageDateLabel(date) : 'Unknown Date';
+    const dateLabel = formatMessageDateLabel(message.createdAt);
 
-    let group = groupsMap.get(dateKey);
-    if (!group) {
-      group = {
+    if (!groupsMap.has(dateKey)) {
+      groupsMap.set(dateKey, {
         dateKey,
         dateLabel,
         messages: [],
-      };
-      groupsMap.set(dateKey, group);
+      });
     }
-    group.messages.push(message);
+
+    groupsMap.get(dateKey)!.messages.push(message);
   }
 
   return Array.from(groupsMap.values());
@@ -95,7 +95,7 @@ export function useMessages(
   const isQueryEnabled = Boolean(enabled && resolvedWorkspaceId && conversationId);
 
   const query = useInfiniteQuery({
-    queryKey: ['messages', resolvedWorkspaceId, conversationId, limit],
+    queryKey: conversationKeys.messages(resolvedWorkspaceId, conversationId ?? undefined, limit),
     queryFn: async ({ pageParam = 1 }) => {
       if (!resolvedWorkspaceId || !conversationId) {
         throw new Error('Workspace ID and Conversation ID are required to fetch messages');

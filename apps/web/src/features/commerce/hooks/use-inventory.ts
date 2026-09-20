@@ -2,6 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { commerceApi } from '../api/commerce-client';
+import { commerceKeys } from '@/lib/query-keys';
 import type {
   ListInventoryTransactionsQueryDto,
   ListInventoryVariantsQueryDto,
@@ -9,7 +10,7 @@ import type {
 
 export function useInventoryVariants(workspaceId?: string, query?: ListInventoryVariantsQueryDto) {
   return useQuery({
-    queryKey: ['inventory-variants', workspaceId, query],
+    queryKey: commerceKeys.inventoryVariants(workspaceId, query),
     queryFn: async () => {
       if (!workspaceId) throw new Error('Workspace ID is required');
       const res = await commerceApi.listInventoryVariants(workspaceId, query);
@@ -22,7 +23,7 @@ export function useInventoryVariants(workspaceId?: string, query?: ListInventory
 
 export function useInventorySummary(workspaceId?: string) {
   return useQuery({
-    queryKey: ['inventory-summary', workspaceId],
+    queryKey: commerceKeys.inventorySummary(workspaceId),
     queryFn: async () => {
       if (!workspaceId) throw new Error('Workspace ID is required');
       const res = await commerceApi.getInventorySummary(workspaceId);
@@ -38,7 +39,7 @@ export function useInventoryTransactions(
   query?: ListInventoryTransactionsQueryDto,
 ) {
   return useQuery({
-    queryKey: ['inventory-transactions', workspaceId, query],
+    queryKey: commerceKeys.inventoryTransactions(workspaceId, query),
     queryFn: async () => {
       if (!workspaceId) throw new Error('Workspace ID is required');
       const res = await commerceApi.listInventoryTransactions(workspaceId, query);

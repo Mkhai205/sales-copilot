@@ -1141,6 +1141,29 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
       expect(emittedEvents[0].payload.orderId).toBe(order.id);
     });
 
+    it('should update paymentMethod directly in order record', async () => {
+      const order = await service.createOrder(ws1, {
+        contactId: contact1,
+        items: [{ productId: prod1, variantId: varA, quantity: 1, unitPrice: 350000 }],
+        paymentMethod: PaymentMethod.COD,
+      });
+
+      expect(order.paymentMethod).toBe(PaymentMethod.COD);
+
+      const updated = await service.updateOrder(
+        ws1,
+        order.id,
+        {
+          paymentMethod: PaymentMethod.VIETQR,
+        },
+        userId,
+      );
+
+      expect(updated.paymentMethod).toBe(PaymentMethod.VIETQR);
+      const inDb = ordersDb.get(order.id);
+      expect(inDb.paymentMethod).toBe(PaymentMethod.VIETQR);
+    });
+
     it('should preserve and correctly recalculate percentage discount when items change and discountAmount is not passed', async () => {
       // Subtotal = 500k. 10% discount => discountAmount = 50,000, total = 450,000
       const order = await service.createOrder(ws1, {

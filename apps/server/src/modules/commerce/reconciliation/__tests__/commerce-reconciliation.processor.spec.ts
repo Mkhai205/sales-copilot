@@ -467,6 +467,32 @@ describe('CommerceReconciliation (Bank Reconciliation Engine & Safe Inventory Ma
       expect(duplicateResult.status).toBe('DUPLICATE');
     });
 
+    it('should catch Prisma P2002 error on paymentTransaction.create and return DUPLICATE gracefully', async () => {
+      // Simulate concurrent insert race where findFirst did not find it,
+      // but paymentTransaction.create throws P2002
+      jest.spyOn(clientMock.paymentTransaction, 'create').mockImplementationOnce(async () => {
+        const error = new Error(
+          'Unique constraint failed on fields: (`workspaceId`,`idempotencyKey`)',
+        );
+        (error as any).code = 'P2002';
+        throw error;
+      });
+
+      const duplicateResult = await service.reconcileTransaction({
+        workspaceId: wsId,
+        orderId,
+        amount: 500000,
+        gateway: PaymentGateway.SEPAY,
+        transactionCode: 'TX_RACE_CONDITION_P2002',
+        accountNumber: '0987654321',
+        transferContent: 'ORD 1004',
+      });
+
+      expect(duplicateResult.processed).toBe(false);
+      expect(duplicateResult.status).toBe('DUPLICATE');
+      expect(duplicateResult.orderId).toBe(orderId);
+    });
+
     it('should throw BadRequestException if amount is less than or equal to zero', async () => {
       await expectReject(
         async () => {

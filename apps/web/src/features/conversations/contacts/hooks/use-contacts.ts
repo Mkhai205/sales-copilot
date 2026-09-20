@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useWorkspaces } from '@/features/settings';
 import { contactsApi } from '../api/contacts';
+import { contactKeys, conversationKeys } from '@/lib/query-keys';
 import type {
   ContactDto,
   ContactListQueryDto,
@@ -38,7 +39,7 @@ export function usePaginatedContacts(
   const isEnabled = Boolean((options.enabled ?? true) && resolvedWorkspaceId);
 
   return useQuery<PaginatedContactsResult>({
-    queryKey: ['contacts', resolvedWorkspaceId, options.query],
+    queryKey: contactKeys.list(resolvedWorkspaceId, options.query),
     queryFn: async () => {
       if (!resolvedWorkspaceId) throw new Error('Workspace ID is required');
       const res = await contactsApi.list(resolvedWorkspaceId, options.query);
@@ -74,7 +75,7 @@ export function useContact(contactId?: string | null, options: ContactHookOption
   const isEnabled = Boolean((options.enabled ?? true) && resolvedWorkspaceId && contactId);
 
   return useQuery<ContactDto>({
-    queryKey: ['contact', resolvedWorkspaceId, contactId],
+    queryKey: contactKeys.detail(resolvedWorkspaceId, contactId ?? undefined),
     queryFn: async () => {
       if (!resolvedWorkspaceId || !contactId)
         throw new Error('Workspace ID and Contact ID are required');
@@ -110,17 +111,17 @@ export function useUpdateContact(
     onSuccess: () => {
       if (options.conversationId) {
         queryClient.invalidateQueries({
-          queryKey: ['conversation', resolvedWorkspaceId, options.conversationId],
+          queryKey: conversationKeys.detail(resolvedWorkspaceId, options.conversationId),
         });
       }
       queryClient.invalidateQueries({
-        queryKey: ['contacts', resolvedWorkspaceId],
+        queryKey: contactKeys.list(resolvedWorkspaceId),
       });
       queryClient.invalidateQueries({
-        queryKey: ['contact', resolvedWorkspaceId, contactId],
+        queryKey: contactKeys.detail(resolvedWorkspaceId, contactId),
       });
       queryClient.invalidateQueries({
-        queryKey: ['conversations', resolvedWorkspaceId],
+        queryKey: conversationKeys.list(resolvedWorkspaceId),
       });
       toast.success('Contact info updated');
     },
@@ -148,7 +149,7 @@ export function useCreateContact(options: ContactHookOptions = {}) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ['contacts', resolvedWorkspaceId],
+        queryKey: contactKeys.list(resolvedWorkspaceId),
       });
       toast.success('Contact created successfully');
     },
@@ -176,10 +177,10 @@ export function useMergeContacts(options: ContactHookOptions = {}) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ['contacts', resolvedWorkspaceId],
+        queryKey: contactKeys.list(resolvedWorkspaceId),
       });
       queryClient.invalidateQueries({
-        queryKey: ['conversations', resolvedWorkspaceId],
+        queryKey: conversationKeys.list(resolvedWorkspaceId),
       });
       toast.success('Contacts merged successfully');
     },
@@ -207,7 +208,7 @@ export function useDeleteContact(options: ContactHookOptions = {}) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ['contacts', resolvedWorkspaceId],
+        queryKey: contactKeys.list(resolvedWorkspaceId),
       });
       toast.success('Đã xóa khách hàng thành công');
     },

@@ -21,15 +21,46 @@ import type {
   VietQrResponseDto,
 } from '@sales-copilot/shared-contracts';
 
+export interface PaginatedResult<T> {
+  items: T[];
+  meta?: PaginationMeta;
+}
+
+function normalizePaginatedResponse<T>(res: any): {
+  success: boolean;
+  data: PaginatedResult<T>;
+  meta?: PaginationMeta;
+} {
+  const rawData = res.data;
+  let items: T[] = [];
+  let meta: PaginationMeta | undefined = res.meta;
+
+  if (Array.isArray(rawData)) {
+    items = rawData;
+  } else if (rawData && typeof rawData === 'object' && Array.isArray(rawData.items)) {
+    items = rawData.items;
+    meta = rawData.meta || meta;
+  }
+
+  return {
+    ...res,
+    data: {
+      items,
+      meta,
+    },
+    meta,
+  };
+}
+
 export const commerceApi = {
   // Products
   listProducts: (workspaceId: string, query?: ListProductsQueryDto) =>
-    fetchApi<{ items: ProductResponseDto[]; meta: PaginationMeta }>(
+    fetchApi<ProductResponseDto[]>(
       `/workspaces/${workspaceId}/products${buildQueryString(query)}`,
       {
         headers: workspaceHeaders(workspaceId),
       },
-    ),
+    ).then(res => normalizePaginatedResponse<ProductResponseDto>(res)),
 
   getProduct: (workspaceId: string, id: string) =>
     fetchApi<ProductResponseDto>(`/workspaces/${workspaceId}/products/${id}`, {
@@ -77,29 +108,29 @@ export const commerceApi = {
     variantId: string,
     query?: ListInventoryTransactionsQueryDto,
   ) =>
-    fetchApi<{ items: InventoryTransactionResponseDto[]; meta: PaginationMeta }>(
+    fetchApi<InventoryTransactionResponseDto[]>(
       `/workspaces/${workspaceId}/products/${productId}/variants/${variantId}/inventory/transactions${buildQueryString(query)}`,
       {
         headers: workspaceHeaders(workspaceId),
       },
-    ),
+    ).then(res => normalizePaginatedResponse<InventoryTransactionResponseDto>(res)),
 
   // Inventory Subsystem
   listInventoryTransactions: (workspaceId: string, query?: ListInventoryTransactionsQueryDto) =>
-    fetchApi<{ items: InventoryTransactionResponseDto[]; meta: PaginationMeta }>(
+    fetchApi<InventoryTransactionResponseDto[]>(
       `/workspaces/${workspaceId}/inventory/transactions${buildQueryString(query)}`,
       {
         headers: workspaceHeaders(workspaceId),
       },
-    ),
+    ).then(res => normalizePaginatedResponse<InventoryTransactionResponseDto>(res)),
 
   listInventoryVariants: (workspaceId: string, query?: ListInventoryVariantsQueryDto) =>
-    fetchApi<{ items: InventoryVariantItemDto[]; meta: PaginationMeta }>(
+    fetchApi<InventoryVariantItemDto[]>(
       `/workspaces/${workspaceId}/inventory/variants${buildQueryString(query)}`,
       {
         headers: workspaceHeaders(workspaceId),
       },
-    ),
+    ).then(res => normalizePaginatedResponse<InventoryVariantItemDto>(res)),
 
   getInventorySummary: (workspaceId: string) =>
     fetchApi<{
@@ -125,12 +156,9 @@ export const commerceApi = {
 
   // Orders
   listOrders: (workspaceId: string, query?: ListOrdersQueryDto) =>
-    fetchApi<{ items: OrderResponseDto[]; meta: PaginationMeta }>(
-      `/workspaces/${workspaceId}/orders${buildQueryString(query)}`,
-      {
-        headers: workspaceHeaders(workspaceId),
-      },
-    ),
+    fetchApi<OrderResponseDto[]>(`/workspaces/${workspaceId}/orders${buildQueryString(query)}`, {
+      headers: workspaceHeaders(workspaceId),
+    }).then(res => normalizePaginatedResponse<OrderResponseDto>(res)),
 
   getOrder: (workspaceId: string, id: string) =>
     fetchApi<OrderResponseDto>(`/workspaces/${workspaceId}/orders/${id}`, {

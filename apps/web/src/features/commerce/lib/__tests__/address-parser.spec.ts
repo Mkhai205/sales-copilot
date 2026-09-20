@@ -1,8 +1,8 @@
 import { describe, it } from 'node:test';
 import * as assert from 'node:assert';
-import { fetchProvinces, fetchDistricts, fetchWards, parseAddressText } from '../vietnam-address';
+import { fetchProvinces, fetchDistricts, fetchWards, parseAddressText } from '../address-parser';
 
-describe('Vietnam Address Utilities (apps/web vietnam-address.ts)', () => {
+describe('Address Parser Utilities (apps/web address-parser.ts)', () => {
   it('should fetch list of provinces', async () => {
     const provinces = await fetchProvinces();
     assert.strictEqual(provinces.length, 63);

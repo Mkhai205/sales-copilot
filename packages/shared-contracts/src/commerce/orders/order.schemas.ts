@@ -42,9 +42,9 @@ export interface ShippingAddressResponseDto {
 export const createOrderItemSchema = z.object({
   productId: z.string().uuid('Product ID không hợp lệ'),
   variantId: z.string().uuid('Variant ID không hợp lệ'),
-  quantity: z.coerce.number().int('Số lượng phải là số nguyên').positive('Số lượng phải lớn hơn 0'),
-  unitPrice: z.coerce.number().positive('Đơn giá phải lớn hơn 0'),
-  discountAmount: z.coerce.number().min(0, 'Chiết khấu không được âm').default(0),
+  quantity: z.number().int('Số lượng phải là số nguyên').positive('Số lượng phải lớn hơn 0'),
+  unitPrice: z.number().positive('Đơn giá phải lớn hơn 0'),
+  discountAmount: z.number().min(0, 'Chiết khấu không được âm').default(0),
   metadata: z.record(z.any()).default({}),
 });
 
@@ -80,10 +80,10 @@ export const createOrderSchema = z.object({
   status: z.literal(OrderStatus.DRAFT).default(OrderStatus.DRAFT),
   confirmImmediately: z.boolean().optional().default(false),
   paymentMethod: z.nativeEnum(PaymentMethod).default(PaymentMethod.COD),
-  discountAmount: z.coerce.number().min(0, 'Chiết khấu không được âm').default(0),
+  discountAmount: z.number().min(0, 'Chiết khấu không được âm').default(0),
   discountType: z.nativeEnum(DiscountType).default(DiscountType.FIXED_AMOUNT),
   discountReason: z.string().optional().nullable(),
-  shippingFee: z.coerce.number().min(0, 'Phí vận chuyển không được âm').default(0),
+  shippingFee: z.number().min(0, 'Phí vận chuyển không được âm').default(0),
   customerNotes: z.string().optional().nullable(),
   internalNotes: z.string().optional().nullable(),
   items: z.array(createOrderItemSchema).min(1, 'Đơn hàng phải có ít nhất 1 sản phẩm'),
@@ -102,10 +102,10 @@ export type CreateOrderDto = z.input<typeof createOrderSchema>;
 
 export const updateOrderSchema = z.object({
   paymentMethod: z.nativeEnum(PaymentMethod).optional(),
-  discountAmount: z.coerce.number().min(0).optional(),
+  discountAmount: z.number().min(0).optional(),
   discountType: z.nativeEnum(DiscountType).optional(),
   discountReason: z.string().optional().nullable(),
-  shippingFee: z.coerce.number().min(0).optional(),
+  shippingFee: z.number().min(0).optional(),
   customerNotes: z.string().optional().nullable(),
   internalNotes: z.string().optional().nullable(),
   items: z.array(createOrderItemSchema).min(1).optional(),
@@ -139,7 +139,7 @@ export type CompleteOrderDto = z.input<typeof completeOrderSchema>;
 
 export const manualPayOrderSchema = z.object({
   paymentMethod: z.nativeEnum(PaymentMethod).default(PaymentMethod.CASH),
-  amount: z.coerce.number().positive('Số tiền thanh toán phải lớn hơn 0'),
+  amount: z.number().positive('Số tiền thanh toán phải lớn hơn 0'),
   transactionCode: z.string().trim().optional().nullable(),
   notes: z.string().optional().nullable(),
 });

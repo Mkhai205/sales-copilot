@@ -1,9 +1,12 @@
 'use client';
 
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, type InfiniteData } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { conversationsApi } from '../api/conversations';
 import { useWorkspaces } from '@/features/settings';
+import type { ApiResponse } from '@/lib/api/client';
+import { updateConversationInList } from '@/lib/socket/cache-helpers';
+import { conversationKeys } from '@/lib/query-keys';
 import type {
   AssignConversationDto,
   AssignLabelsDto,
@@ -40,11 +43,11 @@ export function useUpdateConversationStatus(
     },
     onSuccess: (updatedConversation: ConversationResponseDto) => {
       queryClient.setQueryData(
-        ['conversation', resolvedWorkspaceId, conversationId],
+        conversationKeys.detail(resolvedWorkspaceId, conversationId),
         updatedConversation,
       );
       queryClient.invalidateQueries({
-        queryKey: ['conversations', resolvedWorkspaceId],
+        queryKey: conversationKeys.list(resolvedWorkspaceId),
       });
       toast.success('Conversation status updated');
     },
@@ -77,11 +80,11 @@ export function useUpdateConversationPriority(
     },
     onSuccess: (updatedConversation: ConversationResponseDto) => {
       queryClient.setQueryData(
-        ['conversation', resolvedWorkspaceId, conversationId],
+        conversationKeys.detail(resolvedWorkspaceId, conversationId),
         updatedConversation,
       );
       queryClient.invalidateQueries({
-        queryKey: ['conversations', resolvedWorkspaceId],
+        queryKey: conversationKeys.list(resolvedWorkspaceId),
       });
       toast.success('Priority updated');
     },
@@ -111,11 +114,11 @@ export function useAssignConversation(conversationId: string, options: MutationH
     },
     onSuccess: (updatedConversation: ConversationResponseDto) => {
       queryClient.setQueryData(
-        ['conversation', resolvedWorkspaceId, conversationId],
+        conversationKeys.detail(resolvedWorkspaceId, conversationId),
         updatedConversation,
       );
       queryClient.invalidateQueries({
-        queryKey: ['conversations', resolvedWorkspaceId],
+        queryKey: conversationKeys.list(resolvedWorkspaceId),
       });
       toast.success('Assignment updated');
     },
@@ -148,10 +151,10 @@ export function useAssignConversationLabels(
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ['conversation', resolvedWorkspaceId, conversationId],
+        queryKey: conversationKeys.detail(resolvedWorkspaceId, conversationId),
       });
       queryClient.invalidateQueries({
-        queryKey: ['conversations', resolvedWorkspaceId],
+        queryKey: conversationKeys.list(resolvedWorkspaceId),
       });
       toast.success('Label added');
     },
@@ -184,15 +187,54 @@ export function useRemoveConversationLabel(
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ['conversation', resolvedWorkspaceId, conversationId],
+        queryKey: conversationKeys.detail(resolvedWorkspaceId, conversationId),
       });
       queryClient.invalidateQueries({
-        queryKey: ['conversations', resolvedWorkspaceId],
+        queryKey: conversationKeys.list(resolvedWorkspaceId),
       });
       toast.success('Label removed');
     },
     onError: (err: Error) => {
       toast.error(err.message || 'Failed to remove label');
+    },
+  });
+}
+
+export function useResetUnreadMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      workspaceId,
+      conversationId,
+    }: {
+      workspaceId: string;
+      conversationId: string;
+    }) => {
+      const res = await conversationsApi.resetUnread(workspaceId, conversationId);
+      return res.data;
+    },
+    onMutate: async ({ conversationId }) => {
+      // Optimistically zero unread count in both detail and list caches
+      queryClient.setQueriesData<ConversationResponseDto>(
+        {
+          predicate: query =>
+            query.queryKey[0] === 'conversation' && query.queryKey.includes(conversationId),
+        },
+        old => (old ? { ...old, unreadMessagesCount: 0 } : old),
+      );
+
+      queryClient.setQueriesData<InfiniteData<ApiResponse<ConversationResponseDto[]>>>(
+        { queryKey: conversationKeys.all },
+        old =>
+          updateConversationInList(old, conversationId, prev => ({
+            ...prev,
+            unreadMessagesCount: 0,
+          })),
+      );
+    },
+    onError: (err: any) => {
+      console.error('Failed to reset unread count on view:', err);
     },
   });
 }

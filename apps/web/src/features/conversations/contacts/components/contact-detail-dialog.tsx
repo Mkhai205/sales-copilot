@@ -20,6 +20,7 @@ import {
 } from '@/features/commerce/components/order-status-badge';
 import { useContact, useUpdateContact } from '../hooks/use-contacts';
 import { ContactIdentities } from '../contact-identities';
+import { contactKeys } from '@/lib/query-keys';
 import type { ContactDto } from '@sales-copilot/shared-contracts';
 import {
   GitMerge,
@@ -99,7 +100,7 @@ export function ContactDetailDialog({
 
   // Fetch Conversations history for contact
   const { data: conversations, isLoading: isConversationsLoading } = useQuery({
-    queryKey: ['contact-conversations', workspaceId, contact?.id],
+    queryKey: contactKeys.conversations(workspaceId, contact?.id),
     queryFn: async () => {
       if (!workspaceId || !contact?.id) return [];
       const res = await conversationsApi.list(workspaceId, { contactId: contact.id });
@@ -111,7 +112,7 @@ export function ContactDetailDialog({
 
   // Fetch Orders history for contact
   const { data: ordersData, isLoading: isOrdersLoading } = useQuery({
-    queryKey: ['contact-orders', workspaceId, contact?.id],
+    queryKey: contactKeys.orders(workspaceId, contact?.id),
     queryFn: async () => {
       if (!workspaceId || !contact?.id) return [];
       const res = await commerceApi.listOrders(workspaceId, { contactId: contact.id });

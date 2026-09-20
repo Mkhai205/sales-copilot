@@ -7,6 +7,7 @@ import type {
   ConversationCountsResponseDto,
 } from '@sales-copilot/shared-contracts';
 import { useWorkspaces } from '@/features/settings';
+import { conversationKeys } from '@/lib/query-keys';
 
 interface UseConversationCountsOptions {
   workspaceSlug?: string;
@@ -31,7 +32,7 @@ export function useConversationCounts({
   const isQueryEnabled = Boolean(enabled && resolvedWorkspaceId);
 
   const query = useQuery({
-    queryKey: ['conversation-counts', resolvedWorkspaceId, status],
+    queryKey: conversationKeys.counts(resolvedWorkspaceId, status),
     queryFn: async () => {
       if (!resolvedWorkspaceId) {
         throw new Error('Workspace ID is required to fetch conversation counts');

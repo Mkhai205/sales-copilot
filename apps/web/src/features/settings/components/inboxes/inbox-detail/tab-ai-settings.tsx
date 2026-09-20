@@ -23,6 +23,7 @@ import { Button } from '@/components/ui/button';
 import { useUpdateInbox } from '../../../hooks/use-inboxes';
 import { useWorkspaces } from '../../../hooks/use-workspaces';
 import { workspacesApi } from '../../../api/workspaces';
+import { workspaceKeys } from '@/lib/query-keys';
 
 interface TabAiSettingsProps {
   inbox: InboxDetailDto;
@@ -43,7 +44,7 @@ export function TabAiSettings({ inbox, workspaceId, workspaceSlug }: TabAiSettin
 
   // Additional query fallback if bank not in workspaces list
   const { data: fetchedBankConfig, isLoading: isBankConfigLoading } = useQuery({
-    queryKey: ['workspace', workspaceId, 'bank-config'],
+    queryKey: workspaceKeys.bankConfig(workspaceId),
     queryFn: () =>
       workspacesApi
         .getBankConfig(workspaceId)

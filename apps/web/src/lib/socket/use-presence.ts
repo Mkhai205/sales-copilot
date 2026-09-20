@@ -12,6 +12,7 @@ import {
 import { presenceApi } from '@/features/conversations';
 import { useWorkspaces } from '@/features/settings';
 import { useSocket, useSocketEvent } from './use-socket';
+import { presenceKeys } from '@/lib/query-keys';
 
 export interface UseWorkspacePresenceOptions {
   workspaceId?: string;
@@ -36,7 +37,7 @@ export function useWorkspacePresence(options?: UseWorkspacePresenceOptions) {
 
   // 1. Initial fetch of presence list from REST API
   const query = useQuery<PresenceEntry[]>({
-    queryKey: ['presence', resolvedWorkspaceId],
+    queryKey: presenceKeys.list(resolvedWorkspaceId),
     queryFn: async () => {
       if (!resolvedWorkspaceId) return [];
       const res = await presenceApi.getWorkspacePresence(resolvedWorkspaceId, {
@@ -56,21 +57,24 @@ export function useWorkspacePresence(options?: UseWorkspacePresenceOptions) {
     data => {
       if (!resolvedWorkspaceId || !data?.userId) return;
 
-      queryClient.setQueryData<PresenceEntry[]>(['presence', resolvedWorkspaceId], (old = []) => {
-        const existingIndex = old.findIndex(p => p.userId === data.userId);
-        const updatedEntry: PresenceEntry = {
-          userId: data.userId,
-          status: data.status,
-          lastSeenAt: data.lastSeenAt || new Date().toISOString(),
-        };
+      queryClient.setQueryData<PresenceEntry[]>(
+        presenceKeys.list(resolvedWorkspaceId),
+        (old = []) => {
+          const existingIndex = old.findIndex(p => p.userId === data.userId);
+          const updatedEntry: PresenceEntry = {
+            userId: data.userId,
+            status: data.status,
+            lastSeenAt: data.lastSeenAt || new Date().toISOString(),
+          };
 
-        if (existingIndex >= 0) {
-          const updated = [...old];
-          updated[existingIndex] = updatedEntry;
-          return updated;
-        }
-        return [...old, updatedEntry];
-      });
+          if (existingIndex >= 0) {
+            const updated = [...old];
+            updated[existingIndex] = updatedEntry;
+            return updated;
+          }
+          return [...old, updatedEntry];
+        },
+      );
     },
     [resolvedWorkspaceId],
   );

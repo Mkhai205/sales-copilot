@@ -7,7 +7,6 @@ import type {
   UpdateLabelDto,
 } from '@sales-copilot/shared-contracts';
 import { PrismaService } from '../../../infrastructure/database';
-import { mapLabelToDto } from './labels.mapper';
 
 @Injectable()
 export class LabelsService {
@@ -30,18 +29,6 @@ export class LabelsService {
     const color = dto.color && dto.color.trim() !== '' ? dto.color.trim() : '#2563eb';
     const showOnSidebar = dto.showOnSidebar ?? true;
 
-    // Check collision within workspace
-    const existing = await client.label.findFirst({
-      where: { workspaceId, title },
-    });
-
-    if (existing) {
-      throw new ConflictException({
-        code: 'LABEL_ALREADY_EXISTS',
-        message: `Label with title '${title}' already exists in this workspace`,
-      });
-    }
-
     try {
       const created = await client.label.create({
         data: {
@@ -53,18 +40,16 @@ export class LabelsService {
         },
       });
 
-      const labelDto = mapLabelToDto(created);
-
       this.eventEmitter.emit('label.created', {
         workspaceId,
-        label: labelDto,
+        label: created,
       });
 
       this.logger.log(
-        `Created label '${labelDto.title}' (${labelDto.id}) in workspace '${workspaceId}'`,
+        `Created label '${created.title}' (${created.id}) in workspace '${workspaceId}'`,
       );
 
-      return labelDto;
+      return created;
     } catch (err: any) {
       if (err?.code === 'P2002') {
         throw new ConflictException({
@@ -97,14 +82,12 @@ export class LabelsService {
     const orderByField = query?.sortBy || 'title';
     const orderDirection = query?.sortOrder || 'asc';
 
-    const labels = await client.label.findMany({
+    return client.label.findMany({
       where,
       orderBy: {
         [orderByField]: orderDirection,
       },
     });
-
-    return labels.map(mapLabelToDto);
   }
 
   /**
@@ -123,7 +106,7 @@ export class LabelsService {
       });
     }
 
-    return mapLabelToDto(label);
+    return label;
   }
 
   /**
@@ -184,18 +167,16 @@ export class LabelsService {
         data: updateData,
       });
 
-      const labelDto = mapLabelToDto(updated);
-
       this.eventEmitter.emit('label.updated', {
         workspaceId,
-        label: labelDto,
+        label: updated,
       });
 
       this.logger.log(
-        `Updated label '${labelDto.title}' (${labelDto.id}) in workspace '${workspaceId}'`,
+        `Updated label '${updated.title}' (${updated.id}) in workspace '${workspaceId}'`,
       );
 
-      return labelDto;
+      return updated;
     } catch (err: any) {
       if (err?.code === 'P2002') {
         throw new ConflictException({
@@ -224,8 +205,6 @@ export class LabelsService {
       });
     }
 
-    const snapshot = mapLabelToDto(existing);
-
     await client.label.delete({
       where: { workspaceId_id: { workspaceId, id } },
     });
@@ -233,10 +212,10 @@ export class LabelsService {
     this.eventEmitter.emit('label.deleted', {
       workspaceId,
       labelId: id,
-      label: snapshot,
+      label: existing,
     });
 
-    this.logger.log(`Deleted label '${snapshot.title}' (${id}) from workspace '${workspaceId}'`);
+    this.logger.log(`Deleted label '${existing.title}' (${id}) from workspace '${workspaceId}'`);
 
     return { success: true };
   }

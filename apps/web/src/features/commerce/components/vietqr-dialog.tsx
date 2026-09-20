@@ -79,7 +79,9 @@ export function VietQrDialog({ open, onOpenChange, qrData }: VietQrDialogProps) 
               className="w-full h-auto aspect-square object-contain rounded-lg"
             />
           )}
-          <span className="text-[10px] text-gray-500 font-medium mt-1">NAPAS 247 • VIETQR</span>
+          <span className="text-[10px] text-muted-foreground font-medium mt-1">
+            NAPAS 247 • VIETQR
+          </span>
         </div>
 
         {/* Bank Account Breakdown Details */}

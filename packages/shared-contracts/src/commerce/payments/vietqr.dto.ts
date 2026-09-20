@@ -44,6 +44,7 @@ export const vietQrResponseSchema = z.object({
   orderId: z.string(),
   orderNumber: z.string().optional(),
   transferContent: z.string().optional(),
+  conversationId: z.string().nullish(),
 });
 
 export type VietQrResponseDto = z.infer<typeof vietQrResponseSchema>;

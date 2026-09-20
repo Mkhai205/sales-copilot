@@ -53,8 +53,8 @@ export interface LabelDto {
   description?: string | null;
   color: string;
   showOnSidebar: boolean;
-  createdAt: string;
-  updatedAt?: string;
+  createdAt: string | Date;
+  updatedAt?: string | Date;
 }
 
 // ==========================================

@@ -1,4 +1,4 @@
-﻿import { Body, Controller, Logger, Param, Post, UseGuards, Optional } from '@nestjs/common';
+import { Body, Controller, Logger, Param, Post, UseGuards, Optional } from '@nestjs/common';
 import {
   GenerateVietQrDto,
   generateVietQrSchema,
@@ -13,7 +13,6 @@ import { RolesGuard, WorkspaceGuard } from '../../identity/workspaces/guards';
 import type { WorkspaceContext } from '../../identity/workspaces/types/workspace-context.type';
 import { VietQrService } from './vietqr.service';
 import { MessagesService } from '../../omnichannel/messages/messages.service';
-import { PrismaService } from '../../../infrastructure/database/prisma.service';
 
 @Controller('workspaces/:workspaceId/orders/:id/vietqr')
 @UseGuards(WorkspaceGuard, RolesGuard)
@@ -22,7 +21,6 @@ export class VietQrController {
 
   constructor(
     private readonly vietQrService: VietQrService,
-    private readonly prisma: PrismaService,
     @Optional() private readonly messagesService?: MessagesService,
   ) {}
 
@@ -43,33 +41,26 @@ export class VietQrController {
     // If sendToChat is true (default) and order has conversationId, post interactive QR card into chat thread
     const shouldSendToChat = validatedDto?.sendToChat !== false;
 
-    if (shouldSendToChat && this.messagesService) {
+    if (shouldSendToChat && this.messagesService && vietQr.conversationId) {
       try {
-        const order = await this.prisma.getClient().order.findFirst({
-          where: { id: orderId, workspaceId },
-          select: { conversationId: true, displayId: true },
+        const formattedAmount = new Intl.NumberFormat('vi-VN').format(vietQr.amount);
+        const senderType = user?.id ? SenderType.USER : SenderType.SYSTEM;
+        const senderId = user?.id ? user.id : undefined;
+
+        await this.messagesService.create(workspaceId, vietQr.conversationId, {
+          content: `💳 Mã thanh toán VietQR cho đơn hàng #${vietQr.displayId} (${formattedAmount}đ)`,
+          senderType,
+          senderId,
+          messageType: MessageType.OUTGOING,
+          metadata: {
+            type: 'VIETQR_PAYMENT',
+            qrData: vietQr,
+          },
         });
 
-        if (order?.conversationId) {
-          const formattedAmount = new Intl.NumberFormat('vi-VN').format(vietQr.amount);
-          const senderType = user?.id ? SenderType.USER : SenderType.SYSTEM;
-          const senderId = user?.id ? user.id : undefined;
-
-          await this.messagesService.create(workspaceId, order.conversationId, {
-            content: `💳 Mã thanh toán VietQR cho đơn hàng #${vietQr.displayId} (${formattedAmount}đ)`,
-            senderType,
-            senderId,
-            messageType: MessageType.OUTGOING,
-            metadata: {
-              type: 'VIETQR_PAYMENT',
-              qrData: vietQr,
-            },
-          });
-
-          this.logger.log(
-            `Posted VietQR payment card to conversation ${order.conversationId} for order #${vietQr.displayId}`,
-          );
-        }
+        this.logger.log(
+          `Posted VietQR payment card to conversation ${vietQr.conversationId} for order #${vietQr.displayId}`,
+        );
       } catch (err: any) {
         this.logger.warn(`Failed to auto-send VietQR card to chat thread: ${err.message}`);
       }

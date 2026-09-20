@@ -40,6 +40,45 @@ describe('MessagesService (Task T-1.5.6: Message Threading & Polymorphic Senders
     };
 
     mockAttachmentsService = {
+      uploadFileOnly: async (_workspaceId: string, messageId: string, file: any) => {
+        const id = `att_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+        const fileName = file.originalname || 'file.png';
+        const storageKey = `attachments/ws_1/${messageId}/${id}-${fileName}`;
+        return {
+          storageKey,
+          validated: {
+            fileType: FileType.IMAGE,
+            fileName,
+            fileSize: file.size || 100,
+            contentType: file.mimetype || 'image/png',
+          },
+        };
+      },
+      createAttachmentRecord: async (
+        messageId: string,
+        storageKey: string,
+        validated: any,
+        _tx?: any,
+      ) => {
+        const id = `att_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+        const record = {
+          id,
+          messageId,
+          fileName: validated.fileName,
+          fileType: validated.fileType,
+          fileSize: validated.fileSize,
+          storagePath: storageKey,
+          contentType: validated.contentType,
+          createdAt: new Date(),
+        };
+        attachmentsDb.set(id, record);
+        return {
+          ...record,
+          fileUrl: `http://storage/${record.storagePath}`,
+          createdAt: record.createdAt.toISOString(),
+        };
+      },
+      deleteFromStorage: async (_key: string) => {},
       uploadAndCreate: async (_workspaceId: string, messageId: string, file: any, _tx?: any) => {
         const id = `att_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
         const record = {

@@ -1,4 +1,4 @@
-﻿import { forwardRef, Module, OnModuleInit } from '@nestjs/common';
+import { forwardRef, Module, OnModuleInit } from '@nestjs/common';
 import { DatabaseModule } from '../../../../infrastructure/database';
 import { InboxesModule } from '../../../omnichannel/inboxes';
 import { ContactsModule } from '../../contacts';
@@ -9,6 +9,7 @@ import { WebChatAdapter } from './web-chat.adapter';
 import { WebChatGateway } from './web-chat.gateway';
 import { WidgetTokenService } from './widget-token.service';
 import { WebChatController } from './web-chat.controller';
+import { WebChatService } from './web-chat.service';
 
 /**
  * Module providing Web Chat channel integration, visitor REST endpoints,
@@ -23,8 +24,8 @@ import { WebChatController } from './web-chat.controller';
     forwardRef(() => ConversationsModule),
   ],
   controllers: [WebChatController],
-  providers: [WebChatAdapter, WebChatGateway, WidgetTokenService],
-  exports: [WebChatAdapter, WebChatGateway, WidgetTokenService],
+  providers: [WebChatAdapter, WebChatGateway, WidgetTokenService, WebChatService],
+  exports: [WebChatAdapter, WebChatGateway, WidgetTokenService, WebChatService],
 })
 export class WebChatModule implements OnModuleInit {
   constructor(

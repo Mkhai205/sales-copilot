@@ -4,10 +4,11 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import type { CreateTeamDto, TeamDto, UpdateTeamDto } from '@sales-copilot/shared-contracts';
 import { teamsApi } from '../api/teams';
+import { teamKeys } from '@/lib/query-keys';
 
 export function useTeams(workspaceId?: string) {
   return useQuery<TeamDto[]>({
-    queryKey: ['workspaces', workspaceId, 'teams'],
+    queryKey: teamKeys.list(workspaceId),
     queryFn: async () => {
       if (!workspaceId) {
         throw new Error('Workspace ID is required');
@@ -22,7 +23,7 @@ export function useTeams(workspaceId?: string) {
 
 export function useTeam(workspaceId?: string, teamId?: string) {
   return useQuery<TeamDto>({
-    queryKey: ['workspaces', workspaceId, 'teams', teamId],
+    queryKey: teamKeys.detail(workspaceId, teamId),
     queryFn: async () => {
       if (!workspaceId || !teamId) {
         throw new Error('Workspace ID and Team ID are required');
@@ -67,13 +68,13 @@ export function useCreateTeam(workspaceId?: string) {
       return newTeam;
     },
     onSuccess: newTeam => {
-      queryClient.setQueryData<TeamDto[]>(['workspaces', workspaceId, 'teams'], old => {
+      queryClient.setQueryData<TeamDto[]>(teamKeys.list(workspaceId), old => {
         if (!old) return [newTeam];
         if (old.some(t => t.id === newTeam.id)) return old;
         return [...old, newTeam];
       });
       queryClient.invalidateQueries({
-        queryKey: ['workspaces', workspaceId, 'teams'],
+        queryKey: teamKeys.list(workspaceId),
       });
       toast.success('Team created successfully');
     },
@@ -126,12 +127,12 @@ export function useUpdateTeam(workspaceId?: string) {
       return updatedTeam;
     },
     onSuccess: updatedTeam => {
-      queryClient.setQueryData<TeamDto[]>(['workspaces', workspaceId, 'teams'], old => {
+      queryClient.setQueryData<TeamDto[]>(teamKeys.list(workspaceId), old => {
         if (!old) return old;
         return old.map(t => (t.id === updatedTeam.id ? updatedTeam : t));
       });
       queryClient.invalidateQueries({
-        queryKey: ['workspaces', workspaceId, 'teams'],
+        queryKey: teamKeys.list(workspaceId),
       });
       toast.success('Team updated successfully');
     },
@@ -153,9 +154,12 @@ export function useDeleteTeam(workspaceId?: string) {
       return { teamId, success: res.success };
     },
     onSuccess: ({ teamId }) => {
-      queryClient.setQueryData<TeamDto[]>(['workspaces', workspaceId, 'teams'], old => {
+      queryClient.setQueryData<TeamDto[]>(teamKeys.list(workspaceId), old => {
         if (!old) return old;
         return old.filter(t => t.id !== teamId);
+      });
+      queryClient.invalidateQueries({
+        queryKey: teamKeys.list(workspaceId),
       });
       toast.success('Team deleted successfully');
     },

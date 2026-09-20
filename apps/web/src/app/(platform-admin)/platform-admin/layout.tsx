@@ -1,5 +1,3 @@
-'use client';
-
 import * as React from 'react';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { AdminSidebar, AdminHeader } from '@/features/platform-admin';

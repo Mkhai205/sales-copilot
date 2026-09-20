@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { AddressCascader } from './address-cascader';
-import { parseAddressText } from '../lib/vietnam-address';
+import { parseAddressText } from '../lib/address-parser';
 
 interface RecipientInfoFormProps {
   value: Partial<ShippingAddressInputDto>;

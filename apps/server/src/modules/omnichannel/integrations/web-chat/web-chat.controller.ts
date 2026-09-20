@@ -27,13 +27,13 @@ import {
   type WidgetContactResponseDto,
 } from '@sales-copilot/shared-contracts';
 import { ZodBody } from '../../../../common/pipes';
-import { PrismaService } from '../../../../infrastructure/database';
 import { ChannelCredentialService } from '../../../omnichannel/inboxes/channel-credential.service';
 import { ContactResolutionService } from '../../contacts/contact-resolution.service';
 import { MessagesService } from '../../../omnichannel/messages/messages.service';
 import { WebChatAdapter } from './web-chat.adapter';
 import { ChannelContext } from '../channel-adapter.types';
 import { WidgetTokenPayload, WidgetTokenService } from './widget-token.service';
+import { WebChatService } from './web-chat.service';
 import { Public } from '../../../identity/auth';
 
 /**
@@ -45,12 +45,12 @@ import { Public } from '../../../identity/auth';
 @Controller('widget')
 export class WebChatController {
   constructor(
-    private readonly prisma: PrismaService,
     private readonly credentialService: ChannelCredentialService,
     private readonly contactResolutionService: ContactResolutionService,
     private readonly messagesService: MessagesService,
     private readonly webChatAdapter: WebChatAdapter,
     private readonly widgetTokenService: WidgetTokenService,
+    private readonly webChatService: WebChatService,
   ) {}
 
   /**
@@ -213,23 +213,12 @@ export class WebChatController {
   @ApiOperation({ summary: "List the authenticated visitor's conversations" })
   async getVisitorConversations(@Req() req: Request) {
     const tokenPayload = this.authenticateVisitor(req);
-    const client = this.prisma.getClient();
 
-    const conversations = await client.conversation.findMany({
-      where: {
-        workspaceId: tokenPayload.workspaceId,
-        inboxId: tokenPayload.inboxId,
-        contactId: tokenPayload.contactId,
-      },
-      orderBy: { updatedAt: 'desc' },
-      include: {
-        messages: {
-          where: { isPrivate: false },
-          orderBy: { createdAt: 'desc' },
-          take: 1,
-        },
-      },
-    });
+    const conversations = await this.webChatService.getVisitorConversations(
+      tokenPayload.workspaceId,
+      tokenPayload.inboxId,
+      tokenPayload.contactId,
+    );
 
     return {
       items: conversations,
@@ -258,15 +247,12 @@ export class WebChatController {
     @Query('afterId') afterId?: string,
   ): Promise<{ items: MessageResponseDto[]; meta: PaginationMeta }> {
     const tokenPayload = this.authenticateVisitor(req);
-    const client = this.prisma.getClient();
 
     // Verify conversation belongs to this visitor
-    const conversation = await client.conversation.findFirst({
-      where: {
-        id: conversationId,
-        workspaceId: tokenPayload.workspaceId,
-      },
-    });
+    const conversation = await this.webChatService.getVisitorConversation(
+      tokenPayload.workspaceId,
+      conversationId,
+    );
 
     if (!conversation) {
       throw new NotFoundException({
@@ -305,18 +291,7 @@ export class WebChatController {
   }
 
   private async resolveChannelByToken(token: string) {
-    const client = this.prisma.getClient();
-
-    // Direct indexed match by providerAccountId or inboxId to prevent cross-tenant scanning (TASK-3A-07)
-    return client.channel.findFirst({
-      where: {
-        channelType: ChannelType.WEB_CHAT,
-        OR: [{ providerAccountId: token }, { inboxId: token }],
-      },
-      include: {
-        inbox: true,
-      },
-    });
+    return this.webChatService.resolveChannelByToken(token);
   }
 
   private decryptCredentials(rawCredentials: unknown): Record<string, unknown> {
