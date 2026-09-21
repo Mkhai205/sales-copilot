@@ -29,6 +29,8 @@ import {
   createInboxSchema,
   ChannelType,
   createCannedResponseSchema,
+  widgetContactRequestSchema,
+  widgetContactResponseSchema,
 } from '../index';
 
 describe('Shared Contracts — Omnichannel Context Schemas', () => {
@@ -369,6 +371,39 @@ describe('Shared Contracts — Omnichannel Context Schemas', () => {
       });
       assert.throws(() => {
         createCannedResponseSchema.parse({ shortCode: 'hi', content: '' });
+      });
+    });
+  });
+
+  describe('Widget Schemas', () => {
+    it('should validate widgetContactRequestSchema with optional and empty string fields', () => {
+      const parsed = widgetContactRequestSchema.parse({
+        websiteToken: 'web-tok-123',
+        name: 'Guest User',
+        email: '',
+        phoneNumber: '+84987654321',
+      });
+      assert.strictEqual(parsed.websiteToken, 'web-tok-123');
+      assert.strictEqual(parsed.name, 'Guest User');
+      assert.strictEqual(parsed.email, '');
+      assert.strictEqual(parsed.phoneNumber, '+84987654321');
+    });
+
+    it('should validate widgetContactResponseSchema with valid payload', () => {
+      const valid = {
+        token: 'jwt-token-xyz',
+        contactToken: 'contact-tok-456',
+        contact: { id: 'cnt-1', name: 'Guest' },
+        isNewContact: true,
+      };
+      const parsed = widgetContactResponseSchema.parse(valid);
+      assert.strictEqual(parsed.token, 'jwt-token-xyz');
+      assert.strictEqual(parsed.isNewContact, true);
+    });
+
+    it('should reject widgetContactResponseSchema when missing required fields', () => {
+      assert.throws(() => {
+        widgetContactResponseSchema.parse({ token: 'tok' });
       });
     });
   });

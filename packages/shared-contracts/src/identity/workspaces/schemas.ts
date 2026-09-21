@@ -85,4 +85,4 @@ export interface WorkspaceMemberDto {
 export {
   type WorkspacePaymentSettings,
   workspacePaymentSettingsSchema,
-} from '../../commerce/payments/vietqr.dto';
+} from '../../commerce/payments/vietqr.schemas';

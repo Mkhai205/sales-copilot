@@ -1,1 +1,1 @@
-export * from './audit-logs.dto';
+export * from './audit-logs.schemas';

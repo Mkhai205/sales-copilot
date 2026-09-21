@@ -227,7 +227,6 @@ export class RealtimeGateway
                 },
               };
               this.server.to(room).emit(WsServerEvent.COMMERCE_COLLISION_STATUS, envelope);
-              this.server.to(room).emit(WsServerEvent.POS_COLLISION_STATUS, envelope);
               this.server.to(room).emit('event', envelope);
             }
           })
@@ -850,9 +849,6 @@ export class RealtimeGateway
   // ==========================================================================
 
   @SubscribeMessage(WsClientEvent.COMMERCE_EDITING_START)
-  @SubscribeMessage(WsClientEvent.POS_EDITING_START)
-  @SubscribeMessage('commerce.editing_start')
-  @SubscribeMessage('commerce.editing_start')
   async handleCommerceEditingStart(
     client: Socket,
     payload: unknown,
@@ -915,7 +911,6 @@ export class RealtimeGateway
         },
       };
       client.to(room).emit(WsServerEvent.COMMERCE_COLLISION_STATUS, envelope);
-      client.to(room).emit(WsServerEvent.POS_COLLISION_STATUS, envelope);
       client.to(room).emit('event', envelope);
 
       return result;
@@ -930,9 +925,6 @@ export class RealtimeGateway
   }
 
   @SubscribeMessage(WsClientEvent.COMMERCE_EDITING_HEARTBEAT)
-  @SubscribeMessage(WsClientEvent.POS_EDITING_HEARTBEAT)
-  @SubscribeMessage('commerce.editing_heartbeat')
-  @SubscribeMessage('commerce.editing_heartbeat')
   async handleCommerceEditingHeartbeat(
     client: Socket,
     payload: unknown,
@@ -956,9 +948,6 @@ export class RealtimeGateway
   }
 
   @SubscribeMessage(WsClientEvent.COMMERCE_EDITING_STOP)
-  @SubscribeMessage(WsClientEvent.POS_EDITING_STOP)
-  @SubscribeMessage('commerce.editing_stop')
-  @SubscribeMessage('commerce.editing_stop')
   async handleCommerceEditingStop(client: Socket, payload: unknown): Promise<{ success: boolean }> {
     const socketData = client.data as RealtimeSocketData | undefined;
     if (!socketData?.userId || !this.commercePresenceService) {
@@ -990,16 +979,12 @@ export class RealtimeGateway
       },
     };
     client.to(room).emit(WsServerEvent.COMMERCE_COLLISION_STATUS, envelope);
-    client.to(room).emit(WsServerEvent.POS_COLLISION_STATUS, envelope);
     client.to(room).emit('event', envelope);
 
     return { success: released };
   }
 
   @SubscribeMessage(WsClientEvent.COMMERCE_EDITING_TAKEOVER)
-  @SubscribeMessage(WsClientEvent.POS_EDITING_TAKEOVER)
-  @SubscribeMessage('commerce.editing_takeover')
-  @SubscribeMessage('commerce.editing_takeover')
   async handleCommerceEditingTakeover(
     client: Socket,
     payload: unknown,
@@ -1039,7 +1024,6 @@ export class RealtimeGateway
       },
     };
     this.server.to(room).emit(WsServerEvent.COMMERCE_COLLISION_STATUS, envelope);
-    this.server.to(room).emit(WsServerEvent.POS_COLLISION_STATUS, envelope);
     this.server.to(room).emit('event', envelope);
 
     return res;

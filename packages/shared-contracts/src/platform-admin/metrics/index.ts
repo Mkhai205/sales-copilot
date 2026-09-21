@@ -1,1 +1,1 @@
-export * from './metrics.dto';
+export * from './metrics.schemas';

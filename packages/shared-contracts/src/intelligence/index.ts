@@ -1,4 +1,4 @@
-import { z } from 'zod';
+export * from './intelligence.schemas';
 
 export const AI_AUTOPILOT_QUEUE = 'ai-autopilot';
 
@@ -23,6 +23,3 @@ export interface AiAgentResult {
   stepsCount?: number;
   usage?: AiAgentTokenUsage;
 }
-
-export const personaToneSchema = z.enum(['shop_ban', 'em_anh_chi', 'minh_ban', 'chuyen_vien']);
-export type PersonaTone = z.infer<typeof personaToneSchema>;

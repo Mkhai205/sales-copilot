@@ -14,6 +14,7 @@ describe('RealtimeGateway (Agent Realtime WebSocket Namespace /realtime — Task
   let mockPrisma: any;
   let mockEventEmitter: any;
   let mockPresenceService: any;
+  let mockCommercePresenceService: any;
   let emittedEvents: Array<{ event: string; payload: unknown }>;
   let heartbeatCalls: Array<{ workspaceId: string; userId: string }>;
   let presenceOnlineCalls: Array<{ workspaceId: string; userId: string }>;
@@ -208,12 +209,41 @@ describe('RealtimeGateway (Agent Realtime WebSocket Namespace /realtime — Task
       }),
     };
 
+    mockCommercePresenceService = {
+      startEditing: jest.fn().mockResolvedValue({
+        success: true,
+        isLocked: false,
+        remainingTtlSeconds: 30,
+      }),
+      refreshHeartbeat: jest.fn().mockResolvedValue({
+        success: true,
+        remainingTtlSeconds: 30,
+      }),
+      stopEditing: jest.fn().mockResolvedValue(true),
+      takeoverEditing: jest.fn().mockResolvedValue({
+        success: true,
+        remainingTtlSeconds: 30,
+      }),
+      getEditingStatus: jest.fn().mockResolvedValue({
+        isLocked: false,
+        lockedBy: null,
+        remainingTtlSeconds: 0,
+      }),
+      cleanupUserLocks: jest
+        .fn()
+        .mockResolvedValue([
+          { workspaceId: validWorkspaceId1, conversationId: validConversationId1 },
+        ]),
+    };
+
     gateway = new RealtimeGateway(
       mockTokenService,
       mockPrisma,
       undefined,
       mockEventEmitter,
       mockPresenceService,
+      undefined,
+      mockCommercePresenceService,
     );
   });
 
@@ -1088,6 +1118,169 @@ describe('RealtimeGateway (Agent Realtime WebSocket Namespace /realtime — Task
 
       expect(res.success).toBe(false);
       expect(res.error?.code).toBe('CONVERSATION_NOT_FOUND');
+    });
+  });
+
+  describe('8. Commerce Collision Locking & Presence Handlers', () => {
+    let mockServerBroadcasts: Array<{ room: string; event: string; payload: any }>;
+
+    beforeEach(() => {
+      mockServerBroadcasts = [];
+      gateway.server = {
+        to: (room: string) => ({
+          emit: (event: string, payload: any) => {
+            mockServerBroadcasts.push({ room, event, payload });
+          },
+        }),
+      } as any;
+    });
+
+    it('should acquire lock, broadcast COMMERCE_COLLISION_STATUS and emit no legacy collision events on handleCommerceEditingStart', async () => {
+      const socket = createAuthenticatedSocket();
+      const payload = {
+        workspaceId: validWorkspaceId1,
+        conversationId: validConversationId1,
+      };
+
+      const result = await gateway.handleCommerceEditingStart(socket, payload);
+
+      expect(result.success).toBe(true);
+      expect(mockCommercePresenceService.startEditing).toHaveBeenCalledWith(
+        validWorkspaceId1,
+        validConversationId1,
+        expect.objectContaining({ userId: validUserId }),
+      );
+
+      const roomBroadcasts =
+        socket._getBroadcastToRooms()[`conversation_${validConversationId1}`] || [];
+      const collisionEvents = roomBroadcasts.filter(
+        (b: any) => b.event === WsServerEvent.COMMERCE_COLLISION_STATUS,
+      );
+      const posEvents = roomBroadcasts.filter((b: any) => (b.event as string).includes('POS'));
+
+      expect(collisionEvents.length).toBe(1);
+      expect(posEvents.length).toBe(0);
+    });
+
+    it('should renew editing heartbeat on handleCommerceEditingHeartbeat', async () => {
+      const socket = createAuthenticatedSocket();
+      const payload = {
+        workspaceId: validWorkspaceId1,
+        conversationId: validConversationId1,
+      };
+
+      const result = await gateway.handleCommerceEditingHeartbeat(socket, payload);
+
+      expect(result.success).toBe(true);
+      expect(mockCommercePresenceService.refreshHeartbeat).toHaveBeenCalledWith(
+        validWorkspaceId1,
+        validConversationId1,
+        validUserId,
+      );
+    });
+
+    it('should release lock and broadcast unlocked COMMERCE_COLLISION_STATUS on handleCommerceEditingStop', async () => {
+      const socket = createAuthenticatedSocket();
+      const payload = {
+        workspaceId: validWorkspaceId1,
+        conversationId: validConversationId1,
+      };
+
+      const result = await gateway.handleCommerceEditingStop(socket, payload);
+
+      expect(result.success).toBe(true);
+      expect(mockCommercePresenceService.stopEditing).toHaveBeenCalledWith(
+        validWorkspaceId1,
+        validConversationId1,
+        validUserId,
+      );
+
+      const roomBroadcasts =
+        socket._getBroadcastToRooms()[`conversation_${validConversationId1}`] || [];
+      const collisionEvents = roomBroadcasts.filter(
+        (b: any) => b.event === WsServerEvent.COMMERCE_COLLISION_STATUS,
+      );
+      expect(collisionEvents.length).toBe(1);
+    });
+
+    it('should takeover lock and broadcast COMMERCE_COLLISION_STATUS to room on handleCommerceEditingTakeover', async () => {
+      const socket = createAuthenticatedSocket();
+      const payload = {
+        workspaceId: validWorkspaceId1,
+        conversationId: validConversationId1,
+      };
+
+      const result = await gateway.handleCommerceEditingTakeover(socket, payload);
+
+      expect(result.success).toBe(true);
+      expect(mockCommercePresenceService.takeoverEditing).toHaveBeenCalledWith(
+        validWorkspaceId1,
+        validConversationId1,
+        expect.objectContaining({ userId: validUserId }),
+      );
+
+      const collisionBroadcasts = mockServerBroadcasts.filter(
+        b =>
+          b.room === `conversation_${validConversationId1}` &&
+          b.event === WsServerEvent.COMMERCE_COLLISION_STATUS,
+      );
+      expect(collisionBroadcasts.length).toBe(1);
+    });
+
+    it('should cleanup user locks and broadcast COMMERCE_COLLISION_STATUS to released rooms on handleDisconnect', async () => {
+      const socket = createAuthenticatedSocket();
+      gateway.handleDisconnect(socket);
+
+      // Await promise micro/macro-task completion
+      await new Promise(resolve => setTimeout(resolve, 50));
+
+      expect(mockCommercePresenceService.cleanupUserLocks).toHaveBeenCalledWith(validUserId);
+      const releasedBroadcasts = mockServerBroadcasts.filter(
+        b =>
+          b.room === `conversation_${validConversationId1}` &&
+          b.event === WsServerEvent.COMMERCE_COLLISION_STATUS,
+      );
+      expect(releasedBroadcasts.length).toBe(1);
+      const posBroadcasts = mockServerBroadcasts.filter(b => (b.event as string).includes('POS'));
+      expect(posBroadcasts.length).toBe(0);
+    });
+
+    it('should reject unauthenticated socket with UNAUTHORIZED on handleCommerceEditingStart', async () => {
+      const socket = createMockSocket();
+      const payload = {
+        workspaceId: validWorkspaceId1,
+        conversationId: validConversationId1,
+      };
+
+      const result = await gateway.handleCommerceEditingStart(socket, payload);
+      expect(result.success).toBe(false);
+      expect(result.error?.code).toBe('UNAUTHORIZED');
+    });
+
+    it('should reject invalid payload with BAD_REQUEST on handleCommerceEditingStart', async () => {
+      const socket = createAuthenticatedSocket();
+      const invalidPayload = {
+        workspaceId: 'not-a-uuid',
+        conversationId: validConversationId1,
+      };
+
+      const result = await gateway.handleCommerceEditingStart(socket, invalidPayload);
+      expect(result.success).toBe(false);
+      expect(result.error?.code).toBe('BAD_REQUEST');
+    });
+
+    it('should reject invalid payload gracefully on heartbeat, stop and takeover', async () => {
+      const socket = createAuthenticatedSocket();
+      const invalidPayload = { workspaceId: 'not-a-uuid', conversationId: 'invalid' };
+
+      const hbRes = await gateway.handleCommerceEditingHeartbeat(socket, invalidPayload);
+      expect(hbRes.success).toBe(false);
+
+      const stopRes = await gateway.handleCommerceEditingStop(socket, invalidPayload);
+      expect(stopRes.success).toBe(false);
+
+      const takeoverRes = await gateway.handleCommerceEditingTakeover(socket, invalidPayload);
+      expect(takeoverRes.success).toBe(false);
     });
   });
 });

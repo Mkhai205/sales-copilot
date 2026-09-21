@@ -9,19 +9,16 @@ export interface CommerceLockData {
   startedAt: string;
   lastHeartbeatAt: string;
 }
-export type PosLockData = CommerceLockData;
 
 export interface CommerceEditingStatusResult {
   isLocked: boolean;
   lockedBy?: CommerceLockData | null;
   remainingTtlSeconds?: number;
 }
-export type PosEditingStatusResult = CommerceEditingStatusResult;
 
 export interface CommerceStartEditingResult extends CommerceEditingStatusResult {
   success: boolean;
 }
-export type PosStartEditingResult = CommerceStartEditingResult;
 
 @Injectable()
 export class CommercePresenceService {
@@ -48,7 +45,7 @@ export class CommercePresenceService {
 
     if (existingStr) {
       try {
-        const existing = JSON.parse(existingStr) as PosLockData;
+        const existing = JSON.parse(existingStr) as CommerceLockData;
         if (existing.userId !== user.userId) {
           const ttl = await this.redis.ttl(key);
           return {
@@ -74,7 +71,7 @@ export class CommercePresenceService {
       }
     }
 
-    const lockData: PosLockData = {
+    const lockData: CommerceLockData = {
       userId: user.userId,
       userName: user.userName,
       userEmail: user.userEmail,
@@ -109,7 +106,7 @@ export class CommercePresenceService {
     }
 
     try {
-      const existing = JSON.parse(existingStr) as PosLockData;
+      const existing = JSON.parse(existingStr) as CommerceLockData;
       if (existing.userId !== userId) {
         return { success: false, remainingTtlSeconds: 0 };
       }
@@ -135,7 +132,7 @@ export class CommercePresenceService {
     }
 
     try {
-      const existing = JSON.parse(existingStr) as PosLockData;
+      const existing = JSON.parse(existingStr) as CommerceLockData;
       if (existing.userId === userId) {
         await this.redis.del(key);
         return true;
@@ -156,23 +153,23 @@ export class CommercePresenceService {
     user: { userId: string; userName?: string; userEmail?: string; avatarUrl?: string },
   ): Promise<{
     success: boolean;
-    previousLockedBy?: PosLockData | null;
+    previousLockedBy?: CommerceLockData | null;
     remainingTtlSeconds: number;
   }> {
     const key = this.getLockKey(workspaceId, conversationId);
     const existingStr = await this.redis.get(key);
-    let previousLockedBy: PosLockData | null = null;
+    let previousLockedBy: CommerceLockData | null = null;
 
     if (existingStr) {
       try {
-        previousLockedBy = JSON.parse(existingStr) as PosLockData;
+        previousLockedBy = JSON.parse(existingStr) as CommerceLockData;
       } catch {
         // ignore
       }
     }
 
     const now = new Date().toISOString();
-    const lockData: PosLockData = {
+    const lockData: CommerceLockData = {
       userId: user.userId,
       userName: user.userName,
       userEmail: user.userEmail,
@@ -196,7 +193,7 @@ export class CommercePresenceService {
   async getEditingStatus(
     workspaceId: string,
     conversationId: string,
-  ): Promise<PosEditingStatusResult> {
+  ): Promise<CommerceEditingStatusResult> {
     const key = this.getLockKey(workspaceId, conversationId);
     const existingStr = await this.redis.get(key);
 
@@ -205,7 +202,7 @@ export class CommercePresenceService {
     }
 
     try {
-      const existing = JSON.parse(existingStr) as PosLockData;
+      const existing = JSON.parse(existingStr) as CommerceLockData;
       const ttl = await this.redis.ttl(key);
       return {
         isLocked: true,
@@ -226,10 +223,7 @@ export class CommercePresenceService {
   ): Promise<Array<{ workspaceId: string; conversationId: string }>> {
     const cleaned: Array<{ workspaceId: string; conversationId: string }> = [];
     try {
-      const keys = [
-        ...(await this.redis.scan('lock:commerce:editing:*')),
-        ...(await this.redis.scan('lock:commerce:editing:*')),
-      ];
+      const keys = await this.redis.scan('lock:commerce:editing:*');
       for (const key of keys) {
         const val = await this.redis.get(key);
         if (val) {
@@ -256,5 +250,3 @@ export class CommercePresenceService {
     return cleaned;
   }
 }
-
-export const PosPresenceService = CommercePresenceService;

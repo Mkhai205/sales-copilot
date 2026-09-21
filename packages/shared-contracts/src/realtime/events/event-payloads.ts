@@ -62,8 +62,6 @@ export enum DomainEvent {
   ORDER_COMPLETED = 'order.completed',
   INVENTORY_UPDATED = 'inventory.updated',
   COMMERCE_COLLISION_STATUS = 'commerce.collision_status',
-  // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
-  POS_COLLISION_STATUS = 'commerce.collision_status',
   ORDER_SHIPPED = 'order.shipped',
 
   // Payment & Reconciliation events
@@ -242,7 +240,6 @@ export interface CommerceCollisionStatusPayload extends BaseDomainEventPayload {
   } | null;
   remainingTtlSeconds?: number;
 }
-export type PosCollisionStatusPayload = CommerceCollisionStatusPayload;
 
 export interface OrderShippedEventPayload extends BaseDomainEventPayload {
   orderId: string;

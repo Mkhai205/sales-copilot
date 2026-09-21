@@ -59,8 +59,6 @@ export enum WsServerEvent {
   ORDER_COMPLETED = 'order.completed',
   INVENTORY_UPDATED = 'inventory.updated',
   COMMERCE_COLLISION_STATUS = 'commerce.collision_status',
-  // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
-  POS_COLLISION_STATUS = 'commerce.collision_status',
 
   ORDER_SHIPPED = 'order.shipped',
 
@@ -87,16 +85,6 @@ export enum WsClientEvent {
   COMMERCE_EDITING_HEARTBEAT = 'commerce.editing_heartbeat',
   COMMERCE_EDITING_STOP = 'commerce.editing_stop',
   COMMERCE_EDITING_TAKEOVER = 'commerce.editing_takeover',
-
-  // Backward-compat aliases
-  // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
-  POS_EDITING_START = 'commerce.editing_start',
-  // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
-  POS_EDITING_HEARTBEAT = 'commerce.editing_heartbeat',
-  // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
-  POS_EDITING_STOP = 'commerce.editing_stop',
-  // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
-  POS_EDITING_TAKEOVER = 'commerce.editing_takeover',
 }
 
 // ============================================================================
@@ -145,8 +133,6 @@ export const commerceEditingActionSchema = z.object({
   conversationId: z.string().uuid('Invalid conversation ID format (UUID expected)'),
 });
 export type CommerceEditingActionDto = z.infer<typeof commerceEditingActionSchema>;
-export const posEditingActionSchema = commerceEditingActionSchema;
-export type PosEditingActionDto = CommerceEditingActionDto;
 
 export const orderShippedEventPayloadSchema = z.object({
   workspaceId: z.string().uuid(),

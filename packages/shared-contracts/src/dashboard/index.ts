@@ -1,1 +1,1 @@
-export * from './schemas';
+export * from './dashboard.schemas';

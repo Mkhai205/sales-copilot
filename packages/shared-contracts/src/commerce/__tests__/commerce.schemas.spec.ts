@@ -15,6 +15,8 @@ import {
   InventoryTransactionType,
   PaymentMethod,
   COMMERCE_RECONCILIATION_QUEUE,
+  generateVietQrSchema,
+  vietQrResponseSchema,
 } from '../index';
 
 describe('Shared Contracts — Commerce Context Schemas', () => {
@@ -349,6 +351,45 @@ describe('Shared Contracts — Commerce Context Schemas', () => {
 
       const result = shippingAddressInputSchema.safeParse(payload);
       assert.strictEqual(result.success, false);
+    });
+  });
+
+  describe('VietQR Schemas', () => {
+    it('should validate generateVietQrSchema with defaults', () => {
+      const parsed = generateVietQrSchema.parse({});
+      assert.strictEqual(parsed.sendToChat, true);
+    });
+
+    it('should validate generateVietQrSchema with custom fields', () => {
+      const parsed = generateVietQrSchema.parse({
+        bankBin: '970422',
+        accountNumber: '123456789',
+        accountName: 'NGUYEN VAN A',
+        memo: 'DH1001',
+        sendToChat: false,
+      });
+      assert.strictEqual(parsed.bankBin, '970422');
+      assert.strictEqual(parsed.accountNumber, '123456789');
+      assert.strictEqual(parsed.accountName, 'NGUYEN VAN A');
+      assert.strictEqual(parsed.memo, 'DH1001');
+      assert.strictEqual(parsed.sendToChat, false);
+    });
+
+    it('should validate vietQrResponseSchema with valid payload', () => {
+      const payload = {
+        qrPayload: '00020101021238...',
+        qrUrl: 'https://img.vietqr.io/image/970422-123456789-compact2.png',
+        bankBin: '970422',
+        bankName: 'MBBank',
+        accountNumber: '123456789',
+        accountName: 'NGUYEN VAN A',
+        amount: 250000,
+        memo: 'DH1001',
+        displayId: 1001,
+        orderId: '00000000-0000-0000-0000-000000000001',
+      };
+      const result = vietQrResponseSchema.safeParse(payload);
+      assert.strictEqual(result.success, true);
     });
   });
 });

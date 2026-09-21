@@ -8,5 +8,3 @@ import { CommercePresenceService } from './commerce-presence.service';
   exports: [CommercePresenceService],
 })
 export class CommercePresenceModule {}
-
-export const PosPresenceModule = CommercePresenceModule;

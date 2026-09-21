@@ -1,2 +1,2 @@
 export * from './payment.schemas';
-export * from './vietqr.dto';
+export * from './vietqr.schemas';

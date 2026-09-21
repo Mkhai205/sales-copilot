@@ -94,5 +94,3 @@ export function useCommerceCollision({
     takeover,
   };
 }
-
-export const usePosCollision = useCommerceCollision;

@@ -8,15 +8,22 @@ import {
   channelSettingsSchema,
 } from '../schemas';
 import {
-  VIETNAMESE_PHONE_EXTRACT_REGEX,
   extractVietnamesePhoneNumbers,
   normalizeVietnamesePhoneNumber,
 } from '../../../common/phone';
 
 describe('Shared Contracts — Comment Guard Schemas & Regex', () => {
   describe('Constants and Schemas', () => {
-    it('should maintain COMMENT_GUARD_QUEUE invariant', () => {
+    it('should maintain COMMENT_GUARD_QUEUE and default template invariants', () => {
       assert.strictEqual(COMMENT_GUARD_QUEUE, 'comment-guard');
+      assert.ok(
+        typeof DEFAULT_COMMENT_GUARD_PRIVATE_REPLY === 'string' &&
+          DEFAULT_COMMENT_GUARD_PRIVATE_REPLY.length > 0,
+      );
+      assert.ok(
+        typeof DEFAULT_COMMENT_GUARD_PUBLIC_REPLY === 'string' &&
+          DEFAULT_COMMENT_GUARD_PUBLIC_REPLY.length > 0,
+      );
     });
 
     it('should validate commentGuardConfigSchema defaults', () => {
