@@ -1,8 +1,6 @@
-import { Controller, Get, HttpCode, HttpStatus, Patch, Post, UseGuards } from '@nestjs/common';
+import { Controller, Get, HttpCode, HttpStatus, Patch, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiHeader, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import {
-  type CreateWorkspaceDto,
-  createWorkspaceSchema,
   type UpdateWorkspaceDto,
   updateWorkspaceSchema,
   type UserWorkspaceDto,
@@ -32,20 +30,6 @@ export class WorkspacesController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getMyWorkspaces(@CurrentUser() user: JwtUserPayload): Promise<UserWorkspaceDto[]> {
     return this.workspacesService.findWorkspacesByUserId(user.userId);
-  }
-
-  @Post()
-  @HttpCode(HttpStatus.CREATED)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Provision a new workspace and become OWNER' })
-  @ApiResponse({ status: 201, description: 'Workspace provisioned successfully' })
-  @ApiResponse({ status: 400, description: 'Validation failed or invalid input' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async createWorkspace(
-    @CurrentUser() user: JwtUserPayload,
-    @ZodBody(createWorkspaceSchema) dto: CreateWorkspaceDto,
-  ): Promise<WorkspaceDto> {
-    return this.workspacesService.createWorkspace(user.userId, dto);
   }
 
   @Get('current')

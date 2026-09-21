@@ -193,7 +193,7 @@ export function MembersTable({ workspaceId, currentUserId, currentUserRole }: Me
           )}
         </div>
 
-        {/* Invite Button */}
+        {/* Add Employee Button */}
         {canManage && (
           <Button
             size="sm"
@@ -201,7 +201,7 @@ export function MembersTable({ workspaceId, currentUserId, currentUserRole }: Me
             className="h-8 gap-1.5 text-xs font-medium"
           >
             <UserPlus className="size-3.5" data-icon="inline-start" />
-            Mời thành viên
+            Thêm nhân viên
           </Button>
         )}
       </div>

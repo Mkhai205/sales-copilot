@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   ForbiddenException,
   Injectable,
@@ -8,6 +9,8 @@ import {
 } from '@nestjs/common';
 import type {
   AuthTokensDto,
+  ChangePasswordDto,
+  ChangePasswordResponseDto,
   LoginDto,
   LoginResponseDto,
   RefreshTokenDto,
@@ -52,7 +55,7 @@ export class AuthService {
     const passwordHash = await this.passwordService.hash(dto.password);
     const workspaceName = dto.workspaceName?.trim() || `${dto.name.trim()}'s Workspace`;
 
-    const result = await this.prisma.runInTransaction(async txCtx => {
+    const result = await this.prisma.runInTransaction(async _txCtx => {
       const client = this.prisma.client;
 
       const user = await client.user.create({
@@ -309,6 +312,61 @@ export class AuthService {
       isActive: updated.isActive,
       createdAt: updated.createdAt.toISOString(),
       updatedAt: updated.updatedAt.toISOString(),
+    };
+  }
+
+  /**
+   * Changes authenticated user password with current password verification.
+   */
+  async changePassword(userId: string, dto: ChangePasswordDto): Promise<ChangePasswordResponseDto> {
+    const user = await this.prisma.client.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException({
+        code: 'USER_NOT_FOUND',
+        message: 'User profile not found',
+      });
+    }
+
+    if (!user.isActive) {
+      throw new ForbiddenException({
+        code: 'ACCOUNT_DEACTIVATED',
+        message: 'Account is deactivated',
+      });
+    }
+
+    const isMatch = await this.passwordService.verify(user.passwordHash, dto.currentPassword);
+    if (!isMatch) {
+      throw new BadRequestException({
+        code: 'INVALID_CURRENT_PASSWORD',
+        message: 'Mật khẩu hiện tại không chính xác',
+      });
+    }
+
+    if (dto.currentPassword === dto.newPassword) {
+      throw new BadRequestException({
+        code: 'PASSWORD_UNCHANGED',
+        message: 'Mật khẩu mới không được trùng với mật khẩu hiện tại',
+      });
+    }
+
+    const newPasswordHash = await this.passwordService.hash(dto.newPassword);
+
+    await this.prisma.client.user.update({
+      where: { id: userId },
+      data: { passwordHash: newPasswordHash },
+    });
+
+    // Revoke all existing refresh token sessions for security
+    await this.tokenService.revokeAllUserTokens(userId);
+
+    this.logger.log(`Password changed successfully for user '${userId}'`);
+
+    return {
+      success: true,
+      message: 'Đổi mật khẩu thành công',
     };
   }
 }

@@ -4,6 +4,7 @@ import { decodeJwtPayload, isSuperAdmin, isTokenExpired } from './lib/auth/edge-
 
 const PUBLIC_PREFIXES = [
   '/login',
+  '/register',
   '/auth',
   '/api',
   '/_next',

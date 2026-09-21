@@ -3,7 +3,13 @@
 import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { API_BASE } from '@/lib/api/client';
-import type { LoginDto, LoginResponseDto, UserWorkspaceDto } from '@sales-copilot/shared-contracts';
+import type {
+  LoginDto,
+  LoginResponseDto,
+  RegisterDto,
+  RegisterResponseDto,
+  UserWorkspaceDto,
+} from '@sales-copilot/shared-contracts';
 
 const REFRESH_TOKEN_MAX_AGE = 7 * 24 * 60 * 60; // 7 days (matching REFRESH_TOKEN_EXPIRES_IN_SECONDS: 604800)
 
@@ -128,6 +134,66 @@ export async function loginAction(
   } else {
     redirect(`/${targetSlug}/dashboard`);
   }
+}
+
+export async function registerAction(
+  formData: RegisterDto,
+): Promise<ActionResult<RegisterResponseDto> | void> {
+  let targetSlug: string;
+
+  try {
+    const res = await fetch(`${API_BASE}/auth/register`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(formData),
+      cache: 'no-store',
+    });
+
+    const responseBody = await res.json();
+
+    if (!res.ok || !responseBody.success) {
+      return {
+        success: false,
+        error: responseBody.error || {
+          code: 'REGISTRATION_FAILED',
+          message: 'Đăng ký thất bại. Vui lòng kiểm tra lại thông tin.',
+        },
+      };
+    }
+
+    const { tokens, workspace } = responseBody.data as RegisterResponseDto;
+
+    const cookieStore = await cookies();
+    const cookieBase = await getAuthCookieBaseOptions();
+
+    cookieStore.set('access_token', tokens.accessToken, {
+      ...cookieBase,
+      maxAge: tokens.expiresIn,
+    });
+
+    cookieStore.set('refresh_token', tokens.refreshToken, {
+      ...cookieBase,
+      maxAge: REFRESH_TOKEN_MAX_AGE,
+    });
+
+    targetSlug = workspace.slug;
+  } catch (err: any) {
+    if (err?.digest?.startsWith('NEXT_REDIRECT') || err?.message === 'NEXT_REDIRECT') {
+      throw err;
+    }
+    return {
+      success: false,
+      error: {
+        code: 'NETWORK_ERROR',
+        message: err?.message || 'Không thể kết nối đến máy chủ xác thực.',
+      },
+    };
+  }
+
+  // Auto-redirect straight to Dashboard
+  redirect(`/${targetSlug}/dashboard`);
 }
 
 export async function getSocketTokenAction(): Promise<string | null> {

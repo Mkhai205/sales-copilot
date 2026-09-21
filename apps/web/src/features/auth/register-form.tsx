@@ -3,6 +3,9 @@
 import * as React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useQueryClient } from '@tanstack/react-query';
+import { AlertCircleIcon } from 'lucide-react';
+import { registerSchema, type RegisterDto } from '@sales-copilot/shared-contracts';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -10,73 +13,46 @@ import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/c
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Spinner } from '@/components/ui/spinner';
-import { loginSchema, type LoginDto } from '@sales-copilot/shared-contracts';
-import { loginAction } from './actions';
-import {
-  AlertCircleIcon,
-  ShieldCheckIcon,
-  UserCheckIcon,
-  HeadphonesIcon,
-  SparklesIcon,
-} from 'lucide-react';
+import { registerAction } from './actions';
 
-const TEST_ACCOUNTS = [
-  {
-    role: 'Super Admin',
-    name: 'Super Administrator',
-    email: 'superadmin@salescopilot.io',
-    password: 'SalesCopilot@2026!',
-    icon: ShieldCheckIcon,
-    badgeClass: 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30',
-  },
-  {
-    role: 'Admin',
-    name: 'Workspace Admin',
-    email: 'admin@salescopilot.io',
-    password: 'SalesCopilot@2026!',
-    icon: UserCheckIcon,
-    badgeClass: 'bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-500/30',
-  },
-  {
-    role: 'Agent',
-    name: 'Sarah Agent',
-    email: 'agent@salescopilot.io',
-    password: 'SalesCopilot@2026!',
-    icon: HeadphonesIcon,
-    badgeClass: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30',
-  },
-];
-
-import { useQueryClient } from '@tanstack/react-query';
-
-export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) {
+export function RegisterForm({ className, ...props }: React.ComponentProps<'div'>) {
   const queryClient = useQueryClient();
+  const [workspaceName, setWorkspaceName] = React.useState('');
+  const [name, setName] = React.useState('');
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
-  const [fieldErrors, setFieldErrors] = React.useState<{ email?: string; password?: string }>({});
+  const [fieldErrors, setFieldErrors] = React.useState<{
+    workspaceName?: string;
+    name?: string;
+    email?: string;
+    password?: string;
+  }>({});
   const [apiError, setApiError] = React.useState<string | null>(null);
   const [isPending, setIsPending] = React.useState(false);
-
-  const handleSelectTestAccount = (account: (typeof TEST_ACCOUNTS)[number]) => {
-    setEmail(account.email);
-    setPassword(account.password);
-    setFieldErrors({});
-    setApiError(null);
-  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setApiError(null);
     setFieldErrors({});
 
-    const formData: LoginDto = { email, password };
+    const formData: RegisterDto = {
+      workspaceName: workspaceName.trim() || undefined,
+      name: name.trim(),
+      email: email.trim(),
+      password,
+    };
 
     // Client-side schema validation
-    const parseResult = loginSchema.safeParse(formData);
+    const parseResult = registerSchema.safeParse(formData);
     if (!parseResult.success) {
-      const formatted: { email?: string; password?: string } = {};
+      const formatted: {
+        workspaceName?: string;
+        name?: string;
+        email?: string;
+        password?: string;
+      } = {};
       for (const issue of parseResult.error.issues) {
-        const fieldName = issue.path[0] as 'email' | 'password';
+        const fieldName = issue.path[0] as 'workspaceName' | 'name' | 'email' | 'password';
         if (fieldName && !formatted[fieldName]) {
           formatted[fieldName] = issue.message;
         }
@@ -89,15 +65,14 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
     queryClient.clear();
 
     try {
-      const result = await loginAction(formData);
+      const result = await registerAction(formData);
       if (result && !result.success && result.error) {
         setApiError(
-          result.error.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin tài khoản.',
+          result.error.message || 'Đăng ký thất bại. Vui lòng kiểm tra lại thông tin cung cấp.',
         );
         setIsPending(false);
       }
     } catch (err: any) {
-      // Next.js redirect may throw NEXT_REDIRECT in internal client router handling, which shouldn't be treated as error
       if (err?.digest?.startsWith('NEXT_REDIRECT') || err?.message === 'NEXT_REDIRECT') {
         return;
       }
@@ -110,10 +85,10 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
     <div className={cn('flex flex-col gap-6 w-full', className)} {...props}>
       <Card className="overflow-hidden p-0 shadow-lg border-border/80 bg-card">
         <CardContent className="grid p-0 md:grid-cols-2">
-          {/* Left: Form */}
+          {/* Left: Register Form */}
           <form onSubmit={handleSubmit} className="p-6 sm:p-8 flex flex-col justify-center">
             <FieldGroup>
-              <div className="flex flex-col items-center gap-2 mb-2">
+              <div className="flex flex-col items-center gap-2 mb-3">
                 <div className="flex items-center justify-center mb-1">
                   <Image
                     src="/brand/logo.png"
@@ -136,9 +111,9 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
                     className="hidden h-10 w-auto object-contain dark:block"
                   />
                 </div>
-                <h1 className="text-2xl font-bold tracking-tight">{'Chào mừng bạn quay lại'}</h1>
+                <h1 className="text-2xl font-bold tracking-tight">Tạo cửa hàng mới</h1>
                 <p className="text-xs text-muted-foreground text-center">
-                  {'Đăng nhập để truy cập hộp thư đa kênh và trợ lý hội thoại của bạn'}
+                  Bắt đầu quản lý bán hàng đa kênh và kích hoạt AI Copilot cho doanh nghiệp của bạn
                 </p>
               </div>
 
@@ -149,15 +124,50 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
                 </Alert>
               )}
 
+              <Field data-invalid={!!fieldErrors.workspaceName}>
+                <FieldLabel htmlFor="workspaceName" className="text-xs font-medium">
+                  Tên Shop / Doanh nghiệp
+                </FieldLabel>
+                <Input
+                  id="workspaceName"
+                  name="workspaceName"
+                  placeholder="Cửa hàng thời trang ABC"
+                  className="h-9"
+                  value={workspaceName}
+                  onChange={e => setWorkspaceName(e.target.value)}
+                  disabled={isPending}
+                  required
+                />
+                {fieldErrors.workspaceName && <FieldError>{fieldErrors.workspaceName}</FieldError>}
+              </Field>
+
+              <Field data-invalid={!!fieldErrors.name}>
+                <FieldLabel htmlFor="name" className="text-xs font-medium">
+                  Họ và tên chủ shop
+                </FieldLabel>
+                <Input
+                  id="name"
+                  name="name"
+                  placeholder="Nguyễn Văn A"
+                  className="h-9"
+                  autoComplete="name"
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  disabled={isPending}
+                  required
+                />
+                {fieldErrors.name && <FieldError>{fieldErrors.name}</FieldError>}
+              </Field>
+
               <Field data-invalid={!!fieldErrors.email}>
                 <FieldLabel htmlFor="email" className="text-xs font-medium">
-                  {'Email công việc'}
+                  Email liên hệ
                 </FieldLabel>
                 <Input
                   id="email"
                   name="email"
                   type="email"
-                  placeholder={'ban@congty.vn'}
+                  placeholder="ban@congty.vn"
                   className="h-9"
                   autoComplete="email"
                   value={email}
@@ -169,24 +179,16 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
               </Field>
 
               <Field data-invalid={!!fieldErrors.password}>
-                <div className="flex items-center justify-between w-full">
-                  <FieldLabel htmlFor="password" className="text-xs font-medium">
-                    {'Mật khẩu'}
-                  </FieldLabel>
-                  <a
-                    href="#"
-                    className="text-xs text-muted-foreground hover:text-primary transition-colors underline-offset-2 hover:underline"
-                  >
-                    {'Quên mật khẩu?'}
-                  </a>
-                </div>
+                <FieldLabel htmlFor="password" className="text-xs font-medium">
+                  Mật khẩu
+                </FieldLabel>
                 <Input
                   id="password"
                   name="password"
                   type="password"
-                  placeholder="••••••••"
+                  placeholder="Ít nhất 6 ký tự"
                   className="h-9"
-                  autoComplete="current-password"
+                  autoComplete="new-password"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                   disabled={isPending}
@@ -195,7 +197,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
                 {fieldErrors.password && <FieldError>{fieldErrors.password}</FieldError>}
               </Field>
 
-              <Field className="mt-1">
+              <Field className="mt-2">
                 <Button
                   type="submit"
                   size="lg"
@@ -205,74 +207,18 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
                   {isPending ? (
                     <>
                       <Spinner className="mr-2" />
-                      {'Đang đăng nhập...'}
+                      Đang tạo cửa hàng...
                     </>
                   ) : (
-                    'Đăng nhập'
+                    'Đăng ký cửa hàng'
                   )}
                 </Button>
               </Field>
 
-              {/* Quick Test Accounts Section */}
-              <div className="mt-3 pt-3 border-t border-border/60">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-1 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                    <SparklesIcon className="size-3 text-primary" />
-                    <span>{'Tài khoản thử nghiệm nhanh'}</span>
-                  </div>
-                  <span className="text-[10px] text-muted-foreground font-mono">Điền nhanh</span>
-                </div>
-                <div className="grid grid-cols-3 gap-1.5">
-                  {TEST_ACCOUNTS.map(acc => {
-                    const Icon = acc.icon;
-                    const isSelected = email === acc.email;
-                    const roleName =
-                      acc.role === 'Super Admin'
-                        ? 'Quản trị cấp cao'
-                        : acc.role === 'Admin'
-                          ? 'Quản trị viên'
-                          : 'Chuyên viên CSKH';
-                    return (
-                      <button
-                        key={acc.email}
-                        type="button"
-                        onClick={() => handleSelectTestAccount(acc)}
-                        disabled={isPending}
-                        className={cn(
-                          'flex flex-col items-start gap-1 p-2 rounded-md border text-left transition-all cursor-pointer',
-                          'hover:border-primary/50 hover:bg-muted/50 focus:outline-none focus:ring-1 focus:ring-ring',
-                          isSelected
-                            ? 'border-primary bg-primary/5 shadow-xs'
-                            : 'border-border/60 bg-card/60',
-                        )}
-                      >
-                        <div className="flex items-center justify-between w-full">
-                          <span
-                            className={cn(
-                              'inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-semibold border',
-                              acc.badgeClass,
-                            )}
-                          >
-                            <Icon className="size-2.5" />
-                            {roleName}
-                          </span>
-                        </div>
-                        <span
-                          className="text-[10px] text-muted-foreground font-mono truncate w-full"
-                          title={acc.email}
-                        >
-                          {acc.email.split('@')[0]}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <FieldDescription className="text-center mt-1 text-xs">
-                {'Chưa có tài khoản? '}
-                <Link href="/register" className="font-medium text-primary hover:underline">
-                  {'Đăng ký'}
+              <FieldDescription className="text-center mt-2 text-xs">
+                Đã có tài khoản?{' '}
+                <Link href="/login" className="font-medium text-primary hover:underline">
+                  Đăng nhập
                 </Link>
               </FieldDescription>
             </FieldGroup>
@@ -282,15 +228,14 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
           <div className="relative hidden md:flex flex-col justify-between p-8 bg-gradient-to-br from-primary/15 via-primary/5 to-muted border-l border-border/60">
             <div className="space-y-3">
               <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-primary/15 text-primary border border-primary/20">
-                {'Nền tảng Đa kênh'}
+                Khởi tạo miễn phí
               </div>
               <h2 className="text-xl font-bold tracking-tight text-foreground">
-                {'Hội thoại Khách hàng Thống nhất & AI Sales Copilot'}
+                Tự động hóa bán hàng & Chăm sóc khách hàng đa kênh
               </h2>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                {
-                  'Kết nối Facebook, Zalo, Telegram, Email và Web Chat trong một hộp thư thời gian thực duy nhất.'
-                }
+                Tạo cửa hàng của bạn ngay hôm nay để trải nghiệm trợ lý AI Copilot chốt đơn, đối
+                soát VietQR và đồng bộ hội thoại thời gian thực.
               </p>
             </div>
 
@@ -309,15 +254,15 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
             <div className="space-y-2.5 pt-4 border-t border-border/40">
               <div className="flex items-center gap-2.5 text-xs text-muted-foreground">
                 <div className="size-2 rounded-full bg-emerald-500 shrink-0" />
-                <span>{'Luồng sự kiện WebSocket thời gian thực'}</span>
+                <span>Mô hình 1 tài khoản = 1 shop khép kín & bảo mật</span>
               </div>
               <div className="flex items-center gap-2.5 text-xs text-muted-foreground">
                 <div className="size-2 rounded-full bg-blue-500 shrink-0" />
-                <span>{'Cô lập không gian làm việc đa người thuê (Multi-tenant)'}</span>
+                <span>Tạo tài khoản nhân viên nhanh chóng không cần link mời</span>
               </div>
               <div className="flex items-center gap-2.5 text-xs text-muted-foreground">
                 <div className="size-2 rounded-full bg-purple-500 shrink-0" />
-                <span>{'Tự động phân bổ tư vấn viên & tin nhắn mẫu thông minh'}</span>
+                <span>Trợ lý AI bán hàng và tự động lên đơn tự động</span>
               </div>
             </div>
           </div>
@@ -325,15 +270,15 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
       </Card>
 
       <FieldDescription className="px-6 text-center text-xs text-muted-foreground">
-        {'Bằng cách tiếp tục, bạn đồng ý với '}
+        Bằng cách tiếp tục, bạn đồng ý với{' '}
         <a href="#" className="underline hover:text-primary">
-          {'Điều khoản Dịch vụ'}
+          Điều khoản Dịch vụ
         </a>{' '}
-        {'và '}
+        và{' '}
         <a href="#" className="underline hover:text-primary">
-          {'Chính sách Quyền riêng tư'}
-        </a>
-        {' của chúng tôi.'}
+          Chính sách Quyền riêng tư
+        </a>{' '}
+        của chúng tôi.
       </FieldDescription>
     </div>
   );

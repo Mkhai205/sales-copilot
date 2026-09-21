@@ -55,6 +55,7 @@ export type AssignableWorkspaceRole = z.infer<typeof assignableWorkspaceRoleSche
 
 export const addWorkspaceMemberSchema = z.object({
   email: z.string().trim().email('Invalid email address'),
+  name: z.string().trim().min(1).max(100).optional(),
   role: assignableWorkspaceRoleSchema.default(WorkspaceRole.AGENT),
 });
 export type AddWorkspaceMemberDto = z.infer<typeof addWorkspaceMemberSchema>;

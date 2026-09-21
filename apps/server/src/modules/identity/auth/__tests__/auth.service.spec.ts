@@ -348,4 +348,88 @@ describe('AuthService (Login, Refresh & Session Use Cases)', () => {
       );
     });
   });
+
+  describe('changePassword', () => {
+    it('should change password successfully and revoke existing refresh tokens', async () => {
+      let revokeAllCalledWith: string | null = null;
+      mockTokenService.revokeAllUserTokens = async (userId: string) => {
+        revokeAllCalledWith = userId;
+      };
+
+      authService = new AuthService(
+        mockPrismaService as PrismaService,
+        mockPasswordService as PasswordService,
+        mockTokenService as TokenService,
+      );
+
+      const result = await authService.changePassword(mockActiveUser.id, {
+        currentPassword: 'CorrectPassword123!',
+        newPassword: 'NewSecurePassword456!',
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.message).toBe('Đổi mật khẩu thành công');
+      expect(revokeAllCalledWith).toBe(mockActiveUser.id);
+    });
+
+    it('should throw BadRequestException when current password is wrong', async () => {
+      await expectReject(
+        async () => {
+          await authService.changePassword(mockActiveUser.id, {
+            currentPassword: 'WrongPassword!',
+            newPassword: 'NewSecurePassword456!',
+          });
+        },
+        (err: any) => {
+          expect(err.response?.code).toBe('INVALID_CURRENT_PASSWORD');
+          return true;
+        },
+      );
+    });
+
+    it('should throw BadRequestException when new password matches current password', async () => {
+      await expectReject(
+        async () => {
+          await authService.changePassword(mockActiveUser.id, {
+            currentPassword: 'CorrectPassword123!',
+            newPassword: 'CorrectPassword123!',
+          });
+        },
+        (err: any) => {
+          expect(err.response?.code).toBe('PASSWORD_UNCHANGED');
+          return true;
+        },
+      );
+    });
+
+    it('should throw NotFoundException when user does not exist', async () => {
+      await expectReject(
+        async () => {
+          await authService.changePassword('non_existing_user', {
+            currentPassword: 'CorrectPassword123!',
+            newPassword: 'NewSecurePassword456!',
+          });
+        },
+        (err: any) => {
+          expect(err.response?.code).toBe('USER_NOT_FOUND');
+          return true;
+        },
+      );
+    });
+
+    it('should throw ForbiddenException when user is inactive', async () => {
+      await expectReject(
+        async () => {
+          await authService.changePassword(mockInactiveUser.id, {
+            currentPassword: 'CorrectPassword123!',
+            newPassword: 'NewSecurePassword456!',
+          });
+        },
+        (err: any) => {
+          expect(err.response?.code).toBe('ACCOUNT_DEACTIVATED');
+          return true;
+        },
+      );
+    });
+  });
 });

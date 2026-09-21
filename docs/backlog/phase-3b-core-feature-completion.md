@@ -154,11 +154,11 @@
 - Auth Controller cho `POST /auth/register` và `POST /workspaces/:id/members` mới.
 
 ### 5. Tiêu chí nghiệm thu (Acceptance Criteria & Definition of Done)
-- [ ] Luồng đăng ký tại `/register` tạo đủ 3 records (User, Workspace, Member) và auto-login thành công.
-- [ ] Bỏ hoàn toàn màn hình Workspace Selection khỏi app.
-- [ ] Tính năng "Add Employee" trong Settings tạo tài khoản nhân viên thành công và gửi email đúng.
-- [ ] Nhân viên login vào thẳng hệ thống, không cần chọn shop.
-- [ ] OWNER có thể xoá member, ADMIN không thể xoá OWNER.
+- [x] Luồng đăng ký tại `/register` tạo đủ 3 records (User, Workspace, Member) và auto-login thành công.
+- [x] Bỏ hoàn toàn màn hình Workspace Selection khỏi app.
+- [x] Tính năng "Add Employee" trong Settings tạo tài khoản nhân viên thành công và gửi email đúng.
+- [x] Nhân viên login vào thẳng hệ thống, không cần chọn shop.
+- [x] OWNER có thể xoá member, ADMIN không thể xoá OWNER.
 
 ---
 

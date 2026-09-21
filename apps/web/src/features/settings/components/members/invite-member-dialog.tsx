@@ -36,6 +36,7 @@ interface InviteMemberDialogProps {
 
 export function InviteMemberDialog({ open, onOpenChange, workspaceId }: InviteMemberDialogProps) {
   const [email, setEmail] = React.useState('');
+  const [name, setName] = React.useState('');
   const [role, setRole] = React.useState<AssignableWorkspaceRole>(WorkspaceRole.AGENT);
   const [touched, setTouched] = React.useState(false);
 
@@ -44,24 +45,29 @@ export function InviteMemberDialog({ open, onOpenChange, workspaceId }: InviteMe
   // Validate email
   const emailError = React.useMemo(() => {
     if (!touched) return null;
-    const res = addWorkspaceMemberSchema.safeParse({ email, role });
+    const res = addWorkspaceMemberSchema.safeParse({ email, name: name.trim() || undefined, role });
     if (!res.success) {
       const issue = res.error.issues.find(i => i.path.includes('email'));
       return issue?.message || 'Email không hợp lệ';
     }
     return null;
-  }, [email, role, touched]);
+  }, [email, name, role, touched]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setTouched(true);
 
-    const res = addWorkspaceMemberSchema.safeParse({ email, role });
+    const res = addWorkspaceMemberSchema.safeParse({
+      email,
+      name: name.trim() || undefined,
+      role,
+    });
     if (!res.success) return;
 
     addMember(res.data, {
       onSuccess: () => {
         setEmail('');
+        setName('');
         setRole(WorkspaceRole.AGENT);
         setTouched(false);
         onOpenChange(false);
@@ -72,6 +78,7 @@ export function InviteMemberDialog({ open, onOpenChange, workspaceId }: InviteMe
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {
       setEmail('');
+      setName('');
       setRole(WorkspaceRole.AGENT);
       setTouched(false);
     }
@@ -86,15 +93,30 @@ export function InviteMemberDialog({ open, onOpenChange, workspaceId }: InviteMe
             <div className="flex items-center gap-2">
               <UserPlus className="size-4 text-primary" />
               <DialogTitle className="text-sm font-semibold">
-                Mời thành viên vào không gian làm việc
+                Thêm nhân viên vào cửa hàng
               </DialogTitle>
             </div>
             <DialogDescription className="text-xs">
-              Thêm đồng nghiệp vào không gian làm việc. Lời mời sẽ được gửi tới email của họ.
+              Tạo tài khoản nhân viên mới. Hệ thống sẽ tự động tạo tài khoản và gửi email chứa thông
+              tin đăng nhập tới nhân viên.
             </DialogDescription>
           </DialogHeader>
 
           <FieldGroup className="gap-4 py-2">
+            {/* Name Field */}
+            <Field>
+              <FieldLabel htmlFor="invite-name">Họ và tên nhân viên</FieldLabel>
+              <Input
+                id="invite-name"
+                type="text"
+                value={name}
+                onChange={e => setName(e.target.value)}
+                placeholder="Nguyễn Văn B"
+                className="text-xs"
+              />
+              <FieldDescription>Tên hiển thị của nhân viên (tùy chọn).</FieldDescription>
+            </Field>
+
             {/* Email Field */}
             <Field data-invalid={!!emailError}>
               <FieldLabel htmlFor="invite-email">Địa chỉ Email</FieldLabel>
@@ -106,20 +128,20 @@ export function InviteMemberDialog({ open, onOpenChange, workspaceId }: InviteMe
                   setEmail(e.target.value);
                   if (!touched) setTouched(true);
                 }}
-                placeholder="colleague@company.com"
+                placeholder="nhanvien@congty.vn"
                 aria-invalid={!!emailError}
                 required
                 className="text-xs"
               />
               <FieldDescription>
-                Phải là email của người dùng đã đăng ký trong hệ thống.
+                Email đăng nhập của nhân viên để nhận thông tin tài khoản.
               </FieldDescription>
               {emailError && <FieldError errors={[{ message: emailError }]} />}
             </Field>
 
             {/* Role Select Field */}
             <Field>
-              <FieldLabel htmlFor="invite-role">Vai trò trong Workspace</FieldLabel>
+              <FieldLabel htmlFor="invite-role">Vai trò trong Cửa hàng</FieldLabel>
               <Select value={role} onValueChange={(val: AssignableWorkspaceRole) => setRole(val)}>
                 <SelectTrigger id="invite-role" className="w-full text-xs">
                   <SelectValue placeholder="Chọn vai trò" />
@@ -144,7 +166,7 @@ export function InviteMemberDialog({ open, onOpenChange, workspaceId }: InviteMe
                 </SelectContent>
               </Select>
               <FieldDescription>
-                Xác định các mục và quyền quản trị mà người dùng này có thể truy cập.
+                Xác định các mục và quyền hạn mà nhân viên này có thể truy cập.
               </FieldDescription>
             </Field>
           </FieldGroup>
@@ -170,12 +192,12 @@ export function InviteMemberDialog({ open, onOpenChange, workspaceId }: InviteMe
               {isPending ? (
                 <>
                   <Spinner className="size-3.5" data-icon="inline-start" />
-                  Đang mời...
+                  Đang tạo...
                 </>
               ) : (
                 <>
                   <UserPlus className="size-3.5" data-icon="inline-start" />
-                  Mời thành viên
+                  Tạo tài khoản
                 </>
               )}
             </Button>

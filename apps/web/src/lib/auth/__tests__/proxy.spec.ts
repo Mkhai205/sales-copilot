@@ -26,6 +26,11 @@ describe('Next.js Edge Proxy — /platform-admin Protection & Security (apps/web
     const res = await proxy(req);
     assert.strictEqual(res.status, 200);
     assert.strictEqual(res.headers.get('location'), null);
+
+    const registerReq = new NextRequest('http://localhost:3000/register');
+    const registerRes = await proxy(registerReq);
+    assert.strictEqual(registerRes.status, 200);
+    assert.strictEqual(registerRes.headers.get('location'), null);
   });
 
   it('should redirect unauthenticated user from /platform-admin to /login with redirect parameter', async () => {

@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto';
 import {
   BadRequestException,
   ConflictException,
@@ -24,6 +25,8 @@ import {
 import { PrismaService } from '../../../infrastructure/database';
 import { generateSlug } from './utils/slug.util';
 import { ChannelCredentialService } from '../../omnichannel/inboxes/channel-credential.service';
+import { PasswordService } from '../auth/password.service';
+import { ResendService } from '../../../infrastructure/email/resend.service';
 
 @Injectable()
 export class WorkspacesService {
@@ -33,6 +36,8 @@ export class WorkspacesService {
     private readonly prisma: PrismaService,
     @Optional() private readonly eventEmitter?: EventEmitter2,
     @Optional() private readonly channelCredentialService?: ChannelCredentialService,
+    @Optional() private readonly passwordService?: PasswordService,
+    @Optional() private readonly resendService?: ResendService,
   ) {}
 
   /**
@@ -378,7 +383,8 @@ export class WorkspacesService {
   }
 
   /**
-   * Adds an existing user to the workspace by their email address.
+   * Adds an existing user or creates a new employee account in the workspace.
+   * Enforces 1 User = 1 Workspace constraint (TASK-3B-04).
    */
   async addMemberByEmail(
     workspaceId: string,
@@ -387,49 +393,88 @@ export class WorkspacesService {
     dto: AddWorkspaceMemberDto,
   ): Promise<WorkspaceMemberDto> {
     const client = this.prisma.getClient();
+    const normalizedEmail = dto.email.trim().toLowerCase();
 
-    // 1. Verify target user exists, or auto-provision account if not found (TASK-3A-05)
+    // 1. Verify target user exists, or auto-provision account if not found (TASK-3B-04)
     let user = await client.user.findUnique({
-      where: { email: dto.email.toLowerCase() },
+      where: { email: normalizedEmail },
     });
 
+    let temporaryPassword: string;
+
     if (!user) {
-      const generatedName = dto.email.split('@')[0];
-      const placeholderHash = '$argon2id$v=19$m=65536,t=3,p=4$placeholder';
+      // Auto-provision user account with a secure temporary password
+      temporaryPassword = randomBytes(8).toString('hex');
+      const passwordHash = this.passwordService
+        ? await this.passwordService.hash(temporaryPassword)
+        : '$argon2id$v=19$m=65536,t=3,p=4$placeholder';
+
+      const userName = dto.name?.trim() || normalizedEmail.split('@')[0];
+
       user = await client.user.create({
         data: {
-          email: dto.email.toLowerCase(),
-          name: generatedName,
-          passwordHash: placeholderHash,
+          email: normalizedEmail,
+          name: userName,
+          passwordHash,
           role: 'USER',
           isActive: true,
         },
       });
+
       this.logger.log(
-        `Auto-provisioned user account '${user.email}' (${user.id}) for workspace member addition`,
+        `Auto-provisioned employee account '${user.email}' (${user.id}) for workspace member addition`,
       );
-    }
+    } else {
+      if (!user.isActive) {
+        throw new BadRequestException({
+          code: 'USER_INACTIVE',
+          message: 'Cannot add deactivated user to workspace',
+        });
+      }
 
-    if (!user.isActive) {
-      throw new BadRequestException({
-        code: 'USER_INACTIVE',
-        message: 'Cannot add deactivated user to workspace',
+      // Check if already a member of THIS workspace
+      const existingInCurrent = await client.workspaceMember.findUnique({
+        where: { workspaceId_userId: { workspaceId, userId: user.id } },
+      });
+
+      if (existingInCurrent) {
+        throw new ConflictException({
+          code: 'MEMBER_ALREADY_EXISTS',
+          message: `User with email '${dto.email}' is already a member of this workspace`,
+        });
+      }
+
+      // 1 User = 1 Workspace invariant: Check if user already belongs to ANY OTHER workspace
+      const existingAnyMembership = await client.workspaceMember.findFirst({
+        where: { userId: user.id },
+      });
+
+      if (existingAnyMembership) {
+        throw new ConflictException({
+          code: 'USER_ALREADY_IN_WORKSPACE',
+          message: `User with email '${dto.email}' already belongs to another workspace. In the 1 user = 1 shop model, a user cannot join multiple workspaces.`,
+        });
+      }
+
+      // If user exists in the system but belongs to no workspace (e.g. previously removed or auto-provisioned),
+      // regenerate temporary password so they receive fresh credentials and can access the shop.
+      temporaryPassword = randomBytes(8).toString('hex');
+      const passwordHash = this.passwordService
+        ? await this.passwordService.hash(temporaryPassword)
+        : '$argon2id$v=19$m=65536,t=3,p=4$placeholder';
+
+      const userName = dto.name?.trim() || user.name || normalizedEmail.split('@')[0];
+
+      user = await client.user.update({
+        where: { id: user.id },
+        data: {
+          name: userName,
+          passwordHash,
+        },
       });
     }
 
-    // 2. Check if already a member
-    const existing = await client.workspaceMember.findUnique({
-      where: { workspaceId_userId: { workspaceId, userId: user.id } },
-    });
-
-    if (existing) {
-      throw new ConflictException({
-        code: 'MEMBER_ALREADY_EXISTS',
-        message: `User with email '${dto.email}' is already a member of this workspace`,
-      });
-    }
-
-    // 3. Create membership
+    // 2. Create membership
     const created = await client.workspaceMember.create({
       data: {
         workspaceId,
@@ -460,8 +505,31 @@ export class WorkspacesService {
         userId: user.id,
         email: user.email,
         role: dto.role,
+        temporaryPassword: temporaryPassword || undefined,
         performedByUserId: actorUserId,
       });
+    }
+
+    // 3. Send credentials email via Resend if a temporary password was generated
+    if (temporaryPassword && this.resendService) {
+      try {
+        const ws = await client.workspace.findUnique({
+          where: { id: workspaceId },
+          select: { name: true },
+        });
+        const workspaceName = ws?.name || 'Không gian làm việc';
+        await this.resendService.sendEmployeeCredentials({
+          to: user.email,
+          name: user.name,
+          temporaryPassword,
+          workspaceName,
+          role: dto.role,
+        });
+      } catch (emailErr: any) {
+        this.logger.warn(
+          `Failed to dispatch employee credentials email to ${user.email}: ${emailErr?.message}`,
+        );
+      }
     }
 
     return this.mapMemberToDto(created);

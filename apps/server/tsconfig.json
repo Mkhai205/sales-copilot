@@ -4,7 +4,8 @@
     "rootDir": "../..",
     "module": "commonjs",
     "outDir": "../../dist/out-tsc",
-    "types": ["node", "jest"]
+    "types": ["node", "jest"],
+    "jsx": "react-jsx"
   },
   "include": ["src/**/*", "prisma/**/*"]
 }

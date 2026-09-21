@@ -11,6 +11,7 @@ import { DatabaseModule } from './infrastructure/database/database.module';
 import { QueueModule } from './infrastructure/queue';
 import { RedisModule } from './infrastructure/redis';
 import { StorageModule } from './infrastructure/storage/storage.module';
+import { ResendModule } from './infrastructure/email';
 import { IdentityModule, JwtAuthGuard } from './modules/identity';
 import { OmnichannelModule } from './modules/omnichannel';
 import { CommerceModule } from './modules/commerce';
@@ -117,6 +118,7 @@ import { pinoRedactConfig } from './common/logging';
     QueueModule,
     RedisModule,
     StorageModule,
+    ResendModule,
     IdentityModule,
     OmnichannelModule,
     CommerceModule,

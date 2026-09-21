@@ -55,6 +55,10 @@ export const envSchema = z.object({
   // LLM Gateway Default API Keys
   GEMINI_API_KEY: z.string().optional(),
   OPENAI_API_KEY: z.string().optional(),
+
+  // Email Service (Resend)
+  RESEND_API_KEY: z.string().optional(),
+  RESEND_FROM_EMAIL: z.string().default('Sales Copilot <sales-copilot@kakadev.xyz>'),
 });
 
 export type EnvConfig = z.infer<typeof envSchema>;

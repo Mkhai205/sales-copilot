@@ -17,7 +17,7 @@ import {
 import { PrismaService } from '../../../infrastructure/database/prisma.service';
 import { RedisService } from '../../../infrastructure/redis/redis.service';
 import { InventoryLedgerService } from '../inventory/inventory-ledger.service';
-import { parseOrderDisplayId } from './commerce-reconciliation.processor';
+import { parseOrderDisplayId } from './reconciliation.util';
 
 export interface ReconcileTransactionParams {
   workspaceId: string;

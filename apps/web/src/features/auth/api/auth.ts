@@ -1,6 +1,8 @@
 import { fetchApi } from '@/lib/api/client';
 import type {
   AuthTokensDto,
+  ChangePasswordDto,
+  ChangePasswordResponseDto,
   LoginDto,
   LoginResponseDto,
   LogoutDto,
@@ -33,6 +35,12 @@ export const authApi = {
   updateProfile: (dto: UpdateUserProfileDto) =>
     fetchApi<UserDto>('/auth/me', {
       method: 'PATCH',
+      body: JSON.stringify(dto),
+    }),
+
+  changePassword: (dto: ChangePasswordDto) =>
+    fetchApi<ChangePasswordResponseDto>('/auth/change-password', {
+      method: 'POST',
       body: JSON.stringify(dto),
     }),
 };

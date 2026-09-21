@@ -10,6 +10,7 @@
     "build:web": "nx run web:build",
     "serve:server": "nx serve server",
     "serve:web": "nx serve web",
+    "email:dev": "pnpm --filter @sales-copilot/email-templates dev",
     "typecheck": "nx run-many -t typecheck",
     "test": "nx test server",
     "test:integration": "nx run server:test:integration",

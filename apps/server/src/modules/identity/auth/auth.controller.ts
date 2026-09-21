@@ -11,6 +11,9 @@ import { Throttle } from '@nestjs/throttler';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import {
   type AuthTokensDto,
+  type ChangePasswordDto,
+  type ChangePasswordResponseDto,
+  changePasswordSchema,
   type LoginDto,
   type LoginResponseDto,
   loginSchema,
@@ -114,5 +117,20 @@ export class AuthController {
     @ZodBody(updateUserProfileSchema) dto: UpdateUserProfileDto,
   ): Promise<UserDto> {
     return this.authService.updateProfile(user.userId, dto);
+  }
+
+  @Post('change-password')
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Change current authenticated user password' })
+  @ApiResponse({ status: 200, description: 'Password changed successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid current password or validation failed' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async changePassword(
+    @CurrentUser() user: JwtUserPayload,
+    @ZodBody(changePasswordSchema) dto: ChangePasswordDto,
+  ): Promise<ChangePasswordResponseDto> {
+    return this.authService.changePassword(user.userId, dto);
   }
 }

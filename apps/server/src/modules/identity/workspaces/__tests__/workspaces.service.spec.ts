@@ -418,6 +418,71 @@ describe('WorkspacesService (Provisioning, Tenant Queries & Member RBAC)', () =>
       );
     });
 
+    it('should throw ConflictException (USER_ALREADY_IN_WORKSPACE) when user belongs to another workspace (TASK-3B-04)', async () => {
+      // Put agent into a different workspace
+      const otherWsMember = {
+        id: 'wm_other_ws',
+        workspaceId: 'ws_other_shop',
+        userId: 'usr_agent_1',
+        role: WorkspaceRole.AGENT,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      membersDb.set(otherWsMember.id, otherWsMember);
+      membersDb.set(`ws_other_shop:usr_agent_1`, otherWsMember);
+
+      await expectReject(
+        async () => {
+          await service.addMemberByEmail('ws_test_1', 'usr_owner_1', WorkspaceRole.OWNER, {
+            email: 'agent@alphacorp.com',
+            role: WorkspaceRole.AGENT,
+          });
+        },
+        (err: any) => {
+          expect(err.response?.code).toBe('USER_ALREADY_IN_WORKSPACE');
+          return true;
+        },
+      );
+    });
+
+    it('should auto-provision employee account with provided name and trigger email (TASK-3B-04)', async () => {
+      let sentEmailPayload: any = null;
+      const mockResendService: any = {
+        sendEmployeeCredentials: async (params: any) => {
+          sentEmailPayload = params;
+          return true;
+        },
+      };
+
+      const customService = new WorkspacesService(
+        mockPrismaService as PrismaService,
+        mockEventEmitter,
+        undefined,
+        undefined,
+        mockResendService,
+      );
+
+      const member = await customService.addMemberByEmail(
+        'ws_test_1',
+        'usr_owner_1',
+        WorkspaceRole.OWNER,
+        {
+          email: 'linh.nv@company.com',
+          name: 'Linh Nguyen',
+          role: WorkspaceRole.ADMIN,
+        },
+      );
+
+      assertDefined(member.id);
+      expect(member.user?.name).toBe('Linh Nguyen');
+      expect(member.user?.email).toBe('linh.nv@company.com');
+      expect(member.role).toBe(WorkspaceRole.ADMIN);
+      expect(sentEmailPayload).not.toBeNull();
+      expect(sentEmailPayload.to).toBe('linh.nv@company.com');
+      expect(sentEmailPayload.name).toBe('Linh Nguyen');
+      expect(sentEmailPayload.temporaryPassword).toBeDefined();
+    });
+
     it('should update member role successfully', async () => {
       // First add agent
       const agentMember = await service.addMemberByEmail(

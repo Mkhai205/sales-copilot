@@ -4,7 +4,9 @@
       "@sales-copilot/shared-contracts": ["./packages/shared-contracts/src/index.ts"],
       "@sales-copilot/shared-contracts/*": ["./packages/shared-contracts/src/*"],
       "@sales-copilot/widget-sdk": ["./packages/widget-sdk/src/index.ts"],
-      "@sales-copilot/widget-sdk/*": ["./packages/widget-sdk/src/*"]
+      "@sales-copilot/widget-sdk/*": ["./packages/widget-sdk/src/*"],
+      "@sales-copilot/email-templates": ["./packages/email-templates/src/index.ts"],
+      "@sales-copilot/email-templates/*": ["./packages/email-templates/src/*"]
     },
     "declaration": true,
     "emitDecoratorMetadata": true,
