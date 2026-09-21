@@ -186,6 +186,22 @@ export const presenceKeys = {
     workspaceId !== undefined ? (['presence', workspaceId] as const) : (['presence'] as const),
 };
 
+export const reconciliationKeys = {
+  all: ['reconciliation'] as const,
+  transactions: (workspaceId?: string, query?: any) =>
+    query !== undefined
+      ? (['reconciliation-transactions', workspaceId, query] as const)
+      : workspaceId !== undefined
+        ? (['reconciliation-transactions', workspaceId] as const)
+        : (['reconciliation-transactions'] as const),
+  stats: (workspaceId?: string, query?: any) =>
+    query !== undefined
+      ? (['reconciliation-stats', workspaceId, query] as const)
+      : workspaceId !== undefined
+        ? (['reconciliation-stats', workspaceId] as const)
+        : (['reconciliation-stats'] as const),
+};
+
 export const queryKeys = {
   commerce: commerceKeys,
   conversations: conversationKeys,
@@ -198,4 +214,5 @@ export const queryKeys = {
   inboxes: inboxKeys,
   dashboard: dashboardKeys,
   presence: presenceKeys,
+  reconciliation: reconciliationKeys,
 };

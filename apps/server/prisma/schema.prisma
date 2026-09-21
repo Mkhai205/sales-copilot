@@ -701,7 +701,7 @@ model OrderItem {
 model PaymentTransaction {
   id                String                   @id @default(uuid())
   workspaceId       String
-  orderId           String
+  orderId           String?
   paymentMethod     PaymentMethod            @default(VIETQR)
   gateway           PaymentGateway           @default(MANUAL)
   amount            Decimal                  @db.Decimal(15, 2)
@@ -719,7 +719,7 @@ model PaymentTransaction {
   updatedAt         DateTime                 @updatedAt
 
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  order     Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  order     Order?    @relation(fields: [orderId], references: [id], onDelete: SetNull)
 
   @@unique([workspaceId, id])
   @@unique([workspaceId, idempotencyKey])

@@ -61,8 +61,12 @@ export enum WsServerEvent {
   COMMERCE_COLLISION_STATUS = 'commerce.collision_status',
   // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
   POS_COLLISION_STATUS = 'commerce.collision_status',
-   
+
   ORDER_SHIPPED = 'order.shipped',
+
+  // Payment & Reconciliation events
+  PAYMENT_TRANSACTION_CREATED = 'payment_transaction.created',
+  PAYMENT_TRANSACTION_UPDATED = 'payment_transaction.updated',
 }
 
 // ============================================================================

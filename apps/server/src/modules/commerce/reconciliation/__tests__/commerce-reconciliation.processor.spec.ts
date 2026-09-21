@@ -242,6 +242,10 @@ describe('CommerceReconciliation (Bank Reconciliation Engine & Safe Inventory Ma
         mockPrismaService,
         mockEventEmitter as any,
         mockInventoryLedgerService as any,
+        {
+          acquireLock: async () => 'mock-token',
+          releaseLock: async () => true,
+        } as any,
       );
     });
 
@@ -566,6 +570,14 @@ describe('CommerceReconciliation (Bank Reconciliation Engine & Safe Inventory Ma
               return null;
             },
           },
+          paymentTransaction: {
+            findFirst: async () => null,
+            create: async ({ data }: any) => ({
+              id: 'pending-tx-id',
+              createdAt: new Date(),
+              ...data,
+            }),
+          },
         }),
       };
 
@@ -590,10 +602,15 @@ describe('CommerceReconciliation (Bank Reconciliation Engine & Safe Inventory Ma
         }),
       };
 
+      const mockEventEmitter = {
+        emit: jest.fn(),
+      };
+
       processor = new PosReconciliationProcessor(
         mockPrismaService,
         mockRedisService,
         mockReconciliationService,
+        mockEventEmitter as any,
       );
     });
 

@@ -112,11 +112,11 @@
 - UI: Shadcn DataTable, Badge.
 
 ### 5. Tiêu chí nghiệm thu (Acceptance Criteria & Definition of Done)
-- [ ] API mới cho Reconciliation hoạt động đúng, trả về DTO Zod schema.
-- [ ] Hiển thị Ledger Table với đầy đủ dữ liệu, filter và real-time update.
-- [ ] `ManualMatchDialog` cho phép OWNER/ADMIN gắn giao dịch với đơn hàng thành công, đổi trạng thái sang RECONCILED.
-- [ ] AGENT không thể thao tác Manual Match.
-- [ ] Log thao tác được ghi nhận lại vào DB.
+- [x] API mới cho Reconciliation hoạt động đúng, trả về DTO Zod schema.
+- [x] Hiển thị Ledger Table với đầy đủ dữ liệu, filter và real-time update.
+- [x] `ManualMatchDialog` cho phép OWNER/ADMIN gắn giao dịch với đơn hàng thành công, đổi trạng thái sang RECONCILED.
+- [x] AGENT không thể thao tác Manual Match.
+- [x] Log thao tác được ghi nhận lại vào DB.
 
 ---
 

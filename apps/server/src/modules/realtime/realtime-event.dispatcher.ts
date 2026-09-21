@@ -37,6 +37,7 @@ import {
   OrderCompletedEventPayload,
   InventoryUpdatedEventPayload,
   OrderShippedEventPayload,
+  PaymentTransactionEventPayload,
 } from '@sales-copilot/shared-contracts';
 import { RealtimeGateway } from './realtime.gateway';
 
@@ -465,6 +466,28 @@ export class RealtimeEventDispatcher {
     this.broadcastSafe(
       `workspace_${payload.workspaceId}`,
       WsServerEvent.INVENTORY_UPDATED,
+      payload,
+    );
+  }
+
+  @OnEvent(DomainEvent.PAYMENT_TRANSACTION_CREATED)
+  handlePaymentTransactionCreated(payload: PaymentTransactionEventPayload): void {
+    if (!payload?.workspaceId) return;
+
+    this.broadcastSafe(
+      [`workspace_${payload.workspaceId}`],
+      WsServerEvent.PAYMENT_TRANSACTION_CREATED,
+      payload,
+    );
+  }
+
+  @OnEvent(DomainEvent.PAYMENT_TRANSACTION_UPDATED)
+  handlePaymentTransactionUpdated(payload: PaymentTransactionEventPayload): void {
+    if (!payload?.workspaceId) return;
+
+    this.broadcastSafe(
+      [`workspace_${payload.workspaceId}`],
+      WsServerEvent.PAYMENT_TRANSACTION_UPDATED,
       payload,
     );
   }

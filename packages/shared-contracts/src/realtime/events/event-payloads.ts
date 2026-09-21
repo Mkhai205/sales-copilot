@@ -65,6 +65,10 @@ export enum DomainEvent {
   // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
   POS_COLLISION_STATUS = 'commerce.collision_status',
   ORDER_SHIPPED = 'order.shipped',
+
+  // Payment & Reconciliation events
+  PAYMENT_TRANSACTION_CREATED = 'payment_transaction.created',
+  PAYMENT_TRANSACTION_UPDATED = 'payment_transaction.updated',
 }
 
 // ============================================================================
@@ -258,4 +262,17 @@ export interface OrderCompletedEventPayload extends BaseDomainEventPayload {
   conversationId?: string | null;
   completedAt: string | Date;
   order: Record<string, unknown>;
+}
+
+export interface PaymentTransactionEventPayload extends BaseDomainEventPayload {
+  transactionId: string;
+  amount: number;
+  currency: string;
+  status: string;
+  gateway: string;
+  transactionCode?: string | null;
+  transferContent?: string | null;
+  orderId?: string | null;
+  displayId?: number | null;
+  createdAt: string | Date;
 }
