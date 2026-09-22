@@ -13,8 +13,12 @@ import {
   MessageSquare,
   ArrowDown,
   Bot,
+  Sparkles,
 } from 'lucide-react';
+import type { AiDebugMetadata } from '@sales-copilot/shared-contracts';
+import { AiMessageDebugSheet } from './ai-message-debug-sheet';
 import { cn } from '@/lib/utils';
+
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -236,6 +240,7 @@ function MessageItem({
   inboxName,
   workspaceId,
   onOpenLightbox,
+  onInspectAi,
 }: {
   message: MessageResponseDto;
   contactName?: string;
@@ -244,6 +249,7 @@ function MessageItem({
   inboxName?: string;
   workspaceId?: string;
   onOpenLightbox: (images: AttachmentDto[], index?: number) => void;
+  onInspectAi?: (aiDebug: AiDebugMetadata) => void;
 }) {
   const isAiGenerated = React.useMemo(() => {
     if (!message.metadata) return false;
@@ -259,6 +265,20 @@ function MessageItem({
     }
     return false;
   }, [message.metadata]);
+
+  const aiDebug = React.useMemo<AiDebugMetadata | null>(() => {
+    if (!message.metadata) return null;
+    let meta = message.metadata as any;
+    if (typeof meta === 'string') {
+      try {
+        meta = JSON.parse(meta);
+      } catch {
+        return null;
+      }
+    }
+    return meta?.aiDebug || null;
+  }, [message.metadata]);
+
   const isPrivate = message.isPrivate;
   const isSystem =
     !isAiGenerated &&
@@ -388,9 +408,22 @@ function MessageItem({
           <MessageContent className="items-end">
             <MessageHeader className="justify-end gap-1">
               {isAiGenerated ? (
-                <span className="inline-flex items-center gap-1 font-semibold text-foreground">
+                <span className="inline-flex items-center gap-1.5 font-semibold text-foreground">
                   <Bot className="size-3 text-primary" />
                   <span>{'AI Autopilot'}</span>
+                  {aiDebug && (
+                    <button
+                      type="button"
+                      onClick={() => onInspectAi?.(aiDebug)}
+                      className="inline-flex items-center gap-1 text-[10px] text-muted-foreground hover:text-primary transition-colors cursor-pointer px-1.5 py-0.5 rounded bg-muted/80 hover:bg-muted font-normal ml-0.5"
+                      title="Xem chi tiết các bước xử lý và Tool Calls"
+                    >
+                      <Sparkles className="size-2.5 text-primary" />
+                      <span>
+                        {aiDebug.toolCalls?.length ? `${aiDebug.toolCalls.length} tools` : 'Debug'}
+                      </span>
+                    </button>
+                  )}
                 </span>
               ) : (
                 <span>You</span>
@@ -761,7 +794,10 @@ export function MessageThread({
     initialIndex: 0,
   });
 
+  const [selectedAiDebug, setSelectedAiDebug] = React.useState<AiDebugMetadata | null>(null);
+
   const viewportRef = React.useRef<HTMLDivElement>(null);
+
   const [newUnreadCount, setNewUnreadCount] = React.useState(0);
 
   const openLightbox = React.useCallback((images: AttachmentDto[], index = 0) => {
@@ -861,6 +897,7 @@ export function MessageThread({
                         inboxName={conversation?.inbox?.name}
                         workspaceId={activeWorkspaceId}
                         onOpenLightbox={openLightbox}
+                        onInspectAi={setSelectedAiDebug}
                       />
                     ))}
                   </React.Fragment>
@@ -918,6 +955,13 @@ export function MessageThread({
         images={lightboxState.images}
         initialIndex={lightboxState.initialIndex}
         onClose={closeLightbox}
+      />
+
+      {/* AI Message Debug Sheet */}
+      <AiMessageDebugSheet
+        open={Boolean(selectedAiDebug)}
+        onOpenChange={open => !open && setSelectedAiDebug(null)}
+        aiDebug={selectedAiDebug}
       />
     </div>
   );

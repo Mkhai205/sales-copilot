@@ -53,6 +53,18 @@ function DetailPanelLoading() {
   );
 }
 
+function formatAiCost(usd: number): string {
+  if (usd <= 0) return '$0.00';
+  if (usd < 0.001) return '< $0.001';
+  return `$${usd.toFixed(4)}`;
+}
+
+function formatTokenCount(num: number): string {
+  if (num >= 1_000_000) return `${(num / 1_000_000).toFixed(1)}M`;
+  if (num >= 1_000) return `${(num / 1_000).toFixed(1)}k`;
+  return num.toLocaleString();
+}
+
 export function DetailPanel({
   conversationId,
   workspaceSlug,
@@ -123,6 +135,62 @@ export function DetailPanel({
     }).length;
   }, [messages]);
 
+  const fallbackAiMetrics = React.useMemo(() => {
+    if (!messages) return null;
+    let cost = 0;
+    let tokens = 0;
+    let inTokens = 0;
+    let outTokens = 0;
+    let count = 0;
+
+    for (const m of messages) {
+      const meta =
+        typeof m.metadata === 'string'
+          ? (() => {
+              try {
+                return JSON.parse(m.metadata);
+              } catch {
+                return {};
+              }
+            })()
+          : (m.metadata as any) || {};
+
+      if (meta?.isAiGenerated) {
+        count++;
+        if (meta.aiDebug?.estimatedCostUsd) {
+          cost += meta.aiDebug.estimatedCostUsd;
+        }
+        if (meta.aiDebug?.usage) {
+          inTokens += meta.aiDebug.usage.input || 0;
+          outTokens += meta.aiDebug.usage.output || 0;
+          tokens += meta.aiDebug.usage.total || 0;
+        } else if (meta.aiTokenUsage) {
+          const pTokens = meta.aiTokenUsage.promptTokens || 0;
+          const cTokens = meta.aiTokenUsage.completionTokens || 0;
+          inTokens += pTokens;
+          outTokens += cTokens;
+          tokens += meta.aiTokenUsage.totalTokens || pTokens + cTokens;
+          cost += (pTokens * 0.15 + cTokens * 0.6) / 1_000_000;
+        }
+      }
+    }
+    return { cost, tokens, inTokens, outTokens, count };
+  }, [messages]);
+
+  const resolvedAiMetrics = React.useMemo(() => {
+    const raw = (conversation?.customAttributes as any)?.aiUsage;
+    if (raw && typeof raw.totalCostUsd === 'number') {
+      return {
+        cost: raw.totalCostUsd,
+        tokens: raw.totalTokens || 0,
+        inTokens: raw.inputTokens || 0,
+        outTokens: raw.outputTokens || 0,
+        count: raw.aiMessagesCount || aiMessagesCount,
+      };
+    }
+    return fallbackAiMetrics;
+  }, [conversation?.customAttributes, fallbackAiMetrics, aiMessagesCount]);
+
   return (
     <Tabs
       value={internalTab}
@@ -173,10 +241,12 @@ export function DetailPanel({
             <ConversationActions conversation={conversation} workspaceSlug={workspaceSlug} />
 
             {/* AI Activity Card */}
-            {(isAiConfigured || aiMessagesCount > 0) && (
+            {(isAiConfigured ||
+              aiMessagesCount > 0 ||
+              (resolvedAiMetrics && resolvedAiMetrics.count > 0)) && (
               <>
                 <Separator className="bg-border/60" />
-                <div className="rounded-lg border border-border/70 bg-muted/20 p-3 flex flex-col gap-2">
+                <div className="rounded-lg border border-border/70 bg-muted/20 p-3 flex flex-col gap-2.5">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
                       <Bot className="size-3.5 text-primary" />
@@ -198,8 +268,35 @@ export function DetailPanel({
                       </Badge>
                     )}
                   </div>
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span>{`AI xử lý: ${aiMessagesCount} tin nhắn`}</span>
+
+                  {/* Observability Metrics: Cost & Tokens */}
+                  <div className="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-border/60">
+                    <div>
+                      <div className="text-[10px] text-muted-foreground uppercase font-medium">
+                        {'Chi phí ước tính'}
+                      </div>
+                      <div className="font-semibold text-foreground mt-0.5">
+                        {resolvedAiMetrics ? formatAiCost(resolvedAiMetrics.cost) : '$0.00'}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] text-muted-foreground uppercase font-medium">
+                        {'Token tiêu thụ'}
+                      </div>
+                      <div className="font-semibold text-foreground mt-0.5">
+                        {resolvedAiMetrics ? formatTokenCount(resolvedAiMetrics.tokens) : '0'}
+                        {resolvedAiMetrics && resolvedAiMetrics.tokens > 0 && (
+                          <span className="text-[10px] font-normal text-muted-foreground ml-1">
+                            ({formatTokenCount(resolvedAiMetrics.inTokens)} in /{' '}
+                            {formatTokenCount(resolvedAiMetrics.outTokens)} out)
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-1 border-t border-border/40">
+                    <span>{`AI xử lý: ${resolvedAiMetrics?.count ?? aiMessagesCount} tin nhắn`}</span>
                   </div>
                 </div>
               </>

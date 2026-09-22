@@ -17,6 +17,31 @@ export const AI_AGENT_CONSTANTS = {
   ABUSE_STATE_TTL_SECONDS: 120,
 } as const;
 
+export interface ModelPricingConfig {
+  inputPricePerMillion: number;
+  outputPricePerMillion: number;
+}
+
+export const AI_MODEL_PRICING: Record<string, ModelPricingConfig> = {
+  'gemini-2.5-flash': {
+    inputPricePerMillion: 0.15,
+    outputPricePerMillion: 0.6,
+  },
+};
+
+export function calculateEstimatedCostUsd(
+  model: string,
+  inputTokens: number,
+  outputTokens: number,
+): number {
+  const pricing = AI_MODEL_PRICING[model] || AI_MODEL_PRICING[AI_AGENT_CONSTANTS.DEFAULT_MODEL];
+  const cost =
+    (Math.max(0, inputTokens) * pricing.inputPricePerMillion +
+      Math.max(0, outputTokens) * pricing.outputPricePerMillion) /
+    1_000_000;
+  return Math.round(cost * 1e7) / 1e7;
+}
+
 export function getAiDebounceKey(workspaceId: string, conversationId: string): string {
   return `ws:${workspaceId}:ai:debounce:${conversationId}`;
 }

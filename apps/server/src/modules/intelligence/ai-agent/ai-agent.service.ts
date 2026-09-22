@@ -3,12 +3,21 @@ import { ConfigService } from '@nestjs/config';
 import { generateText, stepCountIs, type LanguageModel } from 'ai';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { createVertex } from '@ai-sdk/google-vertex';
-import type { AiAgentResult } from '@sales-copilot/shared-contracts';
+import type {
+  AiAgentResult,
+  AiDebugMetadata,
+  AiToolCallDebug,
+} from '@sales-copilot/shared-contracts';
 import { PrismaService } from '../../../infrastructure/database';
-import { AI_AGENT_CONSTANTS, HumanTakeoverAbortError } from './ai-agent.constants';
+import {
+  AI_AGENT_CONSTANTS,
+  calculateEstimatedCostUsd,
+  HumanTakeoverAbortError,
+} from './ai-agent.constants';
 import { AiContextBuilder } from './ai-context.builder';
 import { buildAgentTools } from './tools';
 import { CommerceToolRegistry } from './tools/commerce-tool.registry';
+import { summarizeToolOutput } from './utils/ai-tool-summarizer';
 
 @Injectable()
 export class AiAgentService {
@@ -118,6 +127,8 @@ export class AiAgentService {
     conversationId: string,
     inboxId: string,
   ): Promise<AiAgentResult> {
+    const startTime = Date.now();
+
     // 1. Resolve LanguageModel instance (Workspace BYOK -> GCP Vertex AI -> AI Studio)
     const model = await this.resolveLanguageModel(workspaceId);
 
@@ -148,6 +159,9 @@ export class AiAgentService {
       `Executing AI agent loop for conversation '${conversationId}' in workspace '${workspaceId}'`,
     );
 
+    const recordedToolCalls: AiToolCallDebug[] = [];
+    let stepCounter = 0;
+
     // 5. Execute agent loop via Vercel AI SDK generateText
     const result = await generateText({
       model,
@@ -158,6 +172,8 @@ export class AiAgentService {
       temperature: AI_AGENT_CONSTANTS.DEFAULT_TEMPERATURE,
 
       onStepFinish: async step => {
+        stepCounter += 1;
+
         // Human Takeover check mid-loop: if paused, immediately abort
         const conv = await this.prisma.getClient().conversation.findFirst({
           where: { id: conversationId, workspaceId },
@@ -171,22 +187,85 @@ export class AiAgentService {
           throw new HumanTakeoverAbortError();
         }
 
-        this.logger.debug(
-          `Agent step completed for conv '${conversationId}': ${step.toolCalls?.length ?? 0} tool calls, text generated: ${Boolean(step.text)}`,
-        );
+        const toolCalls = step.toolCalls || [];
+        const toolResults = step.toolResults || [];
+        const perf = (step as any).performance;
+        const toolExecTimes = perf?.toolExecutionMs || {};
+        const stepTimeMs = perf?.stepTimeMs ?? 0;
+        const stepTokens = step.usage?.totalTokens ?? 0;
+        const tokensStr = stepTokens > 0 ? `+${stepTokens}` : '+0';
+
+        if (toolCalls.length > 0) {
+          for (const tc of toolCalls) {
+            const toolCallId = tc.toolCallId;
+            const toolName = tc.toolName;
+            const inputArgs = (tc as any).args ?? (tc as any).input ?? {};
+            const matchingResult = toolResults.find(r => r.toolCallId === toolCallId);
+            const rawOutput = matchingResult
+              ? ((matchingResult as any).output ?? (matchingResult as any).result)
+              : undefined;
+
+            const durationMs =
+              typeof toolExecTimes[toolCallId] === 'number'
+                ? toolExecTimes[toolCallId]
+                : Math.round(stepTimeMs / (toolCalls.length || 1));
+
+            const outputSummary = summarizeToolOutput(toolName, rawOutput);
+
+            recordedToolCalls.push({
+              name: toolName,
+              input: inputArgs,
+              outputSummary,
+              durationMs,
+            });
+
+            // Terminal logging format per Epic 4.2.1
+            const inputSummary = JSON.stringify(inputArgs);
+            this.logger.log(
+              `[AiAgent] Conv ${conversationId} | Step ${stepCounter}/${AI_AGENT_CONSTANTS.DEFAULT_MAX_STEPS} | Tool: ${toolName} | Input: ${inputSummary} | Duration: ${durationMs}ms | Tokens: ${tokensStr}`,
+            );
+          }
+        } else {
+          this.logger.log(
+            `[AiAgent] Conv ${conversationId} | Step ${stepCounter}/${AI_AGENT_CONSTANTS.DEFAULT_MAX_STEPS} | Direct Generation | Duration: ${stepTimeMs}ms | Tokens: ${tokensStr}`,
+          );
+        }
       },
     });
 
+    const totalDurationMs = Date.now() - startTime;
     const rawUsage = result.usage as any;
+    const inputTokens = rawUsage?.inputTokens ?? rawUsage?.promptTokens ?? 0;
+    const outputTokens = rawUsage?.outputTokens ?? rawUsage?.completionTokens ?? 0;
+    const totalTokens = rawUsage?.totalTokens ?? inputTokens + outputTokens;
+
+    const modelId = (model as any).modelId || AI_AGENT_CONSTANTS.DEFAULT_MODEL;
+    const provider = (model as any).provider || 'vertex-ai';
+    const estimatedCostUsd = calculateEstimatedCostUsd(modelId, inputTokens, outputTokens);
+
+    const aiDebug: AiDebugMetadata = {
+      provider,
+      model: modelId,
+      stepsCount: result.steps.length,
+      totalDurationMs,
+      usage: {
+        input: inputTokens,
+        output: outputTokens,
+        total: totalTokens,
+      },
+      estimatedCostUsd,
+      toolCalls: recordedToolCalls,
+    };
 
     return {
       text: result.text,
       stepsCount: result.steps.length,
       usage: {
-        promptTokens: rawUsage?.inputTokens ?? rawUsage?.promptTokens ?? 0,
-        completionTokens: rawUsage?.outputTokens ?? rawUsage?.completionTokens ?? 0,
-        totalTokens: rawUsage?.totalTokens ?? 0,
+        promptTokens: inputTokens,
+        completionTokens: outputTokens,
+        totalTokens,
       },
+      aiDebug,
     };
   }
 }

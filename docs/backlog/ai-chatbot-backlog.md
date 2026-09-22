@@ -38,9 +38,9 @@ Ngăn chặn khách hàng inject instructions vào system prompt thông qua các
 - Các biến cần wrap: `contactName`, `contactPhone`, `shopName`, `customInstructions`.
 
 #### 5. Tiêu chí nghiệm thu
-- [ ] Các biến user-controllable trong system prompt được wrap XML tags
-- [ ] Test case: đặt tên khách chứa fake instructions → bot vẫn hoạt động đúng rules
-- [ ] Không ảnh hưởng chất lượng phản hồi bình thường
+- [x] Các biến user-controllable trong system prompt được wrap XML tags
+- [x] Test case: đặt tên khách chứa fake instructions → bot vẫn hoạt động đúng rules
+- [x] Không ảnh hưởng chất lượng phản hồi bình thường
 
 ---
 
@@ -65,11 +65,11 @@ Ngăn chặn spam và abuse — khách gửi quá nhiều tin nhắn trong thờ
 - Không block kênh chat — khách vẫn gửi được, chỉ bot không trả lời khi vượt limit.
 
 #### 4. Tiêu chí nghiệm thu
-- [ ] Gửi 6 tin/phút → tin thứ 6 không trigger LLM call
-- [ ] Gửi 3 tin trùng nội dung → tin thứ 3 bị bỏ qua
-- [ ] Rate limit counter tự reset sau 1 phút
-- [ ] Log warning khi rate limit triggered (để monitoring)
-- [ ] Không ảnh hưởng tin nhắn bình thường (< 5/phút)
+- [x] Gửi 6 tin/phút → tin thứ 6 không trigger LLM call
+- [x] Gửi 3 tin trùng nội dung → tin thứ 3 bị bỏ qua
+- [x] Rate limit counter tự reset sau 1 phút
+- [x] Log warning khi rate limit triggered (để monitoring)
+- [x] Không ảnh hưởng tin nhắn bình thường (< 5/phút)
 
 ---
 
@@ -97,10 +97,10 @@ Chặn nội dung vi phạm và cải thiện xử lý câu hỏi off-topic trư
 - Không xây "AI content moderation service" phức tạp.
 
 #### 4. Tiêu chí nghiệm thu
-- [ ] Message chỉ emoji → không trigger LLM
-- [ ] Message chứa từ khoá blacklist → reply mẫu, không gọi LLM
-- [ ] "Giải toán cho tôi" → LLM trả lời nhất quán "Em chỉ hỗ trợ tư vấn mua hàng ạ"
-- [ ] "Tai nghe giá bao nhiêu?" → bot trả lời bình thường (không bị filter sai)
+- [x] Message chỉ emoji → không trigger LLM
+- [x] Message chứa từ khoá blacklist → reply mẫu, không gọi LLM
+- [x] "Giải toán cho tôi" → LLM trả lời nhất quán "Em chỉ hỗ trợ tư vấn mua hàng ạ"
+- [x] "Tai nghe giá bao nhiêu?" → bot trả lời bình thường (không bị filter sai)
 
 ---
 
@@ -147,10 +147,10 @@ Cho phép admin xem chi tiết bot đã gọi tool nào, input/output gì, mất
 - Không tạo bảng DB riêng cho logs — lưu trong `metadata` JSON field hiện có.
 
 #### 4. Tiêu chí nghiệm thu
-- [ ] Terminal log hiển thị tool name, input summary, duration cho mỗi step
-- [ ] Message metadata chứa `aiDebug` object đầy đủ
-- [ ] Truy vấn được metadata qua API (GET message detail)
-- [ ] Không ảnh hưởng performance (log async, không blocking)
+- [x] Terminal log hiển thị tool name, input summary, duration cho mỗi step
+- [x] Message metadata chứa `aiDebug` object đầy đủ
+- [x] Truy vấn được metadata qua API (GET message detail)
+- [x] Không ảnh hưởng performance (log async, không blocking)
 
 ---
 
@@ -189,9 +189,9 @@ estimatedCost = (inputTokens × 0.15 + outputTokens × 0.60) / 1_000_000
 - Không tạo billing system hay usage limits — chỉ hiển thị thông tin.
 
 #### 4. Tiêu chí nghiệm thu
-- [ ] Mỗi AI message có `aiDebug.estimatedCostUsd` trong metadata
-- [ ] Admin panel hiển thị tổng AI cost trong conversation detail
-- [ ] Cost tính đúng công thức: (input × 0.15 + output × 0.60) / 1M
+- [x] Mỗi AI message có `aiDebug.estimatedCostUsd` trong metadata
+- [x] Admin panel hiển thị tổng AI cost trong conversation detail
+- [x] Cost tính đúng công thức: (input × 0.15 + output × 0.60) / 1M
 
 ---
 

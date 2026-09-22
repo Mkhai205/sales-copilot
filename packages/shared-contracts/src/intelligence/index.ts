@@ -16,10 +16,13 @@ export interface AiAgentTokenUsage {
   totalTokens: number;
 }
 
+import type { AiDebugMetadata } from './intelligence.schemas';
+
 export interface AiAgentResult {
   skipped?: boolean;
   reason?: string;
   text?: string;
   stepsCount?: number;
   usage?: AiAgentTokenUsage;
+  aiDebug?: AiDebugMetadata;
 }

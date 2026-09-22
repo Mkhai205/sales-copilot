@@ -87,13 +87,48 @@ export class AiAgentWorker extends WorkerHost {
             isAiGenerated: true,
             aiSteps: result.stepsCount ?? 1,
             aiTokenUsage: result.usage,
+            aiDebug: result.aiDebug,
           },
         });
 
-        // Update lastAiMessageAt timestamp
+        // 5. Rollup conversation.customAttributes.aiUsage for fast, multi-tenant UI observability
+        const currentConv = await client.conversation.findFirst({
+          where: { id: conversationId, workspaceId },
+          select: { customAttributes: true },
+        });
+
+        const currentAttrs = (currentConv?.customAttributes as Record<string, any>) || {};
+        const prevAiUsage = (currentAttrs.aiUsage as Record<string, any>) || {};
+
+        const newCost = (prevAiUsage.totalCostUsd || 0) + (result.aiDebug?.estimatedCostUsd || 0);
+        const newTotalTokens = (prevAiUsage.totalTokens || 0) + (result.usage?.totalTokens || 0);
+        const newInputTokens =
+          (prevAiUsage.inputTokens || 0) +
+          (result.aiDebug?.usage?.input || result.usage?.promptTokens || 0);
+        const newOutputTokens =
+          (prevAiUsage.outputTokens || 0) +
+          (result.aiDebug?.usage?.output || result.usage?.completionTokens || 0);
+        const newAiMessagesCount = (prevAiUsage.aiMessagesCount || 0) + 1;
+
+        const updatedAiUsage = {
+          totalCostUsd: Math.round(newCost * 1e7) / 1e7,
+          totalTokens: newTotalTokens,
+          inputTokens: newInputTokens,
+          outputTokens: newOutputTokens,
+          aiMessagesCount: newAiMessagesCount,
+          lastCalculatedAt: new Date().toISOString(),
+        };
+
+        // Update lastAiMessageAt timestamp and customAttributes in a single multi-tenant query
         await client.conversation.updateMany({
           where: { id: conversationId, workspaceId },
-          data: { lastAiMessageAt: new Date() },
+          data: {
+            lastAiMessageAt: new Date(),
+            customAttributes: {
+              ...currentAttrs,
+              aiUsage: updatedAiUsage,
+            },
+          },
         });
       }
 
