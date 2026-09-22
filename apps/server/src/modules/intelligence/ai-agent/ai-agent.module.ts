@@ -17,6 +17,7 @@ import { AiDispatcherListener } from './ai-dispatcher.listener';
 import { AiTakeoverListener } from './ai-takeover.listener';
 import { AiContextBuilder } from './ai-context.builder';
 import { DiscountGuardService } from './services/discount-guard.service';
+import { AiGuardrailService } from './services/ai-guardrail.service';
 import { CommerceToolRegistry } from './tools/commerce-tool.registry';
 import { ensureDivisionsLoaded } from './utils/address-parser.util';
 
@@ -42,9 +43,16 @@ import { ensureDivisionsLoaded } from './utils/address-parser.util';
     AiTakeoverListener,
     AiContextBuilder,
     DiscountGuardService,
+    AiGuardrailService,
     CommerceToolRegistry,
   ],
-  exports: [AiAgentService, CommerceToolRegistry, DiscountGuardService, BullModule],
+  exports: [
+    AiAgentService,
+    CommerceToolRegistry,
+    DiscountGuardService,
+    AiGuardrailService,
+    BullModule,
+  ],
 })
 export class AiAgentModule implements OnModuleInit {
   private readonly logger = new Logger(AiAgentModule.name);

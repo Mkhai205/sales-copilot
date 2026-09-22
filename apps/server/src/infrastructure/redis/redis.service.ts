@@ -186,6 +186,17 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
+  async expire(key: string, seconds: number): Promise<boolean> {
+    if (!this.client) return false;
+    try {
+      const res = await this.client.expire(key, seconds);
+      return res === 1;
+    } catch (err) {
+      this.logger.error(`Redis EXPIRE error for key ${key}:`, err);
+      return false;
+    }
+  }
+
   /**
    * Scans for keys matching a pattern using SCAN (non-blocking, production-safe).
    * NOTE: Avoid calling this in hot paths — use dedicated index structures (Sets) instead.

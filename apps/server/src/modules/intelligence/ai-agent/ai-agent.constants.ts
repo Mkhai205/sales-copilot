@@ -6,11 +6,40 @@ export const AI_AGENT_CONSTANTS = {
   DEFAULT_MODEL: 'gemini-2.5-flash',
   MAX_HISTORY_MESSAGES: 20,
   FALLBACK_MESSAGE: 'Em chưa thể xử lý yêu cầu này, để em chuyển cho nhân viên hỗ trợ ạ.',
+
+  // Guardrails & Rate limiting
+  RATE_LIMIT_PER_MINUTE: 5,
+  RATE_LIMIT_WARN_MESSAGE: 'Anh/chị vui lòng chờ em xử lý tin nhắn trước ạ 😊',
+  RATE_LIMIT_WARN_TTL_SECONDS: 60,
+  BLACKLIST_REPLY_MESSAGE: 'Em không hỗ trợ nội dung này ạ',
+  ABUSE_CONSECUTIVE_LIMIT: 3,
+  ABUSE_SHORT_MSG_MAX_LENGTH: 2,
+  ABUSE_STATE_TTL_SECONDS: 120,
 } as const;
 
 export function getAiDebounceKey(workspaceId: string, conversationId: string): string {
   return `ws:${workspaceId}:ai:debounce:${conversationId}`;
 }
+
+export function getAiRateLimitKey(
+  workspaceId: string,
+  conversationId: string,
+  bucketMinute = Math.floor(Date.now() / 60000),
+): string {
+  return `ws:${workspaceId}:ai:ratelimit:${conversationId}:${bucketMinute}`;
+}
+
+export function getAiRateLimitWarnedKey(workspaceId: string, conversationId: string): string {
+  return `ws:${workspaceId}:ai:ratelimit-warned:${conversationId}`;
+}
+
+export function getAiAbuseKey(workspaceId: string, conversationId: string): string {
+  return `ws:${workspaceId}:ai:abuse:${conversationId}`;
+}
+
+// Regex specifically targeting extreme profanity / toxic abuse without false positives
+export const CONTENT_BLACKLIST_REGEX =
+  /đụ\s*m[áàảãạ]|đ[éèẻẽẹ]o\s*m[eẹ]|đ[ií]t\s*m[eẹ]|c[áàảãạ]i\s*l[ồô]n|c[áàảãạ]i\s*đ[ií]t/iu;
 
 export const PERSONA_TONE_DESCRIPTIONS: Record<string, string> = {
   shop_ban: 'Shop - Bạn (gần gũi, trẻ trung, tự nhiên)',

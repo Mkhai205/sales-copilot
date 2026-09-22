@@ -7,6 +7,8 @@ describe('AiDispatcherListener', () => {
   let mockPrisma: any;
   let mockRedis: any;
   let mockQueue: any;
+  let mockGuardrailService: any;
+  let mockMessagesService: any;
   let redisStore: Map<string, { val: string; ttl?: number }>;
   let queuedJobs: any[];
   let conversationsDb: Map<string, any>;
@@ -43,7 +45,21 @@ describe('AiDispatcherListener', () => {
       },
     };
 
-    listener = new AiDispatcherListener(mockPrisma, mockRedis, mockQueue);
+    mockGuardrailService = {
+      check: jest.fn().mockResolvedValue({ allowed: true }),
+    };
+
+    mockMessagesService = {
+      create: jest.fn().mockResolvedValue({ id: 'reply-msg-1' }),
+    };
+
+    listener = new AiDispatcherListener(
+      mockPrisma,
+      mockRedis,
+      mockGuardrailService,
+      mockMessagesService,
+      mockQueue,
+    );
   });
 
   it('should ignore messages from USER or SYSTEM', async () => {
@@ -167,5 +183,65 @@ describe('AiDispatcherListener', () => {
     expect(job.data.messageId).toBe('msg-contact-1');
     expect(job.opts.delay).toBe(AI_AGENT_CONSTANTS.DEFAULT_DEBOUNCE_DELAY_MS);
     expect(job.opts.attempts).toBe(2);
+  });
+
+  it('should block message and send warning reply when guardrail returns allowed=false with shouldReply=true', async () => {
+    mockGuardrailService.check.mockResolvedValueOnce({
+      allowed: false,
+      reason: 'RATE_LIMITED',
+      shouldReply: true,
+      replyText: AI_AGENT_CONSTANTS.RATE_LIMIT_WARN_MESSAGE,
+    });
+
+    await listener.handleInboundMessage({
+      workspaceId,
+      conversationId,
+      message: {
+        id: 'msg-spam-1',
+        senderType: SenderType.CONTACT,
+        messageType: MessageType.INCOMING,
+        isPrivate: false,
+      },
+    });
+
+    // Should NOT enqueue to BullMQ
+    expect(queuedJobs.length).toBe(0);
+
+    // Should send warning reply via MessagesService
+    expect(mockMessagesService.create).toHaveBeenCalledWith(workspaceId, conversationId, {
+      content: AI_AGENT_CONSTANTS.RATE_LIMIT_WARN_MESSAGE,
+      senderType: SenderType.SYSTEM,
+      messageType: MessageType.OUTGOING,
+      isPrivate: false,
+      metadata: {
+        isAiGenerated: true,
+        guardrailReason: 'RATE_LIMITED',
+      },
+    });
+  });
+
+  it('should silently drop message when guardrail returns allowed=false with shouldReply=false', async () => {
+    mockGuardrailService.check.mockResolvedValueOnce({
+      allowed: false,
+      reason: 'DUPLICATE_SPAM',
+      shouldReply: false,
+    });
+
+    await listener.handleInboundMessage({
+      workspaceId,
+      conversationId,
+      message: {
+        id: 'msg-spam-2',
+        senderType: SenderType.CONTACT,
+        messageType: MessageType.INCOMING,
+        isPrivate: false,
+      },
+    });
+
+    // Should NOT enqueue to BullMQ
+    expect(queuedJobs.length).toBe(0);
+
+    // Should NOT send reply
+    expect(mockMessagesService.create).not.toHaveBeenCalled();
   });
 });

@@ -11,7 +11,9 @@ import {
 } from '@sales-copilot/shared-contracts';
 import { PrismaService } from '../../../infrastructure/database';
 import { RedisService } from '../../../infrastructure/redis';
+import { MessagesService } from '../../omnichannel/messages/messages.service';
 import { AI_AGENT_CONSTANTS, getAiDebounceKey } from './ai-agent.constants';
+import { AiGuardrailService } from './services/ai-guardrail.service';
 
 export interface InboundMessageCreatedEvent {
   workspaceId: string;
@@ -33,6 +35,8 @@ export class AiDispatcherListener {
   constructor(
     private readonly prisma: PrismaService,
     private readonly redisService: RedisService,
+    private readonly guardrailService: AiGuardrailService,
+    private readonly messagesService: MessagesService,
     @InjectQueue(AI_AUTOPILOT_QUEUE)
     private readonly aiQueue: Queue<AiAgentJobData>,
   ) {}
@@ -48,6 +52,34 @@ export class AiDispatcherListener {
 
     // 2. Skip non-incoming messages or private notes
     if (message.messageType !== MessageType.INCOMING || payload.isPrivate || message.isPrivate) {
+      return;
+    }
+
+    // 2.5. Pre-dispatch guardrails (Content filter, Abuse detection, Rate limiting)
+    const guardrailResult = await this.guardrailService.check({
+      workspaceId,
+      conversationId,
+      messageContent: message.content,
+    });
+
+    if (!guardrailResult.allowed) {
+      this.logger.warn(
+        `Guardrail blocked message '${message.id}' in conv '${conversationId}': ${guardrailResult.reason}`,
+      );
+
+      if (guardrailResult.shouldReply && guardrailResult.replyText) {
+        await this.messagesService.create(workspaceId, conversationId, {
+          content: guardrailResult.replyText,
+          senderType: SenderType.SYSTEM,
+          messageType: MessageType.OUTGOING,
+          isPrivate: false,
+          metadata: {
+            isAiGenerated: true,
+            guardrailReason: guardrailResult.reason,
+          },
+        });
+      }
+
       return;
     }
 
