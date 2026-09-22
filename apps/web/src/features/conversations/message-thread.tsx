@@ -375,7 +375,7 @@ function MessageItem({
               <MessageAvatar className="translate-y-0 group-has-data-[slot=message-footer]/message:translate-y-0">
                 <Avatar className="size-8 ring-1 ring-primary/30">
                   <AvatarImage
-                    src={inboxAvatar || '/avatar-bot-copilot.svg'}
+                    src={inboxAvatar || '/avatar-bot-copilot.png'}
                     alt={inboxName || 'AI Autopilot'}
                   />
                   <AvatarFallback className="text-[10px] bg-primary/10 text-primary font-semibold">
@@ -383,12 +383,6 @@ function MessageItem({
                   </AvatarFallback>
                 </Avatar>
               </MessageAvatar>
-              <span
-                className="absolute -bottom-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-primary text-[8px] text-primary-foreground ring-2 ring-background shadow-xs pointer-events-none"
-                title="AI Autopilot"
-              >
-                🤖
-              </span>
             </div>
           )}
           <MessageContent className="items-end">
@@ -473,7 +467,7 @@ function MessageItem({
   const isBotSender =
     message.sender?.name?.toLowerCase().includes('bot') ||
     message.sender?.name?.toLowerCase().includes('copilot');
-  const defaultAvatar = isBotSender ? '/avatar-bot-copilot.svg' : '/avatar-contact-default.svg';
+  const defaultAvatar = isBotSender ? '/avatar-bot-copilot.png' : '/avatar-contact-default.svg';
   const senderInitials = (message.sender?.name || contactName || 'C')
     .split(' ')
     .map(n => n[0])

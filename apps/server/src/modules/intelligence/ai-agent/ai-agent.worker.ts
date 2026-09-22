@@ -11,7 +11,11 @@ import {
 import { PrismaService } from '../../../infrastructure/database';
 import { RedisService } from '../../../infrastructure/redis';
 import { MessagesService } from '../../omnichannel/messages/messages.service';
-import { getAiDebounceKey, HumanTakeoverAbortError } from './ai-agent.constants';
+import {
+  AI_AGENT_CONSTANTS,
+  getAiDebounceKey,
+  HumanTakeoverAbortError,
+} from './ai-agent.constants';
 import { AiAgentService } from './ai-agent.service';
 
 @Processor(AI_AUTOPILOT_QUEUE, { concurrency: 5 })
@@ -106,6 +110,26 @@ export class AiAgentWorker extends WorkerHost {
         `Error executing AI agent for conversation '${conversationId}': ${(err as Error).message}`,
         (err as Error).stack,
       );
+
+      // On fatal AI failure on final retry, send graceful fallback message so customer is never left hanging
+      if (job.attemptsMade >= (job.opts.attempts || 2) - 1) {
+        try {
+          await this.messagesService.create(workspaceId, conversationId, {
+            content: AI_AGENT_CONSTANTS.FALLBACK_MESSAGE,
+            senderType: SenderType.SYSTEM,
+            messageType: MessageType.OUTGOING,
+            isPrivate: false,
+            metadata: {
+              isAiGenerated: true,
+              isFallback: true,
+              error: (err as Error).message,
+            },
+          });
+        } catch (msgErr) {
+          this.logger.error(`Failed to dispatch fallback message: ${(msgErr as Error).message}`);
+        }
+      }
+
       throw err;
     }
   }

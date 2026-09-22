@@ -85,3 +85,7 @@ Thumbs.db
 
 # Apps Web
 apps/web/public/widget/
+
+# Secrets & Service Accounts
+**/secrets/
+*-service-account*.json

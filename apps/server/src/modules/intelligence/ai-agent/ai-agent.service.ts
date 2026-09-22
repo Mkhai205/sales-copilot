@@ -1,7 +1,8 @@
 import { Injectable, Logger, Optional } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { generateText, stepCountIs } from 'ai';
+import { generateText, stepCountIs, type LanguageModel } from 'ai';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
+import { createVertex } from '@ai-sdk/google-vertex';
 import type { AiAgentResult } from '@sales-copilot/shared-contracts';
 import { PrismaService } from '../../../infrastructure/database';
 import { AI_AGENT_CONSTANTS, HumanTakeoverAbortError } from './ai-agent.constants';
@@ -21,7 +22,66 @@ export class AiAgentService {
   ) {}
 
   /**
-   * Resolves Gemini API key:
+   * Resolves LanguageModel instance:
+   * 1. Per-workspace BYOK (workspace.settings.llmCredentials.geminiApiKey) -> @ai-sdk/google
+   * 2. Google Cloud Vertex AI (GOOGLE_APPLICATION_CREDENTIALS) -> @ai-sdk/google-vertex
+   * 3. Platform default from GEMINI_API_KEY env -> @ai-sdk/google
+   */
+  async resolveLanguageModel(workspaceId: string): Promise<LanguageModel> {
+    const client = this.prisma.getClient();
+    const workspace = await client.workspace.findUnique({
+      where: { id: workspaceId },
+      select: { settings: true },
+    });
+
+    const settings = (workspace?.settings as Record<string, unknown>) || {};
+    const llmCreds = (settings.llmCredentials as Record<string, unknown>) || {};
+    const byokKey = llmCreds.geminiApiKey as string | undefined;
+
+    // 1. Per-workspace BYOK key takes highest precedence for multi-tenant customization
+    if (byokKey && byokKey.trim()) {
+      this.logger.debug(`Using Workspace BYOK AI Studio key for workspace '${workspaceId}'`);
+      const google = createGoogleGenerativeAI({ apiKey: byokKey.trim() });
+      return google(AI_AGENT_CONSTANTS.DEFAULT_MODEL);
+    }
+
+    // 2. Google Cloud Vertex AI (uses organization GCP credits)
+    const vertexCredentials =
+      this.configService.get<string>('GOOGLE_APPLICATION_CREDENTIALS') ||
+      process.env.GOOGLE_APPLICATION_CREDENTIALS;
+    const vertexProject =
+      this.configService.get<string>('GOOGLE_VERTEX_PROJECT') || process.env.GOOGLE_VERTEX_PROJECT;
+    const vertexLocation =
+      this.configService.get<string>('GOOGLE_VERTEX_LOCATION') ||
+      process.env.GOOGLE_VERTEX_LOCATION ||
+      'us-central1';
+
+    if (vertexCredentials && vertexProject) {
+      this.logger.debug(
+        `Using Google Cloud Vertex AI provider for workspace '${workspaceId}' (project: ${vertexProject}, region: ${vertexLocation})`,
+      );
+      const vertex = createVertex({
+        project: vertexProject,
+        location: vertexLocation,
+      });
+      return vertex(AI_AGENT_CONSTANTS.DEFAULT_MODEL);
+    }
+
+    // 3. Platform default Google AI Studio API key
+    const envKey = this.configService.get<string>('GEMINI_API_KEY');
+    if (envKey && envKey.trim()) {
+      this.logger.debug(`Using Google AI Studio default provider for workspace '${workspaceId}'`);
+      const google = createGoogleGenerativeAI({ apiKey: envKey.trim() });
+      return google(AI_AGENT_CONSTANTS.DEFAULT_MODEL);
+    }
+
+    throw new Error(
+      `No AI provider available for workspace '${workspaceId}'. Please configure Google Cloud Vertex AI or GEMINI_API_KEY.`,
+    );
+  }
+
+  /**
+   * Resolves Gemini API key (kept for backward-compatibility & unit tests):
    * 1. Per-workspace BYOK (workspace.settings.llmCredentials.geminiApiKey)
    * 2. Platform default from GEMINI_API_KEY env
    */
@@ -58,8 +118,8 @@ export class AiAgentService {
     conversationId: string,
     inboxId: string,
   ): Promise<AiAgentResult> {
-    // 1. Resolve API key
-    const apiKey = await this.resolveApiKey(workspaceId);
+    // 1. Resolve LanguageModel instance (Workspace BYOK -> GCP Vertex AI -> AI Studio)
+    const model = await this.resolveLanguageModel(workspaceId);
 
     // 2. Build contextual prompt and conversation history
     const { systemPrompt, messages, aiPolicy } = await this.contextBuilder.build(
@@ -67,10 +127,6 @@ export class AiAgentService {
       conversationId,
       inboxId,
     );
-
-    // 3. Initialize Google provider with resolved key
-    const google = createGoogleGenerativeAI({ apiKey });
-    const model = google(AI_AGENT_CONSTANTS.DEFAULT_MODEL);
 
     // 4. Build tools scoped by workspaceId closure (never expose workspaceId to LLM params)
     const tools = this.toolRegistry

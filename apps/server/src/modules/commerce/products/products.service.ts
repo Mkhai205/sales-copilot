@@ -57,23 +57,33 @@ export class ProductsService {
     }
 
     if (query.search) {
-      const searchTerm = query.search;
-      where.OR = [
-        { name: { contains: searchTerm, mode: 'insensitive' } },
-        { sku: { contains: searchTerm, mode: 'insensitive' } },
-        { barcode: { contains: searchTerm, mode: 'insensitive' } },
-        {
-          variants: {
-            some: {
-              OR: [
-                { name: { contains: searchTerm, mode: 'insensitive' } },
-                { sku: { contains: searchTerm, mode: 'insensitive' } },
-                { barcode: { contains: searchTerm, mode: 'insensitive' } },
-              ],
+      const searchTerm = query.search.trim();
+      const words = searchTerm.split(/\s+/).filter(Boolean);
+
+      const makeCondition = (term: string) => ({
+        OR: [
+          { name: { contains: term, mode: 'insensitive' as const } },
+          { sku: { contains: term, mode: 'insensitive' as const } },
+          { barcode: { contains: term, mode: 'insensitive' as const } },
+          {
+            variants: {
+              some: {
+                OR: [
+                  { name: { contains: term, mode: 'insensitive' as const } },
+                  { sku: { contains: term, mode: 'insensitive' as const } },
+                  { barcode: { contains: term, mode: 'insensitive' as const } },
+                ],
+              },
             },
           },
-        },
-      ];
+        ],
+      });
+
+      if (words.length > 1) {
+        where.AND = words.map(makeCondition);
+      } else {
+        where.OR = makeCondition(searchTerm).OR;
+      }
     }
 
     if (query.lowStock) {

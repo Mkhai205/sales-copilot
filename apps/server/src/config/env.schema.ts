@@ -52,9 +52,12 @@ export const envSchema = z.object({
   FB_APP_SECRET: z.string().optional(),
   FB_VERIFY_TOKEN: z.string().optional(),
 
-  // LLM Gateway Default API Keys
+  // LLM Gateway Default API Keys & Vertex AI
   GEMINI_API_KEY: z.string().optional(),
   OPENAI_API_KEY: z.string().optional(),
+  GOOGLE_APPLICATION_CREDENTIALS: z.string().optional(),
+  GOOGLE_VERTEX_PROJECT: z.string().optional(),
+  GOOGLE_VERTEX_LOCATION: z.string().optional(),
 
   // Email Service (Resend)
   RESEND_API_KEY: z.string().optional(),
