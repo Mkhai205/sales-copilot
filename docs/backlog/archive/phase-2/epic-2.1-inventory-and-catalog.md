@@ -45,17 +45,17 @@
 
 5. **Tiêu chí nghiệm thu (Acceptance Criteria & Definition of Done)**:
 
-   - [ ] Migration Prisma thành công: Model `Product` và `ProductVariant` kèm khóa ngoại liên kết `workspaceId`.
+   - [x] Migration Prisma thành công: Model `Product` và `ProductVariant` kèm khóa ngoại liên kết `workspaceId`.
 
-   - [ ] Tạo sản phẩm kèm 3-6 biến thể thành công từ giao diện `/products` và render dữ liệu ngay lập tức trên bảng mà không cần tải lại trang.
+   - [x] Tạo sản phẩm kèm 3-6 biến thể thành công từ giao diện `/products` và render dữ liệu ngay lập tức trên bảng mà không cần tải lại trang.
 
-   - [ ] Báo lỗi `409 Conflict` thân thiện và rõ ràng khi nhập trùng mã SKU đã tồn tại trong workspace.
+   - [x] Báo lỗi `409 Conflict` thân thiện và rõ ràng khi nhập trùng mã SKU đã tồn tại trong workspace.
 
-   - [ ] Tìm kiếm theo Tên hoặc SKU phản hồi dưới 50ms trên giao diện.
+   - [x] Tìm kiếm theo Tên hoặc SKU phản hồi dưới 50ms trên giao diện.
 
-   - [ ] Unit tests backend bao phủ: Tạo thành công trong transaction, chặn trùng SKU, chặn giá âm.
+   - [x] Unit tests backend bao phủ: Tạo thành công trong transaction, chặn trùng SKU, chặn giá âm.
 
-   - [ ] Chạy `pnpm typecheck` và `pnpm nx run server:test` pass 100%.
+   - [x] Chạy `pnpm typecheck` và `pnpm nx run server:test` pass 100%.
 
 ---
 
@@ -94,14 +94,14 @@
 
 5. **Tiêu chí nghiệm thu (Acceptance Criteria & Definition of Done)**:
 
-   - [ ] Migration Prisma thành công: Model `InventoryTransaction` ghi nhận biến động kho.
+   - [x] Migration Prisma thành công: Model `InventoryTransaction` ghi nhận biến động kho.
 
-   - [ ] Nhập kho hoặc kiểm kê trên giao diện cập nhật ngay lập tức tồn kho vật lý và khả dụng.
+   - [x] Nhập kho hoặc kiểm kê trên giao diện cập nhật ngay lập tức tồn kho vật lý và khả dụng.
 
-   - [ ] Hệ thống chặn đứng thao tác nếu điều chỉnh làm tồn vật lý âm (`400 Bad Request`).
+   - [x] Hệ thống chặn đứng thao tác nếu điều chỉnh làm tồn vật lý âm (`400 Bad Request`).
 
-   - [ ] Mở lịch sử xem được đầy đủ nhật ký biến động kho minh bạch (ai làm, lý do, số lượng trước/sau).
+   - [x] Mở lịch sử xem được đầy đủ nhật ký biến động kho minh bạch (ai làm, lý do, số lượng trước/sau).
 
-   - [ ] Unit tests backend bao phủ: Nhập kho tăng tồn, kiểm kê giảm tồn, chặn âm kho, ghi log sổ cái.
+   - [x] Unit tests backend bao phủ: Nhập kho tăng tồn, kiểm kê giảm tồn, chặn âm kho, ghi log sổ cái.
 
-   - [ ] Chạy `pnpm typecheck` và `pnpm nx run server:test` pass 100%.
+   - [x] Chạy `pnpm typecheck` và `pnpm nx run server:test` pass 100%.

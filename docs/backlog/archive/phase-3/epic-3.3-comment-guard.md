@@ -160,29 +160,29 @@ Tích hợp trực tiếp vào màn hình cấu hình hộp thư (`apps/web/src/
 ## 4. Tiêu Chí Nghiệm Thu (Definition of Done)
 
 ### Detection & Processing Core
-- [ ] Quét chính xác SĐT Việt Nam với các định dạng: `0912345678`, `+84912345678`, `091 234 5678`, `091-234-5678`, `091.234.5678`.
-- [ ] Không nhận diện nhầm các cụm từ thông thường: "giá 350000đ", "quận 09", "ngày 09/10".
-- [ ] Tốc độ bóc tách Regex < 5ms.
-- [ ] Bỏ qua comment của chính Page (`from.id === page_id`).
+- [x] Quét chính xác SĐT Việt Nam với các định dạng: `0912345678`, `+84912345678`, `091 234 5678`, `091-234-5678`, `091.234.5678`.
+- [x] Không nhận diện nhầm các cụm từ thông thường: "giá 350000đ", "quận 09", "ngày 09/10".
+- [x] Tốc độ bóc tách Regex < 5ms.
+- [x] Bỏ qua comment của chính Page (`from.id === page_id`).
 
 ### Facebook Graph API Actions
-- [ ] Ẩn bình luận thành công qua Graph API (`is_hidden: true`).
-- [ ] Gửi Private Reply thành công vào Messenger của khách hàng.
-- [ ] Đăng bình luận công khai phản hồi thành công (khi bật `publicReplyEnabled`).
-- [ ] Xử lý fail-safe: Nếu hành động ẩn thất bại (do phân quyền), vẫn tiếp tục gửi Private Reply và bình luận phản hồi.
-- [ ] Bắt được cả sự kiện comment mới (`verb === 'add'`) và comment được chỉnh sửa (`verb === 'edited'`).
+- [x] Ẩn bình luận thành công qua Graph API (`is_hidden: true`).
+- [x] Gửi Private Reply thành công vào Messenger của khách hàng.
+- [x] Đăng bình luận công khai phản hồi thành công (khi bật `publicReplyEnabled`).
+- [x] Xử lý fail-safe: Nếu hành động ẩn thất bại (do phân quyền), vẫn tiếp tục gửi Private Reply và bình luận phản hồi.
+- [x] Bắt được cả sự kiện comment mới (`verb === 'add'`) và comment được chỉnh sửa (`verb === 'edited'`).
 
 ### CRM & Unified Inbox Flow
-- [ ] Tự động cập nhật số điện thoại bóc tách vào `Contact.phoneNumber`.
-- [ ] Tạo mới hoặc gán vào Conversation đang hoạt động trong Inbox tương ứng.
-- [ ] Lưu nội dung comment ban đầu thành Message thuộc Conversation.
-- [ ] Kích hoạt luồng `AiDispatcherListener` tự động tư vấn khi `AUTOPILOT` bật, hoặc hiển thị tại danh sách chờ nhân viên khi `AUTOPILOT` tắt.
+- [x] Tự động cập nhật số điện thoại bóc tách vào `Contact.phoneNumber`.
+- [x] Tạo mới hoặc gán vào Conversation đang hoạt động trong Inbox tương ứng.
+- [x] Lưu nội dung comment ban đầu thành Message thuộc Conversation.
+- [x] Kích hoạt luồng `AiDispatcherListener` tự động tư vấn khi `AUTOPILOT` bật, hoặc hiển thị tại danh sách chờ nhân viên khi `AUTOPILOT` tắt.
 
 ### Resilience & Performance
-- [ ] Webhook phản hồi HTTP 200 < 100ms.
-- [ ] BullMQ xử lý hàng đợi có Rate Limiter và Retry Exponential Backoff khi gặp lỗi 429.
-- [ ] Đảm bảo tính Idempotent: webhook gửi trùng không tạo nhiều conversation hay gửi tin nhắn lặp lại.
+- [x] Webhook phản hồi HTTP 200 < 100ms.
+- [x] BullMQ xử lý hàng đợi có Rate Limiter và Retry Exponential Backoff khi gặp lỗi 429.
+- [x] Đảm bảo tính Idempotent: webhook gửi trùng không tạo nhiều conversation hay gửi tin nhắn lặp lại.
 
 ### UI Configuration
-- [ ] Giao diện cấu hình hiển thị đầy đủ trong tab Configuration của Facebook Messenger Inbox.
-- [ ] Lưu và nạp chính xác các trường cấu hình: `enabled`, `publicReplyEnabled`, `privateReplyTemplate`, `publicReplyTemplate`.
+- [x] Giao diện cấu hình hiển thị đầy đủ trong tab Configuration của Facebook Messenger Inbox.
+- [x] Lưu và nạp chính xác các trường cấu hình: `enabled`, `publicReplyEnabled`, `privateReplyTemplate`, `publicReplyTemplate`.

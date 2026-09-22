@@ -34,11 +34,11 @@
    - RFC Kiến trúc: [`docs/architecture/rfc-commerce-and-orders.md#vietqr-generation`](file:///d:/workspace/Sales%20Copilot/docs/architecture/rfc-commerce-and-orders.md)
 
 5. **Tiêu chí nghiệm thu (Acceptance Criteria & Definition of Done)**:
-   - [ ] Mã QR quét thành công trên các ứng dụng ngân hàng phổ biến (Vietcombank, MB, Techcombank) và tự động điền đúng STK, số tiền, cú pháp `DH...`.
-   - [ ] Bấm xem mã QR mở modal nhanh dưới 100ms.
-   - [ ] Nút sao chép (copy-to-clipboard) hoạt động chuẩn xác trên cả desktop và mobile.
-   - [ ] Unit tests backend bao phủ: Sinh chuỗi payload EMVCo hợp lệ, kiểm tra CRC-16 checksum, định dạng memo chuẩn.
-   - [ ] Chạy `pnpm typecheck` và `pnpm nx run server:test` pass 100%.
+   - [x] Mã QR quét thành công trên các ứng dụng ngân hàng phổ biến (Vietcombank, MB, Techcombank) và tự động điền đúng STK, số tiền, cú pháp `DH...`.
+   - [x] Bấm xem mã QR mở modal nhanh dưới 100ms.
+   - [x] Nút sao chép (copy-to-clipboard) hoạt động chuẩn xác trên cả desktop và mobile.
+   - [x] Unit tests backend bao phủ: Sinh chuỗi payload EMVCo hợp lệ, kiểm tra CRC-16 checksum, định dạng memo chuẩn.
+   - [x] Chạy `pnpm typecheck` và `pnpm nx run server:test` pass 100%.
 
 ---
 
@@ -72,9 +72,9 @@
    - RFC Kiến trúc: [`docs/architecture/rfc-commerce-and-orders.md#bank-reconciliation-pipeline`](file:///d:/workspace/Sales%20Copilot/docs/architecture/rfc-commerce-and-orders.md)
 
 5. **Tiêu chí nghiệm thu (Acceptance Criteria & Definition of Done)**:
-   - [ ] Endpoint Webhook xác thực Secret/HMAC hợp lệ và phản hồi HTTP 200 trong < 100ms.
-   - [ ] Xử lý kháng lặp thành công: Gửi lại cùng 1 transaction webhook không gây lỗi và không bị trừ kho 2 lần.
-   - [ ] Đơn hàng tự động đổi sang trạng thái `PAID` và trừ cả tồn vật lý lẫn tồn tạm giữ chính xác.
-   - [ ] Màn hình chat nhận sự kiện WebSocket và cập nhật badge đơn hàng sang "ĐÃ THANH TOÁN" xanh lá trong < 1s.
-   - [ ] Unit tests backend bao phủ: Đối soát khớp tiền, xử lý trùng lặp transaction, xử lý thiếu tiền.
-   - [ ] Chạy `pnpm typecheck` và `pnpm nx run server:test` pass 100%.
+   - [x] Endpoint Webhook xác thực Secret/HMAC hợp lệ và phản hồi HTTP 200 trong < 100ms.
+   - [x] Xử lý kháng lặp thành công: Gửi lại cùng 1 transaction webhook không gây lỗi và không bị trừ kho 2 lần.
+   - [x] Đơn hàng tự động đổi sang trạng thái `PAID` và trừ cả tồn vật lý lẫn tồn tạm giữ chính xác.
+   - [x] Màn hình chat nhận sự kiện WebSocket và cập nhật badge đơn hàng sang "ĐÃ THANH TOÁN" xanh lá trong < 1s.
+   - [x] Unit tests backend bao phủ: Đối soát khớp tiền, xử lý trùng lặp transaction, xử lý thiếu tiền.
+   - [x] Chạy `pnpm typecheck` và `pnpm nx run server:test` pass 100%.

@@ -163,27 +163,27 @@ _Không cần endpoint mới._ Comment Guard update đã đi qua `PATCH /api/v1/
 ## 5. Tiêu Chí Nghiệm Thu
 
 ### AI Settings UI
-- [ ] Tab "AI Agent" xuất hiện trong Inbox Detail
-- [ ] Toggle Autopilot bật/tắt → auto-save → AI hoạt động/dừng tương ứng
-- [ ] Toggle bị block khi `workspace.settings.paymentSettings` chưa cấu hình → hiện inline error
-- [ ] Persona tone select → 4 options với label + subtitle → auto-save
-- [ ] Custom Instructions textarea → max 2000 ký tự → debounce auto-save
-- [ ] Discount fields → validate range → auto-save
-- [ ] Kho + TK ngân hàng hiển thị read-only từ workspace settings
+- [x] Tab "AI Agent" xuất hiện trong Inbox Detail
+- [x] Toggle Autopilot bật/tắt → auto-save → AI hoạt động/dừng tương ứng
+- [x] Toggle bị block khi `workspace.settings.paymentSettings` chưa cấu hình → hiện inline error
+- [x] Persona tone select → 4 options với label + subtitle → auto-save
+- [x] Custom Instructions textarea → max 2000 ký tự → debounce auto-save
+- [x] Discount fields → validate range → auto-save
+- [x] Kho + TK ngân hàng hiển thị read-only từ workspace settings
 
 ### Comment Guard UI
-- [ ] Nút "Khôi phục mặc định" hoạt động cho cả private + public reply template
-- [ ] Layout responsive, consistent với các tab khác
+- [x] Nút "Khôi phục mặc định" hoạt động cho cả private + public reply template
+- [x] Layout responsive, consistent với các tab khác
 
 ### Conversation UI
-- [ ] Badge "🤖 AI" nhỏ trên avatar tin nhắn AI (chỉ internal view)
-- [ ] Nút "Tiếp quản từ AI" hoạt động → `isAiPaused = true` → badge đổi sang "👤 Nhân viên"
-- [ ] Không có nút "Resume AI" (takeover một chiều)
-- [ ] Real-time: tin nhắn AI xuất hiện + badge cập nhật không cần refresh
-- [ ] Info card AI stats trong Detail Panel sidebar
+- [x] Badge "🤖 AI" nhỏ trên avatar tin nhắn AI (chỉ internal view)
+- [x] Nút "Tiếp quản từ AI" hoạt động → `isAiPaused = true` → badge đổi sang "👤 Nhân viên"
+- [x] Không có nút "Resume AI" (takeover một chiều)
+- [x] Real-time: tin nhắn AI xuất hiện + badge cập nhật không cần refresh
+- [x] Info card AI stats trong Detail Panel sidebar
 
 ### Codebase Quality
-- [ ] Xóa key i18n sót `conversations.aiAutofill`
-- [ ] Tất cả components dùng Shadcn UI primitives
-- [ ] TanStack Query cho mọi API calls (không `useEffect` fetch thủ công)
-- [ ] Design tokens: `bg-background`, `text-foreground`, `text-primary`
+- [x] Xóa key i18n sót `conversations.aiAutofill`
+- [x] Tất cả components dùng Shadcn UI primitives
+- [x] TanStack Query cho mọi API calls (không `useEffect` fetch thủ công)
+- [x] Design tokens: `bg-background`, `text-foreground`, `text-primary`

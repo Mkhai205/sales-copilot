@@ -41,13 +41,13 @@
    - RFC Kiến trúc: [`docs/architecture/rfc-commerce-and-orders.md`](file:///d:/workspace/Sales%20Copilot/docs/architecture/rfc-commerce-and-orders.md)
 
 5. **Tiêu chí nghiệm thu (Acceptance Criteria & Definition of Done)**:
-   - [ ] Migration Prisma thành công: Model `Order` và `OrderItem` với các Enums chuẩn.
-   - [ ] Lên đơn thành công làm tăng `reservedStock` tương ứng của biến thể trong kho.
-   - [ ] Chặn đứng bán âm kho khi 2 request đồng thời tranh chấp 1 mặt hàng chỉ còn tồn khả dụng = 1 (1 đơn thành công, 1 đơn báo lỗi hết hàng).
-   - [ ] Redis lock cảnh báo va chạm khi 2 tab/nhân viên cùng mở form tạo đơn cho 1 khách hàng.
-   - [ ] Thẻ tóm tắt đơn hàng xuất hiện ngay lập tức trong dòng chat của cuộc trò chuyện.
-   - [ ] Unit tests backend bao phủ: Trừ tồn tạm, chống deadlock, tranh chấp đồng thời, Redis lock.
-   - [ ] Chạy `pnpm typecheck` và `pnpm nx run server:test` pass 100%.
+   - [x] Migration Prisma thành công: Model `Order` và `OrderItem` với các Enums chuẩn.
+   - [x] Lên đơn thành công làm tăng `reservedStock` tương ứng của biến thể trong kho.
+   - [x] Chặn đứng bán âm kho khi 2 request đồng thời tranh chấp 1 mặt hàng chỉ còn tồn khả dụng = 1 (1 đơn thành công, 1 đơn báo lỗi hết hàng).
+   - [x] Redis lock cảnh báo va chạm khi 2 tab/nhân viên cùng mở form tạo đơn cho 1 khách hàng.
+   - [x] Thẻ tóm tắt đơn hàng xuất hiện ngay lập tức trong dòng chat của cuộc trò chuyện.
+   - [x] Unit tests backend bao phủ: Trừ tồn tạm, chống deadlock, tranh chấp đồng thời, Redis lock.
+   - [x] Chạy `pnpm typecheck` và `pnpm nx run server:test` pass 100%.
 
 ---
 
@@ -78,9 +78,9 @@
    - RFC Kiến trúc: [`docs/architecture/rfc-commerce-and-orders.md#order-state-machine`](file:///d:/workspace/Sales%20Copilot/docs/architecture/rfc-commerce-and-orders.md)
 
 5. **Tiêu chí nghiệm thu (Acceptance Criteria & Definition of Done)**:
-   - [ ] Bảng danh sách đơn hàng hiển thị đầy đủ, phân trang, tìm kiếm và lọc trạng thái mượt mà.
-   - [ ] Hủy đơn ở trạng thái `CONFIRMED` giải phóng tồn tạm `reservedStock` ngay lập tức.
-   - [ ] Hủy đơn ở trạng thái `PAID` hoàn trả tồn vật lý `physicalStock` và ghi log sổ cái kho.
-   - [ ] Chặn đứng thao tác hủy đơn đối với đơn hàng đã hoàn tất (`COMPLETED`).
-   - [ ] Unit tests backend bao phủ: Chuyển trạng thái hợp lệ, hoàn kho khi hủy đơn, chặn hủy đơn hoàn tất.
-   - [ ] Chạy `pnpm typecheck` và `pnpm nx run server:test` pass 100%.
+   - [x] Bảng danh sách đơn hàng hiển thị đầy đủ, phân trang, tìm kiếm và lọc trạng thái mượt mà.
+   - [x] Hủy đơn ở trạng thái `CONFIRMED` giải phóng tồn tạm `reservedStock` ngay lập tức.
+   - [x] Hủy đơn ở trạng thái `PAID` hoàn trả tồn vật lý `physicalStock` và ghi log sổ cái kho.
+   - [x] Chặn đứng thao tác hủy đơn đối với đơn hàng đã hoàn tất (`COMPLETED`).
+   - [x] Unit tests backend bao phủ: Chuyển trạng thái hợp lệ, hoàn kho khi hủy đơn, chặn hủy đơn hoàn tất.
+   - [x] Chạy `pnpm typecheck` và `pnpm nx run server:test` pass 100%.

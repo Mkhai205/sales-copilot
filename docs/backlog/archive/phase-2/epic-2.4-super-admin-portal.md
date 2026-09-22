@@ -36,12 +36,12 @@
    - RFC Kiến trúc: [`docs/architecture/rfc-super-admin.md#platform-roles--security`](file:///d:/workspace/Sales%20Copilot/docs/architecture/rfc-super-admin.md)
 
 5. **Tiêu chí nghiệm thu (Acceptance Criteria & Definition of Done)**:
-   - [ ] Người dùng không có quyền `SUPER_ADMIN` bị chặn 100% khi cố tình truy cập `/platform-admin` hoặc gọi API platform-admin (`403 Forbidden`).
-   - [ ] Bảng danh sách Workspaces hiển thị đúng và tìm kiếm nhanh theo tên/slug.
-   - [ ] Khóa shop (`SUSPENDED`) ngăn chặn ngay lập tức quyền truy cập của toàn bộ nhân viên vào shop đó qua `WorkspaceGuard` (`403 WORKSPACE_SUSPENDED`).
-   - [ ] Điều chỉnh Quota cập nhật thành công và các kiểm tra hạn mức tại shop áp dụng ngay lập tức.
-   - [ ] Unit tests backend bao phủ: Guard chặn quyền, API khóa shop, API cập nhật quota.
-   - [ ] Chạy `pnpm typecheck` và `pnpm nx run server:test` pass 100%.
+   - [x] Người dùng không có quyền `SUPER_ADMIN` bị chặn 100% khi cố tình truy cập `/platform-admin` hoặc gọi API platform-admin (`403 Forbidden`).
+   - [x] Bảng danh sách Workspaces hiển thị đúng và tìm kiếm nhanh theo tên/slug.
+   - [x] Khóa shop (`SUSPENDED`) ngăn chặn ngay lập tức quyền truy cập của toàn bộ nhân viên vào shop đó qua `WorkspaceGuard` (`403 WORKSPACE_SUSPENDED`).
+   - [x] Điều chỉnh Quota cập nhật thành công và các kiểm tra hạn mức tại shop áp dụng ngay lập tức.
+   - [x] Unit tests backend bao phủ: Guard chặn quyền, API khóa shop, API cập nhật quota.
+   - [x] Chạy `pnpm typecheck` và `pnpm nx run server:test` pass 100%.
 
 ---
 
@@ -72,9 +72,9 @@
    - RFC Kiến trúc: [`docs/architecture/rfc-super-admin.md#2-tier-configuration-cache`](file:///d:/workspace/Sales%20Copilot/docs/architecture/rfc-super-admin.md)
 
 5. **Tiêu chí nghiệm thu (Acceptance Criteria & Definition of Done)**:
-   - [ ] Migration Prisma thành công: Model `SystemSetting` và `PlatformAuditLog`.
-   - [ ] Tốc độ đọc Feature Flag qua bộ nhớ đệm Redis đạt < 5ms.
-   - [ ] Cập nhật Feature Flag / System Setting tức thì trên toàn hệ thống mà không cần restart server.
-   - [ ] Mọi hành vi can thiệp của Super Admin được ghi nhận đầy đủ vào `PlatformAuditLog` kèm IP và Diff.
-   - [ ] Unit tests backend bao phủ: Đọc cache Redis, Invalidate cache khi update, ghi log audit.
-   - [ ] Chạy `pnpm typecheck` và `pnpm nx run server:test` pass 100%.
+   - [x] Migration Prisma thành công: Model `SystemSetting` và `PlatformAuditLog`.
+   - [x] Tốc độ đọc Feature Flag qua bộ nhớ đệm Redis đạt < 5ms.
+   - [x] Cập nhật Feature Flag / System Setting tức thì trên toàn hệ thống mà không cần restart server.
+   - [x] Mọi hành vi can thiệp của Super Admin được ghi nhận đầy đủ vào `PlatformAuditLog` kèm IP và Diff.
+   - [x] Unit tests backend bao phủ: Đọc cache Redis, Invalidate cache khi update, ghi log audit.
+   - [x] Chạy `pnpm typecheck` và `pnpm nx run server:test` pass 100%.

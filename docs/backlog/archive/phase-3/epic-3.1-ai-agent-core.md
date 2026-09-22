@@ -155,39 +155,39 @@ SĐT: {contactPhone}
 ## 4. Tiêu Chí Nghiệm Thu
 
 ### Core Agent Loop
-- [ ] Vercel AI SDK (`ai` + `@ai-sdk/google`) cài và hoạt động
-- [ ] `AiAgentService.processConversation()` chạy được agent loop cơ bản (LLM trả text, chưa cần tools)
-- [ ] Agent trả lời dựa trên system prompt + conversation history
-- [ ] `maxSteps: 10` enforce — loop không chạy vô hạn
+- [x] Vercel AI SDK (`ai` + `@ai-sdk/google`) cài và hoạt động
+- [x] `AiAgentService.processConversation()` chạy được agent loop cơ bản (LLM trả text, chưa cần tools)
+- [x] Agent trả lời dựa trên system prompt + conversation history
+- [x] `maxSteps: 10` enforce — loop không chạy vô hạn
 
 ### Dispatcher
-- [ ] Tin nhắn CONTACT → enqueue job `ai-autopilot` khi `aiPolicy.enabled === true`
-- [ ] Tin nhắn không phải CONTACT → bỏ qua
-- [ ] Conversation `isAiPaused === true` → bỏ qua
-- [ ] Inbox không có `aiCommercePolicy` → bỏ qua
+- [x] Tin nhắn CONTACT → enqueue job `ai-autopilot` khi `aiPolicy.enabled === true`
+- [x] Tin nhắn không phải CONTACT → bỏ qua
+- [x] Conversation `isAiPaused === true` → bỏ qua
+- [x] Inbox không có `aiCommercePolicy` → bỏ qua
 
 ### Worker
-- [ ] `AiAgentWorker` xử lý job từ BullMQ queue `ai-autopilot`
-- [ ] Debounce hoạt động: gửi 3 tin liên tiếp → chỉ xử lý tin cuối
-- [ ] Job retry: 2 lần, exponential backoff
+- [x] `AiAgentWorker` xử lý job từ BullMQ queue `ai-autopilot`
+- [x] Debounce hoạt động: gửi 3 tin liên tiếp → chỉ xử lý tin cuối
+- [x] Job retry: 2 lần, exponential backoff
 
 ### Human Takeover
-- [ ] Nhân viên gửi tin → `isAiPaused = true` → AI dừng
-- [ ] AI đang xử lý giữa chừng → `onStepFinish` detect takeover → abort
-- [ ] Resolve conversation → `isAiPaused = false`
-- [ ] Khách nhắn lại → AI hoạt động bình thường
+- [x] Nhân viên gửi tin → `isAiPaused = true` → AI dừng
+- [x] AI đang xử lý giữa chừng → `onStepFinish` detect takeover → abort
+- [x] Resolve conversation → `isAiPaused = false`
+- [x] Khách nhắn lại → AI hoạt động bình thường
 
 ### Message Attribution
-- [ ] Tin AI có `senderType: 'SYSTEM'`, `metadata.isAiGenerated: true`
-- [ ] `OutboundMessageListener` tự động gửi ra kênh
-- [ ] WebSocket broadcast tin AI cho frontend
+- [x] Tin AI có `senderType: 'SYSTEM'`, `metadata.isAiGenerated: true`
+- [x] `OutboundMessageListener` tự động gửi ra kênh
+- [x] WebSocket broadcast tin AI cho frontend
 
 ### Context Builder
-- [ ] Load tối đa 20 tin nhắn gần nhất
-- [ ] System prompt chứa persona + rules + customInstructions + contact info
-- [ ] Map messages sang `CoreMessage[]` format của Vercel AI SDK
+- [x] Load tối đa 20 tin nhắn gần nhất
+- [x] System prompt chứa persona + rules + customInstructions + contact info
+- [x] Map messages sang `CoreMessage[]` format của Vercel AI SDK
 
 ### Schema & Migration
-- [ ] Prisma migration: `isAiPaused Boolean @default(false)` trên Conversation
-- [ ] Zod schema `aiCommercePolicy` cập nhật: bỏ `mode`, thêm `enabled`, `customInstructions` (max 2000)
-- [ ] Shared contracts: queue name `AI_AUTOPILOT_QUEUE`, job data interface
+- [x] Prisma migration: `isAiPaused Boolean @default(false)` trên Conversation
+- [x] Zod schema `aiCommercePolicy` cập nhật: bỏ `mode`, thêm `enabled`, `customInstructions` (max 2000)
+- [x] Shared contracts: queue name `AI_AUTOPILOT_QUEUE`, job data interface

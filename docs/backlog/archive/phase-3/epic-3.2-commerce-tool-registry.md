@@ -174,25 +174,25 @@ AI: "Shop đã tạo đơn #DH1042 tổng 180.000đ (150k sản phẩm + 30k shi
 ## 5. Tiêu Chí Nghiệm Thu
 
 ### Tools hoạt động đúng
-- [ ] Mỗi tool có unit test cover happy path + error path
-- [ ] `searchProducts` trả kết quả chính xác theo keyword, chỉ products `isActive`
-- [ ] `extractShippingInfo` parse đúng SĐT + GSO 3 cấp (Tier 1), fallback LLM (Tier 2)
-- [ ] `evaluateDiscount` enforce `min(total × %, maxVnd)` — không bao giờ approved vượt trần
-- [ ] `createDraftOrder` atomic reserve stock — concurrent test không oversell
-- [ ] `confirmAndGenerateQR` sinh QR đúng chuẩn EMVCo, có ảnh URL
-- [ ] `escalateToHuman` set `isAiPaused = true` + notify agents
+- [x] Mỗi tool có unit test cover happy path + error path
+- [x] `searchProducts` trả kết quả chính xác theo keyword, chỉ products `isActive`
+- [x] `extractShippingInfo` parse đúng SĐT + GSO 3 cấp (Tier 1), fallback LLM (Tier 2)
+- [x] `evaluateDiscount` enforce `min(total × %, maxVnd)` — không bao giờ approved vượt trần
+- [x] `createDraftOrder` atomic reserve stock — concurrent test không oversell
+- [x] `confirmAndGenerateQR` sinh QR đúng chuẩn EMVCo, có ảnh URL
+- [x] `escalateToHuman` set `isAiPaused = true` + notify agents
 
 ### Tool Registry tích hợp Agent
-- [ ] 9 tools đăng ký vào `generateText({ tools: {...} })`
-- [ ] Agent gọi đúng tool theo context (hỏi giá → searchProducts, gửi địa chỉ → extractShippingInfo)
-- [ ] Agent loop hoàn thành user journey mẫu end-to-end
+- [x] 9 tools đăng ký vào `generateText({ tools: {...} })`
+- [x] Agent gọi đúng tool theo context (hỏi giá → searchProducts, gửi địa chỉ → extractShippingInfo)
+- [x] Agent loop hoàn thành user journey mẫu end-to-end
 
 ### Multi-tenancy
-- [ ] Không tool nào có `workspaceId` trong parameter schema
-- [ ] Mọi query bên trong tool đều có `workspaceId` trong `where`
-- [ ] Test cross-tenant: Workspace A không truy cập được sản phẩm Workspace B
+- [x] Không tool nào có `workspaceId` trong parameter schema
+- [x] Mọi query bên trong tool đều có `workspaceId` trong `where`
+- [x] Test cross-tenant: Workspace A không truy cập được sản phẩm Workspace B
 
 ### Error Handling
-- [ ] Stock hết → tool trả error → AI thông báo khách, suggest sản phẩm thay thế
-- [ ] Discount vượt trần → tool trả `approved: false` → AI từ chối khéo
-- [ ] Product không tồn tại → tool trả null → AI thông báo không tìm thấy
+- [x] Stock hết → tool trả error → AI thông báo khách, suggest sản phẩm thay thế
+- [x] Discount vượt trần → tool trả `approved: false` → AI từ chối khéo
+- [x] Product không tồn tại → tool trả null → AI thông báo không tìm thấy
