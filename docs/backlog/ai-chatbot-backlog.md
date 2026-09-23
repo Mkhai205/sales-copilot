@@ -441,9 +441,9 @@ Bộ integration test tự động kiểm tra từng commerce tool hoạt độn
 - Chạy bằng `pnpm nx run server:test`.
 
 #### 4. Tiêu chí nghiệm thu
-- [ ] 16 test cases pass
-- [ ] Chạy trong CI pipeline
-- [ ] Coverage: tất cả 9 commerce tools + 1 knowledge tool (khi có)
+- [x] 16 test cases pass (unit tests + real PostgreSQL integration tests)
+- [x] Chạy trong CI pipeline (`nx run server:test` cho unit tests, `nx run server:test:integration` cho DB tests)
+- [x] Coverage: tất cả 9 commerce tools + 1 knowledge tool (khi có)
 
 ---
 

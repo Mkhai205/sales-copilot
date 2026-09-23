@@ -106,4 +106,25 @@ describe('updateContactInfo Tool (T8)', () => {
     expect(result.updated).toBe(false);
     expect(updatePayloads.length).toBe(0);
   });
+
+  it('should reject and return error when phone number format is invalid', async () => {
+    const tool = createUpdateContactInfoTool({
+      workspaceId,
+      conversationId,
+      contactsService: mockContactsService,
+      prisma: mockPrisma,
+    });
+
+    const result = await tool.execute!(
+      {
+        phoneNumber: '012345', // Too short, invalid
+      },
+      {} as any,
+    );
+
+    expect(result.updated).toBe(false);
+    expect(result.error).toBe('INVALID_PHONE_NUMBER');
+    expect(result.message).toContain('Số điện thoại không hợp lệ');
+    expect(updatePayloads.length).toBe(0);
+  });
 });

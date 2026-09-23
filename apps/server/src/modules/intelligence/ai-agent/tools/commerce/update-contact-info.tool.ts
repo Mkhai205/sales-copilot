@@ -53,8 +53,16 @@ export function createUpdateContactInfoTool({
         // 2. Normalize phone to E.164 standard (+84...)
         let e164Phone: string | undefined;
         if (phoneNumber) {
-          const normalized = normalizeVietnamesePhone(phoneNumber);
-          if (isValidVietnamesePhone(normalized)) {
+          const trimmed = phoneNumber.trim();
+          if (trimmed) {
+            const normalized = normalizeVietnamesePhone(trimmed);
+            if (!isValidVietnamesePhone(normalized)) {
+              return {
+                error: 'INVALID_PHONE_NUMBER',
+                message: 'Số điện thoại không hợp lệ (yêu cầu số điện thoại Việt Nam 10 chữ số)',
+                updated: false,
+              };
+            }
             e164Phone = normalized.startsWith('0') ? `+84${normalized.slice(1)}` : normalized;
           }
         }
