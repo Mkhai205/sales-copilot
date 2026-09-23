@@ -378,11 +378,11 @@ Bot tự động gửi tin nhắn nhắc nhở nếu khách không phản hồi 
 - Không áp dụng cho conversation đã RESOLVED.
 
 #### 4. Tiêu chí nghiệm thu
-- [ ] Bot reply → delayed job được schedule
-- [ ] Khách không reply 5 phút → nhận follow-up message
-- [ ] Khách reply trước 5 phút → không nhận follow-up
-- [ ] Chỉ nhắc 1 lần, không lặp lại
-- [ ] `isAiPaused = true` → không gửi follow-up
+- [x] Bot reply → delayed job được schedule
+- [x] Khách không reply 5 phút → nhận follow-up message
+- [x] Khách reply trước 5 phút → không nhận follow-up
+- [x] Chỉ nhắc 1 lần, không lặp lại
+- [x] `isAiPaused = true` → không gửi follow-up
 
 ---
 
@@ -399,9 +399,9 @@ Thêm timeout 5 giây cho nested LLM call trong `extract-shipping-info` Tier 2 v
 - Log metrics: tier nào được dùng, confidence score, duration.
 
 #### 3. Tiêu chí nghiệm thu
-- [ ] Tier 2 LLM call có timeout 5 giây
-- [ ] Timeout → graceful fallback, không crash
-- [ ] Terminal log hiển thị tier used + confidence + duration
+- [x] Tier 2 LLM call có timeout 5 giây
+- [x] Timeout → graceful fallback, không crash
+- [x] Terminal log hiển thị tier used + confidence + duration
 
 ---
 
