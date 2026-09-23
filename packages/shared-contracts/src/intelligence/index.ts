@@ -1,4 +1,5 @@
 export * from './intelligence.schemas';
+export * from './knowledge.schemas';
 
 export const AI_AUTOPILOT_QUEUE = 'ai-autopilot';
 

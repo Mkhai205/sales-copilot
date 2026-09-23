@@ -202,6 +202,22 @@ export const reconciliationKeys = {
         : (['reconciliation-stats'] as const),
 };
 
+export const knowledgeKeys = {
+  all: ['knowledge'] as const,
+  list: (workspaceId?: string, query?: any) =>
+    query !== undefined
+      ? (['knowledge-articles', workspaceId, query] as const)
+      : workspaceId !== undefined
+        ? (['knowledge-articles', workspaceId] as const)
+        : (['knowledge-articles'] as const),
+  detail: (workspaceId?: string, id?: string) =>
+    id !== undefined
+      ? (['knowledge-article', workspaceId, id] as const)
+      : workspaceId !== undefined
+        ? (['knowledge-article', workspaceId] as const)
+        : (['knowledge-article'] as const),
+};
+
 export const queryKeys = {
   commerce: commerceKeys,
   conversations: conversationKeys,
@@ -215,4 +231,5 @@ export const queryKeys = {
   dashboard: dashboardKeys,
   presence: presenceKeys,
   reconciliation: reconciliationKeys,
+  knowledge: knowledgeKeys,
 };

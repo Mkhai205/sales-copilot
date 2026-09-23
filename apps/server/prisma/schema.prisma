@@ -152,6 +152,13 @@ enum InventoryTransactionType {
   INVENTORY_AUDIT
 }
 
+enum KnowledgeEmbeddingStatus {
+  PENDING
+  PROCESSING
+  READY
+  FAILED
+}
+
 model User {
   id           String       @id @default(uuid())
   email        String       @unique
@@ -205,6 +212,7 @@ model Workspace {
   orderItems            OrderItem[]
   paymentTransactions   PaymentTransaction[]
   inventoryTransactions InventoryTransaction[]
+  knowledgeArticles     KnowledgeArticle[]
 
   @@index([isSuspended])
   @@map("workspaces")
@@ -793,3 +801,28 @@ model PlatformAuditLog {
   @@index([createdAt])
   @@map("platform_audit_logs")
 }
+
+// =============================================================================
+// MODELS: KNOWLEDGE BASE (RAG LEVEL 2 — PGVECTOR)
+// =============================================================================
+
+model KnowledgeArticle {
+  id              String                   @id @default(uuid())
+  workspaceId     String
+  title           String
+  content         String                   @db.Text
+  category        String?
+  embedding       Unsupported("vector(768)")?
+  embeddingStatus KnowledgeEmbeddingStatus @default(PENDING)
+  embeddingError  String?                  @db.Text
+  isActive        Boolean                  @default(true)
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime                 @updatedAt
+
+  workspace       Workspace                @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, id])
+  @@index([workspaceId])
+  @@index([workspaceId, isActive])
+}
+

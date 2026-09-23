@@ -137,6 +137,16 @@ describe('WorkspacesService (Provisioning, Tenant Queries & Member RBAC)', () =>
           usersDb.set(`email:${created.email.toLowerCase()}`, created);
           return created;
         },
+        update: async ({ where, data }: { where: { id: string }; data: any }) => {
+          const existing = usersDb.get(where.id);
+          if (!existing) return null;
+          const updated = { ...existing, ...data, updatedAt: new Date() };
+          usersDb.set(where.id, updated);
+          if (updated.email) {
+            usersDb.set(`email:${updated.email.toLowerCase()}`, updated);
+          }
+          return updated;
+        },
       },
       workspaceMember: {
         findUnique: async ({

@@ -10,6 +10,7 @@ import { ProductsModule } from '../../commerce/products/products.module';
 import { OrdersModule } from '../../commerce/orders/orders.module';
 import { InventoryModule } from '../../commerce/inventory/inventory.module';
 import { VietQrModule } from '../../commerce/payments/vietqr.module';
+import { KnowledgeModule } from '../knowledge/knowledge.module';
 
 import { AiAgentService } from './ai-agent.service';
 import { AiAgentWorker } from './ai-agent.worker';
@@ -32,6 +33,7 @@ import { ensureDivisionsLoaded } from './utils/address-parser.util';
     OrdersModule,
     InventoryModule,
     VietQrModule,
+    KnowledgeModule,
     BullModule.registerQueue({
       name: AI_AUTOPILOT_QUEUE,
     }),

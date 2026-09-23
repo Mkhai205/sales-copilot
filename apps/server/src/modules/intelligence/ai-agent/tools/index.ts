@@ -13,6 +13,7 @@ export * from './commerce/create-draft-order.tool';
 export * from './commerce/confirm-and-generate-qr.tool';
 export * from './commerce/update-contact-info.tool';
 export * from './commerce/escalate-to-human.tool';
+export * from './knowledge/search-knowledge.tool';
 
 /**
  * Builds registered tools available for the AI Agent loop.

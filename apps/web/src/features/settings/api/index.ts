@@ -4,3 +4,4 @@ export * from './inboxes';
 export * from './facebook';
 export * from './labels';
 export * from './canned-responses';
+export * from './knowledge';

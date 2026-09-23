@@ -380,4 +380,27 @@ describe('CommerceToolRegistry & 2 AM Customer Journey', () => {
     expect(qrMessage).toBeTruthy();
     expect(qrMessage.metadata.qrData.amount).toBe(180000);
   });
+
+  it('should register searchKnowledge tool when knowledgeService is injected', () => {
+    const mockKnowledgeService: any = {
+      searchSimilar: jest.fn().mockResolvedValue([]),
+    };
+
+    const registryWithKnowledge = new CommerceToolRegistry(
+      mockPrisma,
+      mockRedis,
+      mockProductsService,
+      mockOrdersService,
+      mockInventoryService,
+      mockVietQrService,
+      mockContactsService,
+      mockMessagesService,
+      new DiscountGuardService(),
+      mockKnowledgeService,
+    );
+
+    const tools = registryWithKnowledge.buildTools({ workspaceId: workspaceA });
+    expect(tools.searchKnowledge).toBeDefined();
+    expect(tools.searchProducts).toBeDefined();
+  });
 });

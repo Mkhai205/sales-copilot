@@ -51,6 +51,8 @@ export function SettingsSidebar({ workspaceSlug, ...props }: SettingsSidebarProp
         return 'Nhật ký hoạt động';
       case 'bank':
         return 'Ngân hàng & Thanh toán';
+      case 'knowledge':
+        return 'Kiến thức AI';
       default:
         return fallback;
     }

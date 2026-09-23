@@ -7,4 +7,5 @@ export * from './teams';
 export * from './inboxes';
 export * from './labels';
 export * from './canned-responses';
+export * from './knowledge';
 export * from './settings-index-view';

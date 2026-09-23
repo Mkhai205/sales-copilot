@@ -6,3 +6,4 @@ export * from './use-workspace-mutations';
 export * from './use-inboxes';
 export * from './use-labels';
 export * from './use-canned-responses';
+export * from './use-knowledge';

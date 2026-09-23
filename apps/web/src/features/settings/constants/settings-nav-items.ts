@@ -1,5 +1,14 @@
 import type { LucideIcon } from 'lucide-react';
-import { FileText, Inbox, Settings, Tag, UserCheck, Users2, Landmark } from 'lucide-react';
+import {
+  BookOpen,
+  FileText,
+  Inbox,
+  Settings,
+  Tag,
+  UserCheck,
+  Users2,
+  Landmark,
+} from 'lucide-react';
 import { WorkspaceRole } from '@sales-copilot/shared-contracts';
 
 export type SettingsCategory = 'workspace' | 'operations';
@@ -84,6 +93,15 @@ export const SETTINGS_NAV_ITEMS: SettingsNavItem[] = [
     category: 'operations',
     allowedRoles: [WorkspaceRole.OWNER, WorkspaceRole.ADMIN],
     adminOnly: true,
+  },
+  {
+    id: 'knowledge',
+    title: 'Kiến thức AI',
+    description: 'Quản lý chính sách, FAQ và kiến thức để AI Chatbot tư vấn chính xác',
+    icon: BookOpen,
+    segment: 'knowledge',
+    category: 'operations',
+    allowedRoles: [WorkspaceRole.OWNER, WorkspaceRole.ADMIN],
   },
 ];
 

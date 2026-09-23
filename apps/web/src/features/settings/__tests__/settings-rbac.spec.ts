@@ -9,8 +9,8 @@ import {
 } from '../constants/settings-nav-items';
 
 describe('Settings Navigation & RBAC (Task 27)', () => {
-  it('should define all 7 settings items with correct categories and segments', () => {
-    assert.strictEqual(SETTINGS_NAV_ITEMS.length, 7);
+  it('should define all 8 settings items with correct categories and segments', () => {
+    assert.strictEqual(SETTINGS_NAV_ITEMS.length, 8);
 
     const segments = SETTINGS_NAV_ITEMS.map(item => item.segment);
     assert.deepStrictEqual(segments, [
@@ -21,13 +21,14 @@ describe('Settings Navigation & RBAC (Task 27)', () => {
       'labels',
       'canned-responses',
       'bank',
+      'knowledge',
     ]);
 
     const workspaceItems = SETTINGS_NAV_ITEMS.filter(item => item.category === 'workspace');
     assert.strictEqual(workspaceItems.length, 4);
 
     const operationsItems = SETTINGS_NAV_ITEMS.filter(item => item.category === 'operations');
-    assert.strictEqual(operationsItems.length, 3);
+    assert.strictEqual(operationsItems.length, 4);
   });
 
   describe('getPermittedSettingsNavItems', () => {
@@ -36,14 +37,14 @@ describe('Settings Navigation & RBAC (Task 27)', () => {
       assert.deepStrictEqual(getPermittedSettingsNavItems(undefined), []);
     });
 
-    it('should return all 7 items for OWNER', () => {
+    it('should return all 8 items for OWNER', () => {
       const permitted = getPermittedSettingsNavItems(WorkspaceRole.OWNER);
-      assert.strictEqual(permitted.length, 7);
+      assert.strictEqual(permitted.length, 8);
     });
 
-    it('should return all 7 items for ADMIN', () => {
+    it('should return all 8 items for ADMIN', () => {
       const permitted = getPermittedSettingsNavItems(WorkspaceRole.ADMIN);
-      assert.strictEqual(permitted.length, 7);
+      assert.strictEqual(permitted.length, 8);
     });
 
     it('should return 4 operational items for AGENT (excluding admin-only)', () => {
@@ -79,6 +80,11 @@ describe('Settings Navigation & RBAC (Task 27)', () => {
       assert.strictEqual(isSettingsSectionAllowed('bank', WorkspaceRole.OWNER), true);
       assert.strictEqual(isSettingsSectionAllowed('bank', WorkspaceRole.ADMIN), true);
       assert.strictEqual(isSettingsSectionAllowed('bank', WorkspaceRole.AGENT), false);
+
+      // Knowledge is admin-only
+      assert.strictEqual(isSettingsSectionAllowed('knowledge', WorkspaceRole.OWNER), true);
+      assert.strictEqual(isSettingsSectionAllowed('knowledge', WorkspaceRole.ADMIN), true);
+      assert.strictEqual(isSettingsSectionAllowed('knowledge', WorkspaceRole.AGENT), false);
 
       // Invalid segment or null role
       assert.strictEqual(isSettingsSectionAllowed('non-existent', WorkspaceRole.ADMIN), false);

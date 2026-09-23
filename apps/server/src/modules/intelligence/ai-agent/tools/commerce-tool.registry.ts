@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
 import type { ToolSet, LanguageModel } from 'ai';
 import type { InboxAiCommercePolicyConfig } from '@sales-copilot/shared-contracts';
 import { PrismaService } from '../../../../infrastructure/database/prisma.service';
@@ -20,6 +20,8 @@ import { createCreateDraftOrderTool } from './commerce/create-draft-order.tool';
 import { createConfirmAndGenerateQrTool } from './commerce/confirm-and-generate-qr.tool';
 import { createUpdateContactInfoTool } from './commerce/update-contact-info.tool';
 import { createEscalateToHumanTool } from './commerce/escalate-to-human.tool';
+import { createSearchKnowledgeTool } from './knowledge/search-knowledge.tool';
+import { KnowledgeService } from '../../knowledge/knowledge.service';
 
 export interface CommerceToolBuildContext {
   workspaceId: string;
@@ -41,16 +43,26 @@ export class CommerceToolRegistry {
     private readonly contactsService: ContactsService,
     private readonly messagesService: MessagesService,
     private readonly discountGuardService: DiscountGuardService,
+    @Optional() private readonly knowledgeService?: KnowledgeService,
   ) {}
 
   /**
-   * Constructs all 9 Vercel AI SDK tools scoped by workspaceId closure.
+   * Constructs all Vercel AI SDK tools scoped by workspaceId closure.
    * Multi-tenancy rule: workspaceId is strictly injected via closure and never exposed in tool parameters.
    */
   buildTools(context: CommerceToolBuildContext, model?: LanguageModel): ToolSet {
     const { workspaceId, conversationId, policy } = context;
 
     return {
+      ...(this.knowledgeService
+        ? {
+            searchKnowledge: createSearchKnowledgeTool({
+              workspaceId,
+              knowledgeService: this.knowledgeService,
+            }),
+          }
+        : {}),
+
       searchProducts: createSearchProductsTool({
         workspaceId,
         productsService: this.productsService,
