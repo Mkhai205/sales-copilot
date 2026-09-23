@@ -7,3 +7,4 @@ export * from './use-inboxes';
 export * from './use-labels';
 export * from './use-canned-responses';
 export * from './use-knowledge';
+export * from './use-bank-settings';

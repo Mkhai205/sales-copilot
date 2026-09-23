@@ -17,7 +17,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Spinner } from '@/components/ui/spinner';
 import {
   AlertDialog,
@@ -56,7 +55,7 @@ export function InboxesList({ workspaceId, currentUserRole, workspaceSlug }: Inb
     }
   };
 
-  const { data: inboxes, isLoading } = useInboxes(workspaceId);
+  const { data: inboxes } = useInboxes(workspaceId);
   const { mutate: deleteInbox, isPending: isDeleting } = useDeleteInbox(workspaceId);
 
   const canManage =
@@ -155,29 +154,7 @@ export function InboxesList({ workspaceId, currentUserRole, workspaceSlug }: Inb
       </div>
 
       {/* Inboxes Cards Grid */}
-      {isLoading ? (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 3 }).map((_, idx) => (
-            <Card key={idx} className="border-border bg-card/30">
-              <CardHeader className="pb-3">
-                <div className="flex items-center gap-2.5">
-                  <Skeleton className="size-8 rounded-lg" />
-                  <div className="flex flex-col gap-1 flex-1">
-                    <Skeleton className="h-4 w-28" />
-                    <Skeleton className="h-3 w-16" />
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="pb-4">
-                <Skeleton className="h-6 w-20 rounded-full" />
-              </CardContent>
-              <CardFooter className="pt-0">
-                <Skeleton className="h-6 w-24 rounded-full" />
-              </CardFooter>
-            </Card>
-          ))}
-        </div>
-      ) : filteredInboxes.length === 0 ? (
+      {filteredInboxes.length === 0 ? (
         <div className="flex min-h-[300px] flex-col items-center justify-center rounded-xl border border-dashed border-border p-8 text-center bg-card/20">
           <div className="mb-3 flex items-center justify-center">
             <Image

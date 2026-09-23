@@ -2,9 +2,7 @@
 
 import * as React from 'react';
 import { MessageSquareText } from 'lucide-react';
-import { Skeleton } from '@/components/ui/skeleton';
-import { PageHeader } from '@/components/layout/page-header';
-import { SettingsGuard } from '../settings-guard';
+import { SettingsPageLayout } from '../layout';
 import { useSettingsRbac } from '../../hooks/use-settings-rbac';
 import { CannedResponsesList } from './canned-responses-list';
 
@@ -16,29 +14,21 @@ export function CannedResponsesSettingsView({ workspaceSlug }: CannedResponsesSe
   const { currentWorkspace, currentRole, isLoading } = useSettingsRbac(workspaceSlug);
 
   return (
-    <SettingsGuard workspaceSlug={workspaceSlug} segment="canned-responses">
-      <div className="flex flex-col gap-6 w-full p-6 overflow-y-auto">
-        <PageHeader
-          title="Tin nhắn mẫu"
-          description="Tạo các mẫu câu trả lời nhanh với phím tắt gợi ý (/) để phản hồi khách hàng tức thì."
-          icon={MessageSquareText}
+    <SettingsPageLayout
+      workspaceSlug={workspaceSlug}
+      segment="canned-responses"
+      title="Tin nhắn mẫu"
+      description="Tạo các mẫu câu trả lời nhanh với phím tắt gợi ý (/) để phản hồi khách hàng tức thì."
+      icon={MessageSquareText}
+      isLoading={isLoading || !currentWorkspace}
+      skeletonVariant="table"
+    >
+      {currentWorkspace && (
+        <CannedResponsesList
+          workspaceId={currentWorkspace.id}
+          currentUserRole={currentRole ?? undefined}
         />
-
-        {isLoading || !currentWorkspace ? (
-          <div className="flex flex-col gap-4">
-            <div className="flex justify-between gap-4">
-              <Skeleton className="h-8 w-64 rounded-md" />
-              <Skeleton className="h-8 w-32 rounded-md" />
-            </div>
-            <Skeleton className="h-64 w-full rounded-xl" />
-          </div>
-        ) : (
-          <CannedResponsesList
-            workspaceId={currentWorkspace.id}
-            currentUserRole={currentRole ?? undefined}
-          />
-        )}
-      </div>
-    </SettingsGuard>
+      )}
+    </SettingsPageLayout>
   );
 }

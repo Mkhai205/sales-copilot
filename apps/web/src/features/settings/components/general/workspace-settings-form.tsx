@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { Building2, Calendar, Check, Copy, Globe, Save, RotateCcw, Sparkles } from 'lucide-react';
+import { Building2, Calendar, Check, Copy, Globe, Sparkles } from 'lucide-react';
 import type { WorkspaceDto } from '@sales-copilot/shared-contracts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field';
@@ -17,10 +17,9 @@ import {
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Spinner } from '@/components/ui/spinner';
-import { Separator } from '@/components/ui/separator';
 import { LANGUAGE_OPTIONS, TIMEZONE_OPTIONS } from '../../constants/workspace-settings-options';
 import { useUpdateWorkspace } from '../../hooks/use-workspace-mutations';
+import { SettingsActionBar } from '../layout';
 
 interface WorkspaceSettingsFormProps {
   workspace: WorkspaceDto;
@@ -277,42 +276,13 @@ export function WorkspaceSettingsForm({ workspace }: WorkspaceSettingsFormProps)
         </CardContent>
       </Card>
 
-      {/* Action Footer */}
-      <Separator />
-
-      <div className="flex items-center justify-end gap-3 pb-8">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={handleReset}
-          disabled={!isDirty || isPending}
-          className="text-xs"
-        >
-          <RotateCcw className="size-3.5" data-icon="inline-start" />
-          {'Hủy'}
-        </Button>
-
-        <Button
-          type="submit"
-          variant="default"
-          size="sm"
-          disabled={!isDirty || !isValid || isPending}
-          className="text-xs font-medium"
-        >
-          {isPending ? (
-            <>
-              <Spinner className="size-3.5" data-icon="inline-start" />
-              {'Đang lưu...'}
-            </>
-          ) : (
-            <>
-              <Save className="size-3.5" data-icon="inline-start" />
-              {'Lưu thay đổi'}
-            </>
-          )}
-        </Button>
-      </div>
+      <SettingsActionBar
+        isDirty={isDirty}
+        isPending={isPending}
+        isValid={isValid}
+        onCancel={handleReset}
+        onSave={handleSubmit}
+      />
     </form>
   );
 }

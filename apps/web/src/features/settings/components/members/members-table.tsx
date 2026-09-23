@@ -1,17 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import {
-  Search,
-  UserPlus,
-  Trash2,
-  AlertTriangle,
-  UserCheck,
-  Shield,
-  ShieldCheck,
-  Crown,
-  X,
-} from 'lucide-react';
+import { Trash2, UserCheck } from 'lucide-react';
 import {
   type AssignableWorkspaceRole,
   type WorkspaceMemberDto,
@@ -25,36 +15,18 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  AlertDialog,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogMedia,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Spinner } from '@/components/ui/spinner';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   useRemoveWorkspaceMember,
   useUpdateMemberRole,
   useWorkspaceMembers,
 } from '../../hooks/use-workspace-members';
-import { InviteMemberDialog } from './invite-member-dialog';
+import { MembersToolbar } from './members-toolbar';
+import { MemberRoleSelect } from './member-role-select';
+import { MemberRemoveDialog } from './member-remove-dialog';
 
 interface MembersTableProps {
   workspaceId: string;
@@ -62,13 +34,26 @@ interface MembersTableProps {
   currentUserRole?: WorkspaceRole;
 }
 
+function getInitials(name?: string, email?: string) {
+  if (name && name.trim()) {
+    const parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) {
+      return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+    }
+    return name.slice(0, 2).toUpperCase();
+  }
+  if (email) {
+    return email.slice(0, 2).toUpperCase();
+  }
+  return 'U';
+}
+
 export function MembersTable({ workspaceId, currentUserId, currentUserRole }: MembersTableProps) {
   const [searchQuery, setSearchQuery] = React.useState('');
   const [roleFilter, setRoleFilter] = React.useState<string>('ALL');
-  const [inviteDialogOpen, setInviteDialogOpen] = React.useState(false);
   const [memberToRemove, setMemberToRemove] = React.useState<WorkspaceMemberDto | null>(null);
 
-  const { data: members, isLoading } = useWorkspaceMembers(workspaceId);
+  const { data: members } = useWorkspaceMembers(workspaceId);
   const { mutate: updateRole, isPending: isUpdatingRole } = useUpdateMemberRole(workspaceId);
   const { mutate: removeMember, isPending: isRemovingMember } =
     useRemoveWorkspaceMember(workspaceId);
@@ -76,7 +61,6 @@ export function MembersTable({ workspaceId, currentUserId, currentUserRole }: Me
   const canManage =
     currentUserRole === WorkspaceRole.OWNER || currentUserRole === WorkspaceRole.ADMIN;
 
-  // Filter members by search query and role filter
   const filteredMembers = React.useMemo(() => {
     if (!members) return [];
 
@@ -107,104 +91,17 @@ export function MembersTable({ workspaceId, currentUserId, currentUserRole }: Me
     });
   };
 
-  const getRoleIcon = (role: WorkspaceRole) => {
-    switch (role) {
-      case WorkspaceRole.OWNER:
-        return <Crown className="size-3 text-amber-500" />;
-      case WorkspaceRole.ADMIN:
-        return <ShieldCheck className="size-3 text-primary" />;
-      case WorkspaceRole.AGENT:
-        return <UserCheck className="size-3 text-emerald-500" />;
-      default:
-        return <Shield className="size-3 text-muted-foreground" />;
-    }
-  };
-
-  const getInitials = (name?: string, email?: string) => {
-    if (name && name.trim()) {
-      const parts = name.trim().split(/\s+/);
-      if (parts.length >= 2) {
-        return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
-      }
-      return name.slice(0, 2).toUpperCase();
-    }
-    if (email) {
-      return email.slice(0, 2).toUpperCase();
-    }
-    return 'U';
-  };
-
   return (
     <div className="flex flex-col gap-5">
-      {/* Table Toolbar */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-1 flex-wrap items-center gap-2.5">
-          {/* Search Input */}
-          <div className="relative w-full sm:max-w-xs">
-            <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Tìm theo tên hoặc email..."
-              className="h-8 pl-8 pr-8 text-xs bg-card/40"
-            />
-            {searchQuery && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => setSearchQuery('')}
-                className="absolute right-1 top-1/2 size-6 -translate-y-1/2 p-0 text-muted-foreground hover:text-foreground"
-              >
-                <X className="size-3" />
-              </Button>
-            )}
-          </div>
-
-          {/* Role Filter */}
-          <Select value={roleFilter} onValueChange={setRoleFilter}>
-            <SelectTrigger className="h-8 w-36 text-xs bg-card/40">
-              <SelectValue placeholder="Tất cả vai trò" />
-            </SelectTrigger>
-            <SelectContent position="popper">
-              <SelectItem value="ALL" className="text-xs">
-                Tất cả vai trò
-              </SelectItem>
-              <SelectItem value={WorkspaceRole.OWNER} className="text-xs">
-                Chủ sở hữu
-              </SelectItem>
-              <SelectItem value={WorkspaceRole.ADMIN} className="text-xs">
-                Quản trị viên
-              </SelectItem>
-              <SelectItem value={WorkspaceRole.AGENT} className="text-xs">
-                Nhân viên
-              </SelectItem>
-            </SelectContent>
-          </Select>
-
-          {/* Members count badge */}
-          {members && (
-            <Badge
-              variant="secondary"
-              className="px-2 py-0.5 text-[11px] font-normal text-muted-foreground"
-            >
-              {filteredMembers.length} thành viên
-            </Badge>
-          )}
-        </div>
-
-        {/* Add Employee Button */}
-        {canManage && (
-          <Button
-            size="sm"
-            onClick={() => setInviteDialogOpen(true)}
-            className="h-8 gap-1.5 text-xs font-medium"
-          >
-            <UserPlus className="size-3.5" data-icon="inline-start" />
-            Thêm nhân viên
-          </Button>
-        )}
-      </div>
+      <MembersToolbar
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        roleFilter={roleFilter}
+        onRoleFilterChange={setRoleFilter}
+        filteredCount={filteredMembers.length}
+        canManage={canManage}
+        workspaceId={workspaceId}
+      />
 
       {/* Members Table */}
       <div className="rounded-xl border border-border bg-card/40 overflow-hidden shadow-2xs">
@@ -222,33 +119,7 @@ export function MembersTable({ workspaceId, currentUserId, currentUserRole }: Me
             </TableRow>
           </TableHeader>
           <TableBody>
-            {isLoading ? (
-              // Loading Skeleton Rows
-              Array.from({ length: 4 }).map((_, idx) => (
-                <TableRow key={idx}>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <Skeleton className="size-8 rounded-full" />
-                      <div className="flex flex-col gap-1">
-                        <Skeleton className="h-3.5 w-32" />
-                        <Skeleton className="h-3 w-44" />
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-7 w-28 rounded-md" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-3 w-20" />
-                  </TableCell>
-                  {canManage && (
-                    <TableCell className="text-right">
-                      <Skeleton className="ml-auto size-7 rounded-md" />
-                    </TableCell>
-                  )}
-                </TableRow>
-              ))
-            ) : filteredMembers.length === 0 ? (
+            {filteredMembers.length === 0 ? (
               <TableRow>
                 <TableCell
                   colSpan={canManage ? 4 : 3}
@@ -311,53 +182,12 @@ export function MembersTable({ workspaceId, currentUserId, currentUserRole }: Me
 
                     {/* Role Column */}
                     <TableCell>
-                      {isOwner ? (
-                        <Badge
-                          variant="outline"
-                          className="gap-1 border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400 px-2 py-0.5 text-xs font-semibold"
-                        >
-                          <Crown className="size-3" />
-                          Chủ sở hữu
-                        </Badge>
-                      ) : canEditThisMember ? (
-                        <Select
-                          value={member.role}
-                          onValueChange={(newRole: AssignableWorkspaceRole) =>
-                            handleRoleChange(member, newRole)
-                          }
-                          disabled={isUpdatingRole}
-                        >
-                          <SelectTrigger className="h-7 w-32 text-xs bg-background/50">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent position="popper">
-                            <SelectItem value={WorkspaceRole.ADMIN} className="text-xs">
-                              <span className="flex items-center gap-1.5">
-                                <ShieldCheck className="size-3 text-primary" />
-                                Quản trị viên
-                              </span>
-                            </SelectItem>
-                            <SelectItem value={WorkspaceRole.AGENT} className="text-xs">
-                              <span className="flex items-center gap-1.5">
-                                <UserCheck className="size-3 text-emerald-500" />
-                                Nhân viên
-                              </span>
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                      ) : (
-                        <Badge
-                          variant="secondary"
-                          className="gap-1 px-2 py-0.5 text-xs font-medium"
-                        >
-                          {getRoleIcon(member.role)}
-                          {member.role === WorkspaceRole.ADMIN
-                            ? 'Quản trị viên'
-                            : member.role === WorkspaceRole.AGENT
-                              ? 'Nhân viên'
-                              : member.role}
-                        </Badge>
-                      )}
+                      <MemberRoleSelect
+                        member={member}
+                        canEdit={canEditThisMember}
+                        isUpdating={isUpdatingRole}
+                        onRoleChange={handleRoleChange}
+                      />
                     </TableCell>
 
                     {/* Joined Date Column */}
@@ -423,60 +253,14 @@ export function MembersTable({ workspaceId, currentUserId, currentUserRole }: Me
         </Table>
       </div>
 
-      {/* Invite Member Dialog */}
-      <InviteMemberDialog
-        open={inviteDialogOpen}
-        onOpenChange={setInviteDialogOpen}
-        workspaceId={workspaceId}
-      />
-
-      {/* Destructive Removal Confirmation AlertDialog */}
-      <AlertDialog
-        open={!!memberToRemove}
+      <MemberRemoveDialog
+        member={memberToRemove}
         onOpenChange={open => {
           if (!open) setMemberToRemove(null);
         }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogMedia className="bg-destructive/10 text-destructive">
-              <AlertTriangle className="size-4" />
-            </AlertDialogMedia>
-            <AlertDialogTitle className="text-sm font-semibold">
-              Xóa thành viên khỏi workspace?
-            </AlertDialogTitle>
-            <AlertDialogDescription className="text-xs">
-              Bạn có chắc chắn muốn xóa{' '}
-              <strong className="text-foreground font-semibold">
-                {memberToRemove?.user?.name || memberToRemove?.user?.email}
-              </strong>{' '}
-              ({memberToRemove?.user?.email}) khỏi workspace này? Họ sẽ ngay lập tức mất quyền truy
-              cập vào tất cả cuộc hội thoại, hộp thư và cài đặt.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isRemovingMember} className="text-xs">
-              Hủy
-            </AlertDialogCancel>
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={handleConfirmRemove}
-              disabled={isRemovingMember}
-              className="text-xs font-medium"
-            >
-              {isRemovingMember ? (
-                <>
-                  <Spinner className="size-3.5" data-icon="inline-start" />
-                  Đang xóa...
-                </>
-              ) : (
-                'Xóa thành viên'
-              )}
-            </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        onConfirm={handleConfirmRemove}
+        isRemoving={isRemovingMember}
+      />
     </div>
   );
 }

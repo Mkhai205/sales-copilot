@@ -21,7 +21,7 @@ export const LABEL_PRESET_COLORS: LabelColorPreset[] = [
 /**
  * Validate whether a string is a valid 6-digit hex color format (#RRGGBB)
  */
-export function isValidHexColor(hex?: string | null): boolean {
+export function isValidHexColor(hex?: string | null): hex is string {
   if (!hex) return false;
   return /^#[0-9A-Fa-f]{6}$/.test(hex.trim());
 }

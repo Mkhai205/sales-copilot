@@ -6,3 +6,4 @@ export * from './inbox-wizard/inbox-vertical-stepper';
 export * from './inboxes-settings-view';
 export * from './inbox-detail-view';
 export * from './new-inbox-wizard-view';
+export * from './new-wizard';

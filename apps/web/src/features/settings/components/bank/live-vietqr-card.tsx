@@ -15,7 +15,7 @@ interface LiveVietQrCardProps {
 
 export function LiveVietQrCard({
   bankBin,
-  bankCode,
+  bankCode: _bankCode,
   bankName,
   accountNumber,
   accountName,

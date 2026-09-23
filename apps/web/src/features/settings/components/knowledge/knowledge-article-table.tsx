@@ -1,18 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import {
-  MoreVertical,
-  Pencil,
-  Trash2,
-  RefreshCw,
-  Search,
-  BookOpen,
-  CheckCircle2,
-  Clock,
-  AlertTriangle,
-  RotateCw,
-} from 'lucide-react';
+import { MoreVertical, Pencil, Trash2, RefreshCw, BookOpen } from 'lucide-react';
 import type { KnowledgeArticleDto } from '@sales-copilot/shared-contracts';
 import {
   Table,
@@ -24,7 +13,6 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,6 +22,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Spinner } from '@/components/ui/spinner';
 import { KNOWLEDGE_CATEGORY_LABELS } from './knowledge-article-dialog';
+import { KnowledgeArticleToolbar } from './knowledge-article-toolbar';
+import { KnowledgeStatusBadge } from './knowledge-status-badge';
 import {
   useKnowledgeArticles,
   useReindexKnowledgeArticle,
@@ -45,7 +35,6 @@ interface KnowledgeArticleTableProps {
   onEditArticle: (article: KnowledgeArticleDto) => void;
   onDeleteArticle: (article: KnowledgeArticleDto) => void;
   onOpenCreate: () => void;
-  onOpenTestSearch: () => void;
 }
 
 export function KnowledgeArticleTable({
@@ -53,7 +42,6 @@ export function KnowledgeArticleTable({
   onEditArticle,
   onDeleteArticle,
   onOpenCreate,
-  onOpenTestSearch: _onOpenTestSearch,
 }: KnowledgeArticleTableProps) {
   const [searchTerm, setSearchTerm] = React.useState('');
   const [selectedCategory, setSelectedCategory] = React.useState<string>('all');
@@ -84,105 +72,25 @@ export function KnowledgeArticleTable({
     });
   };
 
-  const renderStatusBadge = (article: KnowledgeArticleDto) => {
-    switch (article.embeddingStatus) {
-      case 'READY':
-        return (
-          <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30 gap-1 font-normal text-xs">
-            <CheckCircle2 className="h-3 w-3" />
-            Sẵn sàng
-          </Badge>
-        );
-      case 'PROCESSING':
-        return (
-          <Badge className="bg-blue-500/15 text-blue-700 dark:text-blue-400 border-blue-500/30 gap-1 font-normal text-xs">
-            <Spinner className="h-3 w-3" />
-            Đang xử lý
-          </Badge>
-        );
-      case 'PENDING':
-        return (
-          <Badge
-            variant="outline"
-            className="text-amber-600 border-amber-300 gap-1 font-normal text-xs"
-          >
-            <Clock className="h-3 w-3" />
-            Chờ vector
-          </Badge>
-        );
-      case 'FAILED':
-        return (
-          <div className="flex items-center gap-1.5">
-            <Badge className="bg-destructive/15 text-destructive border-destructive/30 gap-1 font-normal text-xs">
-              <AlertTriangle className="h-3 w-3" />
-              Lỗi vector
-            </Badge>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6 text-muted-foreground hover:text-foreground"
-              title="Thử lại re-index"
-              onClick={() => reindexArticle(article.id)}
-              disabled={isReindexing}
-            >
-              <RotateCw className="h-3 w-3" />
-            </Button>
-          </div>
-        );
-      default:
-        return null;
-    }
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+    setPage(1);
+  };
+
+  const handleCategoryChange = (cat: string) => {
+    setSelectedCategory(cat);
+    setPage(1);
   };
 
   return (
     <div className="space-y-4">
       {/* Filter and Search Bar */}
-      <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
-        {/* Search */}
-        <div className="relative w-full sm:w-80">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Tìm kiếm tiêu đề, nội dung..."
-            value={searchTerm}
-            onChange={e => {
-              setSearchTerm(e.target.value);
-              setPage(1);
-            }}
-            className="pl-9"
-          />
-        </div>
-
-        {/* Category Pills */}
-        <div className="flex flex-wrap items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
-          <Button
-            type="button"
-            variant={selectedCategory === 'all' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => {
-              setSelectedCategory('all');
-              setPage(1);
-            }}
-            className="text-xs h-8"
-          >
-            Tất cả
-          </Button>
-          {Object.entries(KNOWLEDGE_CATEGORY_LABELS).map(([key, label]) => (
-            <Button
-              key={key}
-              type="button"
-              variant={selectedCategory === key ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => {
-                setSelectedCategory(key);
-                setPage(1);
-              }}
-              className="text-xs h-8"
-            >
-              {label}
-            </Button>
-          ))}
-        </div>
-      </div>
+      <KnowledgeArticleToolbar
+        searchTerm={searchTerm}
+        onSearchChange={handleSearchChange}
+        selectedCategory={selectedCategory}
+        onCategoryChange={handleCategoryChange}
+      />
 
       {/* Table Container */}
       <div className="rounded-lg border border-border bg-card overflow-hidden">
@@ -274,7 +182,13 @@ export function KnowledgeArticleTable({
                     </button>
                   </TableCell>
 
-                  <TableCell className="align-top py-3.5">{renderStatusBadge(article)}</TableCell>
+                  <TableCell className="align-top py-3.5">
+                    <KnowledgeStatusBadge
+                      status={article.embeddingStatus}
+                      onReindex={() => reindexArticle(article.id)}
+                      isReindexing={isReindexing}
+                    />
+                  </TableCell>
 
                   <TableCell className="align-top py-3.5 text-right">
                     <DropdownMenu>

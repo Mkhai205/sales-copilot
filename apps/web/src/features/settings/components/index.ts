@@ -1,4 +1,3 @@
-export * from './settings-guard';
 export * from './settings-sidebar';
 export * from './general';
 export * from './bank';
@@ -9,3 +8,4 @@ export * from './labels';
 export * from './canned-responses';
 export * from './knowledge';
 export * from './settings-index-view';
+export * from './layout';
