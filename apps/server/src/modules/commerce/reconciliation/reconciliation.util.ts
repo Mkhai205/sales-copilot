@@ -5,7 +5,9 @@
  */
 export function parseOrderDisplayId(memo: string): number | null {
   if (!memo) return null;
-  const match = memo.match(/(?:ORD|DH|SO)[\s_-]*(?:(?:\d{8}|\d{6})[\s_-]+)?(\d+)/i);
+  const match = memo.match(
+    /(?:(?:SEVQR[\s_-]*)?(?:ORD|DH|SO)|SEVQR)[\s_-]*(?:(?:\d{8}|\d{6})[\s_-]+)?(\d+)/i,
+  );
   if (match && match[1]) {
     const id = parseInt(match[1], 10);
     return isNaN(id) ? null : id;

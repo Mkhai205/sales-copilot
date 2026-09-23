@@ -242,7 +242,15 @@ export class VietQrService {
       Math.round(Number(order.totalAmount) - Number(order.paidAmount)),
     );
     const amount = remainingAmount > 0 ? remainingAmount : Math.round(Number(order.totalAmount));
-    const memo = options?.memo || `ORD ${order.displayId}`;
+
+    // VietinBank Open API / SePay requires 'SEVQR' prefix for real-time transaction synchronization
+    const isVietinBank =
+      bankBin === '970415' ||
+      (bankCode && ['CTG', 'ICB'].includes(bankCode.toUpperCase())) ||
+      (bankName && bankName.toLowerCase().includes('vietin'));
+
+    const defaultMemo = isVietinBank ? `SEVQR ORD ${order.displayId}` : `ORD ${order.displayId}`;
+    const memo = options?.memo || defaultMemo;
 
     // 4. Build EMVCo QR and image URL
     const { qrPayload, qrUrl } = this.buildEmvCoPayload({

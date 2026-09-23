@@ -6,6 +6,7 @@ import {
   Logger,
   Param,
   Post,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
@@ -41,10 +42,12 @@ export class PaymentWebhooksController {
   @Post()
   @HttpCode(HttpStatus.OK)
   async handleWebhook(
-    @Param('workspaceId') workspaceId: string,
+    @Param('workspaceId') workspaceIdParam: string,
     @Param('gateway') gatewayParam: string,
     @Body() payload: any,
+    @Req() req: any,
   ): Promise<{ success: boolean; queued: boolean; count: number }> {
+    const workspaceId = req?.workspaceId || req?.params?.workspaceId || workspaceIdParam;
     const gateway = (gatewayParam || '').toLowerCase() as PaymentGatewayType;
 
     // 1. Normalize items array (support Casso { error: 0, data: [...] } and SePay direct payload)

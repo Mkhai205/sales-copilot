@@ -25,6 +25,10 @@ describe('CommerceReconciliation (Bank Reconciliation Engine & Safe Inventory Ma
       expect(parseOrderDisplayId('DH-2025-tien-hang')).toBe(2025);
       expect(parseOrderDisplayId('SO 3001')).toBe(3001);
       expect(parseOrderDisplayId('Nguyen Van A CK SO_5555')).toBe(5555);
+      expect(parseOrderDisplayId('SEVQR ORD 1004')).toBe(1004);
+      expect(parseOrderDisplayId('SEVQR ORD-1004')).toBe(1004);
+      expect(parseOrderDisplayId('SEVQR 1004')).toBe(1004);
+      expect(parseOrderDisplayId('SEVQR ORD-20260909-1004')).toBe(1004);
     });
 
     it('should correctly parse display ID from full order numbers containing date prefix', () => {

@@ -16,10 +16,29 @@ describe('PaymentWebhooks (SePay & Casso Webhook Controller & Guard)', () => {
     beforeEach(() => {
       clientMock = {
         workspace: {
-          findUnique: async (args: any) => {
-            if (args.where.id === wsId) {
+          findFirst: async (args: any) => {
+            const hasMatch =
+              args?.where?.id === wsId ||
+              args?.where?.slug === 'test-slug' ||
+              args?.where?.OR?.some((cond: any) => cond.id === wsId || cond.slug === 'test-slug');
+            if (hasMatch) {
               return {
                 id: wsId,
+                slug: 'test-slug',
+                settings: {
+                  paymentSettings: {
+                    webhookSecret: secretKey,
+                  },
+                },
+              };
+            }
+            return null;
+          },
+          findUnique: async (args: any) => {
+            if (args?.where?.id === wsId) {
+              return {
+                id: wsId,
+                slug: 'test-slug',
                 settings: {
                   paymentSettings: {
                     webhookSecret: secretKey,
@@ -116,6 +135,42 @@ describe('PaymentWebhooks (SePay & Casso Webhook Controller & Guard)', () => {
       expect(allowed).toBe(true);
     });
 
+    it('should allow access when workspaceId in URL is workspace slug instead of uuid', async () => {
+      const ctx = createMockContext(
+        { workspaceId: 'test-slug', gateway: 'sepay' },
+        { 'secure-token': secretKey },
+      );
+      const allowed = await guard.canActivate(ctx);
+      expect(allowed).toBe(true);
+      // Normalized to canonical UUID
+      expect(ctx.switchToHttp().getRequest().params.workspaceId).toBe(wsId);
+    });
+
+    it('should allow access when SePay sends timestamped HMAC signature {timestamp}.{rawBody}', async () => {
+      const body = { id: 103, amount: 250000 };
+      const rawBodyBuffer = Buffer.from(JSON.stringify(body), 'utf8');
+      const timestamp = '1790173985';
+      const toSign = Buffer.concat([Buffer.from(`${timestamp}.`, 'utf8'), rawBodyBuffer]);
+      const hmac = crypto.createHmac('sha256', secretKey).update(toSign).digest('hex');
+
+      const ctx = {
+        switchToHttp: () => ({
+          getRequest: () => ({
+            params: { workspaceId: 'test-slug', gateway: 'sepay' },
+            headers: {
+              'x-sepay-signature': `sha256=${hmac}`,
+              'x-sepay-timestamp': timestamp,
+            },
+            body,
+            rawBody: rawBodyBuffer,
+          }),
+        }),
+      } as any;
+
+      const allowed = await guard.canActivate(ctx);
+      expect(allowed).toBe(true);
+    });
+
     it('should reject when secret is incorrect (401 Unauthorized)', async () => {
       const ctx = createMockContext(
         { workspaceId: wsId, gateway: 'sepay' },
@@ -134,6 +189,10 @@ describe('PaymentWebhooks (SePay & Casso Webhook Controller & Guard)', () => {
     });
 
     it('should reject when workspace has no configured webhook secret', async () => {
+      clientMock.workspace.findFirst = async () => ({
+        id: wsId,
+        settings: {},
+      });
       clientMock.workspace.findUnique = async () => ({
         id: wsId,
         settings: {},

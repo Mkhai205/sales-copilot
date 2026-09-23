@@ -38,10 +38,12 @@ export class PaymentWebhooksGuard implements CanActivate {
       });
     }
 
-    // 1. Fetch workspace payment settings
-    const workspace = await this.prisma.getClient().workspace.findUnique({
-      where: { id: workspaceId },
-      select: { id: true, settings: true },
+    // 1. Fetch workspace payment settings (supports lookup by UUID or slug)
+    const workspace = await this.prisma.getClient().workspace.findFirst({
+      where: {
+        OR: [{ id: workspaceId }, { slug: workspaceId }],
+      },
+      select: { id: true, slug: true, settings: true },
     });
 
     if (!workspace) {
@@ -50,6 +52,11 @@ export class PaymentWebhooksGuard implements CanActivate {
         message: `Workspace '${workspaceId}' not found`,
       });
     }
+
+    // Normalize request params to resolved UUID for downstream controller & queue
+    request.params.workspaceId = workspace.id;
+    (request as any).workspaceId = workspace.id;
+    (request as any).workspace = workspace;
 
     const rawSettings = workspace.settings as any;
     const wsSettings = rawSettings?.paymentSettings as WorkspacePaymentSettings | undefined;
@@ -125,18 +132,35 @@ export class PaymentWebhooksGuard implements CanActivate {
         rawBodyBuffer = Buffer.from(JSON.stringify(request.body || {}), 'utf8');
       }
 
-      const calculatedHmac = crypto
-        .createHmac('sha256', configuredSecret)
-        .update(rawBodyBuffer)
-        .digest('hex');
+      const sepayTimestamp = (request.headers['x-sepay-timestamp'] ||
+        request.headers['x-timestamp'] ||
+        '') as string;
 
       let cleanSignature = signatureHeader.trim();
       if (cleanSignature.startsWith('sha256=')) {
         cleanSignature = cleanSignature.slice(7);
       }
 
-      if (safeTimingCompare(cleanSignature.toLowerCase(), calculatedHmac.toLowerCase())) {
-        return true;
+      // Check candidate payloads:
+      // 1. SePay official HMAC standard: {timestamp}.{raw_body}
+      // 2. Standard raw_body HMAC
+      const candidatePayloads: Buffer[] = [];
+      if (sepayTimestamp) {
+        candidatePayloads.push(
+          Buffer.concat([Buffer.from(`${sepayTimestamp}.`, 'utf8'), rawBodyBuffer]),
+        );
+      }
+      candidatePayloads.push(rawBodyBuffer);
+
+      for (const payload of candidatePayloads) {
+        const calculatedHmac = crypto
+          .createHmac('sha256', configuredSecret)
+          .update(payload)
+          .digest('hex');
+
+        if (safeTimingCompare(cleanSignature.toLowerCase(), calculatedHmac.toLowerCase())) {
+          return true;
+        }
       }
     }
 
