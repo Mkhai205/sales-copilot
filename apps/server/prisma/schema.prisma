@@ -407,6 +407,7 @@ model Conversation {
   customAttributes    Json                 @default("{}")
   isAiPaused          Boolean              @default(false)
   lastAiMessageAt     DateTime?
+  lastContactMessageAt DateTime?
   createdAt           DateTime             @default(now())
   updatedAt           DateTime             @updatedAt
 

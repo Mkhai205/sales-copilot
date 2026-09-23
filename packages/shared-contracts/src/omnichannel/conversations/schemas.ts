@@ -107,6 +107,7 @@ export interface ConversationResponseDto {
   customAttributes?: Record<string, unknown>;
   isAiPaused?: boolean;
   lastAiMessageAt?: string | null;
+  lastContactMessageAt?: string | null;
   labels?: {
     id: string;
     title: string;

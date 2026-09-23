@@ -11,6 +11,15 @@ export interface AiAgentJobData {
   scheduledAt: number;
 }
 
+export interface AiAgentFollowUpJobData {
+  workspaceId: string;
+  conversationId: string;
+  aiMessageTimestamp: number;
+  followUpMessage?: string;
+}
+
+export type AiAutopilotJobData = AiAgentJobData | AiAgentFollowUpJobData;
+
 export interface AiAgentTokenUsage {
   promptTokens: number;
   completionTokens: number;

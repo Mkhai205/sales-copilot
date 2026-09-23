@@ -55,6 +55,14 @@ export class AiDispatcherListener {
       return;
     }
 
+    const client = this.prisma.getClient();
+
+    // 2.1. Update lastContactMessageAt for proactive follow-up tracking (Strict Multi-Tenancy)
+    await client.conversation.updateMany({
+      where: { id: conversationId, workspaceId },
+      data: { lastContactMessageAt: new Date() },
+    });
+
     // 2.5. Pre-dispatch guardrails (Content filter, Abuse detection, Rate limiting)
     const guardrailResult = await this.guardrailService.check({
       workspaceId,
@@ -82,8 +90,6 @@ export class AiDispatcherListener {
 
       return;
     }
-
-    const client = this.prisma.getClient();
 
     // 3. Load conversation + inbox (Strict Multi-Tenancy)
     const conversation = await client.conversation.findFirst({

@@ -1,12 +1,16 @@
-import { Processor, WorkerHost } from '@nestjs/bullmq';
-import { Injectable, Logger } from '@nestjs/common';
-import { Job } from 'bullmq';
+import { InjectQueue, Processor, WorkerHost } from '@nestjs/bullmq';
+import { Injectable, Logger, Optional } from '@nestjs/common';
+import { Job, Queue } from 'bullmq';
 import {
   AI_AUTOPILOT_QUEUE,
+  ConversationStatus,
   MessageType,
   SenderType,
+  type AiAgentFollowUpJobData,
   type AiAgentJobData,
   type AiAgentResult,
+  type AiAutopilotJobData,
+  type InboxAiCommercePolicyConfig,
 } from '@sales-copilot/shared-contracts';
 import { PrismaService } from '../../../infrastructure/database';
 import { RedisService } from '../../../infrastructure/redis';
@@ -28,11 +32,22 @@ export class AiAgentWorker extends WorkerHost {
     private readonly redisService: RedisService,
     private readonly aiAgentService: AiAgentService,
     private readonly messagesService: MessagesService,
+    @Optional()
+    @InjectQueue(AI_AUTOPILOT_QUEUE)
+    private readonly aiQueue?: Queue,
   ) {
     super();
   }
 
-  async process(job: Job<AiAgentJobData>): Promise<AiAgentResult> {
+  async process(job: Job<AiAutopilotJobData>): Promise<AiAgentResult> {
+    if (job.name === AI_AGENT_CONSTANTS.FOLLOW_UP_JOB_NAME) {
+      return this.processFollowUp(job as Job<AiAgentFollowUpJobData>);
+    }
+
+    return this.processMessage(job as Job<AiAgentJobData>);
+  }
+
+  private async processMessage(job: Job<AiAgentJobData>): Promise<AiAgentResult> {
     const { workspaceId, conversationId, inboxId, scheduledAt } = job.data;
 
     this.logger.debug(
@@ -94,7 +109,7 @@ export class AiAgentWorker extends WorkerHost {
         // 5. Rollup conversation.customAttributes.aiUsage for fast, multi-tenant UI observability
         const currentConv = await client.conversation.findFirst({
           where: { id: conversationId, workspaceId },
-          select: { customAttributes: true },
+          select: { customAttributes: true, inbox: true },
         });
 
         const currentAttrs = (currentConv?.customAttributes as Record<string, any>) || {};
@@ -130,6 +145,45 @@ export class AiAgentWorker extends WorkerHost {
             },
           },
         });
+
+        // 6. Schedule proactive follow-up job (configurable delay or default 5 minutes)
+        if (this.aiQueue) {
+          const inboxSettings = currentConv?.inbox?.settings as Record<string, any> | undefined;
+          const aiPolicy = inboxSettings?.aiCommercePolicy as
+            InboxAiCommercePolicyConfig | undefined;
+          const followUpDelayMs =
+            aiPolicy?.followUpDelayMinutes && aiPolicy.followUpDelayMinutes > 0
+              ? aiPolicy.followUpDelayMinutes * 60 * 1000
+              : AI_AGENT_CONSTANTS.FOLLOW_UP_DELAY_MS;
+          const followUpMessage =
+            aiPolicy?.followUpMessage?.trim() || AI_AGENT_CONSTANTS.FOLLOW_UP_MESSAGE;
+
+          const followUpJobId = `follow-up:${conversationId}`;
+          try {
+            const existingJob = await this.aiQueue.getJob(followUpJobId);
+            if (existingJob) {
+              await existingJob.remove();
+            }
+          } catch (err: any) {
+            this.logger.warn(`Failed to clean up existing follow-up job: ${err?.message}`);
+          }
+
+          await this.aiQueue.add(
+            AI_AGENT_CONSTANTS.FOLLOW_UP_JOB_NAME,
+            {
+              workspaceId,
+              conversationId,
+              aiMessageTimestamp: Date.now(),
+              followUpMessage,
+            },
+            {
+              delay: followUpDelayMs,
+              jobId: followUpJobId,
+              removeOnComplete: true,
+              removeOnFail: true,
+            },
+          );
+        }
       }
 
       return result;
@@ -167,5 +221,51 @@ export class AiAgentWorker extends WorkerHost {
 
       throw err;
     }
+  }
+
+  private async processFollowUp(job: Job<AiAgentFollowUpJobData>): Promise<AiAgentResult> {
+    const { workspaceId, conversationId, aiMessageTimestamp, followUpMessage } = job.data;
+    const client = this.prisma.getClient();
+
+    const conv = await client.conversation.findFirst({
+      where: { id: conversationId, workspaceId },
+      select: { isAiPaused: true, status: true, lastContactMessageAt: true },
+    });
+
+    // Cancel conditions:
+    if (!conv) {
+      return { skipped: true, reason: 'CONVERSATION_NOT_FOUND' };
+    }
+    if (conv.isAiPaused) {
+      return { skipped: true, reason: 'HUMAN_TAKEOVER' };
+    }
+    if (conv.status === ConversationStatus.RESOLVED || (conv.status as string) === 'RESOLVED') {
+      return { skipped: true, reason: 'RESOLVED' };
+    }
+
+    // If customer replied after our AI message → skip
+    if (conv.lastContactMessageAt && conv.lastContactMessageAt.getTime() > aiMessageTimestamp) {
+      return { skipped: true, reason: 'CUSTOMER_ALREADY_REPLIED' };
+    }
+
+    const messageContent = followUpMessage?.trim() || AI_AGENT_CONSTANTS.FOLLOW_UP_MESSAGE;
+
+    // Send follow-up (no LLM call)
+    await this.messagesService.create(workspaceId, conversationId, {
+      content: messageContent,
+      senderType: SenderType.SYSTEM,
+      messageType: MessageType.OUTGOING,
+      isPrivate: false,
+      metadata: { isAiGenerated: true, isFollowUp: true },
+    });
+
+    // Update lastAiMessageAt timestamp (Strict Multi-Tenancy)
+    await client.conversation.updateMany({
+      where: { id: conversationId, workspaceId },
+      data: { lastAiMessageAt: new Date() },
+    });
+
+    this.logger.log(`Sent follow-up to conversation '${conversationId}'`);
+    return { skipped: false, reason: 'FOLLOW_UP_SENT', text: messageContent };
   }
 }

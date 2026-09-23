@@ -1,3 +1,4 @@
+import { Logger } from '@nestjs/common';
 import { tool, generateObject, type LanguageModel, type Tool } from 'ai';
 import { z } from 'zod';
 import {
@@ -9,6 +10,8 @@ import {
   ensureDivisionsLoaded,
   parseAddressHierarchyWithDivisions,
 } from '../../utils/address-parser.util';
+
+const logger = new Logger('ExtractShippingInfoTool');
 
 export interface ExtractShippingInfoToolOptions {
   model?: LanguageModel;
@@ -30,11 +33,22 @@ export function createExtractShippingInfoTool(options?: ExtractShippingInfoToolO
       'Bóc tách tên người nhận, số điện thoại, và địa chỉ giao hàng (tỉnh/thành phố, quận/huyện, phường/xã, số nhà/tên đường) từ đoạn tin nhắn tự do của khách hàng.',
     inputSchema: extractShippingInfoInputSchema,
     execute: async ({ text }: ExtractShippingInfoInput) => {
+      const startTime = Date.now();
+      let usedTier2 = false;
+      let tier2Duration: number | undefined;
+      let tier2Failed = false;
+
       try {
         const rawText = text?.trim() || '';
         if (!rawText) {
+          const totalDuration = Date.now() - startTime;
+          logger.log(`Tier 1 | confidence=0% | duration=${totalDuration}ms`);
           return {
             confidence: 0,
+            _meta: {
+              tierUsed: 1,
+              duration: totalDuration,
+            },
           };
         }
 
@@ -99,6 +113,8 @@ export function createExtractShippingInfoTool(options?: ExtractShippingInfoToolO
 
         // --- Tier 2 (Fallback if confidence < 70% and LLM model provided) ---
         if (confidence < 70 && options?.model) {
+          usedTier2 = true;
+          const tier2Start = Date.now();
           try {
             const { object } = await generateObject({
               model: options.model,
@@ -111,7 +127,10 @@ export function createExtractShippingInfoTool(options?: ExtractShippingInfoToolO
                 streetAddress: z.string().nullable().optional(),
               }),
               prompt: `Trích xuất thông tin giao hàng tại Việt Nam từ đoạn tin nhắn sau:\n"${rawText}"\nTrả về đúng các trường: recipientName, phoneNumber, province, district, ward, streetAddress. Nếu trường nào không có, để null.`,
+              abortSignal: AbortSignal.timeout(5000),
             });
+
+            tier2Duration = Date.now() - tier2Start;
 
             if (object) {
               if (!recipientName && object.recipientName) recipientName = object.recipientName;
@@ -122,7 +141,7 @@ export function createExtractShippingInfoTool(options?: ExtractShippingInfoToolO
               if (!province && object.province) province = object.province;
               if (!district && object.district) district = object.district;
               if (!ward && object.ward) ward = object.ward;
-              if (!streetAddress && object.streetAddress) streetAddress = object.streetAddress;
+              if (object.streetAddress) streetAddress = object.streetAddress;
 
               // Recalculate confidence
               confidence = 0;
@@ -132,10 +151,32 @@ export function createExtractShippingInfoTool(options?: ExtractShippingInfoToolO
               if (ward) confidence += 10;
               if (streetAddress) confidence += 5;
             }
-          } catch {
+          } catch (err: any) {
+            tier2Duration = Date.now() - tier2Start;
+            tier2Failed = true;
+            const isTimeout =
+              err?.name === 'TimeoutError' ||
+              err?.name === 'AbortError' ||
+              err?.cause?.name === 'TimeoutError' ||
+              err?.cause?.name === 'AbortError' ||
+              err?.message?.toLowerCase()?.includes('timeout') ||
+              err?.message?.toLowerCase()?.includes('abort');
+
+            if (isTimeout) {
+              logger.warn(`Tier 2 LLM timeout after 5000ms, falling back to Tier 1`);
+            } else {
+              logger.warn(`Tier 2 LLM extraction failed: ${err?.message}, falling back to Tier 1`);
+            }
             // Graceful fallback to Tier 1 results if LLM invocation fails
           }
         }
+
+        const totalDuration = Date.now() - startTime;
+        const tierUsed = usedTier2 ? 2 : 1;
+        const finalConfidence = Math.min(100, confidence);
+        logger.log(
+          `Tier ${tierUsed}${tier2Failed ? ' (fallback to Tier 1)' : ''} | confidence=${finalConfidence}% | duration=${totalDuration}ms`,
+        );
 
         return {
           recipientName,
@@ -144,13 +185,26 @@ export function createExtractShippingInfoTool(options?: ExtractShippingInfoToolO
           district,
           ward,
           streetAddress,
-          confidence: Math.min(100, confidence),
+          confidence: finalConfidence,
+          _meta: {
+            tierUsed,
+            duration: totalDuration,
+            ...(tier2Duration !== undefined ? { tier2Duration } : {}),
+            ...(tier2Failed ? { tier2Failed: true } : {}),
+          },
         };
       } catch (error: any) {
+        const totalDuration = Date.now() - startTime;
         return {
           error: 'EXTRACT_SHIPPING_INFO_FAILED',
           message: error?.message || 'Không thể bóc tách thông tin giao hàng',
           confidence: 0,
+          _meta: {
+            tierUsed: usedTier2 ? 2 : 1,
+            duration: totalDuration,
+            ...(tier2Duration !== undefined ? { tier2Duration } : {}),
+            ...(tier2Failed ? { tier2Failed: true } : {}),
+          },
         };
       }
     },

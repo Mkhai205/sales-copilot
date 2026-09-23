@@ -15,6 +15,11 @@ export const AI_AGENT_CONSTANTS = {
   ABUSE_CONSECUTIVE_LIMIT: 3,
   ABUSE_SHORT_MSG_MAX_LENGTH: 2,
   ABUSE_STATE_TTL_SECONDS: 120,
+
+  // Follow-up
+  FOLLOW_UP_DELAY_MS: 5 * 60 * 1000,
+  FOLLOW_UP_MESSAGE: 'Anh/chị còn cần hỗ trợ gì không ạ? 😊',
+  FOLLOW_UP_JOB_NAME: 'follow-up',
 } as const;
 
 export interface ModelPricingConfig {

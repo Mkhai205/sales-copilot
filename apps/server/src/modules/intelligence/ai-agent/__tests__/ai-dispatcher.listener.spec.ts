@@ -29,6 +29,14 @@ describe('AiDispatcherListener', () => {
             if (!conv || conv.workspaceId !== where.workspaceId) return null;
             return conv;
           },
+          updateMany: async ({ where, data }: any) => {
+            const conv = conversationsDb.get(where.id);
+            if (conv && conv.workspaceId === where.workspaceId) {
+              Object.assign(conv, data);
+              return { count: 1 };
+            }
+            return { count: 0 };
+          },
         },
       }),
     };
@@ -243,5 +251,30 @@ describe('AiDispatcherListener', () => {
 
     // Should NOT send reply
     expect(mockMessagesService.create).not.toHaveBeenCalled();
+  });
+
+  it('should update lastContactMessageAt whenever an inbound message from CONTACT is received', async () => {
+    conversationsDb.set(conversationId, {
+      id: conversationId,
+      workspaceId,
+      inboxId: 'inbox-1',
+      isAiPaused: false,
+      lastContactMessageAt: null,
+      inbox: { settings: { aiCommercePolicy: { enabled: true } } },
+    });
+
+    await listener.handleInboundMessage({
+      workspaceId,
+      conversationId,
+      message: {
+        id: 'msg-contact-new',
+        senderType: SenderType.CONTACT,
+        messageType: MessageType.INCOMING,
+        isPrivate: false,
+      },
+    });
+
+    const conv = conversationsDb.get(conversationId);
+    expect(conv.lastContactMessageAt).toBeInstanceOf(Date);
   });
 });
