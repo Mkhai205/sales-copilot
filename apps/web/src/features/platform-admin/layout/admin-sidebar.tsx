@@ -29,7 +29,7 @@ import {
 } from '@/components/ui/sidebar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { useCurrentUser } from '@/features/auth';
+import { useCurrentUser } from '@/features/auth/hooks/use-current-user';
 import { isNavItemActive } from './navigation-helpers';
 
 export interface AdminNavItem {

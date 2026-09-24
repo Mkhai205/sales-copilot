@@ -1,9 +1,12 @@
 'use client';
 
 import * as React from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import { Eye, EyeOff, KeyRound } from 'lucide-react';
 import { toast } from 'sonner';
+import { z } from 'zod';
 import {
   Dialog,
   DialogContent,
@@ -12,13 +15,28 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
+import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { authApi } from './api/auth';
-import type { ChangePasswordDto } from '@sales-copilot/shared-contracts';
+import { authApi } from '../api/auth';
+import { changePasswordSchema, type ChangePasswordDto } from '@sales-copilot/shared-contracts';
+
+const formSchema = changePasswordSchema
+  .extend({
+    confirmPassword: z.string().min(1, 'Vui lòng nhập lại mật khẩu mới'),
+  })
+  .refine(data => data.currentPassword !== data.newPassword, {
+    message: 'Mật khẩu mới không được trùng với mật khẩu hiện tại.',
+    path: ['newPassword'],
+  })
+  .refine(data => data.newPassword === data.confirmPassword, {
+    message: 'Mật khẩu xác nhận không khớp.',
+    path: ['confirmPassword'],
+  });
+
+type ChangePasswordFormValues = z.infer<typeof formSchema>;
 
 interface ChangePasswordDialogProps {
   open: boolean;
@@ -26,30 +44,23 @@ interface ChangePasswordDialogProps {
 }
 
 export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialogProps) {
-  const [currentPassword, setCurrentPassword] = React.useState('');
-  const [newPassword, setNewPassword] = React.useState('');
-  const [confirmPassword, setConfirmPassword] = React.useState('');
   const [showCurrentPassword, setShowCurrentPassword] = React.useState(false);
   const [showNewPassword, setShowNewPassword] = React.useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
-  const [validationError, setValidationError] = React.useState<string | null>(null);
 
-  const resetForm = () => {
-    setCurrentPassword('');
-    setNewPassword('');
-    setConfirmPassword('');
-    setShowCurrentPassword(false);
-    setShowNewPassword(false);
-    setShowConfirmPassword(false);
-    setValidationError(null);
-  };
-
-  const handleOpenChange = (newOpen: boolean) => {
-    if (!newOpen) {
-      resetForm();
-    }
-    onOpenChange(newOpen);
-  };
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<ChangePasswordFormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: '',
+    },
+  });
 
   const {
     mutate,
@@ -67,34 +78,22 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setValidationError(null);
+  const handleOpenChange = (newOpen: boolean) => {
+    if (!newOpen) {
+      reset();
+      resetMutation();
+      setShowCurrentPassword(false);
+      setShowNewPassword(false);
+      setShowConfirmPassword(false);
+    }
+    onOpenChange(newOpen);
+  };
+
+  const onSubmit = (data: ChangePasswordFormValues) => {
     resetMutation();
-
-    if (!currentPassword) {
-      setValidationError('Vui lòng nhập mật khẩu hiện tại.');
-      return;
-    }
-
-    if (newPassword.length < 6) {
-      setValidationError('Mật khẩu mới phải có ít nhất 6 ký tự.');
-      return;
-    }
-
-    if (currentPassword === newPassword) {
-      setValidationError('Mật khẩu mới không được trùng với mật khẩu hiện tại.');
-      return;
-    }
-
-    if (newPassword !== confirmPassword) {
-      setValidationError('Mật khẩu xác nhận không khớp.');
-      return;
-    }
-
     mutate({
-      currentPassword,
-      newPassword,
+      currentPassword: data.currentPassword,
+      newPassword: data.newPassword,
     });
   };
 
@@ -103,7 +102,7 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit(onSubmit)}>
           <DialogHeader>
             <div className="flex items-center gap-2">
               <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
@@ -117,30 +116,27 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
           </DialogHeader>
 
           <FieldGroup className="gap-4 py-4">
-            {/* Error alerts */}
-            {(validationError || apiErrorMessage) && (
+            {/* Error alert */}
+            {apiErrorMessage && (
               <Alert variant="destructive" className="py-2.5">
                 <AlertDescription className="text-xs font-medium">
-                  {validationError || apiErrorMessage}
+                  {apiErrorMessage}
                 </AlertDescription>
               </Alert>
             )}
 
             {/* Current Password */}
-            <Field>
+            <Field data-invalid={!!errors.currentPassword}>
               <FieldLabel htmlFor="current-password">Mật khẩu hiện tại</FieldLabel>
               <div className="relative">
                 <Input
                   id="current-password"
-                  name="currentPassword"
                   type={showCurrentPassword ? 'text' : 'password'}
-                  value={currentPassword}
-                  onChange={e => setCurrentPassword(e.target.value)}
                   placeholder="Nhập mật khẩu hiện tại"
                   autoComplete="current-password"
                   disabled={isPending}
-                  required
                   className="pr-8 text-xs"
+                  {...register('currentPassword')}
                 />
                 <button
                   type="button"
@@ -156,23 +152,23 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
                   )}
                 </button>
               </div>
+              {errors.currentPassword?.message && (
+                <FieldError>{errors.currentPassword.message}</FieldError>
+              )}
             </Field>
 
             {/* New Password */}
-            <Field>
+            <Field data-invalid={!!errors.newPassword}>
               <FieldLabel htmlFor="new-password">Mật khẩu mới</FieldLabel>
               <div className="relative">
                 <Input
                   id="new-password"
-                  name="newPassword"
                   type={showNewPassword ? 'text' : 'password'}
-                  value={newPassword}
-                  onChange={e => setNewPassword(e.target.value)}
                   placeholder="Tối thiểu 6 ký tự"
                   autoComplete="new-password"
                   disabled={isPending}
-                  required
                   className="pr-8 text-xs"
+                  {...register('newPassword')}
                 />
                 <button
                   type="button"
@@ -184,23 +180,21 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
                   {showNewPassword ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
                 </button>
               </div>
+              {errors.newPassword?.message && <FieldError>{errors.newPassword.message}</FieldError>}
             </Field>
 
             {/* Confirm New Password */}
-            <Field>
+            <Field data-invalid={!!errors.confirmPassword}>
               <FieldLabel htmlFor="confirm-password">Xác nhận mật khẩu mới</FieldLabel>
               <div className="relative">
                 <Input
                   id="confirm-password"
-                  name="confirmPassword"
                   type={showConfirmPassword ? 'text' : 'password'}
-                  value={confirmPassword}
-                  onChange={e => setConfirmPassword(e.target.value)}
                   placeholder="Nhập lại mật khẩu mới"
                   autoComplete="new-password"
                   disabled={isPending}
-                  required
                   className="pr-8 text-xs"
+                  {...register('confirmPassword')}
                 />
                 <button
                   type="button"
@@ -216,6 +210,9 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
                   )}
                 </button>
               </div>
+              {errors.confirmPassword?.message && (
+                <FieldError>{errors.confirmPassword.message}</FieldError>
+              )}
             </Field>
           </FieldGroup>
 

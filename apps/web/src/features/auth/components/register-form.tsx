@@ -3,8 +3,11 @@
 import * as React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useQueryClient } from '@tanstack/react-query';
 import { AlertCircleIcon } from 'lucide-react';
+import { z } from 'zod';
 import { registerSchema, type RegisterDto } from '@sales-copilot/shared-contracts';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -13,56 +16,49 @@ import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/c
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Spinner } from '@/components/ui/spinner';
-import { registerAction } from './actions';
+import { registerAction } from '../actions/auth-actions';
+
+const registerFormSchema = registerSchema.extend({
+  workspaceName: z
+    .string()
+    .trim()
+    .max(100, 'Tên shop không được vượt quá 100 ký tự')
+    .optional()
+    .or(z.literal('')),
+});
+
+type RegisterFormValues = z.infer<typeof registerFormSchema>;
 
 export function RegisterForm({ className, ...props }: React.ComponentProps<'div'>) {
   const queryClient = useQueryClient();
-  const [workspaceName, setWorkspaceName] = React.useState('');
-  const [name, setName] = React.useState('');
-  const [email, setEmail] = React.useState('');
-  const [password, setPassword] = React.useState('');
-  const [fieldErrors, setFieldErrors] = React.useState<{
-    workspaceName?: string;
-    name?: string;
-    email?: string;
-    password?: string;
-  }>({});
   const [apiError, setApiError] = React.useState<string | null>(null);
   const [isPending, setIsPending] = React.useState(false);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<RegisterFormValues>({
+    resolver: zodResolver(registerFormSchema),
+    defaultValues: {
+      workspaceName: '',
+      name: '',
+      email: '',
+      password: '',
+    },
+  });
+
+  const onSubmit = async (data: RegisterFormValues) => {
     setApiError(null);
-    setFieldErrors({});
-
-    const formData: RegisterDto = {
-      workspaceName: workspaceName.trim() || undefined,
-      name: name.trim(),
-      email: email.trim(),
-      password,
-    };
-
-    // Client-side schema validation
-    const parseResult = registerSchema.safeParse(formData);
-    if (!parseResult.success) {
-      const formatted: {
-        workspaceName?: string;
-        name?: string;
-        email?: string;
-        password?: string;
-      } = {};
-      for (const issue of parseResult.error.issues) {
-        const fieldName = issue.path[0] as 'workspaceName' | 'name' | 'email' | 'password';
-        if (fieldName && !formatted[fieldName]) {
-          formatted[fieldName] = issue.message;
-        }
-      }
-      setFieldErrors(formatted);
-      return;
-    }
-
     setIsPending(true);
     queryClient.clear();
+
+    const formData: RegisterDto = {
+      workspaceName: data.workspaceName?.trim() || undefined,
+      name: data.name.trim(),
+      email: data.email.trim(),
+      password: data.password,
+    };
 
     try {
       const result = await registerAction(formData);
@@ -86,7 +82,10 @@ export function RegisterForm({ className, ...props }: React.ComponentProps<'div'
       <Card className="overflow-hidden p-0 shadow-lg border-border/80 bg-card">
         <CardContent className="grid p-0 md:grid-cols-2">
           {/* Left: Register Form */}
-          <form onSubmit={handleSubmit} className="p-6 sm:p-8 flex flex-col justify-center">
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="p-6 sm:p-8 flex flex-col justify-center"
+          >
             <FieldGroup>
               <div className="flex flex-col items-center gap-2 mb-3">
                 <div className="flex items-center justify-center mb-1">
@@ -124,77 +123,67 @@ export function RegisterForm({ className, ...props }: React.ComponentProps<'div'
                 </Alert>
               )}
 
-              <Field data-invalid={!!fieldErrors.workspaceName}>
+              <Field data-invalid={!!errors.workspaceName}>
                 <FieldLabel htmlFor="workspaceName" className="text-xs font-medium">
                   Tên Shop / Doanh nghiệp
                 </FieldLabel>
                 <Input
                   id="workspaceName"
-                  name="workspaceName"
                   placeholder="Cửa hàng thời trang ABC"
                   className="h-9"
-                  value={workspaceName}
-                  onChange={e => setWorkspaceName(e.target.value)}
                   disabled={isPending}
-                  required
+                  {...register('workspaceName')}
                 />
-                {fieldErrors.workspaceName && <FieldError>{fieldErrors.workspaceName}</FieldError>}
+                {errors.workspaceName?.message && (
+                  <FieldError>{errors.workspaceName.message}</FieldError>
+                )}
               </Field>
 
-              <Field data-invalid={!!fieldErrors.name}>
+              <Field data-invalid={!!errors.name}>
                 <FieldLabel htmlFor="name" className="text-xs font-medium">
                   Họ và tên chủ shop
                 </FieldLabel>
                 <Input
                   id="name"
-                  name="name"
                   placeholder="Nguyễn Văn A"
                   className="h-9"
                   autoComplete="name"
-                  value={name}
-                  onChange={e => setName(e.target.value)}
                   disabled={isPending}
-                  required
+                  {...register('name')}
                 />
-                {fieldErrors.name && <FieldError>{fieldErrors.name}</FieldError>}
+                {errors.name?.message && <FieldError>{errors.name.message}</FieldError>}
               </Field>
 
-              <Field data-invalid={!!fieldErrors.email}>
+              <Field data-invalid={!!errors.email}>
                 <FieldLabel htmlFor="email" className="text-xs font-medium">
                   Email liên hệ
                 </FieldLabel>
                 <Input
                   id="email"
-                  name="email"
                   type="email"
                   placeholder="ban@congty.vn"
                   className="h-9"
                   autoComplete="email"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
                   disabled={isPending}
-                  required
+                  {...register('email')}
                 />
-                {fieldErrors.email && <FieldError>{fieldErrors.email}</FieldError>}
+                {errors.email?.message && <FieldError>{errors.email.message}</FieldError>}
               </Field>
 
-              <Field data-invalid={!!fieldErrors.password}>
+              <Field data-invalid={!!errors.password}>
                 <FieldLabel htmlFor="password" className="text-xs font-medium">
                   Mật khẩu
                 </FieldLabel>
                 <Input
                   id="password"
-                  name="password"
                   type="password"
                   placeholder="Ít nhất 6 ký tự"
                   className="h-9"
                   autoComplete="new-password"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
                   disabled={isPending}
-                  required
+                  {...register('password')}
                 />
-                {fieldErrors.password && <FieldError>{fieldErrors.password}</FieldError>}
+                {errors.password?.message && <FieldError>{errors.password.message}</FieldError>}
               </Field>
 
               <Field className="mt-2">

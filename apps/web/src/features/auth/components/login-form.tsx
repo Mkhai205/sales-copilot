@@ -3,15 +3,9 @@
 import * as React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Spinner } from '@/components/ui/spinner';
-import { loginSchema, type LoginDto } from '@sales-copilot/shared-contracts';
-import { loginAction } from './actions';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   AlertCircleIcon,
   ShieldCheckIcon,
@@ -19,6 +13,15 @@ import {
   HeadphonesIcon,
   SparklesIcon,
 } from 'lucide-react';
+import { loginSchema, type LoginDto } from '@sales-copilot/shared-contracts';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Spinner } from '@/components/ui/spinner';
+import { loginAction } from '../actions/auth-actions';
 
 const TEST_ACCOUNTS = [
   {
@@ -47,44 +50,35 @@ const TEST_ACCOUNTS = [
   },
 ];
 
-import { useQueryClient } from '@tanstack/react-query';
-
 export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) {
   const queryClient = useQueryClient();
-  const [email, setEmail] = React.useState('');
-  const [password, setPassword] = React.useState('');
-  const [fieldErrors, setFieldErrors] = React.useState<{ email?: string; password?: string }>({});
   const [apiError, setApiError] = React.useState<string | null>(null);
   const [isPending, setIsPending] = React.useState(false);
 
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm<LoginDto>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+  });
+
+  const emailValue = watch('email');
+
   const handleSelectTestAccount = (account: (typeof TEST_ACCOUNTS)[number]) => {
-    setEmail(account.email);
-    setPassword(account.password);
-    setFieldErrors({});
+    setValue('email', account.email, { shouldValidate: true });
+    setValue('password', account.password, { shouldValidate: true });
     setApiError(null);
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const onSubmit = async (formData: LoginDto) => {
     setApiError(null);
-    setFieldErrors({});
-
-    const formData: LoginDto = { email, password };
-
-    // Client-side schema validation
-    const parseResult = loginSchema.safeParse(formData);
-    if (!parseResult.success) {
-      const formatted: { email?: string; password?: string } = {};
-      for (const issue of parseResult.error.issues) {
-        const fieldName = issue.path[0] as 'email' | 'password';
-        if (fieldName && !formatted[fieldName]) {
-          formatted[fieldName] = issue.message;
-        }
-      }
-      setFieldErrors(formatted);
-      return;
-    }
-
     setIsPending(true);
     queryClient.clear();
 
@@ -97,7 +91,6 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
         setIsPending(false);
       }
     } catch (err: any) {
-      // Next.js redirect may throw NEXT_REDIRECT in internal client router handling, which shouldn't be treated as error
       if (err?.digest?.startsWith('NEXT_REDIRECT') || err?.message === 'NEXT_REDIRECT') {
         return;
       }
@@ -111,7 +104,10 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
       <Card className="overflow-hidden p-0 shadow-lg border-border/80 bg-card">
         <CardContent className="grid p-0 md:grid-cols-2">
           {/* Left: Form */}
-          <form onSubmit={handleSubmit} className="p-6 sm:p-8 flex flex-col justify-center">
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="p-6 sm:p-8 flex flex-col justify-center"
+          >
             <FieldGroup>
               <div className="flex flex-col items-center gap-2 mb-2">
                 <div className="flex items-center justify-center mb-1">
@@ -149,26 +145,23 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
                 </Alert>
               )}
 
-              <Field data-invalid={!!fieldErrors.email}>
+              <Field data-invalid={!!errors.email}>
                 <FieldLabel htmlFor="email" className="text-xs font-medium">
                   {'Email công việc'}
                 </FieldLabel>
                 <Input
                   id="email"
-                  name="email"
                   type="email"
-                  placeholder={'ban@congty.vn'}
+                  placeholder="ban@congty.vn"
                   className="h-9"
                   autoComplete="email"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
                   disabled={isPending}
-                  required
+                  {...register('email')}
                 />
-                {fieldErrors.email && <FieldError>{fieldErrors.email}</FieldError>}
+                {errors.email?.message && <FieldError>{errors.email.message}</FieldError>}
               </Field>
 
-              <Field data-invalid={!!fieldErrors.password}>
+              <Field data-invalid={!!errors.password}>
                 <div className="flex items-center justify-between w-full">
                   <FieldLabel htmlFor="password" className="text-xs font-medium">
                     {'Mật khẩu'}
@@ -182,17 +175,14 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
                 </div>
                 <Input
                   id="password"
-                  name="password"
                   type="password"
                   placeholder="••••••••"
                   className="h-9"
                   autoComplete="current-password"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
                   disabled={isPending}
-                  required
+                  {...register('password')}
                 />
-                {fieldErrors.password && <FieldError>{fieldErrors.password}</FieldError>}
+                {errors.password?.message && <FieldError>{errors.password.message}</FieldError>}
               </Field>
 
               <Field className="mt-1">
@@ -225,7 +215,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
                 <div className="grid grid-cols-3 gap-1.5">
                   {TEST_ACCOUNTS.map(acc => {
                     const Icon = acc.icon;
-                    const isSelected = email === acc.email;
+                    const isSelected = emailValue === acc.email;
                     const roleName =
                       acc.role === 'Super Admin'
                         ? 'Quản trị cấp cao'

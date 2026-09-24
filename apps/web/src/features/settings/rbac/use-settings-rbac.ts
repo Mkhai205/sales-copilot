@@ -4,7 +4,7 @@ import * as React from 'react';
 import { WorkspaceRole } from '@sales-copilot/shared-contracts';
 import { useWorkspaces } from '../general/hooks/use-workspaces';
 
-import { useCurrentUser } from '@/features/auth';
+import { useCurrentUser } from '@/features/auth/hooks/use-current-user';
 import {
   getDefaultSettingsRoute,
   getPermittedSettingsNavItems,

@@ -1,5 +1,5 @@
 import { io, Socket } from 'socket.io-client';
-import { getSocketTokenAction } from '@/features/auth';
+import { getSocketTokenAction } from '@/features/auth/actions/auth-actions';
 
 export function getWsBaseUrl(): string {
   if (typeof window !== 'undefined') {

@@ -1,9 +1,17 @@
-import { fetchApi, workspaceHeaders } from '@/lib/api/client';
+import { fetchApi, workspaceHeaders, buildQueryString } from '@/lib/api/client';
 import type { DashboardSummaryDto } from '@sales-copilot/shared-contracts';
 
+export interface DashboardSummaryParams {
+  from?: string;
+  to?: string;
+}
+
 export const dashboardApi = {
-  getSummary: (workspaceId: string) =>
-    fetchApi<DashboardSummaryDto>(`/workspaces/${workspaceId}/dashboard/summary`, {
-      headers: workspaceHeaders(workspaceId),
-    }),
+  getSummary: (workspaceId: string, params?: DashboardSummaryParams) =>
+    fetchApi<DashboardSummaryDto>(
+      `/workspaces/${workspaceId}/dashboard/summary${buildQueryString(params)}`,
+      {
+        headers: workspaceHeaders(workspaceId),
+      },
+    ),
 };

@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
-import { AdminSidebar, AdminHeader } from '@/features/platform-admin';
+import { AdminSidebar } from '@/features/platform-admin/layout/admin-sidebar';
+import { AdminHeader } from '@/features/platform-admin/layout/admin-header';
 
 export default function SuperAdminLayout({ children }: { children: React.ReactNode }) {
   return (

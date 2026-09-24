@@ -7,13 +7,13 @@ import type {
   SystemSettingItemDto,
   UpdateSystemSettingDto,
 } from '@sales-copilot/shared-contracts';
-import { platformAdminApi } from '../../api/platform-admin';
+import { systemSettingsApi } from '../api/settings';
 
 export function useSystemSettings(category?: SystemSettingCategory | string) {
   return useQuery<SystemSettingItemDto[]>({
     queryKey: ['platform-admin', 'settings', category],
     queryFn: async () => {
-      const res = await platformAdminApi.getSettings(category);
+      const res = await systemSettingsApi.getSettings(category);
       return res.data;
     },
     staleTime: 30_000,
@@ -31,7 +31,7 @@ export function useUpdateSystemSetting() {
 
   return useMutation({
     mutationFn: async ({ key, payload }: UpdateSettingParams) => {
-      const res = await platformAdminApi.updateSetting(key, payload);
+      const res = await systemSettingsApi.updateSetting(key, payload);
       return res.data;
     },
     onMutate: async ({ key, payload }) => {

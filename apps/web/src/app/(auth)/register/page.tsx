@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { RegisterForm } from '@/features/auth';
+import { RegisterForm } from '@/features/auth/components/register-form';
 
 export const metadata: Metadata = {
   title: 'Đăng ký Shop | Sales Copilot',

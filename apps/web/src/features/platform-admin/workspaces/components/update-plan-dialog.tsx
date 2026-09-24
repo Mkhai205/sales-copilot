@@ -1,6 +1,10 @@
 'use client';
 
 import * as React from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { Loader2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -18,16 +22,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Field, FieldGroup, FieldLabel, FieldDescription } from '@/components/ui/field';
+import { Field, FieldGroup, FieldLabel, FieldDescription, FieldError } from '@/components/ui/field';
 import {
   BillingPlanType,
   type PlatformWorkspaceListItemDto,
+  type UpdateWorkspacePlanDto,
 } from '@sales-copilot/shared-contracts';
 import {
   usePlatformWorkspaceDetail,
   useUpdateWorkspacePlan,
 } from '../hooks/use-platform-workspaces';
-import { Loader2 } from 'lucide-react';
 
 export interface UpdatePlanDialogProps {
   workspace: PlatformWorkspaceListItemDto | null;
@@ -35,80 +39,124 @@ export interface UpdatePlanDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
+const updatePlanFormSchema = z.object({
+  billingPlan: z.nativeEnum(BillingPlanType),
+  maxAgents: z
+    .string()
+    .refine(
+      val =>
+        !val.trim() || (!isNaN(Number(val)) && Number.isInteger(Number(val)) && Number(val) >= 1),
+      'Số nhân sự tối thiểu là 1',
+    ),
+  maxChannels: z
+    .string()
+    .refine(
+      val =>
+        !val.trim() || (!isNaN(Number(val)) && Number.isInteger(Number(val)) && Number(val) >= 1),
+      'Số kênh kết nối tối thiểu là 1',
+    ),
+  storageMb: z
+    .string()
+    .refine(
+      val =>
+        !val.trim() || (!isNaN(Number(val)) && Number.isInteger(Number(val)) && Number(val) >= 100),
+      'Dung lượng tối thiểu là 100 MB',
+    ),
+  aiTokens: z
+    .string()
+    .refine(
+      val =>
+        !val.trim() || (!isNaN(Number(val)) && Number.isInteger(Number(val)) && Number(val) >= 0),
+      'Hạn mức tokens AI tối thiểu là 0',
+    ),
+});
+
+type UpdatePlanFormValues = z.infer<typeof updatePlanFormSchema>;
+
 export function UpdatePlanDialog({ workspace, open, onOpenChange }: UpdatePlanDialogProps) {
   const { data: detail, isLoading: isLoadingDetail } = usePlatformWorkspaceDetail(
     open ? workspace?.id : undefined,
   );
   const updatePlanMutation = useUpdateWorkspacePlan();
 
-  const [selectedPlan, setSelectedPlan] = React.useState<BillingPlanType>(BillingPlanType.FREE);
-  const [maxAgents, setMaxAgents] = React.useState<string>('');
-  const [maxChannels, setMaxChannels] = React.useState<string>('');
-  const [storageMb, setStorageMb] = React.useState<string>('');
-  const [aiTokens, setAiTokens] = React.useState<string>('');
-
-  React.useEffect(() => {
-    if (workspace && open) {
-      setSelectedPlan((workspace.billingPlan as BillingPlanType) || BillingPlanType.FREE);
-      setMaxAgents('');
-      setMaxChannels('');
-      setStorageMb('');
-      setAiTokens('');
-    }
-  }, [workspace, open]);
-
-  React.useEffect(() => {
-    if (detail && open) {
-      setSelectedPlan((detail.billingPlan as BillingPlanType) || BillingPlanType.FREE);
-      const custom = (detail.settings?.quotas as Record<string, any>) || {};
-      setMaxAgents(
+  const defaultValues: UpdatePlanFormValues = React.useMemo(() => {
+    const custom = (detail?.settings?.quotas as Record<string, any>) || {};
+    return {
+      billingPlan: (detail?.billingPlan ||
+        workspace?.billingPlan ||
+        BillingPlanType.FREE) as BillingPlanType,
+      maxAgents:
         custom.maxAgents !== undefined && custom.maxAgents !== null ? String(custom.maxAgents) : '',
-      );
-      setMaxChannels(
+      maxChannels:
         custom.maxChannels !== undefined && custom.maxChannels !== null
           ? String(custom.maxChannels)
           : '',
-      );
-      setStorageMb(
+      storageMb:
         custom.storageLimitMb !== undefined && custom.storageLimitMb !== null
           ? String(custom.storageLimitMb)
           : '',
-      );
-      setAiTokens(
+      aiTokens:
         custom.aiMonthlyTokens !== undefined && custom.aiMonthlyTokens !== null
           ? String(custom.aiMonthlyTokens)
           : '',
-      );
-    }
-  }, [detail, open]);
+    };
+  }, [detail, workspace]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    reset,
+    formState: { errors },
+  } = useForm<UpdatePlanFormValues>({
+    resolver: zodResolver(updatePlanFormSchema),
+    defaultValues,
+  });
+
+  React.useEffect(() => {
+    if (open) {
+      reset(defaultValues);
+    }
+  }, [open, defaultValues, reset]);
+
+  const selectedPlan = watch('billingPlan');
+
+  const handleOpenChange = (newOpen: boolean) => {
+    if (!newOpen) {
+      reset(defaultValues);
+    }
+    onOpenChange(newOpen);
+  };
+
+  const onSubmit = async (data: UpdatePlanFormValues) => {
     if (!workspace) return;
 
     const quotas: Record<string, number | null> = {
-      maxAgents: maxAgents.trim() ? parseInt(maxAgents.trim(), 10) : null,
-      maxChannels: maxChannels.trim() ? parseInt(maxChannels.trim(), 10) : null,
-      storageLimitMb: storageMb.trim() ? parseInt(storageMb.trim(), 10) : null,
-      aiMonthlyTokens: aiTokens.trim() ? parseInt(aiTokens.trim(), 10) : null,
+      maxAgents: data.maxAgents.trim() ? parseInt(data.maxAgents.trim(), 10) : null,
+      maxChannels: data.maxChannels.trim() ? parseInt(data.maxChannels.trim(), 10) : null,
+      storageLimitMb: data.storageMb.trim() ? parseInt(data.storageMb.trim(), 10) : null,
+      aiMonthlyTokens: data.aiTokens.trim() ? parseInt(data.aiTokens.trim(), 10) : null,
+    };
+
+    const payload: UpdateWorkspacePlanDto = {
+      billingPlan: data.billingPlan,
+      quotas,
     };
 
     try {
       await updatePlanMutation.mutateAsync({
         id: workspace.id,
-        payload: {
-          billingPlan: selectedPlan,
-          quotas,
-        },
+        payload,
       });
-      onOpenChange(false);
+      handleOpenChange(false);
     } catch {
       // Error handled by mutation toast
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-md sm:max-w-md p-6">
         <DialogHeader className="pb-2">
           <DialogTitle className="text-base font-semibold">
@@ -119,14 +167,14 @@ export function UpdatePlanDialog({ workspace, open, onOpenChange }: UpdatePlanDi
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
           <FieldGroup className="gap-3">
             {/* Gói cước */}
             <Field className="gap-1.5">
               <FieldLabel className="text-xs font-medium">{'Gói cước dịch vụ'}</FieldLabel>
               <Select
                 value={selectedPlan}
-                onValueChange={val => setSelectedPlan(val as BillingPlanType)}
+                onValueChange={val => setValue('billingPlan', val as BillingPlanType)}
               >
                 <SelectTrigger className="h-8 text-xs w-full">
                   <SelectValue placeholder={'Chọn gói cước'} />
@@ -156,7 +204,7 @@ export function UpdatePlanDialog({ workspace, open, onOpenChange }: UpdatePlanDi
 
               <div className="grid grid-cols-2 gap-3">
                 {/* Max Agents */}
-                <Field className="gap-1">
+                <Field data-invalid={!!errors.maxAgents} className="gap-1">
                   <FieldLabel className="text-[11px] font-normal text-muted-foreground">
                     {'Số nhân sự tối đa (maxAgents)'}
                   </FieldLabel>
@@ -164,14 +212,14 @@ export function UpdatePlanDialog({ workspace, open, onOpenChange }: UpdatePlanDi
                     type="number"
                     min="1"
                     placeholder={'Mặc định'}
-                    value={maxAgents}
-                    onChange={e => setMaxAgents(e.target.value)}
                     className="h-8 text-xs"
+                    {...register('maxAgents')}
                   />
+                  {errors.maxAgents?.message && <FieldError>{errors.maxAgents.message}</FieldError>}
                 </Field>
 
                 {/* Max Channels */}
-                <Field className="gap-1">
+                <Field data-invalid={!!errors.maxChannels} className="gap-1">
                   <FieldLabel className="text-[11px] font-normal text-muted-foreground">
                     {'Số kênh kết nối tối đa (maxChannels)'}
                   </FieldLabel>
@@ -179,14 +227,16 @@ export function UpdatePlanDialog({ workspace, open, onOpenChange }: UpdatePlanDi
                     type="number"
                     min="1"
                     placeholder={'Mặc định'}
-                    value={maxChannels}
-                    onChange={e => setMaxChannels(e.target.value)}
                     className="h-8 text-xs"
+                    {...register('maxChannels')}
                   />
+                  {errors.maxChannels?.message && (
+                    <FieldError>{errors.maxChannels.message}</FieldError>
+                  )}
                 </Field>
 
                 {/* Storage MB */}
-                <Field className="gap-1">
+                <Field data-invalid={!!errors.storageMb} className="gap-1">
                   <FieldLabel className="text-[11px] font-normal text-muted-foreground">
                     {'Dung lượng lưu trữ media MB (storageQuotaMb)'}
                   </FieldLabel>
@@ -194,14 +244,14 @@ export function UpdatePlanDialog({ workspace, open, onOpenChange }: UpdatePlanDi
                     type="number"
                     min="100"
                     placeholder={'Mặc định'}
-                    value={storageMb}
-                    onChange={e => setStorageMb(e.target.value)}
                     className="h-8 text-xs"
+                    {...register('storageMb')}
                   />
+                  {errors.storageMb?.message && <FieldError>{errors.storageMb.message}</FieldError>}
                 </Field>
 
                 {/* AI Tokens */}
-                <Field className="gap-1">
+                <Field data-invalid={!!errors.aiTokens} className="gap-1">
                   <FieldLabel className="text-[11px] font-normal text-muted-foreground">
                     {'Hạn mức tokens AI hàng tháng (aiTokensQuotaMonthly)'}
                   </FieldLabel>
@@ -209,10 +259,10 @@ export function UpdatePlanDialog({ workspace, open, onOpenChange }: UpdatePlanDi
                     type="number"
                     min="0"
                     placeholder={'Mặc định'}
-                    value={aiTokens}
-                    onChange={e => setAiTokens(e.target.value)}
                     className="h-8 text-xs"
+                    {...register('aiTokens')}
                   />
+                  {errors.aiTokens?.message && <FieldError>{errors.aiTokens.message}</FieldError>}
                 </Field>
               </div>
             </div>
@@ -223,7 +273,7 @@ export function UpdatePlanDialog({ workspace, open, onOpenChange }: UpdatePlanDi
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => onOpenChange(false)}
+              onClick={() => handleOpenChange(false)}
               disabled={updatePlanMutation.isPending}
               className="text-xs"
             >

@@ -10,7 +10,7 @@ import type {
   ToggleWorkspaceStatusDto,
   UpdateWorkspacePlanDto,
 } from '@sales-copilot/shared-contracts';
-import { platformAdminApi } from '../../api/platform-admin';
+import { workspacesApi } from '../api/workspaces';
 
 export interface UsePlatformWorkspacesResult {
   items: PlatformWorkspaceListItemDto[];
@@ -24,7 +24,7 @@ export function usePlatformWorkspaces(params?: Partial<QueryPlatformWorkspacesDt
   return useQuery<UsePlatformWorkspacesResult>({
     queryKey: ['platform-admin', 'workspaces', params],
     queryFn: async () => {
-      const res = await platformAdminApi.getWorkspaces(params);
+      const res = await workspacesApi.getWorkspaces(params);
       return {
         items: res.data ?? [],
         meta: res.meta,
@@ -42,7 +42,7 @@ export function usePlatformWorkspaceDetail(id?: string) {
     queryKey: ['platform-admin', 'workspaces', 'detail', id],
     queryFn: async () => {
       if (!id) throw new Error('Workspace ID is required');
-      const res = await platformAdminApi.getWorkspaceDetail(id);
+      const res = await workspacesApi.getWorkspaceDetail(id);
       return res.data;
     },
     enabled: Boolean(id),
@@ -63,7 +63,7 @@ export function useUpdateWorkspacePlan() {
 
   return useMutation({
     mutationFn: async ({ id, payload }: UpdateWorkspacePlanParams) => {
-      const res = await platformAdminApi.updateWorkspacePlan(id, payload);
+      const res = await workspacesApi.updateWorkspacePlan(id, payload);
       return res.data;
     },
     onSuccess: (data, variables) => {
@@ -90,7 +90,7 @@ export function useToggleWorkspaceStatus() {
 
   return useMutation({
     mutationFn: async ({ id, payload }: ToggleWorkspaceStatusParams) => {
-      const res = await platformAdminApi.toggleWorkspaceStatus(id, payload);
+      const res = await workspacesApi.toggleWorkspaceStatus(id, payload);
       return res.data;
     },
     onSuccess: (data, variables) => {

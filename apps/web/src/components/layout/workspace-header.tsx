@@ -33,7 +33,9 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { useWorkspaces } from '@/features/settings/general/hooks/use-workspaces';
 import { getDefaultSettingsRoute } from '@/features/settings/rbac/settings-nav-items';
-import { useCurrentUser, logoutAction, ChangePasswordDialog } from '@/features/auth';
+import { useCurrentUser } from '@/features/auth/hooks/use-current-user';
+import { logoutAction } from '@/features/auth/actions/auth-actions';
+import { ChangePasswordDialog } from '@/features/auth/components/change-password-dialog';
 import { disconnectSocketClient } from '@/lib/socket/socket-client';
 
 interface WorkspaceHeaderProps {

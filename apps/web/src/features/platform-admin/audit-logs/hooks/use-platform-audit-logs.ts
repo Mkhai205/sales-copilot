@@ -6,7 +6,7 @@ import type {
   PlatformAuditLogDto,
   QueryPlatformAuditLogsDto,
 } from '@sales-copilot/shared-contracts';
-import { platformAdminApi } from '../../api/platform-admin';
+import { auditLogsApi } from '../api/audit-logs';
 
 export interface UsePlatformAuditLogsResult {
   items: PlatformAuditLogDto[];
@@ -20,7 +20,7 @@ export function usePlatformAuditLogs(params?: Partial<QueryPlatformAuditLogsDto>
   return useQuery<UsePlatformAuditLogsResult>({
     queryKey: ['platform-admin', 'audit-logs', params],
     queryFn: async () => {
-      const res = await platformAdminApi.getAuditLogs(params);
+      const res = await auditLogsApi.getAuditLogs(params);
       return {
         items: res.data ?? [],
         meta: res.meta,
@@ -39,7 +39,7 @@ export function usePlatformAuditLogDetail(id?: string | null) {
     queryKey: ['platform-admin', 'audit-logs', 'detail', id],
     queryFn: async () => {
       if (!id) throw new Error('Audit Log ID is required');
-      const res = await platformAdminApi.getAuditLogById(id);
+      const res = await auditLogsApi.getAuditLogById(id);
       return res.data;
     },
     enabled: Boolean(id),

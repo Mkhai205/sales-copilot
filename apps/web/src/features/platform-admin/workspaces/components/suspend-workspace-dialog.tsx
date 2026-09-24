@@ -1,6 +1,9 @@
 'use client';
 
 import * as React from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Loader2 } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -12,9 +15,12 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { Field, FieldLabel } from '@/components/ui/field';
-import { Loader2 } from 'lucide-react';
-import type { PlatformWorkspaceListItemDto } from '@sales-copilot/shared-contracts';
+import { Field, FieldLabel, FieldError } from '@/components/ui/field';
+import {
+  toggleWorkspaceStatusSchema,
+  type PlatformWorkspaceListItemDto,
+  type ToggleWorkspaceStatusDto,
+} from '@sales-copilot/shared-contracts';
 import { useToggleWorkspaceStatus } from '../hooks/use-platform-workspaces';
 
 export interface SuspendWorkspaceDialogProps {
@@ -28,42 +34,61 @@ export function SuspendWorkspaceDialog({
   open,
   onOpenChange,
 }: SuspendWorkspaceDialogProps) {
-  const [reason, setReason] = React.useState('');
   const toggleStatusMutation = useToggleWorkspaceStatus();
 
+  const isSuspending = workspace ? !workspace.isSuspended : true;
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    watch,
+    formState: { errors },
+  } = useForm<ToggleWorkspaceStatusDto>({
+    resolver: zodResolver(toggleWorkspaceStatusSchema),
+    defaultValues: {
+      isSuspended: isSuspending,
+      reason: '',
+    },
+  });
+
   React.useEffect(() => {
-    if (open) {
-      setReason('');
+    if (open && workspace) {
+      reset({
+        isSuspended: !workspace.isSuspended,
+        reason: '',
+      });
     }
-  }, [open]);
+  }, [open, workspace, reset]);
+
+  const reasonValue = watch('reason') || '';
+
+  const handleOpenChange = (newOpen: boolean) => {
+    if (!newOpen) {
+      reset({ isSuspended: isSuspending, reason: '' });
+    }
+    onOpenChange(newOpen);
+  };
 
   if (!workspace) return null;
 
-  const isSuspending = !workspace.isSuspended;
-
-  const handleConfirm = async (e: React.MouseEvent) => {
-    e.preventDefault();
-
-    if (isSuspending && !reason.trim()) {
-      return;
-    }
-
+  const onConfirm = async (data: ToggleWorkspaceStatusDto) => {
     try {
       await toggleStatusMutation.mutateAsync({
         id: workspace.id,
         payload: {
-          isSuspended: isSuspending,
-          reason: isSuspending ? reason.trim() : undefined,
+          isSuspended: data.isSuspended,
+          reason: data.isSuspended ? data.reason?.trim() : undefined,
         },
       });
-      onOpenChange(false);
+      handleOpenChange(false);
     } catch {
       // Error handled by mutation toast
     }
   };
 
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
+    <AlertDialog open={open} onOpenChange={handleOpenChange}>
       <AlertDialogContent className="max-w-md sm:max-w-md p-6">
         <AlertDialogHeader className="pb-1">
           <AlertDialogTitle className="text-base font-semibold">
@@ -78,7 +103,7 @@ export function SuspendWorkspaceDialog({
 
         {isSuspending && (
           <div className="py-2">
-            <Field className="gap-1.5">
+            <Field data-invalid={!!errors.reason} className="gap-1.5">
               <FieldLabel className="text-xs font-medium text-foreground">
                 {'Lý do tạm khóa'} <span className="text-destructive">*</span>
               </FieldLabel>
@@ -86,11 +111,11 @@ export function SuspendWorkspaceDialog({
                 placeholder={
                   'Nhập lý do tạm khóa (bắt buộc, ví dụ: Quá hạn thanh toán, Vi phạm điều khoản dịch vụ...)'
                 }
-                value={reason}
-                onChange={e => setReason(e.target.value)}
                 className="text-xs min-h-[80px]"
                 autoFocus
+                {...register('reason')}
               />
+              {errors.reason?.message && <FieldError>{errors.reason.message}</FieldError>}
             </Field>
           </div>
         )}
@@ -100,8 +125,11 @@ export function SuspendWorkspaceDialog({
             {'Hủy'}
           </AlertDialogCancel>
           <AlertDialogAction
-            onClick={handleConfirm}
-            disabled={toggleStatusMutation.isPending || (isSuspending && !reason.trim())}
+            onClick={e => {
+              e.preventDefault();
+              handleSubmit(onConfirm)(e);
+            }}
+            disabled={toggleStatusMutation.isPending || (isSuspending && !reasonValue.trim())}
             className={`text-xs h-8 gap-1.5 ${
               isSuspending
                 ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90'

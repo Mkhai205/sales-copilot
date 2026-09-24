@@ -14,7 +14,7 @@ import {
   type CreateMessageDto,
   type MessageResponseDto,
 } from '@sales-copilot/shared-contracts';
-import { useCurrentUser } from '@/features/auth';
+import { useCurrentUser } from '@/features/auth/hooks/use-current-user';
 import { useWorkspaces } from '@/features/settings/general/hooks/use-workspaces';
 import {
   bubbleConversationToTop,
