@@ -1,4 +1,4 @@
-import { CannedResponsesSettingsView } from '@/features/settings';
+import { CannedResponsesSettingsView } from '@/features/settings/canned-responses/canned-responses-settings-view';
 
 export default async function CannedResponsesSettingsPage({
   params,

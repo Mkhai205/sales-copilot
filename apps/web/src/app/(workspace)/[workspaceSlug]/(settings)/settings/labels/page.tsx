@@ -1,4 +1,4 @@
-import { LabelsSettingsView } from '@/features/settings';
+import { LabelsSettingsView } from '@/features/settings/labels/labels-settings-view';
 
 export default async function LabelsSettingsPage({
   params,

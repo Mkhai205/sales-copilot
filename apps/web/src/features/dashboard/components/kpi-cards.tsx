@@ -16,7 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { formatVND } from '@/features/commerce/lib/currency';
+import { formatVND } from '@/features/commerce/shared/lib/currency';
 
 interface KpiCardsProps {
   summary?: DashboardSummaryDto;

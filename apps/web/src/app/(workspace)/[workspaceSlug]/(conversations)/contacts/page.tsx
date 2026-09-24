@@ -1,4 +1,4 @@
-import { ContactsView } from '@/features/conversations';
+import { ContactsView } from '@/features/contacts/contacts-view';
 
 interface ContactsPageProps {
   params: Promise<{ workspaceSlug: string }>;

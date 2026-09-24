@@ -1,4 +1,4 @@
-import { TeamsSettingsView } from '@/features/settings';
+import { TeamsSettingsView } from '@/features/settings/teams/teams-settings-view';
 
 export default async function TeamsSettingsPage({
   params,

@@ -1,0 +1,372 @@
+'use client';
+
+import * as React from 'react';
+import { OrderStatus, PaymentMethod, type OrderResponseDto } from '@sales-copilot/shared-contracts';
+import {
+  ShoppingBag,
+  Plus,
+  CheckCircle,
+  CreditCard,
+  XCircle,
+  Edit,
+  MapPin,
+  Package,
+  QrCode,
+} from 'lucide-react';
+import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { OrderStatusBadge, PaymentStatusBadge } from './order-status-badge';
+import { OrderHistoryList } from './order-history-list';
+import { CommerceOrderForm } from './commerce-order-form';
+import { useActiveConversationOrder } from '../hooks/use-active-conversation-order';
+import { useCommerceOrders } from '../hooks/use-commerce-orders';
+import { ordersApi } from '../api/orders';
+import { formatVND } from '@/features/commerce/shared/lib/currency';
+
+export interface CommerceDetailTabProps {
+  workspaceId: string;
+  conversationId?: string;
+  contactId?: string;
+  contactName?: string | null;
+  contactPhone?: string | null;
+  newOrderTrigger?: number;
+  onOpenDrawer?: (orderToEdit?: OrderResponseDto | null) => void;
+}
+export type PosDetailTabProps = CommerceDetailTabProps;
+
+export function CommerceDetailTab({
+  workspaceId,
+  conversationId,
+  contactId,
+  contactName,
+  contactPhone,
+  newOrderTrigger,
+  onOpenDrawer,
+}: CommerceDetailTabProps) {
+  const [mode, setMode] = React.useState<'view' | 'form'>('view');
+  const [editingOrder, setEditingOrder] = React.useState<OrderResponseDto | null>(null);
+
+  const { activeOrder, orders, isLoading } = useActiveConversationOrder({
+    workspaceId,
+    conversationId,
+    contactId,
+  });
+
+  const { confirmOrder, payOrder, cancelOrder, isConfirming, isPaying, isCancelling } =
+    useCommerceOrders(workspaceId);
+  const [isSendingQr, setIsSendingQr] = React.useState(false);
+
+  // React to external newOrderTrigger (F4 hotkey)
+  React.useEffect(() => {
+    if (newOrderTrigger && newOrderTrigger > 0) {
+      setEditingOrder(null);
+      setMode('form');
+    }
+  }, [newOrderTrigger]);
+
+  const handleSendVietQr = async () => {
+    if (!activeOrder) return;
+    setIsSendingQr(true);
+    try {
+      await ordersApi.generateVietQr(workspaceId, activeOrder.id, { sendToChat: true });
+      toast.success(`Đã gửi mã VietQR cho đơn #${activeOrder.displayId} vào chat!`);
+    } catch (err: any) {
+      toast.error(`Không thể gửi mã VietQR: ${err.message || 'Error'}`);
+    } finally {
+      setIsSendingQr(false);
+    }
+  };
+
+  const handleConfirm = async () => {
+    if (!activeOrder) return;
+    await confirmOrder(activeOrder.id);
+  };
+
+  const handlePay = async () => {
+    if (!activeOrder) return;
+    const remaining = Math.max(0, Number(activeOrder.totalAmount) - Number(activeOrder.paidAmount));
+    await payOrder({
+      orderId: activeOrder.id,
+      dto: {
+        paymentMethod: PaymentMethod.CASH,
+        amount: remaining || Number(activeOrder.totalAmount),
+        notes: 'Tiền mặt',
+      },
+    });
+  };
+
+  const handleCancel = async () => {
+    if (!activeOrder) return;
+    const reason = window.prompt('Nhập lý do hủy đơn hàng:');
+    if (!reason || reason.trim().length < 3) return;
+    await cancelOrder({
+      orderId: activeOrder.id,
+      dto: { cancelReason: reason.trim() },
+    });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="py-8 text-center text-xs text-muted-foreground">
+        {'Đang tải thông tin đơn hàng...'}
+      </div>
+    );
+  }
+
+  // 1. Inline Order Creation / Editing Mode
+  if (mode === 'form') {
+    return (
+      <CommerceOrderForm
+        workspaceId={workspaceId}
+        conversationId={conversationId}
+        contactId={contactId}
+        contactName={contactName}
+        contactPhone={contactPhone}
+        initialOrder={editingOrder}
+        onCancel={() => {
+          setMode('view');
+          setEditingOrder(null);
+        }}
+        onSuccess={savedOrder => {
+          setMode('view');
+          setEditingOrder(null);
+          toast.success(`Đơn hàng #${savedOrder.displayId} đã được lưu thành công!`);
+        }}
+      />
+    );
+  }
+
+  // 2. Standard View Mode: Active Order & Order History
+  return (
+    <div className="flex flex-col gap-4">
+      {/* Active Order Section */}
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center justify-between">
+          <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+            <ShoppingBag className="size-3.5 text-primary" />
+            {'Đơn hàng hiện tại'}
+          </h4>
+
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-6 px-2 text-[11px] gap-1 font-medium text-primary cursor-pointer"
+            onClick={() => {
+              setEditingOrder(null);
+              setMode('form');
+              onOpenDrawer?.(null);
+            }}
+          >
+            <Plus className="size-3" />
+            {'Tạo đơn (F4)'}
+          </Button>
+        </div>
+
+        {activeOrder ? (
+          <div className="rounded-lg border border-border bg-card p-3 flex flex-col gap-3 text-xs shadow-2xs">
+            {/* Header */}
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-sm text-foreground flex items-center gap-1.5">
+                #{activeOrder.displayId}
+                <span className="text-xs text-muted-foreground font-mono font-normal">
+                  ({activeOrder.orderNumber})
+                </span>
+              </span>
+              <div className="flex items-center gap-1.5">
+                <OrderStatusBadge status={activeOrder.status} />
+                <PaymentStatusBadge status={activeOrder.paymentStatus} />
+              </div>
+            </div>
+
+            {/* Line items list */}
+            <div className="flex flex-col gap-1 rounded bg-muted/40 p-2 text-[11px]">
+              {(activeOrder.items || []).map(item => (
+                <div key={item.id} className="flex items-center justify-between">
+                  <span className="truncate max-w-[180px] text-foreground">
+                    {item.quantity}x {item.productName} ({item.variantName})
+                  </span>
+                  <span className="font-medium text-foreground">{formatVND(item.totalPrice)}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Shipping details */}
+            {activeOrder.shippingAddress && (
+              <div className="flex flex-col gap-1 text-[11px] text-muted-foreground">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium text-foreground">
+                    {activeOrder.shippingAddress.recipientName}
+                  </span>
+                  <span className="font-mono">{activeOrder.shippingAddress.phoneNumber}</span>
+                </div>
+                <div className="flex items-start gap-1">
+                  <MapPin className="size-3 text-muted-foreground shrink-0 mt-0.5" />
+                  <span className="line-clamp-2">
+                    {activeOrder.shippingAddress.streetAddress}, {activeOrder.shippingAddress.ward},{' '}
+                    {activeOrder.shippingAddress.district}, {activeOrder.shippingAddress.province}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Financials */}
+            <div className="flex items-center justify-between pt-2 border-t border-border/60">
+              <span className="text-muted-foreground">{'Tổng cộng'}:</span>
+              <span className="font-bold text-sm text-primary">
+                {formatVND(activeOrder.totalAmount)}
+              </span>
+            </div>
+
+            {/* Action Buttons based on status */}
+            <div className="flex items-center justify-end gap-1.5 pt-2 border-t border-border/60 flex-wrap">
+              {activeOrder.status === OrderStatus.DRAFT && (
+                <>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 text-xs text-destructive hover:text-destructive px-2 cursor-pointer"
+                    onClick={handleCancel}
+                    disabled={isCancelling}
+                  >
+                    <XCircle className="size-3.5 mr-1" />
+                    {'Hủy đơn'}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-xs px-2 gap-1 text-primary cursor-pointer"
+                    onClick={handleSendVietQr}
+                    disabled={isSendingQr}
+                  >
+                    <QrCode className="size-3.5" />
+                    {isSendingQr ? 'Đang lưu...' : 'Gửi mã VietQR'}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-xs px-2 gap-1 cursor-pointer"
+                    onClick={() => {
+                      setEditingOrder(activeOrder);
+                      setMode('form');
+                    }}
+                  >
+                    <Edit className="size-3.5" />
+                    {'Chỉnh sửa đơn'} (F4)
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="default"
+                    size="sm"
+                    className="h-7 text-xs px-2.5 gap-1 font-semibold cursor-pointer"
+                    onClick={handleConfirm}
+                    disabled={isConfirming}
+                  >
+                    <CheckCircle className="size-3.5" />
+                    {'Xác nhận đơn'}
+                  </Button>
+                </>
+              )}
+
+              {activeOrder.status === OrderStatus.CONFIRMED && (
+                <>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 text-xs text-destructive hover:text-destructive px-2 cursor-pointer"
+                    onClick={handleCancel}
+                    disabled={isCancelling}
+                  >
+                    <XCircle className="size-3.5 mr-1" />
+                    {'Hủy đơn'}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-xs px-2 gap-1 text-primary cursor-pointer"
+                    onClick={handleSendVietQr}
+                    disabled={isSendingQr}
+                  >
+                    <QrCode className="size-3.5" />
+                    {isSendingQr ? 'Đang lưu...' : 'Gửi mã VietQR'}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="default"
+                    size="sm"
+                    className="h-7 text-xs px-2.5 gap-1 font-semibold cursor-pointer"
+                    onClick={handlePay}
+                    disabled={isPaying}
+                  >
+                    <CreditCard className="size-3.5" />
+                    {'Thanh toán'}
+                  </Button>
+                </>
+              )}
+
+              {(activeOrder.status === OrderStatus.PAID ||
+                activeOrder.status === OrderStatus.SHIPPING) && (
+                <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
+                    <CheckCircle className="size-3.5" />
+                    {activeOrder.status === OrderStatus.SHIPPING ? 'Đang giao' : 'Đã thanh toán'}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center p-6 rounded-lg border border-dashed border-border/80 bg-muted/20 text-center">
+            <Package className="size-7 text-muted-foreground/60 mb-1.5" />
+            <p className="text-xs font-medium text-foreground">
+              {'Chưa có đơn hàng nào trong hội thoại này'}
+            </p>
+            <p className="text-[11px] text-muted-foreground mt-0.5 mb-3">
+              {'Nhấn Tạo đơn (F4) để bắt đầu'}
+            </p>
+            <Button
+              type="button"
+              variant="default"
+              size="sm"
+              className="h-7 text-xs gap-1 font-medium cursor-pointer"
+              onClick={() => {
+                setEditingOrder(null);
+                setMode('form');
+              }}
+            >
+              <Plus className="size-3.5" />
+              {'Tạo đơn (F4)'}
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {/* Contact Order History Section */}
+      {orders.length > 0 && (
+        <div className="flex flex-col gap-1.5 pt-2 border-t border-border/60">
+          <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider text-muted-foreground">
+            {'Lịch sử đơn của khách'} ({orders.length})
+          </h4>
+
+          <div className="rounded-lg border border-border bg-card overflow-hidden">
+            <OrderHistoryList
+              orders={orders}
+              activeOrderId={activeOrder?.id}
+              onSelectOrder={order => {
+                setEditingOrder(order);
+                setMode('form');
+              }}
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export const PosDetailTab = CommerceDetailTab;

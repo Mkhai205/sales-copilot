@@ -1,4 +1,4 @@
-import { NewInboxWizardView } from '@/features/settings';
+import { NewInboxWizardView } from '@/features/settings/inboxes/new-inbox-wizard-view';
 
 export default async function NewInboxPage({
   params,

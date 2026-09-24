@@ -1,4 +1,4 @@
-import { InboxesSettingsView } from '@/features/settings';
+import { InboxesSettingsView } from '@/features/settings/inboxes/inboxes-settings-view';
 
 export default async function InboxesSettingsPage({
   params,

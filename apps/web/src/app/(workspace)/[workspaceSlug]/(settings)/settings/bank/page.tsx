@@ -1,4 +1,4 @@
-import { BankSettingsView } from '@/features/settings';
+import { BankSettingsView } from '@/features/settings/bank/bank-settings-view';
 
 export default async function BankSettingsPage({
   params,

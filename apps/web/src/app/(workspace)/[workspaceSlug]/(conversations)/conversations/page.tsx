@@ -1,4 +1,4 @@
-import { ConversationLayout } from '@/features/conversations';
+import { ConversationLayout } from '@/features/conversations/layout/conversation-layout';
 
 interface ConversationsPageProps {
   params: Promise<{ workspaceSlug: string }>;

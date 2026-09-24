@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
-import { ConversationsSidebar } from '@/features/conversations';
+import { ConversationsSidebar } from '@/features/conversations/layout/conversations-sidebar';
 
 interface ConversationsLayoutProps {
   children: React.ReactNode;

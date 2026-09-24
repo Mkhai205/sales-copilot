@@ -1,4 +1,4 @@
-import { OrdersView } from '@/features/commerce';
+import { OrdersView } from '@/features/commerce/orders/orders-view';
 
 interface OrdersPageProps {
   params: Promise<{ workspaceSlug: string }>;

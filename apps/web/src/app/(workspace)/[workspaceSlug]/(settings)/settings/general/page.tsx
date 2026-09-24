@@ -1,4 +1,4 @@
-import { GeneralSettingsView } from '@/features/settings';
+import { GeneralSettingsView } from '@/features/settings/general/general-settings-view';
 
 export default async function GeneralSettingsPage({
   params,

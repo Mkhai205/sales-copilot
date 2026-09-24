@@ -9,8 +9,8 @@ import {
   type PresenceEntry,
   type PresenceUpdatedEvent,
 } from '@sales-copilot/shared-contracts';
-import { presenceApi } from '@/features/conversations';
-import { useWorkspaces } from '@/features/settings';
+import { presenceApi } from '@/features/conversations/api/presence';
+import { useWorkspaces } from '@/features/settings/general/hooks/use-workspaces';
 import { useSocket, useSocketEvent } from './use-socket';
 import { presenceKeys } from '@/lib/query-keys';
 

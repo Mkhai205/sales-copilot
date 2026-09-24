@@ -13,6 +13,7 @@ import {
   AttachmentTitle,
 } from '@/components/ui/attachment';
 import { cn } from '@/lib/utils';
+import Image from 'next/image';
 
 export interface AttachmentPreviewBarProps {
   attachments: File[];
@@ -75,7 +76,11 @@ export function AttachmentPreviewBar({
           >
             {item.isImage && item.objectUrl ? (
               <AttachmentMedia variant="image" className="size-9 rounded-md shrink-0">
-                <img src={item.objectUrl} alt={item.file.name} className="size-full object-cover" />
+                <Image
+                  src={item.objectUrl}
+                  alt={item.file.name}
+                  className="size-full object-cover"
+                />
               </AttachmentMedia>
             ) : (
               <AttachmentMedia

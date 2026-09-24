@@ -5,7 +5,7 @@ import {
   TIMEZONE_OPTIONS,
   getTimezoneLabel,
   getLanguageLabel,
-} from '../constants/workspace-settings-options';
+} from '../general/constants/workspace-options';
 
 describe('General Workspace Settings (Task 28)', () => {
   describe('updateWorkspaceSchema validation', () => {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { dashboardApi } from '../api/dashboard-client';
+import { dashboardApi } from '../api/dashboard';
 import { dashboardKeys } from '@/lib/query-keys';
 
 export function useDashboardSummary(workspaceId?: string) {

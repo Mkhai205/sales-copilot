@@ -10,7 +10,7 @@ import {
   SETTINGS_NAV_ITEMS,
   getPermittedSettingsNavItems,
   isSettingsSectionAllowed,
-} from '../constants/settings-nav-items';
+} from '../rbac/settings-nav-items';
 
 describe('Knowledge Base Management (Epic 4.3)', () => {
   describe('createKnowledgeArticleSchema validation', () => {

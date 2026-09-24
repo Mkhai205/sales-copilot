@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
-import { SettingsSidebar } from '@/features/settings';
+import { SettingsSidebar } from '@/features/settings/layout/settings-sidebar';
 
 interface SettingsLayoutProps {
   children: React.ReactNode;

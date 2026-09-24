@@ -1,4 +1,4 @@
-import { SettingsIndexView } from '@/features/settings';
+import { SettingsIndexView } from '@/features/settings/layout/settings-index-view';
 
 export default async function SettingsIndexPage({
   params,

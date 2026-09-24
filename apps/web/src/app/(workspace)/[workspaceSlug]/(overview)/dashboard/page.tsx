@@ -2,7 +2,7 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { API_BASE } from '@/lib/api/client';
 import type { UserWorkspaceDto } from '@sales-copilot/shared-contracts';
-import { DashboardView } from '@/features/dashboard';
+import { DashboardView } from '@/features/dashboard/dashboard-view';
 
 export const dynamic = 'force-dynamic';
 

@@ -1,6 +1,10 @@
 import { describe, it, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { facebookApi, type FacebookPageInfo, type ConnectFacebookPageDto } from '../api/facebook';
+import {
+  facebookApi,
+  type FacebookPageInfo,
+  type ConnectFacebookPageDto,
+} from '../inboxes/api/facebook';
 
 describe('Facebook OAuth 1-Click Connection Flow', () => {
   let originalFetch: typeof globalThis.fetch;

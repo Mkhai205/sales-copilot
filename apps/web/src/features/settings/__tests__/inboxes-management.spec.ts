@@ -14,7 +14,7 @@ import {
   type InboxDto,
   type InboxDetailDto,
 } from '@sales-copilot/shared-contracts';
-import { SUPPORTED_CHANNELS } from '../constants/inbox-channels';
+import { SUPPORTED_CHANNELS } from '../inboxes/constants/inbox-channels';
 
 describe('Inboxes & Channels Management (Task 33)', () => {
   describe('createInboxSchema validation across channel types', () => {

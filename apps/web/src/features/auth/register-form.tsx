@@ -271,13 +271,13 @@ export function RegisterForm({ className, ...props }: React.ComponentProps<'div'
 
       <FieldDescription className="px-6 text-center text-xs text-muted-foreground">
         Bằng cách tiếp tục, bạn đồng ý với{' '}
-        <a href="#" className="underline hover:text-primary">
+        <Link href="#" className="underline hover:text-primary">
           Điều khoản Dịch vụ
-        </a>{' '}
+        </Link>{' '}
         và{' '}
-        <a href="#" className="underline hover:text-primary">
+        <Link href="#" className="underline hover:text-primary">
           Chính sách Quyền riêng tư
-        </a>{' '}
+        </Link>{' '}
         của chúng tôi.
       </FieldDescription>
     </div>

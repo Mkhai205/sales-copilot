@@ -9,8 +9,20 @@ import {
   PaymentStatus,
   PaymentMethod,
 } from '@sales-copilot/shared-contracts';
-import * as commerceModule from '../index';
-import { commerceApi } from '../api/commerce-client';
+import { OrdersTable } from '../orders/components/orders-table';
+import { OrderDetailSheet } from '../orders/components/order-detail-sheet';
+import { CreateOrderDialog } from '../orders/components/create-order-dialog';
+import { OrdersView } from '../orders/orders-view';
+import {
+  useCommerceOrders,
+  useCommerceOrdersList,
+  useCommerceOrder,
+} from '../orders/hooks/use-commerce-orders';
+import { CommerceOrderForm } from '../orders/components/commerce-order-form';
+import { RecipientInfoForm, recipientInfoSchema } from '../orders/components/recipient-info-form';
+import { OrderStatusBadge, PaymentStatusBadge } from '../orders/components/order-status-badge';
+import { ordersApi as commerceApi } from '../orders/api/orders';
+import { formatVND } from '../shared/lib/currency';
 
 describe('Epic 2.2: OMS & Orders Management Web Spec', () => {
   let originalFetch: typeof globalThis.fetch;
@@ -32,18 +44,19 @@ describe('Epic 2.2: OMS & Orders Management Web Spec', () => {
     globalThis.fetch = originalFetch;
   });
 
-  describe('Public Barrel Exports in features/commerce', () => {
-    it('should export all OMS components, hooks, and utilities through index.ts', () => {
-      assert.ok(commerceModule.OrdersTable, 'OrdersTable should be exported');
-      assert.ok(commerceModule.OrderDetailSheet, 'OrderDetailSheet should be exported');
-      assert.ok(commerceModule.CreateOrderDialog, 'CreateOrderDialog should be exported');
-      assert.ok(commerceModule.OrdersView, 'OrdersView should be exported');
-      assert.ok(commerceModule.useCommerceOrders, 'useCommerceOrders should be exported');
-      assert.ok(commerceModule.useCommerceOrdersList, 'useCommerceOrdersList should be exported');
-      assert.ok(commerceModule.useCommerceOrder, 'useCommerceOrder should be exported');
-      assert.ok(commerceModule.CommerceOrderForm, 'CommerceOrderForm should be exported');
-      assert.ok(commerceModule.OrderStatusBadge, 'OrderStatusBadge should be exported');
-      assert.ok(commerceModule.PaymentStatusBadge, 'PaymentStatusBadge should be exported');
+  describe('Direct Slice Exports in features/commerce/orders', () => {
+    it('should export all OMS components, hooks, and utilities through direct module paths', () => {
+      assert.ok(OrdersTable, 'OrdersTable should be exported');
+      assert.ok(OrderDetailSheet, 'OrderDetailSheet should be exported');
+      assert.ok(CreateOrderDialog, 'CreateOrderDialog should be exported');
+      assert.ok(OrdersView, 'OrdersView should be exported');
+      assert.ok(useCommerceOrders, 'useCommerceOrders should be exported');
+      assert.ok(useCommerceOrdersList, 'useCommerceOrdersList should be exported');
+      assert.ok(useCommerceOrder, 'useCommerceOrder should be exported');
+      assert.ok(CommerceOrderForm, 'CommerceOrderForm should be exported');
+      assert.ok(RecipientInfoForm, 'RecipientInfoForm should be exported');
+      assert.ok(OrderStatusBadge, 'OrderStatusBadge should be exported');
+      assert.ok(PaymentStatusBadge, 'PaymentStatusBadge should be exported');
     });
   });
 
@@ -212,6 +225,26 @@ describe('Epic 2.2: OMS & Orders Management Web Spec', () => {
         assert.strictEqual(parsed.data.paymentStatus, PaymentStatus.PARTIALLY_PAID);
         assert.strictEqual(parsed.data.search, '0988123456');
       }
+    });
+
+    it('should validate recipientInfoSchema with defaults', () => {
+      const parsed = recipientInfoSchema.safeParse({
+        recipientName: 'Nguyen Van A',
+        phoneNumber: '0988123456',
+        streetAddress: '123 Le Loi',
+      });
+      assert.strictEqual(parsed.success, true);
+      if (parsed.success) {
+        assert.strictEqual(parsed.data.recipientName, 'Nguyen Van A');
+        assert.strictEqual(parsed.data.ward, '');
+      }
+    });
+
+    it('formatVND should format both numbers and numeric strings consistently', () => {
+      const formattedNum = formatVND(150000);
+      const formattedStr = formatVND('150000');
+      assert.strictEqual(formattedNum, formattedStr);
+      assert.ok(formattedNum.includes('150.000'));
     });
   });
 });

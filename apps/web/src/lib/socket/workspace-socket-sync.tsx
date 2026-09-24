@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useWorkspaces } from '@/features/settings';
+import { useWorkspaces } from '@/features/settings/general/hooks/use-workspaces';
 import { useWorkspaceRoom } from './use-socket';
 
 export interface WorkspaceSocketSyncProps {

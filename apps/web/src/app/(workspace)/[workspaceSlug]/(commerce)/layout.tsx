@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
-import { CommerceSidebar } from '@/features/commerce';
+import { CommerceSidebar } from '@/features/commerce/layout/commerce-sidebar';
 
 interface CommerceLayoutProps {
   children: React.ReactNode;

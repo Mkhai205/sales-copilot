@@ -5,7 +5,7 @@ import {
   updateLabelSchema,
   type LabelDto,
 } from '@sales-copilot/shared-contracts';
-import { LABEL_PRESET_COLORS, isValidHexColor } from '../constants/label-colors';
+import { LABEL_PRESET_COLORS, isValidHexColor } from '../labels/constants/label-colors';
 
 describe('Labels Management (Task 31)', () => {
   describe('createLabelSchema validation', () => {

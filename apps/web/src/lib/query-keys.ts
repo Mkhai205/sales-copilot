@@ -168,8 +168,8 @@ export const workspaceKeys = {
   teams: (workspaceId?: string) => teamKeys.list(workspaceId),
   bankConfig: (workspaceId?: string) =>
     workspaceId
-      ? (['workspace', workspaceId, 'bank-config'] as const)
-      : (['workspace', 'bank-config'] as const),
+      ? (['workspaces', workspaceId, 'bank-config'] as const)
+      : (['workspaces', 'bank-config'] as const),
 };
 
 export const dashboardKeys = {

@@ -6,7 +6,7 @@ import {
   getPermittedSettingsNavItems,
   isSettingsSectionAllowed,
   getDefaultSettingsRoute,
-} from '../constants/settings-nav-items';
+} from '../rbac/settings-nav-items';
 
 describe('Settings Navigation & RBAC (Task 27)', () => {
   it('should define all 8 settings items with correct categories and segments', () => {

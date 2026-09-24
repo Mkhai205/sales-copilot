@@ -1,4 +1,4 @@
-import { KnowledgeSettingsView } from '@/features/settings';
+import { KnowledgeSettingsView } from '@/features/settings/knowledge/knowledge-settings-view';
 
 export default async function KnowledgeSettingsPage({
   params,

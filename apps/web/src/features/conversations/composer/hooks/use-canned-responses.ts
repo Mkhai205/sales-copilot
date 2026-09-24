@@ -1,7 +1,8 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { cannedResponsesApi, useWorkspaces } from '@/features/settings';
+import { cannedResponsesApi } from '@/features/settings/canned-responses/api/canned-responses';
+import { useWorkspaces } from '@/features/settings/general/hooks/use-workspaces';
 import type { CannedResponseDto } from '@sales-copilot/shared-contracts';
 import { cannedResponseKeys } from '@/lib/query-keys';
 

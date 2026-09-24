@@ -31,7 +31,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useWorkspaces } from '@/features/settings';
+import { useWorkspaces } from '@/features/settings/general/hooks/use-workspaces';
+import { getDefaultSettingsRoute } from '@/features/settings/rbac/settings-nav-items';
 import { useCurrentUser, logoutAction, ChangePasswordDialog } from '@/features/auth';
 import { disconnectSocketClient } from '@/lib/socket/socket-client';
 
@@ -87,6 +88,10 @@ export function WorkspaceHeader({ workspaceSlug }: WorkspaceHeaderProps) {
 
   const canAccessDashboard = activeWorkspace?.role === 'OWNER' || activeWorkspace?.role === 'ADMIN';
 
+  const settingsHref = activeWorkspace?.role
+    ? getDefaultSettingsRoute(workspaceSlug, activeWorkspace.role)
+    : `/${workspaceSlug}/settings`;
+
   const navItems = [
     ...(canAccessDashboard
       ? [
@@ -112,7 +117,7 @@ export function WorkspaceHeader({ workspaceSlug }: WorkspaceHeaderProps) {
     },
     {
       label: 'Cài đặt',
-      href: `/${workspaceSlug}/settings/general`,
+      href: settingsHref,
       icon: Settings,
       isActive: isSettingsActive,
     },

@@ -15,7 +15,7 @@ import {
   type MessageResponseDto,
 } from '@sales-copilot/shared-contracts';
 import { useCurrentUser } from '@/features/auth';
-import { useWorkspaces } from '@/features/settings';
+import { useWorkspaces } from '@/features/settings/general/hooks/use-workspaces';
 import {
   bubbleConversationToTop,
   markMessageFailedInInfiniteData,

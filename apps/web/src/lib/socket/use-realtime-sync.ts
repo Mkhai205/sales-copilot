@@ -4,7 +4,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useQueryClient, type InfiniteData } from '@tanstack/react-query';
 import { WsServerEvent } from '@sales-copilot/shared-contracts';
 import type { ApiResponse } from '@/lib/api/client';
-import { conversationsApi } from '@/features/conversations';
+import { conversationsApi } from '@/features/conversations/api/conversations';
 import {
   MessageType,
   SenderType,

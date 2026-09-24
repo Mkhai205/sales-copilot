@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "paths": {
+      "@/*": ["./apps/web/src/*"],
       "@sales-copilot/shared-contracts": ["./packages/shared-contracts/src/index.ts"],
       "@sales-copilot/shared-contracts/*": ["./packages/shared-contracts/src/*"],
       "@sales-copilot/widget-sdk": ["./packages/widget-sdk/src/index.ts"],

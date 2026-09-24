@@ -1,4 +1,4 @@
-import { InboxDetailView } from '@/features/settings';
+import { InboxDetailView } from '@/features/settings/inboxes/inbox-detail-view';
 
 export default async function InboxDetailPage({
   params,

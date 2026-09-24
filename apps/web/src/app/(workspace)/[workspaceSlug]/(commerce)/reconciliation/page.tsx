@@ -1,4 +1,4 @@
-import { ReconciliationView } from '@/features/commerce';
+import { ReconciliationView } from '@/features/commerce/reconciliation/reconciliation-view';
 
 interface ReconciliationPageProps {
   params: Promise<{ workspaceSlug: string }>;

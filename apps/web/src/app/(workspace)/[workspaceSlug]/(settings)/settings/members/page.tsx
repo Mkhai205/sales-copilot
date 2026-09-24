@@ -1,4 +1,4 @@
-import { MembersSettingsView } from '@/features/settings';
+import { MembersSettingsView } from '@/features/settings/members/members-settings-view';
 
 export default async function MembersSettingsPage({
   params,

@@ -173,12 +173,12 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
                   <FieldLabel htmlFor="password" className="text-xs font-medium">
                     {'Mật khẩu'}
                   </FieldLabel>
-                  <a
+                  <Link
                     href="#"
                     className="text-xs text-muted-foreground hover:text-primary transition-colors underline-offset-2 hover:underline"
                   >
                     {'Quên mật khẩu?'}
-                  </a>
+                  </Link>
                 </div>
                 <Input
                   id="password"
@@ -326,13 +326,13 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
 
       <FieldDescription className="px-6 text-center text-xs text-muted-foreground">
         {'Bằng cách tiếp tục, bạn đồng ý với '}
-        <a href="#" className="underline hover:text-primary">
+        <Link href="#" className="underline hover:text-primary">
           {'Điều khoản Dịch vụ'}
-        </a>{' '}
+        </Link>{' '}
         {'và '}
-        <a href="#" className="underline hover:text-primary">
+        <Link href="#" className="underline hover:text-primary">
           {'Chính sách Quyền riêng tư'}
-        </a>
+        </Link>
         {' của chúng tôi.'}
       </FieldDescription>
     </div>
