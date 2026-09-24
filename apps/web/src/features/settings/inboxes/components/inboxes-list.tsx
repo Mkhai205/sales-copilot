@@ -220,13 +220,10 @@ export function InboxesList({ workspaceId, currentUserRole, workspaceSlug }: Inb
                           {inbox.name}
                         </CardTitle>
                         <div className="flex items-center gap-1.5 mt-0.5">
-                          <Image
+                          <img
                             src={meta.iconSrc}
                             alt={meta.label}
-                            width={12}
-                            height={12}
                             className="size-3 object-contain shrink-0"
-                            unoptimized
                           />
                           <span className="text-[11px] text-muted-foreground truncate">
                             {meta.label}

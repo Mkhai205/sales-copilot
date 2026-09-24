@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import * as React from 'react';
 import { ExternalLink, Globe } from 'lucide-react';
@@ -47,6 +47,9 @@ export function RichLinkCard({ preview, className }: RichLinkCardProps) {
             <Image
               src={preview.image}
               alt={preview.title || domain || 'Preview image'}
+              fill
+              sizes="(max-width: 768px) 100vw, 340px"
+              unoptimized
               className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-[1.02]"
               onError={() => setImageError(true)}
               loading="lazy"

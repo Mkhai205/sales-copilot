@@ -66,11 +66,14 @@ export function InventoryVariantsTable({
             <TableRow key={variant.id} className="hover:bg-muted/30 transition-colors">
               {/* Image */}
               <TableCell className="p-2">
-                <div className="size-9 rounded-md border bg-muted/40 overflow-hidden flex items-center justify-center">
+                <div className="relative size-9 rounded-md border bg-muted/40 overflow-hidden flex items-center justify-center">
                   {variant.productImageUrl ? (
                     <Image
                       src={variant.productImageUrl}
                       alt={variant.name}
+                      fill
+                      sizes="36px"
+                      unoptimized
                       className="size-full object-cover"
                     />
                   ) : (

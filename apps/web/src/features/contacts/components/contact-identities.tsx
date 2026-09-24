@@ -1,7 +1,6 @@
 'use client';
 
 import * as React from 'react';
-import Image from 'next/image';
 import { Link2, Plus, Trash2, Loader2 } from 'lucide-react';
 import { type ChannelIdentityDto } from '@sales-copilot/shared-contracts';
 import { getChannelMeta } from '@/lib/channels';
@@ -174,15 +173,7 @@ export function ContactIdentities({
               >
                 <div className="flex items-center gap-2.5 min-w-0">
                   <div className="size-8 rounded-lg flex items-center justify-center border border-border/60 bg-muted/40 p-1.5 shrink-0">
-                    <Image
-                      src={meta.iconSrc}
-                      alt={meta.label}
-                      width={20}
-                      height={20}
-                      unoptimized
-                      style={{ width: '20px', height: '20px' }}
-                      className="size-5 object-contain"
-                    />
+                    <img src={meta.iconSrc} alt={meta.label} className="size-5 object-contain" />
                   </div>
                   <div className="min-w-0">
                     <p className="truncate font-semibold text-foreground text-xs">{meta.label}</p>
@@ -244,13 +235,10 @@ export function ContactIdentities({
                         return (
                           <SelectItem key={inbox.channel!.id} value={inbox.channel!.id}>
                             <div className="flex items-center gap-2">
-                              <Image
+                              <img
                                 src={meta.iconSrc}
                                 alt={meta.label}
-                                width={16}
-                                height={16}
-                                unoptimized
-                                className="size-4 object-contain"
+                                className="size-4 object-contain shrink-0"
                               />
                               <span>{inbox.name}</span>
                               <span className="text-muted-foreground text-[10px]">

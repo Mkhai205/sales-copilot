@@ -1,7 +1,6 @@
 'use client';
 
 import * as React from 'react';
-import Image from 'next/image';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CHANNEL_CARDS, type ChannelCardItem } from './types';
@@ -22,15 +21,7 @@ export function StepChannelGrid({ onSelectChannel }: StepChannelGridProps) {
           <div className="flex flex-col gap-3.5">
             <div className="flex items-center justify-between">
               <div className="flex size-11 items-center justify-center rounded-xl border border-border/60 bg-muted/40 p-2 shadow-xs transition-colors group-hover:border-primary/40 group-hover:bg-primary/5">
-                <Image
-                  src={channel.logoSrc}
-                  alt={channel.title}
-                  width={28}
-                  height={28}
-                  unoptimized
-                  style={{ width: '28px', height: '28px' }}
-                  className="size-7 object-contain"
-                />
+                <img src={channel.logoSrc} alt={channel.title} className="size-7 object-contain" />
               </div>
               {channel.badge && (
                 <Badge

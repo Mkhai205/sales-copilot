@@ -4,7 +4,6 @@ import * as React from 'react';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { Inbox, MessageSquare, User, Users, UserX } from 'lucide-react';
-import Image from 'next/image';
 import { getChannelMeta } from '@/lib/channels';
 
 function InboxChannelIcon({
@@ -23,12 +22,9 @@ function InboxChannelIcon({
 
   return (
     <div className="relative flex size-4 shrink-0 items-center justify-center overflow-hidden rounded-xs">
-      <Image
+      <img
         src={src}
         alt={name}
-        width={16}
-        height={16}
-        unoptimized
         onError={() => setError(true)}
         className="size-full object-contain rounded-xs"
       />

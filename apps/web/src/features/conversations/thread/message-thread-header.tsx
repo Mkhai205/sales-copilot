@@ -1,7 +1,6 @@
 'use client';
 
 import * as React from 'react';
-import Image from 'next/image';
 import {
   PanelRightClose,
   PanelRightOpen,
@@ -165,17 +164,13 @@ export function MessageThreadHeader({
             </AvatarFallback>
           </Avatar>
           <div
-            className="absolute -bottom-1 -right-1 size-4.5 rounded-full border-2 border-background bg-card shadow-xs flex items-center justify-center shrink-0"
+            className="absolute -bottom-1 -right-1 size-4.5 rounded-full border-2 border-background bg-card shadow-xs flex items-center justify-center shrink-0 p-0.5"
             title={channelMeta.label}
           >
-            <Image
+            <img
               src={channelMeta.iconSrc}
               alt={channelMeta.label}
-              width={14}
-              height={14}
-              unoptimized
-              style={{ width: '14px', height: '14px' }}
-              className="size-3.5 object-contain"
+              className="size-full object-contain"
             />
           </div>
         </div>

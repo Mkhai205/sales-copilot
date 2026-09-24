@@ -120,11 +120,14 @@ export function ProductPickerCommand({
                         )}
                       >
                         <div className="flex items-center gap-2.5 min-w-0">
-                          <div className="size-8 rounded border bg-muted/40 flex items-center justify-center shrink-0 overflow-hidden">
+                          <div className="relative size-8 rounded border bg-muted/40 flex items-center justify-center shrink-0 overflow-hidden">
                             {v.imageUrl ? (
                               <Image
                                 src={v.imageUrl}
                                 alt={v.productName}
+                                fill
+                                sizes="32px"
+                                unoptimized
                                 className="size-full object-cover"
                               />
                             ) : (

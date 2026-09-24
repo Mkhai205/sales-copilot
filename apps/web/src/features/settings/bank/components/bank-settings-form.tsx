@@ -48,6 +48,25 @@ export function BankSettingsForm({
   const [copiedUrl, setCopiedUrl] = React.useState(false);
   const [origin, setOrigin] = React.useState('');
 
+  const defaultValues: WorkspacePaymentSettings = React.useMemo(
+    () => ({
+      bankBin: initialSettings?.bankBin || '',
+      bankCode: initialSettings?.bankCode || '',
+      bankName: initialSettings?.bankName || '',
+      accountNumber: initialSettings?.accountNumber || '',
+      accountName: initialSettings?.accountName || '',
+      webhookSecret: initialSettings?.webhookSecret || '',
+    }),
+    [
+      initialSettings?.bankBin,
+      initialSettings?.bankCode,
+      initialSettings?.bankName,
+      initialSettings?.accountNumber,
+      initialSettings?.accountName,
+      initialSettings?.webhookSecret,
+    ],
+  );
+
   const {
     register,
     handleSubmit,
@@ -57,10 +76,8 @@ export function BankSettingsForm({
     formState: { isDirty, isValid, errors },
   } = useForm<WorkspacePaymentSettings>({
     resolver: zodResolver(workspacePaymentSettingsSchema),
-    values: initialSettings,
-    resetOptions: {
-      keepDirtyValues: true,
-    },
+    defaultValues,
+    values: defaultValues,
     mode: 'onChange',
   });
 
@@ -93,8 +110,9 @@ export function BankSettingsForm({
     });
   };
 
-  const handleReset = () => {
-    reset(initialSettings);
+  const handleReset = (e?: React.MouseEvent) => {
+    e?.preventDefault();
+    reset(defaultValues);
   };
 
   const handleSelectBank = (bank: VietnamBank) => {

@@ -75,10 +75,16 @@ export function AttachmentPreviewBar({
             className="group relative max-w-[200px] shrink-0 border border-border/80 bg-background shadow-xs hover:border-border transition-all"
           >
             {item.isImage && item.objectUrl ? (
-              <AttachmentMedia variant="image" className="size-9 rounded-md shrink-0">
+              <AttachmentMedia
+                variant="image"
+                className="relative size-9 rounded-md shrink-0 overflow-hidden"
+              >
                 <Image
                   src={item.objectUrl}
                   alt={item.file.name}
+                  fill
+                  sizes="36px"
+                  unoptimized
                   className="size-full object-cover"
                 />
               </AttachmentMedia>

@@ -25,9 +25,10 @@ Mục tiêu trọng tâm hiện tại: **Phát triển tính năng mới cho Cor
   - Trước khi viết code, dừng lại ở nấc thang đầu tiên thoả mãn:
     1. _Có thực sự cần không?_ (YAGNI - Không cần thì bỏ qua).
     2. _Codebase đã có sẵn chưa?_ (Tái sử dụng helper/pattern có sẵn).
-    3. _Stdlib / Native Platform có sẵn không?_ (Dùng tính năng có sẵn của Node/TypeScript/Browser/HTML).
+    3. _Stdlib / Native Platform có sẵn không?.
     4. _Dependencies đã cài trong repo có làm được không?_ (Dùng thư viện đã có).
-    5. _Chỉ khi đó mới viết code mới:_ Viết lượng code tối thiểu nhất, clean nhất và có kiểm thử đầy đủ.
+    5. _Có dependencies hay lib nào phổ biến đáng tin cậy có thể giải quyết được không?_ Tìm kiếm và xác nhận nếu được thì cài đặt và dùng không phải code lại.
+    6. _Chỉ khi đó mới viết code mới:_ Viết lượng code tối thiểu nhất, clean nhất và có kiểm thử đầy đủ.
 - **Rule of Three:** Chỉ đóng gói (abstract) code thành helper dùng chung sau khi đoạn code đó đã bị duplicate ít nhất 2 lần.
 
 ## 3. Mandatory Security & Data Isolation (Strict Multi-Tenancy)
@@ -39,11 +40,12 @@ Mục tiêu trọng tâm hiện tại: **Phát triển tính năng mới cho Cor
 
 ## 4. Frontend Guidelines (Next.js & Web UI)
 
-- **Giao diện:** BẮT BUỘC tái sử dụng các primitive của **Shadcn UI** và **Tailwind CSS**. Không tự phát minh lại các UI components nếu Shadcn đã có. Luôn check `src/components/ui/` trước khi code.
-- **State Management:** Quản lý server state (fetching, caching, mutation) BẮT BUỘC dùng **TanStack Query** (React Query). Hạn chế tối đa dùng `useEffect` để fetch API thủ công.
-- **Design Tokens:** Sử dụng các utility classes ngữ nghĩa của Tailwind (như `bg-background`, `text-foreground`, `text-primary`).
+- **Giao diện:** BẮT BUỘC tái sử dụng các primitive của **Shadcn UI** và **Tailwind CSS**. Không tự phát minh lại các UI components nếu Shadcn đã có. Luôn check `src/components/ui/` trước khi code. Dùng skills /frontend-design /shadcn /tailwind-v4-shadcn.
+- **State Management:** Quản lý server state (fetching, caching, mutation) BẮT BUỘC dùng **TanStack Query** (React Query). Hạn chế tối đa dùng `useEffect` để fetch API thủ công. Dùng skills /tanstack-query-best-practices /vercel-react-best-practices.
+- **Design Tokens:** Sử dụng các utility classes ngữ nghĩa của Tailwind.
 
 ## 5. Workflow & Human-in-the-Loop
 
 - **Plan Before Code:** Với bất kỳ task lớn, thêm tính năng hoặc refactor sâu, AI Agent PHẢI tạo file `implementation_plan.md` và chờ user phê duyệt trước khi sinh code.
+- **Trức khi viết test:** Đọc skills tdd.
 - **Verification:** Sau khi code xong, luôn verify lại bằng các lệnh `lint`, `typecheck` hoặc `test` để đảm bảo code không làm break hệ thống hiện tại.

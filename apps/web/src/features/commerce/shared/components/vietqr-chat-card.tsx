@@ -93,6 +93,9 @@ export function VietQrChatCard({ qrData, isPaid = false }: VietQrChatCardProps) 
             <Image
               src={qrData.qrUrl}
               alt={`QR #${qrData.displayId}`}
+              width={96}
+              height={96}
+              unoptimized
               className="w-full h-full object-contain rounded"
             />
             <div className="absolute inset-0 bg-black/40 rounded-lg opacity-0 group-hover/qr:opacity-100 transition-opacity flex items-center justify-center text-white">

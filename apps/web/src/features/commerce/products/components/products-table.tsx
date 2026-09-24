@@ -130,11 +130,14 @@ export function ProductsTable({
 
                   {/* Thumbnail Image */}
                   <TableCell className="p-2">
-                    <div className="size-9 rounded-md border bg-muted/40 overflow-hidden flex items-center justify-center">
+                    <div className="relative size-9 rounded-md border bg-muted/40 overflow-hidden flex items-center justify-center">
                       {product.imageUrl ? (
                         <Image
                           src={product.imageUrl}
                           alt={product.name}
+                          fill
+                          sizes="36px"
+                          unoptimized
                           className="size-full object-cover"
                         />
                       ) : (

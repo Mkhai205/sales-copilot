@@ -20,7 +20,7 @@ export interface SettingsActionBarProps {
   /** Hàm callback khi bấm Lưu */
   onSave?: (e: React.FormEvent) => void;
   /** Hàm callback khi bấm Hủy */
-  onCancel?: () => void;
+  onCancel?: (e?: React.MouseEvent) => void;
   /** Custom children nếu muốn tùy biến nút */
   children?: React.ReactNode;
   /** Class tùy biến */
@@ -70,9 +70,13 @@ export function SettingsActionBar({
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={onCancel}
+                  onClick={e => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onCancel(e);
+                  }}
                   disabled={isPending}
-                  className="h-8 text-xs gap-1.5"
+                  className="h-8 text-xs gap-1.5 cursor-pointer"
                 >
                   <RotateCcw className="size-3.5" data-icon="inline-start" />
                   {cancelLabel}

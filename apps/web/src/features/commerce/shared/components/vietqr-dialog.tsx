@@ -77,6 +77,9 @@ export function VietQrDialog({ open, onOpenChange, qrData }: VietQrDialogProps) 
             <Image
               src={qrData.qrUrl}
               alt={`VietQR đơn hàng #${qrData.displayId}`}
+              width={260}
+              height={260}
+              unoptimized
               className="w-full h-auto aspect-square object-contain rounded-lg"
             />
           )}

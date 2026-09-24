@@ -52,10 +52,8 @@ export function WorkspaceSettingsForm({ workspace }: WorkspaceSettingsFormProps)
     formState: { isDirty, isValid, errors },
   } = useForm<UpdateWorkspaceDto>({
     resolver: zodResolver(updateWorkspaceSchema),
+    defaultValues,
     values: defaultValues,
-    resetOptions: {
-      keepDirtyValues: true,
-    },
     mode: 'onChange',
   });
 
@@ -76,7 +74,8 @@ export function WorkspaceSettingsForm({ workspace }: WorkspaceSettingsFormProps)
     });
   };
 
-  const handleReset = () => {
+  const handleReset = (e?: React.MouseEvent) => {
+    e?.preventDefault();
     reset(defaultValues);
   };
 

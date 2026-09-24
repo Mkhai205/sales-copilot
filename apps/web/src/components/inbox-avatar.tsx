@@ -85,15 +85,7 @@ export function InboxAvatar({
         />
       ) : (
         <div className="flex size-full items-center justify-center p-2">
-          <Image
-            src={meta.iconSrc}
-            alt={meta.label}
-            width={config.iconSize}
-            height={config.iconSize}
-            unoptimized
-            style={{ width: `${config.iconSize}px`, height: `${config.iconSize}px` }}
-            className="object-contain"
-          />
+          <img src={meta.iconSrc} alt={meta.label} className="size-full object-contain" />
         </div>
       )}
 
@@ -106,14 +98,7 @@ export function InboxAvatar({
             config.badgeContainer,
           )}
         >
-          <Image
-            src={meta.iconSrc}
-            alt={meta.label}
-            width={config.badgeIconSize}
-            height={config.badgeIconSize}
-            unoptimized
-            className="object-contain"
-          />
+          <img src={meta.iconSrc} alt={meta.label} className="size-full object-contain" />
         </div>
       )}
     </div>

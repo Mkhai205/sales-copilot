@@ -1,7 +1,6 @@
 'use client';
 
 import * as React from 'react';
-import Image from 'next/image';
 import { toast } from 'sonner';
 import { Upload, X, ArrowRight } from 'lucide-react';
 import { ChannelType } from '@sales-copilot/shared-contracts';
@@ -102,13 +101,9 @@ export function StepGenericForm({
       <CardHeader className="pb-4">
         <div className="flex items-center gap-3">
           <div className="flex size-11 items-center justify-center rounded-xl border border-border/60 bg-muted/40 p-2 shadow-xs">
-            <Image
+            <img
               src={selectedChannel.logoSrc}
               alt={selectedChannel.title}
-              width={28}
-              height={28}
-              unoptimized
-              style={{ width: '28px', height: '28px' }}
               className="size-7 object-contain"
             />
           </div>

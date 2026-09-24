@@ -2,7 +2,6 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
 import { CornerUpLeft, Lock, Flame, Flag, UserX, ImageIcon } from 'lucide-react';
 import {
@@ -159,13 +158,9 @@ export function ConversationCard({
         {/* Row 2: Channel icon + Page name (left) & Assignee with short name (right) */}
         <div className="flex items-center justify-between gap-2 min-w-0">
           <div className="flex items-center gap-1.5 min-w-0 flex-1">
-            <Image
+            <img
               src={channelMeta.iconSrc}
               alt={channelMeta.label}
-              width={14}
-              height={14}
-              unoptimized
-              style={{ width: '14px', height: '14px' }}
               className="size-3.5 object-contain shrink-0"
             />
             <span

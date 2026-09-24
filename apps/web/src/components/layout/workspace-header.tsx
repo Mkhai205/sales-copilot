@@ -1,7 +1,6 @@
 'use client';
 
 import * as React from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -142,14 +141,10 @@ export function WorkspaceHeader({ workspaceSlug }: WorkspaceHeaderProps) {
         {/* Left Section: Brand & Shop Identity (TASK-3A-05: 1 user = 1 shop model) */}
         <div className="flex items-center justify-start">
           <div className="flex h-9 items-center gap-2.5 rounded-lg px-2 text-left">
-            <Image
+            <img
               src="/brand/logo-icon.png"
               alt={activeWorkspace.name || 'Sales Copilot'}
-              width={28}
-              height={28}
               className="size-5.5 object-contain"
-              priority
-              unoptimized
             />
             <div className="flex flex-col text-left">
               <span className="max-w-[130px] truncate text-xs font-semibold leading-tight text-foreground md:max-w-[170px]">
@@ -174,8 +169,8 @@ export function WorkspaceHeader({ workspaceSlug }: WorkspaceHeaderProps) {
                 className={cn(
                   'flex h-8.5 items-center gap-2 rounded-md px-3 text-xs font-medium transition-colors',
                   item.isActive
-                    ? 'bg-primary/10 text-primary shadow-2xs font-semibold'
-                    : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground',
+                    ? 'bg-primary/10 text-primary shadow-2xs font-semibold dark:bg-primary/15'
+                    : 'text-foreground/75 hover:bg-muted/70 hover:text-foreground font-medium',
                 )}
               >
                 <Icon className="size-4 shrink-0" />

@@ -1,7 +1,6 @@
 'use client';
 
 import * as React from 'react';
-import Image from 'next/image';
 import { toast } from 'sonner';
 import { ShieldCheck, ChevronDown, ChevronUp, RefreshCw, CheckCircle2, Check } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
@@ -344,13 +343,9 @@ export function StepFacebookOAuth({
         <CardHeader>
           <div className="flex items-center gap-3">
             <div className="flex size-11 items-center justify-center rounded-xl border border-border/60 bg-muted/40 p-2 shadow-xs">
-              <Image
+              <img
                 src="/channels/messenger.png"
                 alt="Facebook Messenger"
-                width={28}
-                height={28}
-                unoptimized
-                style={{ width: '28px', height: '28px' }}
                 className="size-7 object-contain"
               />
             </div>

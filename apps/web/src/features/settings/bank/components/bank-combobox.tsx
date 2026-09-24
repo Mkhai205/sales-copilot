@@ -41,11 +41,14 @@ export function BankCombobox({ selectedBin, onSelectBank, disabled }: BankCombob
         >
           {selectedBank ? (
             <div className="flex items-center gap-3.5 min-w-0">
-              <div className="h-9 w-24 flex items-center justify-center overflow-hidden">
+              <div className="relative h-9 w-24 flex items-center justify-center overflow-hidden">
                 {selectedBank.logo ? (
                   <Image
                     src={selectedBank.logo}
                     alt={selectedBank.shortName}
+                    fill
+                    sizes="96px"
+                    unoptimized
                     className="h-full w-full object-contain"
                     onError={e => {
                       (e.target as HTMLElement).style.display = 'none';
@@ -109,10 +112,13 @@ export function BankCombobox({ selectedBin, onSelectBank, disabled }: BankCombob
                     className="flex items-center justify-between p-2 cursor-pointer text-xs"
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="h-8 w-20 flex items-center justify-center overflow-hidden">
+                      <div className="relative h-8 w-20 flex items-center justify-center overflow-hidden">
                         <Image
                           src={bank.logo}
                           alt={bank.shortName}
+                          fill
+                          sizes="80px"
+                          unoptimized
                           className="h-full w-full object-contain"
                           onError={e => {
                             (e.target as HTMLElement).style.display = 'none';

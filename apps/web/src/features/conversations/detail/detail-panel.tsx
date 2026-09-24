@@ -201,17 +201,17 @@ export function DetailPanel({
     >
       {/* Detail Header: Top Tabs [Khách hàng | Đơn hàng] */}
       <div className="flex h-14 shrink-0 items-center border-b border-border/80 px-3 bg-background/95 backdrop-blur-xs">
-        <TabsList className="grid w-full grid-cols-2 h-8 p-0.5">
+        <TabsList className="grid w-full grid-cols-2 h-8.5 bg-transparent p-0 gap-1.5 border-0">
           <TabsTrigger
             value="contact"
-            className="text-[11px] gap-1.5 px-2 font-medium cursor-pointer"
+            className="flex h-8.5 items-center justify-center gap-2 rounded-md px-3 text-xs font-medium cursor-pointer transition-colors border border-transparent text-foreground/75 hover:bg-muted/70 hover:text-foreground dark:text-foreground/75 dark:hover:text-foreground data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:font-semibold data-[state=active]:shadow-2xs data-[state=active]:border-transparent dark:data-[state=active]:bg-primary/15 dark:data-[state=active]:text-primary dark:data-[state=active]:border-transparent data-[state=active]:hover:bg-primary/15 data-[state=active]:hover:text-primary"
           >
             <User className="size-3.5 shrink-0" />
             <span className="truncate">{'Khách hàng'}</span>
           </TabsTrigger>
           <TabsTrigger
             value="commerce"
-            className="text-[11px] gap-1.5 px-2 font-medium cursor-pointer"
+            className="flex h-8.5 items-center justify-center gap-2 rounded-md px-3 text-xs font-medium cursor-pointer transition-colors border border-transparent text-foreground/75 hover:bg-muted/70 hover:text-foreground dark:text-foreground/75 dark:hover:text-foreground data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:font-semibold data-[state=active]:shadow-2xs data-[state=active]:border-transparent dark:data-[state=active]:bg-primary/15 dark:data-[state=active]:text-primary dark:data-[state=active]:border-transparent data-[state=active]:hover:bg-primary/15 data-[state=active]:hover:text-primary"
           >
             <ShoppingBag className="size-3.5 shrink-0" />
             <span className="truncate">Đơn hàng</span>

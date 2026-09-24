@@ -70,7 +70,7 @@ export function ConversationListFilters({ workspaceSlug }: ConversationListFilte
                 'relative flex items-center gap-1.5 h-full text-xs transition-colors cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary/40',
                 isActive
                   ? 'text-primary font-semibold after:absolute after:bottom-0 after:inset-x-0 after:h-0.5 after:bg-primary'
-                  : 'text-muted-foreground hover:text-foreground font-medium',
+                  : 'text-foreground/75 hover:text-foreground font-medium',
               )}
             >
               <span>{tab.label}</span>
@@ -78,7 +78,7 @@ export function ConversationListFilters({ workspaceSlug }: ConversationListFilte
                 <span
                   className={cn(
                     'rounded-full px-1.5 py-0 text-[10px] tabular-nums font-semibold transition-colors',
-                    isActive ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground',
+                    isActive ? 'bg-primary/10 text-primary' : 'bg-muted/70 text-foreground/70',
                   )}
                 >
                   {countDisplay}

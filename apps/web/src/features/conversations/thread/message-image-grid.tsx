@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import * as React from 'react';
 import { cn } from '@/lib/utils';
@@ -57,8 +57,12 @@ export function MessageImageGrid({
           <Image
             src={sticker.fileUrl}
             alt={sticker.fileName || 'Sticker'}
+            width={140}
+            height={140}
+            unoptimized
+            loading="eager"
+            style={{ width: 'auto', height: 'auto' }}
             className="w-auto h-auto max-h-[140px] max-w-full object-contain filter drop-shadow-xs"
-            loading="lazy"
           />
         )}
       </div>
@@ -80,8 +84,12 @@ export function MessageImageGrid({
           <Image
             src={img.fileUrl}
             alt={img.fileName || 'Image'}
+            width={600}
+            height={400}
+            unoptimized
+            loading="eager"
+            style={{ width: 'auto', height: 'auto' }}
             className="w-full max-h-[300px] object-cover rounded-2xl transition-transform duration-200 group-hover:scale-[1.01] group-hover:brightness-95"
-            loading="lazy"
           />
         )}
       </div>
@@ -107,8 +115,11 @@ export function MessageImageGrid({
               <Image
                 src={img.fileUrl}
                 alt={img.fileName || `Image ${idx + 1}`}
+                fill
+                sizes="(max-width: 768px) 50vw, 180px"
+                unoptimized
+                loading="eager"
                 className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-[1.02] group-hover:brightness-95"
-                loading="lazy"
               />
             )}
           </div>
@@ -135,8 +146,11 @@ export function MessageImageGrid({
             <Image
               src={images[0].fileUrl}
               alt={images[0].fileName || 'Image 1'}
+              fill
+              sizes="(max-width: 768px) 50vw, 180px"
+              unoptimized
+              loading="eager"
               className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-[1.02] group-hover:brightness-95"
-              loading="lazy"
             />
           )}
         </div>
@@ -153,8 +167,11 @@ export function MessageImageGrid({
                 <Image
                   src={img.fileUrl}
                   alt={img.fileName || `Image ${idx + 2}`}
+                  fill
+                  sizes="(max-width: 768px) 50vw, 180px"
+                  unoptimized
+                  loading="eager"
                   className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-[1.02] group-hover:brightness-95"
-                  loading="lazy"
                 />
               )}
             </div>
@@ -187,8 +204,11 @@ export function MessageImageGrid({
               <Image
                 src={img.fileUrl}
                 alt={img.fileName || `Image ${idx + 1}`}
+                fill
+                sizes="(max-width: 768px) 50vw, 180px"
+                unoptimized
+                loading="eager"
                 className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-[1.02] group-hover:brightness-95"
-                loading="lazy"
               />
             )}
             {isLastAndHasMore && (

@@ -51,6 +51,9 @@ export function LiveVietQrCard({
               <Image
                 src={qrUrl}
                 alt={`Mã VietQR ${displayBankName}`}
+                width={320}
+                height={320}
+                unoptimized
                 className="w-full h-full object-contain"
                 onError={() => setImgError(true)}
               />

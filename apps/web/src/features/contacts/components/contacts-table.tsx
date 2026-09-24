@@ -1,7 +1,6 @@
 'use client';
 
 import * as React from 'react';
-import Image from 'next/image';
 import {
   Table,
   TableBody,
@@ -206,13 +205,10 @@ export function ContactsTable({
                                     variant="outline"
                                     className="px-1.5 py-0.5 text-[10px] gap-1 font-normal bg-background/80 hover:bg-muted"
                                   >
-                                    <Image
+                                    <img
                                       src={meta.iconSrc}
                                       alt={meta.label}
-                                      width={12}
-                                      height={12}
-                                      unoptimized
-                                      className="size-3 object-contain"
+                                      className="size-3 object-contain shrink-0"
                                     />
                                     <span className="max-w-[80px] truncate">{meta.label}</span>
                                   </Badge>

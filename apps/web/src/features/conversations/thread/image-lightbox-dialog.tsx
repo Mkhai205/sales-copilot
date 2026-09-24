@@ -212,7 +212,10 @@ export function ImageLightboxDialog({
                 <Image
                   src={currentImage.fileUrl}
                   alt={currentImage.fileName || 'Preview'}
-                  className="max-h-[78vh] max-w-[88vw] object-contain rounded-md shadow-2xl transition-transform duration-200"
+                  width={1600}
+                  height={1200}
+                  unoptimized
+                  className="max-h-[78vh] max-w-[88vw] w-auto h-auto object-contain rounded-md shadow-2xl transition-transform duration-200"
                 />
               )}
             </div>
@@ -256,6 +259,9 @@ export function ImageLightboxDialog({
                       <Image
                         src={img.fileUrl}
                         alt={img.fileName || `Thumb ${idx + 1}`}
+                        fill
+                        sizes="48px"
+                        unoptimized
                         className="h-full w-full object-cover"
                       />
                     )}
