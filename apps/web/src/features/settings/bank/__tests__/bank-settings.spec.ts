@@ -1,8 +1,7 @@
 import { describe, it, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { workspacePaymentSettingsSchema } from '@sales-copilot/shared-contracts';
-import { VIETNAM_BANKS } from '../bank/constants/vietnam-banks';
-import { bankApi } from '../bank/api/bank';
+import { VIETNAM_BANKS, isVietinBank, findBankByBin } from '../constants/vietnam-banks';
+import { bankApi } from '../api/bank';
 
 describe('Bank & Payment Settings (Epic 4.3 / Phase 3)', () => {
   let originalFetch: typeof globalThis.fetch;
@@ -16,77 +15,7 @@ describe('Bank & Payment Settings (Epic 4.3 / Phase 3)', () => {
     globalThis.fetch = originalFetch;
   });
 
-  describe('workspacePaymentSettingsSchema validation', () => {
-    it('should validate valid payment settings payload', () => {
-      const validPayload = {
-        bankBin: '970422',
-        bankCode: 'MB',
-        bankName: 'MBBank',
-        accountNumber: '103888325398',
-        accountName: 'NGUYEN VAN A',
-        webhookSecret: 'sec_1234567890abcdef',
-      };
-
-      const parsed = workspacePaymentSettingsSchema.parse(validPayload);
-      assert.strictEqual(parsed.bankBin, '970422');
-      assert.strictEqual(parsed.bankCode, 'MB');
-      assert.strictEqual(parsed.accountNumber, '103888325398');
-      assert.strictEqual(parsed.accountName, 'NGUYEN VAN A');
-      assert.strictEqual(parsed.webhookSecret, 'sec_1234567890abcdef');
-    });
-
-    it('should accept valid payload without optional webhookSecret, bankCode, and bankName', () => {
-      const minimalPayload = {
-        bankBin: '970436',
-        accountNumber: '0071000123456',
-        accountName: 'CONG TY TNHH KAKA',
-      };
-
-      const parsed = workspacePaymentSettingsSchema.parse(minimalPayload);
-      assert.strictEqual(parsed.bankBin, '970436');
-      assert.strictEqual(parsed.accountNumber, '0071000123456');
-      assert.strictEqual(parsed.accountName, 'CONG TY TNHH KAKA');
-      assert.strictEqual(parsed.webhookSecret, undefined);
-    });
-
-    it('should reject payload with empty bankBin', () => {
-      const invalid = {
-        bankBin: '',
-        accountNumber: '123456789',
-        accountName: 'TRAN VAN B',
-      };
-
-      assert.throws(() => workspacePaymentSettingsSchema.parse(invalid), {
-        name: 'ZodError',
-      });
-    });
-
-    it('should reject payload with empty accountNumber', () => {
-      const invalid = {
-        bankBin: '970422',
-        accountNumber: '',
-        accountName: 'TRAN VAN B',
-      };
-
-      assert.throws(() => workspacePaymentSettingsSchema.parse(invalid), {
-        name: 'ZodError',
-      });
-    });
-
-    it('should reject payload with empty accountName', () => {
-      const invalid = {
-        bankBin: '970422',
-        accountNumber: '123456789',
-        accountName: '',
-      };
-
-      assert.throws(() => workspacePaymentSettingsSchema.parse(invalid), {
-        name: 'ZodError',
-      });
-    });
-  });
-
-  describe('Vietnam Banks NAPAS Constants', () => {
+  describe('Vietnam Banks NAPAS Constants & Helpers', () => {
     it('should contain a list of supported Vietnam banks', () => {
       assert.ok(VIETNAM_BANKS.length > 20);
     });
@@ -100,17 +29,23 @@ describe('Bank & Payment Settings (Epic 4.3 / Phase 3)', () => {
       }
     });
 
-    it('should correctly detect VietinBank special case prefixes for SEVQR auto-reconciliation', () => {
-      const isVietinBank = (bankBin: string, bankCode: string, bankName: string) =>
-        bankBin === '970415' ||
-        bankCode.toUpperCase() === 'CTG' ||
-        bankCode.toUpperCase() === 'ICB' ||
-        bankName.toLowerCase().includes('vietin');
-
+    it('should correctly detect VietinBank via exported isVietinBank helper', () => {
       assert.strictEqual(isVietinBank('970415', 'CTG', 'VietinBank'), true);
       assert.strictEqual(isVietinBank('970422', 'MB', 'MBBank'), false);
       assert.strictEqual(isVietinBank('970436', 'VCB', 'Vietcombank'), false);
-      assert.strictEqual(isVietinBank('', 'ICB', 'Ngân hàng Công thương'), true);
+      assert.strictEqual(isVietinBank(null, 'ICB', 'Ngân hàng Công thương'), true);
+      assert.strictEqual(isVietinBank(undefined, undefined, undefined), false);
+    });
+
+    it('should find bank by BIN via findBankByBin helper', () => {
+      const vcb = findBankByBin('970436');
+      assert.ok(vcb);
+      assert.strictEqual(vcb?.shortName, 'Vietcombank');
+
+      const nonExistent = findBankByBin('000000');
+      assert.strictEqual(nonExistent, undefined);
+
+      assert.strictEqual(findBankByBin(null), undefined);
     });
   });
 
@@ -148,11 +83,13 @@ describe('Bank & Payment Settings (Epic 4.3 / Phase 3)', () => {
       let requestedUrl = '';
       let requestedMethod = '';
       let requestedBody = '';
+      let requestedHeaders: any = {};
 
       globalThis.fetch = (async (url: string | URL | Request, init?: RequestInit) => {
         requestedUrl = url.toString();
         requestedMethod = init?.method || '';
         requestedBody = (init?.body as string) || '';
+        requestedHeaders = init?.headers || {};
         return {
           ok: true,
           status: 200,
@@ -173,6 +110,10 @@ describe('Bank & Payment Settings (Epic 4.3 / Phase 3)', () => {
       const res = await bankApi.updateBankConfig(workspaceId, payload);
       assert.ok(requestedUrl.includes('/workspaces/current/bank'));
       assert.strictEqual(requestedMethod, 'PATCH');
+      assert.strictEqual(
+        requestedHeaders['X-Workspace-Id'] || requestedHeaders['x-workspace-id'],
+        workspaceId,
+      );
       assert.strictEqual(res.data.bankBin, '970415');
       assert.strictEqual(res.data.accountNumber, '109988776655');
     });

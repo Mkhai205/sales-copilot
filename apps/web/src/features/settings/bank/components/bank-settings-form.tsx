@@ -30,7 +30,7 @@ import { SettingsActionBar } from '../../layout/settings-action-bar';
 import { useUpdateBankSettings } from '../hooks/use-bank-settings';
 import { BankCombobox } from './bank-combobox';
 import { LiveVietQrCard } from './live-vietqr-card';
-import type { VietnamBank } from '../constants/vietnam-banks';
+import { isVietinBank, type VietnamBank } from '../constants/vietnam-banks';
 import Link from 'next/link';
 
 interface BankSettingsFormProps {
@@ -110,11 +110,7 @@ export function BankSettingsForm({
     setTimeout(() => setCopiedUrl(false), 2000);
   };
 
-  const isVietinBank =
-    bankBin === '970415' ||
-    bankCode.toUpperCase() === 'CTG' ||
-    bankCode.toUpperCase() === 'ICB' ||
-    bankName.toLowerCase().includes('vietin');
+  const isVietin = isVietinBank(bankBin, bankCode, bankName);
 
   const isWebhookConfigured = Boolean(webhookSecret && webhookSecret.trim());
 
@@ -200,7 +196,7 @@ export function BankSettingsForm({
               </Field>
 
               {/* Ghi chú VietinBank */}
-              {isVietinBank && (
+              {isVietin && (
                 <div className="flex items-center gap-2 rounded-lg bg-sky-50 dark:bg-sky-950/30 px-3 py-2 text-xs text-sky-800 dark:text-sky-300 border border-sky-200 dark:border-sky-800/60">
                   <Info className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400 shrink-0" />
                   <span>
@@ -220,7 +216,7 @@ export function BankSettingsForm({
                 bankName={bankName}
                 accountNumber={accountNumber}
                 accountName={accountName}
-                isVietinBank={isVietinBank}
+                isVietinBank={isVietin}
               />
             </div>
           </div>

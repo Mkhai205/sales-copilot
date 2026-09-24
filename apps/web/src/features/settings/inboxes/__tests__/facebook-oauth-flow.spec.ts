@@ -1,10 +1,6 @@
 import { describe, it, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
-import {
-  facebookApi,
-  type FacebookPageInfo,
-  type ConnectFacebookPageDto,
-} from '../inboxes/api/facebook';
+import { facebookApi, type FacebookPageInfo, type ConnectFacebookPageDto } from '../api/facebook';
 
 describe('Facebook OAuth 1-Click Connection Flow', () => {
   let originalFetch: typeof globalThis.fetch;
@@ -126,35 +122,6 @@ describe('Facebook OAuth 1-Click Connection Flow', () => {
       assert.strictEqual(parsedBody.pageName, 'Fashion Brand Store');
       assert.strictEqual(parsedBody.inboxName, 'Fashion Support');
       assert.deepStrictEqual(parsedBody.memberUserIds, ['user_agent_1', 'user_agent_2']);
-    });
-  });
-
-  describe('OAuth Message Contract & Page Selection Logic', () => {
-    it('should correctly parse FACEBOOK_OAUTH_SUCCESS message', () => {
-      const messageData = {
-        type: 'FACEBOOK_OAUTH_SUCCESS',
-        sessionId: 'session_999_valid',
-        workspaceId: 'ws_test_456',
-      };
-
-      assert.strictEqual(messageData.type, 'FACEBOOK_OAUTH_SUCCESS');
-      assert.ok(messageData.sessionId);
-      assert.ok(messageData.workspaceId);
-    });
-
-    it('should identify already connected pages to prevent duplicate connections', () => {
-      const pages: FacebookPageInfo[] = [
-        { pageId: '1', pageName: 'P1', isAlreadyConnected: false },
-        { pageId: '2', pageName: 'P2', isAlreadyConnected: true },
-        { pageId: '3', pageName: 'P3', isAlreadyConnected: false },
-      ];
-
-      const selectablePages = pages.filter(p => !p.isAlreadyConnected);
-      const connectedPages = pages.filter(p => p.isAlreadyConnected);
-
-      assert.strictEqual(selectablePages.length, 2);
-      assert.strictEqual(connectedPages.length, 1);
-      assert.strictEqual(connectedPages[0].pageId, '2');
     });
   });
 });

@@ -239,3 +239,22 @@ export const VIETNAM_BANKS: VietnamBank[] = [
     logo: 'https://cdn.vietqr.io/img/CAKE.png',
   },
 ];
+
+export function isVietinBank(
+  bankBin?: string | null,
+  bankCode?: string | null,
+  bankName?: string | null,
+): boolean {
+  if (!bankBin && !bankCode && !bankName) return false;
+  return (
+    bankBin === '970415' ||
+    bankCode?.toUpperCase() === 'CTG' ||
+    bankCode?.toUpperCase() === 'ICB' ||
+    Boolean(bankName?.toLowerCase().includes('vietin'))
+  );
+}
+
+export function findBankByBin(bin?: string | null): VietnamBank | undefined {
+  if (!bin) return undefined;
+  return VIETNAM_BANKS.find(b => b.bin === bin);
+}
