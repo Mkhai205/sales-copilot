@@ -183,7 +183,7 @@ export function TabBusinessHours({ inbox, workspaceId }: TabBusinessHoursProps) 
   };
 
   return (
-    <div className="flex flex-col gap-6 max-w-3xl">
+    <div className="flex flex-col gap-6 w-full">
       <Card className="border-border bg-card/40">
         <CardHeader className="pb-4">
           <div className="flex items-center gap-2">

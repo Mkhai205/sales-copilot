@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { Check, Trash2, UserPlus, Users, Zap } from 'lucide-react';
+import { Trash2, UserPlus, Users, Zap } from 'lucide-react';
 import type { InboxDetailDto, InboxAutoAssignmentConfig } from '@sales-copilot/shared-contracts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field';
@@ -121,7 +121,7 @@ export function TabCollaborators({ inbox, workspaceId }: TabCollaboratorsProps) 
   };
 
   return (
-    <div className="flex flex-col gap-6 max-w-3xl">
+    <div className="flex flex-col gap-6 w-full">
       {/* Assigned Members Section */}
       <Card className="border-border bg-card/40">
         <CardHeader className="pb-4">
@@ -133,7 +133,7 @@ export function TabCollaborators({ inbox, workspaceId }: TabCollaboratorsProps) 
                 thư này.
               </CardDescription>
             </div>
-            <Badge variant="secondary" className="text-xs font-normal">
+            <Badge variant="default" className="text-xs font-normal">
               {inboxMembers?.length ?? 0} nhân sự
             </Badge>
           </div>
@@ -331,10 +331,7 @@ export function TabCollaborators({ inbox, workspaceId }: TabCollaboratorsProps) 
                     Đang lưu...
                   </>
                 ) : (
-                  <>
-                    <Check className="size-3.5" data-icon="inline-start" />
-                    Lưu cấu hình phân bổ
-                  </>
+                  <>Lưu cấu hình phân bổ</>
                 )}
               </Button>
             </div>

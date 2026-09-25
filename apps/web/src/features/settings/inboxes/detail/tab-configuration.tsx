@@ -246,7 +246,7 @@ export function TabConfiguration({ inbox, workspaceId, workspaceSlug }: TabConfi
   };
 
   return (
-    <div className="flex flex-col gap-6 max-w-3xl">
+    <div className="flex flex-col gap-6 w-full">
       {/* ─── WEB CHAT CONFIGURATION ────────────────────────────────────────── */}
       {inbox.channelType === ChannelType.WEB_CHAT && (
         <>

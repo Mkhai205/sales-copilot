@@ -36,6 +36,7 @@ export function TabGeneralSettings({ inbox, workspaceId, workspaceSlug }: TabGen
   const router = useRouter();
   const [name, setName] = React.useState(inbox.name || '');
   const [avatarUrl, setAvatarUrl] = React.useState(inbox.avatarUrl || '');
+  const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
   const [greetingMessage, setGreetingMessage] = React.useState(
     inbox.greetingMessage || (inbox.settings?.greetingMessage as string) || '',
   );
@@ -45,6 +46,15 @@ export function TabGeneralSettings({ inbox, workspaceId, workspaceSlug }: TabGen
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
   const [isUploadingAvatar, setIsUploadingAvatar] = React.useState(false);
+
+  // Clean up local blob preview on unmount or when previewUrl changes
+  React.useEffect(() => {
+    return () => {
+      if (previewUrl && previewUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -60,6 +70,10 @@ export function TabGeneralSettings({ inbox, workspaceId, workspaceSlug }: TabGen
       return;
     }
 
+    // 1. Instant local preview
+    const localBlobUrl = URL.createObjectURL(file);
+    setPreviewUrl(localBlobUrl);
+
     setIsUploadingAvatar(true);
     try {
       const res = await inboxesApi.uploadAvatar(workspaceId, file);
@@ -69,6 +83,7 @@ export function TabGeneralSettings({ inbox, workspaceId, workspaceSlug }: TabGen
       }
     } catch (err: any) {
       toast.error(err.message || 'Không thể tải ảnh đại diện lên');
+      setPreviewUrl(null);
     } finally {
       setIsUploadingAvatar(false);
       if (fileInputRef.current) {
@@ -77,13 +92,22 @@ export function TabGeneralSettings({ inbox, workspaceId, workspaceSlug }: TabGen
     }
   };
 
-  // Sync state if inbox updates
+  const handleRemoveAvatar = () => {
+    if (previewUrl && previewUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(previewUrl);
+    }
+    setPreviewUrl(null);
+    setAvatarUrl('');
+  };
+
+  // Sync state if inbox updates from outside
   React.useEffect(() => {
     setName(inbox.name || '');
     setAvatarUrl(inbox.avatarUrl || '');
+    setPreviewUrl(null);
     setGreetingMessage(inbox.greetingMessage || (inbox.settings?.greetingMessage as string) || '');
     setAllowMessagesAfterResolved(Boolean(inbox.settings?.allowMessagesAfterResolved ?? true));
-  }, [inbox]);
+  }, [inbox.id, inbox.updatedAt]);
 
   const { mutate: updateInbox, isPending: isSaving } = useUpdateInbox(workspaceId);
   const { mutate: deleteInbox, isPending: isDeleting } = useDeleteInbox(workspaceId);
@@ -128,7 +152,7 @@ export function TabGeneralSettings({ inbox, workspaceId, workspaceSlug }: TabGen
   };
 
   return (
-    <div className="flex flex-col gap-6 max-w-3xl">
+    <div className="flex flex-col gap-6 w-full">
       <Card className="border-border bg-card/40">
         <CardHeader className="pb-4">
           <CardTitle className="text-base font-semibold">Cài đặt chung</CardTitle>
@@ -137,131 +161,140 @@ export function TabGeneralSettings({ inbox, workspaceId, workspaceSlug }: TabGen
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-            <FieldGroup className="gap-4">
-              <Field>
-                <FieldLabel htmlFor="inbox-name" className="text-xs font-medium">
-                  Tên hộp thư <span className="text-destructive">*</span>
-                </FieldLabel>
-                <Input
-                  id="inbox-name"
-                  value={name}
-                  onChange={e => setName(e.target.value)}
-                  placeholder="Ví dụ: CSKH Website, Fanpage Bán Hàng"
-                  maxLength={100}
-                  required
-                  className="h-9 text-xs"
-                />
-                <FieldDescription className="text-[11px] text-muted-foreground">
-                  Tên này sẽ hiển thị nội bộ với nhân viên và xuất hiện trong tiêu đề widget nếu hỗ
-                  trợ.
-                </FieldDescription>
-              </Field>
+          <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8 items-start">
+              {/* Left Column: Form Settings (Name, Greeting, Reopen Switch) */}
+              <div className="md:col-span-8 flex flex-col gap-4">
+                <FieldGroup className="gap-4">
+                  {/* Inbox Name */}
+                  <Field>
+                    <FieldLabel htmlFor="inbox-name" className="text-xs font-medium">
+                      Tên hộp thư <span className="text-destructive">*</span>
+                    </FieldLabel>
+                    <Input
+                      id="inbox-name"
+                      value={name}
+                      onChange={e => setName(e.target.value)}
+                      placeholder="Ví dụ: CSKH Website, Fanpage Bán Hàng"
+                      maxLength={100}
+                      required
+                      className="h-9 text-xs"
+                    />
+                    <FieldDescription className="text-[11px] text-muted-foreground">
+                      Tên này sẽ hiển thị nội bộ với nhân viên và xuất hiện trong tiêu đề widget nếu
+                      hỗ trợ.
+                    </FieldDescription>
+                  </Field>
 
-              <Field>
-                <FieldLabel className="text-xs font-medium">Hình đại diện (Avatar)</FieldLabel>
-                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-3.5 rounded-xl border border-border/80 bg-muted/20">
+                  {/* Greeting Message */}
+                  <Field>
+                    <FieldLabel htmlFor="greeting-message" className="text-xs font-medium">
+                      Lời chào tự động khi bắt đầu cuộc trò chuyện
+                    </FieldLabel>
+                    <Textarea
+                      id="greeting-message"
+                      value={greetingMessage}
+                      onChange={e => setGreetingMessage(e.target.value)}
+                      placeholder="Xin chào! Chúng tôi có thể giúp gì cho bạn hôm nay?"
+                      rows={4}
+                      className="text-xs resize-none"
+                    />
+                    <FieldDescription className="text-[11px] text-muted-foreground">
+                      Tin nhắn này sẽ tự động gửi khi khách hàng bắt đầu phiên chat mới.
+                    </FieldDescription>
+                  </Field>
+
+                  {/* Auto-reopen Switch */}
+                  <div className="flex items-center justify-between rounded-lg border border-border/80 bg-muted/20 p-3.5 mt-1">
+                    <div className="flex flex-col gap-0.5 pr-4">
+                      <span className="text-xs font-medium text-foreground">
+                        Cho phép mở lại hội thoại khi khách hàng gửi tin nhắn mới
+                      </span>
+                      <span className="text-[11px] text-muted-foreground">
+                        Khi kích hoạt, nếu khách hàng gửi tin nhắn vào một cuộc hội thoại đã được
+                        đánh dấu Đã giải quyết (Resolved), hội thoại sẽ tự động chuyển lại sang Đang
+                        mở (Open).
+                      </span>
+                    </div>
+                    <Switch
+                      checked={allowMessagesAfterResolved}
+                      onCheckedChange={setAllowMessagesAfterResolved}
+                    />
+                  </div>
+                </FieldGroup>
+              </div>
+
+              {/* Right Column: Avatar Management Card */}
+              <div className="md:col-span-4 flex flex-col items-center text-center gap-4">
+                <span className="text-xs font-medium text-foreground">Hình đại diện (Avatar)</span>
+
+                <div className="relative inline-block my-1">
                   <InboxAvatar
-                    avatarUrl={avatarUrl}
+                    avatarUrl={previewUrl || avatarUrl}
                     channelType={inbox.channelType}
                     name={name || inbox.name}
                     size="xl"
+                    className="size-42 rounded-2xl border-2 border-border/80 shadow-xs"
                   />
 
-                  <div className="flex flex-col gap-2 min-w-0 flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="image/png,image/jpeg,image/webp,image/svg+xml"
-                        className="hidden"
-                        onChange={handleFileChange}
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        disabled={isUploadingAvatar}
-                        onClick={() => fileInputRef.current?.click()}
-                        className="h-8 gap-1.5 text-xs font-medium"
-                      >
-                        {isUploadingAvatar ? (
-                          <>
-                            <Spinner className="size-3.5" data-icon="inline-start" />
-                            Đang tải lên...
-                          </>
-                        ) : (
-                          <>
-                            <Upload className="size-3.5" data-icon="inline-start" />
-                            {avatarUrl ? 'Thay đổi ảnh' : 'Tải ảnh lên'}
-                          </>
-                        )}
-                      </Button>
-
-                      {avatarUrl && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          disabled={isUploadingAvatar}
-                          onClick={() => setAvatarUrl('')}
-                          className="h-8 gap-1.5 text-xs text-muted-foreground hover:text-destructive"
-                        >
-                          <X className="size-3.5" data-icon="inline-start" />
-                          Gỡ ảnh
-                        </Button>
-                      )}
-                    </div>
-
-                    <p className="text-[11px] text-muted-foreground leading-relaxed">
-                      Hỗ trợ định dạng PNG, JPG, JPEG, WEBP hoặc SVG (tối đa 5MB). Với Fanpage
-                      Facebook, ảnh đại diện đã được đồng bộ tự động từ Fanpage Meta.
-                    </p>
-                  </div>
+                  {/* Remove Avatar Button (Corner 'x' button) */}
+                  {(previewUrl || avatarUrl) && (
+                    <button
+                      type="button"
+                      onClick={handleRemoveAvatar}
+                      disabled={isUploadingAvatar}
+                      title="Gỡ ảnh đại diện"
+                      className="absolute -top-1.5 -right-1.5 z-20 size-5 rounded-full bg-background border border-border shadow-xs flex items-center justify-center hover:text-white hover:bg-destructive cursor-pointer"
+                    >
+                      <X className="size-3" />
+                      <span className="sr-only">Gỡ ảnh</span>
+                    </button>
+                  )}
                 </div>
-              </Field>
 
-              <Field>
-                <FieldLabel htmlFor="greeting-message" className="text-xs font-medium">
-                  Lời chào tự động khi bắt đầu cuộc trò chuyện
-                </FieldLabel>
-                <Textarea
-                  id="greeting-message"
-                  value={greetingMessage}
-                  onChange={e => setGreetingMessage(e.target.value)}
-                  placeholder="Xin chào! Chúng tôi có thể giúp gì cho bạn hôm nay?"
-                  rows={3}
-                  className="text-xs resize-none"
-                />
-                <FieldDescription className="text-[11px] text-muted-foreground">
-                  Tin nhắn này sẽ tự động gửi khi khách hàng bắt đầu phiên chat mới.
-                </FieldDescription>
-              </Field>
+                <div className="flex flex-col items-center gap-2 w-full max-w-[200px]">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                    className="hidden"
+                    onChange={handleFileChange}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={isUploadingAvatar}
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-full h-8 gap-1.5 text-xs font-medium"
+                  >
+                    {isUploadingAvatar ? (
+                      <>
+                        <Spinner className="size-3.5" data-icon="inline-start" />
+                        Đang tải lên...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="size-3.5" data-icon="inline-start" />
+                        {previewUrl || avatarUrl ? 'Thay đổi ảnh' : 'Tải ảnh lên'}
+                      </>
+                    )}
+                  </Button>
 
-              <div className="flex items-center justify-between rounded-lg border border-border/80 bg-muted/20 p-3.5">
-                <div className="flex flex-col gap-0.5 pr-4">
-                  <span className="text-xs font-medium text-foreground">
-                    Cho phép mở lại hội thoại khi khách hàng gửi tin nhắn mới
-                  </span>
-                  <span className="text-[11px] text-muted-foreground">
-                    Khi kích hoạt, nếu khách hàng gửi tin nhắn vào một cuộc hội thoại đã được đánh
-                    dấu Đã giải quyết (Resolved), hội thoại sẽ tự động chuyển lại sang Đang mở
-                    (Open).
-                  </span>
+                  <p className="text-[9px] text-muted-foreground leading-relaxed text-center">
+                    PNG, JPG, WEBP hoặc SVG (tối đa 5MB). Fanpage Facebook sẽ tự đồng bộ từ Meta.
+                  </p>
                 </div>
-                <Switch
-                  checked={allowMessagesAfterResolved}
-                  onCheckedChange={setAllowMessagesAfterResolved}
-                />
               </div>
-            </FieldGroup>
+            </div>
 
-            <div className="flex items-center justify-end pt-2">
+            {/* Bottom Actions Footer */}
+            <div className="flex items-center justify-end pt-3 border-t border-border/60">
               <Button
                 type="submit"
                 size="sm"
                 disabled={isSaving || !name.trim()}
-                className="h-8 gap-1.5 text-xs font-medium"
+                className="h-9 px-4 gap-1.5 text-xs font-medium"
               >
                 {isSaving ? (
                   <>
@@ -281,26 +314,28 @@ export function TabGeneralSettings({ inbox, workspaceId, workspaceSlug }: TabGen
       </Card>
 
       {/* Danger Zone */}
-      <Card className="border-destructive/30 bg-destructive/5">
+      <Card className="border border-destructive bg-destructive/10">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-semibold text-destructive">
             Khu vực nguy hiểm
           </CardTitle>
-          <CardDescription className="text-xs text-muted-foreground">
+          <CardDescription className="text-xs text-foreground">
             Xóa hộp thư này sẽ ngắt kết nối kênh và xóa vĩnh viễn cấu hình liên kết. Các cuộc hội
             thoại lịch sử có thể bị ngắt nhận tin nhắn mới.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={() => setIsDeleteDialogOpen(true)}
-            className="h-8 gap-1.5 text-xs font-medium"
-          >
-            <Trash2 className="size-3.5" data-icon="inline-start" />
-            Xóa hộp thư này
-          </Button>
+          <div className="flex items-center justify-end">
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => setIsDeleteDialogOpen(true)}
+              className="h-8 text-xs font-medium"
+            >
+              <Trash2 className="size-3.5" data-icon="inline-start" />
+              Xóa hộp thư này
+            </Button>
+          </div>
         </CardContent>
       </Card>
 

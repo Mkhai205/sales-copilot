@@ -2,12 +2,19 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Bot, Clock, Globe, Settings, Users } from 'lucide-react';
+import { Bot, Clock, Globe, Settings, Users } from 'lucide-react';
 import type { InboxDetailDto } from '@sales-copilot/shared-contracts';
 import { getChannelMeta } from '@/lib/channels';
 import { InboxAvatar } from '@/components/inbox-avatar';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TabGeneralSettings } from './tab-general-settings';
 import { TabCollaborators } from './tab-collaborators';
@@ -67,44 +74,63 @@ export function InboxDetailLayout({
 
   return (
     <div className="flex flex-col gap-6 w-full pb-12">
-      {/* Top Header & Navigation */}
-      <div className="flex flex-col gap-4 border-b border-border pb-5">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => router.push(`/${workspaceSlug}/settings/inboxes`)}
-          className="w-fit -ml-2 h-8 gap-1.5 text-xs text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft className="size-3.5" data-icon="inline-start" />
-          Quay lại danh sách Hộp thư
-        </Button>
+      {/* Top Header & Breadcrumbs */}
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center justify-between gap-4">
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink
+                  onClick={() => router.push(`/${workspaceSlug}/settings/inboxes`)}
+                  className="cursor-pointer text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Hộp thư & Kênh liên lạc
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage className="text-xs font-medium text-foreground">
+                  {inbox.name}
+                </BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+        </div>
 
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-1">
           <div className="flex items-center gap-3.5 min-w-0">
             <InboxAvatar
               avatarUrl={inbox.avatarUrl}
               channelType={inbox.channelType}
               name={inbox.name}
               size="lg"
+              className="rounded-xl border border-border/80 shadow-xs shrink-0"
             />
             <div className="flex flex-col min-w-0">
-              <div className="flex items-center gap-2.5 flex-wrap">
-                <h1 className="text-lg font-semibold tracking-tight text-foreground truncate">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-xl font-semibold tracking-tight text-foreground truncate">
                   {inbox.name}
                 </h1>
                 <Badge
                   variant="outline"
-                  className="px-2 py-0.5 text-[11px] font-medium border-border/70"
+                  className="px-2 py-0.5 text-[11px] font-medium border-border/80 bg-muted/30"
                 >
+                  <img
+                    src={meta.iconSrc}
+                    alt={meta.label}
+                    className="size-3 object-contain inline-block mr-1"
+                  />
                   {meta.label}
                 </Badge>
               </div>
               <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-                <span className="font-mono text-[11px]">ID: {inbox.id.slice(0, 8)}</span>
-                <span>•</span>
+                <span className="font-mono text-[11px] text-muted-foreground/80">
+                  ID: {inbox.id.slice(0, 8)}
+                </span>
+                <span className="text-border">•</span>
                 {isConnected ? (
-                  <span className="inline-flex items-center gap-1.5 font-medium text-emerald-500">
-                    <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="inline-flex items-center gap-1.5 font-medium text-emerald-600 dark:text-emerald-400">
+                    <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
                     Đang kết nối
                   </span>
                 ) : (
@@ -116,39 +142,53 @@ export function InboxDetailLayout({
               </div>
             </div>
           </div>
-
-          <div className="flex items-center gap-2">
-            <Badge variant="secondary" className="px-2.5 py-1 text-xs font-normal">
-              {inbox.memberCount ?? 0} nhân sự phụ trách
-            </Badge>
-          </div>
         </div>
       </div>
 
-      {/* Tabs Navigation */}
+      {/* Underline Tabs Navigation */}
       <Tabs value={activeTab} onValueChange={handleTabChange} className="flex flex-col gap-6">
-        <TabsList className="w-full justify-start overflow-x-auto h-auto p-1 bg-muted/50 border border-border rounded-lg">
-          <TabsTrigger value="general" className="gap-2 text-xs py-2 px-3">
-            <Settings className="size-3.5" />
-            Cài đặt chung
-          </TabsTrigger>
-          <TabsTrigger value="collaborators" className="gap-2 text-xs py-2 px-3">
-            <Users className="size-3.5" />
-            Đội ngũ & Phân bổ
-          </TabsTrigger>
-          <TabsTrigger value="configuration" className="gap-2 text-xs py-2 px-3">
-            <Globe className="size-3.5" />
-            Cấu hình & Tích hợp
-          </TabsTrigger>
-          <TabsTrigger value="business-hours" className="gap-2 text-xs py-2 px-3">
-            <Clock className="size-3.5" />
-            Giờ làm việc
-          </TabsTrigger>
-          <TabsTrigger value="ai-agent" className="gap-2 text-xs py-2 px-3">
-            <Bot className="size-3.5" />
-            AI Agent
-          </TabsTrigger>
-        </TabsList>
+        <div className="border-b border-border">
+          <TabsList
+            variant="line"
+            className="h-10 w-full justify-start gap-4 sm:gap-6 bg-transparent p-0 rounded-none overflow-x-auto"
+          >
+            <TabsTrigger
+              value="general"
+              className="gap-2 text-xs h-10 px-1 font-medium text-muted-foreground hover:text-foreground data-[state=active]:text-foreground data-[state=active]:font-semibold"
+            >
+              <Settings className="size-3.5" />
+              Cài đặt chung
+            </TabsTrigger>
+            <TabsTrigger
+              value="collaborators"
+              className="gap-2 text-xs h-10 px-1 font-medium text-muted-foreground hover:text-foreground data-[state=active]:text-foreground data-[state=active]:font-semibold"
+            >
+              <Users className="size-3.5" />
+              Đội ngũ & Phân bổ
+            </TabsTrigger>
+            <TabsTrigger
+              value="configuration"
+              className="gap-2 text-xs h-10 px-1 font-medium text-muted-foreground hover:text-foreground data-[state=active]:text-foreground data-[state=active]:font-semibold"
+            >
+              <Globe className="size-3.5" />
+              Cấu hình & Tích hợp
+            </TabsTrigger>
+            <TabsTrigger
+              value="business-hours"
+              className="gap-2 text-xs h-10 px-1 font-medium text-muted-foreground hover:text-foreground data-[state=active]:text-foreground data-[state=active]:font-semibold"
+            >
+              <Clock className="size-3.5" />
+              Giờ làm việc
+            </TabsTrigger>
+            <TabsTrigger
+              value="ai-agent"
+              className="gap-2 text-xs h-10 px-1 font-medium text-muted-foreground hover:text-foreground data-[state=active]:text-foreground data-[state=active]:font-semibold"
+            >
+              <Bot className="size-3.5" />
+              AI Agent
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="general" className="mt-0">
           <TabGeneralSettings

@@ -262,7 +262,7 @@ export function TabAiSettings({ inbox, workspaceId, workspaceSlug }: TabAiSettin
   ];
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 w-full">
       {/* 1. Header Card with Live Status Badge */}
       <Card className="border-border bg-card/40">
         <CardHeader className="pb-4">

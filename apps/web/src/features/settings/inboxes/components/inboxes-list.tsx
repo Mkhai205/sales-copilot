@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import Image from 'next/image';
-import { Plus, Search, Pencil, Trash2, AlertTriangle, X, Users } from 'lucide-react';
+import { Plus, Search, X, Users } from 'lucide-react';
 import { type InboxDto, ChannelType, WorkspaceRole } from '@sales-copilot/shared-contracts';
 import { getChannelMeta } from '@/lib/channels';
 import { InboxAvatar } from '@/components/inbox-avatar';
@@ -17,20 +17,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Spinner } from '@/components/ui/spinner';
-import {
-  AlertDialog,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogMedia,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import { useRouter } from 'next/navigation';
-import { useDeleteInbox, useInboxes } from '../hooks/use-inboxes';
-import { InboxEditDialog } from './inbox-edit-dialog';
+import { useInboxes } from '../hooks/use-inboxes';
 
 interface InboxesListProps {
   workspaceId: string;
@@ -42,8 +30,6 @@ export function InboxesList({ workspaceId, currentUserRole, workspaceSlug }: Inb
   const router = useRouter();
   const [searchQuery, setSearchQuery] = React.useState('');
   const [channelFilter, setChannelFilter] = React.useState<string>('ALL');
-  const [inboxToEdit, setInboxToEdit] = React.useState<InboxDto | null>(null);
-  const [inboxToDelete, setInboxToDelete] = React.useState<InboxDto | null>(null);
 
   const handleAddInbox = () => {
     if (workspaceSlug) {
@@ -52,7 +38,6 @@ export function InboxesList({ workspaceId, currentUserRole, workspaceSlug }: Inb
   };
 
   const { data: inboxes } = useInboxes(workspaceId);
-  const { mutate: deleteInbox, isPending: isDeleting } = useDeleteInbox(workspaceId);
 
   const canManage =
     currentUserRole === WorkspaceRole.OWNER || currentUserRole === WorkspaceRole.ADMIN;
@@ -69,13 +54,6 @@ export function InboxesList({ workspaceId, currentUserRole, workspaceSlug }: Inb
       return matchesSearch && matchesChannel;
     });
   }, [inboxes, searchQuery, channelFilter]);
-
-  const handleConfirmDelete = () => {
-    if (!inboxToDelete) return;
-    deleteInbox(inboxToDelete.id, {
-      onSuccess: () => setInboxToDelete(null),
-    });
-  };
 
   return (
     <div className="flex flex-col gap-5">
@@ -231,34 +209,6 @@ export function InboxesList({ workspaceId, currentUserRole, workspaceSlug }: Inb
                         </div>
                       </div>
                     </div>
-
-                    <div
-                      className="flex items-center gap-1"
-                      onClick={e => e.stopPropagation()} // Prevent card navigation
-                    >
-                      {canManage && (
-                        <>
-                          <Button
-                            variant="ghost"
-                            size="icon-xs"
-                            onClick={() => setInboxToEdit(inbox)}
-                            className="text-muted-foreground hover:text-foreground"
-                            title={'Cài đặt nhanh'}
-                          >
-                            <Pencil className="size-3.5" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon-xs"
-                            onClick={() => setInboxToDelete(inbox)}
-                            className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                            title={'Xóa hộp thư'}
-                          >
-                            <Trash2 className="size-3.5" />
-                          </Button>
-                        </>
-                      )}
-                    </div>
                   </div>
                 </CardHeader>
 
@@ -313,57 +263,6 @@ export function InboxesList({ workspaceId, currentUserRole, workspaceSlug }: Inb
           })}
         </div>
       )}
-
-      {/* Edit & Members Dialog */}
-      <InboxEditDialog
-        open={!!inboxToEdit}
-        onOpenChange={open => {
-          if (!open) setInboxToEdit(null);
-        }}
-        workspaceId={workspaceId}
-        inboxToEdit={inboxToEdit}
-      />
-
-      {/* Delete Inbox AlertDialog */}
-      <AlertDialog
-        open={!!inboxToDelete}
-        onOpenChange={open => {
-          if (!open) setInboxToDelete(null);
-        }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogMedia className="bg-destructive/10 text-destructive">
-              <AlertTriangle className="size-4" />
-            </AlertDialogMedia>
-            <AlertDialogTitle className="text-sm font-semibold">{'Xóa hộp thư?'}</AlertDialogTitle>
-            <AlertDialogDescription className="text-xs">
-              {`Bạn có chắc chắn muốn xóa "${inboxToDelete?.name || ''}"? Kênh kết nối và phân bổ nhân viên sẽ bị hủy liên kết, đồng thời các hội thoại mới từ kênh này sẽ ngừng tiếp nhận. Thao tác này không thể hoàn tác.`}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting} className="text-xs">
-              {'Hủy'}
-            </AlertDialogCancel>
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={handleConfirmDelete}
-              disabled={isDeleting}
-              className="text-xs font-medium"
-            >
-              {isDeleting ? (
-                <>
-                  <Spinner className="size-3.5" data-icon="inline-start" />
-                  {'Đang xóa...'}
-                </>
-              ) : (
-                'Xóa hộp thư'
-              )}
-            </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }

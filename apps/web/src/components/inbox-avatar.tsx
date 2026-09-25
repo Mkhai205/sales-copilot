@@ -46,6 +46,34 @@ const SIZE_MAP = {
   },
 };
 
+/**
+ * Normalizes MinIO storage avatar URLs to match the current browsing environment.
+ * If running on localhost and URL points to storage-sales-copilot.kakadev.xyz, rewrites to localhost:9000.
+ * If running on tunnel domain and URL points to localhost:9000, rewrites to storage-sales-copilot.kakadev.xyz.
+ * Blob / data URLs are passed as-is.
+ */
+function normalizeAvatarUrl(url?: string | null): string | null {
+  if (!url || !url.trim()) return null;
+  const trimmed = url.trim();
+
+  if (trimmed.startsWith('blob:') || trimmed.startsWith('data:')) {
+    return trimmed;
+  }
+
+  if (typeof window !== 'undefined') {
+    const isLocalhost =
+      window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    if (isLocalhost && trimmed.includes('storage-sales-copilot.kakadev.xyz')) {
+      return trimmed.replace('https://storage-sales-copilot.kakadev.xyz', 'http://localhost:9000');
+    }
+    if (!isLocalhost && trimmed.includes('http://localhost:9000')) {
+      return trimmed.replace('http://localhost:9000', 'https://storage-sales-copilot.kakadev.xyz');
+    }
+  }
+
+  return trimmed;
+}
+
 export function InboxAvatar({
   avatarUrl,
   channelType,
@@ -54,6 +82,7 @@ export function InboxAvatar({
   showChannelBadge = true,
   className,
 }: InboxAvatarProps) {
+  const normalizedUrl = normalizeAvatarUrl(avatarUrl);
   const [imageError, setImageError] = React.useState(false);
   const meta = getChannelMeta(channelType);
   const config = SIZE_MAP[size] || SIZE_MAP.md;
@@ -61,9 +90,9 @@ export function InboxAvatar({
   // Reset image error state whenever avatarUrl changes
   React.useEffect(() => {
     setImageError(false);
-  }, [avatarUrl]);
+  }, [normalizedUrl]);
 
-  const hasValidAvatar = Boolean(avatarUrl && avatarUrl.trim() && !imageError);
+  const hasValidAvatar = Boolean(normalizedUrl && !imageError);
 
   return (
     <div
@@ -75,7 +104,7 @@ export function InboxAvatar({
     >
       {hasValidAvatar ? (
         <Image
-          src={avatarUrl!.trim()}
+          src={normalizedUrl!}
           alt={name}
           fill
           unoptimized
