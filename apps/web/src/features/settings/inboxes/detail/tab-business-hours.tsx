@@ -183,9 +183,9 @@ export function TabBusinessHours({ inbox, workspaceId }: TabBusinessHoursProps) 
   };
 
   return (
-    <div className="flex flex-col gap-6 w-full">
+    <div className="flex flex-col gap-4 w-full">
       <Card className="border-border bg-card/40">
-        <CardHeader className="pb-4">
+        <CardHeader>
           <div className="flex items-center gap-2">
             <Clock className="size-4 text-primary" />
             <CardTitle className="text-base font-semibold">
@@ -348,7 +348,7 @@ export function TabBusinessHours({ inbox, workspaceId }: TabBusinessHoursProps) 
               </FieldGroup>
             )}
 
-            <div className="flex items-center justify-end pt-2">
+            <div className="flex items-center justify-end">
               <Button
                 type="submit"
                 size="sm"
@@ -357,12 +357,12 @@ export function TabBusinessHours({ inbox, workspaceId }: TabBusinessHoursProps) 
               >
                 {isSaving ? (
                   <>
-                    <Spinner className="size-3.5" data-icon="inline-start" />
+                    <Spinner className="size-3.5" />
                     Đang lưu...
                   </>
                 ) : (
                   <>
-                    <Check className="size-3.5" data-icon="inline-start" />
+                    <Check className="size-3.5" />
                     Lưu cài đặt giờ làm việc
                   </>
                 )}

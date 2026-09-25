@@ -1,4 +1,4 @@
-import { Module, OnModuleInit, forwardRef } from '@nestjs/common';
+import { Module, OnModuleInit } from '@nestjs/common';
 import { DatabaseModule } from '../../../../infrastructure/database';
 import { InboxesModule } from '../../../omnichannel/inboxes';
 import { WorkspacesModule } from '../../../identity/workspaces';

@@ -89,7 +89,6 @@ export function StockAdjustmentDialog({
 
   const type = watch('type');
   const quantity = watch('quantity');
-  const reason = watch('reason');
 
   if (!variant) return null;
 

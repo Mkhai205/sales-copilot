@@ -1,4 +1,3 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import {
   OrderStatus,
@@ -10,10 +9,6 @@ import {
 } from '@sales-copilot/shared-contracts';
 import { ReconciliationController } from '../reconciliation.controller';
 import { PaymentReconciliationService } from '../payment-reconciliation.service';
-import { PrismaService } from '../../../../infrastructure/database/prisma.service';
-import { RedisService } from '../../../../infrastructure/redis/redis.service';
-import { InventoryLedgerService } from '../../inventory/inventory-ledger.service';
-import { EventEmitter2 } from '@nestjs/event-emitter';
 
 describe('ReconciliationController & Service Unit Tests', () => {
   let controller: ReconciliationController;

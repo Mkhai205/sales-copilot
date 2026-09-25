@@ -195,7 +195,7 @@ export function StepFacebookOAuth({
             disabled={isRedirectingFb}
             className="h-8 gap-1.5 text-xs text-muted-foreground hover:text-foreground"
           >
-            <RefreshCw className="size-3" data-icon="inline-start" />
+            <RefreshCw className="size-3" />
             Đổi tài khoản / Làm mới
           </Button>
         </div>
@@ -319,12 +319,12 @@ export function StepFacebookOAuth({
               >
                 {isSubmittingBatch ? (
                   <>
-                    <Spinner className="size-3.5" data-icon="inline-start" />
+                    <Spinner className="size-3.5" />
                     Đang kết nối Hộp thư...
                   </>
                 ) : (
                   <>
-                    <CheckCircle2 className="size-3.5" data-icon="inline-start" />
+                    <CheckCircle2 className="size-3.5" />
                     Kết nối {selectedPageIds.length} Fanpage đã chọn
                   </>
                 )}
@@ -379,7 +379,7 @@ export function StepFacebookOAuth({
             >
               {isRedirectingFb ? (
                 <>
-                  <Spinner className="size-3.5" data-icon="inline-start" />
+                  <Spinner className="size-3.5" />
                   Đang kết nối Facebook...
                 </>
               ) : (
@@ -467,7 +467,7 @@ export function StepFacebookOAuth({
               >
                 {isSubmittingManualFb ? (
                   <>
-                    <Spinner className="size-3.5" data-icon="inline-start" />
+                    <Spinner className="size-3.5" />
                     Đang kết nối...
                   </>
                 ) : (

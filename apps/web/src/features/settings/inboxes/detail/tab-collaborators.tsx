@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { Trash2, UserPlus, Users, Zap } from 'lucide-react';
+import { Check, Trash2, User2, UserPlus, Users, Zap } from 'lucide-react';
 import type { InboxDetailDto, InboxAutoAssignmentConfig } from '@sales-copilot/shared-contracts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field';
@@ -121,13 +121,19 @@ export function TabCollaborators({ inbox, workspaceId }: TabCollaboratorsProps) 
   };
 
   return (
-    <div className="flex flex-col gap-6 w-full">
+    <div className="flex flex-col gap-4 w-full">
       {/* Assigned Members Section */}
       <Card className="border-border bg-card/40">
-        <CardHeader className="pb-4">
+        <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-base font-semibold">Đội ngũ nhân viên tiếp nhận</CardTitle>
+              <div className="flex items-center gap-2">
+                <User2 className="size-4 text-primary" />{' '}
+                <CardTitle className="text-base font-semibold">
+                  Đội ngũ nhân viên tiếp nhận
+                </CardTitle>
+              </div>
+
               <CardDescription className="text-xs">
                 Chỉ định các nhân viên có quyền tiếp nhận và phản hồi các cuộc trò chuyện trong hộp
                 thư này.
@@ -178,9 +184,9 @@ export function TabCollaborators({ inbox, workspaceId }: TabCollaboratorsProps) 
               className="h-9 gap-1.5 text-xs font-medium shrink-0"
             >
               {isAddingMember ? (
-                <Spinner className="size-3.5" data-icon="inline-start" />
+                <Spinner className="size-3.5" />
               ) : (
-                <UserPlus className="size-3.5" data-icon="inline-start" />
+                <UserPlus className="size-3.5" />
               )}
               Thêm nhân viên
             </Button>
@@ -248,7 +254,7 @@ export function TabCollaborators({ inbox, workspaceId }: TabCollaboratorsProps) 
 
       {/* Auto Assignment Policy Section */}
       <Card className="border-border bg-card/40">
-        <CardHeader className="pb-4">
+        <CardHeader>
           <div className="flex items-center gap-2">
             <Zap className="size-4 text-amber-500" />
             <CardTitle className="text-base font-semibold">
@@ -318,7 +324,7 @@ export function TabCollaborators({ inbox, workspaceId }: TabCollaboratorsProps) 
               </FieldGroup>
             )}
 
-            <div className="flex items-center justify-end pt-2">
+            <div className="flex items-center justify-end">
               <Button
                 type="submit"
                 size="sm"
@@ -327,11 +333,14 @@ export function TabCollaborators({ inbox, workspaceId }: TabCollaboratorsProps) 
               >
                 {isSavingAssignment ? (
                   <>
-                    <Spinner className="size-3.5" data-icon="inline-start" />
+                    <Spinner className="size-3.5" />
                     Đang lưu...
                   </>
                 ) : (
-                  <>Lưu cấu hình phân bổ</>
+                  <>
+                    <Check className="size-3.5" />
+                    Lưu cấu hình phân bổ
+                  </>
                 )}
               </Button>
             </div>

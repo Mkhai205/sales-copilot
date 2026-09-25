@@ -50,7 +50,7 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
 
           <CardFooter className="flex flex-col sm:flex-row gap-2 pt-2 justify-center">
             <Button variant="default" onClick={() => reset()} className="w-full sm:w-auto">
-              <RotateCcw data-icon="inline-start" />
+              <RotateCcw />
               Try Again
             </Button>
             <Button
@@ -60,7 +60,7 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
               }}
               className="w-full sm:w-auto"
             >
-              <Home data-icon="inline-start" />
+              <Home />
               Reload App
             </Button>
           </CardFooter>

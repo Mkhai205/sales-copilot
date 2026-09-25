@@ -170,12 +170,12 @@ export function StepGenericForm({
                     >
                       {isUploadingAvatar ? (
                         <>
-                          <Spinner className="size-3" data-icon="inline-start" />
+                          <Spinner className="size-3" />
                           Đang tải...
                         </>
                       ) : (
                         <>
-                          <Upload className="size-3" data-icon="inline-start" />
+                          <Upload className="size-3" />
                           {formValues.genericAvatarUrl ? 'Thay đổi ảnh' : 'Tải ảnh lên'}
                         </>
                       )}
@@ -190,7 +190,7 @@ export function StepGenericForm({
                         onClick={() => onChangeValues(prev => ({ ...prev, genericAvatarUrl: '' }))}
                         className="h-7 px-2 gap-1 text-xs text-muted-foreground hover:text-destructive"
                       >
-                        <X className="size-3" data-icon="inline-start" />
+                        <X className="size-3" />
                         Gỡ ảnh
                       </Button>
                     )}

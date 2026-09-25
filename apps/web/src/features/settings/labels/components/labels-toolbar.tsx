@@ -56,7 +56,7 @@ export function LabelsToolbar({
 
       {canManage && (
         <Button size="sm" onClick={onCreateLabel} className="h-8 gap-1.5 text-xs font-medium">
-          <Plus className="size-3.5" data-icon="inline-start" />
+          <Plus className="size-3.5" />
           Thêm nhãn mới
         </Button>
       )}

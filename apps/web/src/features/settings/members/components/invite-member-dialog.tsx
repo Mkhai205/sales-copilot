@@ -191,12 +191,12 @@ export function InviteMemberDialog({ open, onOpenChange, workspaceId }: InviteMe
             >
               {isPending ? (
                 <>
-                  <Spinner className="size-3.5" data-icon="inline-start" />
+                  <Spinner className="size-3.5" />
                   Đang tạo...
                 </>
               ) : (
                 <>
-                  <UserPlus className="size-3.5" data-icon="inline-start" />
+                  <UserPlus className="size-3.5" />
                   Tạo tài khoản
                 </>
               )}

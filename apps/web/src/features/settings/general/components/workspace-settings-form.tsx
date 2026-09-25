@@ -102,12 +102,10 @@ export function WorkspaceSettingsForm({ workspace }: WorkspaceSettingsFormProps)
         <CardHeader className="pb-4">
           <div className="flex items-center gap-2">
             <Building2 className="size-4 text-primary" />
-            <CardTitle className="text-sm font-semibold">
-              {'Thông tin Không gian làm việc'}
-            </CardTitle>
+            <CardTitle className="text-sm font-semibold">Thông tin Không gian làm việc</CardTitle>
           </div>
           <CardDescription className="text-xs">
-            {'Thông tin chung về tổ chức và hiển thị bảng điều khiển của bạn.'}
+            Thông tin chung về tổ chức và hiển thị bảng điều khiển của bạn.
           </CardDescription>
         </CardHeader>
         <CardContent>

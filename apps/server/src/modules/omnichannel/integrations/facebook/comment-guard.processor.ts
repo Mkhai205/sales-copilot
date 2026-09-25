@@ -118,6 +118,7 @@ export class CommentGuardProcessor extends WorkerHost {
     // 1. Strict Multi-Tenancy: Fetch channel by channelId and workspaceId
     const channel = await client.channel.findFirst({
       where: { id: channelId, workspaceId },
+      include: { inbox: true },
     });
 
     if (!channel) {
@@ -153,6 +154,16 @@ export class CommentGuardProcessor extends WorkerHost {
     const credentials = this.decryptCredentials(channel.credentials);
     const graphVersion = (channel.settings as any)?.graphApiVersion || undefined;
 
+    // Helper: Interpolate dynamic template placeholders
+    const customerName = job.data.senderName?.trim() || 'anh/chị';
+    const pageName = (channel.settings as any)?.pageName || (channel as any).inbox?.name || 'Shop';
+
+    const interpolate = (templateText: string) => {
+      return templateText
+        .replaceAll('{customer_name}', customerName)
+        .replaceAll('{page_name}', pageName);
+    };
+
     // 3. Step 1: Hide Comment (Fail-safe: continue on non-rate-limit error)
     let hidden = false;
     try {
@@ -172,13 +183,14 @@ export class CommentGuardProcessor extends WorkerHost {
 
     // 4. Step 2: Send Private Reply via Messenger
     let privateReplyResult: { id: string } | null = null;
-    const privateReplyTemplate =
+    const rawPrivateTemplate =
       commentGuard.privateReplyTemplate?.trim() || DEFAULT_COMMENT_GUARD_PRIVATE_REPLY;
+    const privateReplyContent = interpolate(rawPrivateTemplate);
     try {
       privateReplyResult = await this.adapter.sendPrivateReply(
         credentials,
         commentId,
-        privateReplyTemplate,
+        privateReplyContent,
         graphVersion,
       );
       this.logger.log(
@@ -199,13 +211,14 @@ export class CommentGuardProcessor extends WorkerHost {
     // 5. Step 3: Post Public Comment Reply (if publicReplyEnabled !== false)
     let publicReplyResult: { id: string } | null = null;
     if (commentGuard.publicReplyEnabled !== false) {
-      const publicReplyTemplate =
+      const rawPublicTemplate =
         commentGuard.publicReplyTemplate?.trim() || DEFAULT_COMMENT_GUARD_PUBLIC_REPLY;
+      const publicReplyContent = interpolate(rawPublicTemplate);
       try {
         publicReplyResult = await this.adapter.sendPublicCommentReply(
           credentials,
           commentId,
-          publicReplyTemplate,
+          publicReplyContent,
           graphVersion,
         );
         this.logger.log(

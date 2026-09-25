@@ -26,7 +26,6 @@ describe('Commerce Tools PostgreSQL Integration Tests (Real Database)', () => {
   let testInboxId: string;
   let testConversationId: string;
   let testContactId: string;
-  let testProductId: string;
   let variantInStockId: string;
   let variantOutOfStockId: string;
   let foreignVariantId: string;

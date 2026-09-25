@@ -56,7 +56,7 @@ export function TeamsToolbar({
 
       {canManage && (
         <Button size="sm" onClick={onCreateTeam} className="h-8 gap-1.5 text-xs font-medium">
-          <UserPlus className="size-3.5" data-icon="inline-start" />
+          <UserPlus className="size-3.5" />
           Tạo nhóm mới
         </Button>
       )}

@@ -45,7 +45,7 @@ export default function NotFound() {
         <CardFooter className="flex flex-col sm:flex-row gap-2 pt-2 justify-center">
           <Button variant="default" asChild className="w-full sm:w-auto">
             <Link href="/">
-              <Home data-icon="inline-start" />
+              <Home />
               Return to Home
             </Link>
           </Button>
@@ -60,7 +60,7 @@ export default function NotFound() {
             }}
             className="w-full sm:w-auto"
           >
-            <ArrowLeft data-icon="inline-start" />
+            <ArrowLeft />
             Go Back
           </Button>
         </CardFooter>

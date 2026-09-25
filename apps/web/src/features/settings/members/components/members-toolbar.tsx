@@ -99,7 +99,7 @@ export function MembersToolbar({
             onClick={() => setInviteDialogOpen(true)}
             className="h-8 gap-1.5 text-xs font-medium"
           >
-            <UserPlus className="size-3.5" data-icon="inline-start" />
+            <UserPlus className="size-3.5" />
             Thêm nhân viên
           </Button>
 

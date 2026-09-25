@@ -191,6 +191,75 @@ export class WidgetUIRenderer {
     const tagline = this.options.config.welcomeTagline || 'How can we help you today?';
     const hideBubble = this.options.hideMessageBubble || false;
 
+    const preChatOpts = this.options.config.preChatFormOptions as any;
+    let requireName = true;
+    let requireEmail = true;
+    let requirePhone = false;
+
+    if (preChatOpts) {
+      if (Array.isArray(preChatOpts.preChatFields)) {
+        const nameField = preChatOpts.preChatFields.find(
+          (f: any) => ['fullName', 'name'].includes(f.name) || f.type === 'text',
+        );
+        const emailField = preChatOpts.preChatFields.find(
+          (f: any) => ['emailAddress', 'email'].includes(f.name) || f.type === 'email',
+        );
+        const phoneField = preChatOpts.preChatFields.find(
+          (f: any) => ['phoneNumber', 'phone'].includes(f.name) || f.type === 'phone',
+        );
+
+        if (nameField !== undefined) {
+          requireName = Boolean(nameField.enabled ?? nameField.required);
+        }
+        if (emailField !== undefined) {
+          requireEmail = Boolean(emailField.enabled ?? emailField.required);
+        }
+        if (phoneField !== undefined) {
+          requirePhone = Boolean(phoneField.enabled ?? phoneField.required);
+        }
+      } else {
+        if (preChatOpts.requireName !== undefined) {
+          requireName = Boolean(preChatOpts.requireName);
+        }
+        if (preChatOpts.requireEmail !== undefined) {
+          requireEmail = Boolean(preChatOpts.requireEmail);
+        }
+        if (preChatOpts.requirePhone !== undefined) {
+          requirePhone = Boolean(preChatOpts.requirePhone);
+        }
+      }
+    }
+
+    const showName = requireName || (!requirePhone && !requireEmail);
+    const showPhone = requirePhone;
+    const showEmail = requireEmail;
+
+    const preChatTitle =
+      preChatOpts?.preChatMessage || 'Vui lòng cung cấp thông tin để bắt đầu trò chuyện:';
+
+    let preChatFieldsHtml = '';
+    if (showName) {
+      preChatFieldsHtml += `
+          <div class="sc-form-group">
+            <label class="sc-form-label" for="sc-prechat-name">Họ và tên <span class="sc-required">*</span></label>
+            <input class="sc-form-input" id="sc-prechat-name" type="text" placeholder="Ví dụ: Nguyễn Văn A" autocomplete="name" />
+          </div>`;
+    }
+    if (showPhone) {
+      preChatFieldsHtml += `
+          <div class="sc-form-group">
+            <label class="sc-form-label" for="sc-prechat-phone">Số điện thoại <span class="sc-required">*</span></label>
+            <input class="sc-form-input" id="sc-prechat-phone" type="tel" placeholder="Ví dụ: 0912345678" autocomplete="tel" />
+          </div>`;
+    }
+    if (showEmail) {
+      preChatFieldsHtml += `
+          <div class="sc-form-group">
+            <label class="sc-form-label" for="sc-prechat-email">Email <span class="sc-required">*</span></label>
+            <input class="sc-form-input" id="sc-prechat-email" type="email" placeholder="name@example.com" autocomplete="email" />
+          </div>`;
+    }
+
     this.shadow.innerHTML = `
       <style>
         :host {
@@ -616,23 +685,8 @@ export class WidgetUIRenderer {
 
         <!-- Pre-Chat Form -->
         <div class="sc-prechat-form" id="sc-prechat-form" style="display: ${this.isPreChatActive ? 'flex' : 'none'};">
-          <div class="sc-prechat-title">Vui lòng cung cấp thông tin để bắt đầu trò chuyện:</div>
-          
-          <div class="sc-form-group">
-            <label class="sc-form-label" for="sc-prechat-name">Họ và tên <span class="sc-required">*</span></label>
-            <input class="sc-form-input" id="sc-prechat-name" type="text" placeholder="Ví dụ: Nguyễn Văn A" autocomplete="name" />
-          </div>
-
-          <div class="sc-form-group">
-            <label class="sc-form-label" for="sc-prechat-phone">Số điện thoại <span class="sc-required">*</span></label>
-            <input class="sc-form-input" id="sc-prechat-phone" type="tel" placeholder="Ví dụ: 0912345678" autocomplete="tel" />
-          </div>
-
-          <div class="sc-form-group">
-            <label class="sc-form-label" for="sc-prechat-email">Email</label>
-            <input class="sc-form-input" id="sc-prechat-email" type="email" placeholder="name@example.com" autocomplete="email" />
-          </div>
-
+          <div class="sc-prechat-title">${preChatTitle}</div>
+          ${preChatFieldsHtml}
           <button type="button" class="sc-prechat-submit-btn" id="sc-btn-prechat-submit">Bắt đầu trò chuyện</button>
         </div>
 
@@ -705,6 +759,13 @@ export class WidgetUIRenderer {
     const prechatSubmitBtn = this.shadow.getElementById('sc-btn-prechat-submit');
     prechatSubmitBtn?.addEventListener('click', () => this.handlePreChatSubmit());
 
+    const nameInput = this.shadow.getElementById('sc-prechat-name');
+    nameInput?.addEventListener('input', () => nameInput.classList.remove('sc-input-error'));
+    const phoneInput = this.shadow.getElementById('sc-prechat-phone');
+    phoneInput?.addEventListener('input', () => phoneInput.classList.remove('sc-input-error'));
+    const emailInput = this.shadow.getElementById('sc-prechat-email');
+    emailInput?.addEventListener('input', () => emailInput.classList.remove('sc-input-error'));
+
     this.sendBtn?.addEventListener('click', () => this.handleSendMessage());
 
     this.inputField?.addEventListener('keydown', (e: KeyboardEvent) => {
@@ -735,24 +796,40 @@ export class WidgetUIRenderer {
     const email = emailInput?.value.trim() || '';
 
     let hasError = false;
-    if (!name) {
-      nameInput?.classList.add('sc-input-error');
-      hasError = true;
-    } else {
-      nameInput?.classList.remove('sc-input-error');
+
+    if (nameInput) {
+      if (!name) {
+        nameInput.classList.add('sc-input-error');
+        hasError = true;
+      } else {
+        nameInput.classList.remove('sc-input-error');
+      }
     }
 
-    if (!phone && !email) {
-      phoneInput?.classList.add('sc-input-error');
-      hasError = true;
-    } else {
-      phoneInput?.classList.remove('sc-input-error');
+    if (phoneInput) {
+      const cleanedPhone = phone.replace(/[\s.-]/g, '');
+      if (!phone || cleanedPhone.length < 8) {
+        phoneInput.classList.add('sc-input-error');
+        hasError = true;
+      } else {
+        phoneInput.classList.remove('sc-input-error');
+      }
+    }
+
+    if (emailInput) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!email || !emailRegex.test(email)) {
+        emailInput.classList.add('sc-input-error');
+        hasError = true;
+      } else {
+        emailInput.classList.remove('sc-input-error');
+      }
     }
 
     if (hasError) return;
 
     this.options.onPreChatSubmit?.({
-      name,
+      name: name || 'Khách truy cập',
       phoneNumber: phone || undefined,
       email: email || undefined,
     });

@@ -14,7 +14,6 @@ import { Separator } from '@/components/ui/separator';
 import { formatVND } from '@/features/commerce/shared/lib/currency';
 import {
   Building2,
-  Calendar,
   CheckCircle2,
   Clock,
   Copy,

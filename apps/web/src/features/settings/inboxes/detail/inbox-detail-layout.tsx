@@ -73,7 +73,7 @@ export function InboxDetailLayout({
   const isConnected = inbox.channel?.isConnected ?? true;
 
   return (
-    <div className="flex flex-col gap-6 w-full pb-12">
+    <div className="flex flex-col gap-4 w-full pb-12">
       {/* Top Header & Breadcrumbs */}
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between gap-4">
@@ -97,14 +97,14 @@ export function InboxDetailLayout({
           </Breadcrumb>
         </div>
 
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-1">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3.5 min-w-0">
             <InboxAvatar
               avatarUrl={inbox.avatarUrl}
               channelType={inbox.channelType}
               name={inbox.name}
               size="lg"
-              className="rounded-xl border border-border/80 shadow-xs shrink-0"
+              className="rounded-lg border shadow-xs shrink-0"
             />
             <div className="flex flex-col min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
@@ -146,7 +146,7 @@ export function InboxDetailLayout({
       </div>
 
       {/* Underline Tabs Navigation */}
-      <Tabs value={activeTab} onValueChange={handleTabChange} className="flex flex-col gap-6">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="flex flex-col gap-4">
         <div className="border-b border-border">
           <TabsList
             variant="line"
@@ -190,7 +190,7 @@ export function InboxDetailLayout({
           </TabsList>
         </div>
 
-        <TabsContent value="general" className="mt-0">
+        <TabsContent value="general">
           <TabGeneralSettings
             inbox={inbox}
             workspaceId={workspaceId}
@@ -198,19 +198,19 @@ export function InboxDetailLayout({
           />
         </TabsContent>
 
-        <TabsContent value="collaborators" className="mt-0">
+        <TabsContent value="collaborators">
           <TabCollaborators inbox={inbox} workspaceId={workspaceId} />
         </TabsContent>
 
-        <TabsContent value="configuration" className="mt-0">
+        <TabsContent value="configuration">
           <TabConfiguration inbox={inbox} workspaceId={workspaceId} workspaceSlug={workspaceSlug} />
         </TabsContent>
 
-        <TabsContent value="business-hours" className="mt-0">
+        <TabsContent value="business-hours">
           <TabBusinessHours inbox={inbox} workspaceId={workspaceId} />
         </TabsContent>
 
-        <TabsContent value="ai-agent" className="mt-0">
+        <TabsContent value="ai-agent">
           <TabAiSettings inbox={inbox} workspaceId={workspaceId} workspaceSlug={workspaceSlug} />
         </TabsContent>
       </Tabs>

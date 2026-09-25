@@ -10,7 +10,6 @@ import {
   OrderStatus,
   normalizeVietnamesePhone,
   type OrderResponseDto,
-  type ShippingAddressInputDto,
   type CreateOrderItemDto,
 } from '@sales-copilot/shared-contracts';
 import { toast } from 'sonner';
@@ -21,7 +20,7 @@ import { useCommerceCollision } from '../hooks/use-commerce-collision';
 import { AgentCollisionBanner } from './agent-collision-banner';
 import { ProductPickerCommand } from '@/features/commerce/products/components/product-picker-command';
 import type { FlatProductVariant } from '@/features/commerce/products/hooks/use-commerce-products';
-import { LineItemsTable, type PosLineItem } from './line-items-table';
+import { LineItemsTable } from './line-items-table';
 import { RecipientInfoForm } from './recipient-info-form';
 import { OrderFinancialSummary } from './order-financial-summary';
 import { ordersApi } from '../api/orders';
@@ -165,7 +164,6 @@ export function CommerceOrderForm({
   const discountReason = watch('discountReason') || '';
   const shippingFee = watch('shippingFee') || 0;
   const paymentMethod = watch('paymentMethod') || PaymentMethod.COD;
-  const customerNotes = watch('customerNotes') || '';
 
   // Handle adding variant from command palette
   const handleSelectVariant = (variant: FlatProductVariant) => {

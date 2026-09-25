@@ -53,12 +53,12 @@ export default function AuthError({ error, reset }: AuthErrorProps) {
 
       <CardFooter className="flex flex-col sm:flex-row gap-2 pt-2 justify-center">
         <Button variant="default" onClick={() => reset()} className="w-full sm:w-auto">
-          <RotateCcw data-icon="inline-start" />
+          <RotateCcw />
           Try Again
         </Button>
         <Button variant="outline" asChild className="w-full sm:w-auto">
           <Link href="/login">
-            <LogIn data-icon="inline-start" />
+            <LogIn />
             Back to Login
           </Link>
         </Button>

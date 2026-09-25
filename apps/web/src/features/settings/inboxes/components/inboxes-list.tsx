@@ -3,7 +3,7 @@
 import * as React from 'react';
 import Image from 'next/image';
 import { Plus, Search, X, Users } from 'lucide-react';
-import { type InboxDto, ChannelType, WorkspaceRole } from '@sales-copilot/shared-contracts';
+import { ChannelType, WorkspaceRole } from '@sales-copilot/shared-contracts';
 import { getChannelMeta } from '@/lib/channels';
 import { InboxAvatar } from '@/components/inbox-avatar';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -121,7 +121,7 @@ export function InboxesList({ workspaceId, currentUserRole, workspaceSlug }: Inb
 
         {canManage && (
           <Button size="sm" onClick={handleAddInbox} className="h-8 gap-1.5 text-xs font-medium">
-            <Plus className="size-3.5" data-icon="inline-start" />
+            <Plus className="size-3.5" />
             {'Thêm hộp thư'}
           </Button>
         )}
@@ -158,7 +158,7 @@ export function InboxesList({ workspaceId, currentUserRole, workspaceSlug }: Inb
               onClick={handleAddInbox}
               className="mt-4 h-8 gap-1.5 text-xs font-medium"
             >
-              <Plus className="size-3.5" data-icon="inline-start" />
+              <Plus className="size-3.5" />
               {'Tạo hộp thư đầu tiên'}
             </Button>
           )}

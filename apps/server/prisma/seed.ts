@@ -83,7 +83,10 @@ async function seed() {
     'Workspace & Store': { Count: 1, Detail: workspace.name },
     'Users & Memberships': { Count: userList.length, Detail: 'SuperAdmin, Admin, Agent' },
     'Support Teams': { Count: 1, Detail: team.name },
-    'Inboxes & Channels': { Count: 1, Detail: 'Website Live Chat (WEB_CHAT 1:1)' },
+    'Inboxes & Channels': {
+      Count: 3,
+      Detail: 'Website Live Chat, Facebook Fanpage, Telegram Support Bot',
+    },
     'Labels & Tags': {
       Count: Object.keys(labels).length,
       Detail: 'VIP, Khách sỉ, Khiếu nại, Báo giá, Hỗ trợ...',

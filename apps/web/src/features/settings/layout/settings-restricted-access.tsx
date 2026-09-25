@@ -38,7 +38,7 @@ export function SettingsRestrictedAccess({
         </Button>
         <Button variant="outline" size="sm" asChild>
           <Link href={`/${workspaceSlug}/conversations`}>
-            <ArrowLeft className="size-3.5" data-icon="inline-start" />
+            <ArrowLeft className="size-3.5" />
             Về trang Hội thoại
           </Link>
         </Button>

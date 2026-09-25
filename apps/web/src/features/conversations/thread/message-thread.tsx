@@ -47,19 +47,15 @@ import {
   AttachmentActions,
   AttachmentAction,
 } from '@/components/ui/attachment';
-import { useQueryClient, type InfiniteData } from '@tanstack/react-query';
 import {
   DeliveryStatus,
   MessageType,
   SenderType,
   type AttachmentDto,
-  type ConversationResponseDto,
   type LinkPreviewData,
   type MessageResponseDto,
 } from '@sales-copilot/shared-contracts';
-import { fetchApi, workspaceHeaders, type ApiResponse } from '@/lib/api/client';
-import { conversationsApi } from '../api/conversations';
-import { updateConversationInList } from '@/lib/socket/cache-helpers';
+import { fetchApi, workspaceHeaders } from '@/lib/api/client';
 import { useConversation } from '../list/hooks/use-conversation';
 import { useMessages } from './hooks/use-messages';
 import { useResetUnreadMutation } from '../detail/hooks/use-conversation-mutations';

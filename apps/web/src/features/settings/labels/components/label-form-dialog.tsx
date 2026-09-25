@@ -296,7 +296,7 @@ export function LabelFormDialog({
             >
               {isPending ? (
                 <>
-                  <Spinner className="size-3.5" data-icon="inline-start" />
+                  <Spinner className="size-3.5" />
                   {isEditing ? 'Đang lưu...' : 'Đang tạo...'}
                 </>
               ) : isEditing ? (

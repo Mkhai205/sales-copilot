@@ -38,12 +38,13 @@ export const SETTINGS_NAV_ITEMS: SettingsNavItem[] = [
   },
   {
     id: 'inboxes',
-    title: 'Hộp thư',
+    title: 'Hộp thư đến',
     description: 'Quản lý kênh giao tiếp (Web Chat, Facebook, Telegram, Email)',
     icon: Inbox,
     segment: 'inboxes',
     category: 'workspace',
-    allowedRoles: [WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.AGENT],
+    allowedRoles: [WorkspaceRole.OWNER, WorkspaceRole.ADMIN],
+    adminOnly: true,
   },
   {
     id: 'teams',

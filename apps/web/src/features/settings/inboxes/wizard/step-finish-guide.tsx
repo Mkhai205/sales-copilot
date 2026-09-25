@@ -240,7 +240,7 @@ export function StepFinishGuide({
             onClick={() => router.push(`/${workspaceSlug}/settings/inboxes/${createdResult.id}`)}
             className="text-xs h-9 gap-1.5 font-medium"
           >
-            <Settings className="size-3.5" data-icon="inline-start" />
+            <Settings className="size-3.5" />
             Cấu hình chi tiết
           </Button>
         </div>

@@ -60,6 +60,7 @@ function InboxDetailContent({
       hideHeader={true}
       isLoading={isLoading}
       skeletonVariant="detail"
+      containerWidth="wide"
     >
       {isError || !inbox ? (
         <div className="flex min-h-[400px] flex-col items-center justify-center rounded-xl border border-dashed border-border p-8 text-center bg-card/20 max-w-3xl mx-auto my-auto">
@@ -74,7 +75,7 @@ function InboxDetailContent({
             onClick={() => router.push(`/${workspaceSlug}/settings/inboxes`)}
             className="mt-4 h-8 gap-1.5 text-xs font-medium"
           >
-            <ArrowLeft className="size-3.5" data-icon="inline-start" />
+            <ArrowLeft className="size-3.5" />
             Quay lại danh sách Hộp thư
           </Button>
         </div>

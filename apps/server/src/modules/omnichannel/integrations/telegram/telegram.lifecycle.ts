@@ -73,6 +73,19 @@ export class TelegramLifecycleService {
       `Processing Telegram channel setup for channel '${payload.channelId}' in workspace '${payload.workspaceId}'`,
     );
 
+    const client = this.prisma.getClient();
+    const channel = await client.channel.findFirst({
+      where: { id: payload.channelId, workspaceId: payload.workspaceId },
+    });
+
+    if (channel && channel.isConnected === false) {
+      this.logger.log(
+        `Telegram channel '${payload.channelId}' is marked disconnected; cleaning up webhook`,
+      );
+      await this.removeWebhook(payload.workspaceId, payload.channelId);
+      return;
+    }
+
     await this.setupWebhook(payload.workspaceId, payload.channelId);
   }
 
@@ -150,6 +163,39 @@ export class TelegramLifecycleService {
 
       const botInfo = await this.adapter.getChannelInfo(channelContext);
 
+      // Security Guard: Prevent changing to a DIFFERENT Bot ID on an existing channel
+      const existingBotId =
+        channel.providerAccountId || (channelSettings.botId as string | undefined);
+      const incomingBotId =
+        botInfo.providerAccountId || (botInfo.metadata?.id ? String(botInfo.metadata.id) : '');
+
+      if (existingBotId && incomingBotId && existingBotId !== incomingBotId) {
+        const existingUsername = channelSettings.botUsername
+          ? `@${channelSettings.botUsername}`
+          : existingBotId;
+        const incomingUsername = botInfo.metadata?.username
+          ? `@${botInfo.metadata.username}`
+          : incomingBotId;
+        const mismatchError = `BOT_ID_MISMATCH: Token này thuộc về bot ${incomingUsername} khác với bot ban đầu (${existingUsername}). Vui lòng tạo Inbox mới nếu muốn dùng bot khác.`;
+
+        this.logger.warn(
+          `Security Guard: Prevented bot mismatch for channel '${channelId}'. Existing: ${existingBotId}, New: ${incomingBotId}`,
+        );
+
+        await client.channel.update({
+          where: { workspaceId_id: { workspaceId, id: channelId } },
+          data: {
+            isConnected: false,
+            settings: {
+              ...channelSettings,
+              lastSyncError: mismatchError,
+              lastSyncAt: new Date().toISOString(),
+            },
+          },
+        });
+        return false;
+      }
+
       // 2. Compute public webhook URL and secret token
       const webhookUrl = this.getWebhookUrl(channelId);
       const secretToken =
@@ -168,6 +214,7 @@ export class TelegramLifecycleService {
         ...channelSettings,
         botUsername: botInfo.metadata?.username,
         botName: botInfo.name,
+        botId: incomingBotId || existingBotId,
         webhookUrl,
         webhookSetAt: new Date().toISOString(),
         lastSyncAt: new Date().toISOString(),
@@ -179,7 +226,7 @@ export class TelegramLifecycleService {
       await client.channel.update({
         where: { workspaceId_id: { workspaceId, id: channelId } },
         data: {
-          providerAccountId: botInfo.providerAccountId || String(botInfo.metadata?.id || ''),
+          providerAccountId: incomingBotId || channel.providerAccountId,
           isConnected,
           settings: updatedSettings as any,
         },

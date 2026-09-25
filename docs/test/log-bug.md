@@ -5,6 +5,8 @@
 - [x] migrate middleware-to-proxy
 - [x] thêm thư viện để hỗ trợ emoji
 - [x] xây dựng bộ lọc fillter
+- kiểm tra việc hiển thị baseUrl ở frontend (chuẩn hóa lại domain, codebase đang có nhiều domain do AI tự chế)
+- tạo custom badge với các variant khác nhau
 - kiểm tra clean backend
 - kiểm tra clean frontend, chỗ nào vẫn còn mock data, code giao diện thừa, giao diện nào chưa có logic hoặc placeholder cần note lại
 - bỏ outbound webhooks

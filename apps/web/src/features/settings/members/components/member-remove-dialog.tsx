@@ -66,7 +66,7 @@ export function MemberRemoveDialog({
           >
             {isRemoving ? (
               <>
-                <Spinner className="size-3.5" data-icon="inline-start" />
+                <Spinner className="size-3.5" />
                 Đang xóa...
               </>
             ) : (

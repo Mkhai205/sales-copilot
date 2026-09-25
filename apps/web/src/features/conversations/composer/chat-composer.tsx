@@ -436,7 +436,7 @@ export function ChatComposer({
                   : 'text-muted-foreground hover:text-foreground hover:bg-background/40',
               )}
             >
-              <MessageSquare className="size-3.5" data-icon="inline-start" />
+              <MessageSquare className="size-3.5" />
               <span>{'Trả lời'}</span>
             </button>
 
@@ -451,7 +451,7 @@ export function ChatComposer({
                   : 'text-muted-foreground hover:text-foreground hover:bg-background/40',
               )}
             >
-              <Lock className="size-3.5" data-icon="inline-start" />
+              <Lock className="size-3.5" />
               <span>{'Ghi chú nội bộ'}</span>
             </button>
           </div>
@@ -513,7 +513,7 @@ export function ChatComposer({
                   className="text-muted-foreground hover:text-foreground"
                   aria-label="Đính kèm tệp"
                 >
-                  <Paperclip className="size-3.5" data-icon="inline-start" />
+                  <Paperclip className="size-3.5" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="top">
@@ -542,7 +542,7 @@ export function ChatComposer({
                   )}
                   aria-label="Tin nhắn mẫu"
                 >
-                  <MessageSquareQuote className="size-3.5" data-icon="inline-start" />
+                  <MessageSquareQuote className="size-3.5" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="top">
@@ -572,12 +572,12 @@ export function ChatComposer({
                 >
                   {isPending ? (
                     <>
-                      <Spinner className="size-3" data-icon="inline-start" />
+                      <Spinner className="size-3" />
                       <span>{isNote ? 'Đang lưu...' : 'Gửi'}</span>
                     </>
                   ) : isNote ? (
                     <>
-                      <Lock className="size-3" data-icon="inline-start" />
+                      <Lock className="size-3" />
                       <span>{'Ghi chú nội bộ'}</span>
                     </>
                   ) : (

@@ -29,9 +29,10 @@ export interface SettingsPageLayoutProps {
   /**
    * Giới hạn độ rộng nội dung:
    * - 'form' (mặc định): max-w-5xl mx-auto (~1024px) thống nhất toàn phân hệ Settings
+   * - 'wide': max-w-6xl mx-auto (~1152px) cho các giao diện split-view / live preview
    * - 'full': 100% viewport width
    */
-  containerWidth?: 'form' | 'full';
+  containerWidth?: 'form' | 'wide' | 'full';
   /** Trạng thái tải dữ liệu của trang */
   isLoading?: boolean;
   /** Dạng skeleton tự động hiển thị khi isLoading = true */
@@ -70,11 +71,17 @@ export function SettingsPageLayout({
   const isPageLoading = isLoading || isRbacLoading;
 
   const isFormWidth = containerWidth === 'form';
+  const isWideWidth = containerWidth === 'wide';
 
   return (
     <div className="flex flex-col flex-1 h-full min-h-0 overflow-y-auto bg-background p-6 relative">
       <div
-        className={cn('w-full flex flex-col gap-6', isFormWidth && 'max-w-5xl mx-auto', className)}
+        className={cn(
+          'w-full flex flex-col gap-6',
+          isFormWidth && 'max-w-5xl mx-auto',
+          isWideWidth && 'max-w-6xl mx-auto',
+          className,
+        )}
       >
         {!hideHeader && title && (
           <PageHeader

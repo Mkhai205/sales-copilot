@@ -9,10 +9,9 @@ import {
   SeedTestContext,
   TestWebSocketClient,
 } from './helpers';
-import { MessageType, SenderType, WsServerEvent } from '@sales-copilot/shared-contracts';
+import { WsServerEvent } from '@sales-copilot/shared-contracts';
 import { PresenceService } from '../../src/modules/realtime/presence.service';
 import { ConversationsService } from '../../src/modules/omnichannel/conversations/conversations.service';
-import { MessagesService } from '../../src/modules/omnichannel/messages/messages.service';
 
 describe('E2E Scenario 3 — Auto-Assignment Flow (Task 17 — Feature F-1.11.1)', () => {
   let ctx: TestAppContext;

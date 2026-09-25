@@ -56,13 +56,13 @@ export default function DashboardError({ error, reset }: DashboardErrorProps) {
 
         <CardFooter className="flex flex-col sm:flex-row gap-2 pt-2 justify-center">
           <Button variant="default" onClick={() => reset()} className="w-full sm:w-auto">
-            <RotateCcw data-icon="inline-start" />
+            <RotateCcw />
             Try Again
           </Button>
           {workspaceSlug && (
             <Button variant="outline" asChild className="w-full sm:w-auto">
               <Link href={`/${workspaceSlug}/conversations`}>
-                <MessageSquare data-icon="inline-start" />
+                <MessageSquare />
                 Conversations
               </Link>
             </Button>

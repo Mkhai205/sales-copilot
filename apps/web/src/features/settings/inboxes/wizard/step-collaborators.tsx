@@ -141,12 +141,12 @@ export function StepCollaborators({
           >
             {isSubmitting ? (
               <>
-                <Spinner className="size-3.5" data-icon="inline-start" />
+                <Spinner className="size-3.5" />
                 Đang tạo hộp thư...
               </>
             ) : (
               <>
-                <CheckCircle2 className="size-3.5" data-icon="inline-start" />
+                <CheckCircle2 className="size-3.5" />
                 Hoàn tất &amp; Tạo hộp thư
               </>
             )}

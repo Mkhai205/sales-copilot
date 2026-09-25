@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { AlertTriangle, Check, Trash2, Upload, X } from 'lucide-react';
+import { AlertTriangle, Check, Settings, Trash2, TriangleAlert, Upload, X } from 'lucide-react';
 import { toast } from 'sonner';
 import type { InboxDetailDto } from '@sales-copilot/shared-contracts';
 import { inboxesApi } from '../api/inboxes';
@@ -152,10 +152,13 @@ export function TabGeneralSettings({ inbox, workspaceId, workspaceSlug }: TabGen
   };
 
   return (
-    <div className="flex flex-col gap-6 w-full">
+    <div className="flex flex-col gap-4 w-full">
       <Card className="border-border bg-card/40">
-        <CardHeader className="pb-4">
-          <CardTitle className="text-base font-semibold">Cài đặt chung</CardTitle>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Settings className="size-4 text-primary" />{' '}
+            <CardTitle className="text-base font-semibold">Cài đặt chung</CardTitle>
+          </div>
           <CardDescription className="text-xs">
             Quản lý tên nhận diện, hình đại diện và lời chào tự động của hộp thư này.
           </CardDescription>
@@ -178,7 +181,7 @@ export function TabGeneralSettings({ inbox, workspaceId, workspaceSlug }: TabGen
                       placeholder="Ví dụ: CSKH Website, Fanpage Bán Hàng"
                       maxLength={100}
                       required
-                      className="h-9 text-xs"
+                      className="h-8 text-xs"
                     />
                     <FieldDescription className="text-[11px] text-muted-foreground">
                       Tên này sẽ hiển thị nội bộ với nhân viên và xuất hiện trong tiêu đề widget nếu
@@ -270,12 +273,12 @@ export function TabGeneralSettings({ inbox, workspaceId, workspaceSlug }: TabGen
                   >
                     {isUploadingAvatar ? (
                       <>
-                        <Spinner className="size-3.5" data-icon="inline-start" />
+                        <Spinner className="size-3.5" />
                         Đang tải lên...
                       </>
                     ) : (
                       <>
-                        <Upload className="size-3.5" data-icon="inline-start" />
+                        <Upload className="size-3.5" />
                         {previewUrl || avatarUrl ? 'Thay đổi ảnh' : 'Tải ảnh lên'}
                       </>
                     )}
@@ -289,21 +292,21 @@ export function TabGeneralSettings({ inbox, workspaceId, workspaceSlug }: TabGen
             </div>
 
             {/* Bottom Actions Footer */}
-            <div className="flex items-center justify-end pt-3 border-t border-border/60">
+            <div className="flex items-center justify-end">
               <Button
                 type="submit"
                 size="sm"
                 disabled={isSaving || !name.trim()}
-                className="h-9 px-4 gap-1.5 text-xs font-medium"
+                className="h-8 gap-1.5 text-xs font-medium"
               >
                 {isSaving ? (
                   <>
-                    <Spinner className="size-3.5" data-icon="inline-start" />
+                    <Spinner className="size-3.5" />
                     Đang lưu...
                   </>
                 ) : (
                   <>
-                    <Check className="size-3.5" data-icon="inline-start" />
+                    <Check className="size-3.5" />
                     Lưu thay đổi
                   </>
                 )}
@@ -315,10 +318,13 @@ export function TabGeneralSettings({ inbox, workspaceId, workspaceSlug }: TabGen
 
       {/* Danger Zone */}
       <Card className="border border-destructive bg-destructive/10">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-semibold text-destructive">
-            Khu vực nguy hiểm
-          </CardTitle>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <TriangleAlert className="size-4 text-destructive" />
+            <CardTitle className="text-sm font-semibold text-destructive">
+              Khu vực nguy hiểm
+            </CardTitle>
+          </div>
           <CardDescription className="text-xs text-foreground">
             Xóa hộp thư này sẽ ngắt kết nối kênh và xóa vĩnh viễn cấu hình liên kết. Các cuộc hội
             thoại lịch sử có thể bị ngắt nhận tin nhắn mới.
@@ -332,7 +338,7 @@ export function TabGeneralSettings({ inbox, workspaceId, workspaceSlug }: TabGen
               onClick={() => setIsDeleteDialogOpen(true)}
               className="h-8 text-xs font-medium"
             >
-              <Trash2 className="size-3.5" data-icon="inline-start" />
+              <Trash2 className="size-3.5" />
               Xóa hộp thư này
             </Button>
           </div>
@@ -367,7 +373,7 @@ export function TabGeneralSettings({ inbox, workspaceId, workspaceSlug }: TabGen
             >
               {isDeleting ? (
                 <>
-                  <Spinner className="size-3.5" data-icon="inline-start" />
+                  <Spinner className="size-3.5" />
                   Đang xóa...
                 </>
               ) : (

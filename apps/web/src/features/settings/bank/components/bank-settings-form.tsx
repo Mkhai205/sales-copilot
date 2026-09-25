@@ -136,18 +136,16 @@ export function BankSettingsForm({
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6 w-full">
       {/* Card 1: Tài khoản ngân hàng thụ hưởng & Live VietQR */}
       <Card className="border-border bg-card/50">
-        <CardHeader className="pb-4 border-b border-border/40">
+        <CardHeader className="pb-4">
           <div className="flex items-center gap-2">
             <Building2 className="w-4 h-4 text-primary" />
-            <div>
-              <CardTitle className="text-sm font-semibold">Tài khoản ngân hàng thụ hưởng</CardTitle>
-              <CardDescription className="text-xs mt-0.5">
-                Thông tin tài khoản để sinh mã VietQR chuẩn NAPAS 247 khi khách thanh toán đơn hàng.
-              </CardDescription>
-            </div>
+            <CardTitle className="text-sm font-semibold">Tài khoản ngân hàng thụ hưởng</CardTitle>
           </div>
+          <CardDescription className="text-xs">
+            Thông tin tài khoản để sinh mã VietQR chuẩn NAPAS 247 khi khách thanh toán đơn hàng.
+          </CardDescription>
         </CardHeader>
-        <CardContent className="pt-6">
+        <CardContent>
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             {/* Cột trái: Form nhập liệu chuẩn Shadcn Fields (7 cols) */}
             <FieldGroup className="lg:col-span-7 flex flex-col gap-4">

@@ -78,7 +78,7 @@ export function SettingsActionBar({
                   disabled={isPending}
                   className="h-8 text-xs gap-1.5 cursor-pointer"
                 >
-                  <RotateCcw className="size-3.5" data-icon="inline-start" />
+                  <RotateCcw className="size-3.5" />
                   {cancelLabel}
                 </Button>
               )}
@@ -92,12 +92,12 @@ export function SettingsActionBar({
               >
                 {isPending ? (
                   <>
-                    <Spinner className="size-3.5" data-icon="inline-start" />
+                    <Spinner className="size-3.5" />
                     Đang lưu...
                   </>
                 ) : (
                   <>
-                    <Save className="size-3.5" data-icon="inline-start" />
+                    <Save className="size-3.5" />
                     {saveLabel}
                   </>
                 )}

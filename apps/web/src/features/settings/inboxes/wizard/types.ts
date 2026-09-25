@@ -15,6 +15,7 @@ export interface ChannelCardItem {
   description: string;
   badge?: string;
   logoSrc: string;
+  disabled?: boolean;
 }
 
 export const CHANNEL_CARDS: ChannelCardItem[] = [
@@ -31,7 +32,8 @@ export const CHANNEL_CARDS: ChannelCardItem[] = [
     key: 'zalo',
     title: 'Zalo Official Account',
     description: 'Tiếp cận khách hàng Việt Nam qua tích hợp Zalo OA bằng OA ID và Secret Key.',
-    badge: 'Phổ biến tại VN',
+    badge: 'Sắp ra mắt',
+    disabled: true,
     logoSrc: '/channels/zalo.png',
   },
   {
@@ -53,6 +55,8 @@ export const CHANNEL_CARDS: ChannelCardItem[] = [
     key: 'email',
     title: 'Hỗ trợ qua Email',
     description: 'Kết nối hòm thư dùng chung qua SMTP / IMAP để xử lý email dưới dạng hội thoại.',
+    badge: 'Sắp ra mắt',
+    disabled: true,
     logoSrc: '/channels/email.png',
   },
 ];

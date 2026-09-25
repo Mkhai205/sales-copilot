@@ -262,24 +262,23 @@ export function TabAiSettings({ inbox, workspaceId, workspaceSlug }: TabAiSettin
   ];
 
   return (
-    <div className="flex flex-col gap-6 w-full">
+    <div className="flex flex-col gap-4 w-full">
       {/* 1. Header Card with Live Status Badge */}
       <Card className="border-border bg-card/40">
-        <CardHeader className="pb-4">
+        <CardHeader>
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="p-2 rounded-md bg-primary/10 text-primary">
-                <Bot className="size-5" />
-              </div>
-              <div>
+            <div>
+              <div className="flex items-center gap-2">
+                <Bot className="size-4 text-primary" />
+
                 <CardTitle className="text-base font-semibold">
                   Trợ Lý Bán Hàng Tự Động (AI Autopilot)
                 </CardTitle>
-                <CardDescription className="text-xs">
-                  Cấu hình trợ lý AI tự động tương tác, tư vấn sản phẩm, tính toán giảm giá và chốt
-                  đơn cho hộp thư này.
-                </CardDescription>
               </div>
+              <CardDescription className="text-xs">
+                Cấu hình trợ lý AI tự động tương tác, tư vấn sản phẩm, tính toán giảm giá và chốt
+                đơn cho hộp thư này.
+              </CardDescription>
             </div>
             <Badge
               variant="outline"
@@ -342,7 +341,7 @@ export function TabAiSettings({ inbox, workspaceId, workspaceSlug }: TabAiSettin
       <Card
         className={`border-border bg-card/40 transition-opacity ${!isAiEnabled ? 'opacity-60' : ''}`}
       >
-        <CardHeader className="pb-4">
+        <CardHeader>
           <div className="flex items-center gap-2">
             <Sparkles className="size-4 text-primary" />
             <CardTitle className="text-sm font-semibold">
@@ -477,9 +476,9 @@ export function TabAiSettings({ inbox, workspaceId, workspaceSlug }: TabAiSettin
 
       {/* 3. Read-only System Resources Information */}
       <Card className="border-border bg-muted/20">
-        <CardHeader className="pb-3">
+        <CardHeader>
           <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Thông Tin Hệ Thống Phục Vụ Bán Hàng (Chỉ đọc)
+            Thông Tin Hệ Thống Phục Vụ Bán Hàng
           </CardTitle>
           <CardDescription className="text-xs">
             AI tham chiếu các cấu hình hệ thống này để kiểm tra tồn kho và sinh mã thanh toán VietQR

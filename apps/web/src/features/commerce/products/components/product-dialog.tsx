@@ -167,7 +167,6 @@ export function ProductDialog({
   const currentSku = watch('sku');
   const currentBasePrice = watch('basePrice');
   const currentCostPrice = watch('costPrice');
-  const currentSimpleStock = watch('simpleStock');
 
   // Auto-generate suggested master SKU from name if empty
   const handleNameChange = (val: string) => {

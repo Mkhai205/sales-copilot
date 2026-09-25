@@ -69,8 +69,21 @@ export class FacebookLifecycleService {
     }
 
     this.logger.log(
-      `Processing Facebook Page subscription setup for channel '${payload.channelId}' in workspace '${payload.workspaceId}'`,
+      `Processing Facebook Page subscription event for channel '${payload.channelId}' in workspace '${payload.workspaceId}'`,
     );
+
+    const client = this.prisma.getClient();
+    const channel = await client.channel.findFirst({
+      where: { id: payload.channelId, workspaceId: payload.workspaceId },
+    });
+
+    if (channel && channel.isConnected === false) {
+      this.logger.log(
+        `Facebook channel '${payload.channelId}' is marked disconnected; cleaning up page subscription`,
+      );
+      await this.removePageSubscription(payload.workspaceId, payload.channelId);
+      return;
+    }
 
     await this.setupPageSubscription(payload.workspaceId, payload.channelId);
   }

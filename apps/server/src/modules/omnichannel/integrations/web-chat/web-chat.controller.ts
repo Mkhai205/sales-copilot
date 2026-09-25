@@ -113,13 +113,40 @@ export class WebChatController {
       });
     }
 
+    const inboxSettings = (channel.inbox?.settings as Record<string, any>) || {};
+    const webWidget = (inboxSettings.webWidget as Record<string, any>) || {};
+    const channelSettings = (channel.settings as Record<string, unknown>) || {};
+
+    const mergedSettings: Record<string, unknown> = {
+      ...(webWidget.widgetColor ? { widgetColor: webWidget.widgetColor } : {}),
+      ...(webWidget.allowedDomains
+        ? {
+            allowedDomains: Array.isArray(webWidget.allowedDomains)
+              ? webWidget.allowedDomains.join(', ')
+              : webWidget.allowedDomains,
+          }
+        : {}),
+      ...(webWidget.hmacMandatory !== undefined ? { hmacMandatory: webWidget.hmacMandatory } : {}),
+      ...(webWidget.preChatForm
+        ? {
+            preChatFormEnabled: webWidget.preChatForm.enabled,
+            preChatFormOptions: {
+              requireName: webWidget.preChatForm.requireName,
+              requireEmail: webWidget.preChatForm.requireEmail,
+              requirePhone: webWidget.preChatForm.requirePhone,
+            },
+          }
+        : {}),
+      ...channelSettings,
+    };
+
     const channelContext: ChannelContext = {
       channelId: channel.id,
       inboxId: channel.inboxId,
       workspaceId: channel.workspaceId,
       channelType: ChannelType.WEB_CHAT,
       credentials: this.decryptCredentials(channel.credentials),
-      settings: (channel.settings as Record<string, unknown>) || {},
+      settings: mergedSettings,
       providerAccountId: channel.providerAccountId,
     };
 

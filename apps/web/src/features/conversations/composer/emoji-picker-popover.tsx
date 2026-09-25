@@ -62,7 +62,7 @@ export function EmojiPickerPopover({ onEmojiSelect, disabled = false }: EmojiPic
               )}
               aria-label="Chèn biểu tượng cảm xúc"
             >
-              <Smile className="size-3.5" data-icon="inline-start" />
+              <Smile className="size-3.5" />
             </Button>
           </PopoverTrigger>
         </TooltipTrigger>

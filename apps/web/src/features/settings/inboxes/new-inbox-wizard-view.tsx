@@ -189,8 +189,9 @@ function NewInboxPageContent({ initialWorkspaceSlug }: { initialWorkspaceSlug?: 
     <SettingsPageLayout
       workspaceSlug={workspaceSlug}
       segment="inboxes"
-      hideHeader
-      className="pb-16"
+      hideHeader={true}
+      skeletonVariant="detail"
+      containerWidth="wide"
     >
       <div className="flex flex-col gap-6 w-full">
         {/* Top Back Navigation */}
@@ -211,7 +212,7 @@ function NewInboxPageContent({ initialWorkspaceSlug }: { initialWorkspaceSlug?: 
             }}
             className="w-fit -ml-2 h-8 gap-1.5 text-xs text-muted-foreground hover:text-foreground"
           >
-            <ArrowLeft className="size-3.5" data-icon="inline-start" />
+            <ArrowLeft className="size-3.5" />
             {currentStep === 1
               ? 'Quay lại danh sách Hộp thư'
               : currentStep === 4
