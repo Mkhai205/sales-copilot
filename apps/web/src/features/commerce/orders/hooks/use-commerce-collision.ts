@@ -6,7 +6,7 @@ import {
   WsServerEvent,
   type CommerceCollisionStatusPayload,
 } from '@sales-copilot/shared-contracts';
-import { getSocketClient } from '@/lib/socket/socket-client';
+import { useSocket } from '@/lib/socket/use-socket';
 
 export function useCommerceCollision({
   workspaceId,
@@ -17,15 +17,15 @@ export function useCommerceCollision({
   conversationId?: string;
   isOpen: boolean;
 }) {
+  const { socket, isConnected } = useSocket();
   const [collisionStatus, setCollisionStatus] =
     React.useState<CommerceCollisionStatusPayload | null>(null);
 
   React.useEffect(() => {
-    if (!isOpen || !workspaceId || !conversationId) {
+    if (!isOpen || !workspaceId || !conversationId || !socket || !isConnected) {
+      setCollisionStatus(null);
       return;
     }
-
-    const socket = getSocketClient();
 
     // 1. Listen for collision status updates
     const handleCollisionStatus = (envelope: any) => {
@@ -64,12 +64,12 @@ export function useCommerceCollision({
       clearInterval(interval);
       socket.off(WsServerEvent.COMMERCE_COLLISION_STATUS, handleCollisionStatus);
       socket.emit(WsClientEvent.COMMERCE_EDITING_STOP, { workspaceId, conversationId });
+      setCollisionStatus(null);
     };
-  }, [isOpen, workspaceId, conversationId]);
+  }, [isOpen, workspaceId, conversationId, socket, isConnected]);
 
   const takeover = React.useCallback(() => {
-    if (!workspaceId || !conversationId) return;
-    const socket = getSocketClient();
+    if (!workspaceId || !conversationId || !socket) return;
     socket.emit(
       WsClientEvent.COMMERCE_EDITING_TAKEOVER,
       { workspaceId, conversationId },
@@ -85,7 +85,7 @@ export function useCommerceCollision({
         }
       },
     );
-  }, [workspaceId, conversationId]);
+  }, [workspaceId, conversationId, socket]);
 
   return {
     isLocked: Boolean(collisionStatus?.isLocked),

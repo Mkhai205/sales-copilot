@@ -22,6 +22,7 @@ import { CreateOrderDialog } from './components/create-order-dialog';
 import { OrderStatus, PaymentStatus, type OrderResponseDto } from '@sales-copilot/shared-contracts';
 import { ChevronLeft, ChevronRight, Plus, RefreshCw, Search, ShoppingBag, X } from 'lucide-react';
 import { PageHeader } from '@/components/layout/page-header';
+import { commerceKeys } from '@/lib/query-keys';
 
 export interface OrdersViewProps {
   workspaceSlug: string;
@@ -61,15 +62,13 @@ export function OrdersView({ workspaceSlug }: OrdersViewProps) {
 
   // Query orders
   const { data, isLoading, refetch, isFetching } = useQuery({
-    queryKey: [
-      'commerce-orders',
-      workspaceId,
+    queryKey: commerceKeys.orders(workspaceId, {
       page,
       limit,
       activeTab,
       paymentFilter,
       debouncedSearch,
-    ],
+    }),
     queryFn: async () => {
       if (!workspaceId) throw new Error('Workspace ID is required');
       const res = await ordersApi.listOrders(workspaceId, {

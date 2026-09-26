@@ -1,5 +1,5 @@
 export function isEditableEventTarget(target: EventTarget | null): boolean {
-  if (!(target instanceof HTMLElement)) {
+  if (typeof HTMLElement === 'undefined' || !(target instanceof HTMLElement)) {
     return false;
   }
 

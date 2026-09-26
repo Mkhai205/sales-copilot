@@ -215,7 +215,7 @@ export function useSendMessage(options: UseSendMessageOptions) {
 
       // 5. Update conversation list with optimistic lastMessage
       queryClient.setQueriesData<InfiniteData<ApiResponse<any[]>>>(
-        { queryKey: conversationKeys.all },
+        { queryKey: conversationKeys.list() },
         old => {
           if (!old) return old;
           const { updatedData } = bubbleConversationToTop(old, conversationId, {
@@ -272,7 +272,7 @@ export function useSendMessage(options: UseSendMessageOptions) {
 
       // Update conversation in list
       queryClient.setQueriesData<InfiniteData<ApiResponse<any[]>>>(
-        { queryKey: conversationKeys.all },
+        { queryKey: conversationKeys.list() },
         old => {
           if (!old) return old;
           const { updatedData } = bubbleConversationToTop(old, conversationId, {

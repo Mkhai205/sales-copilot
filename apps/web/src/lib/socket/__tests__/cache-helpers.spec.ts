@@ -123,6 +123,49 @@ describe('Realtime Cache Helpers (Task 22)', () => {
       const result = appendMessageToInfiniteData(undefined, dummyMessage1);
       assert.strictEqual(result, undefined);
     });
+
+    it('should append a new message to the last page when cache has multiple pages', () => {
+      const dummyMessagePage2: MessageResponseDto = {
+        ...dummyMessage1,
+        id: 'msg-page-2',
+        content: 'Page 2 content',
+      };
+      const newMessage: MessageResponseDto = {
+        ...dummyMessage2,
+        id: 'msg-new-last',
+        content: 'Brand new incoming message',
+      };
+
+      const multiPageData: InfiniteData<ApiResponse<MessageResponseDto[]>> = {
+        pages: [
+          {
+            success: true,
+            data: [dummyMessage1],
+            meta: { page: 1, limit: 1, total: 2, totalPages: 2, hasMore: true },
+          },
+          {
+            success: true,
+            data: [dummyMessagePage2],
+            meta: { page: 2, limit: 1, total: 2, totalPages: 2, hasMore: false },
+          },
+        ],
+        pageParams: [1, 2],
+      };
+
+      const result = appendMessageToInfiniteData(multiPageData, newMessage);
+      assert.ok(result);
+      assert.strictEqual(result.pages.length, 2);
+      // Page 0 data should NOT have new message added
+      assert.strictEqual(result.pages[0].data?.length, 1);
+      assert.strictEqual(result.pages[0].data[0].id, 'msg-1');
+      assert.strictEqual(result.pages[0].meta?.total, 3);
+
+      // Page 1 (last page) should have the new message appended
+      assert.strictEqual(result.pages[1].data?.length, 2);
+      assert.strictEqual(result.pages[1].data[0].id, 'msg-page-2');
+      assert.strictEqual(result.pages[1].data[1].id, 'msg-new-last');
+      assert.strictEqual(result.pages[1].meta?.total, 3);
+    });
   });
 
   describe('updateMessageInInfiniteData', () => {
@@ -152,6 +195,36 @@ describe('Realtime Cache Helpers (Task 22)', () => {
       assert.ok(result);
       assert.strictEqual(result.pages[0].data?.length, 0);
       assert.strictEqual(result.pages[0].meta?.total, 0);
+    });
+
+    it('should remove message from later page and decrement total on all pages in multi-page cache', () => {
+      const dummyMessagePage2: MessageResponseDto = {
+        ...dummyMessage1,
+        id: 'msg-page-2',
+        content: 'Page 2 content',
+      };
+      const multiPageData: InfiniteData<ApiResponse<MessageResponseDto[]>> = {
+        pages: [
+          {
+            success: true,
+            data: [dummyMessage1],
+            meta: { page: 1, limit: 1, total: 2, totalPages: 2, hasMore: true },
+          },
+          {
+            success: true,
+            data: [dummyMessagePage2],
+            meta: { page: 2, limit: 1, total: 2, totalPages: 2, hasMore: false },
+          },
+        ],
+        pageParams: [1, 2],
+      };
+
+      const result = removeMessageFromInfiniteData(multiPageData, 'msg-page-2');
+      assert.ok(result);
+      assert.strictEqual(result.pages[0].data?.length, 1);
+      assert.strictEqual(result.pages[0].meta?.total, 1);
+      assert.strictEqual(result.pages[1].data?.length, 0);
+      assert.strictEqual(result.pages[1].meta?.total, 1);
     });
 
     it('should return unchanged data if message ID not found', () => {

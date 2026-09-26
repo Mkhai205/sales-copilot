@@ -56,8 +56,8 @@ export function useRealtimeSync(): void {
       // 1. Reconcile / append into message infinite query cache
       queryClient.setQueriesData<InfiniteData<ApiResponse<MessageResponseDto[]>>>(
         {
-          predicate: query =>
-            query.queryKey[0] === 'messages' && query.queryKey.includes(message.conversationId),
+          queryKey: ['conversations', 'messages'],
+          predicate: query => query.queryKey.includes(message.conversationId),
         },
         old => reconcileOrAppendMessage(old, message),
       );
@@ -72,7 +72,7 @@ export function useRealtimeSync(): void {
       // 2. Update and bubble conversation to top in conversation lists
       let foundInList = false;
       queryClient.setQueriesData<InfiniteData<ApiResponse<ConversationResponseDto[]>>>(
-        { queryKey: conversationKeys.all },
+        { queryKey: conversationKeys.list() },
         old => {
           if (!old) return old;
           const { updatedData, found } = bubbleConversationToTop(
@@ -104,14 +104,15 @@ export function useRealtimeSync(): void {
 
       // If conversation wasn't found in current list cache (e.g. newly created conversation), refetch
       if (!foundInList) {
-        queryClient.invalidateQueries({ queryKey: conversationKeys.all });
+        queryClient.invalidateQueries({ queryKey: conversationKeys.list() });
+        queryClient.invalidateQueries({ queryKey: conversationKeys.counts() });
       }
 
       // 3. Update single conversation detail query if viewed
       queryClient.setQueriesData<ConversationResponseDto>(
         {
-          predicate: query =>
-            query.queryKey[0] === 'conversation' && query.queryKey.includes(message.conversationId),
+          queryKey: ['conversations', 'detail'],
+          predicate: query => query.queryKey.includes(message.conversationId),
         },
         old => {
           if (!old) return old;
@@ -172,15 +173,15 @@ export function useRealtimeSync(): void {
 
       queryClient.setQueriesData<InfiniteData<ApiResponse<MessageResponseDto[]>>>(
         {
-          predicate: query =>
-            query.queryKey[0] === 'messages' && query.queryKey.includes(message.conversationId),
+          queryKey: ['conversations', 'messages'],
+          predicate: query => query.queryKey.includes(message.conversationId),
         },
         old => updateMessageInInfiniteData(old, message),
       );
 
       // Also update lastMessage in conversation list if applicable
       queryClient.setQueriesData<InfiniteData<ApiResponse<ConversationResponseDto[]>>>(
-        { queryKey: conversationKeys.all },
+        { queryKey: conversationKeys.list() },
         old =>
           updateConversationInList(old, message.conversationId, prev => {
             if (prev.lastMessage?.id === message.id) {
@@ -203,8 +204,8 @@ export function useRealtimeSync(): void {
 
       queryClient.setQueriesData<InfiniteData<ApiResponse<MessageResponseDto[]>>>(
         {
-          predicate: query =>
-            query.queryKey[0] === 'messages' && query.queryKey.includes(payload.conversationId),
+          queryKey: ['conversations', 'messages'],
+          predicate: query => query.queryKey.includes(payload.conversationId),
         },
         old => removeMessageFromInfiniteData(old, payload.messageId),
       );
@@ -224,8 +225,8 @@ export function useRealtimeSync(): void {
 
       queryClient.setQueriesData<InfiniteData<ApiResponse<MessageResponseDto[]>>>(
         {
-          predicate: query =>
-            query.queryKey[0] === 'messages' && query.queryKey.includes(message.conversationId),
+          queryKey: ['conversations', 'messages'],
+          predicate: query => query.queryKey.includes(message.conversationId),
         },
         old => updateMessageInInfiniteData(old, message),
       );
@@ -258,14 +259,14 @@ export function useRealtimeSync(): void {
 
       queryClient.setQueriesData<ConversationResponseDto>(
         {
-          predicate: query =>
-            query.queryKey[0] === 'conversation' && query.queryKey.includes(conversationId),
+          queryKey: ['conversations', 'detail'],
+          predicate: query => query.queryKey.includes(conversationId),
         },
         old => (old ? { ...old, ...conv } : old),
       );
 
       queryClient.setQueriesData<InfiniteData<ApiResponse<ConversationResponseDto[]>>>(
-        { queryKey: conversationKeys.all },
+        { queryKey: conversationKeys.list() },
         old =>
           updateConversationInList(old, conversationId, prev => ({
             ...prev,
@@ -286,15 +287,15 @@ export function useRealtimeSync(): void {
     // Update single conversation query
     queryClient.setQueriesData<ConversationResponseDto>(
       {
-        predicate: query =>
-          query.queryKey[0] === 'conversation' && query.queryKey.includes(conversationId),
+        queryKey: ['conversations', 'detail'],
+        predicate: query => query.queryKey.includes(conversationId),
       },
       old => (old ? { ...old, status: newStatus || old.status } : old),
     );
 
     // Update list item
     queryClient.setQueriesData<InfiniteData<ApiResponse<ConversationResponseDto[]>>>(
-      { queryKey: conversationKeys.all },
+      { queryKey: conversationKeys.list() },
       old =>
         updateConversationInList(old, conversationId, {
           status: newStatus,
@@ -302,7 +303,7 @@ export function useRealtimeSync(): void {
     );
 
     // Invalidate conversations to preserve tab grouping (e.g. Open vs. Resolved)
-    queryClient.invalidateQueries({ queryKey: conversationKeys.all });
+    queryClient.invalidateQueries({ queryKey: conversationKeys.list() });
     queryClient.invalidateQueries({ queryKey: conversationKeys.counts() });
   };
 
@@ -321,8 +322,8 @@ export function useRealtimeSync(): void {
 
     queryClient.setQueriesData<ConversationResponseDto>(
       {
-        predicate: query =>
-          query.queryKey[0] === 'conversation' && query.queryKey.includes(conversationId),
+        queryKey: ['conversations', 'detail'],
+        predicate: query => query.queryKey.includes(conversationId),
       },
       old =>
         old
@@ -336,7 +337,7 @@ export function useRealtimeSync(): void {
     );
 
     queryClient.setQueriesData<InfiniteData<ApiResponse<ConversationResponseDto[]>>>(
-      { queryKey: conversationKeys.all },
+      { queryKey: conversationKeys.list() },
       old =>
         updateConversationInList(old, conversationId, prev => ({
           ...prev,
@@ -346,7 +347,7 @@ export function useRealtimeSync(): void {
         })),
     );
 
-    queryClient.invalidateQueries({ queryKey: conversationKeys.all });
+    queryClient.invalidateQueries({ queryKey: conversationKeys.list() });
     queryClient.invalidateQueries({ queryKey: conversationKeys.counts() });
   });
 
@@ -360,14 +361,14 @@ export function useRealtimeSync(): void {
 
     queryClient.setQueriesData<ConversationResponseDto>(
       {
-        predicate: query =>
-          query.queryKey[0] === 'conversation' && query.queryKey.includes(conversationId),
+        queryKey: ['conversations', 'detail'],
+        predicate: query => query.queryKey.includes(conversationId),
       },
       old => (old ? { ...old, priority: priority || old.priority } : old),
     );
 
     queryClient.setQueriesData<InfiniteData<ApiResponse<ConversationResponseDto[]>>>(
-      { queryKey: conversationKeys.all },
+      { queryKey: conversationKeys.list() },
       old =>
         updateConversationInList(old, conversationId, {
           priority,
@@ -385,14 +386,14 @@ export function useRealtimeSync(): void {
 
     queryClient.setQueriesData<ConversationResponseDto>(
       {
-        predicate: query =>
-          query.queryKey[0] === 'conversation' && query.queryKey.includes(conversationId),
+        queryKey: ['conversations', 'detail'],
+        predicate: query => query.queryKey.includes(conversationId),
       },
       old => (old ? { ...old, labels: labels || old.labels } : old),
     );
 
     queryClient.setQueriesData<InfiniteData<ApiResponse<ConversationResponseDto[]>>>(
-      { queryKey: conversationKeys.all },
+      { queryKey: conversationKeys.list() },
       old =>
         updateConversationInList(old, conversationId, {
           labels,
@@ -430,7 +431,7 @@ export function useRealtimeSync(): void {
 
     // Update contact in conversation list
     queryClient.setQueriesData<InfiniteData<ApiResponse<ConversationResponseDto[]>>>(
-      { queryKey: conversationKeys.all },
+      { queryKey: conversationKeys.list() },
       old => {
         if (!old || !old.pages) return old;
         return {
@@ -456,18 +457,8 @@ export function useRealtimeSync(): void {
   // 4. Commerce & Orders Events (Milestone M2)
   // ==========================================================================
 
-  const handleOrderEvent = (payload: any) => {
-    const order = payload?.order || payload;
-
-    queryClient.invalidateQueries({ queryKey: commerceKeys.orders() });
-    queryClient.invalidateQueries({ queryKey: commerceKeys.activeOrder() });
-    queryClient.invalidateQueries({ queryKey: commerceKeys.products() });
-    queryClient.invalidateQueries({ queryKey: commerceKeys.inventoryVariants() });
-    queryClient.invalidateQueries({ queryKey: commerceKeys.inventorySummary() });
-    queryClient.invalidateQueries({ queryKey: commerceKeys.inventoryTransactions() });
-    if (order?.id) {
-      queryClient.invalidateQueries({ queryKey: commerceKeys.order() });
-    }
+  const handleOrderEvent = () => {
+    queryClient.invalidateQueries({ queryKey: commerceKeys.all });
   };
 
   useSocketEvent(WsServerEvent.ORDER_CREATED, handleOrderEvent);
@@ -476,11 +467,10 @@ export function useRealtimeSync(): void {
   useSocketEvent(WsServerEvent.ORDER_PAID, handleOrderEvent);
   useSocketEvent(WsServerEvent.ORDER_PARTIALLY_PAID, handleOrderEvent);
   useSocketEvent(WsServerEvent.ORDER_CANCELLED, handleOrderEvent);
+  useSocketEvent(WsServerEvent.ORDER_SHIPPED, handleOrderEvent);
+  useSocketEvent(WsServerEvent.ORDER_COMPLETED, handleOrderEvent);
 
   useSocketEvent(WsServerEvent.INVENTORY_UPDATED, () => {
-    queryClient.invalidateQueries({ queryKey: commerceKeys.products() });
-    queryClient.invalidateQueries({ queryKey: commerceKeys.inventoryVariants() });
-    queryClient.invalidateQueries({ queryKey: commerceKeys.inventorySummary() });
-    queryClient.invalidateQueries({ queryKey: commerceKeys.inventoryTransactions() });
+    queryClient.invalidateQueries({ queryKey: commerceKeys.all });
   });
 }

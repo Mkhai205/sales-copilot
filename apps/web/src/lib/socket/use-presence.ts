@@ -1,17 +1,10 @@
 'use client';
 
 import * as React from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import {
-  PresenceStatus,
-  WsClientEvent,
-  WsServerEvent,
-  type PresenceEntry,
-  type PresenceUpdatedEvent,
-} from '@sales-copilot/shared-contracts';
+import { useQuery } from '@tanstack/react-query';
+import { PresenceStatus, type PresenceEntry } from '@sales-copilot/shared-contracts';
 import { presenceApi } from '@/features/conversations/api/presence';
 import { useWorkspaces } from '@/features/settings/general/hooks/use-workspaces';
-import { useSocket, useSocketEvent } from './use-socket';
 import { presenceKeys } from '@/lib/query-keys';
 
 export interface UseWorkspacePresenceOptions {
@@ -21,13 +14,11 @@ export interface UseWorkspacePresenceOptions {
 
 /**
  * Hook to retrieve and subscribe to all presence updates across a workspace.
- * Automatically manages 30s heartbeat interval and TanStack Query cache updates.
+ * Realtime updates and heartbeat are managed centrally by <WorkspaceSocketSync>.
  */
 export function useWorkspacePresence(options?: UseWorkspacePresenceOptions) {
   const { workspaceId: explicitWorkspaceId, workspaceSlug } = options || {};
   const { data: workspaces } = useWorkspaces();
-  const queryClient = useQueryClient();
-  const { socket, isConnected } = useSocket();
 
   // Resolve target workspace ID
   const resolvedWorkspaceId =
@@ -35,7 +26,7 @@ export function useWorkspacePresence(options?: UseWorkspacePresenceOptions) {
     (workspaceSlug ? workspaces?.find(w => w.slug === workspaceSlug)?.id : undefined) ||
     workspaces?.[0]?.id;
 
-  // 1. Initial fetch of presence list from REST API
+  // 1. Fetch presence list from REST API / cache
   const query = useQuery<PresenceEntry[]>({
     queryKey: presenceKeys.list(resolvedWorkspaceId),
     queryFn: async () => {
@@ -48,50 +39,6 @@ export function useWorkspacePresence(options?: UseWorkspacePresenceOptions) {
     enabled: Boolean(resolvedWorkspaceId),
     staleTime: 60 * 1000, // 1 minute
   });
-
-  // 2. Real-time presence updates via WebSocket
-  useSocketEvent<
-    PresenceUpdatedEvent | { userId: string; status: PresenceStatus; lastSeenAt?: string }
-  >(
-    WsServerEvent.PRESENCE_UPDATED,
-    data => {
-      if (!resolvedWorkspaceId || !data?.userId) return;
-
-      queryClient.setQueryData<PresenceEntry[]>(
-        presenceKeys.list(resolvedWorkspaceId),
-        (old = []) => {
-          const existingIndex = old.findIndex(p => p.userId === data.userId);
-          const updatedEntry: PresenceEntry = {
-            userId: data.userId,
-            status: data.status,
-            lastSeenAt: data.lastSeenAt || new Date().toISOString(),
-          };
-
-          if (existingIndex >= 0) {
-            const updated = [...old];
-            updated[existingIndex] = updatedEntry;
-            return updated;
-          }
-          return [...old, updatedEntry];
-        },
-      );
-    },
-    [resolvedWorkspaceId],
-  );
-
-  // 3. Periodic heartbeat every 30s to keep agent's own presence TTL alive
-  React.useEffect(() => {
-    if (!socket || !isConnected) return;
-
-    // Send immediate heartbeat on connect/mount
-    socket.emit(WsClientEvent.HEARTBEAT);
-
-    const interval = setInterval(() => {
-      socket.emit(WsClientEvent.HEARTBEAT);
-    }, 30_000);
-
-    return () => clearInterval(interval);
-  }, [socket, isConnected]);
 
   // Derived presence map for O(1) status lookups
   const presenceMap = React.useMemo(() => {
@@ -135,14 +82,39 @@ export function useWorkspacePresence(options?: UseWorkspacePresenceOptions) {
 }
 
 /**
- * Convenience hook to check presence for a specific user.
+ * Fine-grained hook to check presence for a specific user.
+ * Uses TanStack Query's `select` option to prevent re-renders when other users' presence changes.
  */
 export function useUserPresence(userId?: string | null, options?: UseWorkspacePresenceOptions) {
-  const { getStatus, isOnline, isLoading } = useWorkspacePresence(options);
+  const { workspaceId: explicitWorkspaceId, workspaceSlug } = options || {};
+  const { data: workspaces } = useWorkspaces();
+
+  const resolvedWorkspaceId =
+    explicitWorkspaceId ||
+    (workspaceSlug ? workspaces?.find(w => w.slug === workspaceSlug)?.id : undefined) ||
+    workspaces?.[0]?.id;
+
+  const query = useQuery({
+    queryKey: presenceKeys.list(resolvedWorkspaceId),
+    queryFn: async () => {
+      if (!resolvedWorkspaceId) return [];
+      const res = await presenceApi.getWorkspacePresence(resolvedWorkspaceId, {
+        includeOffline: true,
+      });
+      return res.data;
+    },
+    select: React.useCallback(
+      (list: PresenceEntry[]) =>
+        list.find(p => p.userId === userId)?.status ?? PresenceStatus.OFFLINE,
+      [userId],
+    ),
+    enabled: Boolean(resolvedWorkspaceId && userId),
+    staleTime: 60 * 1000,
+  });
 
   return {
-    status: getStatus(userId),
-    isOnline: isOnline(userId),
-    isLoading,
+    status: query.data ?? PresenceStatus.OFFLINE,
+    isOnline: query.data === PresenceStatus.ONLINE,
+    isLoading: query.isLoading,
   };
 }

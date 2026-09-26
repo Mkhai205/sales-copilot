@@ -46,15 +46,15 @@ export function useTakeoverConversation(
       // 1. Optimistically update single conversation detail cache
       queryClient.setQueriesData<ConversationResponseDto>(
         {
-          predicate: query =>
-            query.queryKey[0] === 'conversation' && query.queryKey.includes(updatedConversation.id),
+          queryKey: ['conversations', 'detail'],
+          predicate: query => query.queryKey.includes(updatedConversation.id),
         },
         old => (old ? { ...old, ...updatedConversation, isAiPaused: true } : updatedConversation),
       );
 
       // 2. Optimistically update conversation list caches for instantaneous UI response
       queryClient.setQueriesData<InfiniteData<ApiResponse<ConversationResponseDto[]>>>(
-        { queryKey: conversationKeys.all },
+        { queryKey: conversationKeys.list() },
         old =>
           updateConversationInList(old, updatedConversation.id, prev => ({
             ...prev,
@@ -65,7 +65,7 @@ export function useTakeoverConversation(
 
       // 3. Invalidate lists to maintain server parity
       queryClient.invalidateQueries({
-        queryKey: conversationKeys.all,
+        queryKey: conversationKeys.list(),
       });
 
       toast.success('Đã tiếp quản từ AI thành công');

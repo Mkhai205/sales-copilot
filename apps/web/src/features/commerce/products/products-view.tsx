@@ -20,6 +20,7 @@ import type { ProductResponseDto } from '@sales-copilot/shared-contracts';
 import { AlertTriangle, ChevronLeft, ChevronRight, Plus, Search, Tag, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { PageHeader } from '@/components/layout/page-header';
+import { commerceKeys } from '@/lib/query-keys';
 
 interface ProductsViewProps {
   workspaceSlug: string;
@@ -68,15 +69,13 @@ export function ProductsView({ workspaceSlug }: ProductsViewProps) {
   }, [searchTerm]);
 
   const { data, isLoading, refetch } = useQuery({
-    queryKey: [
-      'commerce-products',
-      workspaceId,
+    queryKey: commerceKeys.products(workspaceId, {
       page,
       limit,
       debouncedSearch,
       selectedCategory,
       lowStockFilter,
-    ],
+    }),
     queryFn: async () => {
       if (!workspaceId) throw new Error('Workspace ID is required');
       const res = await productsApi.listProducts(workspaceId, {

@@ -54,8 +54,11 @@ export const CHANNEL_META_MAP: Record<ChannelType, ChannelMeta> = {
 };
 
 export function getChannelMeta(channelType?: ChannelType | string | null): ChannelMeta {
-  if (channelType && channelType in CHANNEL_META_MAP) {
-    return CHANNEL_META_MAP[channelType as ChannelType];
+  if (channelType && typeof channelType === 'string') {
+    const normalized = channelType.trim().toUpperCase() as ChannelType;
+    if (normalized in CHANNEL_META_MAP) {
+      return CHANNEL_META_MAP[normalized];
+    }
   }
   return CHANNEL_META_MAP[ChannelType.WEB_CHAT];
 }

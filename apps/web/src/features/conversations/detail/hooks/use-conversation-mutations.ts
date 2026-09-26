@@ -218,14 +218,14 @@ export function useResetUnreadMutation() {
       // Optimistically zero unread count in both detail and list caches
       queryClient.setQueriesData<ConversationResponseDto>(
         {
-          predicate: query =>
-            query.queryKey[0] === 'conversation' && query.queryKey.includes(conversationId),
+          queryKey: ['conversations', 'detail'],
+          predicate: query => query.queryKey.includes(conversationId),
         },
         old => (old ? { ...old, unreadMessagesCount: 0 } : old),
       );
 
       queryClient.setQueriesData<InfiniteData<ApiResponse<ConversationResponseDto[]>>>(
-        { queryKey: conversationKeys.all },
+        { queryKey: conversationKeys.list() },
         old =>
           updateConversationInList(old, conversationId, prev => ({
             ...prev,

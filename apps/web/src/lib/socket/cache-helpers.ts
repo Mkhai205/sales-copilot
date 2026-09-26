@@ -1,4 +1,4 @@
-﻿import type { InfiniteData } from '@tanstack/react-query';
+import type { InfiniteData } from '@tanstack/react-query';
 import type { ApiResponse } from '../api/client';
 import {
   DeliveryStatus,
@@ -24,20 +24,20 @@ export function appendMessageToInfiniteData(
     return oldData;
   }
 
+  const lastPageIndex = oldData.pages.length - 1;
   const newPages = oldData.pages.map((page, index) => {
-    if (index === 0) {
-      return {
-        ...page,
-        data: [...(page.data || []), newMessage],
-        meta: page.meta
-          ? {
-              ...page.meta,
-              total: (page.meta.total ?? page.data?.length ?? 0) + 1,
-            }
-          : undefined,
-      };
-    }
-    return page;
+    const isLastPage = index === lastPageIndex;
+    const nextTotal = (page.meta?.total ?? page.data?.length ?? 0) + 1;
+    return {
+      ...page,
+      data: isLastPage ? [...(page.data || []), newMessage] : page.data,
+      meta: page.meta
+        ? {
+            ...page.meta,
+            total: nextTotal,
+          }
+        : undefined,
+    };
   });
 
   return {
@@ -184,7 +184,7 @@ export function removeMessageFromInfiniteData(
   }
 
   let removed = false;
-  const newPages = oldData.pages.map(page => {
+  const filteredPages = oldData.pages.map(page => {
     if (!page.data) return page;
 
     const filteredData = page.data.filter(m => m.id !== messageId);
@@ -193,18 +193,26 @@ export function removeMessageFromInfiniteData(
       return {
         ...page,
         data: filteredData,
-        meta: page.meta
-          ? {
-              ...page.meta,
-              total: Math.max(0, (page.meta.total ?? page.data.length) - 1),
-            }
-          : undefined,
       };
     }
     return page;
   });
 
-  return removed ? { ...oldData, pages: newPages } : oldData;
+  if (!removed) {
+    return oldData;
+  }
+
+  const newPages = filteredPages.map(page => ({
+    ...page,
+    meta: page.meta
+      ? {
+          ...page.meta,
+          total: Math.max(0, (page.meta.total ?? page.data?.length ?? 1) - 1),
+        }
+      : undefined,
+  }));
+
+  return { ...oldData, pages: newPages };
 }
 
 /**
