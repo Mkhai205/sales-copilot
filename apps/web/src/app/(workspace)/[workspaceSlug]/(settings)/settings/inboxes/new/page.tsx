@@ -1,4 +1,4 @@
-import { NewInboxWizardView } from '@/features/settings/inboxes/new-inbox-wizard-view';
+import { NewInboxView } from '@/features/settings/inboxes/new/new-inbox-view';
 
 export default async function NewInboxPage({
   params,
@@ -6,5 +6,5 @@ export default async function NewInboxPage({
   params: Promise<{ workspaceSlug: string }>;
 }) {
   const { workspaceSlug } = await params;
-  return <NewInboxWizardView workspaceSlug={workspaceSlug} />;
+  return <NewInboxView workspaceSlug={workspaceSlug} />;
 }

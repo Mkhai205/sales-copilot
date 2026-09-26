@@ -8,15 +8,6 @@ export interface FacebookPageInfo {
   isAlreadyConnected: boolean;
 }
 
-export interface ConnectFacebookPageDto {
-  pageId: string;
-  pageName: string;
-  pageAccessToken?: string;
-  userAccessToken?: string;
-  inboxName?: string;
-  memberUserIds?: string[];
-}
-
 export interface ConnectFacebookPagesBatchDto {
   pageIds: string[];
   sessionId: string;
@@ -37,16 +28,6 @@ export const facebookApi = {
     fetchApi<FacebookPageInfo[]>(`/integrations/facebook/pages${buildQueryString({ sessionId })}`, {
       headers: workspaceHeaders(workspaceId),
     }),
-
-  connectPage: (workspaceId: string, dto: ConnectFacebookPageDto, sessionId?: string) =>
-    fetchApi<{ inboxId: string; channelId: string }>(
-      `/integrations/facebook/connect${buildQueryString({ sessionId })}`,
-      {
-        method: 'POST',
-        headers: workspaceHeaders(workspaceId),
-        body: JSON.stringify(dto),
-      },
-    ),
 
   connectPagesBatch: (workspaceId: string, dto: ConnectFacebookPagesBatchDto) =>
     fetchApi<{

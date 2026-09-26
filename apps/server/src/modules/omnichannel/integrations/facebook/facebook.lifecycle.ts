@@ -59,17 +59,32 @@ export class FacebookLifecycleService {
   }
 
   /**
-   * Handles channel.created and channel.updated domain events.
+   * Handles channel.created domain event: validates Page Access Token and subscribes to webhooks.
    */
   @OnEvent('channel.created')
-  @OnEvent('channel.updated')
-  async handleChannelEvent(payload: ChannelLifecycleEventPayload): Promise<void> {
+  async handleChannelCreated(payload: ChannelLifecycleEventPayload): Promise<void> {
     if (payload.channelType !== ChannelType.FACEBOOK_MESSENGER) {
       return;
     }
 
     this.logger.log(
-      `Processing Facebook Page subscription event for channel '${payload.channelId}' in workspace '${payload.workspaceId}'`,
+      `Processing Facebook Page subscription setup on channel.created for channel '${payload.channelId}' in workspace '${payload.workspaceId}'`,
+    );
+
+    await this.setupPageSubscription(payload.workspaceId, payload.channelId);
+  }
+
+  /**
+   * Handles channel.updated domain event: if channel was disconnected, clean up subscription; otherwise re-sync.
+   */
+  @OnEvent('channel.updated')
+  async handleChannelUpdated(payload: ChannelLifecycleEventPayload): Promise<void> {
+    if (payload.channelType !== ChannelType.FACEBOOK_MESSENGER) {
+      return;
+    }
+
+    this.logger.log(
+      `Processing Facebook Page subscription update on channel.updated for channel '${payload.channelId}' in workspace '${payload.workspaceId}'`,
     );
 
     const client = this.prisma.getClient();
@@ -86,6 +101,13 @@ export class FacebookLifecycleService {
     }
 
     await this.setupPageSubscription(payload.workspaceId, payload.channelId);
+  }
+
+  /**
+   * For backwards compatibility with direct calls.
+   */
+  async handleChannelEvent(payload: ChannelLifecycleEventPayload): Promise<void> {
+    await this.handleChannelCreated(payload);
   }
 
   /**

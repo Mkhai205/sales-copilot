@@ -19,6 +19,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useRouter } from 'next/navigation';
 import { useInboxes } from '../hooks/use-inboxes';
+import { CHANNEL_METADATA } from '../constants/inbox-channels';
 
 interface InboxesListProps {
   workspaceId: string;
@@ -38,9 +39,6 @@ export function InboxesList({ workspaceId, currentUserRole, workspaceSlug }: Inb
   };
 
   const { data: inboxes } = useInboxes(workspaceId);
-
-  const canManage =
-    currentUserRole === WorkspaceRole.OWNER || currentUserRole === WorkspaceRole.ADMIN;
 
   const filteredInboxes = React.useMemo(() => {
     if (!inboxes) return [];
@@ -91,21 +89,11 @@ export function InboxesList({ workspaceId, currentUserRole, workspaceSlug }: Inb
               <SelectItem value="ALL" className="text-xs">
                 {'Tất cả kênh'}
               </SelectItem>
-              <SelectItem value={ChannelType.WEB_CHAT} className="text-xs">
-                {'Web Chat'}
-              </SelectItem>
-              <SelectItem value={ChannelType.FACEBOOK_MESSENGER} className="text-xs">
-                {'Messenger'}
-              </SelectItem>
-              <SelectItem value={ChannelType.TELEGRAM} className="text-xs">
-                {'Telegram'}
-              </SelectItem>
-              <SelectItem value={ChannelType.EMAIL} className="text-xs">
-                {'Email'}
-              </SelectItem>
-              <SelectItem value={ChannelType.ZALO} className="text-xs">
-                {'Zalo OA'}
-              </SelectItem>
+              {CHANNEL_METADATA.map(meta => (
+                <SelectItem key={meta.type} value={meta.type} className="text-xs">
+                  {meta.title}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
 
@@ -119,17 +107,15 @@ export function InboxesList({ workspaceId, currentUserRole, workspaceSlug }: Inb
           )}
         </div>
 
-        {canManage && (
-          <Button size="sm" onClick={handleAddInbox} className="h-8 gap-1.5 text-xs font-medium">
-            <Plus className="size-3.5" />
-            {'Thêm hộp thư'}
-          </Button>
-        )}
+        <Button size="sm" onClick={handleAddInbox} className="h-8 gap-1.5 text-xs font-medium">
+          <Plus className="size-3.5" />
+          {'Thêm hộp thư'}
+        </Button>
       </div>
 
       {/* Inboxes Cards Grid */}
       {filteredInboxes.length === 0 ? (
-        <div className="flex min-h-[300px] flex-col items-center justify-center rounded-xl border border-dashed border-border p-8 text-center bg-card/20">
+        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border p-8 text-center bg-card/20">
           <div className="mb-3 flex items-center justify-center">
             <Image
               src={
@@ -152,7 +138,7 @@ export function InboxesList({ workspaceId, currentUserRole, workspaceSlug }: Inb
               ? 'Thử thay đổi từ khóa tìm kiếm hoặc đặt lại bộ lọc kênh.'
               : 'Kết nối các kênh giao tiếp (Web Chat, Messenger, Telegram, v.v.) để tiếp nhận và phản hồi khách hàng.'}
           </p>
-          {canManage && !searchQuery && channelFilter === 'ALL' && (
+          {!searchQuery && channelFilter === 'ALL' && (
             <Button
               size="sm"
               onClick={handleAddInbox}
@@ -180,11 +166,11 @@ export function InboxesList({ workspaceId, currentUserRole, workspaceSlug }: Inb
               <Card
                 key={inbox.id}
                 onClick={handleCardClick}
-                className="group relative flex flex-col justify-between overflow-hidden border border-border/70 hover:border-border hover:shadow-sm transition-all duration-150 cursor-pointer bg-card"
+                className="group relative flex flex-col justify-between border cursor-pointer bg-card transition-all hover:border-primary/50 hover:bg-card/80 hover:shadow-sm"
               >
                 <CardHeader className="p-4 pb-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-3 min-w-0">
+                  <div className="flex items-start justify-between gap-3 min-w-0 w-full">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
                       <InboxAvatar
                         channelType={inbox.channelType}
                         avatarUrl={inbox.avatarUrl}
@@ -193,8 +179,11 @@ export function InboxesList({ workspaceId, currentUserRole, workspaceSlug }: Inb
                         showChannelBadge={false}
                         className="rounded-lg shrink-0 border border-border/50"
                       />
-                      <div className="flex flex-col min-w-0">
-                        <CardTitle className="truncate text-sm font-semibold group-hover:text-primary transition-colors">
+                      <div className="flex flex-col min-w-0 flex-1">
+                        <CardTitle
+                          className="truncate text-sm font-semibold group-hover:text-primary transition-colors"
+                          title={inbox.name}
+                        >
                           {inbox.name}
                         </CardTitle>
                         <div className="flex items-center gap-1.5 mt-0.5">

@@ -14,11 +14,7 @@ import { PrismaService } from '../../../../infrastructure/database';
 import { RedisService } from '../../../../infrastructure/redis';
 import { ChannelCredentialService } from '../../../omnichannel/inboxes/channel-credential.service';
 import { FacebookAdapter } from './facebook.adapter';
-import type {
-  ConnectFacebookPageDto,
-  ConnectFacebookPagesBatchDto,
-  FacebookPageInfo,
-} from './facebook.dto';
+import type { ConnectFacebookPagesBatchDto, FacebookPageInfo } from './facebook.dto';
 
 const FB_DIALOG_BASE = 'https://www.facebook.com';
 const GRAPH_API_BASE = 'https://graph.facebook.com';
@@ -310,149 +306,6 @@ export class FacebookService {
   }
 
   /**
-   * Connects a selected Facebook Page: creates Inbox + Channel with encrypted credentials,
-   * and triggers webhook subscription via channel.created event.
-   *
-   * Reference: Chatwoot callbacks_controller.rb#register_facebook_page
-   */
-  async connectPage(
-    workspaceId: string,
-    dto: ConnectFacebookPageDto,
-    sessionId?: string,
-  ): Promise<{ inboxId: string; channelId: string }> {
-    const client = this.prisma.getClient();
-
-    // 1. Resolve tokens from Redis session if not supplied in DTO
-    let pageAccessToken = dto.pageAccessToken;
-    let userAccessToken = dto.userAccessToken;
-
-    if (sessionId) {
-      const sessionData = await this.redis.get(`${USER_TOKEN_PREFIX}${sessionId}`);
-      if (sessionData) {
-        try {
-          const parsed = JSON.parse(sessionData) as {
-            userAccessToken?: string;
-            pages?: Record<string, { accessToken: string; name: string }>;
-          };
-          if (!userAccessToken && parsed.userAccessToken) {
-            userAccessToken = parsed.userAccessToken;
-          }
-          if (!pageAccessToken && parsed.pages?.[dto.pageId]?.accessToken) {
-            pageAccessToken = parsed.pages[dto.pageId].accessToken;
-          }
-        } catch {
-          // ignore parse error
-        }
-      }
-    }
-
-    if (!pageAccessToken || !userAccessToken) {
-      throw new BadRequestException({
-        code: 'MISSING_CREDENTIALS',
-        message:
-          'Both pageAccessToken and userAccessToken are required to connect a Facebook Page.',
-      });
-    }
-
-    // 2. Check if this page is already connected in ANY workspace across the system (Cross-tenant collision prevention - TASK-3A-10)
-    const existingChannel = await client.channel.findFirst({
-      where: {
-        channelType: 'FACEBOOK_MESSENGER',
-        providerAccountId: dto.pageId,
-      },
-    });
-
-    if (existingChannel) {
-      if (existingChannel.workspaceId === workspaceId) {
-        throw new ConflictException({
-          code: 'FACEBOOK_PAGE_ALREADY_CONNECTED',
-          message: `Facebook Page '${dto.pageName}' is already connected in this workspace`,
-          details: { pageId: dto.pageId },
-        });
-      } else {
-        throw new ConflictException({
-          code: 'FACEBOOK_PAGE_ALREADY_CONNECTED',
-          message:
-            'Trang Facebook này đã được kết nối với một workspace khác. Vui lòng ngắt kết nối ở workspace cũ trước.',
-          details: { pageId: dto.pageId },
-        });
-      }
-    }
-
-    // 3. Encrypt credentials
-    const credentials = {
-      pageAccessToken,
-      userAccessToken,
-      appSecret: this.configService.get<string>('FB_APP_SECRET') || '',
-    };
-    const encryptedString = this.credentialService.encrypt(credentials);
-
-    // 4. Create Inbox + Channel (+ InboxMembers) in a transaction
-    const inboxName = dto.inboxName || dto.pageName;
-
-    const result = await this.prisma.runInTransaction(async txCtx => {
-      const tx = txCtx.tx;
-
-      const inbox = await tx.inbox.create({
-        data: {
-          workspaceId,
-          name: inboxName,
-        },
-      });
-
-      const channel = await tx.channel.create({
-        data: {
-          workspaceId,
-          inboxId: inbox.id,
-          channelType: 'FACEBOOK_MESSENGER',
-          providerAccountId: dto.pageId,
-          credentials: { encrypted: encryptedString } as any,
-          settings: {} as any,
-          isConnected: false, // Will be set to true after webhook subscription succeeds
-        },
-      });
-
-      if (dto.memberUserIds && dto.memberUserIds.length > 0) {
-        await tx.inboxMember.createMany({
-          data: dto.memberUserIds.map(userId => ({
-            inboxId: inbox.id,
-            userId,
-          })),
-          skipDuplicates: true,
-        });
-      }
-
-      return { inboxId: inbox.id, channelId: channel.id };
-    });
-
-    // 4. Emit channel.created event → FacebookLifecycleService will auto-subscribe webhook
-    this.eventEmitter.emit('channel.created', {
-      workspaceId,
-      inboxId: result.inboxId,
-      channelId: result.channelId,
-      channelType: ChannelType.FACEBOOK_MESSENGER,
-    });
-
-    // 5. Set inbox avatar from Page picture
-    const avatarUrl = `https://graph.facebook.com/${dto.pageId}/picture?type=large`;
-    await client.inbox.update({
-      where: { workspaceId_id: { workspaceId, id: result.inboxId } },
-      data: { avatarUrl },
-    });
-
-    // 6. Cleanup session
-    if (sessionId) {
-      await this.redis.del(`${USER_TOKEN_PREFIX}${sessionId}`);
-    }
-
-    this.logger.log(
-      `Connected Facebook Page '${dto.pageName}' (${dto.pageId}) to workspace '${workspaceId}'`,
-    );
-
-    return result;
-  }
-
-  /**
    * Connects multiple selected Facebook Pages in batch:
    * Creates Inbox + Channel with encrypted credentials for each page,
    * assigns workspace members, and triggers webhook subscription.
@@ -576,12 +429,21 @@ export class FacebookService {
       });
 
       // Emit channel.created event -> FacebookLifecycleService will auto-subscribe webhook
-      this.eventEmitter.emit('channel.created', {
-        workspaceId,
-        inboxId: result.inboxId,
-        channelId: result.channelId,
-        channelType: ChannelType.FACEBOOK_MESSENGER,
-      });
+      if (this.eventEmitter.emitAsync) {
+        await this.eventEmitter.emitAsync('channel.created', {
+          workspaceId,
+          inboxId: result.inboxId,
+          channelId: result.channelId,
+          channelType: ChannelType.FACEBOOK_MESSENGER,
+        });
+      } else {
+        this.eventEmitter.emit('channel.created', {
+          workspaceId,
+          inboxId: result.inboxId,
+          channelId: result.channelId,
+          channelType: ChannelType.FACEBOOK_MESSENGER,
+        });
+      }
 
       createdList.push({
         inboxId: result.inboxId,
@@ -663,23 +525,34 @@ export class FacebookService {
       });
     }
 
-    // Exchange token for long-lived token
-    const appId = this.getAppId();
     const appSecret = this.getAppSecret();
+    let userAccessToken: string = omniAuthToken;
 
-    const longLivedUrl = new URL(`${GRAPH_API_BASE}/${GRAPH_API_VERSION}/oauth/access_token`);
-    longLivedUrl.searchParams.set('grant_type', 'fb_exchange_token');
-    longLivedUrl.searchParams.set('client_id', appId);
-    longLivedUrl.searchParams.set('client_secret', appSecret);
-    longLivedUrl.searchParams.set('fb_exchange_token', omniAuthToken);
+    // Check if omniAuthToken is a Redis session ID from OAuth callback
+    const sessionData = await this.redis.get(`${USER_TOKEN_PREFIX}${omniAuthToken}`);
+    if (sessionData) {
+      const parsed = JSON.parse(sessionData) as { userAccessToken?: string };
+      if (parsed.userAccessToken) {
+        userAccessToken = parsed.userAccessToken;
+      }
+    } else {
+      // Exchange token for long-lived token
+      const appId = this.getAppId();
 
-    const response = await fetch(longLivedUrl.toString());
-    const data = (await response.json()) as {
-      access_token?: string;
-      error?: { message: string };
-    };
+      const longLivedUrl = new URL(`${GRAPH_API_BASE}/${GRAPH_API_VERSION}/oauth/access_token`);
+      longLivedUrl.searchParams.set('grant_type', 'fb_exchange_token');
+      longLivedUrl.searchParams.set('client_id', appId);
+      longLivedUrl.searchParams.set('client_secret', appSecret);
+      longLivedUrl.searchParams.set('fb_exchange_token', omniAuthToken);
 
-    const userAccessToken = data.access_token || omniAuthToken;
+      const response = await fetch(longLivedUrl.toString());
+      const data = (await response.json()) as {
+        access_token?: string;
+        error?: { message: string };
+      };
+
+      userAccessToken = data.access_token || omniAuthToken;
+    }
 
     // Find the page access token for the connected page
     const pagesUrl = `${GRAPH_API_BASE}/${GRAPH_API_VERSION}/me/accounts?access_token=${encodeURIComponent(userAccessToken)}`;
@@ -723,12 +596,21 @@ export class FacebookService {
     await this.redis.del(`channel:${channelId}:reauth_required`);
 
     // Re-subscribe webhook
-    this.eventEmitter.emit('channel.updated', {
-      workspaceId,
-      inboxId: channel.inboxId,
-      channelId: channel.id,
-      channelType: ChannelType.FACEBOOK_MESSENGER,
-    });
+    if (this.eventEmitter.emitAsync) {
+      await this.eventEmitter.emitAsync('channel.updated', {
+        workspaceId,
+        inboxId: channel.inboxId,
+        channelId: channel.id,
+        channelType: ChannelType.FACEBOOK_MESSENGER,
+      });
+    } else {
+      this.eventEmitter.emit('channel.updated', {
+        workspaceId,
+        inboxId: channel.inboxId,
+        channelId: channel.id,
+        channelType: ChannelType.FACEBOOK_MESSENGER,
+      });
+    }
 
     this.logger.log(`Re-authorized Facebook channel '${channelId}'`);
 

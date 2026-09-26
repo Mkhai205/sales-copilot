@@ -2,35 +2,35 @@ import { ChannelType } from '@sales-copilot/shared-contracts';
 
 export interface ChannelTypeMeta {
   type: ChannelType;
+  key: string;
   title: string;
   description: string;
+  badge?: string;
+  logoSrc: string;
+  disabled?: boolean;
 }
 
-export const SUPPORTED_CHANNELS: ChannelTypeMeta[] = [
+export const CHANNEL_METADATA: ChannelTypeMeta[] = [
   {
     type: ChannelType.WEB_CHAT,
+    key: 'web_chat',
     title: 'Website Live Chat',
-    description: 'Embed a customizable live chat widget on your website to chat with visitors.',
+    description: 'Nhúng widget chat trực tiếp tương tác trên website hoặc gian hàng của bạn.',
+    logoSrc: '/channels/website.png',
   },
   {
     type: ChannelType.FACEBOOK_MESSENGER,
+    key: 'facebook',
     title: 'Facebook Messenger',
-    description: 'Connect your Facebook Business Page to reply to direct customer messages.',
+    description: 'Kết nối Fanpage qua OAuth 1-click để tiếp nhận và trả lời tin nhắn khách hàng.',
+    badge: 'Phổ biến',
+    logoSrc: '/channels/messenger.png',
   },
   {
     type: ChannelType.TELEGRAM,
+    key: 'telegram',
     title: 'Telegram Bot',
-    description: 'Connect a Telegram Bot token to receive and respond to chats via Telegram.',
-  },
-  {
-    type: ChannelType.EMAIL,
-    title: 'Email Support',
-    description:
-      'Connect via SMTP/IMAP to convert incoming customer emails into conversation tickets.',
-  },
-  {
-    type: ChannelType.ZALO,
-    title: 'Zalo OA',
-    description: 'Integrate your Zalo Official Account to chat with customers in Vietnam.',
+    description: 'Kết nối Telegram Bot Token để xử lý tin nhắn khách hàng trực tiếp từ Telegram.',
+    logoSrc: '/channels/telegram.png',
   },
 ];

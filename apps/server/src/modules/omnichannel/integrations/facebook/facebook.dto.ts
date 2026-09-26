@@ -9,18 +9,6 @@ export const facebookCallbackQuerySchema = z.object({
 
 export type FacebookCallbackQuery = z.infer<typeof facebookCallbackQuerySchema>;
 
-export const connectFacebookPageSchema = z.object({
-  pageId: z.string().min(1, 'Page ID is required'),
-  pageName: z.string().min(1, 'Page name is required'),
-  pageAccessToken: z.string().min(1, 'Page Access Token is required').optional(),
-  userAccessToken: z.string().min(1, 'User Access Token is required').optional(),
-  inboxName: z.string().min(1).max(100).optional(),
-  memberUserIds: z.array(z.string()).optional(),
-  sessionId: z.string().optional(),
-});
-
-export type ConnectFacebookPageDto = z.infer<typeof connectFacebookPageSchema>;
-
 // ─── Connect Pages Batch ──────────────────────────────────────────────────────
 
 export const connectFacebookPagesBatchSchema = z.object({

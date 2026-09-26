@@ -37,6 +37,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { useQueryClient } from '@tanstack/react-query';
+import { inboxKeys } from '@/lib/query-keys';
 import { facebookApi } from '../../../api/facebook';
 import { useUpdateInbox } from '../../../hooks/use-inboxes';
 
@@ -49,21 +51,44 @@ interface FacebookConfigProps {
 export function FacebookConfig({ inbox, workspaceId, workspaceSlug }: FacebookConfigProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const queryClient = useQueryClient();
   const { mutate: updateInbox, isPending: isUpdating } = useUpdateInbox(workspaceId);
   const [isReauthorizing, setIsReauthorizing] = React.useState(false);
   const [isDisconnectOpen, setIsDisconnectOpen] = React.useState(false);
 
   const sessionId = searchParams.get('sessionId');
+  const processedSessionIdRef = React.useRef<string | null>(null);
+  const [isSyncingSession, setIsSyncingSession] = React.useState(Boolean(sessionId));
 
   React.useEffect(() => {
-    if (sessionId) {
-      toast.success('Xác thực lại tài khoản Facebook thành công!');
-      const targetUrl = workspaceSlug
-        ? `/${workspaceSlug}/settings/inboxes/${inbox.id}?tab=configuration`
-        : `/settings/inboxes/${inbox.id}?tab=configuration`;
-      router.replace(targetUrl, { scroll: false });
-    }
-  }, [sessionId, workspaceSlug, inbox.id, router]);
+    if (!sessionId || !inbox.channel?.id) return;
+    if (processedSessionIdRef.current === sessionId) return;
+    processedSessionIdRef.current = sessionId;
+
+    setIsSyncingSession(true);
+    const channelId = inbox.channel.id;
+
+    facebookApi
+      .reauthorizePage(workspaceId, channelId, sessionId)
+      .then(() => {
+        toast.success('Đồng bộ và kết nối Fanpage Facebook thành công!', {
+          id: `fb-reauth-${channelId}`,
+        });
+        queryClient.invalidateQueries({ queryKey: inboxKeys.detail(workspaceId, inbox.id) });
+      })
+      .catch(err => {
+        toast.error(err.message || 'Không thể đồng bộ Fanpage Facebook', {
+          id: `fb-reauth-${channelId}`,
+        });
+      })
+      .finally(() => {
+        setIsSyncingSession(false);
+        const targetUrl = workspaceSlug
+          ? `/${workspaceSlug}/settings/inboxes/${inbox.id}?tab=configuration`
+          : `/settings/inboxes/${inbox.id}?tab=configuration`;
+        router.replace(targetUrl, { scroll: false });
+      });
+  }, [sessionId, workspaceId, inbox.channel?.id, workspaceSlug, inbox.id, router, queryClient]);
 
   // Comment Guard Settings State
   const existingCommentGuard = (inbox.channel?.settings as any)?.commentGuard;
@@ -182,7 +207,7 @@ export function FacebookConfig({ inbox, workspaceId, workspaceSlug }: FacebookCo
   };
 
   return (
-    <div className="flex flex-col gap-6 w-full max-w-5xl">
+    <div className="flex flex-col gap-6 w-full">
       <Card className="border-border bg-card/40">
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -209,7 +234,7 @@ export function FacebookConfig({ inbox, workspaceId, workspaceSlug }: FacebookCo
               {isConnected ? (
                 <span className="flex items-center gap-1.5 font-medium">
                   <ShieldCheck className="size-3.5" />
-                  Đang hoạt động (Connected)
+                  Đã kết nối
                 </span>
               ) : (
                 <span className="flex items-center gap-1.5 font-medium">
@@ -221,15 +246,31 @@ export function FacebookConfig({ inbox, workspaceId, workspaceSlug }: FacebookCo
           </div>
         </CardHeader>
 
-        <CardContent className="flex flex-col gap-5">
+        <CardContent className="flex flex-col gap-4">
+          {isSyncingSession && (
+            <div className="flex items-center gap-2.5 rounded-lg border border-[#1877F2]/30 bg-[#1877F2]/10 p-3 text-xs text-[#1877F2]">
+              <Spinner className="size-4 shrink-0" />
+              <span className="font-medium">
+                Đang hoàn tất đồng bộ và kích hoạt kết nối Fanpage Facebook...
+              </span>
+            </div>
+          )}
+
+          {channelSettings.lastSyncError && !isSyncingSession && (
+            <div className="flex items-center gap-2 rounded-lg border border-amber-500/20 bg-amber-500/5 p-3 text-xs text-amber-500">
+              <ShieldAlert className="size-4 shrink-0" />
+              <span>
+                Lỗi đồng bộ gần nhất:{' '}
+                <span className="text-muted-foreground">{channelSettings.lastSyncError}</span>
+              </span>
+            </div>
+          )}
+
           {isConnected ? (
-            <div className="flex flex-col gap-5">
+            <div className="flex flex-col gap-4">
               {/* Fanpage Profile Card */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-[#1877F2]/20 bg-[#1877F2]/5 p-4.5">
                 <div className="flex items-center gap-3.5">
-                  <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-[#1877F2] text-white shadow-sm font-bold text-lg">
-                    f
-                  </div>
                   <div className="flex flex-col gap-0.5">
                     <span className="text-sm font-semibold text-foreground">{pageName}</span>
                     <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground mt-0.5">
@@ -267,7 +308,7 @@ export function FacebookConfig({ inbox, workspaceId, workspaceSlug }: FacebookCo
               </div>
 
               {/* Action Bar: Re-authorize & Disconnect */}
-              <div className="flex flex-wrap items-center justify-between gap-3 pt-1 border-t border-border/60">
+              <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
                   <Button
                     variant="outline"
@@ -337,7 +378,13 @@ export function FacebookConfig({ inbox, workspaceId, workspaceSlug }: FacebookCo
                   </>
                 ) : (
                   <>
-                    <MessageSquare className="size-4" />
+                    <svg
+                      className="size-4 fill-current"
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                    </svg>
                     Kết nối với Facebook
                   </>
                 )}

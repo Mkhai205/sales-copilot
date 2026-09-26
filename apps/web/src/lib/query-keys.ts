@@ -155,6 +155,10 @@ export const inboxKeys = {
   list: (workspaceId?: string) => ['inboxes', workspaceId] as const,
   detail: (workspaceId?: string, id?: string) => ['inboxes', workspaceId, id] as const,
   members: (workspaceId?: string, id?: string) => ['inboxes', workspaceId, id, 'members'] as const,
+  facebookDiscoveredPages: (workspaceId?: string, sessionId?: string) =>
+    sessionId !== undefined
+      ? (['inboxes', workspaceId, 'facebook', 'discovered-pages', sessionId] as const)
+      : (['inboxes', workspaceId, 'facebook', 'discovered-pages'] as const),
 };
 
 export const workspaceKeys = {

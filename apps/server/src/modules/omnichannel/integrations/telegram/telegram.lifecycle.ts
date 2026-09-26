@@ -60,17 +60,32 @@ export class TelegramLifecycleService {
   }
 
   /**
-   * Handles channel.created and channel.updated domain events.
+   * Handles channel.created domain event: validates bot token and sets up webhook.
    */
   @OnEvent('channel.created')
-  @OnEvent('channel.updated')
-  async handleChannelEvent(payload: ChannelLifecycleEventPayload): Promise<void> {
+  async handleChannelCreated(payload: ChannelLifecycleEventPayload): Promise<void> {
     if (payload.channelType !== ChannelType.TELEGRAM) {
       return;
     }
 
     this.logger.log(
-      `Processing Telegram channel setup for channel '${payload.channelId}' in workspace '${payload.workspaceId}'`,
+      `Processing Telegram channel setup on channel.created for channel '${payload.channelId}' in workspace '${payload.workspaceId}'`,
+    );
+
+    await this.setupWebhook(payload.workspaceId, payload.channelId);
+  }
+
+  /**
+   * Handles channel.updated domain event: if channel was disconnected, clean up webhook; otherwise re-sync.
+   */
+  @OnEvent('channel.updated')
+  async handleChannelUpdated(payload: ChannelLifecycleEventPayload): Promise<void> {
+    if (payload.channelType !== ChannelType.TELEGRAM) {
+      return;
+    }
+
+    this.logger.log(
+      `Processing Telegram channel update on channel.updated for channel '${payload.channelId}' in workspace '${payload.workspaceId}'`,
     );
 
     const client = this.prisma.getClient();
@@ -87,6 +102,13 @@ export class TelegramLifecycleService {
     }
 
     await this.setupWebhook(payload.workspaceId, payload.channelId);
+  }
+
+  /**
+   * For backwards compatibility with direct calls.
+   */
+  async handleChannelEvent(payload: ChannelLifecycleEventPayload): Promise<void> {
+    await this.handleChannelCreated(payload);
   }
 
   /**

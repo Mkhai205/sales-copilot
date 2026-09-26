@@ -1,0 +1,119 @@
+# See https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
+
+# Compiled output & Bundles
+dist
+tmp
+out-tsc
+.next
+out
+build
+*.tsbuildinfo
+next-env.d.ts
+**/next-env.d.ts
+apps/server/src/infrastructure/database/generated
+
+# Dependencies
+node_modules
+.pnpm-store
+.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+
+# Environment files
+.env
+.env.*
+.env.tunnel
+!.env.example
+!.env.template
+
+# IDEs and editors
+.idea
+.project
+.classpath
+.c9
+*.launch
+.settings
+*.sublime-workspace
+.vscode/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+testem.log
+
+# Testing & Coverage
+coverage
+/coverage
+test-results
+playwright-report
+.nyc_output
+
+# Vercel & Deployment
+.vercel
+.open-next
+
+# System Files
+.DS_Store
+Thumbs.db
+*.pem
+*.swp
+*.swo
+
+# Nx & Monorepo Caches
+.nx/cache
+.nx/workspace-data
+.cursor/rules/nx-rules.mdc
+.github/instructions/nx.instructions.md
+.nx/polygraph
+.nx/self-healing
+.nx/migrate-runs
+.turbo
+.eslintcache
+
+# Custom tooling
+.claude/worktrees
+.claude/settings.local.json
+
+# Multi-agent scratchpads & artifacts
+.agents/*
+
+# Apps Web
+apps/web/public/widget/
+
+# Secrets & Service Accounts
+**/secrets/
+*-service-account*.json
+
+# ===== ↑ 以上同步自 .gitignore（「从 .gitignore 同步」只重写以上部分）=====
+.git/
+.hg/
+.svn/
+bower_components/
+jspm_packages/
+__pycache__/
+site-packages/
+venv/
+htmlcov/
+lcov-report/
+cmakefiles/
+cmake-build-*/
+bazel-*/
+pods/
+deriveddata/
+storybook-static/
+allure-results/
+allure-report/
+cdk.out/
+*.egg-info/
+*.dist-info/
+eggs/
+pip-wheel-metadata/
+wheels/
+# ----- ↑ 以上为 ZCode 默认排除规则（自定义规则请写在本行下方，不会被同步/恢复改动）-----
+# 自定义规则写在下方（本行提示可删除）

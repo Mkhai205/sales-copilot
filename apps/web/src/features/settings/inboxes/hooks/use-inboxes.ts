@@ -10,6 +10,11 @@ import type {
   UpdateInboxDto,
 } from '@sales-copilot/shared-contracts';
 import { inboxesApi } from '../api/inboxes';
+import {
+  facebookApi,
+  type ConnectFacebookPagesBatchDto,
+  type FacebookPageInfo,
+} from '../api/facebook';
 import { inboxKeys } from '@/lib/query-keys';
 
 export function useInboxes(workspaceId?: string) {
@@ -68,15 +73,11 @@ export function useCreateInbox(workspaceId?: string) {
       const res = await inboxesApi.create(workspaceId, dto);
       const newInbox = res.data;
 
-      // 2. Add members if provided
+      // 2. Add members concurrently if provided
       if (memberUserIds.length > 0) {
-        for (const userId of memberUserIds) {
-          try {
-            await inboxesApi.addMember(workspaceId, newInbox.id, userId);
-          } catch {
-            // Member addition can be retried in inbox edit
-          }
-        }
+        await Promise.allSettled(
+          memberUserIds.map(userId => inboxesApi.addMember(workspaceId, newInbox.id, userId)),
+        );
       }
 
       return newInbox;
@@ -272,6 +273,45 @@ export function useRemoveInboxMember(workspaceId?: string, inboxId?: string) {
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Xóa nhân viên thất bại');
+    },
+  });
+}
+
+export function useFacebookDiscoveredPages(workspaceId?: string, sessionId?: string | null) {
+  return useQuery<FacebookPageInfo[]>({
+    queryKey: inboxKeys.facebookDiscoveredPages(workspaceId, sessionId || undefined),
+    queryFn: async () => {
+      if (!workspaceId || !sessionId) {
+        throw new Error('Workspace ID and Session ID are required');
+      }
+      const res = await facebookApi.discoverPages(workspaceId, sessionId);
+      return res.data;
+    },
+    enabled: Boolean(workspaceId && sessionId),
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useConnectFacebookBatch(workspaceId?: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (dto: ConnectFacebookPagesBatchDto) => {
+      if (!workspaceId) {
+        throw new Error('Workspace ID is required');
+      }
+      const res = await facebookApi.connectPagesBatch(workspaceId, dto);
+      return res.data;
+    },
+    onSuccess: data => {
+      queryClient.invalidateQueries({
+        queryKey: inboxKeys.list(workspaceId),
+      });
+      const count = data.inboxes?.length || 0;
+      toast.success(`Đã kết nối thành công ${count} Fanpage Facebook!`);
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Không thể kết nối các Fanpage đã chọn');
     },
   });
 }

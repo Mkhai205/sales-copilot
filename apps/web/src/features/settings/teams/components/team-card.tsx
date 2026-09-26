@@ -36,13 +36,16 @@ export function TeamCard({ team, canManage, onEdit, onDelete }: TeamCardProps) {
   return (
     <Card className="group relative flex flex-col justify-between border-border bg-card/40 hover:bg-card/70 transition-all shadow-2xs hover:shadow-sm">
       <CardHeader className="pb-2.5">
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex items-center gap-2.5 min-w-0">
+        <div className="flex items-start justify-between gap-2 min-w-0 w-full">
+          <div className="flex items-center gap-2.5 min-w-0 flex-1">
             <div className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10 text-primary">
               <Users2 className="size-4" />
             </div>
-            <div className="flex flex-col min-w-0">
-              <CardTitle className="truncate text-sm font-semibold text-foreground">
+            <div className="flex flex-col min-w-0 flex-1">
+              <CardTitle
+                className="truncate text-sm font-semibold text-foreground"
+                title={team.name}
+              >
                 {team.name}
               </CardTitle>
               <span className="text-[11px] text-muted-foreground">{memberCount} thành viên</span>
@@ -50,7 +53,7 @@ export function TeamCard({ team, canManage, onEdit, onDelete }: TeamCardProps) {
           </div>
 
           {canManage && (
-            <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
+            <div className="flex items-center gap-1 shrink-0 opacity-80 group-hover:opacity-100 transition-opacity">
               <Button
                 variant="ghost"
                 size="icon-sm"

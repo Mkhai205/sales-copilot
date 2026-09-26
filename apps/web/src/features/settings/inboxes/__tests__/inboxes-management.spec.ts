@@ -1,7 +1,7 @@
 import { describe, it, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { ChannelType } from '@sales-copilot/shared-contracts';
-import { SUPPORTED_CHANNELS } from '../constants/inbox-channels';
+import { CHANNEL_METADATA } from '../constants/inbox-channels';
 import { inboxesApi } from '../api/inboxes';
 
 describe('Inboxes & Channels Management (Task 33)', () => {
@@ -16,19 +16,17 @@ describe('Inboxes & Channels Management (Task 33)', () => {
     globalThis.fetch = originalFetch;
   });
 
-  describe('SUPPORTED_CHANNELS Constants', () => {
-    it('should contain all 5 channels: WEB_CHAT, FACEBOOK, TELEGRAM, EMAIL, ZALO', () => {
-      assert.strictEqual(SUPPORTED_CHANNELS.length, 5);
-      const types = SUPPORTED_CHANNELS.map(c => c.type);
+  describe('CHANNEL_METADATA Constants', () => {
+    it('should contain 3 supported channels: WEB_CHAT, FACEBOOK, TELEGRAM', () => {
+      assert.strictEqual(CHANNEL_METADATA.length, 3);
+      const types = CHANNEL_METADATA.map(c => c.type);
       assert.ok(types.includes(ChannelType.WEB_CHAT));
       assert.ok(types.includes(ChannelType.FACEBOOK_MESSENGER));
       assert.ok(types.includes(ChannelType.TELEGRAM));
-      assert.ok(types.includes(ChannelType.EMAIL));
-      assert.ok(types.includes(ChannelType.ZALO));
     });
 
     it('each supported channel should have a non-empty title and description', () => {
-      for (const channel of SUPPORTED_CHANNELS) {
+      for (const channel of CHANNEL_METADATA) {
         assert.ok(channel.title.length > 0);
         assert.ok(channel.description.length > 0);
       }

@@ -18,6 +18,7 @@ describe('FacebookService (OAuth Provisioning & Page Connection)', () => {
   let inboxesDb: Map<string, any>;
   let emittedEvents: Array<{ event: string; payload: any }>;
   let originalFetch: typeof globalThis.fetch;
+  let idCounter = 0;
 
   const wsId = 'ws_fb_oauth_test';
   const chanId = 'chan_fb_oauth_1';
@@ -87,7 +88,8 @@ describe('FacebookService (OAuth Provisioning & Page Connection)', () => {
           return results;
         },
         create: async ({ data }: { data: any }) => {
-          const id = data.id || `chan_${Date.now()}`;
+          idCounter++;
+          const id = data.id || `chan_${idCounter}`;
           const created = { id, ...data, createdAt: new Date(), updatedAt: new Date() };
           channelsDb.set(id, created);
           return created;
@@ -109,7 +111,8 @@ describe('FacebookService (OAuth Provisioning & Page Connection)', () => {
       },
       inbox: {
         create: async ({ data }: { data: any }) => {
-          const id = data.id || `inbox_${Date.now()}`;
+          idCounter++;
+          const id = data.id || `inbox_${idCounter}`;
           const created = { id, ...data, createdAt: new Date(), updatedAt: new Date() };
           inboxesDb.set(id, created);
           return created;
@@ -296,123 +299,6 @@ describe('FacebookService (OAuth Provisioning & Page Connection)', () => {
     });
   });
 
-  describe('connectPage()', () => {
-    it('should create inbox, create channel with encrypted credentials, and emit channel.created event', async () => {
-      const sessionId = 'session_connect_test';
-      redisStore.set(
-        `fb_user_token:${sessionId}`,
-        JSON.stringify({ userAccessToken: 'EAAB_USER_TOKEN', workspaceId: wsId }),
-      );
-
-      const result = await service.connectPage(
-        wsId,
-        {
-          pageId: 'page_new_123',
-          pageName: 'New Shop Fanpage',
-          pageAccessToken: 'EAAB_PAGE_ACCESS_TOKEN',
-          userAccessToken: 'EAAB_USER_ACCESS_TOKEN',
-        },
-        sessionId,
-      );
-
-      assertDefined(result.inboxId);
-      assertDefined(result.channelId);
-
-      // Verify channel in DB
-      const channel = channelsDb.get(result.channelId);
-      assertDefined(channel);
-      expect(channel.workspaceId).toBe(wsId);
-      expect(channel.providerAccountId).toBe('page_new_123');
-      expect(channel.channelType).toBe('FACEBOOK_MESSENGER');
-
-      // Verify credentials decrypted
-      const decrypted = credentialService.decrypt(channel.credentials.encrypted);
-      expect(decrypted.pageAccessToken).toBe('EAAB_PAGE_ACCESS_TOKEN');
-
-      // Verify channel.created event was emitted
-      const emitted = emittedEvents.find(e => e.event === 'channel.created');
-      assertDefined(emitted);
-      expect(emitted.payload.channelId).toBe(result.channelId);
-      expect(emitted.payload.channelType).toBe(ChannelType.FACEBOOK_MESSENGER);
-    });
-
-    it('should auto-resolve pageAccessToken and userAccessToken from Redis session when omitted in DTO', async () => {
-      const sessionId = 'session_auto_tokens';
-      redisStore.set(
-        `fb_user_token:${sessionId}`,
-        JSON.stringify({
-          userAccessToken: 'EAAB_SESSION_USER_TOKEN',
-          workspaceId: wsId,
-          pages: {
-            page_from_session: {
-              accessToken: 'EAAB_SESSION_PAGE_TOKEN',
-              name: 'Session Fanpage',
-            },
-          },
-        }),
-      );
-
-      const result = await service.connectPage(
-        wsId,
-        {
-          pageId: 'page_from_session',
-          pageName: 'Session Fanpage',
-          memberUserIds: ['user_agent_1', 'user_agent_2'],
-        },
-        sessionId,
-      );
-
-      assertDefined(result.inboxId);
-      assertDefined(result.channelId);
-
-      const channel = channelsDb.get(result.channelId);
-      assertDefined(channel);
-      const decrypted = credentialService.decrypt(channel.credentials.encrypted);
-      expect(decrypted.pageAccessToken).toBe('EAAB_SESSION_PAGE_TOKEN');
-      expect(decrypted.userAccessToken).toBe('EAAB_SESSION_USER_TOKEN');
-    });
-
-    it('should throw ConflictException if page is already connected in workspace', async () => {
-      channelsDb.set('existing_chan', {
-        id: 'existing_chan',
-        workspaceId: wsId,
-        channelType: 'FACEBOOK_MESSENGER',
-        providerAccountId: 'page_already_connected',
-      });
-
-      await expectReject(
-        () =>
-          service.connectPage(wsId, {
-            pageId: 'page_already_connected',
-            pageName: 'Shop Page',
-            pageAccessToken: 'token',
-            userAccessToken: 'user_token',
-          }),
-        /already connected in this workspace/,
-      );
-    });
-
-    it('should reject connection when page is already connected in a different workspace (cross-tenant collision - TASK-3A-10)', async () => {
-      channelsDb.set('other_chan', {
-        id: 'other_chan',
-        workspaceId: 'other_workspace_123',
-        channelType: 'FACEBOOK_MESSENGER',
-        providerAccountId: 'page_connected_elsewhere',
-      });
-
-      await expectReject(
-        () =>
-          service.connectPage(wsId, {
-            pageId: 'page_connected_elsewhere',
-            pageName: 'Other Shop Page',
-            pageAccessToken: 'token',
-            userAccessToken: 'user_token',
-          }),
-        /đã được kết nối với một workspace khác/,
-      );
-    });
-  });
-
   describe('connectPagesBatch()', () => {
     it('should connect multiple pages in batch and auto-assign workspace members', async () => {
       const sessionId = 'session_batch_test';
@@ -454,8 +340,55 @@ describe('FacebookService (OAuth Provisioning & Page Connection)', () => {
       expect(inboxesDb.get(result.inboxes[0].inboxId)).toBeTruthy();
       expect(inboxesDb.get(result.inboxes[1].inboxId)).toBeTruthy();
 
+      // Check credentials decrypted properly
+      const chan1 = channelsDb.get(result.inboxes[0].channelId);
+      assertDefined(chan1);
+      const dec1 = credentialService.decrypt(chan1.credentials.encrypted);
+      expect(dec1.pageAccessToken).toBe('EAAB_TOKEN_1');
+
       // Check session cleaned up
       expect(redisStore.has(`fb_user_token:${sessionId}`)).toBe(false);
+
+      // Check channel.created events emitted
+      const events = emittedEvents.filter(e => e.event === 'channel.created');
+      expect(events.length).toBe(2);
+    });
+
+    it('should skip pages that are already connected in another workspace', async () => {
+      channelsDb.set('other_chan', {
+        id: 'other_chan',
+        workspaceId: 'other_workspace_123',
+        channelType: 'FACEBOOK_MESSENGER',
+        providerAccountId: 'page_already_taken',
+      });
+
+      const sessionId = 'session_collision';
+      redisStore.set(
+        `fb_user_token:${sessionId}`,
+        JSON.stringify({
+          userAccessToken: 'EAAB_USER',
+          workspaceId: wsId,
+          pages: {
+            page_already_taken: {
+              accessToken: 'EAAB_TOKEN',
+              name: 'Taken Page',
+            },
+            page_fresh: {
+              accessToken: 'EAAB_TOKEN_FRESH',
+              name: 'Fresh Page',
+            },
+          },
+        }),
+      );
+
+      const result = await service.connectPagesBatch(wsId, {
+        pageIds: ['page_already_taken', 'page_fresh'],
+        sessionId,
+        assignAllMembers: true,
+      });
+
+      expect(result.inboxes.length).toBe(1);
+      expect(result.inboxes[0].pageId).toBe('page_fresh');
     });
   });
 

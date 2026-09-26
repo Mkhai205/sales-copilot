@@ -32,12 +32,7 @@ import { ChannelCredentialService } from '../../../omnichannel/inboxes/channel-c
 import { WebhooksService } from '../channel-webhooks/webhooks.service';
 import { FacebookService } from './facebook.service';
 import { FacebookAdapter } from './facebook.adapter';
-import {
-  connectFacebookPageSchema,
-  connectFacebookPagesBatchSchema,
-  type ConnectFacebookPageDto,
-  type ConnectFacebookPagesBatchDto,
-} from './facebook.dto';
+import { connectFacebookPagesBatchSchema, type ConnectFacebookPagesBatchDto } from './facebook.dto';
 
 /**
  * Facebook Messenger Integration Controller.
@@ -300,21 +295,6 @@ export class FacebookController {
     @Query('sessionId') sessionId: string,
   ) {
     return this.facebookService.discoverPages(context.workspaceId, sessionId);
-  }
-
-  @Post('connect')
-  @HttpCode(HttpStatus.CREATED)
-  @UseGuards(WorkspaceGuard, RolesGuard)
-  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN)
-  @ApiOperation({ summary: 'Connect a Facebook Page to create Inbox + Channel' })
-  @ApiResponse({ status: 201, description: 'Facebook Page connected successfully' })
-  async connectPage(
-    @CurrentWorkspace() context: WorkspaceContext,
-    @Body() body: any,
-    @Query('sessionId') sessionId?: string,
-  ): Promise<{ inboxId: string; channelId: string }> {
-    const dto = connectFacebookPageSchema.parse(body) as ConnectFacebookPageDto;
-    return this.facebookService.connectPage(context.workspaceId, dto, sessionId);
   }
 
   @Post('connect-batch')

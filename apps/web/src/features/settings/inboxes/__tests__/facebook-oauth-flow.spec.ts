@@ -1,6 +1,10 @@
 import { describe, it, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { facebookApi, type FacebookPageInfo, type ConnectFacebookPageDto } from '../api/facebook';
+import {
+  facebookApi,
+  type FacebookPageInfo,
+  type ConnectFacebookPagesBatchDto,
+} from '../api/facebook';
 
 describe('Facebook OAuth 1-Click Connection Flow', () => {
   let originalFetch: typeof globalThis.fetch;
@@ -85,16 +89,15 @@ describe('Facebook OAuth 1-Click Connection Flow', () => {
       assert.strictEqual(res.data[1].isAlreadyConnected, true);
     });
 
-    it('connectPage() should make POST request with JSON body and sessionId', async () => {
+    it('connectPagesBatch() should make POST request with JSON body and workspaceId header', async () => {
       let requestedUrl = '';
       let requestedMethod = '';
       let requestedBody = '';
 
-      const dto: ConnectFacebookPageDto = {
-        pageId: 'page_101',
-        pageName: 'Fashion Brand Store',
-        inboxName: 'Fashion Support',
-        memberUserIds: ['user_agent_1', 'user_agent_2'],
+      const dto: ConnectFacebookPagesBatchDto = {
+        sessionId: 'session_xyz_789',
+        pageIds: ['page_101', 'page_102'],
+        assignAllMembers: true,
       };
 
       globalThis.fetch = (async (url: string | URL | Request, init?: RequestInit) => {
@@ -106,22 +109,61 @@ describe('Facebook OAuth 1-Click Connection Flow', () => {
           status: 201,
           json: async () => ({
             success: true,
-            data: { inboxId: 'inbox_new_1', channelId: 'chan_new_1' },
+            data: {
+              inboxes: [
+                { inboxId: 'inbox_1', channelId: 'chan_1', pageId: 'page_101', pageName: 'Page 1' },
+                { inboxId: 'inbox_2', channelId: 'chan_2', pageId: 'page_102', pageName: 'Page 2' },
+              ],
+            },
           }),
         } as unknown as Response;
       }) as typeof globalThis.fetch;
 
-      const res = await facebookApi.connectPage(workspaceId, dto, 'session_xyz_789');
+      const res = await facebookApi.connectPagesBatch(workspaceId, dto);
 
       assert.strictEqual(res.success, true);
       assert.strictEqual(requestedMethod, 'POST');
-      assert.ok(requestedUrl.includes('/integrations/facebook/connect?sessionId=session_xyz_789'));
+      assert.ok(requestedUrl.includes('/integrations/facebook/connect-batch'));
 
       const parsedBody = JSON.parse(requestedBody);
-      assert.strictEqual(parsedBody.pageId, 'page_101');
-      assert.strictEqual(parsedBody.pageName, 'Fashion Brand Store');
-      assert.strictEqual(parsedBody.inboxName, 'Fashion Support');
-      assert.deepStrictEqual(parsedBody.memberUserIds, ['user_agent_1', 'user_agent_2']);
+      assert.strictEqual(parsedBody.sessionId, 'session_xyz_789');
+      assert.deepStrictEqual(parsedBody.pageIds, ['page_101', 'page_102']);
+      assert.strictEqual(parsedBody.assignAllMembers, true);
+      assert.strictEqual(res.data.inboxes.length, 2);
+    });
+
+    it('connectPagesBatch() should send specific memberUserIds when selected in Step 3', async () => {
+      let requestedBody = '';
+
+      const dto: ConnectFacebookPagesBatchDto = {
+        sessionId: 'session_xyz_789',
+        pageIds: ['page_101'],
+        assignAllMembers: false,
+        memberUserIds: ['user_abc', 'user_def'],
+      };
+
+      globalThis.fetch = (async (_url: string | URL | Request, init?: RequestInit) => {
+        requestedBody = (init?.body as string) || '';
+        return {
+          ok: true,
+          status: 201,
+          json: async () => ({
+            success: true,
+            data: {
+              inboxes: [
+                { inboxId: 'inbox_1', channelId: 'chan_1', pageId: 'page_101', pageName: 'Page 1' },
+              ],
+            },
+          }),
+        } as unknown as Response;
+      }) as typeof globalThis.fetch;
+
+      const res = await facebookApi.connectPagesBatch(workspaceId, dto);
+
+      assert.strictEqual(res.success, true);
+      const parsedBody = JSON.parse(requestedBody);
+      assert.strictEqual(parsedBody.assignAllMembers, false);
+      assert.deepStrictEqual(parsedBody.memberUserIds, ['user_abc', 'user_def']);
     });
   });
 });
