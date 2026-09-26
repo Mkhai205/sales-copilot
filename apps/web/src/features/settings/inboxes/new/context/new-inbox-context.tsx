@@ -41,6 +41,7 @@ interface NewInboxContextValue {
   isLoadingMembers: boolean;
   isSubmitting: boolean;
   sessionIdParam: string | null;
+  setSessionId: (id: string | null) => void;
 
   selectChannel: (key: SupportedChannelKey) => void;
   backToChannelSelect: () => void;
@@ -81,7 +82,16 @@ export function NewInboxProvider({ children, initialWorkspaceSlug }: NewInboxPro
   const connectFacebookBatchMutation = useConnectFacebookBatch(workspaceId);
 
   const initialChannelParam = searchParams.get('channel');
-  const sessionIdParam = searchParams.get('sessionId');
+  const urlSessionId = searchParams.get('sessionId');
+  const [sessionIdState, setSessionIdState] = React.useState<string | null>(() => urlSessionId);
+
+  React.useEffect(() => {
+    if (urlSessionId) {
+      setSessionIdState(urlSessionId);
+    }
+  }, [urlSessionId]);
+
+  const sessionIdParam = sessionIdState || urlSessionId;
 
   const resolvedInitialChannel: SupportedChannelKey | null = React.useMemo(() => {
     if (sessionIdParam) return 'facebook';
@@ -96,6 +106,14 @@ export function NewInboxProvider({ children, initialWorkspaceSlug }: NewInboxPro
   const [selectedChannelKey, setSelectedChannelKey] = React.useState<SupportedChannelKey | null>(
     resolvedInitialChannel,
   );
+
+  const setSessionId = React.useCallback((id: string | null) => {
+    setSessionIdState(id);
+    if (id) {
+      setSelectedChannelKey('facebook');
+      setCurrentStage('channel_flow');
+    }
+  }, []);
 
   const [selectedMemberUserIds, setSelectedMemberUserIds] = React.useState<string[]>([]);
   const [draftConfig, setDraftConfig] = React.useState<DraftChannelConfig | null>(null);
@@ -166,6 +184,7 @@ export function NewInboxProvider({ children, initialWorkspaceSlug }: NewInboxPro
     setSelectedChannelKey(null);
     setPendingFbPageIds([]);
     setDraftConfig(null);
+    setSessionIdState(null);
     setCurrentStage('select_channel');
     if (typeof window !== 'undefined') {
       const targetUrl = `/${workspaceSlug}/settings/inboxes/new`;
@@ -332,6 +351,7 @@ export function NewInboxProvider({ children, initialWorkspaceSlug }: NewInboxPro
       isLoadingMembers,
       isSubmitting,
       sessionIdParam,
+      setSessionId,
       selectChannel,
       backToChannelSelect,
       goToStage,
@@ -356,6 +376,7 @@ export function NewInboxProvider({ children, initialWorkspaceSlug }: NewInboxPro
       isLoadingMembers,
       isSubmitting,
       sessionIdParam,
+      setSessionId,
       selectChannel,
       backToChannelSelect,
       goToStage,

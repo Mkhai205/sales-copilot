@@ -3,6 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { useQueryErrorResetBoundary } from '@tanstack/react-query';
 import { AlertCircle, MessageSquare, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -14,30 +15,38 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 
-interface DashboardErrorProps {
+interface WorkspaceErrorProps {
   error: Error & { digest?: string };
   reset: () => void;
 }
 
-export default function DashboardError({ error, reset }: DashboardErrorProps) {
+export default function WorkspaceError({ error, reset }: WorkspaceErrorProps) {
   const params = useParams<{ workspaceSlug: string }>();
   const workspaceSlug = params?.workspaceSlug;
+  const { reset: resetQueries } = useQueryErrorResetBoundary();
 
   React.useEffect(() => {
-    console.error('Dashboard Error:', error);
+    console.error('Workspace Error:', error);
   }, [error]);
 
+  const handleReset = () => {
+    resetQueries();
+    reset();
+  };
+
   return (
-    <div className="flex h-full w-full items-center justify-center p-6 bg-background text-foreground">
+    <div className="flex h-full min-h-[60vh] w-full items-center justify-center p-6 bg-background text-foreground">
       <Card className="w-full max-w-md border-border bg-card shadow-lg text-center">
         <CardHeader className="items-center pb-2">
           <div className="flex size-12 items-center justify-center rounded-full bg-destructive/10 text-destructive mb-2">
             <AlertCircle className="size-6" />
           </div>
-          <CardTitle className="text-lg font-semibold text-foreground">Workspace Error</CardTitle>
+          <CardTitle className="text-lg font-semibold text-foreground">
+            Lỗi không gian làm việc
+          </CardTitle>
           <CardDescription className="text-muted-foreground text-center">
-            An error occurred while loading this section of the workspace. You can retry or return
-            to your conversations.
+            Đã xảy ra sự cố trong quá trình tải dữ liệu phân hệ này. Bạn có thể thử lại hoặc quay về
+            hộp thư hội thoại.
           </CardDescription>
         </CardHeader>
 
@@ -49,21 +58,21 @@ export default function DashboardError({ error, reset }: DashboardErrorProps) {
           )}
           {error.digest && (
             <div className="font-mono text-[11px] text-muted-foreground/80">
-              Error Digest: {error.digest}
+              Mã tham chiếu: {error.digest}
             </div>
           )}
         </CardContent>
 
         <CardFooter className="flex flex-col sm:flex-row gap-2 pt-2 justify-center">
-          <Button variant="default" onClick={() => reset()} className="w-full sm:w-auto">
-            <RotateCcw />
-            Try Again
+          <Button variant="default" onClick={handleReset} className="w-full sm:w-auto">
+            <RotateCcw data-icon="inline-start" />
+            Thử lại
           </Button>
           {workspaceSlug && (
             <Button variant="outline" asChild className="w-full sm:w-auto">
               <Link href={`/${workspaceSlug}/conversations`}>
-                <MessageSquare />
-                Conversations
+                <MessageSquare data-icon="inline-start" />
+                Hộp thư hội thoại
               </Link>
             </Button>
           )}

@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Spinner } from '@/components/ui/spinner';
 import { useFacebookDiscoveredPages } from '@/features/settings/inboxes/hooks/use-inboxes';
-import { facebookApi } from '@/features/settings/inboxes/api/facebook';
+import { useFacebookOAuthPopup } from '@/features/settings/inboxes/hooks/use-facebook-oauth-popup';
 import { useNewInbox } from '../../context/new-inbox-context';
 import type { ChannelDefinition } from '../../channel-registry';
 
@@ -21,14 +21,25 @@ interface FacebookFlowProps {
 export function FacebookFlow({ channel }: FacebookFlowProps) {
   const {
     workspaceId,
-    workspaceSlug,
     sessionIdParam,
+    setSessionId,
     backToChannelSelect,
     proceedToCollaboratorsForFacebook,
     pendingFbPageIds,
   } = useNewInbox();
 
-  const [isRedirectingFb, setIsRedirectingFb] = React.useState(false);
+  const { openOAuthPopup, isConnecting: isRedirectingFb } = useFacebookOAuthPopup({
+    workspaceId,
+    onSuccess: sessionId => {
+      setSessionId(sessionId);
+      toast.success('Kết nối tài khoản Facebook thành công!');
+    },
+    onError: error => {
+      toast.error(error);
+    },
+  });
+
+  const handleStartFacebookOAuth = openOAuthPopup;
 
   const {
     data: pages = [],
@@ -52,23 +63,6 @@ export function FacebookFlow({ channel }: FacebookFlowProps) {
       }
     }
   }, [pages, pendingFbPageIds]);
-
-  const handleStartFacebookOAuth = async () => {
-    if (!workspaceId || isRedirectingFb) return;
-    setIsRedirectingFb(true);
-
-    try {
-      const origin = typeof window !== 'undefined' ? window.location.origin : '';
-      const returnUrl = `${origin}/${workspaceSlug}/settings/inboxes/new?channel=facebook`;
-
-      const res = await facebookApi.getAuthUrl(workspaceId, origin, returnUrl);
-      window.location.href = res.data.authUrl;
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Không thể khởi tạo ủy quyền Facebook';
-      toast.error(message);
-      setIsRedirectingFb(false);
-    }
-  };
 
   const handleToggleSelectPage = (pageId: string) => {
     setSelectedPageIds(prev =>
@@ -298,13 +292,13 @@ export function FacebookFlow({ channel }: FacebookFlowProps) {
         <CardContent className="flex flex-col gap-5 pt-2">
           <div className="rounded-lg border border-border bg-muted/40 p-4 text-xs leading-relaxed text-muted-foreground flex flex-col gap-2">
             <div className="flex items-center gap-2 font-medium text-foreground">
-              <ShieldCheck className="size-4 text-emerald-500" />
+              <ShieldCheck className="size-4 text-primary" />
               <span>Kết nối trực tiếp OAuth an toàn qua Meta</span>
             </div>
             <p>
-              Khi nhấp vào nút bên dưới, bạn sẽ được chuyển hướng đến trang ủy quyền chính thức của
-              Meta. Bạn có thể chọn những Fanpage muốn kết nối. Sau khi cấp quyền, Meta sẽ chuyển
-              hướng an toàn trở lại Sales Copilot với danh sách Fanpage sẵn sàng tạo hộp thư.
+              Khi nhấp vào nút bên dưới, cửa sổ xác thực chính thức của Meta sẽ mở lên. Bạn có thể
+              chọn những Fanpage muốn kết nối. Sau khi cấp quyền, cửa sổ sẽ tự động đóng và danh
+              sách Fanpage sẵn sàng để bạn chọn tạo hộp thư.
             </p>
           </div>
 
@@ -327,8 +321,8 @@ export function FacebookFlow({ channel }: FacebookFlowProps) {
             >
               {isRedirectingFb ? (
                 <>
-                  <Spinner className="size-3.5" />
-                  Đang kết nối Facebook...
+                  <Spinner className="size-3.5" data-icon="inline-start" />
+                  Đang mở cửa sổ kết nối...
                 </>
               ) : (
                 <>

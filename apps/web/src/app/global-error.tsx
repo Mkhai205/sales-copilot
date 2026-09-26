@@ -24,7 +24,7 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
   }, [error]);
 
   return (
-    <html lang="en" className="dark h-full antialiased font-sans">
+    <html lang="vi" className="h-full antialiased font-sans">
       <body className="h-full flex min-h-screen items-center justify-center bg-background p-6 text-foreground antialiased">
         <Card className="w-full max-w-md border-border bg-card shadow-2xl">
           <CardHeader className="text-center items-center pb-2">
@@ -32,26 +32,26 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
               <AlertTriangle className="size-6" />
             </div>
             <CardTitle className="text-lg font-semibold text-foreground">
-              Critical Application Error
+              Sự cố hệ thống nghiêm trọng
             </CardTitle>
             <CardDescription className="text-muted-foreground text-center">
-              An unexpected system error occurred in the root layout. Please try refreshing or
-              reloading the application.
+              Đã xảy ra lỗi không mong muốn trong quá trình dựng giao diện gốc. Vui lòng thử lại
+              hoặc tải lại toàn bộ ứng dụng.
             </CardDescription>
           </CardHeader>
 
           <CardContent className="flex flex-col gap-2 pt-2">
             {error.digest && (
               <div className="rounded-md border border-border/50 bg-muted/40 p-2.5 text-center font-mono text-[11px] text-muted-foreground break-all select-all">
-                Reference ID: {error.digest}
+                Mã tham chiếu: {error.digest}
               </div>
             )}
           </CardContent>
 
           <CardFooter className="flex flex-col sm:flex-row gap-2 pt-2 justify-center">
             <Button variant="default" onClick={() => reset()} className="w-full sm:w-auto">
-              <RotateCcw />
-              Try Again
+              <RotateCcw data-icon="inline-start" />
+              Thử lại
             </Button>
             <Button
               variant="outline"
@@ -60,8 +60,8 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
               }}
               className="w-full sm:w-auto"
             >
-              <Home />
-              Reload App
+              <Home data-icon="inline-start" />
+              Tải lại trang chủ
             </Button>
           </CardFooter>
         </Card>

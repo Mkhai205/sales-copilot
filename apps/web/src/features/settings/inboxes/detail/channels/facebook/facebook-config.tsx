@@ -41,6 +41,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { inboxKeys } from '@/lib/query-keys';
 import { facebookApi } from '../../../api/facebook';
 import { useUpdateInbox } from '../../../hooks/use-inboxes';
+import { useFacebookOAuthPopup } from '../../../hooks/use-facebook-oauth-popup';
 
 interface FacebookConfigProps {
   inbox: InboxDetailDto;
@@ -53,7 +54,6 @@ export function FacebookConfig({ inbox, workspaceId, workspaceSlug }: FacebookCo
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const { mutate: updateInbox, isPending: isUpdating } = useUpdateInbox(workspaceId);
-  const [isReauthorizing, setIsReauthorizing] = React.useState(false);
   const [isDisconnectOpen, setIsDisconnectOpen] = React.useState(false);
 
   const sessionId = searchParams.get('sessionId');
@@ -128,19 +128,39 @@ export function FacebookConfig({ inbox, workspaceId, workspaceSlug }: FacebookCo
   const lastSyncAt = channelSettings.lastSyncAt;
 
   // ── Handle OAuth Connect / Re-authorize ────────────────────────────────────
-  const handleStartFacebookOAuth = async () => {
-    setIsReauthorizing(true);
-    try {
-      const returnUrl = workspaceSlug
-        ? `${origin}/${workspaceSlug}/settings/inboxes/${inbox.id}?tab=configuration`
-        : `${origin}/settings/inboxes/${inbox.id}?tab=configuration`;
-      const res = await facebookApi.getAuthUrl(workspaceId, origin, returnUrl);
-      window.location.href = res.data.authUrl;
-    } catch (err: any) {
-      toast.error(err.message || 'Không thể khởi tạo liên kết Facebook OAuth');
-      setIsReauthorizing(false);
-    }
-  };
+  const handleReauthorizeSession = React.useCallback(
+    async (sessId: string) => {
+      if (!inbox.channel?.id) return;
+      setIsSyncingSession(true);
+      const channelId = inbox.channel.id;
+      try {
+        await facebookApi.reauthorizePage(workspaceId, channelId, sessId);
+        toast.success('Đồng bộ và kết nối Fanpage Facebook thành công!', {
+          id: `fb-reauth-${channelId}`,
+        });
+        queryClient.invalidateQueries({ queryKey: inboxKeys.detail(workspaceId, inbox.id) });
+      } catch (err: any) {
+        toast.error(err.message || 'Không thể đồng bộ Fanpage Facebook', {
+          id: `fb-reauth-${channelId}`,
+        });
+      } finally {
+        setIsSyncingSession(false);
+      }
+    },
+    [workspaceId, inbox.channel?.id, inbox.id, queryClient],
+  );
+
+  const { openOAuthPopup, isConnecting: isReauthorizing } = useFacebookOAuthPopup({
+    workspaceId,
+    onSuccess: newSessionId => {
+      handleReauthorizeSession(newSessionId);
+    },
+    onError: err => {
+      toast.error(err || 'Không thể khởi tạo liên kết Facebook OAuth');
+    },
+  });
+
+  const handleStartFacebookOAuth = openOAuthPopup;
 
   // ── Handle Disconnect ───────────────────────────────────────────────────
   const handleDisconnect = () => {

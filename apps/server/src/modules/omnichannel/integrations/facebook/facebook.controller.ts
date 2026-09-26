@@ -179,8 +179,8 @@ export class FacebookController {
   @Public()
   @ApiOperation({ summary: 'Handle Facebook OAuth callback redirect' })
   @ApiResponse({
-    status: 200,
-    description: 'HTML page sending postMessage to popup opener or redirecting',
+    status: 302,
+    description: 'Redirects to frontend OAuth callback page with sessionId or error',
   })
   async handleCallback(
     @Query('code') code: string,
@@ -206,82 +206,13 @@ export class FacebookController {
         redirectUrl = `${frontendUrl}/auth/facebook/callback?sessionId=${result.sessionId}&workspaceId=${result.workspaceId}`;
       }
 
-      const html = `<!DOCTYPE html>
-<html>
-<head>
-  <title>Facebook Authorization</title>
-  <meta charset="utf-8">
-  <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #f8fafc; color: #0f172a; }
-    .card { background: white; padding: 2rem; border-radius: 0.75rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); text-align: center; max-width: 400px; }
-    .spinner { border: 3px solid #e2e8f0; border-top: 3px solid #2563eb; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; margin: 0 auto 1rem; }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-  </style>
-</head>
-<body>
-  <div class="card">
-    <div class="spinner"></div>
-    <h3 style="margin: 0 0 0.5rem;">Authorization Successful</h3>
-    <p style="color: #64748b; font-size: 0.875rem; margin: 0;">Connecting your Facebook Pages, this window will close automatically...</p>
-  </div>
-  <script>
-    try {
-      if (window.opener) {
-        window.opener.postMessage({
-          type: 'FACEBOOK_OAUTH_SUCCESS',
-          sessionId: ${JSON.stringify(result.sessionId)},
-          workspaceId: ${JSON.stringify(result.workspaceId)}
-        }, '*');
-      }
-    } catch (e) {
-      // ignore
-    }
-    window.location.href = ${JSON.stringify(redirectUrl)};
-  </script>
-</body>
-</html>`;
-
-      res.setHeader('Content-Type', 'text/html');
-      res.status(HttpStatus.OK).send(html);
+      return res.redirect(redirectUrl);
     } catch (error) {
       const errorMsg = (error as Error).message || 'Facebook authorization failed';
       const frontendUrl = this.resolveFrontendUrl(undefined, req);
       const redirectUrl = `${frontendUrl}/auth/facebook/callback?error=${encodeURIComponent(errorMsg)}`;
 
-      const errorHtml = `<!DOCTYPE html>
-<html>
-<head>
-  <title>Facebook Authorization Failed</title>
-  <meta charset="utf-8">
-  <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #f8fafc; color: #0f172a; }
-    .card { background: white; padding: 2rem; border-radius: 0.75rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); text-align: center; max-width: 400px; }
-  </style>
-</head>
-<body>
-  <div class="card">
-    <h3 style="margin: 0 0 0.5rem; color: #dc2626;">Authorization Failed</h3>
-    <p style="color: #64748b; font-size: 0.875rem; margin: 0 0 1rem;">${errorMsg.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>
-    <button onclick="window.close()" style="background: #e2e8f0; border: none; padding: 0.5rem 1rem; border-radius: 0.375rem; cursor: pointer; font-size: 0.875rem;">Close Window</button>
-  </div>
-  <script>
-    try {
-      if (window.opener) {
-        window.opener.postMessage({
-          type: 'FACEBOOK_OAUTH_ERROR',
-          error: ${JSON.stringify(errorMsg)}
-        }, '*');
-      }
-    } catch (e) {
-      // ignore
-    }
-    window.location.href = ${JSON.stringify(redirectUrl)};
-  </script>
-</body>
-</html>`;
-
-      res.setHeader('Content-Type', 'text/html');
-      res.status(HttpStatus.OK).send(errorHtml);
+      return res.redirect(redirectUrl);
     }
   }
 

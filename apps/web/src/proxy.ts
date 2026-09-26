@@ -8,6 +8,8 @@ const PUBLIC_PREFIXES = [
   '/auth',
   '/api',
   '/_next',
+  '/_not-found',
+  '/not-found',
   '/favicon.ico',
   '/widget',
   '/test-chat.html',

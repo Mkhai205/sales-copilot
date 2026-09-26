@@ -3,9 +3,9 @@
 import * as React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch, type Control } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   AlertCircleIcon,
   ShieldCheckIcon,
@@ -30,7 +30,7 @@ const TEST_ACCOUNTS = [
     email: 'superadmin@salescopilot.io',
     password: 'SalesCopilot@2026!',
     icon: ShieldCheckIcon,
-    badgeClass: 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30',
+    roleTitle: 'Quản trị cấp cao',
   },
   {
     role: 'Admin',
@@ -38,7 +38,7 @@ const TEST_ACCOUNTS = [
     email: 'admin@salescopilot.io',
     password: 'SalesCopilot@2026!',
     icon: UserCheckIcon,
-    badgeClass: 'bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-500/30',
+    roleTitle: 'Quản trị viên',
   },
   {
     role: 'Agent',
@@ -46,20 +46,65 @@ const TEST_ACCOUNTS = [
     email: 'agent@salescopilot.io',
     password: 'SalesCopilot@2026!',
     icon: HeadphonesIcon,
-    badgeClass: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30',
+    roleTitle: 'Chuyên viên CSKH',
   },
-];
+] as const;
+
+interface QuickTestAccountsProps {
+  control: Control<LoginDto>;
+  onSelectAccount: (account: (typeof TEST_ACCOUNTS)[number]) => void;
+  disabled: boolean;
+}
+
+/**
+ * Isolated sub-component subscribing to email value via useWatch.
+ * Prevents the entire LoginForm and illustration panels from re-rendering on every keystroke.
+ */
+function QuickTestAccounts({ control, onSelectAccount, disabled }: QuickTestAccountsProps) {
+  const emailValue = useWatch({ control, name: 'email' });
+
+  return (
+    <div className="flex flex-col gap-3 mt-3 pt-3 border-t border-border/60">
+      <div className="flex items-center gap-1 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+        <SparklesIcon className="size-3 text-primary" />
+        <span>Tài khoản thử nghiệm nhanh</span>
+      </div>
+      <div className="grid grid-cols-3 gap-1.5">
+        {TEST_ACCOUNTS.map(acc => {
+          const Icon = acc.icon;
+          const isSelected = emailValue === acc.email;
+          return (
+            <button
+              key={acc.email}
+              type="button"
+              onClick={() => onSelectAccount(acc)}
+              disabled={disabled}
+              className={cn(
+                'flex items-center justify-center gap-1 p-2 text-[11px] rounded-md border transition-all hover:border-primary/50 hover:bg-muted/50',
+                isSelected
+                  ? 'border-primary bg-primary/5 shadow-xs'
+                  : 'border-border/60 bg-card/60',
+              )}
+            >
+              <Icon className="size-4 text-primary" />
+              {acc.roleTitle}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) {
   const queryClient = useQueryClient();
   const [apiError, setApiError] = React.useState<string | null>(null);
-  const [isPending, setIsPending] = React.useState(false);
 
   const {
     register,
     handleSubmit,
     setValue,
-    watch,
+    control,
     formState: { errors },
   } = useForm<LoginDto>({
     resolver: zodResolver(loginSchema),
@@ -69,34 +114,33 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
     },
   });
 
-  const emailValue = watch('email');
+  const { mutate: login, isPending } = useMutation({
+    mutationFn: async (formData: LoginDto) => {
+      setApiError(null);
+      return await loginAction(formData);
+    },
+    onSuccess: result => {
+      if (result && !result.success && result.error) {
+        setApiError(
+          result.error.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin tài khoản.',
+        );
+        return;
+      }
+      // Clear cache strictly upon successful authentication
+      queryClient.clear();
+    },
+    onError: (err: any) => {
+      if (err?.digest?.startsWith('NEXT_REDIRECT') || err?.message === 'NEXT_REDIRECT') {
+        return;
+      }
+      setApiError(err?.message || 'Đã xảy ra lỗi không mong muốn. Vui lòng thử lại.');
+    },
+  });
 
   const handleSelectTestAccount = (account: (typeof TEST_ACCOUNTS)[number]) => {
     setValue('email', account.email, { shouldValidate: true });
     setValue('password', account.password, { shouldValidate: true });
     setApiError(null);
-  };
-
-  const onSubmit = async (formData: LoginDto) => {
-    setApiError(null);
-    setIsPending(true);
-    queryClient.clear();
-
-    try {
-      const result = await loginAction(formData);
-      if (result && !result.success && result.error) {
-        setApiError(
-          result.error.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin tài khoản.',
-        );
-        setIsPending(false);
-      }
-    } catch (err: any) {
-      if (err?.digest?.startsWith('NEXT_REDIRECT') || err?.message === 'NEXT_REDIRECT') {
-        return;
-      }
-      setApiError(err?.message || 'Đã xảy ra lỗi không mong muốn. Vui lòng thử lại.');
-      setIsPending(false);
-    }
   };
 
   return (
@@ -105,7 +149,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
         <CardContent className="grid p-0 md:grid-cols-2">
           {/* Left: Form */}
           <form
-            onSubmit={handleSubmit(onSubmit)}
+            onSubmit={handleSubmit(data => login(data))}
             className="p-6 sm:p-8 flex flex-col justify-center"
           >
             <FieldGroup>
@@ -132,9 +176,9 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
                     className="hidden h-10 w-auto object-contain dark:block"
                   />
                 </div>
-                <h1 className="text-2xl font-bold tracking-tight">{'Chào mừng bạn quay lại'}</h1>
+                <h1 className="text-2xl font-bold tracking-tight">Chào mừng bạn quay lại</h1>
                 <p className="text-xs text-muted-foreground text-center">
-                  {'Đăng nhập để truy cập hộp thư đa kênh và trợ lý hội thoại của bạn'}
+                  Đăng nhập để truy cập hộp thư đa kênh và trợ lý hội thoại của bạn
                 </p>
               </div>
 
@@ -145,124 +189,69 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
                 </Alert>
               )}
 
-              <Field data-invalid={!!errors.email}>
+              <Field data-invalid={!!errors.email} data-disabled={isPending}>
                 <FieldLabel htmlFor="email" className="text-xs font-medium">
-                  {'Email công việc'}
+                  Email công việc
                 </FieldLabel>
                 <Input
                   id="email"
                   type="email"
                   placeholder="ban@congty.vn"
-                  className="h-9"
                   autoComplete="email"
+                  aria-invalid={!!errors.email}
                   disabled={isPending}
                   {...register('email')}
                 />
                 {errors.email?.message && <FieldError>{errors.email.message}</FieldError>}
               </Field>
 
-              <Field data-invalid={!!errors.password}>
+              <Field data-invalid={!!errors.password} data-disabled={isPending}>
                 <div className="flex items-center justify-between w-full">
                   <FieldLabel htmlFor="password" className="text-xs font-medium">
-                    {'Mật khẩu'}
+                    Mật khẩu
                   </FieldLabel>
                   <Link
                     href="#"
                     className="text-xs text-muted-foreground hover:text-primary transition-colors underline-offset-2 hover:underline"
                   >
-                    {'Quên mật khẩu?'}
+                    Quên mật khẩu?
                   </Link>
                 </div>
                 <Input
                   id="password"
                   type="password"
                   placeholder="••••••••"
-                  className="h-9"
                   autoComplete="current-password"
+                  aria-invalid={!!errors.password}
                   disabled={isPending}
                   {...register('password')}
                 />
                 {errors.password?.message && <FieldError>{errors.password.message}</FieldError>}
               </Field>
 
-              <Field className="mt-1">
+              <div className="mt-2">
                 <Button
                   type="submit"
-                  size="lg"
-                  className="w-full h-9 font-medium shadow-sm cursor-pointer"
+                  size="default"
+                  className="w-full font-medium shadow-sm"
                   disabled={isPending}
                 >
-                  {isPending ? (
-                    <>
-                      <Spinner className="mr-2" />
-                      {'Đang đăng nhập...'}
-                    </>
-                  ) : (
-                    'Đăng nhập'
-                  )}
+                  {isPending && <Spinner data-icon="inline-start" />}
+                  {isPending ? 'Đang đăng nhập...' : 'Đăng nhập'}
                 </Button>
-              </Field>
-
-              {/* Quick Test Accounts Section */}
-              <div className="mt-3 pt-3 border-t border-border/60">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-1 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                    <SparklesIcon className="size-3 text-primary" />
-                    <span>{'Tài khoản thử nghiệm nhanh'}</span>
-                  </div>
-                  <span className="text-[10px] text-muted-foreground font-mono">Điền nhanh</span>
-                </div>
-                <div className="grid grid-cols-3 gap-1.5">
-                  {TEST_ACCOUNTS.map(acc => {
-                    const Icon = acc.icon;
-                    const isSelected = emailValue === acc.email;
-                    const roleName =
-                      acc.role === 'Super Admin'
-                        ? 'Quản trị cấp cao'
-                        : acc.role === 'Admin'
-                          ? 'Quản trị viên'
-                          : 'Chuyên viên CSKH';
-                    return (
-                      <button
-                        key={acc.email}
-                        type="button"
-                        onClick={() => handleSelectTestAccount(acc)}
-                        disabled={isPending}
-                        className={cn(
-                          'flex flex-col items-start gap-1 p-2 rounded-md border text-left transition-all cursor-pointer',
-                          'hover:border-primary/50 hover:bg-muted/50 focus:outline-none focus:ring-1 focus:ring-ring',
-                          isSelected
-                            ? 'border-primary bg-primary/5 shadow-xs'
-                            : 'border-border/60 bg-card/60',
-                        )}
-                      >
-                        <div className="flex items-center justify-between w-full">
-                          <span
-                            className={cn(
-                              'inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-semibold border',
-                              acc.badgeClass,
-                            )}
-                          >
-                            <Icon className="size-2.5" />
-                            {roleName}
-                          </span>
-                        </div>
-                        <span
-                          className="text-[10px] text-muted-foreground font-mono truncate w-full"
-                          title={acc.email}
-                        >
-                          {acc.email.split('@')[0]}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
               </div>
 
+              {/* Quick Test Accounts Section */}
+              <QuickTestAccounts
+                control={control}
+                onSelectAccount={handleSelectTestAccount}
+                disabled={isPending}
+              />
+
               <FieldDescription className="text-center mt-1 text-xs">
-                {'Chưa có tài khoản? '}
+                Chưa có tài khoản?{' '}
                 <Link href="/register" className="font-medium text-primary hover:underline">
-                  {'Đăng ký'}
+                  Đăng ký
                 </Link>
               </FieldDescription>
             </FieldGroup>
@@ -270,17 +259,16 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
 
           {/* Right: Feature Showcase Panel */}
           <div className="relative hidden md:flex flex-col justify-between p-8 bg-gradient-to-br from-primary/15 via-primary/5 to-muted border-l border-border/60">
-            <div className="space-y-3">
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-primary/15 text-primary border border-primary/20">
-                {'Nền tảng Đa kênh'}
+            <div className="flex flex-col gap-3">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-primary/15 text-primary border border-primary/20 w-fit">
+                Nền tảng Đa kênh
               </div>
               <h2 className="text-xl font-bold tracking-tight text-foreground">
-                {'Hội thoại Khách hàng Thống nhất & AI Sales Copilot'}
+                Hội thoại Khách hàng Thống nhất & AI Sales Copilot
               </h2>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                {
-                  'Kết nối Facebook, Zalo, Telegram, Email và Web Chat trong một hộp thư thời gian thực duy nhất.'
-                }
+                Kết nối Facebook, Zalo, Telegram, Email và Web Chat trong một hộp thư thời gian thực
+                duy nhất.
               </p>
             </div>
 
@@ -296,18 +284,18 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
               />
             </div>
 
-            <div className="space-y-2.5 pt-4 border-t border-border/40">
+            <div className="flex flex-col gap-2.5 pt-4 border-t border-border/40">
               <div className="flex items-center gap-2.5 text-xs text-muted-foreground">
-                <div className="size-2 rounded-full bg-emerald-500 shrink-0" />
-                <span>{'Luồng sự kiện WebSocket thời gian thực'}</span>
+                <div className="size-2 rounded-full bg-primary shrink-0" />
+                <span>Luồng sự kiện WebSocket thời gian thực</span>
               </div>
               <div className="flex items-center gap-2.5 text-xs text-muted-foreground">
-                <div className="size-2 rounded-full bg-blue-500 shrink-0" />
-                <span>{'Cô lập không gian làm việc đa người thuê (Multi-tenant)'}</span>
+                <div className="size-2 rounded-full bg-primary/80 shrink-0" />
+                <span>Cô lập không gian làm việc đa người thuê (Multi-tenant)</span>
               </div>
               <div className="flex items-center gap-2.5 text-xs text-muted-foreground">
-                <div className="size-2 rounded-full bg-purple-500 shrink-0" />
-                <span>{'Tự động phân bổ tư vấn viên & tin nhắn mẫu thông minh'}</span>
+                <div className="size-2 rounded-full bg-primary/60 shrink-0" />
+                <span>Tự động phân bổ tư vấn viên & tin nhắn mẫu thông minh</span>
               </div>
             </div>
           </div>
@@ -315,15 +303,15 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
       </Card>
 
       <FieldDescription className="px-6 text-center text-xs text-muted-foreground">
-        {'Bằng cách tiếp tục, bạn đồng ý với '}
+        Bằng cách tiếp tục, bạn đồng ý với{' '}
         <Link href="#" className="underline hover:text-primary">
-          {'Điều khoản Dịch vụ'}
+          Điều khoản Dịch vụ
         </Link>{' '}
-        {'và '}
+        và{' '}
         <Link href="#" className="underline hover:text-primary">
-          {'Chính sách Quyền riêng tư'}
-        </Link>
-        {' của chúng tôi.'}
+          Chính sách Quyền riêng tư
+        </Link>{' '}
+        của chúng tôi.
       </FieldDescription>
     </div>
   );

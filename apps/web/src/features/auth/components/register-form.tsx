@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { AlertCircleIcon } from 'lucide-react';
 import { z } from 'zod';
 import { registerSchema, type RegisterDto } from '@sales-copilot/shared-contracts';
@@ -32,7 +32,6 @@ type RegisterFormValues = z.infer<typeof registerFormSchema>;
 export function RegisterForm({ className, ...props }: React.ComponentProps<'div'>) {
   const queryClient = useQueryClient();
   const [apiError, setApiError] = React.useState<string | null>(null);
-  const [isPending, setIsPending] = React.useState(false);
 
   const {
     register,
@@ -48,34 +47,34 @@ export function RegisterForm({ className, ...props }: React.ComponentProps<'div'
     },
   });
 
-  const onSubmit = async (data: RegisterFormValues) => {
-    setApiError(null);
-    setIsPending(true);
-    queryClient.clear();
-
-    const formData: RegisterDto = {
-      workspaceName: data.workspaceName?.trim() || undefined,
-      name: data.name.trim(),
-      email: data.email.trim(),
-      password: data.password,
-    };
-
-    try {
-      const result = await registerAction(formData);
+  const { mutate: handleRegister, isPending } = useMutation({
+    mutationFn: async (data: RegisterFormValues) => {
+      setApiError(null);
+      const formData: RegisterDto = {
+        workspaceName: data.workspaceName?.trim() || undefined,
+        name: data.name.trim(),
+        email: data.email.trim(),
+        password: data.password,
+      };
+      return await registerAction(formData);
+    },
+    onSuccess: result => {
       if (result && !result.success && result.error) {
         setApiError(
           result.error.message || 'Đăng ký thất bại. Vui lòng kiểm tra lại thông tin cung cấp.',
         );
-        setIsPending(false);
+        return;
       }
-    } catch (err: any) {
+      // Clear cache strictly upon successful registration
+      queryClient.clear();
+    },
+    onError: (err: any) => {
       if (err?.digest?.startsWith('NEXT_REDIRECT') || err?.message === 'NEXT_REDIRECT') {
         return;
       }
       setApiError(err?.message || 'Đã xảy ra lỗi không mong muốn. Vui lòng thử lại.');
-      setIsPending(false);
-    }
-  };
+    },
+  });
 
   return (
     <div className={cn('flex flex-col gap-6 w-full', className)} {...props}>
@@ -83,7 +82,7 @@ export function RegisterForm({ className, ...props }: React.ComponentProps<'div'
         <CardContent className="grid p-0 md:grid-cols-2">
           {/* Left: Register Form */}
           <form
-            onSubmit={handleSubmit(onSubmit)}
+            onSubmit={handleSubmit(data => handleRegister(data))}
             className="p-6 sm:p-8 flex flex-col justify-center"
           >
             <FieldGroup>
@@ -123,14 +122,14 @@ export function RegisterForm({ className, ...props }: React.ComponentProps<'div'
                 </Alert>
               )}
 
-              <Field data-invalid={!!errors.workspaceName}>
+              <Field data-invalid={!!errors.workspaceName} data-disabled={isPending}>
                 <FieldLabel htmlFor="workspaceName" className="text-xs font-medium">
                   Tên Shop / Doanh nghiệp
                 </FieldLabel>
                 <Input
                   id="workspaceName"
                   placeholder="Cửa hàng thời trang ABC"
-                  className="h-9"
+                  aria-invalid={!!errors.workspaceName}
                   disabled={isPending}
                   {...register('workspaceName')}
                 />
@@ -139,22 +138,22 @@ export function RegisterForm({ className, ...props }: React.ComponentProps<'div'
                 )}
               </Field>
 
-              <Field data-invalid={!!errors.name}>
+              <Field data-invalid={!!errors.name} data-disabled={isPending}>
                 <FieldLabel htmlFor="name" className="text-xs font-medium">
                   Họ và tên chủ shop
                 </FieldLabel>
                 <Input
                   id="name"
                   placeholder="Nguyễn Văn A"
-                  className="h-9"
                   autoComplete="name"
+                  aria-invalid={!!errors.name}
                   disabled={isPending}
                   {...register('name')}
                 />
                 {errors.name?.message && <FieldError>{errors.name.message}</FieldError>}
               </Field>
 
-              <Field data-invalid={!!errors.email}>
+              <Field data-invalid={!!errors.email} data-disabled={isPending}>
                 <FieldLabel htmlFor="email" className="text-xs font-medium">
                   Email liên hệ
                 </FieldLabel>
@@ -162,15 +161,15 @@ export function RegisterForm({ className, ...props }: React.ComponentProps<'div'
                   id="email"
                   type="email"
                   placeholder="ban@congty.vn"
-                  className="h-9"
                   autoComplete="email"
+                  aria-invalid={!!errors.email}
                   disabled={isPending}
                   {...register('email')}
                 />
                 {errors.email?.message && <FieldError>{errors.email.message}</FieldError>}
               </Field>
 
-              <Field data-invalid={!!errors.password}>
+              <Field data-invalid={!!errors.password} data-disabled={isPending}>
                 <FieldLabel htmlFor="password" className="text-xs font-medium">
                   Mật khẩu
                 </FieldLabel>
@@ -178,31 +177,25 @@ export function RegisterForm({ className, ...props }: React.ComponentProps<'div'
                   id="password"
                   type="password"
                   placeholder="Ít nhất 6 ký tự"
-                  className="h-9"
                   autoComplete="new-password"
+                  aria-invalid={!!errors.password}
                   disabled={isPending}
                   {...register('password')}
                 />
                 {errors.password?.message && <FieldError>{errors.password.message}</FieldError>}
               </Field>
 
-              <Field className="mt-2">
+              <div className="mt-2">
                 <Button
                   type="submit"
-                  size="lg"
-                  className="w-full h-9 font-medium shadow-sm cursor-pointer"
+                  size="default"
+                  className="w-full font-medium shadow-sm"
                   disabled={isPending}
                 >
-                  {isPending ? (
-                    <>
-                      <Spinner className="mr-2" />
-                      Đang tạo cửa hàng...
-                    </>
-                  ) : (
-                    'Đăng ký cửa hàng'
-                  )}
+                  {isPending && <Spinner data-icon="inline-start" />}
+                  {isPending ? 'Đang tạo cửa hàng...' : 'Đăng ký cửa hàng'}
                 </Button>
-              </Field>
+              </div>
 
               <FieldDescription className="text-center mt-2 text-xs">
                 Đã có tài khoản?{' '}
@@ -215,8 +208,8 @@ export function RegisterForm({ className, ...props }: React.ComponentProps<'div'
 
           {/* Right: Feature Showcase Panel */}
           <div className="relative hidden md:flex flex-col justify-between p-8 bg-gradient-to-br from-primary/15 via-primary/5 to-muted border-l border-border/60">
-            <div className="space-y-3">
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-primary/15 text-primary border border-primary/20">
+            <div className="flex flex-col gap-3">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-primary/15 text-primary border border-primary/20 w-fit">
                 Khởi tạo miễn phí
               </div>
               <h2 className="text-xl font-bold tracking-tight text-foreground">
@@ -240,17 +233,17 @@ export function RegisterForm({ className, ...props }: React.ComponentProps<'div'
               />
             </div>
 
-            <div className="space-y-2.5 pt-4 border-t border-border/40">
+            <div className="flex flex-col gap-2.5 pt-4 border-t border-border/40">
               <div className="flex items-center gap-2.5 text-xs text-muted-foreground">
-                <div className="size-2 rounded-full bg-emerald-500 shrink-0" />
+                <div className="size-2 rounded-full bg-primary shrink-0" />
                 <span>Mô hình 1 tài khoản = 1 shop khép kín & bảo mật</span>
               </div>
               <div className="flex items-center gap-2.5 text-xs text-muted-foreground">
-                <div className="size-2 rounded-full bg-blue-500 shrink-0" />
+                <div className="size-2 rounded-full bg-primary/80 shrink-0" />
                 <span>Tạo tài khoản nhân viên nhanh chóng không cần link mời</span>
               </div>
               <div className="flex items-center gap-2.5 text-xs text-muted-foreground">
-                <div className="size-2 rounded-full bg-purple-500 shrink-0" />
+                <div className="size-2 rounded-full bg-primary/60 shrink-0" />
                 <span>Trợ lý AI bán hàng và tự động lên đơn tự động</span>
               </div>
             </div>
