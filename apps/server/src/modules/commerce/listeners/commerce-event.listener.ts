@@ -25,7 +25,6 @@ export class CommerceEventListener {
   constructor(private readonly messagesService: MessagesService) {}
 
   @OnEvent(DomainEvent.ORDER_PAID)
-  @OnEvent('order.paid')
   async handleOrderPaid(payload: OrderPaidListenerPayload): Promise<void> {
     if (!payload?.workspaceId || !payload?.orderId) {
       return;
@@ -76,7 +75,6 @@ export class CommerceEventListener {
   }
 
   @OnEvent(DomainEvent.ORDER_PARTIALLY_PAID)
-  @OnEvent('order.partially_paid')
   async handleOrderPartiallyPaid(payload: {
     workspaceId: string;
     orderId: string;
@@ -143,7 +141,6 @@ export class CommerceEventListener {
   }
 
   @OnEvent(DomainEvent.ORDER_CONFIRMED)
-  @OnEvent('order.confirmed')
   async handleOrderConfirmed(payload: {
     workspaceId: string;
     orderId: string;
@@ -199,7 +196,6 @@ export class CommerceEventListener {
   }
 
   @OnEvent(DomainEvent.ORDER_COMPLETED)
-  @OnEvent('order.completed')
   async handleOrderCompleted(payload: {
     workspaceId: string;
     orderId: string;
@@ -246,7 +242,6 @@ export class CommerceEventListener {
   }
 
   @OnEvent(DomainEvent.ORDER_CANCELLED)
-  @OnEvent('order.cancelled')
   async handleOrderCancelled(payload: {
     workspaceId: string;
     orderId: string;

@@ -625,7 +625,7 @@ describe('WebChatGateway (Widget WebSocket Namespace /widget)', () => {
     });
   });
 
-  describe('handleOutboundMessage() (@OnEvent widget.outbound_message)', () => {
+  describe('handleOutboundMessage() (@OnEvent widget:message)', () => {
     it('should broadcast outbound message to visitor socket rooms', () => {
       const eventPayload = {
         workspaceId: 'ws_test_001',

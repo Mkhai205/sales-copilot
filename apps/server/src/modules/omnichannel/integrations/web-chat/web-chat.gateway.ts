@@ -437,7 +437,6 @@ export class WebChatGateway
    * Listens for outbound messages dispatched by OutboundMessageListener / WebChatAdapter
    * and broadcasts them directly to the visitor's socket rooms.
    */
-  @OnEvent('widget.outbound_message')
   @OnEvent('widget:message')
   handleOutboundMessage(payload: WebChatOutboundEventPayload) {
     if (!this.server || !payload) return;
@@ -445,8 +444,7 @@ export class WebChatGateway
     const { channelId, recipientExternalId, message } = payload;
     if (!recipientExternalId || !message) return;
 
-    // Deduplicate so that multiple events (e.g. 'widget.outbound_message' and 'widget:message')
-    // for the same message only broadcast once.
+    // Idempotency guard: producer retries must not double-broadcast the same message.
     const msgObj = message as any;
     const msgId =
       msgObj.id ||

@@ -30,9 +30,10 @@ import {
   ChevronRight,
   HelpCircle,
 } from 'lucide-react';
-import type {
-  PaymentTransactionResponseDto,
-  PaginationMeta,
+import {
+  PaymentTransactionStatus,
+  type PaymentTransactionResponseDto,
+  type PaginationMeta,
 } from '@sales-copilot/shared-contracts';
 
 function formatDateTime(dateInput: Date | string): string {
@@ -137,8 +138,8 @@ export function ReconciliationLedgerTable({
           </TableHeader>
           <TableBody>
             {transactions.map(tx => {
-              const isSuccess = tx.status === 'SUCCESS';
-              const isPending = tx.status === 'PENDING';
+              const isSuccess = tx.status === PaymentTransactionStatus.SUCCESS;
+              const isPending = tx.status === PaymentTransactionStatus.PENDING;
 
               return (
                 <TableRow

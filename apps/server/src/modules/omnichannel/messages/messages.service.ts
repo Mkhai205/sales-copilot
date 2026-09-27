@@ -467,6 +467,7 @@ export class MessagesService {
         limit,
         total,
         totalPages,
+        hasMore: page < totalPages,
         hasNextPage: page < totalPages,
         hasPreviousPage: page > 1,
       },

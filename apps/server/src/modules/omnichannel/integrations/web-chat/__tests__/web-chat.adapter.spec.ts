@@ -404,9 +404,8 @@ describe('WebChatAdapter (Web Chat Widget Channel Integration)', () => {
       expect(result.deliveryStatus).toBe(DeliveryStatus.SENT);
       expect(typeof result.rawResponse).toBe('object');
 
-      expect(emittedEvents.length).toBe(2);
-      expect(emittedEvents[0].event).toBe('widget.outbound_message');
-      expect(emittedEvents[1].event).toBe('widget:message');
+      expect(emittedEvents.length).toBe(1);
+      expect(emittedEvents[0].event).toBe('widget:message');
 
       const payload = emittedEvents[0].payload as any;
       expect(payload.workspaceId).toBe(mockChannelContext.workspaceId);

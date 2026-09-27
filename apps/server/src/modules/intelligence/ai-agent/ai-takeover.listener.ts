@@ -56,27 +56,34 @@ export class AiTakeoverListener {
 
     const client = this.prisma.getClient();
 
-    // Set isAiPaused = true (Strict Multi-Tenancy)
-    const result = await client.conversation.updateMany({
-      where: {
-        id: conversationId,
-        workspaceId,
-        isAiPaused: false,
-      },
-      data: {
-        isAiPaused: true,
-      },
-    });
+    try {
+      // Set isAiPaused = true (Strict Multi-Tenancy)
+      const result = await client.conversation.updateMany({
+        where: {
+          id: conversationId,
+          workspaceId,
+          isAiPaused: false,
+        },
+        data: {
+          isAiPaused: true,
+        },
+      });
 
-    if (result.count > 0) {
-      this.logger.log(
-        `Human agent sent public message in conversation '${conversationId}'. AI paused (Human Takeover activated).`,
+      if (result.count > 0) {
+        this.logger.log(
+          `Human agent sent public message in conversation '${conversationId}'. AI paused (Human Takeover activated).`,
+        );
+      }
+
+      // Clear any pending debounce key
+      const debounceKey = getAiDebounceKey(workspaceId, conversationId);
+      await this.redisService.del(debounceKey);
+    } catch (err) {
+      this.logger.error(
+        `Failed to activate human takeover for conversation '${conversationId}': ${(err as Error).message}`,
+        (err as Error).stack,
       );
     }
-
-    // Clear any pending debounce key
-    const debounceKey = getAiDebounceKey(workspaceId, conversationId);
-    await this.redisService.del(debounceKey);
   }
 
   /**
@@ -89,21 +96,30 @@ export class AiTakeoverListener {
     if (currentStatus === ConversationStatus.RESOLVED) {
       const client = this.prisma.getClient();
 
-      await client.conversation.updateMany({
-        where: {
-          id: conversationId,
-          workspaceId,
-          isAiPaused: true,
-        },
-        data: {
-          isAiPaused: false,
-        },
-      });
+      try {
+        await client.conversation.updateMany({
+          where: {
+            id: conversationId,
+            workspaceId,
+            isAiPaused: true,
+          },
+          data: {
+            isAiPaused: false,
+          },
+        });
 
-      const debounceKey = getAiDebounceKey(workspaceId, conversationId);
-      await this.redisService.del(debounceKey);
+        const debounceKey = getAiDebounceKey(workspaceId, conversationId);
+        await this.redisService.del(debounceKey);
 
-      this.logger.debug(`Conversation '${conversationId}' resolved. AI pause flag reset to false.`);
+        this.logger.debug(
+          `Conversation '${conversationId}' resolved. AI pause flag reset to false.`,
+        );
+      } catch (err) {
+        this.logger.error(
+          `Failed to reset AI pause flag for conversation '${conversationId}': ${(err as Error).message}`,
+          (err as Error).stack,
+        );
+      }
     }
   }
 }

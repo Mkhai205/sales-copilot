@@ -21,6 +21,8 @@ import { commerceKeys } from '@/lib/query-keys';
 import { useManualMatchTransaction } from '../hooks/use-reconciliation';
 import { Check, Loader2, Search, Sparkles } from 'lucide-react';
 import {
+  OrderStatus,
+  PaymentStatus,
   manualMatchTransactionSchema,
   type ManualMatchTransactionDto,
   type OrderResponseDto,
@@ -93,8 +95,9 @@ export function ManualMatchDialog({
   const eligibleOrders = React.useMemo(() => {
     const filtered = rawOrders.filter(
       o =>
-        o.status !== 'CANCELLED' &&
-        (o.paymentStatus === 'UNPAID' || o.paymentStatus === 'PARTIALLY_PAID'),
+        o.status !== OrderStatus.CANCELLED &&
+        (o.paymentStatus === PaymentStatus.UNPAID ||
+          o.paymentStatus === PaymentStatus.PARTIALLY_PAID),
     );
 
     const txAmount = Number(transaction?.amount || 0);

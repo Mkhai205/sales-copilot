@@ -220,7 +220,6 @@ export class RealtimeEventDispatcher {
   // ==========================================================================
 
   @OnEvent(DomainEvent.CONTACT_CREATED)
-  @OnEvent('contact.created')
   handleContactCreated(payload: ContactCreatedEvent): void {
     if (!payload?.workspaceId) return;
     const data = payload.contact || payload;
@@ -228,7 +227,6 @@ export class RealtimeEventDispatcher {
   }
 
   @OnEvent(DomainEvent.CONTACT_UPDATED)
-  @OnEvent('contact.updated')
   handleContactUpdated(payload: ContactUpdatedEvent): void {
     if (!payload?.workspaceId) return;
     const data = payload.contact || payload;
@@ -236,7 +234,6 @@ export class RealtimeEventDispatcher {
   }
 
   @OnEvent(DomainEvent.CONTACT_DELETED)
-  @OnEvent('contact.deleted')
   handleContactDeleted(payload: ContactDeletedEvent): void {
     if (!payload?.workspaceId) return;
     const data = {

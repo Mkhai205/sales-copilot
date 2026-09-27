@@ -46,7 +46,11 @@ export async function ensureDivisionsLoaded(): Promise<{
       cachedProvinces = provinces;
       cachedDistricts = districts;
       cachedCommunes = communes;
-    })();
+    })().catch(err => {
+      // Allow a later call to retry instead of awaiting a permanently rejected promise.
+      loadPromise = null;
+      throw err;
+    });
   }
 
   await loadPromise;

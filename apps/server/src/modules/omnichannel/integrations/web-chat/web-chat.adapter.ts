@@ -346,7 +346,6 @@ export class WebChatAdapter implements ChannelAdapter {
 
     if (this.eventEmitter) {
       try {
-        this.eventEmitter.emit('widget.outbound_message', outboundEvent);
         this.eventEmitter.emit('widget:message', outboundEvent);
       } catch (err) {
         this.logger.warn(`Failed to emit widget outbound message event: ${(err as Error).message}`);

@@ -23,7 +23,10 @@ import {
   XCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import type { PaymentTransactionResponseDto } from '@sales-copilot/shared-contracts';
+import {
+  PaymentTransactionStatus,
+  type PaymentTransactionResponseDto,
+} from '@sales-copilot/shared-contracts';
 
 interface TransactionDetailSheetProps {
   open: boolean;
@@ -53,8 +56,8 @@ export function TransactionDetailSheet({
     setTimeout(() => setCopiedField(null), 2000);
   };
 
-  const isPending = transaction.status === 'PENDING';
-  const isSuccess = transaction.status === 'SUCCESS';
+  const isPending = transaction.status === PaymentTransactionStatus.PENDING;
+  const isSuccess = transaction.status === PaymentTransactionStatus.SUCCESS;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
