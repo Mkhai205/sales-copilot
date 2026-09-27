@@ -6,8 +6,8 @@ import {
   SystemSettingItemDto,
   UpdateSystemSettingDto,
 } from '@sales-copilot/shared-contracts';
-import { PrismaService } from '../../../infrastructure/database';
-import { RedisService } from '../../../infrastructure/redis';
+import { PrismaService } from '../../../infrastructure/database/prisma.service';
+import { RedisService } from '../../../infrastructure/redis/redis.service';
 
 export interface ActorContext {
   userId: string;

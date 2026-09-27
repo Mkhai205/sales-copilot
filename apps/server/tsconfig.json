@@ -7,5 +7,5 @@
     "types": ["node", "jest"],
     "jsx": "react-jsx"
   },
-  "include": ["src/**/*", "prisma/**/*"]
+  "include": ["src/**/*", "prisma/**/*", "test/**/*"]
 }

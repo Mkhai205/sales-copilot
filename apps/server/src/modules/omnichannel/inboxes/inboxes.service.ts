@@ -21,7 +21,7 @@ import {
   UpdateInboxDto,
   WorkspaceRole,
 } from '@sales-copilot/shared-contracts';
-import { PrismaService } from '../../../infrastructure/database';
+import { PrismaService } from '../../../infrastructure/database/prisma.service';
 import { StorageService } from '../../../infrastructure/storage/storage.service';
 import { ChannelCredentialService } from './channel-credential.service';
 
@@ -108,6 +108,29 @@ export class InboxesService {
   }
 
   /**
+   * Normalizes an avatar URL or key into a clean relative storage key (e.g. 'avatars/inboxes/...')
+   * before storing in the database. External non-storage URLs are preserved as-is.
+   */
+  private normalizeAvatarStorageKey(avatarUrl?: string | null): string | null {
+    if (!avatarUrl || !avatarUrl.trim()) return null;
+    const trimmed = avatarUrl.trim();
+    if (this.storageService) {
+      return this.storageService.extractStorageKey(trimmed) || null;
+    }
+    return trimmed.replace(/^\/+/, '');
+  }
+
+  /**
+   * Resolves a stored avatar storage key or legacy MinIO URL to an active, environment-accurate public URL.
+   * External CDN URLs are returned untouched.
+   */
+  private resolveAvatarUrl(avatarUrl?: string | null): string | null {
+    if (!avatarUrl || !avatarUrl.trim()) return null;
+    const trimmed = avatarUrl.trim();
+    return this.storageService ? this.storageService.resolvePublicUrl(trimmed) : trimmed;
+  }
+
+  /**
    * Creates an Inbox and linked Channel (1:1) in a single database transaction.
    * Credentials are encrypted using AES-256-GCM before database insertion.
    */
@@ -148,11 +171,13 @@ export class InboxesService {
     const result = await this.prisma.runInTransaction(async txCtx => {
       const tx = txCtx.tx;
 
+      const normalizedAvatarUrl = this.normalizeAvatarStorageKey(dto.avatarUrl);
+
       const inbox = await tx.inbox.create({
         data: {
           workspaceId,
           name: dto.name,
-          avatarUrl: dto.avatarUrl ?? null,
+          avatarUrl: normalizedAvatarUrl,
           isAutoAssignmentEnabled: dto.isAutoAssignmentEnabled ?? false,
           settings: inboxSettings as any,
         },
@@ -188,7 +213,7 @@ export class InboxesService {
         id: inbox.id,
         workspaceId: inbox.workspaceId,
         name: inbox.name,
-        avatarUrl: inbox.avatarUrl,
+        avatarUrl: this.resolveAvatarUrl(inbox.avatarUrl),
         channelType: channel.channelType as ChannelType,
         greetingMessage: settingsObj.greetingMessage as string | undefined,
         settings: settingsObj,
@@ -236,7 +261,7 @@ export class InboxesService {
         id: inbox.id,
         workspaceId: inbox.workspaceId,
         name: inbox.name,
-        avatarUrl: inbox.avatarUrl,
+        avatarUrl: this.resolveAvatarUrl(inbox.avatarUrl),
         channelType: (inbox.channel?.channelType as ChannelType) || ChannelType.WEB_CHAT,
         greetingMessage: settingsObj.greetingMessage as string | undefined,
         settings: settingsObj,
@@ -278,7 +303,7 @@ export class InboxesService {
       id: inbox.id,
       workspaceId: inbox.workspaceId,
       name: inbox.name,
-      avatarUrl: inbox.avatarUrl,
+      avatarUrl: this.resolveAvatarUrl(inbox.avatarUrl),
       channelType: (inbox.channel?.channelType as ChannelType) || ChannelType.WEB_CHAT,
       greetingMessage: settingsObj.greetingMessage as string | undefined,
       settings: settingsObj,
@@ -361,7 +386,9 @@ export class InboxesService {
         where: { workspaceId_id: { workspaceId, id: inboxId } },
         data: {
           ...(dto.name !== undefined ? { name: dto.name } : {}),
-          ...(dto.avatarUrl !== undefined ? { avatarUrl: dto.avatarUrl } : {}),
+          ...(dto.avatarUrl !== undefined
+            ? { avatarUrl: this.normalizeAvatarStorageKey(dto.avatarUrl) }
+            : {}),
           ...(dto.isAutoAssignmentEnabled !== undefined
             ? { isAutoAssignmentEnabled: dto.isAutoAssignmentEnabled }
             : {}),
@@ -496,7 +523,7 @@ export class InboxesService {
         id: m.user.id,
         email: m.user.email,
         name: m.user.name,
-        avatarUrl: m.user.avatarUrl,
+        avatarUrl: this.resolveAvatarUrl(m.user.avatarUrl),
         role: (m.user.workspaceMembers[0]?.role as WorkspaceRole) || WorkspaceRole.AGENT,
       },
       createdAt: m.createdAt.toISOString(),
@@ -577,7 +604,7 @@ export class InboxesService {
         id: workspaceMember.user.id,
         email: workspaceMember.user.email,
         name: workspaceMember.user.name,
-        avatarUrl: workspaceMember.user.avatarUrl,
+        avatarUrl: this.resolveAvatarUrl(workspaceMember.user.avatarUrl),
         role: workspaceMember.role as WorkspaceRole,
       },
       createdAt: newMember.createdAt.toISOString(),

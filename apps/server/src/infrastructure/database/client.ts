@@ -2,6 +2,8 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
 import { PrismaClient } from './generated/client';
 
+export * from './generated/client';
+
 let pool: Pool | null = null;
 let prismaClient: PrismaClient | null = null;
 

@@ -1,14 +1,8 @@
 import argon2 from 'argon2';
-import {
-  createTestApp,
-  seedTestData,
-  cleanupTestData,
-  loginAsAgent,
-  createTestWebSocketClient,
-  TestAppContext,
-  SeedTestContext,
-  TestWebSocketClient,
-} from './helpers';
+import { createTestApp, type TestAppContext } from './helpers/setup';
+import { seedTestData, cleanupTestData, type SeedTestContext } from './helpers/seed';
+import { loginAsAgent } from './helpers/auth';
+import { createTestWebSocketClient, type TestWebSocketClient } from './helpers/ws-client';
 import { WsServerEvent } from '@sales-copilot/shared-contracts';
 import { PresenceService } from '../../src/modules/realtime/presence.service';
 import { ConversationsService } from '../../src/modules/omnichannel/conversations/conversations.service';

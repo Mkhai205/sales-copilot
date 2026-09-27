@@ -4,8 +4,8 @@ import {
   ConversationStatus,
   PresenceStatus,
 } from '@sales-copilot/shared-contracts';
-import { PrismaService } from '../../../infrastructure/database';
-import { RedisService } from '../../../infrastructure/redis';
+import { PrismaService } from '../../../infrastructure/database/prisma.service';
+import { RedisService } from '../../../infrastructure/redis/redis.service';
 import { PresenceService } from '../../realtime/presence.service';
 import { ConversationsService } from './conversations.service';
 

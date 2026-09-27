@@ -3,7 +3,7 @@ import { ChannelType } from '@sales-copilot/shared-contracts';
 import { TelegramLifecycleService } from '../telegram.lifecycle';
 import { TelegramAdapter } from '../telegram.adapter';
 import { ChannelCredentialService } from '../../../../omnichannel/inboxes/channel-credential.service';
-import { PrismaService } from '../../../../../infrastructure/database';
+import { PrismaService } from '../../../../../infrastructure/database/prisma.service';
 
 describe('TelegramLifecycleService (Automated Webhook Setup & Token Validation)', () => {
   let service: TelegramLifecycleService;
@@ -27,8 +27,8 @@ describe('TelegramLifecycleService (Automated Webhook Setup & Token Validation)'
         if (key === 'CHANNEL_ENCRYPTION_KEY' || key === 'ENCRYPTION_KEY') {
           return '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
         }
-        if (key === 'WEBHOOK_BASE_URL' || key === 'APP_URL' || key === 'BASE_URL') {
-          return 'https://app.salescopilot.io';
+        if (key === 'WEBHOOK_BASE_URL') {
+          return 'https://example.com';
         }
         return undefined;
       },
@@ -144,7 +144,7 @@ describe('TelegramLifecycleService (Automated Webhook Setup & Token Validation)'
 
       expect(getChannelInfoCalled).toBe(true);
       expect(deleteWebhookCalled).toBe(true);
-      expect(setWebhookUrl).toBe(`https://app.salescopilot.io/channels/${chanId}/webhook`);
+      expect(setWebhookUrl).toBe(`https://example.com/api/v1/channels/${chanId}/webhook`);
       expect(setWebhookSecret).toBe('secret_token_123');
 
       // Verify channel updated in DB
@@ -154,7 +154,7 @@ describe('TelegramLifecycleService (Automated Webhook Setup & Token Validation)'
       expect(updatedChannel.settings.botUsername).toBe('sales_copilot_bot');
       expect(updatedChannel.settings.botName).toBe('Sales Copilot Bot');
       expect(updatedChannel.settings.webhookUrl).toBe(
-        `https://app.salescopilot.io/channels/${chanId}/webhook`,
+        `https://example.com/api/v1/channels/${chanId}/webhook`,
       );
       expect(updatedChannel.settings.lastSyncError).toBe(null);
       expect(updatedChannel.settings.lastSyncAt).toBeTruthy();

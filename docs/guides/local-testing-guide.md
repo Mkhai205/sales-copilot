@@ -83,12 +83,12 @@ Web Chat Widget có thể được kiểm thử hoàn chỉnh mà không cần C
 1. **Browser A (Agent Dashboard)**:
    - Truy cập `http://localhost:3000/login`
    - Đăng nhập bằng tài khoản Admin đã seed:
-     - Email: `admin@salescopilot.vn` (hoặc email trong seed)
-     - Password: `Password123!`
+     - Email: `admin@example.com` (hoặc `superadmin@example.com`)
+     - Password: `SalesCopilot@2026!` (mặc định trong seed)
    - Vào mục **Settings > Inboxes > Add Inbox**:
      - Chọn channel **Web Chat**
      - Đặt tên Inbox (ví dụ: "Website Support")
-     - Nhận **Channel ID** và **SDK Script snippet**
+     - Nhận **Website Token** và **SDK Script snippet**
    - Chuyển sang màn hình **Conversations** để chờ tin nhắn.
 
 2. **Browser B (Ẩn danh / Incognito - Visitor)**:
@@ -102,19 +102,19 @@ Web Chat Widget có thể được kiểm thử hoàn chỉnh mà không cần C
        <h1>Khách hàng ghé thăm Website</h1>
        <script>
          (function(d,t) {
-           var BASE_URL="http://localhost:8000";
-           var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
-           g.src=BASE_URL+"/widget/sdk.js";
+           var BASE_URL = "http://localhost:8000";
+           var g = d.createElement(t), s = d.getElementsByTagName(t)[0];
+           g.src = BASE_URL + "/widget/sdk.js";
            g.defer = true;
            g.async = true;
-           s.parentNode.insertBefore(g,s);
-           g.onload=function(){
+           s.parentNode.insertBefore(g, s);
+           g.onload = function() {
              window.SalesCopilotWidget.init({
-               baseUrl: BASE_URL,
-               channelId: "<CHANNEL_ID_VỪA_TẠO>"
+               websiteToken: "<WEBSITE_TOKEN_VỪA_TẠO>",
+               baseUrl: BASE_URL
              });
            };
-         })(document,"script");
+         })(document, "script");
        </script>
      </body>
      </html>
@@ -163,13 +163,16 @@ Script sẽ thực hiện:
 Cập nhật cấu hình trong `apps/server/.env`:
 
 ```bash
+# Public Base URL của Backend (Single Source of Truth cho Web Chat Embed SDK, Swagger, Webhook)
+APP_BASE_URL=https://sales-copilot.kakadev.xyz
+
+# (Tùy chọn) Webhook Base URL: Mặc định tự động kế thừa APP_BASE_URL ở trên
+# WEBHOOK_BASE_URL=https://sales-copilot.kakadev.xyz
+
 # Thêm domain tunnel vào danh sách CORS origins cho phép
 CORS_ORIGIN='https://sales-copilot.kakadev.xyz,http://localhost:3000'
 
-# Public Base URL cho Webhooks và OAuth
-WEBHOOK_BASE_URL=https://sales-copilot.kakadev.xyz
-
-# Public URL cho MinIO Storage (phục vụ ảnh/file đính kèm)
+# Public URL cho MinIO Storage (phục vụ ảnh/file đính kèm ra ngoài trình duyệt)
 STORAGE_PUBLIC_ENDPOINT=https://storage-sales-copilot.kakadev.xyz
 
 # Facebook Meta App Credentials (lấy từ Meta Developer Console)

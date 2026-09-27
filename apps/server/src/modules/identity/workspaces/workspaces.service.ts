@@ -9,7 +9,7 @@ import {
   Optional,
 } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import type { Workspace, WorkspaceMember } from '../../../infrastructure/database';
+import type { Workspace, WorkspaceMember } from '../../../infrastructure/database/client';
 import {
   AddWorkspaceMemberDto,
   BillingPlanType,
@@ -22,7 +22,7 @@ import {
   WorkspaceRole,
   type WorkspacePaymentSettings,
 } from '@sales-copilot/shared-contracts';
-import { PrismaService } from '../../../infrastructure/database';
+import { PrismaService } from '../../../infrastructure/database/prisma.service';
 import { generateSlug } from './utils/slug.util';
 import { ChannelCredentialService } from '../../omnichannel/inboxes/channel-credential.service';
 import { PasswordService } from '../auth/password.service';

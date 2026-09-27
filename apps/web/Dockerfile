@@ -19,8 +19,10 @@ COPY --from=deps /app/packages/shared-contracts/node_modules ./packages/shared-c
 COPY --from=deps /app/packages/widget-sdk/node_modules ./packages/widget-sdk/node_modules
 COPY . .
 
+ARG NEXT_PUBLIC_APP_URL=http://localhost:3000
 ARG NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
 ARG NEXT_PUBLIC_WS_URL=http://localhost:8000
+ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_WS_URL=$NEXT_PUBLIC_WS_URL
 

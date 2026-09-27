@@ -22,8 +22,8 @@ import {
   MessageType,
   SenderType,
 } from '@sales-copilot/shared-contracts';
-import { PrismaService } from '../../../infrastructure/database';
-import { sanitizeMessageContent } from '../../../common/utils';
+import { PrismaService } from '../../../infrastructure/database/prisma.service';
+import { sanitizeMessageContent } from '../../../common/utils/html-sanitizer';
 import { AttachmentsService, UploadedFile } from './attachments.service';
 import { StorageService } from '../../../infrastructure/storage/storage.service';
 import { mapMessageToDto, MessageWithRelations } from './messages.mapper';

@@ -18,6 +18,7 @@ import {
   Info,
   ShieldCheck,
   Sparkles,
+  AlertTriangle,
 } from 'lucide-react';
 
 import { Input } from '@/components/ui/input';
@@ -32,6 +33,7 @@ import { BankCombobox } from './bank-combobox';
 import { LiveVietQrCard } from './live-vietqr-card';
 import { isVietinBank, type VietnamBank } from '../constants/vietnam-banks';
 import Link from 'next/link';
+import { getAppUrl, isLocalhostOrigin } from '@/lib/config/app-url';
 
 interface BankSettingsFormProps {
   workspaceId: string;
@@ -88,9 +90,11 @@ export function BankSettingsForm({
   }, []);
 
   const webhookUrl = React.useMemo(() => {
-    const base = origin || 'https://sales-copilot.kakadev.xyz';
+    const base = getAppUrl(origin);
     return `${base}/api/v1/workspaces/${workspaceSlug}/webhooks/payments/sepay`;
   }, [origin, workspaceSlug]);
+
+  const isLocalhost = React.useMemo(() => isLocalhostOrigin(webhookUrl), [webhookUrl]);
 
   const { mutate: updateSettings, isPending } = useUpdateBankSettings(workspaceId);
 
@@ -358,6 +362,19 @@ export function BankSettingsForm({
                     )}
                   </Button>
                 </div>
+                {isLocalhost && (
+                  <div className="flex items-start gap-2.5 p-3 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-800 dark:text-amber-300 text-xs">
+                    <AlertTriangle className="size-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
+                    <div className="space-y-1">
+                      <p className="font-medium">Cảnh báo môi trường Localhost</p>
+                      <p className="text-[11px] text-amber-700 dark:text-amber-300/90 leading-relaxed">
+                        Địa chỉ Webhook hiện tại đang trỏ về <strong>localhost</strong>. Các dịch vụ
+                        đối soát bên ngoài (như SePay) không thể gửi tín hiệu thanh toán đến máy cục
+                        bộ nếu không sử dụng đường hầm công khai (như Cloudflare Tunnel hoặc ngrok).
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 

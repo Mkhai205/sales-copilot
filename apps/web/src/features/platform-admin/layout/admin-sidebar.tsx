@@ -128,7 +128,7 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
               {currentUser?.name || currentUser?.email || 'Super Administrator'}
             </span>
             <span className="text-[10px] text-muted-foreground truncate">
-              {currentUser?.email || 'superadmin@salescopilot.io'}
+              {currentUser?.email || 'superadmin@example.com'}
             </span>
           </div>
           <Button

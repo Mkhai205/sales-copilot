@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { OnEvent } from '@nestjs/event-emitter';
 import { ChannelType } from '@sales-copilot/shared-contracts';
-import { PrismaService } from '../../../../infrastructure/database';
+import { PrismaService } from '../../../../infrastructure/database/prisma.service';
 import { ChannelCredentialService } from '../../../omnichannel/inboxes/channel-credential.service';
 import { TelegramAdapter } from './telegram.adapter';
 import { ChannelLifecycleEventPayload } from '../channel-adapter.types';
@@ -49,14 +49,8 @@ export class TelegramLifecycleService {
    * Constructs the public webhook URL for a channel.
    */
   private getWebhookUrl(channelId: string): string {
-    const rawBaseUrl =
-      this.configService.get<string>('WEBHOOK_BASE_URL') ||
-      this.configService.get<string>('APP_URL') ||
-      this.configService.get<string>('BASE_URL') ||
-      'http://localhost:8000';
-
-    const baseUrl = rawBaseUrl.replace(/\/+$/, '');
-    return `${baseUrl}/channels/${channelId}/webhook`;
+    const baseUrl = this.configService.get<string>('WEBHOOK_BASE_URL');
+    return `${baseUrl}/api/v1/channels/${channelId}/webhook`;
   }
 
   /**

@@ -1,7 +1,7 @@
 import { assertDefined } from '../../../../../test/test-assertions';
 import { ContactResolutionService } from '../contact-resolution.service';
 import { ContactsService } from '../contacts.service';
-import { PrismaService } from '../../../../infrastructure/database';
+import { PrismaService } from '../../../../infrastructure/database/prisma.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
 describe('ContactResolutionService (3NF Multi-Channel Identity Resolution Engine)', () => {

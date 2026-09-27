@@ -4,26 +4,27 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerModule } from '@nestjs/throttler';
-import { ThrottlerBehindProxyGuard } from './common/guards';
+import { ThrottlerBehindProxyGuard } from './common/guards/throttler-behind-proxy.guard';
 import { LoggerModule } from 'nestjs-pino';
 
 import { DatabaseModule } from './infrastructure/database/database.module';
-import { QueueModule } from './infrastructure/queue';
-import { RedisModule } from './infrastructure/redis';
+import { QueueModule } from './infrastructure/queue/queue.module';
+import { RedisModule } from './infrastructure/redis/redis.module';
 import { StorageModule } from './infrastructure/storage/storage.module';
-import { ResendModule } from './infrastructure/email';
-import { IdentityModule, JwtAuthGuard } from './modules/identity';
-import { OmnichannelModule } from './modules/omnichannel';
-import { CommerceModule } from './modules/commerce';
-import { IntelligenceModule } from './modules/intelligence';
-import { PlatformAdminModule } from './modules/platform-admin';
-import { RealtimeModule } from './modules/realtime';
-import { HealthModule } from './modules/health';
+import { ResendModule } from './infrastructure/email/resend.module';
+import { IdentityModule } from './modules/identity/identity.module';
+import { JwtAuthGuard } from './modules/identity/auth/guards/jwt-auth.guard';
+import { OmnichannelModule } from './modules/omnichannel/omnichannel.module';
+import { CommerceModule } from './modules/commerce/commerce.module';
+import { IntelligenceModule } from './modules/intelligence/intelligence.module';
+import { PlatformAdminModule } from './modules/platform-admin/platform-admin.module';
+import { RealtimeModule } from './modules/realtime/realtime.module';
+import { HealthModule } from './modules/health/health.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
-import { validateEnv } from './config';
-import { RequestIdMiddleware } from './common/middlewares';
-import { pinoRedactConfig } from './common/logging';
+import { validateEnv } from './config/env.validation';
+import { RequestIdMiddleware } from './common/middlewares/request-id.middleware';
+import { pinoRedactConfig } from './common/logging/redaction.config';
 
 @Module({
   imports: [

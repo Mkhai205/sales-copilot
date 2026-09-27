@@ -1,7 +1,7 @@
 import { ArgumentsHost, BadRequestException, HttpStatus, NotFoundException } from '@nestjs/common';
 import { z, ZodError } from 'zod';
 import { HttpExceptionFilter } from '../http-exception.filter';
-import { Prisma } from '../../../infrastructure/database';
+import { Prisma } from '../../../infrastructure/database/client';
 
 describe('HttpExceptionFilter (Global Exception Normalization)', () => {
   let filter: HttpExceptionFilter;

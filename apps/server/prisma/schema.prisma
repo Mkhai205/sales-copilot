@@ -1,11 +1,13 @@
 datasource db {
-  provider = "postgresql"
+  provider   = "postgresql"
+  extensions = [vector]
 }
 
 generator client {
-  provider     = "prisma-client"
-  output       = "../src/infrastructure/database/generated"
-  moduleFormat = "cjs"
+  provider        = "prisma-client"
+  output          = "../src/infrastructure/database/generated"
+  moduleFormat    = "cjs"
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 enum PlatformRole {

@@ -1,14 +1,9 @@
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { randomUUID } from 'node:crypto';
-import {
-  createTestApp,
-  seedTestData,
-  cleanupTestData,
-  loginAsAgent,
-  createTestWebSocketClient,
-  TestAppContext,
-  SeedTestContext,
-} from './helpers';
+import { createTestApp, type TestAppContext } from './helpers/setup';
+import { seedTestData, cleanupTestData, type SeedTestContext } from './helpers/seed';
+import { loginAsAgent } from './helpers/auth';
+import { createTestWebSocketClient } from './helpers/ws-client';
 import { DomainEvent, WsServerEvent } from '@sales-copilot/shared-contracts';
 
 describe('TestWebSocketClient Helper E2E Tests (Task 14 — Feature F-1.11.1)', () => {

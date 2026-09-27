@@ -3,7 +3,7 @@ import { ChannelType } from '@sales-copilot/shared-contracts';
 import { FacebookLifecycleService } from '../facebook.lifecycle';
 import { FacebookAdapter } from '../facebook.adapter';
 import { ChannelCredentialService } from '../../../../omnichannel/inboxes/channel-credential.service';
-import { PrismaService } from '../../../../../infrastructure/database';
+import { PrismaService } from '../../../../../infrastructure/database/prisma.service';
 
 describe('FacebookLifecycleService (Page Webhook Subscription Management)', () => {
   let service: FacebookLifecycleService;

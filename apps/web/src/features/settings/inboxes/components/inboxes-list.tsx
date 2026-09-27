@@ -3,7 +3,7 @@
 import * as React from 'react';
 import Image from 'next/image';
 import { Plus, Search, X, Users } from 'lucide-react';
-import { ChannelType, WorkspaceRole } from '@sales-copilot/shared-contracts';
+import { WorkspaceRole } from '@sales-copilot/shared-contracts';
 import { getChannelMeta } from '@/lib/channels';
 import { InboxAvatar } from '@/components/inbox-avatar';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -27,7 +27,11 @@ interface InboxesListProps {
   workspaceSlug?: string;
 }
 
-export function InboxesList({ workspaceId, currentUserRole, workspaceSlug }: InboxesListProps) {
+export function InboxesList({
+  workspaceId,
+  currentUserRole: _currentUserRole,
+  workspaceSlug,
+}: InboxesListProps) {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = React.useState('');
   const [channelFilter, setChannelFilter] = React.useState<string>('ALL');

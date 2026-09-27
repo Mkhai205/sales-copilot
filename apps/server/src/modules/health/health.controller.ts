@@ -2,7 +2,7 @@ import { Controller, Get, HttpStatus, Res } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 import { HealthService } from './health.service';
-import { Public } from '../identity';
+import { Public } from '../identity/auth/decorators/public.decorator';
 
 @ApiTags('Health')
 @Controller('health')

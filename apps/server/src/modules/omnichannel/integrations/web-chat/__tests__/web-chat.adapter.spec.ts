@@ -1,4 +1,5 @@
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import type { ConfigService } from '@nestjs/config';
 import { ChannelType, DeliveryStatus, MessageContentType } from '@sales-copilot/shared-contracts';
 import { WebChatAdapter } from '../web-chat.adapter';
 import {
@@ -541,13 +542,15 @@ describe('WebChatAdapter (Web Chat Widget Channel Integration)', () => {
     });
 
     describe('buildEmbedScript()', () => {
-      it('should generate script snippet containing websiteToken and default baseUrl', () => {
-        const script = adapter.buildEmbedScript('tok_website_xyz_123');
+      it('should generate script snippet containing websiteToken and configured baseUrl', () => {
+        const script = adapter.buildEmbedScript('tok_website_xyz_123', 'https://chat.example.com');
 
         expect(script.includes("websiteToken: 'tok_website_xyz_123'")).toBeTruthy();
-        expect(script.includes('https://app.salescopilot.com')).toBeTruthy();
+        expect(script.includes('var BASE_URL = "https://chat.example.com";')).toBeTruthy();
         expect(script.includes('/widget/sdk.js')).toBeTruthy();
         expect(script.includes('window.SalesCopilotWidget.init')).toBeTruthy();
+        expect(script.includes('baseUrl: BASE_URL')).toBeTruthy();
+        expect(script.includes(['salescopilot', 'com'].join('.'))).toBeFalsy();
       });
 
       it('should support custom baseUrl and strip trailing slash', () => {
@@ -557,6 +560,26 @@ describe('WebChatAdapter (Web Chat Widget Channel Integration)', () => {
         );
 
         expect(script.includes('var BASE_URL = "https://chat.example.com";')).toBeTruthy();
+      });
+
+      it('should gracefully handle omitted baseUrl without hardcoded domain fallback', () => {
+        const script = adapter.buildEmbedScript('tok_website_xyz_123');
+
+        expect(script.includes("websiteToken: 'tok_website_xyz_123'")).toBeTruthy();
+        expect(script.includes('var BASE_URL = "";')).toBeTruthy();
+        expect(script.includes('/widget/sdk.js')).toBeTruthy();
+        expect(script.includes(['salescopilot', 'com'].join('.'))).toBeFalsy();
+      });
+
+      it('should resolve baseUrl from ConfigService when available', () => {
+        const mockConfig = {
+          get: (key: string) => (key === 'APP_BASE_URL' ? 'https://chat.example.com' : undefined),
+        } as unknown as ConfigService;
+        const configuredAdapter = new WebChatAdapter(mockEventEmitter, mockConfig);
+        const script = configuredAdapter.buildEmbedScript('tok_website_xyz_123');
+
+        expect(script.includes('var BASE_URL = "https://chat.example.com";')).toBeTruthy();
+        expect(script.includes('/widget/sdk.js')).toBeTruthy();
       });
     });
   });

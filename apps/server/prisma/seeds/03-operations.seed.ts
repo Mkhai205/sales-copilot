@@ -1,4 +1,4 @@
-import type { PrismaClient, Workspace, Label } from '../../src/infrastructure/database';
+import type { PrismaClient, Workspace, Label } from '../../src/infrastructure/database/client';
 
 export async function seedOperations(
   prisma: PrismaClient,

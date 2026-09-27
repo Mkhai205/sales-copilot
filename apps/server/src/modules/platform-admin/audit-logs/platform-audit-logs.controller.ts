@@ -7,7 +7,7 @@ import {
   QueryPlatformAuditLogsDto,
   queryPlatformAuditLogsSchema,
 } from '@sales-copilot/shared-contracts';
-import { ZodQuery } from '../../../common/pipes';
+import { ZodQuery } from '../../../common/pipes/zod-schema-validation.pipe';
 import { PlatformRoles } from '../decorators/platform-roles.decorator';
 import { PlatformRolesGuard } from '../guards/platform-roles.guard';
 import { PlatformAuditLogsService } from './platform-audit-logs.service';

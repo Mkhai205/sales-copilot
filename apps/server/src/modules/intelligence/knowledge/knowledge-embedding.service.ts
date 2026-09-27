@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { embed, type EmbeddingModel } from 'ai';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { createVertex } from '@ai-sdk/google-vertex';
-import { PrismaService } from '../../../infrastructure/database';
+import { PrismaService } from '../../../infrastructure/database/prisma.service';
 import { EMBEDDING_MODEL } from './knowledge.constants';
 
 export function formatKnowledgeForEmbedding(

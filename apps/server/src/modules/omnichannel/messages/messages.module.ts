@@ -1,7 +1,7 @@
 ﻿import { Module } from '@nestjs/common';
-import { AuthModule } from '../../identity/auth';
-import { WorkspacesModule } from '../../identity/workspaces';
-import { ConversationsModule } from '../conversations';
+import { AuthModule } from '../../identity/auth/auth.module';
+import { WorkspacesModule } from '../../identity/workspaces/workspaces.module';
+import { ConversationsModule } from '../conversations/conversations.module';
 import { AttachmentsService } from './attachments.service';
 import { MessagesController } from './messages.controller';
 import { MessagesService } from './messages.service';

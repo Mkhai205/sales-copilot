@@ -635,7 +635,7 @@ describe('ChannelIngestionProcessor (Task T-1.5.7: Inbound Ingestion Pipeline In
         upload: async (buffer: Buffer, contentType: string, key: string) => {
           uploadedFiles.push({ key, contentType, buffer });
         },
-        getPublicUrl: (key: string) => `https://minio.salescopilot.test/${key}`,
+        getPublicUrl: (key: string) => `https://minio.example.test/${key}`,
       };
 
       const processorWithStorage = new ChannelIngestionProcessor(
@@ -701,9 +701,7 @@ describe('ChannelIngestionProcessor (Task T-1.5.7: Inbound Ingestion Pipeline In
         expect(
           msg.attachments[0].storagePath.startsWith('attachments/ws_corp/inbound/'),
         ).toBeTruthy();
-        expect(
-          msg.attachments[0].fileUrl.startsWith('https://minio.salescopilot.test/'),
-        ).toBeTruthy();
+        expect(msg.attachments[0].fileUrl.startsWith('https://minio.example.test/')).toBeTruthy();
       } finally {
         globalThis.fetch = originalFetch;
       }

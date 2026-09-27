@@ -7,9 +7,11 @@ import {
   PaginationMeta,
   WorkspaceRole,
 } from '@sales-copilot/shared-contracts';
-import { ZodQuery } from '../../../common/pipes';
-import { CurrentWorkspace, Roles } from '../workspaces/decorators';
-import { RolesGuard, WorkspaceGuard } from '../workspaces/guards';
+import { ZodQuery } from '../../../common/pipes/zod-schema-validation.pipe';
+import { CurrentWorkspace } from '../workspaces/decorators/current-workspace.decorator';
+import { Roles } from '../workspaces/decorators/roles.decorator';
+import { RolesGuard } from '../workspaces/guards/roles.guard';
+import { WorkspaceGuard } from '../workspaces/guards/workspace.guard';
 import type { WorkspaceContext } from '../workspaces/types/workspace-context.type';
 import { AuditLogService } from './audit-logs.service';
 

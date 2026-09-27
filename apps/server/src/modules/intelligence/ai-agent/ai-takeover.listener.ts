@@ -5,8 +5,8 @@ import {
   SenderType,
   type ConversationResponseDto,
 } from '@sales-copilot/shared-contracts';
-import { PrismaService } from '../../../infrastructure/database';
-import { RedisService } from '../../../infrastructure/redis';
+import { PrismaService } from '../../../infrastructure/database/prisma.service';
+import { RedisService } from '../../../infrastructure/redis/redis.service';
 import { getAiDebounceKey } from './ai-agent.constants';
 
 export interface UserMessageCreatedEvent {

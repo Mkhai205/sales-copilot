@@ -14,7 +14,6 @@ import type {
 const REFRESH_TOKEN_MAX_AGE = 7 * 24 * 60 * 60; // 7 days (matching REFRESH_TOKEN_EXPIRES_IN_SECONDS: 604800)
 
 async function getAuthCookieBaseOptions() {
-  let domain: string | undefined = process.env.COOKIE_DOMAIN;
   let isSecure =
     process.env.NODE_ENV === 'production' ||
     Boolean(process.env.NEXT_PUBLIC_API_URL?.startsWith('https'));
@@ -23,7 +22,6 @@ async function getAuthCookieBaseOptions() {
     const headerList = await headers();
     const host = headerList.get('host')?.split(':')[0];
     if (host === 'localhost' || host === '127.0.0.1') {
-      domain = undefined;
       isSecure = false;
     } else if (host) {
       isSecure = true;
@@ -36,7 +34,6 @@ async function getAuthCookieBaseOptions() {
     httpOnly: true,
     secure: isSecure,
     sameSite: 'lax' as const,
-    domain: domain || undefined,
     path: '/',
   };
 }
@@ -328,11 +325,6 @@ export async function logoutAction(): Promise<void> {
     }
   }
 
-  const cookieBase = await getAuthCookieBaseOptions();
-  if (cookieBase.domain) {
-    cookieStore.delete({ name: 'access_token', domain: cookieBase.domain, path: '/' });
-    cookieStore.delete({ name: 'refresh_token', domain: cookieBase.domain, path: '/' });
-  }
   cookieStore.delete('access_token');
   cookieStore.delete('refresh_token');
 

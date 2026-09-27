@@ -42,11 +42,11 @@ describe('Strict CORS Configuration & Verification (Task 9 — Feature F-1.11.4)
     it('should parse comma-separated origins with whitespace', () => {
       const parsed = envSchema.parse({
         ...baseEnv,
-        CORS_ORIGIN: 'http://localhost:3000, https://app.salescopilot.vn,  http://localhost:8080 ',
+        CORS_ORIGIN: 'http://localhost:3000, https://app.example.com,  http://localhost:8080 ',
       });
       expect(parsed.CORS_ORIGIN).toEqual([
         'http://localhost:3000',
-        'https://app.salescopilot.vn',
+        'https://app.example.com',
         'http://localhost:8080',
       ]);
     });
@@ -54,9 +54,9 @@ describe('Strict CORS Configuration & Verification (Task 9 — Feature F-1.11.4)
     it('should preserve array format when supplied as array', () => {
       const parsed = envSchema.parse({
         ...baseEnv,
-        CORS_ORIGIN: ['http://localhost:3000', 'https://app.salescopilot.vn'],
+        CORS_ORIGIN: ['http://localhost:3000', 'https://app.example.com'],
       });
-      expect(parsed.CORS_ORIGIN).toEqual(['http://localhost:3000', 'https://app.salescopilot.vn']);
+      expect(parsed.CORS_ORIGIN).toEqual(['http://localhost:3000', 'https://app.example.com']);
     });
 
     it('should default to [http://localhost:3000] when omitted', () => {
@@ -67,9 +67,9 @@ describe('Strict CORS Configuration & Verification (Task 9 — Feature F-1.11.4)
 
   describe('createCorsOptions Configuration Properties', () => {
     it('should construct strict CORS options with credentials and standard headers', () => {
-      const options = createCorsOptions(['http://localhost:3000', 'https://app.salescopilot.vn']);
+      const options = createCorsOptions(['http://localhost:3000', 'https://app.example.com']);
 
-      expect(options.origin).toEqual(['http://localhost:3000', 'https://app.salescopilot.vn']);
+      expect(options.origin).toEqual(['http://localhost:3000', 'https://app.example.com']);
       expect(options.credentials).toBe(true);
       expect(options.maxAge).toBe(86400);
 
@@ -96,7 +96,7 @@ describe('Strict CORS Configuration & Verification (Task 9 — Feature F-1.11.4)
   });
 
   describe('Live NestJS HTTP Enforcement', () => {
-    const allowedOrigins = ['http://localhost:3000', 'https://app.salescopilot.vn'];
+    const allowedOrigins = ['http://localhost:3000', 'https://app.example.com'];
 
     it('should allow whitelisted origin with credentials and allow-origin header', async () => {
       const app = await NestFactory.create(CorsTestModule, { logger: false });
@@ -150,14 +150,14 @@ describe('Strict CORS Configuration & Verification (Task 9 — Feature F-1.11.4)
         const res = await fetch(url, {
           method: 'OPTIONS',
           headers: {
-            Origin: 'https://app.salescopilot.vn',
+            Origin: 'https://app.example.com',
             'Access-Control-Request-Method': 'POST',
             'Access-Control-Request-Headers': 'Content-Type, Authorization',
           },
         });
 
         expect(res.status).toBe(204);
-        expect(res.headers.get('access-control-allow-origin')).toBe('https://app.salescopilot.vn');
+        expect(res.headers.get('access-control-allow-origin')).toBe('https://app.example.com');
         expect(res.headers.get('access-control-allow-credentials')).toBe('true');
         const methods = res.headers.get('access-control-allow-methods');
         expect(methods?.includes('POST')).toBeTruthy();

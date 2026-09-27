@@ -31,11 +31,13 @@ import {
   updateConversationStatusSchema,
   WorkspaceRole,
 } from '@sales-copilot/shared-contracts';
-import { ZodBody, ZodQuery } from '../../../common/pipes';
-import { CurrentUser } from '../../identity/auth/decorators';
+import { ZodBody, ZodQuery } from '../../../common/pipes/zod-schema-validation.pipe';
+import { CurrentUser } from '../../identity/auth/decorators/current-user.decorator';
 import type { JwtUserPayload } from '../../identity/auth/types/jwt-payload.type';
-import { CurrentWorkspace, Roles } from '../../identity/workspaces/decorators';
-import { RolesGuard, WorkspaceGuard } from '../../identity/workspaces/guards';
+import { CurrentWorkspace } from '../../identity/workspaces/decorators/current-workspace.decorator';
+import { Roles } from '../../identity/workspaces/decorators/roles.decorator';
+import { RolesGuard } from '../../identity/workspaces/guards/roles.guard';
+import { WorkspaceGuard } from '../../identity/workspaces/guards/workspace.guard';
 import type { WorkspaceContext } from '../../identity/workspaces/types/workspace-context.type';
 import { ConversationsService } from './conversations.service';
 

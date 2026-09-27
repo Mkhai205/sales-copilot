@@ -6,8 +6,8 @@ import {
   Inbox,
   User,
   Workspace,
-  PrismaService,
-} from '../../../src/infrastructure/database';
+} from '../../../src/infrastructure/database/client';
+import { PrismaService } from '../../../src/infrastructure/database/prisma.service';
 
 import { ChannelCredentialService } from '../../../src/modules/omnichannel/inboxes/channel-credential.service';
 
@@ -52,7 +52,7 @@ export async function seedTestData(
   // 1. Create Users
   const adminUser = await client.user.create({
     data: {
-      email: `admin-${testRunId}@test.salescopilot.io`,
+      email: `admin-${testRunId}@example.com`,
       name: `E2E Admin ${testRunId}`,
       passwordHash,
       role: 'USER',
@@ -62,7 +62,7 @@ export async function seedTestData(
 
   const agentUser = await client.user.create({
     data: {
-      email: `agent-${testRunId}@test.salescopilot.io`,
+      email: `agent-${testRunId}@example.com`,
       name: `E2E Agent ${testRunId}`,
       passwordHash,
       role: 'USER',

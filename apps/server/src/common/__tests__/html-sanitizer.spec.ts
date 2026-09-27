@@ -77,18 +77,18 @@ describe('HTML Sanitization for Message Content (Task 10 — Feature F-1.11.4)',
     });
 
     it('should preserve safe links and add rel="noopener noreferrer" on target="_blank"', () => {
-      const input = '<a href="https://salescopilot.vn" target="_blank">Sales Copilot</a>';
+      const input = '<a href="https://example.com" target="_blank">Sales Copilot</a>';
       const result = sanitizeMessageContent(input);
-      expect(result.includes('href="https://salescopilot.vn"')).toBeTruthy();
+      expect(result.includes('href="https://example.com"')).toBeTruthy();
       expect(result.includes('target="_blank"')).toBeTruthy();
       expect(result.includes('rel="noopener noreferrer"')).toBeTruthy();
     });
 
     it('should preserve mailto: and tel: links', () => {
       const input =
-        '<a href="mailto:support@salescopilot.vn">Email</a> and <a href="tel:+84987654321">Call</a>';
+        '<a href="mailto:support@example.com">Email</a> and <a href="tel:+84987654321">Call</a>';
       const result = sanitizeMessageContent(input);
-      expect(result.includes('href="mailto:support@salescopilot.vn"')).toBeTruthy();
+      expect(result.includes('href="mailto:support@example.com"')).toBeTruthy();
       expect(result.includes('href="tel:+84987654321"')).toBeTruthy();
     });
   });

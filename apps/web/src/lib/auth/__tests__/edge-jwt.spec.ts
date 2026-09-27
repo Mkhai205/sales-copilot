@@ -7,7 +7,7 @@ describe('Edge JWT Helper (apps/web/src/lib/auth/edge-jwt.ts)', () => {
     it('should decode a valid JWT with standard base64 payload', () => {
       const payloadObj = {
         sub: 'usr_123',
-        email: 'admin@salescopilot.io',
+        email: 'admin@example.com',
         role: 'SUPER_ADMIN',
       };
       const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64');

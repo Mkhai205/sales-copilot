@@ -1,8 +1,8 @@
 import { Queue } from 'bullmq';
 import { HealthService } from '../health.service';
-import { PrismaService } from '../../../infrastructure/database';
-import { RedisService } from '../../../infrastructure/redis';
-import { StorageService } from '../../../infrastructure/storage';
+import { PrismaService } from '../../../infrastructure/database/prisma.service';
+import { RedisService } from '../../../infrastructure/redis/redis.service';
+import { StorageService } from '../../../infrastructure/storage/storage.service';
 
 const createMockQueue = (isHealthy = true, errorMsg = 'Queue connection failed') =>
   ({

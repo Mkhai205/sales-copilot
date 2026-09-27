@@ -1,7 +1,7 @@
 ﻿import { Module } from '@nestjs/common';
-import { DatabaseModule } from '../../infrastructure/database';
-import { RedisModule } from '../../infrastructure/redis';
-import { AuthModule } from '../identity/auth';
+import { DatabaseModule } from '../../infrastructure/database/database.module';
+import { RedisModule } from '../../infrastructure/redis/redis.module';
+import { AuthModule } from '../identity/auth/auth.module';
 import { WorkspacesModule } from '../identity/workspaces/workspaces.module';
 import { CommercePresenceModule } from '../commerce/presence/commerce-presence.module';
 import { RealtimeGateway } from './realtime.gateway';

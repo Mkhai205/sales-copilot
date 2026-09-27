@@ -9,7 +9,7 @@ import {
 import { Request, Response } from 'express';
 import { ZodError } from 'zod';
 import type { ApiErrorResponse, ErrorCode } from '@sales-copilot/shared-contracts';
-import { Prisma } from '../../infrastructure/database';
+import { Prisma } from '../../infrastructure/database/client';
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {

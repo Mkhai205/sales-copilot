@@ -20,7 +20,7 @@ import {
   ToggleWorkspaceStatusDto,
   UpdateWorkspacePlanDto,
 } from '@sales-copilot/shared-contracts';
-import { PrismaService } from '../../../infrastructure/database';
+import { PrismaService } from '../../../infrastructure/database/prisma.service';
 import { ActorContext, SystemSettingsService } from '../settings/system-settings.service';
 
 @Injectable()

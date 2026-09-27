@@ -7,7 +7,7 @@ import {
   MessageType,
   SenderType,
 } from '@sales-copilot/shared-contracts';
-import { PrismaService } from '../../../infrastructure/database';
+import { PrismaService } from '../../../infrastructure/database/prisma.service';
 import { ChannelAdapterRegistry } from './channel-adapter.registry';
 import { ChannelCredentialService } from '../inboxes/channel-credential.service';
 import {

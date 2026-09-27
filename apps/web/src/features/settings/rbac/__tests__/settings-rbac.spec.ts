@@ -47,15 +47,16 @@ describe('Settings Navigation & RBAC (Task 27)', () => {
       assert.strictEqual(permitted.length, 8);
     });
 
-    it('should return 4 operational items for AGENT (excluding admin-only)', () => {
+    it('should return 3 operational items for AGENT (excluding admin-only)', () => {
       const permitted = getPermittedSettingsNavItems(WorkspaceRole.AGENT);
-      assert.strictEqual(permitted.length, 4);
+      assert.strictEqual(permitted.length, 3);
 
       const segments = permitted.map(item => item.segment);
-      assert.deepStrictEqual(segments, ['inboxes', 'teams', 'labels', 'canned-responses']);
+      assert.deepStrictEqual(segments, ['teams', 'labels', 'canned-responses']);
 
       // Admin only items must not be included
       assert.strictEqual(segments.includes('general'), false);
+      assert.strictEqual(segments.includes('inboxes'), false);
       assert.strictEqual(segments.includes('members'), false);
       assert.strictEqual(segments.includes('bank'), false);
     });
@@ -68,9 +69,10 @@ describe('Settings Navigation & RBAC (Task 27)', () => {
       assert.strictEqual(isSettingsSectionAllowed('general', WorkspaceRole.ADMIN), true);
       assert.strictEqual(isSettingsSectionAllowed('general', WorkspaceRole.AGENT), false);
 
-      // Inboxes is accessible by all roles
+      // Inboxes is admin-only
       assert.strictEqual(isSettingsSectionAllowed('inboxes', WorkspaceRole.OWNER), true);
-      assert.strictEqual(isSettingsSectionAllowed('inboxes', WorkspaceRole.AGENT), true);
+      assert.strictEqual(isSettingsSectionAllowed('inboxes', WorkspaceRole.ADMIN), true);
+      assert.strictEqual(isSettingsSectionAllowed('inboxes', WorkspaceRole.AGENT), false);
 
       // Members is admin-only
       assert.strictEqual(isSettingsSectionAllowed('members', WorkspaceRole.ADMIN), true);
@@ -102,12 +104,13 @@ describe('Settings Navigation & RBAC (Task 27)', () => {
         getDefaultSettingsRoute('acme-corp', WorkspaceRole.ADMIN),
         '/acme-corp/settings/general',
       );
+      // Secondary fallback: getDefaultSettingsRoute('acme-corp', WorkspaceRole.ADMIN) -> /acme-corp/settings/inboxes
     });
 
-    it('should return /settings/inboxes for AGENT', () => {
+    it('should return /settings/teams for AGENT', () => {
       assert.strictEqual(
         getDefaultSettingsRoute('acme-corp', WorkspaceRole.AGENT),
-        '/acme-corp/settings/inboxes',
+        '/acme-corp/settings/teams',
       );
     });
 

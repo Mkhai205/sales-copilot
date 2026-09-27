@@ -1,4 +1,5 @@
 import { Injectable, Logger, Optional } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import * as crypto from 'crypto';
 import { ChannelType, DeliveryStatus, MessageContentType } from '@sales-copilot/shared-contracts';
@@ -110,7 +111,10 @@ export class WebChatAdapter implements ChannelAdapter {
   readonly channelType = ChannelType.WEB_CHAT;
   private readonly logger = new Logger(WebChatAdapter.name);
 
-  constructor(@Optional() private readonly eventEmitter?: EventEmitter2) {}
+  constructor(
+    @Optional() private readonly eventEmitter?: EventEmitter2,
+    @Optional() private readonly configService?: ConfigService,
+  ) {}
 
   /**
    * Verifies incoming webhook or REST widget request authentication.
@@ -483,14 +487,20 @@ export class WebChatAdapter implements ChannelAdapter {
 
   /**
    * Generates the embeddable JavaScript snippet for embedding the widget on websites.
+   * Uses provided baseUrl, or resolves from configured server URL, or falls back to relative host.
    */
-  buildEmbedScript(websiteToken: string, baseUrl = 'https://app.salescopilot.com'): string {
-    const sanitizedBaseUrl = baseUrl.replace(/\/+$/, '');
+  buildEmbedScript(websiteToken: string, baseUrl?: string): string {
+    const resolvedBaseUrl = (
+      baseUrl ??
+      this.configService?.get<string>('APP_BASE_URL') ??
+      ''
+    ).replace(/\/+$/, '');
+
     return `<script>
   (function(d,t) {
-    var BASE_URL = "${sanitizedBaseUrl}";
+    var BASE_URL = "${resolvedBaseUrl}";
     var g = d.createElement(t), s = d.getElementsByTagName(t)[0];
-    g.src = BASE_URL + "/widget/sdk.js";
+    g.src = BASE_URL + "/widget/sdk.js"; // ${resolvedBaseUrl}/widget/sdk.js
     g.async = true;
     s.parentNode.insertBefore(g, s);
     g.onload = function() {

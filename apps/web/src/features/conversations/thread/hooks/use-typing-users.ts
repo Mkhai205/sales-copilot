@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { WsServerEvent, type TypingEventPayload } from '@sales-copilot/shared-contracts';
 import { useCurrentUser } from '@/features/auth/hooks/use-current-user';
-import { useSocketEvent } from '@/lib/socket';
+import { useSocketEvent } from '@/lib/socket/use-socket';
 
 export interface TypingUserEntry {
   userId: string;

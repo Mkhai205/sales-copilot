@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { PlatformRole, AuthTokensDto } from '@sales-copilot/shared-contracts';
 import * as crypto from 'node:crypto';
-import { RedisService } from '../../../infrastructure/redis';
+import { RedisService } from '../../../infrastructure/redis/redis.service';
 import { JwtPayload, StoredRefreshToken } from './types/jwt-payload.type';
 
 @Injectable()

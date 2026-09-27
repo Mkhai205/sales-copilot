@@ -43,12 +43,12 @@ export function TelegramConfig({ inbox, workspaceId }: TelegramConfigProps) {
 
   // Connect form state (when disconnected)
   const [connectToken, setConnectToken] = React.useState('');
-  const [showConnectToken, setShowConnectToken] = React.useState(false);
+  const [showConnectToken, _setShowConnectToken] = React.useState(false);
 
   // Re-auth modal state (when connected)
   const [isReauthOpen, setIsReauthOpen] = React.useState(false);
   const [reauthToken, setReauthToken] = React.useState('');
-  const [showReauthToken, setShowReauthToken] = React.useState(false);
+  const [showReauthToken, _setShowReauthToken] = React.useState(false);
 
   // Disconnect modal state
   const [isDisconnectOpen, setIsDisconnectOpen] = React.useState(false);

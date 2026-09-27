@@ -8,6 +8,7 @@ import { ConfigService } from '@nestjs/config';
 describe('InboxesService (Inbox & Channel 1:1 CRUD & Security)', () => {
   let service: InboxesService;
   let credentialService: ChannelCredentialService;
+  let mockPrismaService: any;
   let inboxesDb: Map<string, any>;
   let channelsDb: Map<string, any>;
   let inboxMembersDb: Map<string, any>;
@@ -137,7 +138,7 @@ describe('InboxesService (Inbox & Channel 1:1 CRUD & Security)', () => {
       },
     };
 
-    const mockPrismaService: any = {
+    mockPrismaService = {
       getClient: () => clientMock,
       runInTransaction: async (cb: (ctx: any) => Promise<any>) => {
         return cb({ tx: clientMock });
@@ -688,6 +689,158 @@ describe('InboxesService (Inbox & Channel 1:1 CRUD & Security)', () => {
           return true;
         },
       );
+    });
+  });
+
+  describe('Avatar Storage Key Persistence & Resolution (Milestone 2)', () => {
+    let serviceWithStorage: InboxesService;
+
+    const mockStorageService: any = {
+      extractStorageKey: (urlOrKey: string): string => {
+        if (!urlOrKey) return '';
+        const trimmed = urlOrKey.trim().replace(/^\/+/, '');
+        if (trimmed.startsWith('https://images.unsplash.com')) return trimmed;
+        if (trimmed.includes('localhost:9000/sales-copilot/')) {
+          return trimmed.split('localhost:9000/sales-copilot/')[1];
+        }
+        if (trimmed.includes('storage-sales-copilot.kakadev.xyz/sales-copilot/')) {
+          return trimmed.split('storage-sales-copilot.kakadev.xyz/sales-copilot/')[1];
+        }
+        return trimmed;
+      },
+      resolvePublicUrl: (urlOrKey?: string | null): string | null => {
+        if (!urlOrKey || !urlOrKey.trim()) return null;
+        if (urlOrKey.startsWith('https://images.unsplash.com')) return urlOrKey;
+        const cleanKey = urlOrKey.trim().replace(/^\/+/, '');
+        return `https://cdn.example.com/sales-copilot/${cleanKey}`;
+      },
+      getPublicUrl: (key: string): string =>
+        `https://cdn.example.com/sales-copilot/${key.replace(/^\/+/, '')}`,
+    };
+
+    beforeEach(() => {
+      serviceWithStorage = new InboxesService(
+        mockPrismaService,
+        credentialService,
+        undefined,
+        mockStorageService,
+      );
+    });
+
+    it('should save relative storage key to database and return resolved URL when creating inbox with full localhost URL', async () => {
+      const fullUrl = 'http://localhost:9000/sales-copilot/avatars/inboxes/ws_alpha_1/logo.png';
+
+      const result = await serviceWithStorage.createInbox(wsAlpha, {
+        name: 'Normalized Inbox 1',
+        channelType: ChannelType.WEB_CHAT,
+        avatarUrl: fullUrl,
+      });
+
+      // 1. Verify database state: stores ONLY relative key
+      const storedInbox = inboxesDb.get(result.id);
+      assertDefined(storedInbox);
+      expect(storedInbox.avatarUrl).toBe('avatars/inboxes/ws_alpha_1/logo.png');
+
+      // 2. Verify returned DTO: returns dynamically resolved public URL
+      expect(result.avatarUrl).toBe(
+        'https://cdn.example.com/sales-copilot/avatars/inboxes/ws_alpha_1/logo.png',
+      );
+    });
+
+    it('should preserve relative key in database when creating inbox with relative path', async () => {
+      const relativeKey = 'avatars/inboxes/ws_alpha_1/icon.png';
+
+      const result = await serviceWithStorage.createInbox(wsAlpha, {
+        name: 'Normalized Inbox 2',
+        channelType: ChannelType.WEB_CHAT,
+        avatarUrl: relativeKey,
+      });
+
+      const storedInbox = inboxesDb.get(result.id);
+      assertDefined(storedInbox);
+      expect(storedInbox.avatarUrl).toBe('avatars/inboxes/ws_alpha_1/icon.png');
+      expect(result.avatarUrl).toBe(
+        'https://cdn.example.com/sales-copilot/avatars/inboxes/ws_alpha_1/icon.png',
+      );
+    });
+
+    it('should preserve external CDN URL in database and response', async () => {
+      const externalUrl = 'https://images.unsplash.com/photo-shop-avatar';
+
+      const result = await serviceWithStorage.createInbox(wsAlpha, {
+        name: 'External Avatar Inbox',
+        channelType: ChannelType.WEB_CHAT,
+        avatarUrl: externalUrl,
+      });
+
+      const storedInbox = inboxesDb.get(result.id);
+      assertDefined(storedInbox);
+      expect(storedInbox.avatarUrl).toBe(externalUrl);
+      expect(result.avatarUrl).toBe(externalUrl);
+    });
+
+    it('should update inbox avatar to relative key when provided a full tunnel URL', async () => {
+      const initial = await serviceWithStorage.createInbox(wsAlpha, {
+        name: 'Update Target Inbox',
+        channelType: ChannelType.WEB_CHAT,
+        avatarUrl: 'avatars/inboxes/ws_alpha_1/old.png',
+      });
+
+      const tunnelUrl =
+        'https://storage-sales-copilot.kakadev.xyz/sales-copilot/avatars/inboxes/ws_alpha_1/new.png';
+
+      const updated = await serviceWithStorage.updateInbox(wsAlpha, initial.id, {
+        avatarUrl: tunnelUrl,
+      });
+
+      // Verify DB persistence is normalized to relative key
+      const storedInbox = inboxesDb.get(initial.id);
+      assertDefined(storedInbox);
+      expect(storedInbox.avatarUrl).toBe('avatars/inboxes/ws_alpha_1/new.png');
+
+      // Verify response is resolved to public URL
+      expect(updated.avatarUrl).toBe(
+        'https://cdn.example.com/sales-copilot/avatars/inboxes/ws_alpha_1/new.png',
+      );
+    });
+
+    it('should resolve avatarUrl to public URL when fetching inbox by ID', async () => {
+      const created = await serviceWithStorage.createInbox(wsAlpha, {
+        name: 'Get Detail Inbox',
+        channelType: ChannelType.WEB_CHAT,
+        avatarUrl: 'avatars/inboxes/ws_alpha_1/detail.png',
+      });
+
+      const detail = await serviceWithStorage.getInboxById(wsAlpha, created.id);
+      expect(detail.avatarUrl).toBe(
+        'https://cdn.example.com/sales-copilot/avatars/inboxes/ws_alpha_1/detail.png',
+      );
+    });
+
+    it('should resolve avatarUrl to public URL for all inboxes in listInboxes', async () => {
+      await serviceWithStorage.createInbox(wsAlpha, {
+        name: 'List Inbox 1',
+        channelType: ChannelType.WEB_CHAT,
+        avatarUrl: 'avatars/inboxes/ws_alpha_1/item1.png',
+      });
+
+      await serviceWithStorage.createInbox(wsAlpha, {
+        name: 'List Inbox 2 (Null Avatar)',
+        channelType: ChannelType.WEB_CHAT,
+        avatarUrl: null as any,
+      });
+
+      const inboxes = await serviceWithStorage.listInboxes(wsAlpha);
+      const inbox1 = inboxes.find(i => i.name === 'List Inbox 1');
+      const inbox2 = inboxes.find(i => i.name === 'List Inbox 2 (Null Avatar)');
+
+      assertDefined(inbox1);
+      assertDefined(inbox2);
+
+      expect(inbox1.avatarUrl).toBe(
+        'https://cdn.example.com/sales-copilot/avatars/inboxes/ws_alpha_1/item1.png',
+      );
+      expect(inbox2.avatarUrl).toBeNull();
     });
   });
 });

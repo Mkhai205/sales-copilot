@@ -254,6 +254,7 @@ describe('Knowledge Base Management (Epic 4.3)', () => {
       );
       assert.strictEqual(res.data.length, 1);
       assert.strictEqual(res.data[0].similarity, 0.88);
+      assert.deepStrictEqual(JSON.parse(requestedBody), searchPayload);
     });
   });
 });

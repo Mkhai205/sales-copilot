@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { useUpdateInbox } from '../../../hooks/use-inboxes';
 import { WebChatPreview } from './web-chat-preview';
+import { getAppUrl } from '@/lib/config/app-url';
 
 interface WebChatConfigProps {
   inbox: InboxDetailDto;
@@ -66,8 +67,7 @@ export function WebChatConfig({ inbox, workspaceId }: WebChatConfigProps) {
       false,
   );
 
-  const origin =
-    typeof window !== 'undefined' ? window.location.origin : 'https://app.salescopilot.vn';
+  const origin = getAppUrl();
   const websiteToken = inbox.channel?.providerAccountId || inbox.id;
   const hmacSecret =
     existingWidget?.hmacSecret ||
@@ -85,7 +85,8 @@ export function WebChatConfig({ inbox, workspaceId }: WebChatConfigProps) {
     g.onload=function(){
       window.SalesCopilotWidget.init({
         inboxId: "${inbox.id}",
-        websiteToken: "${websiteToken}"
+        websiteToken: "${websiteToken}",
+        baseUrl: BASE_URL
       });
     };
   })(document,"script");
@@ -257,7 +258,7 @@ export function WebChatConfig({ inbox, workspaceId }: WebChatConfigProps) {
                     id="allowed-domains"
                     value={allowedDomains}
                     onChange={e => setAllowedDomains(e.target.value)}
-                    placeholder="https://myshop.vn, https://store.myshop.vn"
+                    placeholder="https://example.com, https://your-shop.com"
                     className="h-8 text-xs"
                   />
                   <FieldDescription className="text-[11px] text-muted-foreground">

@@ -1,6 +1,6 @@
 ﻿import { Module, OnModuleInit } from '@nestjs/common';
-import { DatabaseModule } from '../../../../infrastructure/database';
-import { InboxesModule } from '../../../omnichannel/inboxes';
+import { DatabaseModule } from '../../../../infrastructure/database/database.module';
+import { InboxesModule } from '../../inboxes/inboxes.module';
 import { ChannelAdapterRegistry } from '../channel-adapter.registry';
 import { TelegramAdapter } from './telegram.adapter';
 import { TelegramLifecycleService } from './telegram.lifecycle';

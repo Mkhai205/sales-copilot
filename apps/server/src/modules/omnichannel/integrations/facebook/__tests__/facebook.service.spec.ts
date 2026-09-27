@@ -1,11 +1,10 @@
 import { assertDefined, expectReject } from '../../../../../../test/test-assertions';
 import { ConfigService } from '@nestjs/config';
-import { ChannelType } from '@sales-copilot/shared-contracts';
 import { FacebookService } from '../facebook.service';
 import { FacebookAdapter } from '../facebook.adapter';
 import { ChannelCredentialService } from '../../../../omnichannel/inboxes/channel-credential.service';
-import { PrismaService } from '../../../../../infrastructure/database';
-import { RedisService } from '../../../../../infrastructure/redis';
+import { PrismaService } from '../../../../../infrastructure/database/prisma.service';
+import { RedisService } from '../../../../../infrastructure/redis/redis.service';
 
 describe('FacebookService (OAuth Provisioning & Page Connection)', () => {
   let service: FacebookService;
@@ -185,6 +184,15 @@ describe('FacebookService (OAuth Provisioning & Page Connection)', () => {
       expect(parsedUrl.searchParams.get('state')?.startsWith(`${wsId}:`)).toBeTruthy();
       expect(parsedUrl.searchParams.get('scope')).toBe(
         'pages_show_list,pages_messaging,pages_manage_metadata',
+      );
+    });
+  });
+
+  describe('getWebhookUrl() and getRedirectUri() BaseUrl Resolution', () => {
+    it('should return canonical central webhook URL using WEBHOOK_BASE_URL', () => {
+      const webhookUrl = service.getWebhookUrl();
+      expect(webhookUrl).toBe(
+        'https://api-sales-copilot.example.com/api/v1/integrations/facebook/webhook',
       );
     });
   });

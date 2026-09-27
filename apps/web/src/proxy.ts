@@ -48,15 +48,6 @@ interface ResolvedSession {
   isAuthenticated: boolean;
 }
 
-function getCookieDomain(hostname: string): string | undefined {
-  if (hostname === 'localhost' || hostname === '127.0.0.1') {
-    return undefined;
-  }
-  // Host-only cookie by default (RFC 6265) for single-domain security.
-  // Explicit COOKIE_DOMAIN can still be provided if cross-subdomain auth is required.
-  return process.env.COOKIE_DOMAIN || undefined;
-}
-
 async function attemptRefresh(refreshToken: string): Promise<RefreshedTokens | null> {
   const existingPromise = inFlightRefreshes.get(refreshToken);
   if (existingPromise) {
@@ -109,7 +100,6 @@ function applyRefreshedCookies(
   request: NextRequest,
   tokens: RefreshedTokens,
 ): void {
-  const cookieDomain = getCookieDomain(request.nextUrl.hostname);
   const isSecure =
     request.nextUrl.protocol === 'https:' ||
     process.env.NODE_ENV === 'production' ||
@@ -119,7 +109,6 @@ function applyRefreshedCookies(
     httpOnly: true,
     secure: isSecure,
     sameSite: 'lax',
-    domain: cookieDomain,
     maxAge: tokens.expiresIn || 900,
     path: '/',
   });
@@ -131,7 +120,6 @@ function applyRefreshedCookies(
       httpOnly: true,
       secure: isSecure,
       sameSite: 'lax',
-      domain: cookieDomain,
       maxAge: 7 * 24 * 60 * 60, // 7 days (matching REFRESH_TOKEN_EXPIRES_IN_SECONDS: 604800)
       path: '/',
     });
@@ -158,12 +146,7 @@ function createNextResponseWithRefreshedCookies(
   return response;
 }
 
-function clearAuthCookies(response: NextResponse, request: NextRequest): void {
-  const cookieDomain = getCookieDomain(request.nextUrl.hostname);
-  if (cookieDomain) {
-    response.cookies.delete({ name: 'access_token', domain: cookieDomain, path: '/' });
-    response.cookies.delete({ name: 'refresh_token', domain: cookieDomain, path: '/' });
-  }
+function clearAuthCookies(response: NextResponse): void {
   response.cookies.delete('access_token');
   response.cookies.delete('refresh_token');
 }
@@ -177,7 +160,7 @@ function createLoginRedirect(request: NextRequest, clearCookies = false): NextRe
 
   const response = NextResponse.redirect(loginUrl);
   if (clearCookies) {
-    clearAuthCookies(response, request);
+    clearAuthCookies(response);
   }
   return response;
 }

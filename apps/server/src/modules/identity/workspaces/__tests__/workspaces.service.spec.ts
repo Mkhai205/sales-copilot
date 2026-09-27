@@ -1,7 +1,7 @@
 import { assertDefined, expectReject } from '../../../../../test/test-assertions';
 import { BillingPlanType, WorkspaceRole } from '@sales-copilot/shared-contracts';
 import { WorkspacesService } from '../workspaces.service';
-import { PrismaService } from '../../../../infrastructure/database';
+import { PrismaService } from '../../../../infrastructure/database/prisma.service';
 
 describe('WorkspacesService (Provisioning, Tenant Queries & Member RBAC)', () => {
   let service: WorkspacesService;

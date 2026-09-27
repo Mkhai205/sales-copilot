@@ -10,7 +10,7 @@ import {
   MessageType,
   SenderType,
 } from '@sales-copilot/shared-contracts';
-import { PrismaService } from '../database';
+import { PrismaService } from '../database/prisma.service';
 import { StorageService } from '../storage/storage.service';
 import { ContactResolutionService } from '../../modules/omnichannel/contacts/contact-resolution.service';
 import { ConversationsService } from '../../modules/omnichannel/conversations/conversations.service';

@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { AuthModule } from '../auth';
-import { WorkspacesModule } from '../workspaces';
+import { AuthModule } from '../auth/auth.module';
+import { WorkspacesModule } from '../workspaces/workspaces.module';
 import { AuditLogsController } from './audit-logs.controller';
 import { AuditLogService } from './audit-logs.service';
 

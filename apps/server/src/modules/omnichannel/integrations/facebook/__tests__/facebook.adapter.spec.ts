@@ -707,7 +707,7 @@ describe('FacebookAdapter (Facebook Messenger Platform Integration)', () => {
         contentType: MessageContentType.IMAGE,
         attachments: [
           {
-            fileUrl: 'https://minio.salescopilot.com/images/catalog.png',
+            fileUrl: 'https://minio.example.com/images/catalog.png',
             fileName: 'catalog.png',
             fileType: 'image/png',
           },
@@ -718,7 +718,7 @@ describe('FacebookAdapter (Facebook Messenger Platform Integration)', () => {
 
       expect(interceptedBody.message.attachment.type).toBe('image');
       expect(interceptedBody.message.attachment.payload.url).toBe(
-        'https://minio.salescopilot.com/images/catalog.png',
+        'https://minio.example.com/images/catalog.png',
       );
       expect(result.externalMessageId).toBe('mid.attachment_sent_456');
     });
@@ -743,7 +743,7 @@ describe('FacebookAdapter (Facebook Messenger Platform Integration)', () => {
         contentType: MessageContentType.VIDEO,
         attachments: [
           {
-            fileUrl: 'https://minio.salescopilot.com/videos/demo.mp4',
+            fileUrl: 'https://minio.example.com/videos/demo.mp4',
             fileType: 'video/mp4',
           },
         ],

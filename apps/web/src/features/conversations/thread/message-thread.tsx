@@ -63,7 +63,7 @@ import { useWorkspaces } from '@/features/settings/general/hooks/use-workspaces'
 import { MessageThreadHeader } from './message-thread-header';
 import { TypingIndicator } from './typing-indicator';
 import { ChatComposer } from '../composer/chat-composer';
-import { useConversationRoom } from '@/lib/socket';
+import { useConversationRoom } from '@/lib/socket/use-conversation-room';
 import { RichLinkCard } from './rich-link-card';
 import { ImageLightboxDialog } from './image-lightbox-dialog';
 import { MessageImageGrid, isImageAttachment } from './message-image-grid';

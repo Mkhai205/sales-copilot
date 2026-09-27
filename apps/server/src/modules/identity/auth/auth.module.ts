@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
-import { DatabaseModule } from '../../../infrastructure/database';
+import { DatabaseModule } from '../../../infrastructure/database/database.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
-import { JwtAuthGuard } from './guards';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { PasswordService } from './password.service';
 import { TokenService } from './token.service';
 

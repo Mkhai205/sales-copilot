@@ -7,7 +7,7 @@ import type {
   ProductVariant,
   Conversation,
   Order,
-} from '../../src/infrastructure/database';
+} from '../../src/infrastructure/database/client';
 
 export interface OrdersPaymentsSeedResult {
   orders: Order[];

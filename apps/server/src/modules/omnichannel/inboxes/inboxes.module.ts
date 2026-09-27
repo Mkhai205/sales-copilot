@@ -1,7 +1,7 @@
 import { Module, forwardRef } from '@nestjs/common';
-import { DatabaseModule } from '../../../infrastructure/database';
-import { AuthModule } from '../../identity/auth';
-import { WorkspacesModule } from '../../identity/workspaces';
+import { DatabaseModule } from '../../../infrastructure/database/database.module';
+import { AuthModule } from '../../identity/auth/auth.module';
+import { WorkspacesModule } from '../../identity/workspaces/workspaces.module';
 import { ChannelCredentialService } from './channel-credential.service';
 import { InboxMembersController } from './inbox-members.controller';
 import { InboxesController } from './inboxes.controller';

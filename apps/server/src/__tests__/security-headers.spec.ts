@@ -74,7 +74,7 @@ describe('JWT Policy & Security Headers Verification (Task 12 — Feature F-1.11
 
       const user = {
         id: 'usr_test_1',
-        email: 'agent@salescopilot.vn',
+        email: 'agent@example.com',
         role: PlatformRole.USER,
       };
 
@@ -88,7 +88,7 @@ describe('JWT Policy & Security Headers Verification (Task 12 — Feature F-1.11
       // Verify JWT sign options & payload (Identity-Only, no sensitive data)
       expect(signedOptions.expiresIn).toBe(900);
       expect(signedPayload.sub).toBe('usr_test_1');
-      expect(signedPayload.email).toBe('agent@salescopilot.vn');
+      expect(signedPayload.email).toBe('agent@example.com');
       expect(signedPayload.role).toBe(PlatformRole.USER);
       expect(signedPayload.password).toBe(undefined);
 

@@ -7,7 +7,7 @@ import type {
   ResolvedContactResultDto,
 } from '@sales-copilot/shared-contracts';
 import { Prisma } from '../../../infrastructure/database/generated/client';
-import { PrismaService } from '../../../infrastructure/database';
+import { PrismaService } from '../../../infrastructure/database/prisma.service';
 import { ContactsService } from './contacts.service';
 import { mapContactToDto, mapIdentityToDto } from './contacts.mapper';
 

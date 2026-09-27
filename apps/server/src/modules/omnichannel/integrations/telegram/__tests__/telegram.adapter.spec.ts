@@ -999,12 +999,12 @@ describe('TelegramAdapter (Telegram Bot API Integration)', () => {
 
         const res = await adapter.setWebhook(
           token,
-          'https://salescopilot.io/webhooks/telegram/chan_1',
+          'https://example.com/webhooks/telegram/chan_1',
           'secret_token_abc',
         );
 
         expect(res.ok).toBe(true);
-        expect(requestedBody.url).toBe('https://salescopilot.io/webhooks/telegram/chan_1');
+        expect(requestedBody.url).toBe('https://example.com/webhooks/telegram/chan_1');
         expect(requestedBody.secret_token).toBe('secret_token_abc');
         expect(requestedBody.allowed_updates).toEqual([
           'message',
@@ -1042,7 +1042,7 @@ describe('TelegramAdapter (Telegram Bot API Integration)', () => {
             json: async () => ({
               ok: true,
               result: {
-                url: 'https://salescopilot.io/webhooks/telegram/chan_1',
+                url: 'https://example.com/webhooks/telegram/chan_1',
                 has_custom_certificate: false,
                 pending_update_count: 0,
               },
@@ -1051,7 +1051,7 @@ describe('TelegramAdapter (Telegram Bot API Integration)', () => {
 
         const info = await adapter.getWebhookInfo(token);
         assertDefined(info);
-        expect(info?.url).toBe('https://salescopilot.io/webhooks/telegram/chan_1');
+        expect(info?.url).toBe('https://example.com/webhooks/telegram/chan_1');
         expect(info?.pending_update_count).toBe(0);
       });
     });

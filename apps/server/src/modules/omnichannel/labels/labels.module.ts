@@ -1,6 +1,6 @@
 ﻿import { Module } from '@nestjs/common';
-import { AuthModule } from '../../identity/auth';
-import { WorkspacesModule } from '../../identity/workspaces';
+import { AuthModule } from '../../identity/auth/auth.module';
+import { WorkspacesModule } from '../../identity/workspaces/workspaces.module';
 import { LabelsController } from './labels.controller';
 import { LabelsService } from './labels.service';
 

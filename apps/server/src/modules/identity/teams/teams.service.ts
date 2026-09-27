@@ -5,14 +5,14 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import type { TeamMember } from '../../../infrastructure/database';
+import type { TeamMember } from '../../../infrastructure/database/client';
 import {
   CreateTeamDto,
   TeamDto,
   TeamMemberDto,
   UpdateTeamDto,
 } from '@sales-copilot/shared-contracts';
-import { PrismaService } from '../../../infrastructure/database';
+import { PrismaService } from '../../../infrastructure/database/prisma.service';
 
 @Injectable()
 export class TeamsService {

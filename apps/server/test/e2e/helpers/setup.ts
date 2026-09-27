@@ -3,10 +3,11 @@ import { ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import cookieParser from 'cookie-parser';
 import { AppModule } from '../../../src/app.module';
-import { HttpExceptionFilter } from '../../../src/common/filters';
-import { TransformInterceptor } from '../../../src/common/interceptors';
-import { PrismaService } from '../../../src/infrastructure/database';
-import { RedisIoAdapter, RedisService } from '../../../src/infrastructure/redis';
+import { HttpExceptionFilter } from '../../../src/common/filters/http-exception.filter';
+import { TransformInterceptor } from '../../../src/common/interceptors/transform.interceptor';
+import { PrismaService } from '../../../src/infrastructure/database/prisma.service';
+import { RedisIoAdapter } from '../../../src/infrastructure/redis/redis-io.adapter';
+import { RedisService } from '../../../src/infrastructure/redis/redis.service';
 
 export interface TestAppContext {
   app: INestApplication;

@@ -203,8 +203,56 @@ export class StorageService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
+  /**
+   * Returns public URL for a given relative storage key.
+   */
   getPublicUrl(key: string): string {
-    return `${this.publicEndpoint}/${this.bucketName}/${key}`;
+    const cleanKey = key.replace(/^\/+/, '');
+    return `${this.publicEndpoint}/${this.bucketName}/${cleanKey}`;
+  }
+
+  /**
+   * Extracts relative storage key (e.g. 'avatars/inboxes/...').
+   * Leaves external URLs, data URLs, and blob URLs untouched.
+   */
+  extractStorageKey(urlOrKey?: string | null): string {
+    if (!urlOrKey) return '';
+    const trimmed = urlOrKey.trim();
+    if (!trimmed || trimmed.startsWith('data:') || trimmed.startsWith('blob:')) return trimmed;
+
+    // Already a relative path: strip leading slashes
+    if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
+      return trimmed.replace(/^\/+/, '');
+    }
+
+    try {
+      const { pathname } = new URL(trimmed);
+      const buckets = Array.from(new Set([this.bucketName, 'sales-copilot', 'sales-copilot-dev']));
+      const matched = buckets.find(b => pathname.startsWith(`/${b}/`));
+      if (matched) {
+        return pathname.slice(matched.length + 2).replace(/^\/+/, '');
+      }
+      return trimmed; // External CDN URL
+    } catch {
+      return trimmed.replace(/^\/+/, '');
+    }
+  }
+
+  /**
+   * Resolves storage key or URL into public URL.
+   * Passes external URLs through; resolves relative keys against STORAGE_PUBLIC_ENDPOINT.
+   */
+  resolvePublicUrl(urlOrKey?: string | null): string | null {
+    if (!urlOrKey) return null;
+    const trimmed = urlOrKey.trim();
+    if (!trimmed) return null;
+
+    const key = this.extractStorageKey(trimmed);
+    if (!key) return null;
+    if (/^(https?:\/\/|data:|blob:)/.test(key)) {
+      return key;
+    }
+    return this.getPublicUrl(key);
   }
 
   async getSignedUrl(key: string, expires = this.presignedUrlExpiresInSeconds): Promise<string> {

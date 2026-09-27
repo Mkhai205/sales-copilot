@@ -1,14 +1,8 @@
 import request from 'supertest';
-import {
-  createTestApp,
-  seedTestData,
-  cleanupTestData,
-  loginAsAgent,
-  createTestWebSocketClient,
-  TestAppContext,
-  SeedTestContext,
-  TestWebSocketClient,
-} from './helpers';
+import { createTestApp, type TestAppContext } from './helpers/setup';
+import { seedTestData, cleanupTestData, type SeedTestContext } from './helpers/seed';
+import { loginAsAgent } from './helpers/auth';
+import { createTestWebSocketClient, type TestWebSocketClient } from './helpers/ws-client';
 import { WsServerEvent } from '@sales-copilot/shared-contracts';
 
 describe('E2E Scenario 1 — Inbound Message Flow (Task 15 — Feature F-1.11.1)', () => {

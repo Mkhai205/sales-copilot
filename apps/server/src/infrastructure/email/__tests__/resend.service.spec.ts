@@ -32,7 +32,7 @@ describe('ResendService', () => {
     it('renders template and dispatches email via Resend SDK', async () => {
       configService.get.mockImplementation((key: string) => {
         if (key === 'RESEND_API_KEY') return 're_test_123456';
-        if (key === 'RESEND_FROM_EMAIL') return 'Test Copilot <test@salescopilot.io>';
+        if (key === 'RESEND_FROM_EMAIL') return 'Test Copilot <test@example.com>';
         return undefined;
       });
 
@@ -63,7 +63,7 @@ describe('ResendService', () => {
 
       const sendArgs = mockSend.mock.calls[0][0];
       expect(sendArgs.to).toBe('staff@example.com');
-      expect(sendArgs.from).toBe('Test Copilot <test@salescopilot.io>');
+      expect(sendArgs.from).toBe('Test Copilot <test@example.com>');
       expect(sendArgs.subject).toBe(
         '[Sales Copilot] Thông tin tài khoản nhân viên - Shop Thoi Trang',
       );

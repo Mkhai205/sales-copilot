@@ -2,11 +2,11 @@ import { Global, Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { BullModule } from '@nestjs/bullmq';
 import { ChannelIngestionProcessor } from './channel-ingestion.processor';
-import { DatabaseModule } from '../database';
-import { ContactsModule } from '../../modules/omnichannel/contacts';
-import { ConversationsModule } from '../../modules/omnichannel/conversations';
-import { MessagesModule } from '../../modules/omnichannel/messages';
-import { InboxesModule } from '../../modules/omnichannel/inboxes';
+import { DatabaseModule } from '../database/database.module';
+import { ContactsModule } from '../../modules/omnichannel/contacts/contacts.module';
+import { ConversationsModule } from '../../modules/omnichannel/conversations/conversations.module';
+import { MessagesModule } from '../../modules/omnichannel/messages/messages.module';
+import { InboxesModule } from '../../modules/omnichannel/inboxes/inboxes.module';
 
 import { CommentGuardProcessor } from '../../modules/omnichannel/integrations/facebook/comment-guard.processor';
 import { COMMENT_GUARD_QUEUE } from '@sales-copilot/shared-contracts';

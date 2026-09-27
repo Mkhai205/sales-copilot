@@ -3,7 +3,7 @@ import { PlatformRole } from '@sales-copilot/shared-contracts';
 import { AuthService } from '../auth.service';
 import { PasswordService } from '../password.service';
 import { TokenService } from '../token.service';
-import { PrismaService } from '../../../../infrastructure/database';
+import { PrismaService } from '../../../../infrastructure/database/prisma.service';
 
 describe('AuthService (Login, Refresh & Session Use Cases)', () => {
   let authService: AuthService;

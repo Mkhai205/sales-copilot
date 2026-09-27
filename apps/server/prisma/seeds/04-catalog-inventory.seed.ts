@@ -3,7 +3,7 @@ import type {
   Workspace,
   Product,
   ProductVariant,
-} from '../../src/infrastructure/database';
+} from '../../src/infrastructure/database/client';
 
 export interface CatalogInventorySeedResult {
   products: Product[];

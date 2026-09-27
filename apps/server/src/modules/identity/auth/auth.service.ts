@@ -19,7 +19,7 @@ import type {
   UpdateUserProfileDto,
   UserDto,
 } from '@sales-copilot/shared-contracts';
-import { PrismaService } from '../../../infrastructure/database';
+import { PrismaService } from '../../../infrastructure/database/prisma.service';
 import { generateSlug } from '../workspaces/utils/slug.util';
 import { PasswordService } from './password.service';
 import { TokenService } from './token.service';

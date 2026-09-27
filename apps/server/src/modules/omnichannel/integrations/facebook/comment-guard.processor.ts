@@ -12,7 +12,7 @@ import {
   normalizeVietnamesePhoneNumber,
   type ChannelSettings,
 } from '@sales-copilot/shared-contracts';
-import { PrismaService } from '../../../../infrastructure/database';
+import { PrismaService } from '../../../../infrastructure/database/prisma.service';
 import { ContactResolutionService } from '../../../omnichannel/contacts/contact-resolution.service';
 import { ConversationsService } from '../../../omnichannel/conversations/conversations.service';
 import { MessagesService } from '../../../omnichannel/messages/messages.service';

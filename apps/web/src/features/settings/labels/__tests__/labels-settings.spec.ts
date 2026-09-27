@@ -180,6 +180,7 @@ describe('Labels Management (Task 31)', () => {
         workspaceId,
       );
       assert.strictEqual(res.data.color, '#10b981');
+      assert.deepStrictEqual(JSON.parse(requestedBody), { color: '#10b981' });
     });
 
     it('delete() should perform DELETE to /labels/:id', async () => {

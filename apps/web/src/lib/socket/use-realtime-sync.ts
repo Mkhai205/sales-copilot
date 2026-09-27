@@ -12,7 +12,7 @@ import {
   type ConversationResponseDto,
   type MessageResponseDto,
 } from '@sales-copilot/shared-contracts';
-import { useBrowserNotifications } from '@/lib/hooks';
+import { useBrowserNotifications } from '@/lib/hooks/use-browser-notifications';
 import {
   bubbleConversationToTop,
   reconcileOrAppendMessage,

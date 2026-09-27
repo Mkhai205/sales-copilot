@@ -1,6 +1,6 @@
 import { expectReject } from '../../../../../test/test-assertions';
 import { TeamsService } from '../teams.service';
-import { PrismaService } from '../../../../infrastructure/database';
+import { PrismaService } from '../../../../infrastructure/database/prisma.service';
 
 describe('TeamsService (Team Management & Member Assignment)', () => {
   let service: TeamsService;

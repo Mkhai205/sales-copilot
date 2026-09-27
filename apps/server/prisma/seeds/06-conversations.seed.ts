@@ -8,7 +8,7 @@ import type {
   ChannelIdentity,
   Label,
   Conversation,
-} from '../../src/infrastructure/database';
+} from '../../src/infrastructure/database/client';
 
 export interface ConversationsSeedResult {
   conversations: Conversation[];

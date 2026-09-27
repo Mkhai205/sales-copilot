@@ -2,7 +2,7 @@ import { EventEmitter } from 'node:events';
 import { Writable } from 'node:stream';
 import pino from 'pino';
 import pinoHttp from 'pino-http';
-import { pinoRedactConfig, REDACTION_CENSOR, REDACT_PATHS } from '../logging';
+import { pinoRedactConfig, REDACTION_CENSOR, REDACT_PATHS } from '../logging/redaction.config';
 
 describe('Structured Logging & Redaction (Task 7 — Feature F-1.11.3)', () => {
   const createTestLogger = (sink: (logObj: Record<string, any>) => void) => {
@@ -187,7 +187,7 @@ describe('Structured Logging & Redaction (Task 7 — Feature F-1.11.3)', () => {
         user: {
           id: 'usr_admin',
           name: 'Sales Manager',
-          email: 'manager@salescopilot.vn',
+          email: 'manager@example.com',
           phone: '+84901234567',
         },
         customers: [

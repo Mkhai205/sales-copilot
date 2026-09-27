@@ -1,10 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
-import { PrismaService } from '../../infrastructure/database';
-import { RedisService } from '../../infrastructure/redis';
-import { StorageService } from '../../infrastructure/storage';
-import { CHANNEL_INGESTION_QUEUE, COMMENT_GUARD_QUEUE } from '../../infrastructure/queue';
+import { PrismaService } from '../../infrastructure/database/prisma.service';
+import { RedisService } from '../../infrastructure/redis/redis.service';
+import { StorageService } from '../../infrastructure/storage/storage.service';
+import {
+  CHANNEL_INGESTION_QUEUE,
+  COMMENT_GUARD_QUEUE,
+} from '../../infrastructure/queue/queue.module';
 import {
   DependencyCheckResult,
   HealthCheckResponse,

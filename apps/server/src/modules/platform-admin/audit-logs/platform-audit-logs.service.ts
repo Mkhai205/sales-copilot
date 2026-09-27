@@ -6,7 +6,8 @@ import {
   PlatformAuditTargetType,
   QueryPlatformAuditLogsDto,
 } from '@sales-copilot/shared-contracts';
-import { Prisma, PrismaService } from '../../../infrastructure/database';
+import { Prisma } from '../../../infrastructure/database/client';
+import { PrismaService } from '../../../infrastructure/database/prisma.service';
 
 export interface CreatePlatformAuditLogParams {
   actorId: string;

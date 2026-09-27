@@ -27,7 +27,7 @@ const TEST_ACCOUNTS = [
   {
     role: 'Super Admin',
     name: 'Super Administrator',
-    email: 'superadmin@salescopilot.io',
+    email: 'superadmin@example.com',
     password: 'SalesCopilot@2026!',
     icon: ShieldCheckIcon,
     roleTitle: 'Quản trị cấp cao',
@@ -35,7 +35,7 @@ const TEST_ACCOUNTS = [
   {
     role: 'Admin',
     name: 'Workspace Admin',
-    email: 'admin@salescopilot.io',
+    email: 'admin@example.com',
     password: 'SalesCopilot@2026!',
     icon: UserCheckIcon,
     roleTitle: 'Quản trị viên',
@@ -43,7 +43,7 @@ const TEST_ACCOUNTS = [
   {
     role: 'Agent',
     name: 'Sarah Agent',
-    email: 'agent@salescopilot.io',
+    email: 'agent@example.com',
     password: 'SalesCopilot@2026!',
     icon: HeadphonesIcon,
     roleTitle: 'Chuyên viên CSKH',

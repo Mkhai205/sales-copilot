@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { PlatformRole } from '@sales-copilot/shared-contracts';
 import { TokenService } from '../token.service';
-import { RedisService } from '../../../../infrastructure/redis';
+import { RedisService } from '../../../../infrastructure/redis/redis.service';
 
 describe('TokenService (JWT & Refresh Token Rotation)', () => {
   let tokenService: TokenService;

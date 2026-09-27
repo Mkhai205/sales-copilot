@@ -1,9 +1,9 @@
 import { forwardRef, Module, OnModuleInit } from '@nestjs/common';
-import { DatabaseModule } from '../../../../infrastructure/database';
-import { InboxesModule } from '../../../omnichannel/inboxes';
-import { ContactsModule } from '../../contacts';
-import { MessagesModule } from '../../messages';
-import { ConversationsModule } from '../../conversations';
+import { DatabaseModule } from '../../../../infrastructure/database/database.module';
+import { InboxesModule } from '../../inboxes/inboxes.module';
+import { ContactsModule } from '../../contacts/contacts.module';
+import { MessagesModule } from '../../messages/messages.module';
+import { ConversationsModule } from '../../conversations/conversations.module';
 import { ChannelAdapterRegistry } from '../channel-adapter.registry';
 import { WebChatAdapter } from './web-chat.adapter';
 import { WebChatGateway } from './web-chat.gateway';

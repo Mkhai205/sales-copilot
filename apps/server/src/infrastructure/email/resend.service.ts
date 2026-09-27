@@ -21,8 +21,7 @@ export class ResendService {
   constructor(private readonly configService: ConfigService) {
     const apiKey = this.configService.get<string>('RESEND_API_KEY');
     this.fromEmail =
-      this.configService.get<string>('RESEND_FROM_EMAIL') ||
-      'Sales Copilot <noreply@salescopilot.io>';
+      this.configService.get<string>('RESEND_FROM_EMAIL') || 'Sales Copilot <noreply@example.com>';
 
     if (apiKey && apiKey.trim().length > 0) {
       this.resend = new Resend(apiKey.trim());

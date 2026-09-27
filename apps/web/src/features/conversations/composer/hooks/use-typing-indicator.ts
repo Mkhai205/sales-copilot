@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { WsClientEvent } from '@sales-copilot/shared-contracts';
-import { useSocket } from '@/lib/socket';
+import { useSocket } from '@/lib/socket/use-socket';
 
 export interface UseTypingIndicatorOptions {
   conversationId: string;

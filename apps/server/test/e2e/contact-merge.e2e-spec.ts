@@ -1,15 +1,9 @@
 import request from 'supertest';
 import { randomUUID } from 'node:crypto';
-import {
-  createTestApp,
-  seedTestData,
-  cleanupTestData,
-  loginAsAgent,
-  createTestWebSocketClient,
-  TestAppContext,
-  SeedTestContext,
-  TestWebSocketClient,
-} from './helpers';
+import { createTestApp, type TestAppContext } from './helpers/setup';
+import { seedTestData, cleanupTestData, type SeedTestContext } from './helpers/seed';
+import { loginAsAgent } from './helpers/auth';
+import { createTestWebSocketClient, type TestWebSocketClient } from './helpers/ws-client';
 import { ConversationStatus, WsServerEvent } from '@sales-copilot/shared-contracts';
 
 describe('E2E Scenario 5 — Contact Merge Flow (Task 18 — Feature F-1.11.1)', () => {

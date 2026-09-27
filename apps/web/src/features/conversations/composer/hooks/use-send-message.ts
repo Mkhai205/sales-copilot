@@ -20,7 +20,7 @@ import {
   bubbleConversationToTop,
   markMessageFailedInInfiniteData,
   reconcileOrAppendMessage,
-} from '@/lib/socket';
+} from '@/lib/socket/cache-helpers';
 import { conversationKeys } from '@/lib/query-keys';
 
 export interface UseSendMessageOptions {

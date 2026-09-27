@@ -109,4 +109,132 @@ describe('StorageService (S3 / MinIO Storage Operations)', () => {
     expect(health.status).toBe('down');
     expect(health.error).toBe('S3 connection timeout');
   });
+
+  it('should sanitize leading slashes in getPublicUrl to prevent double slashes', () => {
+    const url = storageService.getPublicUrl('/avatars/usr_123.png');
+    expect(url).toBe('http://cdn.example.com/test-bucket/avatars/usr_123.png');
+    const urlMultiple = storageService.getPublicUrl('///avatars/usr_123.png');
+    expect(urlMultiple).toBe('http://cdn.example.com/test-bucket/avatars/usr_123.png');
+  });
+
+  describe('extractStorageKey', () => {
+    it('should extract relative key from relative path input', () => {
+      expect(storageService.extractStorageKey('avatars/inboxes/ws1/img.png')).toBe(
+        'avatars/inboxes/ws1/img.png',
+      );
+    });
+
+    it('should strip leading slashes from relative storage key', () => {
+      expect(storageService.extractStorageKey('/avatars/inboxes/ws1/img.png')).toBe(
+        'avatars/inboxes/ws1/img.png',
+      );
+      expect(storageService.extractStorageKey('///avatars/inboxes/ws1/img.png')).toBe(
+        'avatars/inboxes/ws1/img.png',
+      );
+    });
+
+    it('should extract relative key from localhost MinIO URL', () => {
+      expect(
+        storageService.extractStorageKey(
+          'http://localhost:9000/test-bucket/avatars/inboxes/ws1/img.png',
+        ),
+      ).toBe('avatars/inboxes/ws1/img.png');
+      expect(
+        storageService.extractStorageKey(
+          'http://localhost:9000/sales-copilot/avatars/inboxes/ws1/img.png',
+        ),
+      ).toBe('avatars/inboxes/ws1/img.png');
+    });
+
+    it('should extract relative key from tunnel kakadev MinIO URL', () => {
+      expect(
+        storageService.extractStorageKey(
+          'https://storage-sales-copilot.kakadev.xyz/sales-copilot/avatars/inboxes/ws1/img.png',
+        ),
+      ).toBe('avatars/inboxes/ws1/img.png');
+      expect(
+        storageService.extractStorageKey(
+          'https://storage-sales-copilot.kakadev.xyz/test-bucket/avatars/inboxes/ws1/img.png',
+        ),
+      ).toBe('avatars/inboxes/ws1/img.png');
+    });
+
+    it('should extract relative key from configured STORAGE_PUBLIC_ENDPOINT URL', () => {
+      expect(
+        storageService.extractStorageKey(
+          'http://cdn.example.com/test-bucket/avatars/inboxes/ws1/img.png',
+        ),
+      ).toBe('avatars/inboxes/ws1/img.png');
+    });
+
+    it('should pass through external third-party CDN URLs untouched', () => {
+      const unsplash = 'https://images.unsplash.com/photo-12345?auto=format';
+      expect(storageService.extractStorageKey(unsplash)).toBe(unsplash);
+
+      const facebook =
+        'https://platform-lookaside.fbsbx.com/platform/profilepic/?psid=12345&width=100';
+      expect(storageService.extractStorageKey(facebook)).toBe(facebook);
+
+      const telegram = 'https://api.telegram.org/file/bot123/photos/file_0.jpg';
+      expect(storageService.extractStorageKey(telegram)).toBe(telegram);
+    });
+
+    it('should handle null, undefined, empty, or whitespace-only strings gracefully', () => {
+      expect(storageService.extractStorageKey(null as any)).toBe('');
+      expect(storageService.extractStorageKey(undefined as any)).toBe('');
+      expect(storageService.extractStorageKey('')).toBe('');
+      expect(storageService.extractStorageKey('   ')).toBe('');
+    });
+  });
+
+  describe('resolvePublicUrl', () => {
+    it('should return null for null, undefined, empty, or whitespace input', () => {
+      expect(storageService.resolvePublicUrl(null)).toBeNull();
+      expect(storageService.resolvePublicUrl(undefined)).toBeNull();
+      expect(storageService.resolvePublicUrl('')).toBeNull();
+      expect(storageService.resolvePublicUrl('   ')).toBeNull();
+    });
+
+    it('should resolve relative storage key against STORAGE_PUBLIC_ENDPOINT and bucket', () => {
+      const resolved = storageService.resolvePublicUrl('avatars/inboxes/ws1/img.png');
+      expect(resolved).toBe('http://cdn.example.com/test-bucket/avatars/inboxes/ws1/img.png');
+    });
+
+    it('should strip leading slashes before resolving relative key', () => {
+      const resolved = storageService.resolvePublicUrl('/avatars/inboxes/ws1/img.png');
+      expect(resolved).toBe('http://cdn.example.com/test-bucket/avatars/inboxes/ws1/img.png');
+    });
+
+    it('should re-normalize legacy localhost MinIO full URL to current public endpoint', () => {
+      const legacyLocalhost = 'http://localhost:9000/test-bucket/avatars/inboxes/ws1/img.png';
+      expect(storageService.resolvePublicUrl(legacyLocalhost)).toBe(
+        'http://cdn.example.com/test-bucket/avatars/inboxes/ws1/img.png',
+      );
+    });
+
+    it('should re-normalize legacy tunnel MinIO full URL to current public endpoint', () => {
+      const legacyTunnel =
+        'https://storage-sales-copilot.kakadev.xyz/sales-copilot/avatars/inboxes/ws1/img.png';
+      expect(storageService.resolvePublicUrl(legacyTunnel)).toBe(
+        'http://cdn.example.com/test-bucket/avatars/inboxes/ws1/img.png',
+      );
+    });
+
+    it('should pass through external third-party CDN URLs untouched', () => {
+      const external = 'https://images.unsplash.com/photo-12345?auto=format';
+      expect(storageService.resolvePublicUrl(external)).toBe(external);
+    });
+
+    it('should pass through data URLs untouched', () => {
+      const dataUrl =
+        'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+      expect(storageService.resolvePublicUrl(dataUrl)).toBe(dataUrl);
+    });
+
+    it('should be idempotent when called on already resolved public URLs', () => {
+      const resolvedOnce = storageService.resolvePublicUrl('avatars/inboxes/ws1/img.png');
+      const resolvedTwice = storageService.resolvePublicUrl(resolvedOnce);
+      expect(resolvedTwice).toBe(resolvedOnce);
+    });
+  });
 });

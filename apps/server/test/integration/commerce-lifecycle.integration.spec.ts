@@ -10,7 +10,7 @@ import {
   PaymentMethod,
   PaymentStatus,
 } from '@sales-copilot/shared-contracts';
-import { PrismaService } from '../../src/infrastructure/database';
+import { PrismaService } from '../../src/infrastructure/database/prisma.service';
 import { InventoryLedgerService } from '../../src/modules/commerce/inventory/inventory-ledger.service';
 import { OrdersService } from '../../src/modules/commerce/orders/orders.service';
 

@@ -1,4 +1,4 @@
-import type { PrismaClient } from '../../src/infrastructure/database';
+import type { PrismaClient } from '../../src/infrastructure/database/client';
 
 export async function seedSystemSettings(prisma: PrismaClient): Promise<void> {
   console.log('⚙️ [08-System Settings] Seeding platform configuration records...');
@@ -10,7 +10,7 @@ export async function seedSystemSettings(prisma: PrismaClient): Promise<void> {
       description: 'Cấu hình thông tin chung và liên hệ hỗ trợ toàn hệ thống',
       value: {
         siteName: 'Sales Copilot Omnichannel Platform',
-        supportEmail: 'support@salescopilot.io',
+        supportEmail: 'support@example.com',
         supportHotline: '1900 6868',
         defaultTimezone: 'Asia/Ho_Chi_Minh',
         maintenanceMode: false,

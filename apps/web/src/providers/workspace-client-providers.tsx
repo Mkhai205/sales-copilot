@@ -1,7 +1,7 @@
 'use client';
 
-import * as React from 'react';
-import { RealtimeSync, SocketProvider } from '@/lib/socket';
+import { RealtimeSync } from '@/lib/socket/realtime-sync';
+import { SocketProvider } from '@/lib/socket/socket-provider';
 
 export interface WorkspaceClientProvidersProps {
   children: React.ReactNode;

@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  ConflictException,
   Injectable,
   InternalServerErrorException,
   Logger,
@@ -10,8 +9,8 @@ import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import * as crypto from 'crypto';
 import { ChannelType } from '@sales-copilot/shared-contracts';
-import { PrismaService } from '../../../../infrastructure/database';
-import { RedisService } from '../../../../infrastructure/redis';
+import { PrismaService } from '../../../../infrastructure/database/prisma.service';
+import { RedisService } from '../../../../infrastructure/redis/redis.service';
 import { ChannelCredentialService } from '../../../omnichannel/inboxes/channel-credential.service';
 import { FacebookAdapter } from './facebook.adapter';
 import type { ConnectFacebookPagesBatchDto, FacebookPageInfo } from './facebook.dto';
@@ -72,8 +71,16 @@ export class FacebookService {
   }
 
   private getRedirectUri(): string {
-    const baseUrl = this.configService.get<string>('WEBHOOK_BASE_URL') || 'http://localhost:8000';
-    return `${baseUrl.replace(/\/+$/, '')}/api/v1/integrations/facebook/callback`;
+    const baseUrl = this.configService.get<string>('WEBHOOK_BASE_URL');
+    return `${baseUrl}/api/v1/integrations/facebook/callback`;
+  }
+
+  /**
+   * Constructs the public Central Webhook URL for Facebook Page subscriptions.
+   */
+  getWebhookUrl(): string {
+    const baseUrl = this.configService.get<string>('WEBHOOK_BASE_URL');
+    return `${baseUrl}/api/v1/integrations/facebook/webhook`;
   }
 
   // ─── OAuth Flow ─────────────────────────────────────────────────────────────

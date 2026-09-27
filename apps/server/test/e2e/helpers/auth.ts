@@ -44,7 +44,7 @@ export async function loginAsAgent(
 
   const accessToken = tokens.accessToken as string;
   const refreshToken = tokens.refreshToken as string;
-  const rawCookies: string[] = (res.headers['set-cookie'] as string[]) || [];
+  const rawCookies: string[] = (res.headers['set-cookie'] as unknown as string[]) || [];
 
   // Format cookie string for subsequent supertest .set('Cookie', ...)
   const cookieHeader =

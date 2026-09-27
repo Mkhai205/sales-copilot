@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { ChannelType } from '@sales-copilot/shared-contracts';
-import { PrismaService } from '../../../../infrastructure/database';
-import { RedisService } from '../../../../infrastructure/redis';
+import { PrismaService } from '../../../../infrastructure/database/prisma.service';
+import { RedisService } from '../../../../infrastructure/redis/redis.service';
 import { ChannelCredentialService } from '../../../omnichannel/inboxes/channel-credential.service';
 import { FacebookAdapter } from './facebook.adapter';
 import { ChannelContext, ChannelLifecycleEventPayload } from '../channel-adapter.types';

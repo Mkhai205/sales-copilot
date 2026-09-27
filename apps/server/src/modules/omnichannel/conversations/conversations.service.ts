@@ -14,7 +14,7 @@ import {
   LabelDto,
   PaginationMeta,
 } from '@sales-copilot/shared-contracts';
-import { PrismaService } from '../../../infrastructure/database';
+import { PrismaService } from '../../../infrastructure/database/prisma.service';
 import { mapConversationToDto } from './conversations.mapper';
 
 /**

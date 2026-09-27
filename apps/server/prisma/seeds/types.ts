@@ -11,7 +11,7 @@ import type {
   ChannelIdentity,
   Conversation,
   Order,
-} from '../../src/infrastructure/database';
+} from '../../src/infrastructure/database/client';
 
 export interface SeedContext {
   users: {

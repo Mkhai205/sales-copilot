@@ -9,8 +9,8 @@ import {
   type AiAgentJobData,
   type InboxAiCommercePolicyConfig,
 } from '@sales-copilot/shared-contracts';
-import { PrismaService } from '../../../infrastructure/database';
-import { RedisService } from '../../../infrastructure/redis';
+import { PrismaService } from '../../../infrastructure/database/prisma.service';
+import { RedisService } from '../../../infrastructure/redis/redis.service';
 import { MessagesService } from '../../omnichannel/messages/messages.service';
 import { AI_AGENT_CONSTANTS, getAiDebounceKey } from './ai-agent.constants';
 import { AiGuardrailService } from './services/ai-guardrail.service';

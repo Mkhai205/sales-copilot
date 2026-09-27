@@ -5,7 +5,7 @@ import type {
   AuditLogListQueryDto,
   PaginationMeta,
 } from '@sales-copilot/shared-contracts';
-import { PrismaService } from '../../../infrastructure/database';
+import { PrismaService } from '../../../infrastructure/database/prisma.service';
 
 export interface CreateAuditLogParams {
   workspaceId?: string | null;

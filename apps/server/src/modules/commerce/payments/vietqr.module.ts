@@ -1,7 +1,7 @@
 ﻿import { Module } from '@nestjs/common';
 import { DatabaseModule } from '../../../infrastructure/database/database.module';
-import { AuthModule } from '../../identity/auth';
-import { WorkspacesModule } from '../../identity/workspaces';
+import { AuthModule } from '../../identity/auth/auth.module';
+import { WorkspacesModule } from '../../identity/workspaces/workspaces.module';
 import { MessagesModule } from '../../omnichannel/messages/messages.module';
 import { VietQrService } from './vietqr.service';
 import { VietQrController } from './vietqr.controller';

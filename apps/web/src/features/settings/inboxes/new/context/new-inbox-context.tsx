@@ -2,10 +2,7 @@
 
 import * as React from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
-import { useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
 import { ChannelType, type WorkspaceMemberDto } from '@sales-copilot/shared-contracts';
-import { inboxKeys } from '@/lib/query-keys';
 import { useSettingsRbac } from '@/features/settings/rbac/use-settings-rbac';
 import { useWorkspaceMembers } from '@/features/settings/members/hooks/use-workspace-members';
 import {
@@ -23,6 +20,7 @@ import type {
   NewInboxStage,
   SupportedChannelKey,
 } from '../types';
+import { getAppUrl } from '@/lib/config/app-url';
 
 interface NewInboxContextValue {
   workspaceId: string;
@@ -71,7 +69,6 @@ interface NewInboxProviderProps {
 export function NewInboxProvider({ children, initialWorkspaceSlug }: NewInboxProviderProps) {
   const params = useParams();
   const searchParams = useSearchParams();
-  const queryClient = useQueryClient();
 
   const workspaceSlug = initialWorkspaceSlug || (params?.workspaceSlug as string) || '';
   const { currentWorkspace } = useSettingsRbac(workspaceSlug);
@@ -163,8 +160,7 @@ export function NewInboxProvider({ children, initialWorkspaceSlug }: NewInboxPro
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  const origin =
-    typeof window !== 'undefined' ? window.location.origin : 'https://app.salescopilot.vn';
+  const origin = getAppUrl();
 
   const selectChannel = React.useCallback(
     (channelKey: SupportedChannelKey) => {

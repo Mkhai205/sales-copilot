@@ -1,12 +1,7 @@
 import request from 'supertest';
-import {
-  createTestApp,
-  seedTestData,
-  cleanupTestData,
-  loginAsAgent,
-  TestAppContext,
-  SeedTestContext,
-} from './helpers';
+import { createTestApp, type TestAppContext } from './helpers/setup';
+import { seedTestData, cleanupTestData, type SeedTestContext } from './helpers/seed';
+import { loginAsAgent } from './helpers/auth';
 
 describe('E2E Test Infrastructure Verification (Task 13 — Feature F-1.11.1)', () => {
   let ctx: TestAppContext;

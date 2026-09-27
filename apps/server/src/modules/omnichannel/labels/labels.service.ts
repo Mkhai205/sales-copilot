@@ -6,7 +6,7 @@ import type {
   LabelListQueryDto,
   UpdateLabelDto,
 } from '@sales-copilot/shared-contracts';
-import { PrismaService } from '../../../infrastructure/database';
+import { PrismaService } from '../../../infrastructure/database/prisma.service';
 
 @Injectable()
 export class LabelsService {

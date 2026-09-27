@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 import * as path from 'node:path';
 import type { AttachmentDto } from '@sales-copilot/shared-contracts';
 import { FileType } from '@sales-copilot/shared-contracts';
-import { PrismaService } from '../../../infrastructure/database';
+import { PrismaService } from '../../../infrastructure/database/prisma.service';
 import { StorageService } from '../../../infrastructure/storage/storage.service';
 
 /**

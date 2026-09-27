@@ -1,4 +1,4 @@
-import type { PrismaClient } from '../../src/infrastructure/database';
+import type { PrismaClient } from '../../src/infrastructure/database/client';
 
 /**
  * Safely wipes mock data for a workspace in reverse foreign key order.

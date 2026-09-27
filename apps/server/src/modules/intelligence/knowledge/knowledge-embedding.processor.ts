@@ -1,7 +1,7 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Injectable, Logger } from '@nestjs/common';
 import { Job } from 'bullmq';
-import { PrismaService } from '../../../infrastructure/database';
+import { PrismaService } from '../../../infrastructure/database/prisma.service';
 import { KNOWLEDGE_QUEUE_NAME, type KnowledgeEmbeddingJobData } from './knowledge.constants';
 import {
   KnowledgeEmbeddingService,

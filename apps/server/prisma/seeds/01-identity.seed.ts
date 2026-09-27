@@ -1,5 +1,5 @@
 import * as argon2 from 'argon2';
-import type { PrismaClient, User, Workspace, Team } from '../../src/infrastructure/database';
+import type { PrismaClient, User, Workspace, Team } from '../../src/infrastructure/database/client';
 
 export interface IdentitySeedResult {
   users: {
@@ -14,7 +14,7 @@ export interface IdentitySeedResult {
 export async function seedIdentity(prisma: PrismaClient): Promise<IdentitySeedResult> {
   console.log('👤 [01-Identity] Seeding users, workspace, and memberships...');
 
-  const defaultAdminEmail = process.env.DEFAULT_ADMIN_EMAIL || 'superadmin@salescopilot.io';
+  const defaultAdminEmail = process.env.DEFAULT_ADMIN_EMAIL || 'superadmin@example.com';
   const defaultAdminPassword = process.env.DEFAULT_ADMIN_PASSWORD || 'SalesCopilot@2026!';
   const passwordHash = await argon2.hash(defaultAdminPassword);
 
@@ -38,7 +38,7 @@ export async function seedIdentity(prisma: PrismaClient): Promise<IdentitySeedRe
   });
 
   const adminUser = await prisma.user.upsert({
-    where: { email: 'admin@salescopilot.io' },
+    where: { email: 'admin@example.com' },
     update: {
       name: 'Trần Quản Trị (Admin)',
       role: 'USER',
@@ -46,7 +46,7 @@ export async function seedIdentity(prisma: PrismaClient): Promise<IdentitySeedRe
       avatarUrl: 'https://api.dicebear.com/7.x/bottts/svg?seed=admin',
     },
     create: {
-      email: 'admin@salescopilot.io',
+      email: 'admin@example.com',
       passwordHash,
       name: 'Trần Quản Trị (Admin)',
       role: 'USER',
@@ -56,7 +56,7 @@ export async function seedIdentity(prisma: PrismaClient): Promise<IdentitySeedRe
   });
 
   const agentUser = await prisma.user.upsert({
-    where: { email: 'agent@salescopilot.io' },
+    where: { email: 'agent@example.com' },
     update: {
       name: 'Lê Tư Vấn (Sarah Agent)',
       role: 'USER',
@@ -64,7 +64,7 @@ export async function seedIdentity(prisma: PrismaClient): Promise<IdentitySeedRe
       avatarUrl: 'https://api.dicebear.com/7.x/bottts/svg?seed=sarahagent',
     },
     create: {
-      email: 'agent@salescopilot.io',
+      email: 'agent@example.com',
       passwordHash,
       name: 'Lê Tư Vấn (Sarah Agent)',
       role: 'USER',

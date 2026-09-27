@@ -1,7 +1,7 @@
 import { Module, OnModuleInit } from '@nestjs/common';
-import { DatabaseModule } from '../../../../infrastructure/database';
-import { InboxesModule } from '../../../omnichannel/inboxes';
-import { WorkspacesModule } from '../../../identity/workspaces';
+import { DatabaseModule } from '../../../../infrastructure/database/database.module';
+import { InboxesModule } from '../../inboxes/inboxes.module';
+import { WorkspacesModule } from '../../../identity/workspaces/workspaces.module';
 import { ChannelAdapterRegistry } from '../channel-adapter.registry';
 import { FacebookAdapter } from './facebook.adapter';
 import { FacebookController } from './facebook.controller';

@@ -1,8 +1,9 @@
 import { Module, forwardRef } from '@nestjs/common';
-import { DatabaseModule } from '../../../infrastructure/database';
-import { AuthModule } from '../auth';
+import { DatabaseModule } from '../../../infrastructure/database/database.module';
+import { AuthModule } from '../auth/auth.module';
 import { InboxesModule } from '../../omnichannel/inboxes/inboxes.module';
-import { RolesGuard, WorkspaceGuard } from './guards';
+import { RolesGuard } from './guards/roles.guard';
+import { WorkspaceGuard } from './guards/workspace.guard';
 import { WorkspaceMembersController } from './workspace-members.controller';
 import { WorkspacesController } from './workspaces.controller';
 import { WorkspacesService } from './workspaces.service';

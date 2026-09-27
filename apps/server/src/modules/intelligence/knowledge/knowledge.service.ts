@@ -9,7 +9,7 @@ import type {
   TestSearchResultDto,
   UpdateKnowledgeArticleDto,
 } from '@sales-copilot/shared-contracts';
-import { PrismaService } from '../../../infrastructure/database';
+import { PrismaService } from '../../../infrastructure/database/prisma.service';
 import {
   DEFAULT_SIMILARITY_THRESHOLD,
   DEFAULT_TOP_K,

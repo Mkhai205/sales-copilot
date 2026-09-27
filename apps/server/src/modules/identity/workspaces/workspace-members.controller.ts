@@ -18,11 +18,13 @@ import {
   WorkspaceMemberDto,
   WorkspaceRole,
 } from '@sales-copilot/shared-contracts';
-import { ZodBody } from '../../../common/pipes';
-import { CurrentUser } from '../auth';
+import { ZodBody } from '../../../common/pipes/zod-schema-validation.pipe';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { JwtUserPayload } from '../auth/types/jwt-payload.type';
-import { CurrentWorkspace, Roles } from './decorators';
-import { RolesGuard, WorkspaceGuard } from './guards';
+import { CurrentWorkspace } from './decorators/current-workspace.decorator';
+import { Roles } from './decorators/roles.decorator';
+import { RolesGuard } from './guards/roles.guard';
+import { WorkspaceGuard } from './guards/workspace.guard';
 import type { WorkspaceContext } from './types/workspace-context.type';
 import { WorkspacesService } from './workspaces.service';
 

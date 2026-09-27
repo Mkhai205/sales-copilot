@@ -8,7 +8,6 @@ import {
   Copy,
   Check,
   FileCode,
-  Globe,
   Send,
   ShieldCheck,
   Plus,
@@ -46,7 +45,8 @@ export function SuccessSummaryStep() {
     g.onload=function(){
       window.SalesCopilotWidget.init({
         inboxId: "${createdSummary.id}",
-        websiteToken: "${websiteToken}"
+        websiteToken: "${websiteToken}",
+        baseUrl: BASE_URL
       });
     };
   })(document,"script");

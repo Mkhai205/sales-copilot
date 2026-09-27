@@ -4,7 +4,7 @@ import type {
   User,
   Inbox,
   Channel,
-} from '../../src/infrastructure/database';
+} from '../../src/infrastructure/database/client';
 
 export interface ChannelsInboxesSeedResult {
   inbox: Inbox;
@@ -37,7 +37,7 @@ export async function seedChannelsInboxes(
             'Xin chào! Em có thể hỗ trợ tư vấn sản phẩm hoặc đơn hàng gì cho mình hôm nay ạ?',
           webWidget: {
             widgetColor: '#2563eb',
-            allowedDomains: ['https://app.salescopilot.vn', 'https://yourshop.vn'],
+            allowedDomains: ['https://example.com', 'https://your-shop.com'],
             hmacMandatory: false,
             preChatForm: {
               enabled: true,
@@ -84,7 +84,7 @@ export async function seedChannelsInboxes(
         settings: {
           widgetColor: '#2563eb',
           welcomeTitle: 'Hỗ trợ trực tuyến Sales Copilot',
-          allowedDomains: 'https://app.salescopilot.vn, https://yourshop.vn',
+          allowedDomains: 'https://example.com, https://your-shop.com',
           hmacMandatory: false,
           preChatFormEnabled: true,
           preChatFormOptions: {

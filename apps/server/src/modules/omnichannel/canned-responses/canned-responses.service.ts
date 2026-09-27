@@ -12,7 +12,7 @@ import type {
   CreateCannedResponseDto,
   UpdateCannedResponseDto,
 } from '@sales-copilot/shared-contracts';
-import { PrismaService } from '../../../infrastructure/database';
+import { PrismaService } from '../../../infrastructure/database/prisma.service';
 
 /**
  * Normalizes a canned response shortcode:

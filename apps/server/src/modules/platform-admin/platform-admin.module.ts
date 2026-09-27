@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { DatabaseModule } from '../../infrastructure/database';
-import { RedisModule } from '../../infrastructure/redis';
+import { DatabaseModule } from '../../infrastructure/database/database.module';
+import { RedisModule } from '../../infrastructure/redis/redis.module';
 import { PlatformAuditLogsController } from './audit-logs/platform-audit-logs.controller';
 import { PlatformMetricsController } from './metrics/platform-metrics.controller';
 import { PlatformWorkspacesController } from './workspaces/platform-workspaces.controller';

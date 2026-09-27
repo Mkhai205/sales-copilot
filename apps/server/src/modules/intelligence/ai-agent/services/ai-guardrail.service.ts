@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { RedisService } from '../../../../infrastructure/redis';
+import { RedisService } from '../../../../infrastructure/redis/redis.service';
 import {
   AI_AGENT_CONSTANTS,
   CONTENT_BLACKLIST_REGEX,

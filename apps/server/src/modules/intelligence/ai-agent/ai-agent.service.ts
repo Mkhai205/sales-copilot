@@ -8,14 +8,13 @@ import type {
   AiDebugMetadata,
   AiToolCallDebug,
 } from '@sales-copilot/shared-contracts';
-import { PrismaService } from '../../../infrastructure/database';
+import { PrismaService } from '../../../infrastructure/database/prisma.service';
 import {
   AI_AGENT_CONSTANTS,
   calculateEstimatedCostUsd,
   HumanTakeoverAbortError,
 } from './ai-agent.constants';
 import { AiContextBuilder } from './ai-context.builder';
-import { buildAgentTools } from './tools';
 import { CommerceToolRegistry } from './tools/commerce-tool.registry';
 import { summarizeToolOutput } from './utils/ai-tool-summarizer';
 
@@ -149,11 +148,7 @@ export class AiAgentService {
           },
           model,
         )
-      : buildAgentTools({
-          workspaceId,
-          conversationId,
-          policy: aiPolicy,
-        });
+      : {};
 
     this.logger.debug(
       `Executing AI agent loop for conversation '${conversationId}' in workspace '${workspaceId}'`,

@@ -1,7 +1,7 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import type { ModelMessage } from 'ai';
 import { SenderType, type InboxAiCommercePolicyConfig } from '@sales-copilot/shared-contracts';
-import { PrismaService } from '../../../infrastructure/database';
+import { PrismaService } from '../../../infrastructure/database/prisma.service';
 import { AI_AGENT_CONSTANTS, PERSONA_TONE_DESCRIPTIONS } from './ai-agent.constants';
 
 export interface BuiltAiContext {

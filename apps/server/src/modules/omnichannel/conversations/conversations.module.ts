@@ -1,9 +1,9 @@
 ﻿import { Module } from '@nestjs/common';
-import { DatabaseModule } from '../../../infrastructure/database';
-import { RedisModule } from '../../../infrastructure/redis';
-import { AuthModule } from '../../identity/auth';
+import { DatabaseModule } from '../../../infrastructure/database/database.module';
+import { RedisModule } from '../../../infrastructure/redis/redis.module';
+import { AuthModule } from '../../identity/auth/auth.module';
 import { RealtimeModule } from '../../realtime/realtime.module';
-import { WorkspacesModule } from '../../identity/workspaces';
+import { WorkspacesModule } from '../../identity/workspaces/workspaces.module';
 import { ConversationsController } from './conversations.controller';
 import { LinkPreviewController } from './link-preview.controller';
 import { ConversationsService } from './conversations.service';

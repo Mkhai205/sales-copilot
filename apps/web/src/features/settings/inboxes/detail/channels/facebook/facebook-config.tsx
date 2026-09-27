@@ -118,9 +118,6 @@ export function FacebookConfig({ inbox, workspaceId, workspaceSlug }: FacebookCo
     }
   }, [inbox.channel?.updatedAt, inbox.updatedAt]);
 
-  const origin =
-    typeof window !== 'undefined' ? window.location.origin : 'https://app.salescopilot.vn';
-
   const channelSettings = (inbox.channel?.settings as Record<string, any>) || {};
   const isConnected = Boolean(inbox.channel?.isConnected);
   const pageId = inbox.channel?.providerAccountId || channelSettings.pageId || '109283746581920';

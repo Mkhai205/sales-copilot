@@ -28,9 +28,10 @@ import {
   updateUserProfileSchema,
   type UserDto,
 } from '@sales-copilot/shared-contracts';
-import { ZodBody } from '../../../common/pipes';
+import { ZodBody } from '../../../common/pipes/zod-schema-validation.pipe';
 import { AuthService } from './auth.service';
-import { CurrentUser, Public } from './decorators';
+import { CurrentUser } from './decorators/current-user.decorator';
+import { Public } from './decorators/public.decorator';
 import { JwtUserPayload } from './types/jwt-payload.type';
 
 @ApiTags('Authentication')

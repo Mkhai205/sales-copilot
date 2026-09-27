@@ -56,8 +56,8 @@ Dùng khi lập trình tính năng mới hàng ngày. Tốc độ hot-reload nha
 | File | Mục đích | Các biến quan trọng |
 | :--- | :--- | :--- |
 | `.env` (thư mục gốc) | Docker Compose Dev | `POSTGRES_USER=postgres`, `POSTGRES_PASSWORD=password`, `MINIO_ROOT_USER=minioadmin`, `MINIO_ROOT_PASSWORD=miniopassword123` |
-| `apps/server/.env` | Backend NestJS | `PORT=8000`, `DATABASE_URL=postgresql://postgres:password@localhost:5432/sales_copilot_dev?schema=public`, `REDIS_URL=redis://localhost:6379`, `STORAGE_ENDPOINT=http://localhost:9000`, `JWT_ACCESS_TOKEN_SECRET=...`, `CHANNEL_ENCRYPTION_KEY=...` |
-| `apps/web/.env.local` | Frontend Next.js | `NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1`, `NEXT_PUBLIC_WS_URL=http://localhost:8000` |
+| `apps/server/.env` | Backend NestJS | `PORT=8000`, `APP_BASE_URL=http://localhost:8000`, `DATABASE_URL=postgresql://postgres:password@localhost:5432/sales_copilot_dev?schema=public`, `REDIS_URL=redis://localhost:6379`, `STORAGE_ENDPOINT=http://localhost:9000`, `STORAGE_PUBLIC_ENDPOINT=http://localhost:9000`, `JWT_ACCESS_TOKEN_SECRET=...`, `CHANNEL_ENCRYPTION_KEY=...` |
+| `apps/web/.env.local` | Frontend Next.js | `NEXT_PUBLIC_APP_URL=http://localhost:3000`, `NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1`, `NEXT_PUBLIC_WS_URL=http://localhost:8000` |
 
 ### Các bước khởi động
 
@@ -120,13 +120,17 @@ Script sẽ:
 
 Trong `apps/server/.env`, cập nhật hoặc bỏ comment các dòng:
 ```bash
-# Public webhook base URL (Meta gửi webhook về đây)
-WEBHOOK_BASE_URL=https://sales-copilot.kakadev.xyz
+# Public Base URL của Backend (Single Source of Truth cho Web Chat Embed SDK, Swagger, Webhook)
+APP_BASE_URL=https://sales-copilot.kakadev.xyz
 
-# URL lưu trữ ảnh/file gửi ra ngoài
+# (Tùy chọn) Webhook Base URL: Mặc định tự động kế thừa APP_BASE_URL ở trên.
+# Chỉ khai báo nếu bạn dùng một URL tunnel riêng biệt dành riêng cho webhook:
+# WEBHOOK_BASE_URL=https://sales-copilot.kakadev.xyz
+
+# URL lưu trữ ảnh/file gửi ra ngoài (trình duyệt client tải/xem ảnh từ MinIO)
 STORAGE_PUBLIC_ENDPOINT=https://storage-sales-copilot.kakadev.xyz
 
-# Cho phép Nginx tunnel gọi API
+# Cho phép Nginx tunnel và Web local gọi API
 CORS_ORIGIN='https://sales-copilot.kakadev.xyz,http://localhost:3000'
 
 # Meta App Credentials (lấy từ https://developers.facebook.com)
@@ -198,9 +202,14 @@ CHANNEL_ENCRYPTION_KEY=e4d3c2b1a09876543210fedcba9876543210fedcba9876543210fedcb
 
 # --- Tên miền & Mạng ---
 HTTP_PORT=80
-CORS_ORIGIN=https://sales-copilot.kakadev.xyz
-WEBHOOK_BASE_URL=https://sales-copilot.kakadev.xyz
-STORAGE_PUBLIC_ENDPOINT=https://storage-sales-copilot.kakadev.xyz
+# URL công khai của Backend API (dùng cho Web Chat Embed, Swagger, Webhook)
+APP_BASE_URL=https://your-domain.com
+# Domain của Web UI được phép gọi API qua CORS
+CORS_ORIGIN=https://your-domain.com
+# Webhook Base URL: tự động kế thừa APP_BASE_URL (chỉ điền nếu tách riêng domain webhook)
+# WEBHOOK_BASE_URL=https://your-domain.com
+# URL công khai mà trình duyệt xem ảnh/file tải lên MinIO
+STORAGE_PUBLIC_ENDPOINT=https://storage.your-domain.com
 
 # Mạng nội bộ Docker (Next.js server-side gọi thẳng Backend không qua Internet)
 INTERNAL_API_URL=http://server:8000/api/v1
@@ -268,23 +277,31 @@ docker compose -f docker-compose.prod.yml down
 | `JWT_ACCESS_TOKEN_EXPIRES_IN_SECONDS` | `900` (15m) | Không | Thời gian sống của Access Token |
 | `REFRESH_TOKEN_EXPIRES_IN_SECONDS` | `604800` (7d) | Không | Thời gian sống của Refresh Token |
 | `CHANNEL_ENCRYPTION_KEY` | - | **Có** | Khóa hex 64 ký tự mã hóa token các kênh tích hợp |
-| `COOKIE_DOMAIN` | `undefined` | Không | Domain cookie (để trống để dùng Host-Only cookie an toàn) |
 
 ### Nhóm 3: Lưu trữ tệp tin (S3 / MinIO)
+> **Lưu ý kiến trúc**: Cơ sở dữ liệu chỉ lưu trữ *relative key* (ví dụ: `avatars/inboxes/{wsId}/logo.png`), không lưu URL tuyệt đối. Biến `STORAGE_PUBLIC_ENDPOINT` được gắn động lúc API trả dữ liệu cho client, giúp bạn đổi domain/CDN mà không làm hỏng dữ liệu trong DB.
+
 | Tên biến | Mặc định | Bắt buộc | Mô tả |
 | :--- | :--- | :---: | :--- |
-| `STORAGE_ENDPOINT` | `http://localhost:9000` | Không | Endpoint nội bộ để Server tương tác với MinIO |
-| `STORAGE_PUBLIC_ENDPOINT` | `http://localhost:9000` | Không | Endpoint public để ký Presigned URL cho client tải/xem ảnh |
+| `STORAGE_ENDPOINT` | `http://localhost:9000` | Không | Endpoint nội bộ để Server tương tác với MinIO (S3 Client) |
+| `STORAGE_PUBLIC_ENDPOINT` | `http://localhost:9000` | Không | Endpoint public để client trình duyệt xem/tải ảnh đính kèm |
 | `STORAGE_ACCESS_KEY` | - | **Có** | Root User / Access Key của MinIO |
 | `STORAGE_SECRET_KEY` | - | **Có** | Root Password / Secret Key của MinIO |
 | `STORAGE_BUCKETS` | `sales-copilot` | Không | Tên bucket chính (tự động tạo nếu chưa có) |
 
-### Nhóm 4: Điều hướng & Webhooks
+### Nhóm 4: Điều hướng & Webhooks (Backend)
 | Tên biến | Mặc định | Bắt buộc | Mô tả |
 | :--- | :--- | :---: | :--- |
-| `CORS_ORIGIN` | `http://localhost:3000` | Không | Danh sách origin được phép gọi API (phân cách bằng dấu phẩy) |
-| `WEBHOOK_BASE_URL` | `undefined` | Không | URL public của hệ thống phục vụ webhook callback & OAuth |
-| `INTERNAL_API_URL` | `http://server:8000/api/v1`| Không | URL mạng nội bộ Docker để Next.js gọi NestJS trực tiếp |
+| `APP_BASE_URL` | `http://localhost:8000` | Không | URL công khai chính của Backend API (dùng cho Web Chat Embed SDK, Swagger). Bắt buộc có protocol `http://` hoặc `https://`. |
+| `WEBHOOK_BASE_URL` | Kế thừa `APP_BASE_URL` | Không | URL public phục vụ nhận webhook callback (Meta, Telegram, SePay) và OAuth redirect. Chỉ cần điền riêng khi dùng tunnel riêng biệt. |
+| `CORS_ORIGIN` | `http://localhost:3000` | Không | Danh sách origin được phép gọi API (chuỗi phân cách bằng dấu phẩy). |
+| `INTERNAL_API_URL` | `http://server:8000/api/v1`| Không | URL mạng nội bộ Docker để Next.js SSR/ServerActions gọi Backend NestJS trực tiếp. |
 | `FB_APP_ID` | `undefined` | Không | Meta App ID cho kênh Facebook Messenger |
 | `FB_APP_SECRET` | `undefined` | Không | Meta App Secret để xác thực chữ ký Webhook HMAC-SHA256 |
 | `FB_VERIFY_TOKEN` | `undefined` | Không | Token xác thực Webhook Meta handshake |
+
+### Nhóm 5: Frontend Web (Next.js)
+| Tên biến | Mặc định | Bắt buộc | Mô tả |
+| :--- | :--- | :---: | :--- |
+| `NEXT_PUBLIC_APP_URL` | `http://localhost:3000` | Không | URL public của Web App (fallback trên SSR nếu không có request origin). |
+| `NEXT_PUBLIC_API_URL` | `http://localhost:8000` | Không | URL public của Backend API mà trình duyệt client gọi tới. |

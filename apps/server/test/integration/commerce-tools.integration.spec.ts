@@ -1,7 +1,7 @@
 import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { OrderStatus } from '@sales-copilot/shared-contracts';
-import { PrismaService } from '../../src/infrastructure/database';
+import { PrismaService } from '../../src/infrastructure/database/prisma.service';
 import { InventoryLedgerService } from '../../src/modules/commerce/inventory/inventory-ledger.service';
 import { OrdersService } from '../../src/modules/commerce/orders/orders.service';
 import { ProductsService } from '../../src/modules/commerce/products/products.service';

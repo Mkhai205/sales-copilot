@@ -7,10 +7,11 @@ import helmet from 'helmet';
 import { Logger } from 'nestjs-pino';
 
 import { AppModule } from './app.module';
-import { HttpExceptionFilter } from './common/filters';
-import { TransformInterceptor } from './common/interceptors';
-import { createCorsOptions, HELMET_CONFIG } from './config';
-import { RedisIoAdapter } from './infrastructure/redis';
+import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { TransformInterceptor } from './common/interceptors/transform.interceptor';
+import { createCorsOptions } from './config/cors.config';
+import { HELMET_CONFIG } from './config/helmet.config';
+import { RedisIoAdapter } from './infrastructure/redis/redis-io.adapter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bufferLogs: true, rawBody: true });

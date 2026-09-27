@@ -20,9 +20,11 @@ import {
   updateCannedResponseSchema,
   WorkspaceRole,
 } from '@sales-copilot/shared-contracts';
-import { ZodBody, ZodQuery } from '../../../common/pipes';
-import { CurrentWorkspace, Roles } from '../../identity/workspaces/decorators';
-import { RolesGuard, WorkspaceGuard } from '../../identity/workspaces/guards';
+import { ZodBody, ZodQuery } from '../../../common/pipes/zod-schema-validation.pipe';
+import { CurrentWorkspace } from '../../identity/workspaces/decorators/current-workspace.decorator';
+import { Roles } from '../../identity/workspaces/decorators/roles.decorator';
+import { RolesGuard } from '../../identity/workspaces/guards/roles.guard';
+import { WorkspaceGuard } from '../../identity/workspaces/guards/workspace.guard';
 import type { WorkspaceContext } from '../../identity/workspaces/types/workspace-context.type';
 import { CannedResponsesService } from './canned-responses.service';
 

@@ -58,7 +58,7 @@ const INITIAL_MESSAGES: TestMessage[] = [
 const DEFAULT_EMBED_SCRIPT = `<!-- Start Sales Copilot Live Chat -->
 <script>
   (function(d,t) {
-    var BASE_URL = "https://app.salescopilot.vn";
+    var BASE_URL = "http://localhost:3000";
     var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
     g.src=BASE_URL+"/widget/sdk.js";
     g.defer = true;
@@ -66,7 +66,8 @@ const DEFAULT_EMBED_SCRIPT = `<!-- Start Sales Copilot Live Chat -->
     g.onload=function(){
       window.SalesCopilotWidget.init({
         inboxId: "your-inbox-id",
-        websiteToken: "your-website-token"
+        websiteToken: "your-website-token",
+        baseUrl: BASE_URL
       });
     };
   })(document,"script");
@@ -331,7 +332,7 @@ export function WebChatPreview({
               </div>
               <div className="flex items-center gap-1.5 rounded-md border border-border/80 bg-background/80 px-2 py-0.5 text-[10px] text-muted-foreground font-mono w-48 justify-center truncate">
                 <ShieldCheck className="size-3 text-emerald-500 shrink-0" />
-                <span>https://yourshop.vn</span>
+                <span>https://your-shop.com</span>
               </div>
               <div className="w-8" />
             </div>

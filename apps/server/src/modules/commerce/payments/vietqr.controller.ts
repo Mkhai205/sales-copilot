@@ -8,8 +8,10 @@ import {
   WorkspaceRole,
 } from '@sales-copilot/shared-contracts';
 import { CurrentUser } from '../../identity/auth/decorators/current-user.decorator';
-import { CurrentWorkspace, Roles } from '../../identity/workspaces/decorators';
-import { RolesGuard, WorkspaceGuard } from '../../identity/workspaces/guards';
+import { CurrentWorkspace } from '../../identity/workspaces/decorators/current-workspace.decorator';
+import { Roles } from '../../identity/workspaces/decorators/roles.decorator';
+import { RolesGuard } from '../../identity/workspaces/guards/roles.guard';
+import { WorkspaceGuard } from '../../identity/workspaces/guards/workspace.guard';
 import type { WorkspaceContext } from '../../identity/workspaces/types/workspace-context.type';
 import { VietQrService } from './vietqr.service';
 import { MessagesService } from '../../omnichannel/messages/messages.service';

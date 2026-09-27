@@ -1,6 +1,6 @@
 import * as React from 'react';
-import { WorkspaceSocketSync } from '@/lib/socket';
-import { WorkspaceHeader } from '@/components/layout';
+import { WorkspaceSocketSync } from '@/lib/socket/workspace-socket-sync';
+import { WorkspaceHeader } from '@/components/layout/workspace-header';
 
 interface WorkspaceLayoutProps {
   children: React.ReactNode;

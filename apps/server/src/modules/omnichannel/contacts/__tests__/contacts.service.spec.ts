@@ -1,7 +1,7 @@
 import { assertDefined, expectReject } from '../../../../../test/test-assertions';
 import { ConversationStatus } from '@sales-copilot/shared-contracts';
 import { ContactsService } from '../contacts.service';
-import { PrismaService } from '../../../../infrastructure/database';
+import { PrismaService } from '../../../../infrastructure/database/prisma.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
 describe('ContactsService (Profile Management, Dynamic Attributes, Atomic Merge & Identity Sub-Resources)', () => {

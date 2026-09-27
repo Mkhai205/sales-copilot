@@ -20,7 +20,7 @@ import {
   typingIndicatorSchema,
   commerceEditingActionSchema,
 } from '@sales-copilot/shared-contracts';
-import { PrismaService } from '../../infrastructure/database';
+import { PrismaService } from '../../infrastructure/database/prisma.service';
 import { WorkspacesService } from '../identity/workspaces/workspaces.service';
 import { TokenService } from '../identity/auth/token.service';
 import { PresenceService } from './presence.service';

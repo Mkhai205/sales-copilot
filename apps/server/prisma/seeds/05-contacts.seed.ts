@@ -4,7 +4,7 @@ import type {
   Channel,
   Contact,
   ChannelIdentity,
-} from '../../src/infrastructure/database';
+} from '../../src/infrastructure/database/client';
 
 export interface ContactsSeedResult {
   contacts: Contact[];
