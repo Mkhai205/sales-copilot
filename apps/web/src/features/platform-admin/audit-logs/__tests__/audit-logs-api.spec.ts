@@ -46,33 +46,4 @@ describe('Platform Admin Audit Logs API Client', () => {
     assert.strictEqual(res.data.length, 1);
     assert.strictEqual(res.data[0].id, 'log_1');
   });
-
-  it('getAuditLogById() should perform GET to /platform-admin/audit-logs/:id', async () => {
-    let requestedUrl = '';
-    let requestedMethod = '';
-
-    globalThis.fetch = (async (url: string | URL | Request, init?: RequestInit) => {
-      requestedUrl = url.toString();
-      requestedMethod = init?.method || 'GET';
-      return {
-        ok: true,
-        status: 200,
-        json: async () => ({
-          success: true,
-          data: {
-            id: 'log_detail_1',
-            action: 'TOGGLE_WORKSPACE_STATUS',
-            targetType: 'WORKSPACE',
-            targetId: 'ws_1',
-          },
-        }),
-      } as Response;
-    }) as typeof globalThis.fetch;
-
-    const res = await auditLogsApi.getAuditLogById('log_detail_1');
-
-    assert.ok(requestedUrl.includes('/platform-admin/audit-logs/log_detail_1'));
-    assert.strictEqual(requestedMethod, 'GET');
-    assert.strictEqual(res.data.id, 'log_detail_1');
-  });
 });

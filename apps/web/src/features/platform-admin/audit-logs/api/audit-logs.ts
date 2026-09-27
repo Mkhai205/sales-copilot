@@ -14,11 +14,4 @@ export const auditLogsApi = {
     const qs = buildQueryString(params);
     return fetchApi<PlatformAuditLogDto[]>(`/platform-admin/audit-logs${qs}`);
   },
-
-  /**
-   * Get single platform audit log by ID.
-   */
-  async getAuditLogById(id: string): Promise<ApiResponse<PlatformAuditLogDto>> {
-    return fetchApi<PlatformAuditLogDto>(`/platform-admin/audit-logs/${encodeURIComponent(id)}`);
-  },
 };

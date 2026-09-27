@@ -5,12 +5,12 @@ import { ChannelType, DeliveryStatus, MessageContentType } from '@sales-copilot/
  * - 'message': Normal inbound message (text, media, interactive)
  * - 'delivery_status': Delivery/read receipt or failure notification
  */
-export type InboundEventKind = 'message' | 'delivery_status';
+type InboundEventKind = 'message' | 'delivery_status';
 
 /**
  * Normalized delivery status update from an external channel (e.g. Facebook delivery/read receipts).
  */
-export interface DeliveryStatusInfo {
+interface DeliveryStatusInfo {
   externalMessageId: string;
   status: DeliveryStatus;
   timestamp: Date;

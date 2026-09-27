@@ -50,8 +50,6 @@ export function normalizeVietnamesePhone(phone?: string | null): string {
   return cleaned;
 }
 
-export const normalizeVietnamesePhoneNumber = normalizeVietnamesePhone;
-
 /**
  * Validates if the given phone string matches the standard Vietnamese 10-digit mobile number format.
  */

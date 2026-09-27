@@ -15,11 +15,11 @@ export interface ConfirmAndGenerateQrToolOptions {
   messagesService?: MessagesService;
 }
 
-export const confirmAndGenerateQrInputSchema = z.object({
+const confirmAndGenerateQrInputSchema = z.object({
   orderId: z.string().describe('ID của đơn hàng (orderId) cần xác nhận và sinh mã QR'),
 });
 
-export type ConfirmAndGenerateQrInput = z.infer<typeof confirmAndGenerateQrInputSchema>;
+type ConfirmAndGenerateQrInput = z.infer<typeof confirmAndGenerateQrInputSchema>;
 
 export function createConfirmAndGenerateQrTool({
   workspaceId,

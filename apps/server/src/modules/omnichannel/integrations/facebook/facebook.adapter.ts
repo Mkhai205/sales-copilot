@@ -13,7 +13,7 @@ import {
   WebhookVerificationRequest,
 } from '../channel-adapter.types';
 
-export interface FacebookApiError {
+interface FacebookApiError {
   message: string;
   type: string;
   code: number;
@@ -21,7 +21,7 @@ export interface FacebookApiError {
   fbtrace_id?: string;
 }
 
-export interface FacebookApiResponse<_T = unknown> {
+interface FacebookApiResponse<_T = unknown> {
   error?: FacebookApiError;
   success?: boolean;
   recipient_id?: string;
@@ -42,7 +42,7 @@ export class FacebookRateLimitError extends Error {
   }
 }
 
-export interface FacebookPageProfile {
+interface FacebookPageProfile {
   id: string;
   name: string;
   picture?: {
@@ -55,7 +55,7 @@ export interface FacebookPageProfile {
   };
 }
 
-export interface FacebookUserProfile {
+interface FacebookUserProfile {
   id: string;
   first_name?: string;
   last_name?: string;
@@ -63,7 +63,7 @@ export interface FacebookUserProfile {
   profile_pic?: string;
 }
 
-export interface FacebookMessagingAttachmentPayload {
+interface FacebookMessagingAttachmentPayload {
   url?: string;
   title?: string;
   sticker_id?: number;
@@ -74,34 +74,34 @@ export interface FacebookMessagingAttachmentPayload {
   [key: string]: unknown;
 }
 
-export interface FacebookMessagingAttachment {
+interface FacebookMessagingAttachment {
   type: 'image' | 'audio' | 'video' | 'file' | 'location' | 'fallback' | 'template' | string;
   payload?: FacebookMessagingAttachmentPayload;
 }
 
-export interface FacebookQuickReply {
+interface FacebookQuickReply {
   payload: string;
 }
 
-export interface FacebookPostback {
+interface FacebookPostback {
   mid?: string;
   title?: string;
   payload: string;
 }
 
-export interface FacebookDeliveryReceipt {
+interface FacebookDeliveryReceipt {
   mids?: string[];
   watermark: number;
   seq?: number;
 }
 
-export interface FacebookReadReceipt {
+interface FacebookReadReceipt {
   watermark: number;
   seq?: number;
   mid?: string;
 }
 
-export interface FacebookInboundMessage {
+interface FacebookInboundMessage {
   mid: string;
   text?: string;
   is_echo?: boolean;
@@ -111,7 +111,7 @@ export interface FacebookInboundMessage {
   attachments?: FacebookMessagingAttachment[];
 }
 
-export interface FacebookMessagingEntry {
+interface FacebookMessagingEntry {
   sender?: {
     id: string;
   };
@@ -125,14 +125,14 @@ export interface FacebookMessagingEntry {
   read?: FacebookReadReceipt;
 }
 
-export interface FacebookWebhookEntry {
+interface FacebookWebhookEntry {
   id: string;
   time: number;
   messaging?: FacebookMessagingEntry[];
   standby?: FacebookMessagingEntry[];
 }
 
-export interface FacebookWebhookPayload {
+interface FacebookWebhookPayload {
   object: 'page' | string;
   entry: FacebookWebhookEntry[];
 }

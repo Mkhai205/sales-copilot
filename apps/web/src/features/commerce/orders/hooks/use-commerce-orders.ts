@@ -1,12 +1,11 @@
 'use client';
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import type {
   CancelOrderDto,
   CompleteOrderDto,
   CreateOrderDto,
-  ListOrdersQueryDto,
   ManualPayOrderDto,
   UpdateOrderDto,
 } from '@sales-copilot/shared-contracts';
@@ -150,32 +149,4 @@ export function useCommerceOrders(workspaceId?: string) {
     completeOrder: completeOrderMutation.mutateAsync,
     isCompleting: completeOrderMutation.isPending,
   };
-}
-
-export const usePosOrders = useCommerceOrders;
-
-export function useCommerceOrdersList(workspaceId?: string, query?: ListOrdersQueryDto) {
-  return useQuery({
-    queryKey: commerceKeys.orders(workspaceId, query),
-    queryFn: async () => {
-      if (!workspaceId) throw new Error('Workspace ID is required');
-      const res = await ordersApi.listOrders(workspaceId, query);
-      return res.data;
-    },
-    enabled: Boolean(workspaceId),
-    staleTime: 30 * 1000,
-  });
-}
-
-export function useCommerceOrder(workspaceId?: string, orderId?: string) {
-  return useQuery({
-    queryKey: commerceKeys.order(workspaceId, orderId),
-    queryFn: async () => {
-      if (!workspaceId || !orderId) throw new Error('Workspace ID and Order ID are required');
-      const res = await ordersApi.getOrder(workspaceId, orderId);
-      return res.data;
-    },
-    enabled: Boolean(workspaceId && orderId),
-    staleTime: 30 * 1000,
-  });
 }

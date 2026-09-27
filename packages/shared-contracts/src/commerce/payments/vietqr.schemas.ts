@@ -48,6 +48,3 @@ export const vietQrResponseSchema = z.object({
 });
 
 export type VietQrResponseDto = z.infer<typeof vietQrResponseSchema>;
-
-export const vietQrPayloadResponseSchema = vietQrResponseSchema;
-export type VietQrPayloadResponseDto = VietQrResponseDto;

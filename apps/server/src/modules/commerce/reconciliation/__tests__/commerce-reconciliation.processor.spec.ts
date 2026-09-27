@@ -10,7 +10,6 @@ import {
   parseOrderDisplayId,
   parseOrderNumber,
   CommerceReconciliationProcessor,
-  PosReconciliationProcessor,
 } from '../commerce-reconciliation.processor';
 import { PaymentReconciliationService } from '../payment-reconciliation.service';
 
@@ -523,17 +522,13 @@ describe('CommerceReconciliation (Bank Reconciliation Engine & Safe Inventory Ma
     });
   });
 
-  describe('CommerceReconciliationProcessor (and PosReconciliationProcessor backward compatibility)', () => {
+  describe('CommerceReconciliationProcessor', () => {
     let processor: CommerceReconciliationProcessor;
     let mockPrismaService: any;
     let mockRedisService: any;
     let mockReconciliationService: any;
     let acquiredLocks: string[];
     let releasedLocks: string[];
-
-    it('should export PosReconciliationProcessor as an alias to CommerceReconciliationProcessor', () => {
-      expect(PosReconciliationProcessor).toBe(CommerceReconciliationProcessor);
-    });
 
     const wsId = 'ws-processor-test';
     const orderId = 'order-proc-001';
@@ -610,7 +605,7 @@ describe('CommerceReconciliation (Bank Reconciliation Engine & Safe Inventory Ma
         emit: jest.fn(),
       };
 
-      processor = new PosReconciliationProcessor(
+      processor = new CommerceReconciliationProcessor(
         mockPrismaService,
         mockRedisService,
         mockReconciliationService,

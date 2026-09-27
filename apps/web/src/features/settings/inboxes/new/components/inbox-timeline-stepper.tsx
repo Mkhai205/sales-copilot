@@ -4,14 +4,14 @@ import * as React from 'react';
 import { Check } from 'lucide-react';
 import type { NewInboxStage } from '../types';
 
-export interface TimelineStepItem {
+interface TimelineStepItem {
   stage: NewInboxStage;
   stepNumber: number;
   title: string;
   description: string;
 }
 
-export const INBOX_TIMELINE_STEPS: TimelineStepItem[] = [
+const INBOX_TIMELINE_STEPS: TimelineStepItem[] = [
   {
     stage: 'select_channel',
     stepNumber: 1,

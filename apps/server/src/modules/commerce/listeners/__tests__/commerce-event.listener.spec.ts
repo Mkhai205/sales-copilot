@@ -74,27 +74,4 @@ describe('CommerceEventListener (Realtime Chat Receipt)', () => {
     expect(msg.dto.metadata.type).toBe('PAYMENT_RECEIPT');
     expect(msg.dto.metadata.status).toBe('PARTIALLY_PAID');
   });
-
-  it('should post order shipped activity message to conversation thread on ORDER_SHIPPED', async () => {
-    await listener.handleOrderShipped({
-      workspaceId: wsId,
-      orderId,
-      displayId: 1004,
-      conversationId,
-      trackingCode: 'GHTK998877',
-      shippingCarrier: 'GHTK',
-    });
-
-    expect(createdMessages.length).toBe(1);
-    const msg = createdMessages[0];
-    expect(msg.workspaceId).toBe(wsId);
-    expect(msg.convId).toBe(conversationId);
-    expect(msg.dto.senderType).toBe(SenderType.SYSTEM);
-    expect(msg.dto.messageType).toBe(MessageType.ACTIVITY);
-    expect(msg.dto.content.includes('1004')).toBeTruthy();
-    expect(msg.dto.content.includes('GHTK')).toBeTruthy();
-    expect(msg.dto.content.includes('GHTK998877')).toBeTruthy();
-    expect(msg.dto.metadata.type).toBe('ORDER_SHIPPED');
-    expect(msg.dto.metadata.trackingCode).toBe('GHTK998877');
-  });
 });

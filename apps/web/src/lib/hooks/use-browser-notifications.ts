@@ -63,7 +63,7 @@ export function playSyntheticChime(): void {
 /**
  * Plays audio notification using HTML5 Audio with fallback to Web Audio synthetic chime.
  */
-export function playNotificationSound(soundUrl = '/sounds/ding.mp3'): void {
+function playNotificationSound(soundUrl = '/sounds/ding.mp3'): void {
   if (typeof window === 'undefined') return;
 
   try {

@@ -3,7 +3,7 @@ import sanitizeHtml from 'sanitize-html';
 /**
  * Permitted HTML formatting and structural tags for message content.
  */
-export const ALLOWED_MESSAGE_TAGS = [
+const ALLOWED_MESSAGE_TAGS = [
   'b',
   'i',
   'em',
@@ -42,7 +42,7 @@ export const ALLOWED_MESSAGE_TAGS = [
 /**
  * Permitted attributes per tag for message content.
  */
-export const ALLOWED_MESSAGE_ATTRIBUTES: Record<string, string[]> = {
+const ALLOWED_MESSAGE_ATTRIBUTES: Record<string, string[]> = {
   a: ['href', 'name', 'target', 'rel'],
   img: ['src', 'alt', 'title', 'width', 'height'],
   '*': ['class'],
@@ -52,7 +52,7 @@ export const ALLOWED_MESSAGE_ATTRIBUTES: Record<string, string[]> = {
  * Permitted URL schemes for links and image sources.
  * Strictly disallows dangerous protocols like javascript:, data:, vbscript:.
  */
-export const ALLOWED_MESSAGE_SCHEMES = ['http', 'https', 'mailto', 'tel'];
+const ALLOWED_MESSAGE_SCHEMES = ['http', 'https', 'mailto', 'tel'];
 
 /**
  * Sanitizes rich text / HTML message content to prevent Cross-Site Scripting (XSS).

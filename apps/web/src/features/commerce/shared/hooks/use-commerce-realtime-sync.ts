@@ -5,7 +5,6 @@ import {
   type OrderPaidEventPayload,
   type OrderPartiallyPaidEventPayload,
   type OrderCompletedEventPayload,
-  type OrderShippedEventPayload,
 } from '@sales-copilot/shared-contracts';
 import { toast } from 'sonner';
 import { useSocketEvent } from '@/lib/socket/use-socket';
@@ -14,11 +13,10 @@ export interface UseCommerceRealtimeSyncOptions {
   workspaceId?: string;
   conversationId?: string;
 }
-export type UsePosRealtimeSyncOptions = UseCommerceRealtimeSyncOptions;
 
 /**
  * Real-time notification hook for In-Chat Commerce & automated bank reconciliation.
- * Listens for WebSocket events (order.paid, order.partially_paid, order.shipped, order.completed)
+ * Listens for WebSocket events (order.paid, order.partially_paid, order.completed)
  * and dispatches celebratory Sonner notifications according to the active workspace/conversation context.
  * Cache invalidation is handled globally by useRealtimeSync.
  */
@@ -64,22 +62,7 @@ export function useCommerceRealtimeSync({
     }
   });
 
-  // 3. Order Shipped (Dispatched to carrier)
-  useSocketEvent<OrderShippedEventPayload>(WsServerEvent.ORDER_SHIPPED, data => {
-    if (!data) return;
-
-    if (
-      (!workspaceId || data.workspaceId === workspaceId) &&
-      (!conversationId || !data.conversationId || data.conversationId === conversationId)
-    ) {
-      const orderRef = data.displayId ? `#${data.displayId}` : data.orderNumber;
-      toast.success(`Đơn hàng ${orderRef} đã xuất kho giao cho ${data.shippingCarrier}!`, {
-        description: `Mã vận đơn: ${data.trackingCode}`,
-      });
-    }
-  });
-
-  // 4. Order Completed
+  // 3. Order Completed
   useSocketEvent<OrderCompletedEventPayload>(WsServerEvent.ORDER_COMPLETED, data => {
     if (!data) return;
 
@@ -92,5 +75,3 @@ export function useCommerceRealtimeSync({
     }
   });
 }
-
-export const usePosRealtimeSync = useCommerceRealtimeSync;

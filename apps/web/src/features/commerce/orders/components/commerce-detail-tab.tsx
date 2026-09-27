@@ -32,8 +32,6 @@ export interface CommerceDetailTabProps {
   newOrderTrigger?: number;
   onOpenDrawer?: (orderToEdit?: OrderResponseDto | null) => void;
 }
-export type PosDetailTabProps = CommerceDetailTabProps;
-
 export function CommerceDetailTab({
   workspaceId,
   conversationId,
@@ -368,5 +366,3 @@ export function CommerceDetailTab({
     </div>
   );
 }
-
-export const PosDetailTab = CommerceDetailTab;

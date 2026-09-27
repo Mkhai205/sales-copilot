@@ -1,6 +1,6 @@
 export type HealthStatus = 'ok' | 'degraded' | 'down';
-export type DependencyStatus = 'up' | 'down';
-export type QueueStatus = 'ok' | 'down';
+type DependencyStatus = 'up' | 'down';
+type QueueStatus = 'ok' | 'down';
 
 export interface DependencyCheckResult {
   status: DependencyStatus;
@@ -39,7 +39,7 @@ export interface LivenessResponse {
   timestamp: string;
 }
 
-export interface DatabaseReadinessCheckResult extends DependencyCheckResult {
+interface DatabaseReadinessCheckResult extends DependencyCheckResult {
   migrationsApplied: boolean;
   migrationCount?: number;
   migrationError?: string;

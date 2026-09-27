@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Injectable, Param, PipeTransform, Query } from '@nestjs/common';
+import { BadRequestException, Body, Injectable, PipeTransform, Query } from '@nestjs/common';
 
 type ZodSchemaLike = {
   safeParse: (value: unknown) =>
@@ -37,6 +37,3 @@ export const ZodBody = <T extends ZodSchemaLike>(schema: T) =>
 
 export const ZodQuery = <T extends ZodSchemaLike>(schema: T) =>
   Query(new ZodSchemaValidationPipe(schema));
-
-export const ZodParam = <T extends ZodSchemaLike>(schema: T) =>
-  Param(new ZodSchemaValidationPipe(schema));

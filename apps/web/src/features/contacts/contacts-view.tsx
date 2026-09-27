@@ -195,9 +195,7 @@ export function ContactsView({ workspaceSlug }: ContactsViewProps) {
                 <SelectItem value="ALL">Tất cả kênh</SelectItem>
                 <SelectItem value={ChannelType.FACEBOOK_MESSENGER}>Facebook Messenger</SelectItem>
                 <SelectItem value={ChannelType.TELEGRAM}>Telegram</SelectItem>
-                <SelectItem value={ChannelType.ZALO}>Zalo</SelectItem>
                 <SelectItem value={ChannelType.WEB_CHAT}>Web Chat</SelectItem>
-                <SelectItem value={ChannelType.EMAIL}>Email</SelectItem>
               </SelectContent>
             </Select>
           </div>

@@ -2,11 +2,15 @@
 
 ## Overview
 
-This module will house background queue configurations and workers for asynchronous, retryable, and high-latency tasks in Phase 1:
+This module houses background queue configurations and processors for asynchronous, retryable, and high-latency tasks:
 
-- **Outbound Webhooks**: Dispatching and retrying webhooks to third-party endpoints.
-- **Channel Event Processing**: Ingestion and normalization of inbound webhooks (Facebook, Zalo, Telegram, Email).
-- **Email Delivery**: Asynchronous transactional email processing.
+- **Channel Event Processing**: Ingestion and normalization of inbound webhooks (Facebook, Telegram, Web Chat) via `CHANNEL_INGESTION_QUEUE`.
+- **Comment Guard**: Real-time scanning/masking of Facebook comments containing phone numbers via `COMMENT_GUARD_QUEUE`.
+
+Other queues live next to their domain modules:
+
+- **Commerce Reconciliation** (`COMMERCE_RECONCILIATION_QUEUE`, `apps/server/src/modules/commerce/reconciliation`).
+- **AI Autopilot** (`AI_AUTOPILOT_QUEUE`, `apps/server/src/modules/intelligence/ai-agent`).
 
 ## Architecture
 

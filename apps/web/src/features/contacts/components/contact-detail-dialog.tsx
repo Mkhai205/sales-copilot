@@ -458,6 +458,3 @@ export function ContactDetailDialog({
     </Dialog>
   );
 }
-
-// Backward compatibility alias
-export const ContactDetailSheet = ContactDetailDialog;

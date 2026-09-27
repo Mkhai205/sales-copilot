@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { formatVND } from '@/features/commerce/shared/lib/currency';
 
-export interface PosLineItem {
+interface PosLineItem {
   productId: string;
   variantId: string;
   productName: string;

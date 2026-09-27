@@ -306,43 +306,6 @@ describe('AuditLogService (Feature F-1.8.4: Audit Logging)', () => {
       expect(auditLogsDb[1].action).toBe('CANNED_RESPONSE_DELETED');
     });
 
-    it('should record audit log on automation_rule created, updated, and deleted events', async () => {
-      await service.handleAutomationRuleCreated({
-        workspaceId: 'ws_1',
-        userId: 'usr_admin_1',
-        rule: {
-          id: 'rule_1',
-          name: 'VIP Auto Assign',
-          eventTrigger: 'MESSAGE_CREATED',
-          isActive: true,
-        },
-      });
-
-      await service.handleAutomationRuleUpdated({
-        workspaceId: 'ws_1',
-        userId: 'usr_admin_1',
-        rule: {
-          id: 'rule_1',
-          name: 'VIP Auto Assign Updated',
-          eventTrigger: 'MESSAGE_CREATED',
-          isActive: false,
-        },
-      });
-
-      await service.handleAutomationRuleDeleted({
-        workspaceId: 'ws_1',
-        userId: 'usr_admin_1',
-        ruleId: 'rule_1',
-        name: 'VIP Auto Assign Updated',
-      });
-
-      expect(auditLogsDb.length).toBe(3);
-      expect(auditLogsDb[0].action).toBe('AUTOMATION_RULE_CREATED');
-      expect(auditLogsDb[0].resourceType).toBe('AUTOMATION_RULE');
-      expect(auditLogsDb[1].action).toBe('AUTOMATION_RULE_UPDATED');
-      expect(auditLogsDb[2].action).toBe('AUTOMATION_RULE_DELETED');
-    });
-
     it('should record audit log on workspace_member added, role_updated, and removed events (FINDING-P8-01)', async () => {
       await service.handleWorkspaceMemberAdded({
         workspaceId: 'ws_1',
@@ -380,46 +343,6 @@ describe('AuditLogService (Feature F-1.8.4: Audit Logging)', () => {
       expect(auditLogsDb[1].payload.newRole).toBe('ADMIN');
 
       expect(auditLogsDb[2].action).toBe('WORKSPACE_MEMBER_REMOVED');
-    });
-
-    it('should record audit log on webhook_subscription created, updated, and deleted events (FINDING-P8-01)', async () => {
-      await service.handleWebhookSubscriptionCreated({
-        workspaceId: 'ws_1',
-        userId: 'usr_admin_1',
-        subscription: {
-          id: 'sub_1',
-          url: 'https://example.com/webhook',
-          subscriptions: ['message.created'],
-          isActive: true,
-        },
-      });
-
-      await service.handleWebhookSubscriptionUpdated({
-        workspaceId: 'ws_1',
-        userId: 'usr_admin_1',
-        subscription: {
-          id: 'sub_1',
-          url: 'https://example.com/webhook-v2',
-          subscriptions: ['message.created', 'conversation.created'],
-          isActive: true,
-        },
-      });
-
-      await service.handleWebhookSubscriptionDeleted({
-        workspaceId: 'ws_1',
-        userId: 'usr_admin_1',
-        subscriptionId: 'sub_1',
-        url: 'https://example.com/webhook-v2',
-      });
-
-      expect(auditLogsDb.length).toBe(3);
-      expect(auditLogsDb[0].action).toBe('WEBHOOK_SUBSCRIPTION_CREATED');
-      expect(auditLogsDb[0].resourceType).toBe('WEBHOOK_SUBSCRIPTION');
-      expect(auditLogsDb[0].resourceId).toBe('sub_1');
-
-      expect(auditLogsDb[1].action).toBe('WEBHOOK_SUBSCRIPTION_UPDATED');
-      expect(auditLogsDb[2].action).toBe('WEBHOOK_SUBSCRIPTION_DELETED');
-      expect(auditLogsDb[2].resourceId).toBe('sub_1');
     });
   });
 });

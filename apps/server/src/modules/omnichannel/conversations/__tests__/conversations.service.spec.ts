@@ -545,14 +545,14 @@ describe('ConversationsService (Core & State Machine)', () => {
         convId,
         { status: ConversationStatus.PENDING },
         undefined,
-        { type: 'AUTOMATION_RULE', id: 'rule_999' },
+        { type: 'AGENT', id: 'usr_agent_1' },
       );
 
       const statusEvent = emittedEvents.find(e => e.event === 'conversation.status_updated');
       assertDefined(statusEvent);
       expect(statusEvent.payload.performedBy).toEqual({
-        type: 'AUTOMATION_RULE',
-        id: 'rule_999',
+        type: 'AGENT',
+        id: 'usr_agent_1',
       });
     });
 

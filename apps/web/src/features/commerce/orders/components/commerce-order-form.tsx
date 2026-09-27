@@ -70,8 +70,6 @@ export interface CommerceOrderFormProps {
   onCancel?: () => void;
   onSuccess?: (order: OrderResponseDto) => void;
 }
-export type PosOrderFormProps = CommerceOrderFormProps;
-
 export function CommerceOrderForm({
   workspaceId,
   conversationId,
@@ -81,7 +79,7 @@ export function CommerceOrderForm({
   initialOrder,
   onCancel,
   onSuccess,
-}: PosOrderFormProps) {
+}: CommerceOrderFormProps) {
   const { createOrder, updateOrder, confirmOrder, isCreating, isUpdating, isConfirming } =
     useCommerceOrders(workspaceId);
   const { isLocked, lockedBy, remainingTtlSeconds, takeover } = useCommerceCollision({
@@ -558,5 +556,3 @@ export function CommerceOrderForm({
     </div>
   );
 }
-
-export const PosOrderForm = CommerceOrderForm;

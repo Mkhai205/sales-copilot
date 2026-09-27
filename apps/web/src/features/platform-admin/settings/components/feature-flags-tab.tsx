@@ -39,7 +39,7 @@ const FLAGS: FlagConfig[] = [
     key: 'feature.comment_masking_enabled',
     title: 'Tự động Ẩn Bình luận chứa SĐT',
     description:
-      'Quét nội dung bình luận Facebook/Zalo theo thời gian thực và ẩn ngay lập tức các bình luận chứa số điện thoại chống cướp khách.',
+      'Quét nội dung bình luận Facebook theo thời gian thực và ẩn ngay lập tức các bình luận chứa số điện thoại chống cướp khách.',
     icon: ShieldBan,
     defaultVal: true,
   },

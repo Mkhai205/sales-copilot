@@ -9,11 +9,11 @@ export interface CheckInventoryToolOptions {
   prisma: PrismaService;
 }
 
-export const checkInventoryInputSchema = z.object({
+const checkInventoryInputSchema = z.object({
   variantId: z.string().describe('ID của biến thể sản phẩm (variantId) cần kiểm tra tồn kho'),
 });
 
-export type CheckInventoryInput = z.infer<typeof checkInventoryInputSchema>;
+type CheckInventoryInput = z.infer<typeof checkInventoryInputSchema>;
 
 export function createCheckInventoryTool({
   workspaceId,

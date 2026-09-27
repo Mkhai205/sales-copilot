@@ -60,8 +60,6 @@ export enum WsServerEvent {
   INVENTORY_UPDATED = 'inventory.updated',
   COMMERCE_COLLISION_STATUS = 'commerce.collision_status',
 
-  ORDER_SHIPPED = 'order.shipped',
-
   // Payment & Reconciliation events
   PAYMENT_TRANSACTION_CREATED = 'payment_transaction.created',
   PAYMENT_TRANSACTION_UPDATED = 'payment_transaction.updated',
@@ -133,16 +131,3 @@ export const commerceEditingActionSchema = z.object({
   conversationId: z.string().uuid('Invalid conversation ID format (UUID expected)'),
 });
 export type CommerceEditingActionDto = z.infer<typeof commerceEditingActionSchema>;
-
-export const orderShippedEventPayloadSchema = z.object({
-  workspaceId: z.string().uuid(),
-  orderId: z.string().uuid(),
-  orderNumber: z.string(),
-  displayId: z.number(),
-  conversationId: z.string().uuid().optional().nullable(),
-  trackingCode: z.string(),
-  shippingCarrier: z.string(),
-  shippedAt: z.union([z.string(), z.date()]),
-  order: z.record(z.unknown()),
-});
-export type OrderShippedEventPayloadDto = z.infer<typeof orderShippedEventPayloadSchema>;

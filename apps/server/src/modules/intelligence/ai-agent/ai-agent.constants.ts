@@ -22,12 +22,12 @@ export const AI_AGENT_CONSTANTS = {
   FOLLOW_UP_JOB_NAME: 'follow-up',
 } as const;
 
-export interface ModelPricingConfig {
+interface ModelPricingConfig {
   inputPricePerMillion: number;
   outputPricePerMillion: number;
 }
 
-export const AI_MODEL_PRICING: Record<string, ModelPricingConfig> = {
+const AI_MODEL_PRICING: Record<string, ModelPricingConfig> = {
   'gemini-2.5-flash': {
     inputPricePerMillion: 0.15,
     outputPricePerMillion: 0.6,

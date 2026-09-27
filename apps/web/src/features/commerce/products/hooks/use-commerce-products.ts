@@ -87,5 +87,3 @@ export function useCommerceProducts(workspaceId?: string) {
     searchVariants,
   };
 }
-
-export const usePosProducts = useCommerceProducts;

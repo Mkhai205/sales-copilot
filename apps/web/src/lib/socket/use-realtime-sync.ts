@@ -467,7 +467,6 @@ export function useRealtimeSync(): void {
   useSocketEvent(WsServerEvent.ORDER_PAID, handleOrderEvent);
   useSocketEvent(WsServerEvent.ORDER_PARTIALLY_PAID, handleOrderEvent);
   useSocketEvent(WsServerEvent.ORDER_CANCELLED, handleOrderEvent);
-  useSocketEvent(WsServerEvent.ORDER_SHIPPED, handleOrderEvent);
   useSocketEvent(WsServerEvent.ORDER_COMPLETED, handleOrderEvent);
 
   useSocketEvent(WsServerEvent.INVENTORY_UPDATED, () => {

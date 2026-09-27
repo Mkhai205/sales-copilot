@@ -102,6 +102,3 @@ export const ordersApi = {
       body: dto ? JSON.stringify(dto) : undefined,
     }),
 };
-
-// Compatibility export
-export const commerceApi = ordersApi;

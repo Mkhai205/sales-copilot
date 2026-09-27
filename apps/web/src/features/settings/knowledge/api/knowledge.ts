@@ -15,11 +15,6 @@ export const knowledgeApi = {
       headers: workspaceHeaders(workspaceId),
     }),
 
-  getById: (workspaceId: string, id: string) =>
-    fetchApi<KnowledgeArticleDto>(`/knowledge-articles/${id}`, {
-      headers: workspaceHeaders(workspaceId),
-    }),
-
   create: (workspaceId: string, dto: CreateKnowledgeArticleDto) =>
     fetchApi<KnowledgeArticleDto>('/knowledge-articles', {
       method: 'POST',

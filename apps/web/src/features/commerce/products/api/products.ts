@@ -15,7 +15,7 @@ export interface PaginatedResult<T> {
   meta?: PaginationMeta;
 }
 
-export function normalizePaginatedResponse<T>(res: any): {
+function normalizePaginatedResponse<T>(res: any): {
   success: boolean;
   data: PaginatedResult<T>;
   meta?: PaginationMeta;
@@ -103,6 +103,3 @@ export const productsApi = {
       },
     ).then(res => normalizePaginatedResponse<InventoryTransactionResponseDto>(res)),
 };
-
-// Compatibility export
-export const commerceApi = productsApi;

@@ -274,67 +274,6 @@ export class AuditLogService {
     }
   }
 
-  @OnEvent('automation_rule.created', { async: true })
-  async handleAutomationRuleCreated(payload: any): Promise<void> {
-    try {
-      if (!payload?.workspaceId) return;
-      await this.log({
-        workspaceId: payload.workspaceId,
-        userId: payload.userId ?? null,
-        action: 'AUTOMATION_RULE_CREATED',
-        resourceType: 'AUTOMATION_RULE',
-        resourceId: payload.rule?.id,
-        payload: {
-          name: payload.rule?.name,
-          eventTrigger: payload.rule?.eventTrigger,
-          isActive: payload.rule?.isActive,
-        },
-      });
-    } catch (err) {
-      this.logger.error('Failed to record audit log for automation_rule.created', err);
-    }
-  }
-
-  @OnEvent('automation_rule.updated', { async: true })
-  async handleAutomationRuleUpdated(payload: any): Promise<void> {
-    try {
-      if (!payload?.workspaceId) return;
-      await this.log({
-        workspaceId: payload.workspaceId,
-        userId: payload.userId ?? null,
-        action: 'AUTOMATION_RULE_UPDATED',
-        resourceType: 'AUTOMATION_RULE',
-        resourceId: payload.rule?.id,
-        payload: {
-          name: payload.rule?.name,
-          eventTrigger: payload.rule?.eventTrigger,
-          isActive: payload.rule?.isActive,
-        },
-      });
-    } catch (err) {
-      this.logger.error('Failed to record audit log for automation_rule.updated', err);
-    }
-  }
-
-  @OnEvent('automation_rule.deleted', { async: true })
-  async handleAutomationRuleDeleted(payload: any): Promise<void> {
-    try {
-      if (!payload?.workspaceId) return;
-      await this.log({
-        workspaceId: payload.workspaceId,
-        userId: payload.userId ?? null,
-        action: 'AUTOMATION_RULE_DELETED',
-        resourceType: 'AUTOMATION_RULE',
-        resourceId: payload.ruleId,
-        payload: {
-          name: payload.name,
-        },
-      });
-    } catch (err) {
-      this.logger.error('Failed to record audit log for automation_rule.deleted', err);
-    }
-  }
-
   @OnEvent('workspace_member.added', { async: true })
   async handleWorkspaceMemberAdded(payload: any): Promise<void> {
     try {
@@ -394,67 +333,6 @@ export class AuditLogService {
       });
     } catch (err) {
       this.logger.error('Failed to record audit log for workspace_member.removed', err);
-    }
-  }
-
-  @OnEvent('webhook_subscription.created', { async: true })
-  async handleWebhookSubscriptionCreated(payload: any): Promise<void> {
-    try {
-      if (!payload?.workspaceId) return;
-      await this.log({
-        workspaceId: payload.workspaceId,
-        userId: payload.userId ?? null,
-        action: 'WEBHOOK_SUBSCRIPTION_CREATED',
-        resourceType: 'WEBHOOK_SUBSCRIPTION',
-        resourceId: payload.subscription?.id,
-        payload: {
-          url: payload.subscription?.url,
-          subscriptions: payload.subscription?.subscriptions,
-          isActive: payload.subscription?.isActive,
-        },
-      });
-    } catch (err) {
-      this.logger.error('Failed to record audit log for webhook_subscription.created', err);
-    }
-  }
-
-  @OnEvent('webhook_subscription.updated', { async: true })
-  async handleWebhookSubscriptionUpdated(payload: any): Promise<void> {
-    try {
-      if (!payload?.workspaceId) return;
-      await this.log({
-        workspaceId: payload.workspaceId,
-        userId: payload.userId ?? null,
-        action: 'WEBHOOK_SUBSCRIPTION_UPDATED',
-        resourceType: 'WEBHOOK_SUBSCRIPTION',
-        resourceId: payload.subscription?.id,
-        payload: {
-          url: payload.subscription?.url,
-          subscriptions: payload.subscription?.subscriptions,
-          isActive: payload.subscription?.isActive,
-        },
-      });
-    } catch (err) {
-      this.logger.error('Failed to record audit log for webhook_subscription.updated', err);
-    }
-  }
-
-  @OnEvent('webhook_subscription.deleted', { async: true })
-  async handleWebhookSubscriptionDeleted(payload: any): Promise<void> {
-    try {
-      if (!payload?.workspaceId) return;
-      await this.log({
-        workspaceId: payload.workspaceId,
-        userId: payload.userId ?? null,
-        action: 'WEBHOOK_SUBSCRIPTION_DELETED',
-        resourceType: 'WEBHOOK_SUBSCRIPTION',
-        resourceId: payload.subscriptionId,
-        payload: {
-          url: payload.url,
-        },
-      });
-    } catch (err) {
-      this.logger.error('Failed to record audit log for webhook_subscription.deleted', err);
     }
   }
 }

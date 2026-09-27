@@ -7,10 +7,7 @@ import {
   commentGuardConfigSchema,
   channelSettingsSchema,
 } from '../schemas';
-import {
-  extractVietnamesePhoneNumbers,
-  normalizeVietnamesePhoneNumber,
-} from '../../../common/phone';
+import { extractVietnamesePhoneNumbers, normalizeVietnamesePhone } from '../../../common/phone';
 
 describe('Shared Contracts — Comment Guard Schemas & Regex', () => {
   describe('Constants and Schemas', () => {
@@ -128,18 +125,18 @@ describe('Shared Contracts — Comment Guard Schemas & Regex', () => {
     });
   });
 
-  describe('normalizeVietnamesePhoneNumber()', () => {
+  describe('normalizeVietnamesePhone()', () => {
     it('should normalize international and formatted numbers to standard 09xxxxxxxx', () => {
-      assert.strictEqual(normalizeVietnamesePhoneNumber('+84 91 234 5678'), '0912345678');
-      assert.strictEqual(normalizeVietnamesePhoneNumber('(+84) 912 345 678'), '0912345678');
-      assert.strictEqual(normalizeVietnamesePhoneNumber('(091) 234 5678'), '0912345678');
-      assert.strictEqual(normalizeVietnamesePhoneNumber('091. 234 . 5678'), '0912345678');
-      assert.strictEqual(normalizeVietnamesePhoneNumber('091-234-5678'), '0912345678');
-      assert.strictEqual(normalizeVietnamesePhoneNumber('098.765.4321'), '0987654321');
-      assert.strictEqual(normalizeVietnamesePhoneNumber('84912345678'), '0912345678');
-      assert.strictEqual(normalizeVietnamesePhoneNumber('0912345678'), '0912345678');
-      assert.strictEqual(normalizeVietnamesePhoneNumber(''), '');
-      assert.strictEqual(normalizeVietnamesePhoneNumber(null), '');
+      assert.strictEqual(normalizeVietnamesePhone('+84 91 234 5678'), '0912345678');
+      assert.strictEqual(normalizeVietnamesePhone('(+84) 912 345 678'), '0912345678');
+      assert.strictEqual(normalizeVietnamesePhone('(091) 234 5678'), '0912345678');
+      assert.strictEqual(normalizeVietnamesePhone('091. 234 . 5678'), '0912345678');
+      assert.strictEqual(normalizeVietnamesePhone('091-234-5678'), '0912345678');
+      assert.strictEqual(normalizeVietnamesePhone('098.765.4321'), '0987654321');
+      assert.strictEqual(normalizeVietnamesePhone('84912345678'), '0912345678');
+      assert.strictEqual(normalizeVietnamesePhone('0912345678'), '0912345678');
+      assert.strictEqual(normalizeVietnamesePhone(''), '');
+      assert.strictEqual(normalizeVietnamesePhone(null), '');
     });
   });
 });

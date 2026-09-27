@@ -9,7 +9,7 @@ import {
   MessageContentType,
   SenderType,
   extractVietnamesePhoneNumbers,
-  normalizeVietnamesePhoneNumber,
+  normalizeVietnamesePhone,
   type ChannelSettings,
 } from '@sales-copilot/shared-contracts';
 import { PrismaService } from '../../../../infrastructure/database/prisma.service';
@@ -148,7 +148,7 @@ export class CommentGuardProcessor extends WorkerHost {
       return { success: true, skipped: true, reason: 'NO_PHONE_DETECTED' };
     }
 
-    const primaryPhone = normalizeVietnamesePhoneNumber(extractedPhones[0]);
+    const primaryPhone = normalizeVietnamesePhone(extractedPhones[0]);
     this.logger.log(`${tracePrefix}Extracted phone number: '${primaryPhone}'`);
 
     const credentials = this.decryptCredentials(channel.credentials);

@@ -8,7 +8,7 @@ import {
   getAiRateLimitWarnedKey,
 } from '../ai-agent.constants';
 
-export type GuardrailBlockReason =
+type GuardrailBlockReason =
   'EMPTY_CONTENT' | 'EMOJI_ONLY' | 'BLACKLISTED' | 'DUPLICATE_SPAM' | 'SHORT_SPAM' | 'RATE_LIMITED';
 
 export interface GuardrailCheckResult {

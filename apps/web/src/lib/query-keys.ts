@@ -221,19 +221,3 @@ export const knowledgeKeys = {
         ? (['knowledge', 'article', workspaceId] as const)
         : (['knowledge', 'article'] as const),
 };
-
-export const queryKeys = {
-  commerce: commerceKeys,
-  conversations: conversationKeys,
-  contacts: contactKeys,
-  workspaces: workspaceKeys,
-  cannedResponses: cannedResponseKeys,
-  teams: teamKeys,
-  members: memberKeys,
-  labels: labelKeys,
-  inboxes: inboxKeys,
-  dashboard: dashboardKeys,
-  presence: presenceKeys,
-  reconciliation: reconciliationKeys,
-  knowledge: knowledgeKeys,
-};

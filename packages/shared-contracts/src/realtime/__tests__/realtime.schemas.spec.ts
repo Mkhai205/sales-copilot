@@ -7,7 +7,6 @@ import {
   leaveConversationSchema,
   typingIndicatorSchema,
   commerceEditingActionSchema,
-  orderShippedEventPayloadSchema,
   DomainEvent,
   WsServerEvent,
   WsClientEvent,
@@ -87,31 +86,6 @@ describe('Shared Contracts — Realtime Context Schemas & Events', () => {
           conversationId: 'invalid-id',
         });
       }, /Invalid conversation ID format/);
-    });
-
-    it('should validate orderShippedEventPayloadSchema with valid payload', () => {
-      const payload = {
-        workspaceId: validUuid,
-        orderId: validUuid,
-        orderNumber: 'ORD-1001',
-        displayId: 1001,
-        trackingCode: 'VNP123456789',
-        shippingCarrier: 'VNPost',
-        shippedAt: new Date().toISOString(),
-        order: { id: validUuid, total: 100000 },
-      };
-      const parsed = orderShippedEventPayloadSchema.parse(payload);
-      assert.strictEqual(parsed.orderNumber, 'ORD-1001');
-      assert.strictEqual(parsed.shippingCarrier, 'VNPost');
-    });
-
-    it('should reject orderShippedEventPayloadSchema when missing required fields', () => {
-      assert.throws(() => {
-        orderShippedEventPayloadSchema.parse({
-          workspaceId: validUuid,
-          orderId: validUuid,
-        });
-      });
     });
   });
 

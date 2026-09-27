@@ -35,7 +35,7 @@ export function getServerApiBase(): string {
   return 'http://localhost:8000/api/v1';
 }
 
-export function getApiBase(): string {
+function getApiBase(): string {
   if (typeof window !== 'undefined') {
     const host = window.location.hostname;
     // Local dev: direct cross-origin access to backend
@@ -51,7 +51,7 @@ export function getApiBase(): string {
 
 export const API_BASE = getServerApiBase();
 
-export type ApiResponseMeta = PaginationMeta;
+type ApiResponseMeta = PaginationMeta;
 
 export interface ApiResponse<T> {
   success: boolean;

@@ -27,7 +27,7 @@ export function SettingsPageSkeleton({ variant = 'form', className }: SettingsPa
 /**
  * Skeleton for form-based settings pages (General, Bank & Payment, etc.)
  */
-export function SettingsFormSkeleton({ className }: { className?: string }) {
+function SettingsFormSkeleton({ className }: { className?: string }) {
   return (
     <div className={cn('flex flex-col gap-6 w-full animate-in fade-in-50 duration-200', className)}>
       {/* Primary Configuration Card Skeleton */}
@@ -98,7 +98,7 @@ export function SettingsFormSkeleton({ className }: { className?: string }) {
 /**
  * Skeleton for table-based settings pages (Members, Labels, Canned Responses, Knowledge)
  */
-export function SettingsTableSkeleton({ className }: { className?: string }) {
+function SettingsTableSkeleton({ className }: { className?: string }) {
   return (
     <div className={cn('flex flex-col gap-4 w-full animate-in fade-in-50 duration-200', className)}>
       {/* Toolbar Skeleton */}
@@ -149,7 +149,7 @@ export function SettingsTableSkeleton({ className }: { className?: string }) {
 /**
  * Skeleton for cards-based settings pages (Teams, Inboxes list)
  */
-export function SettingsCardsSkeleton({ className }: { className?: string }) {
+function SettingsCardsSkeleton({ className }: { className?: string }) {
   return (
     <div className={cn('flex flex-col gap-4 w-full animate-in fade-in-50 duration-200', className)}>
       {/* Toolbar Skeleton */}
@@ -197,7 +197,7 @@ export function SettingsCardsSkeleton({ className }: { className?: string }) {
 /**
  * Skeleton for detail pages (Inbox Detail, etc.)
  */
-export function SettingsDetailSkeleton({ className }: { className?: string }) {
+function SettingsDetailSkeleton({ className }: { className?: string }) {
   return (
     <div className={cn('flex flex-col gap-6 w-full animate-in fade-in-50 duration-200', className)}>
       {/* Header bar */}

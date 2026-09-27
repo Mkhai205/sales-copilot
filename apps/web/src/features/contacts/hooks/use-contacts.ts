@@ -20,14 +20,12 @@ export interface ContactHookOptions {
   enabled?: boolean;
 }
 
-export interface PaginatedContactsResult {
+interface PaginatedContactsResult {
   items: ContactDto[];
   meta?: PaginationMeta;
 }
 
-export function usePaginatedContacts(
-  options: ContactHookOptions & { query?: ContactListQueryDto } = {},
-) {
+function usePaginatedContacts(options: ContactHookOptions & { query?: ContactListQueryDto } = {}) {
   const { data: workspaces } = useWorkspaces();
   const resolvedWorkspaceId =
     options.workspaceId ||

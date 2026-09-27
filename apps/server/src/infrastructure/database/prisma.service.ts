@@ -9,15 +9,6 @@ import { Prisma, PrismaClient } from './generated/client';
 export type PostCommitHook = () => Promise<void> | void;
 export type RollbackHook = (error: unknown) => Promise<void> | void;
 
-export type TransactionIsolationLevel =
-  'ReadUncommitted' | 'ReadCommitted' | 'RepeatableRead' | 'Serializable';
-
-export interface TransactionOptions {
-  maxWait?: number;
-  timeout?: number;
-  isolationLevel?: TransactionIsolationLevel;
-}
-
 /**
  * Context container for transaction-scoped state and lifecycle hooks.
  */
@@ -54,9 +45,6 @@ export class TransactionContext {
     return [...this.rollbackHooks];
   }
 }
-
-// Alias for backward compatibility if needed
-export { TransactionContext as PrismaTransactionContext };
 
 @Injectable()
 export class PrismaService implements OnModuleInit, OnModuleDestroy {
@@ -167,10 +155,7 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
    * If a transaction is already active in the current async execution tree, it joins the existing transaction.
    * Post-commit hooks are executed only after the top-level transaction commits successfully.
    */
-  public async runInTransaction<T>(
-    operation: (ctx: TransactionContext) => Promise<T>,
-    options?: TransactionOptions,
-  ): Promise<T> {
+  public async runInTransaction<T>(operation: (ctx: TransactionContext) => Promise<T>): Promise<T> {
     const existingContext = this.als.getStore();
 
     if (existingContext) {
@@ -179,14 +164,9 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
       return operation(existingContext);
     }
 
-    const prismaIsolationLevel = options?.isolationLevel
-      ? (options.isolationLevel as Prisma.TransactionIsolationLevel)
-      : undefined;
-
     const txOptions = {
-      maxWait: options?.maxWait ?? 5000,
-      timeout: options?.timeout ?? 10000,
-      isolationLevel: prismaIsolationLevel,
+      maxWait: 5000,
+      timeout: 10000,
     };
 
     let executedContext: TransactionContext | null = null;

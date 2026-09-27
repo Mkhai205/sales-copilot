@@ -11,7 +11,7 @@ export interface SearchKnowledgeToolOptions {
   knowledgeService: KnowledgeService;
 }
 
-export const searchKnowledgeInputSchema = z.object({
+const searchKnowledgeInputSchema = z.object({
   query: z
     .string()
     .describe(
@@ -19,7 +19,7 @@ export const searchKnowledgeInputSchema = z.object({
     ),
 });
 
-export type SearchKnowledgeInput = z.infer<typeof searchKnowledgeInputSchema>;
+type SearchKnowledgeInput = z.infer<typeof searchKnowledgeInputSchema>;
 
 export function createSearchKnowledgeTool({
   workspaceId,

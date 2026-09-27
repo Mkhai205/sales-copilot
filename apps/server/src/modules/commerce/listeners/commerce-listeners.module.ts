@@ -8,5 +8,3 @@ import { CommerceEventListener } from './commerce-event.listener';
   exports: [CommerceEventListener],
 })
 export class CommerceListenersModule {}
-
-export const PosListenersModule = CommerceListenersModule;

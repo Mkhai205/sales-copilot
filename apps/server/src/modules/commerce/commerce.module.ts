@@ -31,5 +31,3 @@ import { CommerceListenersModule } from './listeners/commerce-listeners.module';
   ],
 })
 export class CommerceModule {}
-
-export const PosModule = CommerceModule;

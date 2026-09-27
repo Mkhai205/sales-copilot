@@ -1,6 +1,6 @@
 import { BillingPlanType, WorkspaceRole } from '@sales-copilot/shared-contracts';
 
-export interface WorkspaceContextData {
+interface WorkspaceContextData {
   id: string;
   name: string;
   slug: string;

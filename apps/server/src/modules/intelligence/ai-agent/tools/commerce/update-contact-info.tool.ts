@@ -11,7 +11,7 @@ export interface UpdateContactInfoToolOptions {
   prisma: PrismaService;
 }
 
-export const updateContactInfoInputSchema = z.object({
+const updateContactInfoInputSchema = z.object({
   name: z.string().optional().describe('Họ và tên của khách hàng'),
   phoneNumber: z.string().optional().describe('Số điện thoại liên lạc của khách hàng'),
   address: z
@@ -22,7 +22,7 @@ export const updateContactInfoInputSchema = z.object({
     ),
 });
 
-export type UpdateContactInfoInput = z.infer<typeof updateContactInfoInputSchema>;
+type UpdateContactInfoInput = z.infer<typeof updateContactInfoInputSchema>;
 
 export function createUpdateContactInfoTool({
   workspaceId,

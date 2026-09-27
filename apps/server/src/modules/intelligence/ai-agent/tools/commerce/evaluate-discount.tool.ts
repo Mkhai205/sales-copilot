@@ -8,12 +8,12 @@ export interface EvaluateDiscountToolOptions {
   policy?: InboxAiCommercePolicyConfig;
 }
 
-export const evaluateDiscountInputSchema = z.object({
+const evaluateDiscountInputSchema = z.object({
   orderTotal: z.number().positive().describe('Tổng giá trị đơn hàng trước khi giảm giá (VND)'),
   requestedDiscount: z.number().min(0).describe('Số tiền giảm giá khách hàng yêu cầu (VND)'),
 });
 
-export type EvaluateDiscountInput = z.infer<typeof evaluateDiscountInputSchema>;
+type EvaluateDiscountInput = z.infer<typeof evaluateDiscountInputSchema>;
 
 export function createEvaluateDiscountTool({
   discountGuardService,

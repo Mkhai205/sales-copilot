@@ -270,6 +270,3 @@ export class CommerceReconciliationProcessor extends WorkerHost {
     }
   }
 }
-
-export const PosReconciliationProcessor = CommerceReconciliationProcessor;
-export type PosReconciliationProcessor = CommerceReconciliationProcessor;

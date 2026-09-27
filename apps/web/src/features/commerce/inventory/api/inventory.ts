@@ -78,6 +78,3 @@ export const inventoryApi = {
       },
     ),
 };
-
-// Compatibility export
-export const commerceApi = inventoryApi;

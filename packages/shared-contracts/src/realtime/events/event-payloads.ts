@@ -7,7 +7,7 @@ import type { MessageResponseDto } from '../../omnichannel/messages/schemas';
 
 /**
  * Domain events emitted throughout the application lifecycle.
- * Consumed by RealtimeEventDispatcher, WebhookDispatcher, etc.
+ * Consumed by RealtimeEventDispatcher.
  */
 export enum DomainEvent {
   // Message events
@@ -62,7 +62,6 @@ export enum DomainEvent {
   ORDER_COMPLETED = 'order.completed',
   INVENTORY_UPDATED = 'inventory.updated',
   COMMERCE_COLLISION_STATUS = 'commerce.collision_status',
-  ORDER_SHIPPED = 'order.shipped',
 
   // Payment & Reconciliation events
   PAYMENT_TRANSACTION_CREATED = 'payment_transaction.created',
@@ -239,17 +238,6 @@ export interface CommerceCollisionStatusPayload extends BaseDomainEventPayload {
     lastHeartbeatAt: string;
   } | null;
   remainingTtlSeconds?: number;
-}
-
-export interface OrderShippedEventPayload extends BaseDomainEventPayload {
-  orderId: string;
-  orderNumber: string;
-  displayId: number;
-  conversationId?: string | null;
-  trackingCode: string;
-  shippingCarrier: string;
-  shippedAt: string | Date;
-  order: Record<string, unknown>;
 }
 
 export interface OrderCompletedEventPayload extends BaseDomainEventPayload {

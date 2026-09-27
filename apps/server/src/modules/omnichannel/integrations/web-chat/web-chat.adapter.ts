@@ -18,7 +18,7 @@ import {
 /**
  * Configuration options for pre-chat form.
  */
-export interface PreChatFormField {
+interface PreChatFormField {
   name: string;
   label: string;
   type: 'text' | 'email' | 'phone' | 'select' | string;
@@ -30,7 +30,7 @@ export interface PreChatFormField {
   regexCue?: string;
 }
 
-export interface PreChatFormOptions {
+interface PreChatFormOptions {
   preChatMessage?: string;
   requireEmail?: boolean;
   preChatFields?: PreChatFormField[];
@@ -39,7 +39,7 @@ export interface PreChatFormOptions {
 /**
  * Web Chat widget metadata and visual customization configuration.
  */
-export interface WebChatWidgetConfig {
+interface WebChatWidgetConfig {
   widgetToken?: string;
   websiteUrl?: string;
   widgetColor?: string;

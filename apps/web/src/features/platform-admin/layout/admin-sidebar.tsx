@@ -32,19 +32,6 @@ import { Button } from '@/components/ui/button';
 import { useCurrentUser } from '@/features/auth/hooks/use-current-user';
 import { isNavItemActive } from './navigation-helpers';
 
-export interface AdminNavItem {
-  label: string;
-  href: string;
-  icon: React.ComponentType<{ className?: string }>;
-}
-
-export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
-  { label: 'Tổng quan', href: '/platform-admin', icon: LayoutDashboard },
-  { label: 'Quản trị Workspaces', href: '/platform-admin/workspaces', icon: Building2 },
-  { label: 'Cấu hình Hệ thống', href: '/platform-admin/settings', icon: Sliders },
-  { label: 'Nhật ký Kiểm toán', href: '/platform-admin/audit-logs', icon: ScrollText },
-];
-
 export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname();
   const { data: currentUser } = useCurrentUser();

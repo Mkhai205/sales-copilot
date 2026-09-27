@@ -29,7 +29,6 @@ export const recipientInfoSchema = z.object({
 
 export type RecipientInfoFormInput = z.input<typeof recipientInfoSchema>;
 export type RecipientInfoFormOutput = z.output<typeof recipientInfoSchema>;
-export type RecipientInfoFormValues = RecipientInfoFormInput;
 
 export interface RecipientInfoFormProps {
   value: Partial<ShippingAddressInputDto>;

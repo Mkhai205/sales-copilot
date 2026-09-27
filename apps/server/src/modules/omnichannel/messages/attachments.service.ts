@@ -9,7 +9,7 @@ import { StorageService } from '../../../infrastructure/storage/storage.service'
 /**
  * Supported MIME type mapping to FileType enum.
  */
-export const ALLOWED_MIME_TYPES: Record<string, FileType> = {
+const ALLOWED_MIME_TYPES: Record<string, FileType> = {
   // Images
   'image/jpeg': FileType.IMAGE,
   'image/png': FileType.IMAGE,

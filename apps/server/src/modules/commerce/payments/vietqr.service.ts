@@ -9,7 +9,7 @@ import { PrismaService } from '../../../infrastructure/database/prisma.service';
 /**
  * Standard NAPAS BIN codes mapped to Bank Code and Display Name.
  */
-export const NAPAS_BANKS: Record<string, { code: string; name: string }> = {
+const NAPAS_BANKS: Record<string, { code: string; name: string }> = {
   '970422': { code: 'MB', name: 'MBBank' },
   '970436': { code: 'VCB', name: 'Vietcombank' },
   '970407': { code: 'TCB', name: 'Techcombank' },

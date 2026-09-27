@@ -22,5 +22,3 @@ import { ReconciliationController } from './reconciliation.controller';
   exports: [PaymentReconciliationService, BullModule],
 })
 export class CommerceReconciliationModule {}
-
-export const PosReconciliationModule = CommerceReconciliationModule;

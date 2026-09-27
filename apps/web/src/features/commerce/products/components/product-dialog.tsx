@@ -49,7 +49,7 @@ const variantRowSchema = z.object({
   attributes: z.record(z.any()),
 });
 
-export type VariantFormRow = z.infer<typeof variantRowSchema>;
+type VariantFormRow = z.infer<typeof variantRowSchema>;
 
 const productFormSchema = z.object({
   name: z.string().trim().min(1, 'Tên sản phẩm là bắt buộc'),

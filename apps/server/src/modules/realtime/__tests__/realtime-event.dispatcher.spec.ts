@@ -641,33 +641,8 @@ describe('RealtimeEventDispatcher — Event Routing & Error Isolation (Task 12)'
         dispatcher.handleConversationCreated({} as any);
         dispatcher.handleContactCreated({} as any);
         dispatcher.handlePresenceUpdated(null as any);
-        dispatcher.handleOrderShipped(null as any);
       }).not.toThrow();
       expect(emittedBroadcasts.length).toBe(0);
-    });
-
-    it('should broadcast ORDER_SHIPPED to conversation and workspace rooms', () => {
-      dispatcher.handleOrderShipped({
-        workspaceId,
-        orderId: 'ord_123',
-        orderNumber: 'ORD-123',
-        displayId: 101,
-        conversationId,
-        trackingCode: 'GHTK123456',
-        shippingCarrier: 'GHTK',
-        shippedAt: new Date().toISOString(),
-        order: { id: 'ord_123' },
-      });
-
-      const wsBroadcast = emittedBroadcasts.find(
-        b => b.room === `workspace_${workspaceId}` && b.event === WsServerEvent.ORDER_SHIPPED,
-      );
-      assertDefined(wsBroadcast);
-
-      const convBroadcast = emittedBroadcasts.find(
-        b => b.room === `conversation_${conversationId}` && b.event === WsServerEvent.ORDER_SHIPPED,
-      );
-      assertDefined(convBroadcast);
     });
   });
 });

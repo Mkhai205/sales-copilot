@@ -16,7 +16,7 @@ export interface UseMessagesOptions {
   enabled?: boolean;
 }
 
-export interface MessageDateGroup {
+interface MessageDateGroup {
   dateKey: string;
   dateLabel: string;
   messages: MessageResponseDto[];
@@ -25,7 +25,7 @@ export interface MessageDateGroup {
 /**
  * Formats a date or ISO string into human-friendly relative date labels ('Today', 'Yesterday', 'MMM d', or 'MMM d, yyyy')
  */
-export function formatMessageDateLabel(dateInput: string | Date): string {
+function formatMessageDateLabel(dateInput: string | Date): string {
   const date = typeof dateInput === 'string' ? parseISO(dateInput) : dateInput;
   if (!isValid(date)) return '';
   if (isToday(date)) return 'Today';
@@ -37,7 +37,7 @@ export function formatMessageDateLabel(dateInput: string | Date): string {
 /**
  * Groups a list of messages chronologically by calendar date
  */
-export function groupMessagesByDate(messages: MessageResponseDto[]): MessageDateGroup[] {
+function groupMessagesByDate(messages: MessageResponseDto[]): MessageDateGroup[] {
   if (!messages || messages.length === 0) return [];
 
   const groupsMap = new Map<string, MessageDateGroup>();

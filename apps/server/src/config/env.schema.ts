@@ -82,7 +82,6 @@ export const envSchema = z
 
     // LLM Gateway Default API Keys & Vertex AI
     GEMINI_API_KEY: z.string().optional(),
-    OPENAI_API_KEY: z.string().optional(),
     GOOGLE_APPLICATION_CREDENTIALS: z.string().optional(),
     GOOGLE_VERTEX_PROJECT: z.string().optional(),
     GOOGLE_VERTEX_LOCATION: z.string().optional(),

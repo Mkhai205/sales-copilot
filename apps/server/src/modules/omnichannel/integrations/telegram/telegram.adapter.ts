@@ -12,14 +12,14 @@ import {
   WebhookVerificationRequest,
 } from '../channel-adapter.types';
 
-export interface TelegramApiResponse<T = unknown> {
+interface TelegramApiResponse<T = unknown> {
   ok: boolean;
   result?: T;
   error_code?: number;
   description?: string;
 }
 
-export interface TelegramUser {
+interface TelegramUser {
   id: number;
   is_bot: boolean;
   first_name: string;
@@ -31,7 +31,7 @@ export interface TelegramUser {
   supports_inline_queries?: boolean;
 }
 
-export interface TelegramChat {
+interface TelegramChat {
   id: number;
   type: 'private' | 'group' | 'supergroup' | 'channel';
   title?: string;
@@ -40,7 +40,7 @@ export interface TelegramChat {
   last_name?: string;
 }
 
-export interface TelegramPhotoSize {
+interface TelegramPhotoSize {
   file_id: string;
   file_unique_id: string;
   width: number;
@@ -48,7 +48,7 @@ export interface TelegramPhotoSize {
   file_size?: number;
 }
 
-export interface TelegramDocument {
+interface TelegramDocument {
   file_id: string;
   file_unique_id: string;
   file_name?: string;
@@ -56,7 +56,7 @@ export interface TelegramDocument {
   file_size?: number;
 }
 
-export interface TelegramVideo {
+interface TelegramVideo {
   file_id: string;
   file_unique_id: string;
   width: number;
@@ -67,7 +67,7 @@ export interface TelegramVideo {
   file_size?: number;
 }
 
-export interface TelegramAudio {
+interface TelegramAudio {
   file_id: string;
   file_unique_id: string;
   duration: number;
@@ -78,7 +78,7 @@ export interface TelegramAudio {
   file_size?: number;
 }
 
-export interface TelegramVoice {
+interface TelegramVoice {
   file_id: string;
   file_unique_id: string;
   duration: number;
@@ -86,7 +86,7 @@ export interface TelegramVoice {
   file_size?: number;
 }
 
-export interface TelegramVideoNote {
+interface TelegramVideoNote {
   file_id: string;
   file_unique_id: string;
   length: number;
@@ -94,7 +94,7 @@ export interface TelegramVideoNote {
   file_size?: number;
 }
 
-export interface TelegramSticker {
+interface TelegramSticker {
   file_id: string;
   file_unique_id: string;
   width: number;
@@ -105,25 +105,25 @@ export interface TelegramSticker {
   file_size?: number;
 }
 
-export interface TelegramLocation {
+interface TelegramLocation {
   longitude: number;
   latitude: number;
 }
 
-export interface TelegramVenue {
+interface TelegramVenue {
   location: TelegramLocation;
   title: string;
   address: string;
 }
 
-export interface TelegramContact {
+interface TelegramContact {
   phone_number: string;
   first_name: string;
   last_name?: string;
   user_id?: number;
 }
 
-export interface TelegramMessage {
+interface TelegramMessage {
   message_id: number;
   from?: TelegramUser;
   sender_chat?: TelegramChat;
@@ -145,7 +145,7 @@ export interface TelegramMessage {
   business_connection_id?: string;
 }
 
-export interface TelegramCallbackQuery {
+interface TelegramCallbackQuery {
   id: string;
   from: TelegramUser;
   message?: TelegramMessage;
@@ -153,7 +153,7 @@ export interface TelegramCallbackQuery {
   chat_instance?: string;
 }
 
-export interface TelegramUpdate {
+interface TelegramUpdate {
   update_id: number;
   message?: TelegramMessage;
   edited_message?: TelegramMessage;

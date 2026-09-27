@@ -17,7 +17,7 @@ export interface ExtractShippingInfoToolOptions {
   model?: LanguageModel;
 }
 
-export const extractShippingInfoInputSchema = z.object({
+const extractShippingInfoInputSchema = z.object({
   text: z
     .string()
     .describe(
@@ -25,7 +25,7 @@ export const extractShippingInfoInputSchema = z.object({
     ),
 });
 
-export type ExtractShippingInfoInput = z.infer<typeof extractShippingInfoInputSchema>;
+type ExtractShippingInfoInput = z.infer<typeof extractShippingInfoInputSchema>;
 
 export function createExtractShippingInfoTool(options?: ExtractShippingInfoToolOptions): Tool {
   return tool({

@@ -10,7 +10,7 @@ export interface ChannelDefinition {
   logoSrc: string;
 }
 
-export const CHANNEL_DEFINITIONS: Record<SupportedChannelKey, ChannelDefinition> = {
+const CHANNEL_DEFINITIONS: Record<SupportedChannelKey, ChannelDefinition> = {
   web_chat: {
     key: 'web_chat',
     type: ChannelType.WEB_CHAT,

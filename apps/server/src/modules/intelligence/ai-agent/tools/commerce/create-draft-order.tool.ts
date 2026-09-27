@@ -18,7 +18,7 @@ export interface CreateDraftOrderToolOptions {
   policy?: InboxAiCommercePolicyConfig;
 }
 
-export const createDraftOrderInputSchema = z.object({
+const createDraftOrderInputSchema = z.object({
   items: z
     .array(
       z.object({
@@ -58,7 +58,7 @@ export const createDraftOrderInputSchema = z.object({
   customerNote: z.string().optional().describe('Ghi chú của khách hàng khi đặt hàng (nếu có)'),
 });
 
-export type CreateDraftOrderInput = z.infer<typeof createDraftOrderInputSchema>;
+type CreateDraftOrderInput = z.infer<typeof createDraftOrderInputSchema>;
 
 export function createCreateDraftOrderTool({
   workspaceId,

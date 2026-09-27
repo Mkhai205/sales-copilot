@@ -238,12 +238,11 @@ describe('Comprehensive Opaque-Box E2E: Domain, BaseUrl & Storage Normalization'
         expect(url).toBe('http://localhost:3000');
       });
 
-      it('T1.5.4: apps/web/src/lib/config/app-url.ts should export getAppUrl and getApiUrl', () => {
+      it('T1.5.4: apps/web/src/lib/config/app-url.ts should export getAppUrl', () => {
         const configPath = path.join(workspaceRoot, 'apps/web/src/lib/config/app-url.ts');
         expect(fs.existsSync(configPath)).toBe(true);
         const content = fs.readFileSync(configPath, 'utf8');
         expect(content).toContain('getAppUrl');
-        expect(content).toContain('getApiUrl');
       });
 
       it('T1.5.5: getAppUrl implementation should reference process.env.NEXT_PUBLIC_APP_URL', () => {

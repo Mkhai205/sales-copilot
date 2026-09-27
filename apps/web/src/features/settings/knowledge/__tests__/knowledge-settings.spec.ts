@@ -86,36 +86,6 @@ describe('Knowledge Base Management (Epic 4.3)', () => {
       assert.strictEqual(res.data.items[0].title, 'Chính sách bảo hành');
     });
 
-    it('getById() should perform GET to /knowledge-articles/:id with workspaceId header', async () => {
-      let requestedUrl = '';
-      let requestedHeaders: any = {};
-
-      globalThis.fetch = (async (url: string | URL | Request, init?: RequestInit) => {
-        requestedUrl = url.toString();
-        requestedHeaders = init?.headers || {};
-        return {
-          ok: true,
-          status: 200,
-          json: async () => ({
-            data: {
-              id: 'ka_123',
-              workspaceId,
-              title: 'Quy trình đổi hàng',
-              content: 'Đổi hàng trong 7 ngày.',
-            },
-          }),
-        } as Response;
-      }) as typeof globalThis.fetch;
-
-      const res = await knowledgeApi.getById(workspaceId, 'ka_123');
-      assert.ok(requestedUrl.includes('/knowledge-articles/ka_123'));
-      assert.strictEqual(
-        requestedHeaders['X-Workspace-Id'] || requestedHeaders['x-workspace-id'],
-        workspaceId,
-      );
-      assert.strictEqual(res.data.id, 'ka_123');
-    });
-
     it('create() should perform POST with JSON body and workspaceId header', async () => {
       let requestedUrl = '';
       let requestedMethod = '';

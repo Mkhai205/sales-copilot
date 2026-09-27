@@ -7,7 +7,7 @@ export interface SearchProductsToolOptions {
   productsService: ProductsService;
 }
 
-export const searchProductsInputSchema = z.object({
+const searchProductsInputSchema = z.object({
   query: z
     .string()
     .describe(
@@ -15,7 +15,7 @@ export const searchProductsInputSchema = z.object({
     ),
 });
 
-export type SearchProductsInput = z.infer<typeof searchProductsInputSchema>;
+type SearchProductsInput = z.infer<typeof searchProductsInputSchema>;
 
 export function createSearchProductsTool({
   workspaceId,

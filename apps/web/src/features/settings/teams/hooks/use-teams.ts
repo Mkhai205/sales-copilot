@@ -21,21 +21,6 @@ export function useTeams(workspaceId?: string) {
   });
 }
 
-export function useTeam(workspaceId?: string, teamId?: string) {
-  return useQuery<TeamDto>({
-    queryKey: teamKeys.detail(workspaceId, teamId),
-    queryFn: async () => {
-      if (!workspaceId || !teamId) {
-        throw new Error('Workspace ID and Team ID are required');
-      }
-      const res = await teamsApi.get(workspaceId, teamId);
-      return res.data;
-    },
-    enabled: !!workspaceId && !!teamId,
-    staleTime: 60 * 1000,
-  });
-}
-
 export function useCreateTeam(workspaceId?: string) {
   const queryClient = useQueryClient();
 

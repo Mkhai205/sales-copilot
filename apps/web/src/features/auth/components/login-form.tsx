@@ -267,8 +267,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
                 Hội thoại Khách hàng Thống nhất & AI Sales Copilot
               </h2>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                Kết nối Facebook, Zalo, Telegram, Email và Web Chat trong một hộp thư thời gian thực
-                duy nhất.
+                Kết nối Facebook, Telegram và Web Chat trong một hộp thư thời gian thực duy nhất.
               </p>
             </div>
 

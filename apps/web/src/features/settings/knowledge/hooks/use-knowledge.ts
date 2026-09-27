@@ -50,21 +50,6 @@ export function useKnowledgeArticles(workspaceId?: string, query?: KnowledgeArti
   });
 }
 
-export function useKnowledgeArticle(workspaceId?: string, id?: string) {
-  return useQuery<KnowledgeArticleDto>({
-    queryKey: knowledgeKeys.detail(workspaceId, id),
-    queryFn: async () => {
-      if (!workspaceId || !id) {
-        throw new Error('Workspace ID and Article ID are required');
-      }
-      const res = await knowledgeApi.getById(workspaceId, id);
-      return res.data;
-    },
-    enabled: !!workspaceId && !!id,
-    staleTime: 60 * 1000,
-  });
-}
-
 export function useCreateKnowledgeArticle(workspaceId?: string) {
   const queryClient = useQueryClient();
 

@@ -30,19 +30,6 @@ export function getAppUrl(overrideOrigin?: string): string {
 }
 
 /**
- * Resolves the backend API base URL.
- * Defaults to `process.env.NEXT_PUBLIC_API_URL` or `http://localhost:8000/api/v1`.
- */
-export function getApiUrl(): string {
-  const configured = process.env.NEXT_PUBLIC_API_URL;
-  if (configured && configured.trim().length > 0) {
-    return configured.trim().replace(/\/+$/, '');
-  }
-
-  return 'http://localhost:8000/api/v1';
-}
-
-/**
  * Detects whether an origin or URL represents a local machine (localhost / loopback IP).
  * Used to trigger informational warnings/badges for webhooks that require a public tunnel.
  *

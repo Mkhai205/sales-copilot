@@ -7,11 +7,11 @@ export interface GetProductDetailsToolOptions {
   productsService: ProductsService;
 }
 
-export const getProductDetailsInputSchema = z.object({
+const getProductDetailsInputSchema = z.object({
   productId: z.string().describe('ID của sản phẩm cần lấy thông tin chi tiết'),
 });
 
-export type GetProductDetailsInput = z.infer<typeof getProductDetailsInputSchema>;
+type GetProductDetailsInput = z.infer<typeof getProductDetailsInputSchema>;
 
 export function createGetProductDetailsTool({
   workspaceId,

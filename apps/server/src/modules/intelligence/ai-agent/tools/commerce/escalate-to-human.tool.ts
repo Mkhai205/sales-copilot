@@ -14,7 +14,7 @@ export interface EscalateToHumanToolOptions {
   redisService?: RedisService;
 }
 
-export const escalateToHumanInputSchema = z.object({
+const escalateToHumanInputSchema = z.object({
   reason: z
     .string()
     .describe(
@@ -22,7 +22,7 @@ export const escalateToHumanInputSchema = z.object({
     ),
 });
 
-export type EscalateToHumanInput = z.infer<typeof escalateToHumanInputSchema>;
+type EscalateToHumanInput = z.infer<typeof escalateToHumanInputSchema>;
 
 export function createEscalateToHumanTool({
   workspaceId,

@@ -30,19 +30,3 @@ export function usePlatformAuditLogs(params?: Partial<QueryPlatformAuditLogsDto>
     staleTime: 15_000,
   });
 }
-
-/**
- * React Query hook to fetch single platform audit log entry by ID.
- */
-export function usePlatformAuditLogDetail(id?: string | null) {
-  return useQuery<PlatformAuditLogDto>({
-    queryKey: ['platform-admin', 'audit-logs', 'detail', id],
-    queryFn: async () => {
-      if (!id) throw new Error('Audit Log ID is required');
-      const res = await auditLogsApi.getAuditLogById(id);
-      return res.data;
-    },
-    enabled: Boolean(id),
-    staleTime: 15_000,
-  });
-}

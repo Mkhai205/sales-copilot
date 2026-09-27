@@ -177,7 +177,7 @@ export function QuotasTab() {
                 onChange={e => setMaxChannels(e.target.value)}
               />
               <FieldDescription>
-                {'Số lượng kênh Fanpage, Zalo OA hoặc Livechat widget được kết nối đồng thời.'}
+                {'Số lượng kênh Fanpage hoặc Livechat widget được kết nối đồng thời.'}
               </FieldDescription>
             </Field>
 

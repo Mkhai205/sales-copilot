@@ -18,7 +18,7 @@ export function isImageAttachment(att: AttachmentDto): boolean {
   return false;
 }
 
-export function isStickerAttachment(att: AttachmentDto): boolean {
+function isStickerAttachment(att: AttachmentDto): boolean {
   if (att.fileName?.toLowerCase().includes('sticker')) return true;
   if (
     att.fileSize !== undefined &&
