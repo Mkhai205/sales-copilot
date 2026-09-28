@@ -1,0 +1,126 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Lint & Typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Dependency audit (high+ blocks, moderate informational)
+        run: pnpm audit --prod --audit-level high
+
+  test:
+    name: Unit + Integration + E2E
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: sales_copilot_dev
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d sales_copilot_dev"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+      redis:
+        image: redis:8.6-alpine
+        ports:
+          - 6379:6379
+
+      minio:
+        image: minio/minio:latest
+        env:
+          MINIO_ROOT_USER: minioadmin
+          MINIO_ROOT_PASSWORD: miniopassword123
+        ports:
+          - 9000:9000
+
+    env:
+      NODE_ENV: test
+      DATABASE_URL: postgresql://postgres:password@localhost:5432/sales_copilot_dev?schema=public
+      REDIS_URL: redis://localhost:6379
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm db:generate
+
+      - name: Apply migrations
+        run: cd apps/server && npx prisma migrate deploy
+
+      # E2E setup.ts overrides DATABASE_URL from sales_copilot_dev -> sales_copilot_test
+      - name: Create e2e test database
+        run: |
+          PGPASSWORD=password psql -h localhost -U postgres -c "CREATE DATABASE sales_copilot_test;" || true
+
+      - name: Create apps/server/.env for test:all (--env-file)
+        run: |
+          cat > apps/server/.env <<'EOF'
+          NODE_ENV=test
+          PORT=8000
+          APP_BASE_URL=http://localhost:8000
+          CORS_ORIGIN=http://localhost:3000
+          JWT_ACCESS_TOKEN_SECRET=ci-jwt-access-secret-at-least-32-characters-long
+          JWT_ACCESS_TOKEN_EXPIRES_IN_SECONDS=900
+          REFRESH_TOKEN_EXPIRES_IN_SECONDS=604800
+          CHANNEL_ENCRYPTION_KEY=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+          DATABASE_URL=postgresql://postgres:password@localhost:5432/sales_copilot_dev?schema=public
+          REDIS_URL=redis://localhost:6379
+          STORAGE_ACCESS_KEY=minioadmin
+          STORAGE_SECRET_KEY=miniopassword123
+          STORAGE_ENDPOINT=http://localhost:9000
+          STORAGE_PUBLIC_ENDPOINT=http://localhost:9000
+          STORAGE_REGION=us-east-1
+          STORAGE_BUCKETS=sales-copilot
+          STORAGE_PRESIGNED_URL_EXPIRES_IN_SECONDS=900
+          EOF
+
+      - name: Unit + Integration + E2E
+        run: pnpm test:all
