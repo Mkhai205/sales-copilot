@@ -35,20 +35,7 @@ import {
   type PaymentTransactionResponseDto,
   type PaginationMeta,
 } from '@sales-copilot/shared-contracts';
-
-function formatDateTime(dateInput: Date | string): string {
-  try {
-    const d = new Date(dateInput);
-    return d.toLocaleString('vi-VN', {
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  } catch {
-    return String(dateInput);
-  }
-}
+import { formatDateTime } from '@/lib/format-date';
 
 interface ReconciliationLedgerTableProps {
   transactions: PaymentTransactionResponseDto[];

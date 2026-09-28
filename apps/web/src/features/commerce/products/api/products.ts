@@ -43,34 +43,31 @@ function normalizePaginatedResponse<T>(res: any): {
 
 export const productsApi = {
   listProducts: (workspaceId: string, query?: ListProductsQueryDto) =>
-    fetchApi<ProductResponseDto[]>(
-      `/workspaces/${workspaceId}/products${buildQueryString(query)}`,
-      {
-        headers: workspaceHeaders(workspaceId),
-      },
-    ).then(res => normalizePaginatedResponse<ProductResponseDto>(res)),
+    fetchApi<ProductResponseDto[]>(`/products${buildQueryString(query)}`, {
+      headers: workspaceHeaders(workspaceId),
+    }).then(res => normalizePaginatedResponse<ProductResponseDto>(res)),
 
   getProduct: (workspaceId: string, id: string) =>
-    fetchApi<ProductResponseDto>(`/workspaces/${workspaceId}/products/${id}`, {
+    fetchApi<ProductResponseDto>(`/products/${id}`, {
       headers: workspaceHeaders(workspaceId),
     }),
 
   createProduct: (workspaceId: string, dto: CreateProductDto) =>
-    fetchApi<ProductResponseDto>(`/workspaces/${workspaceId}/products`, {
+    fetchApi<ProductResponseDto>(`/products`, {
       method: 'POST',
       headers: workspaceHeaders(workspaceId),
       body: JSON.stringify(dto),
     }),
 
   updateProduct: (workspaceId: string, id: string, dto: UpdateProductDto) =>
-    fetchApi<ProductResponseDto>(`/workspaces/${workspaceId}/products/${id}`, {
+    fetchApi<ProductResponseDto>(`/products/${id}`, {
       method: 'PUT',
       headers: workspaceHeaders(workspaceId),
       body: JSON.stringify(dto),
     }),
 
   deleteProduct: (workspaceId: string, id: string) =>
-    fetchApi<{ success: boolean }>(`/workspaces/${workspaceId}/products/${id}`, {
+    fetchApi<{ success: boolean }>(`/products/${id}`, {
       method: 'DELETE',
       headers: workspaceHeaders(workspaceId),
     }),
@@ -82,7 +79,7 @@ export const productsApi = {
     dto: AdjustInventoryDto,
   ) =>
     fetchApi<InventoryTransactionResponseDto>(
-      `/workspaces/${workspaceId}/products/${productId}/variants/${variantId}/inventory`,
+      `/products/${productId}/variants/${variantId}/inventory`,
       {
         method: 'POST',
         headers: workspaceHeaders(workspaceId),
@@ -97,7 +94,7 @@ export const productsApi = {
     query?: ListInventoryTransactionsQueryDto,
   ) =>
     fetchApi<InventoryTransactionResponseDto[]>(
-      `/workspaces/${workspaceId}/products/${productId}/variants/${variantId}/inventory/transactions${buildQueryString(query)}`,
+      `/products/${productId}/variants/${variantId}/inventory/transactions${buildQueryString(query)}`,
       {
         headers: workspaceHeaders(workspaceId),
       },

@@ -64,17 +64,6 @@ export class TestWebSocketClient {
           timestamp: new Date(),
         };
         this.receivedEvents.push(entry);
-
-        // If this is the generic 'event' envelope with inner event name, also index inner event
-        if (event === 'event' && payload && typeof payload === 'object' && 'event' in payload) {
-          const innerPayload = (payload as any).data ?? payload;
-          this.receivedEvents.push({
-            event: (payload as any).event,
-            payload: innerPayload,
-            timestamp: new Date(),
-          });
-        }
-
         this.notifyPendingListeners(event, payload);
       });
 
@@ -309,18 +298,6 @@ export class TestWebSocketClient {
     if (listeners) {
       for (const listener of Array.from(listeners)) {
         listener(payload);
-      }
-    }
-
-    // If generic 'event' envelope with inner event name, also notify inner listeners
-    if (event === 'event' && payload && typeof payload === 'object' && 'event' in payload) {
-      const innerEvent = (payload as any).event;
-      const innerListeners = this.pendingListeners.get(innerEvent);
-      if (innerListeners) {
-        const innerPayload = (payload as any).data ?? payload;
-        for (const listener of Array.from(innerListeners)) {
-          listener(innerPayload);
-        }
       }
     }
   }

@@ -18,12 +18,6 @@ export interface ActorContext {
 
 export const DEFAULT_SYSTEM_SETTINGS = [
   {
-    key: 'feature.pos_vietqr_enabled',
-    value: true,
-    category: SystemSettingCategory.FEATURE_FLAGS,
-    description: 'Bật/tắt thanh toán VietQR & Webhook tự động',
-  },
-  {
     key: 'feature.ai_autopilot_enabled',
     value: true,
     category: SystemSettingCategory.FEATURE_FLAGS,
@@ -34,36 +28,6 @@ export const DEFAULT_SYSTEM_SETTINGS = [
     value: true,
     category: SystemSettingCategory.FEATURE_FLAGS,
     description: 'Bật/tắt ẩn bình luận chứa SĐT tự động',
-  },
-  {
-    key: 'feature.thermal_print_enabled',
-    value: true,
-    category: SystemSettingCategory.FEATURE_FLAGS,
-    description: 'Bật/tắt in phiếu gửi nhiệt K80/K58',
-  },
-  {
-    key: 'llm.default_provider',
-    value: 'GEMINI',
-    category: SystemSettingCategory.AI,
-    description: 'Nhà cung cấp LLM mặc định',
-  },
-  {
-    key: 'llm.default_model',
-    value: 'gemini-2.5-flash',
-    category: SystemSettingCategory.AI,
-    description: 'Model mặc định cho tác vụ bán hàng',
-  },
-  {
-    key: 'llm.temperature_default',
-    value: 0.3,
-    category: SystemSettingCategory.AI,
-    description: 'Nhiệt độ ngẫu nhiên đàm phán bán hàng',
-  },
-  {
-    key: 'llm.max_tokens_limit',
-    value: 2048,
-    category: SystemSettingCategory.AI,
-    description: 'Giới hạn tokens tối đa cho phản hồi AI',
   },
   {
     key: 'quotas.free.max_agents',
@@ -88,24 +52,6 @@ export const DEFAULT_SYSTEM_SETTINGS = [
     value: 50000,
     category: SystemSettingCategory.BILLING,
     description: 'Số token AI tối đa mỗi tháng gói FREE',
-  },
-  {
-    key: 'system.maintenance_mode',
-    value: false,
-    category: SystemSettingCategory.SYSTEM,
-    description: 'Chế độ bảo trì hệ thống',
-  },
-  {
-    key: 'system.banner_message',
-    value: '',
-    category: SystemSettingCategory.SYSTEM,
-    description: 'Thông báo nổi trên toàn hệ thống',
-  },
-  {
-    key: 'system.banner_level',
-    value: 'INFO',
-    category: SystemSettingCategory.SYSTEM,
-    description: 'Mức độ cảnh báo của banner thông báo',
   },
 ];
 

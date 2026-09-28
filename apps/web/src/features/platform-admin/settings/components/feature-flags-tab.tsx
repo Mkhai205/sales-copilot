@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSystemSettings, useUpdateSystemSetting } from '../hooks/use-system-settings';
 import { getSettingValue, parseSettingBoolean } from '../utils/settings-helpers';
-import { QrCode, Bot, ShieldBan, Printer } from 'lucide-react';
+import { Bot, ShieldBan } from 'lucide-react';
 import { SystemSettingCategory } from '@sales-copilot/shared-contracts';
 
 interface FlagConfig {
@@ -19,14 +19,6 @@ interface FlagConfig {
 }
 
 const FLAGS: FlagConfig[] = [
-  {
-    key: 'feature.pos_vietqr_enabled',
-    title: 'Thanh toán VietQR & Webhook tự động',
-    description:
-      'Tự động tạo mã thanh toán VietQR động (NAPAS 247) và đối soát giao dịch ngân hàng thời gian thực qua Webhook < 1s.',
-    icon: QrCode,
-    defaultVal: true,
-  },
   {
     key: 'feature.ai_autopilot_enabled',
     title: 'AI Auto-pilot Chốt đơn 24/7',
@@ -41,14 +33,6 @@ const FLAGS: FlagConfig[] = [
     description:
       'Quét nội dung bình luận Facebook theo thời gian thực và ẩn ngay lập tức các bình luận chứa số điện thoại chống cướp khách.',
     icon: ShieldBan,
-    defaultVal: true,
-  },
-  {
-    key: 'feature.thermal_print_enabled',
-    title: 'In Phiếu gửi Nhiệt K80/K58',
-    description:
-      'Kích hoạt nút in nhanh mẫu phiếu đóng gói và tem giao nhận tương thích máy in nhiệt cầm tay và Commerce cố định.',
-    icon: Printer,
     defaultVal: true,
   },
 ];

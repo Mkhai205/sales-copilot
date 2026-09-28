@@ -3,13 +3,14 @@ import { DatabaseModule } from '../../../../infrastructure/database/database.mod
 import { InboxesModule } from '../../inboxes/inboxes.module';
 import { WorkspacesModule } from '../../../identity/workspaces/workspaces.module';
 import { ChannelAdapterRegistry } from '../channel-adapter.registry';
+import { PlatformAdminModule } from '../../../platform-admin/platform-admin.module';
 import { FacebookAdapter } from './facebook.adapter';
 import { FacebookController } from './facebook.controller';
 import { FacebookLifecycleService } from './facebook.lifecycle';
 import { FacebookService } from './facebook.service';
 
 @Module({
-  imports: [DatabaseModule, InboxesModule, WorkspacesModule],
+  imports: [DatabaseModule, InboxesModule, WorkspacesModule, PlatformAdminModule],
   controllers: [FacebookController],
   providers: [FacebookAdapter, FacebookLifecycleService, FacebookService],
   exports: [FacebookAdapter, FacebookLifecycleService, FacebookService],

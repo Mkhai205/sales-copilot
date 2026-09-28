@@ -74,7 +74,7 @@ describe('RealtimeEventDispatcher — Event Routing & Error Isolation (Task 12)'
   });
 
   describe('1. Message Event Dispatches (Task 12)', () => {
-    it('should broadcast message.created to conversation and workspace rooms on both typed and generic channels', () => {
+    it('should broadcast message.created to conversation and workspace rooms on the typed channel', () => {
       dispatcher.handleMessageCreated({
         workspaceId,
         conversationId,
@@ -89,17 +89,13 @@ describe('RealtimeEventDispatcher — Event Routing & Error Isolation (Task 12)'
         e => e.room === `workspace_${workspaceId}`,
       );
 
-      expect(conversationEmissions.length).toBe(2); // typed event + generic 'event'
-      expect(workspaceEmissions.length).toBe(2);
+      expect(conversationEmissions.length).toBe(1); // typed channel only (D4: generic 'event' stream removed)
+      expect(workspaceEmissions.length).toBe(1);
 
       const typedEvent = conversationEmissions.find(e => e.event === WsServerEvent.MESSAGE_CREATED);
       assertDefined(typedEvent);
       expect((typedEvent.payload as any).data).toEqual(mockMessage);
       expect((typedEvent.payload as any).event).toBe(WsServerEvent.MESSAGE_CREATED);
-
-      const genericEvent = conversationEmissions.find(e => e.event === 'event');
-      assertDefined(genericEvent);
-      expect((genericEvent.payload as any).data).toEqual(mockMessage);
     });
 
     it('should broadcast message.updated to conversation and workspace rooms', () => {

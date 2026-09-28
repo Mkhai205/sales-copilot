@@ -37,7 +37,7 @@ import type { WorkspaceContext } from '../../identity/workspaces/types/workspace
 import { ProductsService } from './products.service';
 
 @ApiTags('Commerce Products')
-@Controller(['workspaces/:workspaceId/products', 'products'])
+@Controller('products')
 @UseGuards(WorkspaceGuard, RolesGuard)
 @ApiBearerAuth()
 @ApiHeader({

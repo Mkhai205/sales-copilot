@@ -98,25 +98,11 @@ export function getTargetTypeBadgeConfig(targetType?: string | null): TargetType
 /**
  * Formats date/timestamp to standard Vietnamese format with seconds (dd/MM/yyyy HH:mm:ss).
  */
+import { formatDateTime as libFormatDateTime } from '@/lib/format-date';
+
 export function formatDateTime(date?: string | number | Date | null): string {
-  if (!date && date !== 0) return '-';
-
-  try {
-    const d = typeof date === 'string' || typeof date === 'number' ? new Date(date) : date;
-    if (!(d instanceof Date) || isNaN(d.getTime())) return '-';
-
-    return new Intl.DateTimeFormat('vi-VN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: false,
-    }).format(d);
-  } catch {
-    return '-';
-  }
+  // Audit trail keeps second precision (decision D7 delegates formatting to the shared lib)
+  return libFormatDateTime(date, { seconds: true });
 }
 
 /**

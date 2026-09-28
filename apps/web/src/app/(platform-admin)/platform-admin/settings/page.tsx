@@ -5,10 +5,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { FeatureFlagsTab } from '@/features/platform-admin/settings/components/feature-flags-tab';
-import { AiDefaultsTab } from '@/features/platform-admin/settings/components/ai-defaults-tab';
 import { QuotasTab } from '@/features/platform-admin/settings/components/quotas-tab';
-import { AnnouncementsTab } from '@/features/platform-admin/settings/components/announcements-tab';
-import { Flag, Sparkles, Scale, Megaphone, RefreshCw, Zap } from 'lucide-react';
+import { Flag, Scale, RefreshCw, Zap } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
@@ -67,22 +65,14 @@ export default function AdminSettingsPage() {
 
       {/* Main Settings Tabs */}
       <Tabs defaultValue="feature-flags" className="flex flex-col gap-6">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:w-auto lg:inline-flex">
+        <TabsList className="grid w-full grid-cols-2 lg:w-auto lg:inline-flex">
           <TabsTrigger value="feature-flags" className="gap-2">
             <Flag className="size-3.5" />
             <span>{'Feature Flags'}</span>
           </TabsTrigger>
-          <TabsTrigger value="ai-defaults" className="gap-2">
-            <Sparkles className="size-3.5" />
-            <span>{'AI Defaults'}</span>
-          </TabsTrigger>
           <TabsTrigger value="quotas" className="gap-2">
             <Scale className="size-3.5" />
             <span>{'Hạn mức & Quotas'}</span>
-          </TabsTrigger>
-          <TabsTrigger value="announcements" className="gap-2">
-            <Megaphone className="size-3.5" />
-            <span>{'Thông báo hệ thống'}</span>
           </TabsTrigger>
         </TabsList>
 
@@ -90,16 +80,8 @@ export default function AdminSettingsPage() {
           <FeatureFlagsTab />
         </TabsContent>
 
-        <TabsContent value="ai-defaults" className="outline-none">
-          <AiDefaultsTab />
-        </TabsContent>
-
         <TabsContent value="quotas" className="outline-none">
           <QuotasTab />
-        </TabsContent>
-
-        <TabsContent value="announcements" className="outline-none">
-          <AnnouncementsTab />
         </TabsContent>
       </Tabs>
     </div>

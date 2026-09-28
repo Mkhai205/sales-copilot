@@ -176,7 +176,7 @@ describe('HttpExceptionFilter (Global Exception Normalization)', () => {
       expect(responseBody.error.message).toContain('Không tìm thấy tài nguyên');
     });
 
-    it('should map P2003 to 400 FOREIGN_KEY_VIOLATION', () => {
+    it('should map P2003 to 409 FOREIGN_KEY_VIOLATION (FK Restrict on delete)', () => {
       const prismaError = new Prisma.PrismaClientKnownRequestError(
         'Foreign key constraint failed',
         {
@@ -188,10 +188,10 @@ describe('HttpExceptionFilter (Global Exception Normalization)', () => {
 
       filter.catch(prismaError, mockHost);
 
-      expect(responseStatusCode).toBe(HttpStatus.BAD_REQUEST);
+      expect(responseStatusCode).toBe(HttpStatus.CONFLICT);
       expect(responseBody.success).toBe(false);
       expect(responseBody.error.code).toBe('FOREIGN_KEY_VIOLATION');
-      expect(responseBody.error.message).toContain('Dữ liệu liên kết không hợp lệ');
+      expect(responseBody.error.message).toContain('đang được tham chiếu');
     });
 
     it('should map P2024 to 503 DATABASE_TIMEOUT', () => {

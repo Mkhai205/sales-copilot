@@ -33,7 +33,7 @@ import type { WorkspaceContext } from '../../identity/workspaces/types/workspace
 import { KnowledgeService } from './knowledge.service';
 
 @ApiTags('Knowledge Articles')
-@Controller(['workspaces/:workspaceId/knowledge-articles', 'knowledge-articles'])
+@Controller('knowledge-articles')
 @UseGuards(WorkspaceGuard, RolesGuard)
 @ApiBearerAuth()
 @ApiHeader({

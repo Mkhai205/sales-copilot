@@ -39,7 +39,7 @@ describe('Commerce Orders OMS Test Suite (Phase 5)', () => {
 
       assert.strictEqual(fetchCalls.length, 1);
       const call = fetchCalls[0];
-      assert.ok(call.url.includes(`/workspaces/${workspaceId}/orders?`));
+      assert.ok(call.url.includes(`/orders?`));
       assert.ok(call.url.includes('status=CONFIRMED'));
       assert.ok(call.url.includes('paymentStatus=PAID'));
       assert.ok(call.url.includes('page=2'));
@@ -52,7 +52,7 @@ describe('Commerce Orders OMS Test Suite (Phase 5)', () => {
       await ordersApi.getOrder(workspaceId, orderId);
       assert.strictEqual(fetchCalls.length, 1);
       const call = fetchCalls[0];
-      assert.ok(call.url.includes(`/workspaces/${workspaceId}/orders/${orderId}`));
+      assert.ok(call.url.includes(`/orders/${orderId}`));
       const headers = call.options?.headers as Record<string, string>;
       assert.strictEqual(headers['X-Workspace-Id'], workspaceId);
     });
@@ -76,7 +76,7 @@ describe('Commerce Orders OMS Test Suite (Phase 5)', () => {
       assert.strictEqual(fetchCalls.length, 1);
       const call = fetchCalls[0];
       assert.strictEqual(call.options?.method, 'POST');
-      assert.ok(call.url.includes(`/workspaces/${workspaceId}/orders`));
+      assert.ok(call.url.includes(`/orders`));
       assert.strictEqual(JSON.parse(call.options?.body as string).confirmImmediately, true);
       const headers = call.options?.headers as Record<string, string>;
       assert.strictEqual(headers['X-Workspace-Id'], workspaceId);
@@ -90,7 +90,7 @@ describe('Commerce Orders OMS Test Suite (Phase 5)', () => {
       assert.strictEqual(fetchCalls.length, 1);
       const call = fetchCalls[0];
       assert.strictEqual(call.options?.method, 'POST');
-      assert.ok(call.url.includes(`/workspaces/${workspaceId}/orders/${orderId}/complete`));
+      assert.ok(call.url.includes(`/orders/${orderId}/complete`));
       assert.strictEqual(
         JSON.parse(call.options?.body as string).notes,
         'Đã hoàn tất đơn và nhận tiền COD',
@@ -107,7 +107,7 @@ describe('Commerce Orders OMS Test Suite (Phase 5)', () => {
       assert.strictEqual(fetchCalls.length, 1);
       const call = fetchCalls[0];
       assert.strictEqual(call.options?.method, 'POST');
-      assert.ok(call.url.includes(`/workspaces/${workspaceId}/orders/${orderId}/cancel`));
+      assert.ok(call.url.includes(`/orders/${orderId}/cancel`));
       assert.strictEqual(
         JSON.parse(call.options?.body as string).cancelReason,
         'Khách hàng đổi ý muốn đổi sang mẫu khác',
@@ -121,7 +121,7 @@ describe('Commerce Orders OMS Test Suite (Phase 5)', () => {
       assert.strictEqual(fetchCalls.length, 1);
       const call = fetchCalls[0];
       assert.strictEqual(call.options?.method, 'POST');
-      assert.ok(call.url.includes(`/workspaces/${workspaceId}/orders/${orderId}/confirm`));
+      assert.ok(call.url.includes(`/orders/${orderId}/confirm`));
       const headers = call.options?.headers as Record<string, string>;
       assert.strictEqual(headers['X-Workspace-Id'], workspaceId);
     });
@@ -136,7 +136,7 @@ describe('Commerce Orders OMS Test Suite (Phase 5)', () => {
       assert.strictEqual(fetchCalls.length, 1);
       const call = fetchCalls[0];
       assert.strictEqual(call.options?.method, 'POST');
-      assert.ok(call.url.includes(`/workspaces/${workspaceId}/orders/${orderId}/pay`));
+      assert.ok(call.url.includes(`/orders/${orderId}/pay`));
       const headers = call.options?.headers as Record<string, string>;
       assert.strictEqual(headers['X-Workspace-Id'], workspaceId);
     });

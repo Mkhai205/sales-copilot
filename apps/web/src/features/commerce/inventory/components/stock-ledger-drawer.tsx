@@ -26,6 +26,7 @@ import {
   User,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { formatDateTime as formatDate } from '@/lib/format-date';
 
 interface StockLedgerDrawerProps {
   open: boolean;
@@ -92,21 +93,6 @@ function getTransactionTypeConfig(type: InventoryTransactionType) {
         badgeClass: 'bg-muted text-muted-foreground border-border',
         sign: '',
       };
-  }
-}
-
-function formatDate(dateInput: Date | string): string {
-  try {
-    const d = new Date(dateInput);
-    return new Intl.DateTimeFormat('vi-VN', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    }).format(d);
-  } catch {
-    return String(dateInput);
   }
 }
 

@@ -17,7 +17,7 @@ import {
 describe('System Settings Helpers & Schema Validation (Feature 2)', () => {
   const mockSettings: SystemSettingItemDto[] = [
     {
-      key: 'feature.pos_vietqr_enabled',
+      key: 'feature.comment_masking_enabled',
       value: true,
       category: SystemSettingCategory.FEATURE_FLAGS,
       description: 'VietQR commerce',
@@ -27,7 +27,7 @@ describe('System Settings Helpers & Schema Validation (Feature 2)', () => {
       updatedAt: new Date(),
     },
     {
-      key: 'llm.temperature_default',
+      key: 'quotas.free.storage_mb',
       value: 0.35,
       category: SystemSettingCategory.AI,
       description: 'Temp',
@@ -51,8 +51,8 @@ describe('System Settings Helpers & Schema Validation (Feature 2)', () => {
   describe('mapSettingsToMap', () => {
     it('should map settings array to Map correctly', () => {
       const map = mapSettingsToMap(mockSettings);
-      assert.strictEqual(map.get('feature.pos_vietqr_enabled'), true);
-      assert.strictEqual(map.get('llm.temperature_default'), 0.35);
+      assert.strictEqual(map.get('feature.comment_masking_enabled'), true);
+      assert.strictEqual(map.get('quotas.free.storage_mb'), 0.35);
       assert.strictEqual(map.get('system.banner_message'), 'Maintenance at 01:00');
     });
 
@@ -64,7 +64,7 @@ describe('System Settings Helpers & Schema Validation (Feature 2)', () => {
 
   describe('getSettingValue', () => {
     it('should return found value when key exists', () => {
-      const val = getSettingValue(mockSettings, 'feature.pos_vietqr_enabled', false);
+      const val = getSettingValue(mockSettings, 'feature.comment_masking_enabled', false);
       assert.strictEqual(val, true);
     });
 
@@ -74,7 +74,7 @@ describe('System Settings Helpers & Schema Validation (Feature 2)', () => {
     });
 
     it('should return fallback when settings list is undefined', () => {
-      const val = getSettingValue(undefined, 'feature.pos_vietqr_enabled', false);
+      const val = getSettingValue(undefined, 'feature.comment_masking_enabled', false);
       assert.strictEqual(val, false);
     });
   });

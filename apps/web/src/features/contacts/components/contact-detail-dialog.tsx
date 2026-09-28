@@ -22,6 +22,7 @@ import { useContact, useUpdateContact } from '../hooks/use-contacts';
 import { ContactIdentities } from './contact-identities';
 import { contactKeys } from '@/lib/query-keys';
 import type { ContactDto } from '@sales-copilot/shared-contracts';
+import { formatDateTime } from '@/lib/format-date';
 import {
   GitMerge,
   MessageSquare,
@@ -32,22 +33,6 @@ import {
   Clock,
   Save,
 } from 'lucide-react';
-
-function formatDateTime(dateInput?: Date | string | null): string {
-  if (!dateInput) return '-';
-  try {
-    const d = new Date(dateInput);
-    return d.toLocaleString('vi-VN', {
-      month: '2-digit',
-      day: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  } catch {
-    return String(dateInput);
-  }
-}
 
 export interface ContactDetailDialogProps {
   contact: ContactDto | null;

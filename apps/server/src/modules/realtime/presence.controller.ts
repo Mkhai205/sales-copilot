@@ -27,7 +27,7 @@ import { PresenceService } from './presence.service';
  * Route: `/workspaces/:workspaceId/presence`
  */
 @ApiTags('Presence')
-@Controller('workspaces/:workspaceId/presence')
+@Controller('presence')
 @ApiBearerAuth()
 export class PresenceController {
   constructor(

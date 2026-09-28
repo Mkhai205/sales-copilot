@@ -35,7 +35,7 @@ describe('Commerce Inventory API Client (Phase 5)', () => {
 
       assert.strictEqual(fetchCalls.length, 1);
       const call = fetchCalls[0];
-      assert.ok(call.url.includes(`/workspaces/${workspaceId}/inventory/transactions`));
+      assert.ok(call.url.includes(`/inventory/transactions`));
       assert.ok(call.url.includes('page=1'));
       assert.ok(call.url.includes('limit=15'));
       assert.ok(call.url.includes('type=STOCK_IN'));
@@ -51,7 +51,7 @@ describe('Commerce Inventory API Client (Phase 5)', () => {
 
       assert.strictEqual(fetchCalls.length, 1);
       const call = fetchCalls[0];
-      assert.ok(call.url.includes(`/workspaces/${workspaceId}/inventory/variants`));
+      assert.ok(call.url.includes(`/inventory/variants`));
       assert.ok(call.url.includes('search=POLO'));
       assert.ok(call.url.includes('lowStock=true'));
       const headers = call.options?.headers as Record<string, string>;
@@ -63,7 +63,7 @@ describe('Commerce Inventory API Client (Phase 5)', () => {
 
       assert.strictEqual(fetchCalls.length, 1);
       const call = fetchCalls[0];
-      assert.ok(call.url.includes(`/workspaces/${workspaceId}/inventory/summary`));
+      assert.ok(call.url.includes(`/inventory/summary`));
       const headers = call.options?.headers as Record<string, string>;
       assert.strictEqual(headers['X-Workspace-Id'], workspaceId);
     });
@@ -80,9 +80,7 @@ describe('Commerce Inventory API Client (Phase 5)', () => {
       assert.strictEqual(fetchCalls.length, 1);
       const call = fetchCalls[0];
       assert.strictEqual(call.options?.method, 'POST');
-      assert.ok(
-        call.url.includes(`/workspaces/${workspaceId}/inventory/variants/${variantId}/adjust`),
-      );
+      assert.ok(call.url.includes(`/inventory/variants/${variantId}/adjust`));
       const headers = call.options?.headers as Record<string, string>;
       assert.strictEqual(headers['X-Workspace-Id'], workspaceId);
       assert.deepStrictEqual(JSON.parse(call.options?.body as string), payload);

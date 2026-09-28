@@ -9,6 +9,7 @@ describe('AiDispatcherListener', () => {
   let mockQueue: any;
   let mockGuardrailService: any;
   let mockMessagesService: any;
+  let mockSystemSettingsService: any;
   let redisStore: Map<string, { val: string; ttl?: number }>;
   let queuedJobs: any[];
   let conversationsDb: Map<string, any>;
@@ -68,11 +69,16 @@ describe('AiDispatcherListener', () => {
       create: jest.fn().mockResolvedValue({ id: 'reply-msg-1' }),
     };
 
+    mockSystemSettingsService = {
+      getSetting: jest.fn().mockResolvedValue(true),
+    };
+
     listener = new AiDispatcherListener(
       mockPrisma,
       mockRedis,
       mockGuardrailService,
       mockMessagesService,
+      mockSystemSettingsService,
       mockQueue,
     );
   });

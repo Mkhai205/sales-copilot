@@ -16,7 +16,7 @@ import type { WorkspaceContext } from '../../identity/workspaces/types/workspace
 import { VietQrService } from './vietqr.service';
 import { MessagesService } from '../../omnichannel/messages/messages.service';
 
-@Controller('workspaces/:workspaceId/orders/:id/vietqr')
+@Controller('orders/:id/vietqr')
 @UseGuards(WorkspaceGuard, RolesGuard)
 export class VietQrController {
   private readonly logger = new Logger(VietQrController.name);

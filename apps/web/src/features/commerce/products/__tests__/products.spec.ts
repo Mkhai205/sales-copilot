@@ -32,7 +32,7 @@ describe('Commerce Products API Client (Phase 5)', () => {
 
       assert.strictEqual(fetchCalls.length, 1);
       const call = fetchCalls[0];
-      assert.ok(call.url.includes(`/workspaces/${workspaceId}/products`));
+      assert.ok(call.url.includes(`/products`));
       assert.ok(call.url.includes('search=Shirt'));
       assert.ok(call.url.includes('page=1'));
       assert.ok(call.url.includes('limit=10'));
@@ -45,7 +45,7 @@ describe('Commerce Products API Client (Phase 5)', () => {
 
       assert.strictEqual(fetchCalls.length, 1);
       const call = fetchCalls[0];
-      assert.ok(call.url.includes(`/workspaces/${workspaceId}/products/${productId}`));
+      assert.ok(call.url.includes(`/products/${productId}`));
       const headers = call.options?.headers as Record<string, string>;
       assert.strictEqual(headers['X-Workspace-Id'], workspaceId);
     });
@@ -62,7 +62,7 @@ describe('Commerce Products API Client (Phase 5)', () => {
       assert.strictEqual(fetchCalls.length, 1);
       const call = fetchCalls[0];
       assert.strictEqual(call.options?.method, 'POST');
-      assert.ok(call.url.includes(`/workspaces/${workspaceId}/products`));
+      assert.ok(call.url.includes(`/products`));
       const headers = call.options?.headers as Record<string, string>;
       assert.strictEqual(headers['X-Workspace-Id'], workspaceId);
       assert.deepStrictEqual(JSON.parse(call.options?.body as string), payload);
@@ -79,7 +79,7 @@ describe('Commerce Products API Client (Phase 5)', () => {
       assert.strictEqual(fetchCalls.length, 1);
       const call = fetchCalls[0];
       assert.strictEqual(call.options?.method, 'PUT');
-      assert.ok(call.url.includes(`/workspaces/${workspaceId}/products/${productId}`));
+      assert.ok(call.url.includes(`/products/${productId}`));
       const headers = call.options?.headers as Record<string, string>;
       assert.strictEqual(headers['X-Workspace-Id'], workspaceId);
       assert.deepStrictEqual(JSON.parse(call.options?.body as string), payload);
@@ -91,7 +91,7 @@ describe('Commerce Products API Client (Phase 5)', () => {
       assert.strictEqual(fetchCalls.length, 1);
       const call = fetchCalls[0];
       assert.strictEqual(call.options?.method, 'DELETE');
-      assert.ok(call.url.includes(`/workspaces/${workspaceId}/products/${productId}`));
+      assert.ok(call.url.includes(`/products/${productId}`));
       const headers = call.options?.headers as Record<string, string>;
       assert.strictEqual(headers['X-Workspace-Id'], workspaceId);
     });
@@ -108,11 +108,7 @@ describe('Commerce Products API Client (Phase 5)', () => {
       assert.strictEqual(fetchCalls.length, 1);
       const call = fetchCalls[0];
       assert.strictEqual(call.options?.method, 'POST');
-      assert.ok(
-        call.url.includes(
-          `/workspaces/${workspaceId}/products/${productId}/variants/${variantId}/inventory`,
-        ),
-      );
+      assert.ok(call.url.includes(`/products/${productId}/variants/${variantId}/inventory`));
       const headers = call.options?.headers as Record<string, string>;
       assert.strictEqual(headers['X-Workspace-Id'], workspaceId);
       assert.deepStrictEqual(JSON.parse(call.options?.body as string), payload);
@@ -124,9 +120,7 @@ describe('Commerce Products API Client (Phase 5)', () => {
       assert.strictEqual(fetchCalls.length, 1);
       const call = fetchCalls[0];
       assert.ok(
-        call.url.includes(
-          `/workspaces/${workspaceId}/products/${productId}/variants/${variantId}/inventory/transactions`,
-        ),
+        call.url.includes(`/products/${productId}/variants/${variantId}/inventory/transactions`),
       );
       assert.ok(call.url.includes('limit=20'));
       const headers = call.options?.headers as Record<string, string>;

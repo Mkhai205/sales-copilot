@@ -7,12 +7,12 @@ export interface WorkspacePresenceQueryDto {
 
 export const presenceApi = {
   getWorkspacePresence: (workspaceId: string, query?: WorkspacePresenceQueryDto) =>
-    fetchApi<PresenceEntry[]>(`/workspaces/${workspaceId}/presence${buildQueryString(query)}`, {
+    fetchApi<PresenceEntry[]>(`/presence${buildQueryString(query)}`, {
       headers: workspaceHeaders(workspaceId),
     }),
 
   getUserPresence: (workspaceId: string, userId: string) =>
-    fetchApi<PresenceEntry>(`/workspaces/${workspaceId}/presence/${userId}`, {
+    fetchApi<PresenceEntry>(`/presence/${userId}`, {
       headers: workspaceHeaders(workspaceId),
     }),
 };

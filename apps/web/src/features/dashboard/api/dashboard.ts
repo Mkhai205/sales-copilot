@@ -8,10 +8,7 @@ export interface DashboardSummaryParams {
 
 export const dashboardApi = {
   getSummary: (workspaceId: string, params?: DashboardSummaryParams) =>
-    fetchApi<DashboardSummaryDto>(
-      `/workspaces/${workspaceId}/dashboard/summary${buildQueryString(params)}`,
-      {
-        headers: workspaceHeaders(workspaceId),
-      },
-    ),
+    fetchApi<DashboardSummaryDto>(`/dashboard/summary${buildQueryString(params)}`, {
+      headers: workspaceHeaders(workspaceId),
+    }),
 };

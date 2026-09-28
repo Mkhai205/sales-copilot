@@ -520,9 +520,6 @@ export class RealtimeEventDispatcher {
       // Passing an array to .to() performs a union and dedupes sockets in Socket.io
       this.gateway.server.to(rooms).emit(event, payload);
 
-      // Also emit on generic 'event' channel for unified event stream listeners
-      this.gateway.server.to(rooms).emit('event', payload);
-
       this.logger.debug(`Broadcasted '${event}' to room(s) '${rooms.join(', ')}'`);
     } catch (err) {
       this.logger.error(

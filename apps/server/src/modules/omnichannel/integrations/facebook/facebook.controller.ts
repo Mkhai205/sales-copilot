@@ -31,6 +31,7 @@ import { RolesGuard } from '../../../identity/workspaces/guards/roles.guard';
 import { WorkspaceGuard } from '../../../identity/workspaces/guards/workspace.guard';
 import type { WorkspaceContext } from '../../../identity/workspaces/types/workspace-context.type';
 import { ChannelCredentialService } from '../../../omnichannel/inboxes/channel-credential.service';
+import { SystemSettingsService } from '../../../platform-admin/settings/system-settings.service';
 import { WebhooksService } from '../channel-webhooks/webhooks.service';
 import { FacebookService } from './facebook.service';
 import { FacebookAdapter } from './facebook.adapter';
@@ -54,6 +55,7 @@ export class FacebookController {
     private readonly facebookService: FacebookService,
     private readonly configService: ConfigService,
     private readonly credentialService: ChannelCredentialService,
+    private readonly systemSettingsService: SystemSettingsService,
     @Inject(forwardRef(() => WebhooksService))
     private readonly webhooksService: WebhooksService,
     private readonly adapter: FacebookAdapter,
@@ -359,6 +361,12 @@ export class FacebookController {
 
     const requestId = headers['x-request-id'] || headers['x-correlation-id'];
 
+    // Platform kill-switch for comment masking (decision D1: flag now gates behavior)
+    const commentMaskingEnabled = await this.systemSettingsService.getSetting<boolean>(
+      'feature.comment_masking_enabled',
+      true,
+    );
+
     for (const entry of body.entry) {
       const pageId = String(entry.id);
 
@@ -419,7 +427,7 @@ export class FacebookController {
             const externalEventId = `${commentId}${editSignature}`;
 
             const channelSettings = (channel.settings as any) || {};
-            if (channelSettings.commentGuard?.enabled === true) {
+            if (channelSettings.commentGuard?.enabled === true && commentMaskingEnabled !== false) {
               const { isDuplicate, event: channelEvent } =
                 await this.facebookService.recordChannelEvent(
                   channel.id,

@@ -9,7 +9,7 @@ import type { WorkspaceContext } from '../identity/workspaces/types/workspace-co
 import { DashboardService } from './dashboard.service';
 
 @ApiTags('Dashboard')
-@Controller(['workspaces/:workspaceId/dashboard', 'dashboard'])
+@Controller('dashboard')
 @UseGuards(WorkspaceGuard, RolesGuard)
 @ApiBearerAuth()
 @ApiHeader({

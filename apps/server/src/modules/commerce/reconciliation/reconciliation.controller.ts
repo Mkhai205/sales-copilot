@@ -23,7 +23,7 @@ import type { WorkspaceContext } from '../../identity/workspaces/types/workspace
 import { PaymentReconciliationService } from './payment-reconciliation.service';
 
 @ApiTags('Commerce Bank Reconciliation')
-@Controller(['workspaces/:workspaceId/reconciliation', 'reconciliation'])
+@Controller('reconciliation')
 @UseGuards(WorkspaceGuard, RolesGuard)
 @ApiBearerAuth()
 @ApiHeader({

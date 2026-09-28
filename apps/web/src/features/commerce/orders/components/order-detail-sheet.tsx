@@ -33,21 +33,7 @@ import {
   FileText,
 } from 'lucide-react';
 import Link from 'next/link';
-
-function formatDateTime(dateInput: Date | string): string {
-  try {
-    const d = new Date(dateInput);
-    return d.toLocaleString('vi-VN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  } catch {
-    return String(dateInput);
-  }
-}
+import { formatDateTime } from '@/lib/format-date';
 
 export interface OrderDetailSheetProps {
   order: OrderResponseDto | null;

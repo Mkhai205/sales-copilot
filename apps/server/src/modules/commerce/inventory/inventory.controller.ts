@@ -23,7 +23,7 @@ import type { WorkspaceContext } from '../../identity/workspaces/types/workspace
 import { InventoryLedgerService } from './inventory-ledger.service';
 
 @ApiTags('Commerce Inventory')
-@Controller(['workspaces/:workspaceId/inventory', 'inventory'])
+@Controller('inventory')
 @UseGuards(WorkspaceGuard, RolesGuard)
 @ApiBearerAuth()
 @ApiHeader({

@@ -14,6 +14,7 @@ import { RedisService } from '../../../infrastructure/redis/redis.service';
 import { MessagesService } from '../../omnichannel/messages/messages.service';
 import { AI_AGENT_CONSTANTS, getAiDebounceKey } from './ai-agent.constants';
 import { AiGuardrailService } from './services/ai-guardrail.service';
+import { SystemSettingsService } from '../../platform-admin/settings/system-settings.service';
 
 export interface InboundMessageCreatedEvent {
   workspaceId: string;
@@ -37,6 +38,7 @@ export class AiDispatcherListener {
     private readonly redisService: RedisService,
     private readonly guardrailService: AiGuardrailService,
     private readonly messagesService: MessagesService,
+    private readonly systemSettingsService: SystemSettingsService,
     @InjectQueue(AI_AUTOPILOT_QUEUE)
     private readonly aiQueue: Queue<AiAgentJobData>,
   ) {}
@@ -117,6 +119,18 @@ export class AiDispatcherListener {
       const aiPolicy = inboxSettings?.aiCommercePolicy as InboxAiCommercePolicyConfig | undefined;
 
       if (!aiPolicy || !aiPolicy.enabled) {
+        return;
+      }
+
+      // 5.5 Platform kill-switch (decision D1: the flag now gates behavior)
+      const autopilotEnabled = await this.systemSettingsService.getSetting<boolean>(
+        'feature.ai_autopilot_enabled',
+        true,
+      );
+      if (autopilotEnabled === false) {
+        this.logger.debug(
+          `AI autopilot disabled platform-wide. Skipping dispatch for conversation '${conversationId}'.`,
+        );
         return;
       }
 

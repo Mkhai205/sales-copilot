@@ -18,12 +18,9 @@ export const reconciliationApi = {
     workspaceId: string,
     query?: ListReconciliationTransactionsQueryDto,
   ): Promise<{ success: boolean; data: PaginatedTransactionsResult; meta?: PaginationMeta }> => {
-    const res = await fetchApi<any>(
-      `/workspaces/${workspaceId}/reconciliation/transactions${buildQueryString(query)}`,
-      {
-        headers: workspaceHeaders(workspaceId),
-      },
-    );
+    const res = await fetchApi<any>(`/reconciliation/transactions${buildQueryString(query)}`, {
+      headers: workspaceHeaders(workspaceId),
+    });
 
     const rawData = res.data;
     let items: PaymentTransactionResponseDto[] = [];
@@ -51,7 +48,7 @@ export const reconciliationApi = {
     query?: ReconciliationStatsQueryDto,
   ): Promise<{ success: boolean; data: ReconciliationStatsResponseDto }> => {
     return fetchApi<ReconciliationStatsResponseDto>(
-      `/workspaces/${workspaceId}/reconciliation/stats${buildQueryString(query)}`,
+      `/reconciliation/stats${buildQueryString(query)}`,
       {
         headers: workspaceHeaders(workspaceId),
       },
@@ -67,7 +64,7 @@ export const reconciliationApi = {
     data: { transaction: PaymentTransactionResponseDto; order: any };
   }> => {
     return fetchApi<{ transaction: PaymentTransactionResponseDto; order: any }>(
-      `/workspaces/${workspaceId}/reconciliation/transactions/${transactionId}/manual-match`,
+      `/reconciliation/transactions/${transactionId}/manual-match`,
       {
         method: 'POST',
         headers: workspaceHeaders(workspaceId),

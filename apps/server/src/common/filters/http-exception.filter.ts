@@ -59,9 +59,10 @@ export class HttpExceptionFilter implements ExceptionFilter {
           break;
         }
         case 'P2003': {
-          statusCode = HttpStatus.BAD_REQUEST;
+          // FK Restrict on delete (decision D6: workspace = soft-delete only) — 409 Conflict
+          statusCode = HttpStatus.CONFLICT;
           code = 'FOREIGN_KEY_VIOLATION';
-          message = 'Dữ liệu liên kết không hợp lệ hoặc không tồn tại';
+          message = 'Tài nguyên đang được tham chiếu bởi dữ liệu khác, không thể xóa';
           details = { field: exception.meta?.field_name };
           break;
         }
