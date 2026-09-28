@@ -69,7 +69,9 @@ jobs:
           - 6379:6379
 
       minio:
-        image: quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z
+        # MinIO yanked their Docker Hub + quay.io images (2025); bitnamilegacy is the
+        # frozen public community build — fine for CI (bucket auto-created by the app)
+        image: bitnamilegacy/minio:latest
         env:
           MINIO_ROOT_USER: minioadmin
           MINIO_ROOT_PASSWORD: miniopassword123
