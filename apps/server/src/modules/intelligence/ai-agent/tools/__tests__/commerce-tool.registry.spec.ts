@@ -1,6 +1,7 @@
 import { OrderStatus } from '@sales-copilot/shared-contracts';
 import { CommerceToolRegistry } from '../commerce-tool.registry';
 import { DiscountGuardService } from '../../services/discount-guard.service';
+import { HumanTakeoverAbortError } from '../../ai-agent.constants';
 
 describe('CommerceToolRegistry & 2 AM Customer Journey', () => {
   const workspaceA = 'ws-store-alpha';
@@ -384,6 +385,44 @@ describe('CommerceToolRegistry & 2 AM Customer Journey', () => {
     const qrMessage = messagesDb.find(m => m.metadata?.type === 'VIETQR_PAYMENT');
     expect(qrMessage).toBeTruthy();
     expect(qrMessage.metadata.qrData.amount).toBe(180000);
+  });
+
+  it('should throw HumanTakeoverAbortError instead of executing the tool when conversation isAiPaused=true', async () => {
+    // The Human Takeover guard re-reads isAiPaused from the DB right before every
+    // tool execution and must abort before the underlying tool runs.
+    jest.spyOn(mockPrisma, 'getClient').mockImplementation((() => ({
+      conversation: {
+        findFirst: async () => ({ isAiPaused: true }),
+      },
+    })) as any);
+
+    const listSpy = jest.spyOn(mockProductsService, 'listProducts');
+
+    const tools = registry.buildTools({ workspaceId: workspaceA, conversationId });
+
+    await expect(
+      (tools.searchProducts as any).execute({ query: 'áo polo' }, {} as any),
+    ).rejects.toThrow(HumanTakeoverAbortError);
+
+    // Underlying tool must never run while a human agent owns the conversation
+    expect(listSpy).not.toHaveBeenCalled();
+  });
+
+  it('should execute the underlying tool normally when conversation isAiPaused=false', async () => {
+    jest.spyOn(mockPrisma, 'getClient').mockImplementation((() => ({
+      conversation: {
+        findFirst: async () => ({ isAiPaused: false }),
+      },
+    })) as any);
+
+    const tools = registry.buildTools({ workspaceId: workspaceA, conversationId });
+
+    const searchResult: any = await (tools.searchProducts as any).execute(
+      { query: 'áo polo' },
+      {} as any,
+    );
+    expect(searchResult.length).toBe(1);
+    expect(searchResult[0].name).toBe('Áo Polo Cotton');
   });
 
   it('should register searchKnowledge tool when knowledgeService is injected', () => {

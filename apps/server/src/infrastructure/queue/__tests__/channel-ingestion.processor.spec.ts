@@ -627,6 +627,42 @@ describe('ChannelIngestionProcessor (Task T-1.5.7: Inbound Ingestion Pipeline In
       const updatedEvt = channelEventsDb.get(eventId);
       expect(updatedEvt.processedAt).toBeNull();
     });
+
+    it('should skip synthetic watermark/read delivery receipts without failing the job and still mark the ChannelEvent processed', async () => {
+      const eventId = 'evt_delivery_watermark';
+      channelEventsDb.set(eventId, {
+        id: eventId,
+        channelId: 'ch_fb_1',
+        externalEventId: 'watermark_12345',
+        eventType: 'message_reads',
+        processedAt: null,
+      });
+
+      const mockJob: any = {
+        id: 'job_deliv_watermark',
+        data: {
+          channelId: 'ch_fb_1',
+          channelEventId: eventId,
+          eventType: 'message_reads',
+          payload: {
+            eventKind: 'delivery_status',
+            deliveryStatusInfo: {
+              externalMessageId: 'watermark_12345',
+              status: DeliveryStatus.READ,
+              timestamp: new Date(),
+            },
+          },
+        },
+      };
+
+      // Synthetic receipt ids (watermark_/read_ prefixes) can never match a Message
+      // row: the job must succeed (no retryable failure) and the ChannelEvent must
+      // be marked processed so it is not requeued forever.
+      await expect(processor.process(mockJob)).resolves.toBeUndefined();
+
+      const updatedEvt = channelEventsDb.get(eventId);
+      expect(updatedEvt.processedAt instanceof Date).toBeTruthy();
+    });
   });
 
   describe('Media Download to StorageService (Feature Task S-2)', () => {

@@ -474,6 +474,47 @@ describe('AutoReconciliationMatcher (Bank Reconciliation Engine & Safe Inventory
     expect(duplicateResult.orderId).toBe(orderId);
   });
 
+  it('should abort with PAYMENT_STATE_CONFLICT when the conditional paid-order update matches 0 rows (concurrent state change)', async () => {
+    // Setup order as already PAID (second/over-payment path: record-only, no stock
+    // mutation) — the exact scenario the lost-update guard protects.
+    const ord = ordersDb.get(orderId);
+    ord.status = OrderStatus.PAID;
+    ord.paymentStatus = PaymentStatus.PAID;
+    ord.paidAmount = 500000;
+
+    // Force the conditional update to match 0 rows, as if a concurrent flow changed
+    // the order state between the load and the update.
+    jest.spyOn(clientMock.order, 'updateMany').mockResolvedValue({ count: 0 });
+
+    await expectReject(
+      async () => {
+        await matcher.reconcileTransaction({
+          workspaceId: wsId,
+          orderId,
+          amount: 100000,
+          gateway: PaymentGateway.SEPAY,
+          transactionCode: 'SEPAY_TX_CONFLICT',
+          accountNumber: '0987654321',
+          transferContent: 'ORD 1004 chuyen them',
+        });
+      },
+      (err: any) => {
+        expect(err.name).toBe('ConflictException');
+        expect(err.response?.code).toBe('PAYMENT_STATE_CONFLICT');
+        return true;
+      },
+    );
+
+    // Abort semantics: no post-commit side effects and no silent overwrite.
+    expect(emittedEvents.length).toBe(0);
+    expect(inventoryTxsDb.length).toBe(0);
+
+    // Order row must remain untouched by the losing writer
+    expect(ord.status).toBe(OrderStatus.PAID);
+    expect(ord.paymentStatus).toBe(PaymentStatus.PAID);
+    expect(ord.paidAmount).toBe(500000);
+  });
+
   it('should throw BadRequestException if amount is less than or equal to zero', async () => {
     await expectReject(
       async () => {

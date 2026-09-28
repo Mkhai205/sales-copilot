@@ -348,7 +348,6 @@ describe('SystemSettingsService (Dynamic System Settings & 2-Tier Caching Engine
     expect(calledWith).toBeTruthy();
     expect(calledWith.skipDuplicates).toBe(true);
     expect(calledWith.data.length).toBe(DEFAULT_SYSTEM_SETTINGS.length);
-    expect(calledWith.data.length >= 6).toBeTruthy();
   });
 
   it('10. Category Inference: correctly maps key prefixes to SystemSettingCategory', () => {

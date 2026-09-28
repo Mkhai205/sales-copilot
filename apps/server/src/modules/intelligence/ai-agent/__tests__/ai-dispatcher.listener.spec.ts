@@ -206,6 +206,34 @@ describe('AiDispatcherListener', () => {
     expect(job.opts.attempts).toBe(2);
   });
 
+  it('should skip dispatch entirely (no debounce slot, no job) when platform kill-switch feature.ai_autopilot_enabled is false', async () => {
+    conversationsDb.set(conversationId, {
+      id: conversationId,
+      workspaceId,
+      inboxId: 'inbox-1',
+      isAiPaused: false,
+      inbox: { settings: { aiCommercePolicy: { enabled: true } } },
+    });
+
+    mockSystemSettingsService.getSetting.mockResolvedValue(false);
+
+    await listener.handleInboundMessage({
+      workspaceId,
+      conversationId,
+      message: {
+        id: 'msg-contact-killswitch',
+        senderType: SenderType.CONTACT,
+        messageType: MessageType.INCOMING,
+        isPrivate: false,
+      },
+    });
+
+    // Kill-switch must abort BEFORE reserving the debounce slot or enqueuing
+    const debounceKey = getAiDebounceKey(workspaceId, conversationId);
+    expect(queuedJobs.length).toBe(0);
+    expect(redisStore.has(debounceKey)).toBeFalsy();
+  });
+
   it('should block message and send warning reply when guardrail returns allowed=false with shouldReply=true', async () => {
     mockGuardrailService.check.mockResolvedValueOnce({
       allowed: false,
