@@ -163,7 +163,7 @@ export class AutoAssignmentService {
 
     // 1. Fetch inbox members
     const inboxMembers = await client.inboxMember.findMany({
-      where: { inboxId },
+      where: { inboxId, inbox: { workspaceId } },
       select: { userId: true },
     });
 
@@ -176,7 +176,7 @@ export class AutoAssignmentService {
     // 2. Intersect with Team members if teamId specified
     if (teamId) {
       const teamMembers = await client.teamMember.findMany({
-        where: { teamId },
+        where: { teamId, team: { workspaceId } },
         select: { userId: true },
       });
       const teamUserSet = new Set(teamMembers.map(tm => tm.userId));

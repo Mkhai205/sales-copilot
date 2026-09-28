@@ -147,6 +147,7 @@ export class MessagesService {
     if (dto.externalId && dto.externalId.trim() !== '') {
       const existing = await client.message.findFirst({
         where: {
+          workspaceId,
           conversationId,
           externalId: dto.externalId.trim(),
         },
@@ -574,7 +575,7 @@ export class MessagesService {
     }
 
     // Clean up S3 objects and attachment records
-    await this.attachmentsService.deleteByMessageId(messageId);
+    await this.attachmentsService.deleteByMessageId(workspaceId, messageId);
 
     await client.message.delete({
       where: { workspaceId_id: { workspaceId, id: messageId } },

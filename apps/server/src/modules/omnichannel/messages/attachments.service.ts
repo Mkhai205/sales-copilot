@@ -244,11 +244,15 @@ export class AttachmentsService {
   /**
    * Deletes all attachments belonging to a message from both MinIO/S3 and database.
    */
-  async deleteByMessageId(messageId: string, tx?: any): Promise<{ deletedCount: number }> {
+  async deleteByMessageId(
+    workspaceId: string,
+    messageId: string,
+    tx?: any,
+  ): Promise<{ deletedCount: number }> {
     const client = tx ?? this.prisma.getClient();
 
     const attachments = await client.attachment.findMany({
-      where: { messageId },
+      where: { messageId, message: { workspaceId } },
     });
 
     for (const attachment of attachments) {
@@ -264,7 +268,7 @@ export class AttachmentsService {
     }
 
     const result = await client.attachment.deleteMany({
-      where: { messageId },
+      where: { messageId, message: { workspaceId } },
     });
 
     this.logger.debug(`Deleted ${result.count} attachments for message ${messageId}`);

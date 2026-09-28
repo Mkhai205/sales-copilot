@@ -32,10 +32,17 @@ export class WidgetTokenService {
     @Optional() private readonly configService?: ConfigService,
     @Optional() private readonly jwtService?: JwtService,
   ) {
-    this.jwtSecret =
+    // No hardcoded fallback: WIDGET_TOKEN_SECRET or the required JWT_ACCESS_TOKEN_SECRET
+    // must be configured, otherwise the service refuses to start.
+    const configuredSecret =
       this.configService?.get<string>('WIDGET_TOKEN_SECRET') ||
-      this.configService?.get<string>('JWT_ACCESS_TOKEN_SECRET') ||
-      'widget_default_secret_key_change_in_production_12345';
+      this.configService?.get<string>('JWT_ACCESS_TOKEN_SECRET');
+    if (!configuredSecret) {
+      throw new Error(
+        'WidgetTokenService requires WIDGET_TOKEN_SECRET or JWT_ACCESS_TOKEN_SECRET to be configured',
+      );
+    }
+    this.jwtSecret = configuredSecret;
 
     const expirySeconds = this.configService?.get<number>('WIDGET_TOKEN_EXPIRY_SECONDS');
     if (typeof expirySeconds === 'number' && expirySeconds > 0) {

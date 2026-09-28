@@ -314,38 +314,40 @@ export class FacebookController {
     @Query() query: Record<string, any>,
     @Req() req?: Request,
   ): Promise<{ success: boolean }> {
-    // 1. Verify HMAC signature using platform-level FB_APP_SECRET
+    // 1. Verify HMAC signature using platform-level FB_APP_SECRET (fail-closed:
+    // without a configured secret the payload cannot be authenticated, so it is rejected)
     const appSecret = this.configService.get<string>('FB_APP_SECRET');
-    if (appSecret) {
-      const signatureHeader = headers['x-hub-signature-256'] || headers['X-Hub-Signature-256'];
+    if (!appSecret) {
+      this.logger.error('Central Webhook: FB_APP_SECRET is not configured. Rejecting payload.');
+      return { success: false };
+    }
+    const signatureHeader = headers['x-hub-signature-256'] || headers['X-Hub-Signature-256'];
 
-      if (!signatureHeader) {
-        this.logger.warn('Central Webhook: Missing X-Hub-Signature-256 header');
+    if (!signatureHeader) {
+      this.logger.warn('Central Webhook: Missing X-Hub-Signature-256 header');
+      return { success: false };
+    }
+
+    const headerValue = Array.isArray(signatureHeader) ? signatureHeader[0] : signatureHeader;
+    const rawPayload =
+      (req as any)?.rawBody || Buffer.from(typeof body === 'string' ? body : JSON.stringify(body));
+    const expectedHash = crypto.createHmac('sha256', appSecret).update(rawPayload).digest('hex');
+
+    const receivedHash = headerValue?.startsWith('sha256=') ? headerValue.slice(7) : headerValue;
+
+    try {
+      const isValid = crypto.timingSafeEqual(
+        Buffer.from(expectedHash, 'hex'),
+        Buffer.from(receivedHash || '', 'hex'),
+      );
+
+      if (!isValid) {
+        this.logger.warn('Central Webhook: HMAC signature verification failed');
         return { success: false };
       }
-
-      const headerValue = Array.isArray(signatureHeader) ? signatureHeader[0] : signatureHeader;
-      const rawPayload =
-        (req as any)?.rawBody ||
-        Buffer.from(typeof body === 'string' ? body : JSON.stringify(body));
-      const expectedHash = crypto.createHmac('sha256', appSecret).update(rawPayload).digest('hex');
-
-      const receivedHash = headerValue?.startsWith('sha256=') ? headerValue.slice(7) : headerValue;
-
-      try {
-        const isValid = crypto.timingSafeEqual(
-          Buffer.from(expectedHash, 'hex'),
-          Buffer.from(receivedHash || '', 'hex'),
-        );
-
-        if (!isValid) {
-          this.logger.warn('Central Webhook: HMAC signature verification failed');
-          return { success: false };
-        }
-      } catch {
-        this.logger.warn('Central Webhook: HMAC comparison error');
-        return { success: false };
-      }
+    } catch {
+      this.logger.warn('Central Webhook: HMAC comparison error');
+      return { success: false };
     }
 
     // 2. Extract page_id from each entry and route to correct Channel

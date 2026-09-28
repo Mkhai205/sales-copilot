@@ -12,6 +12,10 @@ export const REDACT_PATHS = [
   'req.headers.cookie',
   'req.headers["set-cookie"]',
   'res.headers["set-cookie"]',
+  'req.headers["x-api-key"]',
+  'req.headers["secure-token"]',
+  'req.headers["x-hub-signature-256"]',
+  'req.headers["x-telegram-bot-api-secret-token"]',
 
   // Passwords & Encryption Keys
   'password',

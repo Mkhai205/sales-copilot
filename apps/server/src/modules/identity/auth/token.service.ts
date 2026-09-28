@@ -39,16 +39,7 @@ export class TokenService {
     user: { id: string; email: string; role: PlatformRole },
     existingFamilyId?: string,
   ): Promise<AuthTokensDto> {
-    const payload: JwtPayload = {
-      sub: user.id,
-      email: user.email,
-      role: user.role,
-    };
-
-    const accessToken = this.jwtService.sign(payload, {
-      secret: this.accessTokenSecret,
-      expiresIn: this.accessTokenExpiresInSeconds,
-    });
+    const accessToken = await this.signAccessToken(user);
 
     const tokenId = crypto.randomUUID();
     const tokenSecret = crypto.randomBytes(32).toString('hex');
@@ -60,6 +51,7 @@ export class TokenService {
 
     const storedToken: StoredRefreshToken = {
       tokenId,
+      tokenSecretHash: crypto.createHash('sha256').update(tokenSecret).digest('hex'),
       userId: user.id,
       familyId,
       email: user.email,
@@ -97,6 +89,21 @@ export class TokenService {
       refreshToken: rawRefreshToken,
       expiresIn: this.accessTokenExpiresInSeconds,
     };
+  }
+
+  /**
+   * Signs an Identity-Only JWT Access Token.
+   * Also used to re-mint the access token with fresh claims (e.g. a changed role)
+   * after a refresh rotation.
+   */
+  async signAccessToken(user: { id: string; email: string; role: PlatformRole }): Promise<string> {
+    return this.jwtService.sign(
+      { sub: user.id, email: user.email, role: user.role },
+      {
+        secret: this.accessTokenSecret,
+        expiresIn: this.accessTokenExpiresInSeconds,
+      },
+    );
   }
 
   /**
@@ -150,8 +157,8 @@ export class TokenService {
       });
     }
 
-    const [tokenId] = rawRefreshToken.split('.');
-    if (!tokenId) {
+    const [tokenId, tokenSecret] = rawRefreshToken.split('.');
+    if (!tokenId || !tokenSecret) {
       throw new UnauthorizedException({
         code: 'INVALID_REFRESH_TOKEN',
         message: 'Malformed refresh token',
@@ -183,18 +190,9 @@ export class TokenService {
       });
     }
 
-    // Atomic GETDEL: retrieve and delete in a single Redis operation.
-    // This prevents two concurrent requests from both passing the "not revoked" check.
-    const redisClient = this.redisService.getClient();
-    // eslint-disable-next-line no-useless-assignment
-    let tokenData: string | null = null;
-    if (redisClient) {
-      tokenData = await redisClient.getdel(tokenKey);
-    } else {
-      tokenData = await this.redisService.get(tokenKey);
-      if (tokenData) await this.redisService.del(tokenKey);
-    }
-
+    // Plain read first so the secret half can be verified BEFORE the atomic consume below —
+    // knowing only the non-secret tokenId must not be enough to consume a session.
+    const tokenData = await this.redisService.get(tokenKey);
     if (!tokenData) {
       throw new UnauthorizedException({
         code: 'INVALID_REFRESH_TOKEN',
@@ -209,6 +207,35 @@ export class TokenService {
       throw new UnauthorizedException({
         code: 'INVALID_REFRESH_TOKEN',
         message: 'Corrupted refresh token record',
+      });
+    }
+
+    // Timing-safe verification of the secret half. Records without a hash are
+    // legacy (pre-hardening) — they are still accepted, but every newly issued
+    // token carries the hash and is enforced from then on.
+    if (storedToken.tokenSecretHash) {
+      const providedHash = crypto.createHash('sha256').update(tokenSecret).digest('hex');
+      const provided = Buffer.from(providedHash, 'hex');
+      const expected = Buffer.from(storedToken.tokenSecretHash, 'hex');
+      if (provided.length !== expected.length || !crypto.timingSafeEqual(provided, expected)) {
+        throw new UnauthorizedException({
+          code: 'INVALID_REFRESH_TOKEN',
+          message: 'Refresh token is invalid',
+        });
+      }
+    }
+
+    // Atomic GETDEL: retrieve and delete in a single Redis operation.
+    // This prevents two concurrent requests from both passing the "not revoked" check.
+    const redisClient = this.redisService.getClient();
+    const wasConsumed = redisClient
+      ? (await redisClient.getdel(tokenKey)) !== null
+      : (await this.redisService.del(tokenKey)) > 0;
+
+    if (!wasConsumed) {
+      throw new UnauthorizedException({
+        code: 'INVALID_REFRESH_TOKEN',
+        message: 'Refresh token is expired, revoked, or does not exist',
       });
     }
 

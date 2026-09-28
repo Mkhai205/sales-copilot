@@ -27,7 +27,7 @@ export interface ChannelIngestionJobData {
   requestId?: string;
 }
 
-@Processor('channel-ingestion')
+@Processor('channel-ingestion', { concurrency: 5 })
 @Injectable()
 export class ChannelIngestionProcessor extends WorkerHost {
   private readonly logger = new Logger(ChannelIngestionProcessor.name);

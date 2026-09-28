@@ -72,6 +72,7 @@ describe('WidgetTokenService (Visitor JWT Token Issuance & Verification)', () =>
       const customConfig: any = {
         get: (key: string, defaultValue?: any) => {
           if (key === 'WIDGET_TOKEN_EXPIRY_SECONDS') return 3600;
+          if (key === 'JWT_ACCESS_TOKEN_SECRET') return 'test_jwt_secret_for_widget_tokens';
           return defaultValue;
         },
       };

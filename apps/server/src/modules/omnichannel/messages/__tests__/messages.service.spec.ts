@@ -117,7 +117,7 @@ describe('MessagesService (Task T-1.5.6: Message Threading & Polymorphic Senders
           createdAt: record.createdAt.toISOString(),
         };
       },
-      deleteByMessageId: async (messageId: string) => {
+      deleteByMessageId: async (_workspaceId: string, messageId: string) => {
         let count = 0;
         for (const [id, att] of Array.from(attachmentsDb.entries())) {
           if (att.messageId === messageId) {

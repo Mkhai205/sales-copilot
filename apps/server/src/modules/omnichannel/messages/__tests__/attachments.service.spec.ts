@@ -52,6 +52,10 @@ describe('AttachmentsService (Task T-1.5.5: Attachment & Media Storage Integrati
           return Array.from(attachmentsDb.values())
             .filter((att: any) => {
               if (where.messageId && att.messageId !== where.messageId) return false;
+              if (where.message?.workspaceId) {
+                const msg = messagesDb.get(att.messageId);
+                if (!msg || msg.workspaceId !== where.message.workspaceId) return false;
+              }
               return true;
             })
             .map(att => ({ ...att }));
@@ -85,10 +89,13 @@ describe('AttachmentsService (Task T-1.5.5: Attachment & Media Storage Integrati
         deleteMany: async ({ where }: { where: any }) => {
           let count = 0;
           for (const [id, att] of Array.from(attachmentsDb.entries())) {
-            if (where.messageId && att.messageId === where.messageId) {
-              attachmentsDb.delete(id);
-              count++;
+            if (where.messageId && att.messageId !== where.messageId) continue;
+            if (where.message?.workspaceId) {
+              const msg = messagesDb.get(att.messageId);
+              if (!msg || msg.workspaceId !== where.message.workspaceId) continue;
             }
+            attachmentsDb.delete(id);
+            count++;
           }
           return { count };
         },
@@ -311,6 +318,7 @@ describe('AttachmentsService (Task T-1.5.5: Attachment & Media Storage Integrati
 
   describe('deleteByMessageId', () => {
     it('should delete S3 objects and DB records for all message attachments', async () => {
+      messagesDb.set('msg_1', { id: 'msg_1', workspaceId: 'ws_100' });
       const mockBuffer = Buffer.from('file-content');
       await service.uploadAndCreate('ws_100', 'msg_1', {
         buffer: mockBuffer,
@@ -337,7 +345,7 @@ describe('AttachmentsService (Task T-1.5.5: Attachment & Media Storage Integrati
       expect(attachmentsDb.size).toBe(3);
       expect(uploadedFiles.length).toBe(2);
 
-      const deleteResult = await service.deleteByMessageId('msg_1');
+      const deleteResult = await service.deleteByMessageId('ws_100', 'msg_1');
 
       expect(deleteResult.deletedCount).toBe(3);
       expect(attachmentsDb.size).toBe(0);

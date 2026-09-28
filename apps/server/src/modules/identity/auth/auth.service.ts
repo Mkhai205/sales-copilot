@@ -206,7 +206,7 @@ export class AuthService {
    * Refreshes access and refresh tokens via Token Rotation.
    */
   async refreshToken(dto: RefreshTokenDto): Promise<AuthTokensDto> {
-    const { tokens, userId } = await this.tokenService.rotateRefreshToken(dto.refreshToken);
+    const { tokens, userId, role } = await this.tokenService.rotateRefreshToken(dto.refreshToken);
 
     const user = await this.prisma.client.user.findUnique({
       where: { id: userId },
@@ -218,6 +218,16 @@ export class AuthService {
       throw new ForbiddenException({
         code: 'ACCOUNT_DEACTIVATED',
         message: 'Your account has been deactivated. Please contact support.',
+      });
+    }
+
+    // Role changes must propagate to freshly minted access tokens on refresh
+    // (the rotated token was signed with the role snapshot taken at original login).
+    if (role !== user.role) {
+      tokens.accessToken = await this.tokenService.signAccessToken({
+        id: user.id,
+        email: user.email,
+        role: user.role,
       });
     }
 
