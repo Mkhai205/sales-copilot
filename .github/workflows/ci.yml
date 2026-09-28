@@ -129,6 +129,8 @@ jobs:
           STORAGE_REGION=us-east-1
           STORAGE_BUCKETS=sales-copilot
           STORAGE_PRESIGNED_URL_EXPIRES_IN_SECONDS=900
+          RESEND_FROM_EMAIL=Sales Copilot <sales-copilot@kakadev.xyz>
+          # WEBHOOK_BASE_URL= (uncomment only for a public webhook tunnel; inherits APP_BASE_URL)
           EOF
 
       - name: Unit + Integration + E2E
