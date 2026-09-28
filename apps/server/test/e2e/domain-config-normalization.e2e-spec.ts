@@ -1211,6 +1211,9 @@ describe('Comprehensive Opaque-Box E2E: Domain, BaseUrl & Storage Normalization'
 
       it('T2.14.5: should not contain any files named AGENTS.md or GEMINI.md in .agents/teamwork', () => {
         const teamworkDir = path.join(workspaceRoot, '.agents/teamwork');
+        // .agents/teamwork holds gitignored machine-local orchestration artifacts —
+        // on a fresh checkout (CI) it does not exist, trivially satisfying this guard.
+        if (!fs.existsSync(teamworkDir)) return;
         const files = fs.readdirSync(teamworkDir, { recursive: true });
         const illegal = files.filter(
           f => typeof f === 'string' && (f.endsWith('AGENTS.md') || f.endsWith('GEMINI.md')),
