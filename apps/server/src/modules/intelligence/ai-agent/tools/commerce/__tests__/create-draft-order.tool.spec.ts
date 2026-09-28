@@ -5,7 +5,7 @@ describe('createDraftOrder Tool (T6)', () => {
   const workspaceId = 'ws-test-123';
   const conversationId = 'conv-test-456';
   let mockPrisma: any;
-  let mockOrdersService: any;
+  let mockOrderWriterService: any;
   let discountGuardService: DiscountGuardService;
   let createdOrders: any[];
 
@@ -77,7 +77,7 @@ describe('createDraftOrder Tool (T6)', () => {
       }),
     };
 
-    mockOrdersService = {
+    mockOrderWriterService = {
       createOrder: async (wsId: string, dto: any) => {
         const order = {
           id: 'ord-1042',
@@ -109,7 +109,7 @@ describe('createDraftOrder Tool (T6)', () => {
     const tool = createCreateDraftOrderTool({
       workspaceId,
       conversationId,
-      ordersService: mockOrdersService,
+      orderWriterService: mockOrderWriterService,
       discountGuardService,
       prisma: mockPrisma,
       policy: { enabled: true, maxDiscountPercent: 10 },
@@ -142,7 +142,7 @@ describe('createDraftOrder Tool (T6)', () => {
     const tool = createCreateDraftOrderTool({
       workspaceId,
       conversationId,
-      ordersService: mockOrdersService,
+      orderWriterService: mockOrderWriterService,
       discountGuardService,
       prisma: mockPrisma,
     });
@@ -164,7 +164,7 @@ describe('createDraftOrder Tool (T6)', () => {
     const tool = createCreateDraftOrderTool({
       workspaceId,
       conversationId,
-      ordersService: mockOrdersService,
+      orderWriterService: mockOrderWriterService,
       discountGuardService,
       prisma: mockPrisma,
       policy: { enabled: true, maxDiscountPercent: 10, maxDiscountVnd: 20000 },
@@ -187,7 +187,7 @@ describe('createDraftOrder Tool (T6)', () => {
     const tool = createCreateDraftOrderTool({
       workspaceId,
       conversationId,
-      ordersService: mockOrdersService,
+      orderWriterService: mockOrderWriterService,
       discountGuardService,
       prisma: mockPrisma,
     });

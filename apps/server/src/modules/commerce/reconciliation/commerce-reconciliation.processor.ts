@@ -13,7 +13,8 @@ import {
 import { PrismaService } from '../../../infrastructure/database/prisma.service';
 import { RedisService } from '../../../infrastructure/redis/redis.service';
 import { PaymentReconciliationJobData } from '../webhooks/payment-webhooks.controller';
-import { PaymentReconciliationService } from './payment-reconciliation.service';
+import { AutoReconciliationMatcher } from './auto-reconciliation.matcher';
+import { buildPaymentLockKey } from './reconciliation-shared';
 import { parseOrderDisplayId, parseOrderNumber } from './reconciliation.util';
 export { parseOrderDisplayId, parseOrderNumber };
 
@@ -25,7 +26,7 @@ export class CommerceReconciliationProcessor extends WorkerHost {
   constructor(
     private readonly prisma: PrismaService,
     private readonly redisService: RedisService,
-    private readonly paymentReconciliationService: PaymentReconciliationService,
+    private readonly autoReconciliationMatcher: AutoReconciliationMatcher,
     private readonly eventEmitter: EventEmitter2,
   ) {
     super();
@@ -238,7 +239,7 @@ export class CommerceReconciliationProcessor extends WorkerHost {
     // 4. Distributed Redlock Concurrency Guard (TTL 10s).
     // Shared payment lock domain — same key as payOrder and manual match so the two
     // payment flows can never process the same order concurrently.
-    const lockKey = `ws:${workspaceId}:order:${order.id}:payment`;
+    const lockKey = buildPaymentLockKey(workspaceId, order.id);
     const lockToken = await this.redisService.acquireLock(lockKey, 10000);
 
     if (!lockToken) {
@@ -249,8 +250,8 @@ export class CommerceReconciliationProcessor extends WorkerHost {
     }
 
     try {
-      // 5. Execute safe reconciliation service inside database transaction
-      const result = await this.paymentReconciliationService.reconcileTransaction({
+      // 5. Execute safe reconciliation inside database transaction
+      const result = await this.autoReconciliationMatcher.reconcileTransaction({
         workspaceId,
         orderId: order.id,
         amount,

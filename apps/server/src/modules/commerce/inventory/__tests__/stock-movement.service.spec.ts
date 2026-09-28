@@ -1,9 +1,9 @@
 import { expectReject } from '../../../../../test/test-assertions';
 import { DomainEvent, InventoryTransactionType } from '@sales-copilot/shared-contracts';
-import { InventoryLedgerService } from '../inventory-ledger.service';
+import { StockMovementService } from '../stock-movement.service';
 
-describe('InventoryLedgerService (Atomic 3-State Stock & Immutable Ledger)', () => {
-  let service: InventoryLedgerService;
+describe('StockMovementService (Atomic 3-State Stock & Immutable Ledger)', () => {
+  let service: StockMovementService;
   let mockPrismaService: any;
   let mockEventEmitter: any;
   let clientMock: any;
@@ -176,21 +176,7 @@ describe('InventoryLedgerService (Atomic 3-State Stock & Immutable Ledger)', () 
       },
     };
 
-    service = new InventoryLedgerService(mockPrismaService, mockEventEmitter);
-  });
-
-  describe('getStock', () => {
-    it('should return 3-state stock levels (physical, reserved, available)', async () => {
-      const stock = await service.getStock(ws1, varA);
-      expect(stock.variantId).toBe(varA);
-      expect(stock.stockQuantity).toBe(10);
-      expect(stock.reservedQuantity).toBe(2);
-      expect(stock.availableStock).toBe(8);
-    });
-
-    it('should throw NotFoundException if variant does not exist in workspace', async () => {
-      await expectReject(() => service.getStock(ws1, varWs2), /VARIANT_NOT_FOUND/);
-    });
+    service = new StockMovementService(mockPrismaService, mockEventEmitter);
   });
 
   describe('reserveStock', () => {

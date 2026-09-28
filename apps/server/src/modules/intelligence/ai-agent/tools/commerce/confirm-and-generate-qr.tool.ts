@@ -1,7 +1,7 @@
 import { tool, type Tool } from 'ai';
 import { z } from 'zod';
 import { OrderStatus, SenderType } from '@sales-copilot/shared-contracts';
-import type { OrdersService } from '../../../../commerce/orders/orders.service';
+import type { OrderLifecycleService } from '../../../../commerce/orders/order-lifecycle.service';
 import type { VietQrService } from '../../../../commerce/payments/vietqr.service';
 import type { PrismaService } from '../../../../../infrastructure/database/prisma.service';
 import type { MessagesService } from '../../../../omnichannel/messages/messages.service';
@@ -9,7 +9,7 @@ import type { MessagesService } from '../../../../omnichannel/messages/messages.
 export interface ConfirmAndGenerateQrToolOptions {
   workspaceId: string;
   conversationId?: string;
-  ordersService: OrdersService;
+  orderLifecycleService: OrderLifecycleService;
   vietQrService: VietQrService;
   prisma: PrismaService;
   messagesService?: MessagesService;
@@ -24,7 +24,7 @@ type ConfirmAndGenerateQrInput = z.infer<typeof confirmAndGenerateQrInputSchema>
 export function createConfirmAndGenerateQrTool({
   workspaceId,
   conversationId,
-  ordersService,
+  orderLifecycleService,
   vietQrService,
   prisma,
   messagesService,
@@ -65,7 +65,7 @@ export function createConfirmAndGenerateQrTool({
 
         // 2. Transition status: Only confirm if in DRAFT status (Idempotency guarantee)
         if (order.status === OrderStatus.DRAFT) {
-          await ordersService.confirmOrder(workspaceId, orderId);
+          await orderLifecycleService.confirmOrder(workspaceId, orderId);
         }
 
         // 3. Generate VietQR EMVCo payload & image URL

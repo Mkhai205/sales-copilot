@@ -20,7 +20,8 @@ import { Roles } from '../../identity/workspaces/decorators/roles.decorator';
 import { RolesGuard } from '../../identity/workspaces/guards/roles.guard';
 import { WorkspaceGuard } from '../../identity/workspaces/guards/workspace.guard';
 import type { WorkspaceContext } from '../../identity/workspaces/types/workspace-context.type';
-import { PaymentReconciliationService } from './payment-reconciliation.service';
+import { ManualMatchService } from './manual-match.service';
+import { ReconciliationQueryService } from './reconciliation-query.service';
 
 @ApiTags('Commerce Bank Reconciliation')
 @Controller('reconciliation')
@@ -32,7 +33,10 @@ import { PaymentReconciliationService } from './payment-reconciliation.service';
   description: 'Target Workspace UUID for tenant resolution (or via path parameter)',
 })
 export class ReconciliationController {
-  constructor(private readonly reconciliationService: PaymentReconciliationService) {}
+  constructor(
+    private readonly reconciliationQueryService: ReconciliationQueryService,
+    private readonly manualMatchService: ManualMatchService,
+  ) {}
 
   @Get('transactions')
   @HttpCode(HttpStatus.OK)
@@ -44,7 +48,7 @@ export class ReconciliationController {
     @ZodQuery(listReconciliationTransactionsQuerySchema)
     query: ListReconciliationTransactionsQueryOutput,
   ): Promise<{ items: PaymentTransactionResponseDto[]; meta: PaginationMeta }> {
-    return this.reconciliationService.listTransactions(context.workspaceId, query);
+    return this.reconciliationQueryService.listTransactions(context.workspaceId, query);
   }
 
   @Get('stats')
@@ -56,7 +60,7 @@ export class ReconciliationController {
     @CurrentWorkspace() context: WorkspaceContext,
     @ZodQuery(reconciliationStatsQuerySchema) query: ReconciliationStatsQueryOutput,
   ): Promise<ReconciliationStatsResponseDto> {
-    return this.reconciliationService.getStats(context.workspaceId, query);
+    return this.reconciliationQueryService.getStats(context.workspaceId, query);
   }
 
   @Post('transactions/:id/manual-match')
@@ -70,7 +74,7 @@ export class ReconciliationController {
     @Param('id') transactionId: string,
     @ZodBody(manualMatchTransactionSchema) dto: ManualMatchTransactionDto,
   ): Promise<{ success: boolean; transaction: PaymentTransactionResponseDto; order: any }> {
-    return this.reconciliationService.manualMatchTransaction(
+    return this.manualMatchService.manualMatchTransaction(
       context.workspaceId,
       transactionId,
       dto,

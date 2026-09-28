@@ -4,7 +4,9 @@ import { COMMERCE_RECONCILIATION_QUEUE } from '@sales-copilot/shared-contracts';
 import { DatabaseModule } from '../../../infrastructure/database/database.module';
 import { WorkspacesModule } from '../../identity/workspaces/workspaces.module';
 import { InventoryModule } from '../inventory/inventory.module';
-import { PaymentReconciliationService } from './payment-reconciliation.service';
+import { AutoReconciliationMatcher } from './auto-reconciliation.matcher';
+import { ManualMatchService } from './manual-match.service';
+import { ReconciliationQueryService } from './reconciliation-query.service';
 import { CommerceReconciliationProcessor } from './commerce-reconciliation.processor';
 import { ReconciliationController } from './reconciliation.controller';
 
@@ -18,7 +20,12 @@ import { ReconciliationController } from './reconciliation.controller';
     }),
   ],
   controllers: [ReconciliationController],
-  providers: [PaymentReconciliationService, CommerceReconciliationProcessor],
-  exports: [PaymentReconciliationService, BullModule],
+  providers: [
+    AutoReconciliationMatcher,
+    ManualMatchService,
+    ReconciliationQueryService,
+    CommerceReconciliationProcessor,
+  ],
+  exports: [AutoReconciliationMatcher, ManualMatchService, ReconciliationQueryService, BullModule],
 })
 export class CommerceReconciliationModule {}

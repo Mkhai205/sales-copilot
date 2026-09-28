@@ -20,7 +20,8 @@ import { Roles } from '../../identity/workspaces/decorators/roles.decorator';
 import { RolesGuard } from '../../identity/workspaces/guards/roles.guard';
 import { WorkspaceGuard } from '../../identity/workspaces/guards/workspace.guard';
 import type { WorkspaceContext } from '../../identity/workspaces/types/workspace-context.type';
-import { InventoryLedgerService } from './inventory-ledger.service';
+import { InventoryQueryService } from './inventory-query.service';
+import { StockMovementService } from './stock-movement.service';
 
 @ApiTags('Commerce Inventory')
 @Controller('inventory')
@@ -32,7 +33,10 @@ import { InventoryLedgerService } from './inventory-ledger.service';
   description: 'Target Workspace UUID for tenant resolution (or via path parameter)',
 })
 export class InventoryController {
-  constructor(private readonly inventoryLedgerService: InventoryLedgerService) {}
+  constructor(
+    private readonly inventoryQueryService: InventoryQueryService,
+    private readonly stockMovementService: StockMovementService,
+  ) {}
 
   @Get('transactions')
   @HttpCode(HttpStatus.OK)
@@ -45,7 +49,7 @@ export class InventoryController {
     @CurrentWorkspace() context: WorkspaceContext,
     @ZodQuery(listInventoryTransactionsQuerySchema) query: ListInventoryTransactionsQueryOutput,
   ): Promise<{ items: InventoryTransactionResponseDto[]; meta: PaginationMeta }> {
-    return this.inventoryLedgerService.listTransactions(context.workspaceId, query);
+    return this.inventoryQueryService.listTransactions(context.workspaceId, query);
   }
 
   @Get('variants')
@@ -59,7 +63,7 @@ export class InventoryController {
     @CurrentWorkspace() context: WorkspaceContext,
     @ZodQuery(listInventoryVariantsQuerySchema) query: ListInventoryVariantsQueryOutput,
   ): Promise<{ items: InventoryVariantItemDto[]; meta: PaginationMeta }> {
-    return this.inventoryLedgerService.listInventoryVariants(context.workspaceId, query);
+    return this.inventoryQueryService.listInventoryVariants(context.workspaceId, query);
   }
 
   @Get('summary')
@@ -68,7 +72,7 @@ export class InventoryController {
   @ApiOperation({ summary: 'Get workspace inventory summary metrics and KPI cards' })
   @ApiResponse({ status: 200, description: 'Inventory summary retrieved successfully' })
   async getSummary(@CurrentWorkspace() context: WorkspaceContext) {
-    return this.inventoryLedgerService.getInventorySummary(context.workspaceId);
+    return this.inventoryQueryService.getInventorySummary(context.workspaceId);
   }
 
   @Post('variants/:variantId/adjust')
@@ -86,7 +90,7 @@ export class InventoryController {
     @Param('variantId') variantId: string,
     @ZodBody(adjustInventorySchema) dto: AdjustInventoryDto,
   ): Promise<InventoryTransactionResponseDto> {
-    return this.inventoryLedgerService.adjustStock({
+    return this.stockMovementService.adjustStock({
       workspaceId: context.workspaceId,
       variantId,
       dto,

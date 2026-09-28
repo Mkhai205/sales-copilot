@@ -1,11 +1,11 @@
 import { tool, type Tool } from 'ai';
 import { z } from 'zod';
-import type { InventoryLedgerService } from '../../../../commerce/inventory/inventory-ledger.service';
+import type { InventoryQueryService } from '../../../../commerce/inventory/inventory-query.service';
 import type { PrismaService } from '../../../../../infrastructure/database/prisma.service';
 
 export interface CheckInventoryToolOptions {
   workspaceId: string;
-  inventoryLedgerService: InventoryLedgerService;
+  inventoryQueryService: InventoryQueryService;
   prisma: PrismaService;
 }
 
@@ -17,7 +17,7 @@ type CheckInventoryInput = z.infer<typeof checkInventoryInputSchema>;
 
 export function createCheckInventoryTool({
   workspaceId,
-  inventoryLedgerService,
+  inventoryQueryService,
   prisma,
 }: CheckInventoryToolOptions): Tool {
   return tool({
@@ -39,7 +39,7 @@ export function createCheckInventoryTool({
           };
         }
 
-        const stock = await inventoryLedgerService.getStock(workspaceId, variantId);
+        const stock = await inventoryQueryService.getStock(workspaceId, variantId);
 
         return {
           variantId: stock.variantId,

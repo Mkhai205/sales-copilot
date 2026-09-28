@@ -1,6 +1,7 @@
 import { expectReject } from '../../../../../test/test-assertions';
 import { DomainEvent, InventoryTransactionType } from '@sales-copilot/shared-contracts';
-import { InventoryLedgerService } from '../../inventory/inventory-ledger.service';
+import { InventoryQueryService } from '../../inventory/inventory-query.service';
+import { StockMovementService } from '../../inventory/stock-movement.service';
 import { ProductsService } from '../products.service';
 
 describe('ProductsService (Catalog & Inventory Management)', () => {
@@ -271,8 +272,14 @@ describe('ProductsService (Catalog & Inventory Management)', () => {
       },
     };
 
-    const inventoryLedgerService = new InventoryLedgerService(mockPrismaService, mockEventEmitter);
-    service = new ProductsService(mockPrismaService, mockEventEmitter, inventoryLedgerService);
+    const stockMovementService = new StockMovementService(mockPrismaService, mockEventEmitter);
+    const inventoryQueryService = new InventoryQueryService(mockPrismaService);
+    service = new ProductsService(
+      mockPrismaService,
+      mockEventEmitter,
+      stockMovementService,
+      inventoryQueryService,
+    );
   });
 
   describe('createProduct', () => {

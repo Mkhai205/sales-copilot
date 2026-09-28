@@ -22,7 +22,8 @@ import {
 } from '@sales-copilot/shared-contracts';
 import { PrismaService } from '../../../infrastructure/database/prisma.service';
 import { generateSlug } from '../../identity/workspaces/utils/slug.util';
-import { InventoryLedgerService } from '../inventory/inventory-ledger.service';
+import { InventoryQueryService } from '../inventory/inventory-query.service';
+import { StockMovementService } from '../inventory/stock-movement.service';
 
 /**
  * Product projection covering exactly what `formatProduct` serializes,
@@ -75,7 +76,8 @@ export class ProductsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly eventEmitter: EventEmitter2,
-    private readonly inventoryLedgerService: InventoryLedgerService,
+    private readonly stockMovementService: StockMovementService,
+    private readonly inventoryQueryService: InventoryQueryService,
   ) {}
 
   /**
@@ -560,7 +562,7 @@ export class ProductsService {
     dto: AdjustInventoryDto,
     userId?: string,
   ): Promise<InventoryTransactionResponseDto> {
-    return this.inventoryLedgerService.adjustStock({
+    return this.stockMovementService.adjustStock({
       workspaceId,
       productId,
       variantId,
@@ -591,7 +593,7 @@ export class ProductsService {
       });
     }
 
-    return this.inventoryLedgerService.listTransactions(workspaceId, {
+    return this.inventoryQueryService.listTransactions(workspaceId, {
       ...query,
       variantId,
       productId,

@@ -34,7 +34,9 @@ import { Roles } from '../../identity/workspaces/decorators/roles.decorator';
 import { RolesGuard } from '../../identity/workspaces/guards/roles.guard';
 import { WorkspaceGuard } from '../../identity/workspaces/guards/workspace.guard';
 import type { WorkspaceContext } from '../../identity/workspaces/types/workspace-context.type';
-import { OrdersService } from './orders.service';
+import { OrderLifecycleService } from './order-lifecycle.service';
+import { OrderQueryService } from './order-query.service';
+import { OrderWriterService } from './order-writer.service';
 
 @ApiTags('Commerce Orders')
 @Controller('orders')
@@ -46,7 +48,11 @@ import { OrdersService } from './orders.service';
   description: 'Target Workspace UUID for tenant resolution (or via path parameter)',
 })
 export class OrdersController {
-  constructor(private readonly ordersService: OrdersService) {}
+  constructor(
+    private readonly orderWriterService: OrderWriterService,
+    private readonly orderLifecycleService: OrderLifecycleService,
+    private readonly orderQueryService: OrderQueryService,
+  ) {}
 
   @Get()
   @HttpCode(HttpStatus.OK)
@@ -57,7 +63,7 @@ export class OrdersController {
     @CurrentWorkspace() context: WorkspaceContext,
     @ZodQuery(listOrdersQuerySchema) query: ListOrdersQueryOutput,
   ): Promise<{ items: OrderResponseDto[]; meta: PaginationMeta }> {
-    return this.ordersService.listOrders(context.workspaceId, query);
+    return this.orderQueryService.listOrders(context.workspaceId, query);
   }
 
   @Get(':id')
@@ -70,7 +76,7 @@ export class OrdersController {
     @CurrentWorkspace() context: WorkspaceContext,
     @Param('id') id: string,
   ): Promise<OrderResponseDto> {
-    return this.ordersService.getOrderById(context.workspaceId, id);
+    return this.orderQueryService.getOrderById(context.workspaceId, id);
   }
 
   @Post()
@@ -85,7 +91,7 @@ export class OrdersController {
     @CurrentUser() user: JwtUserPayload,
     @ZodBody(createOrderSchema) dto: CreateOrderDto,
   ): Promise<OrderResponseDto> {
-    return this.ordersService.createOrder(context.workspaceId, dto, user?.userId);
+    return this.orderWriterService.createOrder(context.workspaceId, dto, user?.userId);
   }
 
   @Patch(':id')
@@ -101,7 +107,7 @@ export class OrdersController {
     @Param('id') id: string,
     @ZodBody(updateOrderSchema) dto: UpdateOrderDto,
   ): Promise<OrderResponseDto> {
-    return this.ordersService.updateOrder(context.workspaceId, id, dto, user?.userId);
+    return this.orderWriterService.updateOrder(context.workspaceId, id, dto, user?.userId);
   }
 
   @Post(':id/confirm')
@@ -119,7 +125,7 @@ export class OrdersController {
     @CurrentUser() user: JwtUserPayload,
     @Param('id') id: string,
   ): Promise<OrderResponseDto> {
-    return this.ordersService.confirmOrder(context.workspaceId, id, user?.userId);
+    return this.orderLifecycleService.confirmOrder(context.workspaceId, id, user?.userId);
   }
 
   @Post(':id/pay')
@@ -135,7 +141,7 @@ export class OrdersController {
     @Param('id') id: string,
     @ZodBody(manualPayOrderSchema) dto: ManualPayOrderDto,
   ): Promise<OrderResponseDto> {
-    return this.ordersService.payOrder(context.workspaceId, id, dto, user?.userId);
+    return this.orderLifecycleService.payOrder(context.workspaceId, id, dto, user?.userId);
   }
 
   @Post(':id/cancel')
@@ -151,7 +157,7 @@ export class OrdersController {
     @Param('id') id: string,
     @ZodBody(cancelOrderSchema) dto: CancelOrderDto,
   ): Promise<OrderResponseDto> {
-    return this.ordersService.cancelOrder(context.workspaceId, id, dto, user?.userId);
+    return this.orderLifecycleService.cancelOrder(context.workspaceId, id, dto, user?.userId);
   }
 
   @Post(':id/complete')
@@ -168,6 +174,6 @@ export class OrdersController {
     @Param('id') id: string,
     @ZodBody(completeOrderSchema) dto: CompleteOrderDto,
   ): Promise<OrderResponseDto> {
-    return this.ordersService.completeOrder(context.workspaceId, id, dto, user?.userId);
+    return this.orderLifecycleService.completeOrder(context.workspaceId, id, dto, user?.userId);
   }
 }

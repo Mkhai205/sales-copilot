@@ -5,7 +5,7 @@ describe('confirmAndGenerateQR Tool (T7)', () => {
   const workspaceId = 'ws-test-123';
   const conversationId = 'conv-test-456';
   let mockPrisma: any;
-  let mockOrdersService: any;
+  let mockOrderLifecycleService: any;
   let mockVietQrService: any;
   let mockMessagesService: any;
   let confirmCalls: string[];
@@ -62,7 +62,7 @@ describe('confirmAndGenerateQR Tool (T7)', () => {
       }),
     };
 
-    mockOrdersService = {
+    mockOrderLifecycleService = {
       confirmOrder: async (wsId: string, orderId: string) => {
         confirmCalls.push(orderId);
         const o = ordersDb.get(orderId);
@@ -102,7 +102,7 @@ describe('confirmAndGenerateQR Tool (T7)', () => {
     const tool = createConfirmAndGenerateQrTool({
       workspaceId,
       conversationId,
-      ordersService: mockOrdersService,
+      orderLifecycleService: mockOrderLifecycleService,
       vietQrService: mockVietQrService,
       prisma: mockPrisma,
       messagesService: mockMessagesService,
@@ -126,7 +126,7 @@ describe('confirmAndGenerateQR Tool (T7)', () => {
     const tool = createConfirmAndGenerateQrTool({
       workspaceId,
       conversationId,
-      ordersService: mockOrdersService,
+      orderLifecycleService: mockOrderLifecycleService,
       vietQrService: mockVietQrService,
       prisma: mockPrisma,
       messagesService: mockMessagesService,
@@ -144,7 +144,7 @@ describe('confirmAndGenerateQR Tool (T7)', () => {
     const tool = createConfirmAndGenerateQrTool({
       workspaceId,
       conversationId,
-      ordersService: mockOrdersService,
+      orderLifecycleService: mockOrderLifecycleService,
       vietQrService: mockVietQrService,
       prisma: mockPrisma,
       messagesService: mockMessagesService,
@@ -158,7 +158,7 @@ describe('confirmAndGenerateQR Tool (T7)', () => {
     const tool = createConfirmAndGenerateQrTool({
       workspaceId,
       conversationId,
-      ordersService: mockOrdersService,
+      orderLifecycleService: mockOrderLifecycleService,
       vietQrService: mockVietQrService,
       prisma: mockPrisma,
     });

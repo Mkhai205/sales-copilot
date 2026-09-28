@@ -5,14 +5,14 @@ import {
   isValidVietnamesePhone,
   type InboxAiCommercePolicyConfig,
 } from '@sales-copilot/shared-contracts';
-import type { OrdersService } from '../../../../commerce/orders/orders.service';
+import type { OrderWriterService } from '../../../../commerce/orders/order-writer.service';
 import type { PrismaService } from '../../../../../infrastructure/database/prisma.service';
 import type { DiscountGuardService } from '../../services/discount-guard.service';
 
 export interface CreateDraftOrderToolOptions {
   workspaceId: string;
   conversationId?: string;
-  ordersService: OrdersService;
+  orderWriterService: OrderWriterService;
   discountGuardService: DiscountGuardService;
   prisma: PrismaService;
   policy?: InboxAiCommercePolicyConfig;
@@ -63,7 +63,7 @@ type CreateDraftOrderInput = z.infer<typeof createDraftOrderInputSchema>;
 export function createCreateDraftOrderTool({
   workspaceId,
   conversationId,
-  ordersService,
+  orderWriterService,
   discountGuardService,
   prisma,
   policy,
@@ -234,8 +234,8 @@ export function createCreateDraftOrderTool({
           });
         }
 
-        // 6. Create Draft Order via OrdersService
-        const order = await ordersService.createOrder(workspaceId, {
+        // 6. Create Draft Order via OrderWriterService
+        const order = await orderWriterService.createOrder(workspaceId, {
           contactId,
           conversationId: conv?.id || undefined,
           items: verifiedItems,

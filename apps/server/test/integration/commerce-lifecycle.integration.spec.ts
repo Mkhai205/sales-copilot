@@ -11,14 +11,16 @@ import {
   PaymentStatus,
 } from '@sales-copilot/shared-contracts';
 import { PrismaService } from '../../src/infrastructure/database/prisma.service';
-import { InventoryLedgerService } from '../../src/modules/commerce/inventory/inventory-ledger.service';
-import { OrdersService } from '../../src/modules/commerce/orders/orders.service';
+import { StockMovementService } from '../../src/modules/commerce/inventory/stock-movement.service';
+import { OrderLifecycleService } from '../../src/modules/commerce/orders/order-lifecycle.service';
+import { OrderWriterService } from '../../src/modules/commerce/orders/order-writer.service';
 
 describe('Commerce & Inventory PostgreSQL Integration Tests (Real Database & Concurrency)', () => {
   let prismaService: PrismaService;
   let eventEmitter: EventEmitter2;
-  let inventoryLedgerService: InventoryLedgerService;
-  let ordersService: OrdersService;
+  let stockMovementService: StockMovementService;
+  let orderWriterService: OrderWriterService;
+  let orderLifecycleService: OrderLifecycleService;
 
   const testRunId = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
   let testUserId: string;
@@ -44,12 +46,12 @@ describe('Commerce & Inventory PostgreSQL Integration Tests (Real Database & Con
     await prismaService.onModuleInit();
 
     eventEmitter = new EventEmitter2();
-    inventoryLedgerService = new InventoryLedgerService(prismaService, eventEmitter);
-    ordersService = new OrdersService(
+    stockMovementService = new StockMovementService(prismaService, eventEmitter);
+    orderWriterService = new OrderWriterService(prismaService, eventEmitter, stockMovementService);
+    orderLifecycleService = new OrderLifecycleService(
       prismaService,
       eventEmitter,
-      inventoryLedgerService,
-      {} as any,
+      stockMovementService,
       undefined,
     );
 
@@ -166,7 +168,7 @@ describe('Commerce & Inventory PostgreSQL Integration Tests (Real Database & Con
   let createdOrderId: string;
 
   it('1. should create order draft in PostgreSQL with 0 stock reservations', async () => {
-    const order = await ordersService.createOrder(
+    const order = await orderWriterService.createOrder(
       testWorkspaceId,
       {
         contactId: testContactId,
@@ -202,7 +204,11 @@ describe('Commerce & Inventory PostgreSQL Integration Tests (Real Database & Con
   });
 
   it('2. should confirm order, atomically incrementing reservedQuantity in PostgreSQL (Model A)', async () => {
-    const confirmed = await ordersService.confirmOrder(testWorkspaceId, createdOrderId, testUserId);
+    const confirmed = await orderLifecycleService.confirmOrder(
+      testWorkspaceId,
+      createdOrderId,
+      testUserId,
+    );
 
     expect(confirmed.status).toBe(OrderStatus.CONFIRMED);
     expect(confirmed.confirmedAt).toBeTruthy();
@@ -232,7 +238,7 @@ describe('Commerce & Inventory PostgreSQL Integration Tests (Real Database & Con
     // 1. Create 20 distinct DRAFT orders in DB competing for variantB (Stock: 2)
     const draftOrders = await Promise.all(
       Array.from({ length: 20 }).map((_, idx) =>
-        ordersService.createOrder(
+        orderWriterService.createOrder(
           testWorkspaceId,
           {
             contactId: testContactId,
@@ -253,7 +259,9 @@ describe('Commerce & Inventory PostgreSQL Integration Tests (Real Database & Con
 
     // 2. Fire 20 parallel confirm requests against PostgreSQL
     const results = await Promise.allSettled(
-      draftOrders.map(order => ordersService.confirmOrder(testWorkspaceId, order.id, testUserId)),
+      draftOrders.map(order =>
+        orderLifecycleService.confirmOrder(testWorkspaceId, order.id, testUserId),
+      ),
     );
 
     const fulfilled = results.filter(r => r.status === 'fulfilled');
@@ -291,7 +299,7 @@ describe('Commerce & Inventory PostgreSQL Integration Tests (Real Database & Con
   });
 
   it('4. should pay order, committing inventory sale in PostgreSQL (stock 10->7, reserved 3->0)', async () => {
-    const paid = await ordersService.payOrder(
+    const paid = await orderLifecycleService.payOrder(
       testWorkspaceId,
       createdOrderId,
       {
@@ -327,7 +335,7 @@ describe('Commerce & Inventory PostgreSQL Integration Tests (Real Database & Con
   });
 
   it('5. should complete order without double-committing stock (Anti-Double-Commit Invariant)', async () => {
-    const completed = await ordersService.completeOrder(
+    const completed = await orderLifecycleService.completeOrder(
       testWorkspaceId,
       createdOrderId,
       { notes: 'Customer received package' },
@@ -357,7 +365,7 @@ describe('Commerce & Inventory PostgreSQL Integration Tests (Real Database & Con
 
   it('6. should cancel order and restore stock with RETURN_RESTOCK ledger row', async () => {
     // Create a new paid order to test return cancellation
-    const orderToCancel = await ordersService.createOrder(
+    const orderToCancel = await orderWriterService.createOrder(
       testWorkspaceId,
       {
         contactId: testContactId,
@@ -370,7 +378,7 @@ describe('Commerce & Inventory PostgreSQL Integration Tests (Real Database & Con
     );
 
     // Stock was 7, reserved 2 -> pay to commit sale -> stock 5, reserved 0
-    await ordersService.payOrder(
+    await orderLifecycleService.payOrder(
       testWorkspaceId,
       orderToCancel.id,
       { paymentMethod: PaymentMethod.VIETQR, amount: 500000 },
@@ -383,7 +391,7 @@ describe('Commerce & Inventory PostgreSQL Integration Tests (Real Database & Con
     expect(variant.stockQuantity).toBe(5);
 
     // Cancel PAID order (Customer returns goods)
-    const cancelled = await ordersService.cancelOrder(
+    const cancelled = await orderLifecycleService.cancelOrder(
       testWorkspaceId,
       orderToCancel.id,
       { cancelReason: 'Customer refund' },
@@ -416,7 +424,7 @@ describe('Commerce & Inventory PostgreSQL Integration Tests (Real Database & Con
     // Attempting to confirm createdOrderId using foreignWorkspaceId must fail
     await expectReject(
       async () => {
-        await ordersService.confirmOrder(foreignWorkspaceId, createdOrderId, testUserId);
+        await orderLifecycleService.confirmOrder(foreignWorkspaceId, createdOrderId, testUserId);
       },
       (err: any) => {
         expect(err instanceof NotFoundException).toBeTruthy();

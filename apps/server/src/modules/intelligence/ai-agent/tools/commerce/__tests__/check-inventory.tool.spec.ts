@@ -3,7 +3,7 @@ import { createCheckInventoryTool } from '../check-inventory.tool';
 describe('checkInventory Tool (T3)', () => {
   const workspaceId = 'ws-test-123';
   let mockPrisma: any;
-  let mockInventoryService: any;
+  let mockInventoryQueryService: any;
   let tool: any;
 
   beforeEach(() => {
@@ -27,7 +27,7 @@ describe('checkInventory Tool (T3)', () => {
       }),
     };
 
-    mockInventoryService = {
+    mockInventoryQueryService = {
       getStock: async (wsId: string, variantId: string) => {
         if (wsId !== workspaceId) throw new Error('Variant not found');
         if (variantId === 'var-in-stock') {
@@ -54,7 +54,7 @@ describe('checkInventory Tool (T3)', () => {
 
     tool = createCheckInventoryTool({
       workspaceId,
-      inventoryLedgerService: mockInventoryService,
+      inventoryQueryService: mockInventoryQueryService,
       prisma: mockPrisma,
     });
   });

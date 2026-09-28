@@ -9,11 +9,15 @@ import {
   PaymentStatus,
   PaymentTransactionStatus,
 } from '@sales-copilot/shared-contracts';
-import { InventoryLedgerService } from '../../inventory/inventory-ledger.service';
-import { OrdersService } from '../orders.service';
+import { StockMovementService } from '../../inventory/stock-movement.service';
+import { OrderLifecycleService } from '../order-lifecycle.service';
+import { OrderQueryService } from '../order-query.service';
+import { OrderWriterService } from '../order-writer.service';
 
-describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
-  let service: OrdersService;
+describe('Order services (Order Lifecycle & Anti-Overselling Engine)', () => {
+  let writerService: OrderWriterService;
+  let lifecycleService: OrderLifecycleService;
+  let queryService: OrderQueryService;
   let mockPrismaService: any;
   let mockEventEmitter: any;
   let mockRedisService: any;
@@ -459,19 +463,24 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
       },
     };
 
-    const inventoryLedgerService = new InventoryLedgerService(mockPrismaService, mockEventEmitter);
-    service = new OrdersService(
+    const stockMovementService = new StockMovementService(mockPrismaService, mockEventEmitter);
+    writerService = new OrderWriterService(
       mockPrismaService,
       mockEventEmitter,
-      inventoryLedgerService,
-      {} as any,
+      stockMovementService,
+    );
+    lifecycleService = new OrderLifecycleService(
+      mockPrismaService,
+      mockEventEmitter,
+      stockMovementService,
       mockRedisService,
     );
+    queryService = new OrderQueryService(mockPrismaService);
   });
 
   describe('createOrder', () => {
     it('should create order draft with financial totals and item snapshots', async () => {
-      const order = await service.createOrder(
+      const order = await writerService.createOrder(
         ws1,
         {
           contactId: contact1,
@@ -525,7 +534,7 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
     });
 
     it('should create order and confirm immediately with atomic stock reservation (1-click confirm)', async () => {
-      const order = await service.createOrder(
+      const order = await writerService.createOrder(
         ws1,
         {
           contactId: contact1,
@@ -559,7 +568,7 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
     it('should reject order creation with invalid contact in workspace', async () => {
       await expectReject(
         async () => {
-          await service.createOrder(ws1, {
+          await writerService.createOrder(ws1, {
             contactId: 'non-existent-contact',
             items: [{ productId: prod1, variantId: varA, quantity: 1, unitPrice: 350000 }],
           });
@@ -573,7 +582,7 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
 
     it('should fold line-item discount into totalAmount together with order discount (C3)', async () => {
       // 100k subtotal, line discount 20k + order discount 10k => effective discount 30k
-      const order = await service.createOrder(ws1, {
+      const order = await writerService.createOrder(ws1, {
         contactId: contact1,
         items: [
           {
@@ -595,7 +604,7 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
     });
 
     it('should keep sum(line.totalPrice) === totalAmount - shippingFee when only line discounts apply (C3)', async () => {
-      const order = await service.createOrder(ws1, {
+      const order = await writerService.createOrder(ws1, {
         contactId: contact1,
         items: [
           {
@@ -630,7 +639,7 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
     });
 
     it('should clamp a line-item discount to its own line subtotal', async () => {
-      const order = await service.createOrder(ws1, {
+      const order = await writerService.createOrder(ws1, {
         contactId: contact1,
         items: [
           {
@@ -656,12 +665,12 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
     let draftOrder2: any;
 
     beforeEach(async () => {
-      draftOrder1 = await service.createOrder(ws1, {
+      draftOrder1 = await writerService.createOrder(ws1, {
         contactId: contact1,
         items: [{ productId: prod1, variantId: varB, quantity: 1, unitPrice: 350000 }],
       });
 
-      draftOrder2 = await service.createOrder(ws1, {
+      draftOrder2 = await writerService.createOrder(ws1, {
         contactId: contact1,
         items: [{ productId: prod1, variantId: varB, quantity: 1, unitPrice: 350000 }],
       });
@@ -670,7 +679,7 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
     });
 
     it('should successfully confirm order and increment reservedQuantity (Model A)', async () => {
-      const confirmed = await service.confirmOrder(ws1, draftOrder1.id, userId);
+      const confirmed = await lifecycleService.confirmOrder(ws1, draftOrder1.id, userId);
 
       expect(confirmed.status).toBe(OrderStatus.CONFIRMED);
       assertDefined(confirmed.confirmedAt);
@@ -698,12 +707,12 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
 
     it('should block race-condition oversell when 2 concurrent orders compete for 1 unit', async () => {
       // Confirm first order -> succeeds, consumes the 1 available unit
-      await service.confirmOrder(ws1, draftOrder1.id, userId);
+      await lifecycleService.confirmOrder(ws1, draftOrder1.id, userId);
 
       // Attempting to confirm second order must fail with INSUFFICIENT_STOCK
       await expectReject(
         async () => {
-          await service.confirmOrder(ws1, draftOrder2.id, userId);
+          await lifecycleService.confirmOrder(ws1, draftOrder2.id, userId);
         },
         (err: any) => {
           expect(err.response?.code).toBe('INSUFFICIENT_STOCK');
@@ -722,7 +731,7 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
       // Create 10 draft orders competing for varB (stock: 1)
       const orders = await Promise.all(
         Array.from({ length: 10 }).map(() =>
-          service.createOrder(ws1, {
+          writerService.createOrder(ws1, {
             contactId: contact1,
             items: [{ productId: prod1, variantId: varB, quantity: 1, unitPrice: 350000 }],
           }),
@@ -731,7 +740,7 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
 
       // Attempt parallel confirmation
       const results = await Promise.allSettled(
-        orders.map(o => service.confirmOrder(ws1, o.id, userId)),
+        orders.map(o => lifecycleService.confirmOrder(ws1, o.id, userId)),
       );
 
       const fulfilled = results.filter(r => r.status === 'fulfilled');
@@ -749,12 +758,12 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
 
   describe('cancelOrder', () => {
     it('should release reserved inventory when cancelling a CONFIRMED order', async () => {
-      const order = await service.createOrder(ws1, {
+      const order = await writerService.createOrder(ws1, {
         contactId: contact1,
         items: [{ productId: prod1, variantId: varA, quantity: 3, unitPrice: 350000 }],
       });
 
-      await service.confirmOrder(ws1, order.id, userId);
+      await lifecycleService.confirmOrder(ws1, order.id, userId);
 
       // Verify reservedQuantity is 3
       expect(variantsDb.get(varA).reservedQuantity).toBe(3);
@@ -762,7 +771,7 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
       emittedEvents = [];
 
       // Cancel order
-      const cancelled = await service.cancelOrder(
+      const cancelled = await lifecycleService.cancelOrder(
         ws1,
         order.id,
         { cancelReason: 'Khách không có nhu cầu nữa' },
@@ -797,16 +806,18 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
     });
 
     it('should reject cancelling an already CANCELLED order', async () => {
-      const order = await service.createOrder(ws1, {
+      const order = await writerService.createOrder(ws1, {
         contactId: contact1,
         items: [{ productId: prod1, variantId: varA, quantity: 1, unitPrice: 350000 }],
       });
 
-      await service.cancelOrder(ws1, order.id, { cancelReason: 'First cancellation' });
+      await lifecycleService.cancelOrder(ws1, order.id, { cancelReason: 'First cancellation' });
 
       await expectReject(
         async () => {
-          await service.cancelOrder(ws1, order.id, { cancelReason: 'Second cancellation' });
+          await lifecycleService.cancelOrder(ws1, order.id, {
+            cancelReason: 'Second cancellation',
+          });
         },
         (err: any) => {
           expect(err.response?.code).toBe('ORDER_NOT_CANCELLABLE');
@@ -816,13 +827,13 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
     });
 
     it('should restock physical inventory and record RETURN_RESTOCK ledger when cancelling a PAID order', async () => {
-      const order = await service.createOrder(ws1, {
+      const order = await writerService.createOrder(ws1, {
         contactId: contact1,
         items: [{ productId: prod1, variantId: varA, quantity: 2, unitPrice: 350000 }],
       });
 
-      await service.confirmOrder(ws1, order.id, userId);
-      await service.payOrder(
+      await lifecycleService.confirmOrder(ws1, order.id, userId);
+      await lifecycleService.payOrder(
         ws1,
         order.id,
         {
@@ -839,7 +850,7 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
       emittedEvents = [];
 
       // Cancel PAID order (Customer returns goods / refund)
-      const cancelled = await service.cancelOrder(
+      const cancelled = await lifecycleService.cancelOrder(
         ws1,
         order.id,
         { cancelReason: 'Khách đổi ý trả hàng hoàn tiền' },
@@ -867,16 +878,18 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
     });
 
     it('should reject cancelling a COMPLETED order with ORDER_ALREADY_COMPLETED', async () => {
-      const order = await service.createOrder(ws1, {
+      const order = await writerService.createOrder(ws1, {
         contactId: contact1,
         items: [{ productId: prod1, variantId: varA, quantity: 1, unitPrice: 350000 }],
       });
-      await service.confirmOrder(ws1, order.id, userId);
-      await service.completeOrder(ws1, order.id, { notes: 'Delivered' }, userId);
+      await lifecycleService.confirmOrder(ws1, order.id, userId);
+      await lifecycleService.completeOrder(ws1, order.id, { notes: 'Delivered' }, userId);
 
       await expectReject(
         async () => {
-          await service.cancelOrder(ws1, order.id, { cancelReason: 'Want to cancel completed' });
+          await lifecycleService.cancelOrder(ws1, order.id, {
+            cancelReason: 'Want to cancel completed',
+          });
         },
         (err: any) => {
           expect(err.response?.code).toBe('ORDER_ALREADY_COMPLETED');
@@ -886,11 +899,11 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
     });
 
     it('should throw PAYMENT_STATE_CONFLICT and keep reservation when order became non-cancellable at write time (C6)', async () => {
-      const order = await service.createOrder(ws1, {
+      const order = await writerService.createOrder(ws1, {
         contactId: contact1,
         items: [{ productId: prod1, variantId: varA, quantity: 2, unitPrice: 350000 }],
       });
-      await service.confirmOrder(ws1, order.id, userId);
+      await lifecycleService.confirmOrder(ws1, order.id, userId);
 
       // Simulate a concurrent flow (e.g. completeOrder) committing between the
       // service's read and the cancel write: the conditional write must miss.
@@ -903,7 +916,7 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
 
       await expectReject(
         async () => {
-          await service.cancelOrder(
+          await lifecycleService.cancelOrder(
             ws1,
             order.id,
             { cancelReason: 'Đua với hoàn tất đơn' },
@@ -927,12 +940,12 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
 
   describe('completeOrder', () => {
     it('should complete a PAID order and mark fulfillmentStatus DELIVERED', async () => {
-      const order = await service.createOrder(ws1, {
+      const order = await writerService.createOrder(ws1, {
         contactId: contact1,
         items: [{ productId: prod1, variantId: varA, quantity: 1, unitPrice: 350000 }],
       });
-      await service.confirmOrder(ws1, order.id, userId);
-      await service.payOrder(
+      await lifecycleService.confirmOrder(ws1, order.id, userId);
+      await lifecycleService.payOrder(
         ws1,
         order.id,
         { paymentMethod: PaymentMethod.CASH, amount: 350000 },
@@ -941,7 +954,7 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
 
       emittedEvents = [];
 
-      const completed = await service.completeOrder(
+      const completed = await lifecycleService.completeOrder(
         ws1,
         order.id,
         { notes: 'Giao hàng thành công' },
@@ -958,11 +971,11 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
     });
 
     it('should auto-reconcile COD and commit stock when completing a CONFIRMED unpaid order', async () => {
-      const order = await service.createOrder(ws1, {
+      const order = await writerService.createOrder(ws1, {
         contactId: contact1,
         items: [{ productId: prod1, variantId: varA, quantity: 2, unitPrice: 350000 }],
       });
-      await service.confirmOrder(ws1, order.id, userId);
+      await lifecycleService.confirmOrder(ws1, order.id, userId);
 
       // Reserved stock is 2, physical stock is 10, paidAmount is 0
       expect(variantsDb.get(varA).reservedQuantity).toBe(2);
@@ -970,7 +983,7 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
 
       emittedEvents = [];
 
-      const completed = await service.completeOrder(
+      const completed = await lifecycleService.completeOrder(
         ws1,
         order.id,
         { notes: 'COD thu đủ tiền' },
@@ -998,14 +1011,14 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
     });
 
     it('should reject completing a DRAFT order', async () => {
-      const order = await service.createOrder(ws1, {
+      const order = await writerService.createOrder(ws1, {
         contactId: contact1,
         items: [{ productId: prod1, variantId: varA, quantity: 1, unitPrice: 350000 }],
       });
 
       await expectReject(
         async () => {
-          await service.completeOrder(ws1, order.id);
+          await lifecycleService.completeOrder(ws1, order.id);
         },
         (err: any) => {
           expect(err.response?.code).toBe('INVALID_STATUS_FOR_COMPLETION');
@@ -1015,16 +1028,16 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
     });
 
     it('should reject completing an already COMPLETED order', async () => {
-      const order = await service.createOrder(ws1, {
+      const order = await writerService.createOrder(ws1, {
         contactId: contact1,
         items: [{ productId: prod1, variantId: varA, quantity: 1, unitPrice: 350000 }],
       });
-      await service.confirmOrder(ws1, order.id, userId);
-      await service.completeOrder(ws1, order.id, undefined, userId);
+      await lifecycleService.confirmOrder(ws1, order.id, userId);
+      await lifecycleService.completeOrder(ws1, order.id, undefined, userId);
 
       await expectReject(
         async () => {
-          await service.completeOrder(ws1, order.id, undefined, userId);
+          await lifecycleService.completeOrder(ws1, order.id, undefined, userId);
         },
         (err: any) => {
           expect(err.response?.code).toBe('ORDER_ALREADY_COMPLETED');
@@ -1036,12 +1049,12 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
 
   describe('payOrder', () => {
     it('should record payment and commit sale from CONFIRMED order', async () => {
-      const order = await service.createOrder(ws1, {
+      const order = await writerService.createOrder(ws1, {
         contactId: contact1,
         items: [{ productId: prod1, variantId: varA, quantity: 2, unitPrice: 350000 }],
       });
 
-      await service.confirmOrder(ws1, order.id, userId);
+      await lifecycleService.confirmOrder(ws1, order.id, userId);
 
       // Before pay: stock = 10, reserved = 2
       expect(variantsDb.get(varA).stockQuantity).toBe(10);
@@ -1049,7 +1062,7 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
 
       emittedEvents = [];
 
-      const paidOrder = await service.payOrder(
+      const paidOrder = await lifecycleService.payOrder(
         ws1,
         order.id,
         {
@@ -1085,7 +1098,7 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
 
     it('should handle partial payment: transition to CONFIRMED + PARTIALLY_PAID and emit ORDER_PARTIALLY_PAID', async () => {
       // Create DRAFT order: 2 units * 350k = 700k
-      const order = await service.createOrder(ws1, {
+      const order = await writerService.createOrder(ws1, {
         contactId: contact1,
         items: [{ productId: prod1, variantId: varA, quantity: 2, unitPrice: 350000 }],
       });
@@ -1093,7 +1106,7 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
       emittedEvents = [];
 
       // Partial deposit of 300k (less than 700k)
-      const partialRes = await service.payOrder(
+      const partialRes = await lifecycleService.payOrder(
         ws1,
         order.id,
         {
@@ -1123,7 +1136,7 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
       emittedEvents = [];
 
       // Second installment: paying the remaining 400k
-      const finalRes = await service.payOrder(
+      const finalRes = await lifecycleService.payOrder(
         ws1,
         order.id,
         {
@@ -1149,14 +1162,14 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
 
     it('should reject direct payment of DRAFT order if stock is insufficient', async () => {
       // varB has only 1 in stock
-      const order = await service.createOrder(ws1, {
+      const order = await writerService.createOrder(ws1, {
         contactId: contact1,
         items: [{ productId: prod1, variantId: varB, quantity: 2, unitPrice: 350000 }],
       });
 
       await expectReject(
         async () => {
-          await service.payOrder(ws1, order.id, {
+          await lifecycleService.payOrder(ws1, order.id, {
             paymentMethod: PaymentMethod.CASH,
             amount: 700000,
           });
@@ -1170,7 +1183,7 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
 
     it('should sort line items by variantId ascending to prevent deadlocks', async () => {
       // Create order with line items in reverse alphabetical order: varB then varA
-      const order = await service.createOrder(ws1, {
+      const order = await writerService.createOrder(ws1, {
         contactId: contact1,
         items: [
           { productId: prod1, variantId: varB, quantity: 1, unitPrice: 350000 },
@@ -1179,7 +1192,7 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
       });
 
       // Confirm order executes without deadlock or ordering error
-      const confirmed = await service.confirmOrder(ws1, order.id, userId);
+      const confirmed = await lifecycleService.confirmOrder(ws1, order.id, userId);
       expect(confirmed.status).toBe(OrderStatus.CONFIRMED);
       expect(variantsDb.get(varA).reservedQuantity).toBe(1);
       expect(variantsDb.get(varB).reservedQuantity).toBe(1);
@@ -1188,27 +1201,27 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
 
   describe('getOrderById', () => {
     it('should retrieve order by UUID, orderNumber, and displayId strictly scoped to workspace', async () => {
-      const order = await service.createOrder(ws1, {
+      const order = await writerService.createOrder(ws1, {
         contactId: contact1,
         items: [{ productId: prod1, variantId: varA, quantity: 1, unitPrice: 350000 }],
       });
 
       // 1. Lookup by UUID
-      const byUuid = await service.getOrderById(ws1, order.id);
+      const byUuid = await queryService.getOrderById(ws1, order.id);
       expect(byUuid.id).toBe(order.id);
 
       // 2. Lookup by orderNumber
-      const byOrderNum = await service.getOrderById(ws1, order.orderNumber);
+      const byOrderNum = await queryService.getOrderById(ws1, order.orderNumber);
       expect(byOrderNum.id).toBe(order.id);
 
       // 3. Lookup by displayId
-      const byDisplayId = await service.getOrderById(ws1, String(order.displayId));
+      const byDisplayId = await queryService.getOrderById(ws1, String(order.displayId));
       expect(byDisplayId.id).toBe(order.id);
 
       // 4. Cross-tenant isolation check: Tenant 2 cannot access Tenant 1 order
       await expectReject(
         async () => {
-          await service.getOrderById(ws2, order.id);
+          await queryService.getOrderById(ws2, order.id);
         },
         (err: any) => {
           expect(err.response?.code).toBe('ORDER_NOT_FOUND');
@@ -1220,7 +1233,7 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
 
   describe('updateOrder', () => {
     it('should update draft order line items, shipping fee, discount, and address', async () => {
-      const order = await service.createOrder(ws1, {
+      const order = await writerService.createOrder(ws1, {
         contactId: contact1,
         items: [{ productId: prod1, variantId: varA, quantity: 1, unitPrice: 350000 }],
         shippingFee: 20000,
@@ -1228,7 +1241,7 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
 
       emittedEvents = [];
 
-      const updated = await service.updateOrder(
+      const updated = await writerService.updateOrder(
         ws1,
         order.id,
         {
@@ -1269,7 +1282,7 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
     });
 
     it('should update paymentMethod directly in order record', async () => {
-      const order = await service.createOrder(ws1, {
+      const order = await writerService.createOrder(ws1, {
         contactId: contact1,
         items: [{ productId: prod1, variantId: varA, quantity: 1, unitPrice: 350000 }],
         paymentMethod: PaymentMethod.COD,
@@ -1277,7 +1290,7 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
 
       expect(order.paymentMethod).toBe(PaymentMethod.COD);
 
-      const updated = await service.updateOrder(
+      const updated = await writerService.updateOrder(
         ws1,
         order.id,
         {
@@ -1293,7 +1306,7 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
 
     it('should preserve and correctly recalculate percentage discount when items change and discountAmount is not passed', async () => {
       // Subtotal = 500k. 10% discount => discountAmount = 50,000, total = 450,000
-      const order = await service.createOrder(ws1, {
+      const order = await writerService.createOrder(ws1, {
         contactId: contact1,
         items: [{ productId: prod1, variantId: varA, quantity: 1, unitPrice: 500000 }],
         discountType: DiscountType.PERCENTAGE,
@@ -1306,7 +1319,7 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
       expect(order.totalAmount).toBe(450000);
 
       // Now update order: change items to 2 units (subtotal = 1,000,000), without passing discountAmount or discountType
-      const updated = await service.updateOrder(
+      const updated = await writerService.updateOrder(
         ws1,
         order.id,
         {
@@ -1322,7 +1335,7 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
     });
 
     it('should correctly update order with a new percentage discount', async () => {
-      const order = await service.createOrder(ws1, {
+      const order = await writerService.createOrder(ws1, {
         contactId: contact1,
         items: [{ productId: prod1, variantId: varA, quantity: 1, unitPrice: 500000 }],
         shippingFee: 0,
@@ -1332,7 +1345,7 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
       expect(order.discountAmount).toBe(0);
 
       // Update with 20% discount
-      const updated = await service.updateOrder(
+      const updated = await writerService.updateOrder(
         ws1,
         order.id,
         {
@@ -1348,16 +1361,16 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
     });
 
     it('should reject updating order if not in DRAFT status', async () => {
-      const order = await service.createOrder(ws1, {
+      const order = await writerService.createOrder(ws1, {
         contactId: contact1,
         items: [{ productId: prod1, variantId: varA, quantity: 1, unitPrice: 350000 }],
       });
 
-      await service.confirmOrder(ws1, order.id, userId);
+      await lifecycleService.confirmOrder(ws1, order.id, userId);
 
       await expectReject(
         async () => {
-          await service.updateOrder(ws1, order.id, {
+          await writerService.updateOrder(ws1, order.id, {
             shippingFee: 50000,
           });
         },
@@ -1369,14 +1382,14 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
     });
 
     it('should reject updating order belonging to another workspace (multi-tenant guard)', async () => {
-      const order = await service.createOrder(ws1, {
+      const order = await writerService.createOrder(ws1, {
         contactId: contact1,
         items: [{ productId: prod1, variantId: varA, quantity: 1, unitPrice: 350000 }],
       });
 
       await expectReject(
         async () => {
-          await service.updateOrder(ws2, order.id, {
+          await writerService.updateOrder(ws2, order.id, {
             shippingFee: 50000,
           });
         },
@@ -1390,13 +1403,13 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
 
   describe('payOrder (Redlock & Idempotency)', () => {
     it('should acquire Redlock, record manual payment with deterministic key, and emit ORDER_PAID', async () => {
-      const order = await service.createOrder(ws1, {
+      const order = await writerService.createOrder(ws1, {
         contactId: contact1,
         items: [{ productId: prod1, variantId: varA, quantity: 1, unitPrice: 350000 }],
       });
-      await service.confirmOrder(ws1, order.id, userId);
+      await lifecycleService.confirmOrder(ws1, order.id, userId);
 
-      const paid = await service.payOrder(
+      const paid = await lifecycleService.payOrder(
         ws1,
         order.id,
         {
@@ -1431,13 +1444,13 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
     });
 
     it('should reject duplicate payment attempt on the same order with ConflictException', async () => {
-      const order = await service.createOrder(ws1, {
+      const order = await writerService.createOrder(ws1, {
         contactId: contact1,
         items: [{ productId: prod1, variantId: varA, quantity: 1, unitPrice: 350000 }],
       });
-      await service.confirmOrder(ws1, order.id, userId);
+      await lifecycleService.confirmOrder(ws1, order.id, userId);
 
-      await service.payOrder(
+      await lifecycleService.payOrder(
         ws1,
         order.id,
         { amount: 350000, paymentMethod: PaymentMethod.CASH },
@@ -1447,7 +1460,7 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
       // Attempt second payment
       await expectReject(
         async () => {
-          await service.payOrder(
+          await lifecycleService.payOrder(
             ws1,
             order.id,
             { amount: 350000, paymentMethod: PaymentMethod.CASH },
@@ -1463,14 +1476,14 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
     });
 
     it('should reject second manual payment attempt even on partially paid CONFIRMED order', async () => {
-      const order = await service.createOrder(ws1, {
+      const order = await writerService.createOrder(ws1, {
         contactId: contact1,
         items: [{ productId: prod1, variantId: varA, quantity: 1, unitPrice: 350000 }],
       });
-      await service.confirmOrder(ws1, order.id, userId);
+      await lifecycleService.confirmOrder(ws1, order.id, userId);
 
       // First partial payment
-      const partial = await service.payOrder(
+      const partial = await lifecycleService.payOrder(
         ws1,
         order.id,
         { amount: 100000, paymentMethod: PaymentMethod.CASH },
@@ -1483,7 +1496,7 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
       // Attempt second manual payment: must be rejected by idempotency key
       await expectReject(
         async () => {
-          await service.payOrder(
+          await lifecycleService.payOrder(
             ws1,
             order.id,
             { amount: 250000, paymentMethod: PaymentMethod.CASH },
@@ -1499,11 +1512,11 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
     });
 
     it('should throw PAYMENT_STATE_CONFLICT instead of overwriting when order state changed concurrently (C1)', async () => {
-      const order = await service.createOrder(ws1, {
+      const order = await writerService.createOrder(ws1, {
         contactId: contact1,
         items: [{ productId: prod1, variantId: varA, quantity: 1, unitPrice: 350000 }],
       });
-      await service.confirmOrder(ws1, order.id, userId);
+      await lifecycleService.confirmOrder(ws1, order.id, userId);
 
       // Simulate a concurrent flow (e.g. completeOrder) committing between the
       // service's read and its status update: the conditional write must miss.
@@ -1516,7 +1529,7 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
 
       await expectReject(
         async () => {
-          await service.payOrder(
+          await lifecycleService.payOrder(
             ws1,
             order.id,
             { amount: 350000, paymentMethod: PaymentMethod.CASH },
@@ -1541,14 +1554,19 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
 
   describe('completeOrder (COD auto-pay guard)', () => {
     it('should auto-pay COD order and record cod: transaction with ORDER_PAID event', async () => {
-      const order = await service.createOrder(ws1, {
+      const order = await writerService.createOrder(ws1, {
         contactId: contact1,
         items: [{ productId: prod1, variantId: varA, quantity: 1, unitPrice: 350000 }],
         metadata: { paymentMethod: PaymentMethod.COD },
       });
-      await service.confirmOrder(ws1, order.id, userId);
+      await lifecycleService.confirmOrder(ws1, order.id, userId);
 
-      const completed = await service.completeOrder(ws1, order.id, { notes: 'Delivered' }, userId);
+      const completed = await lifecycleService.completeOrder(
+        ws1,
+        order.id,
+        { notes: 'Delivered' },
+        userId,
+      );
 
       expect(completed.status).toBe(OrderStatus.COMPLETED);
       expect(completed.fulfillmentStatus).toBe(FulfillmentStatus.DELIVERED);
@@ -1569,14 +1587,14 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
     });
 
     it('should NOT auto-pay non-COD orders (e.g. VIETQR) leaving paymentStatus UNPAID', async () => {
-      const order = await service.createOrder(ws1, {
+      const order = await writerService.createOrder(ws1, {
         contactId: contact1,
         items: [{ productId: prod1, variantId: varA, quantity: 1, unitPrice: 350000 }],
         metadata: { paymentMethod: PaymentMethod.VIETQR },
       });
-      await service.confirmOrder(ws1, order.id, userId);
+      await lifecycleService.confirmOrder(ws1, order.id, userId);
 
-      const completed = await service.completeOrder(ws1, order.id, {}, userId);
+      const completed = await lifecycleService.completeOrder(ws1, order.id, {}, userId);
 
       expect(completed.status).toBe(OrderStatus.COMPLETED);
       expect(completed.fulfillmentStatus).toBe(FulfillmentStatus.DELIVERED);
@@ -1592,7 +1610,7 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
     });
 
     it('should NOT auto-pay orders without explicit COD/CASH payment method', async () => {
-      const order = await service.createOrder(ws1, {
+      const order = await writerService.createOrder(ws1, {
         contactId: contact1,
         items: [{ productId: prod1, variantId: varA, quantity: 1, unitPrice: 350000 }],
         metadata: {},
@@ -1603,9 +1621,9 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
         delete rawOrd.paymentMethod;
         rawOrd.metadata = {};
       }
-      await service.confirmOrder(ws1, order.id, userId);
+      await lifecycleService.confirmOrder(ws1, order.id, userId);
 
-      const completed = await service.completeOrder(ws1, order.id, {}, userId);
+      const completed = await lifecycleService.completeOrder(ws1, order.id, {}, userId);
 
       expect(completed.status).toBe(OrderStatus.COMPLETED);
       expect(completed.paymentStatus).toBe(PaymentStatus.UNPAID);
@@ -1620,19 +1638,19 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
 
   describe('cancelOrder (Refund tracking & 3PL shipment cancellation)', () => {
     it('should record refund transaction with negative amount and mark paymentStatus REFUNDED', async () => {
-      const order = await service.createOrder(ws1, {
+      const order = await writerService.createOrder(ws1, {
         contactId: contact1,
         items: [{ productId: prod1, variantId: varA, quantity: 1, unitPrice: 350000 }],
       });
-      await service.confirmOrder(ws1, order.id, userId);
-      await service.payOrder(
+      await lifecycleService.confirmOrder(ws1, order.id, userId);
+      await lifecycleService.payOrder(
         ws1,
         order.id,
         { amount: 350000, paymentMethod: PaymentMethod.CASH },
         userId,
       );
 
-      const cancelled = await service.cancelOrder(
+      const cancelled = await lifecycleService.cancelOrder(
         ws1,
         order.id,
         { cancelReason: 'Customer requested cancellation' },

@@ -5,8 +5,9 @@ import { PrismaService } from '../../../../infrastructure/database/prisma.servic
 import { RedisService } from '../../../../infrastructure/redis/redis.service';
 import { HumanTakeoverAbortError } from '../ai-agent.constants';
 import { ProductsService } from '../../../commerce/products/products.service';
-import { OrdersService } from '../../../commerce/orders/orders.service';
-import { InventoryLedgerService } from '../../../commerce/inventory/inventory-ledger.service';
+import { OrderWriterService } from '../../../commerce/orders/order-writer.service';
+import { OrderLifecycleService } from '../../../commerce/orders/order-lifecycle.service';
+import { InventoryQueryService } from '../../../commerce/inventory/inventory-query.service';
 import { VietQrService } from '../../../commerce/payments/vietqr.service';
 import { ContactsService } from '../../../omnichannel/contacts/contacts.service';
 import { MessagesService } from '../../../omnichannel/messages/messages.service';
@@ -38,8 +39,9 @@ export class CommerceToolRegistry {
     private readonly prisma: PrismaService,
     private readonly redisService: RedisService,
     private readonly productsService: ProductsService,
-    private readonly ordersService: OrdersService,
-    private readonly inventoryLedgerService: InventoryLedgerService,
+    private readonly orderWriterService: OrderWriterService,
+    private readonly orderLifecycleService: OrderLifecycleService,
+    private readonly inventoryQueryService: InventoryQueryService,
     private readonly vietQrService: VietQrService,
     private readonly contactsService: ContactsService,
     private readonly messagesService: MessagesService,
@@ -80,7 +82,7 @@ export class CommerceToolRegistry {
 
       checkInventory: createCheckInventoryTool({
         workspaceId,
-        inventoryLedgerService: this.inventoryLedgerService,
+        inventoryQueryService: this.inventoryQueryService,
         prisma: this.prisma,
       }),
 
@@ -96,7 +98,7 @@ export class CommerceToolRegistry {
       createDraftOrder: createCreateDraftOrderTool({
         workspaceId,
         conversationId,
-        ordersService: this.ordersService,
+        orderWriterService: this.orderWriterService,
         discountGuardService: this.discountGuardService,
         prisma: this.prisma,
         policy,
@@ -105,7 +107,7 @@ export class CommerceToolRegistry {
       confirmAndGenerateQR: createConfirmAndGenerateQrTool({
         workspaceId,
         conversationId,
-        ordersService: this.ordersService,
+        orderLifecycleService: this.orderLifecycleService,
         vietQrService: this.vietQrService,
         prisma: this.prisma,
         messagesService: this.messagesService,

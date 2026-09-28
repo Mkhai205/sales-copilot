@@ -11,8 +11,9 @@ describe('CommerceToolRegistry & 2 AM Customer Journey', () => {
   let mockPrisma: any;
   let mockRedis: any;
   let mockProductsService: any;
-  let mockOrdersService: any;
-  let mockInventoryService: any;
+  let mockOrderWriterService: any;
+  let mockOrderLifecycleService: any;
+  let mockInventoryQueryService: any;
   let mockVietQrService: any;
   let mockContactsService: any;
   let mockMessagesService: any;
@@ -153,7 +154,7 @@ describe('CommerceToolRegistry & 2 AM Customer Journey', () => {
       },
     };
 
-    mockInventoryService = {
+    mockInventoryQueryService = {
       getStock: async (wsId: string, variantId: string) => {
         const v = variantsDb.find(
           varItem => varItem.id === variantId && varItem.workspaceId === wsId,
@@ -169,7 +170,7 @@ describe('CommerceToolRegistry & 2 AM Customer Journey', () => {
       },
     };
 
-    mockOrdersService = {
+    mockOrderWriterService = {
       createOrder: async (wsId: string, dto: any) => {
         const orderId = 'ord-1042';
         const order = {
@@ -197,6 +198,9 @@ describe('CommerceToolRegistry & 2 AM Customer Journey', () => {
         ordersDb.set(orderId, order);
         return order;
       },
+    };
+
+    mockOrderLifecycleService = {
       confirmOrder: async (wsId: string, orderId: string) => {
         const order = ordersDb.get(orderId);
         if (!order || order.workspaceId !== wsId) throw new Error('Order not found');
@@ -245,8 +249,9 @@ describe('CommerceToolRegistry & 2 AM Customer Journey', () => {
       mockPrisma,
       mockRedis,
       mockProductsService,
-      mockOrdersService,
-      mockInventoryService,
+      mockOrderWriterService,
+      mockOrderLifecycleService,
+      mockInventoryQueryService,
       mockVietQrService,
       mockContactsService,
       mockMessagesService,
@@ -390,8 +395,9 @@ describe('CommerceToolRegistry & 2 AM Customer Journey', () => {
       mockPrisma,
       mockRedis,
       mockProductsService,
-      mockOrdersService,
-      mockInventoryService,
+      mockOrderWriterService,
+      mockOrderLifecycleService,
+      mockInventoryQueryService,
       mockVietQrService,
       mockContactsService,
       mockMessagesService,

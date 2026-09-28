@@ -2,8 +2,10 @@ import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { OrderStatus } from '@sales-copilot/shared-contracts';
 import { PrismaService } from '../../src/infrastructure/database/prisma.service';
-import { InventoryLedgerService } from '../../src/modules/commerce/inventory/inventory-ledger.service';
-import { OrdersService } from '../../src/modules/commerce/orders/orders.service';
+import { InventoryQueryService } from '../../src/modules/commerce/inventory/inventory-query.service';
+import { StockMovementService } from '../../src/modules/commerce/inventory/stock-movement.service';
+import { OrderLifecycleService } from '../../src/modules/commerce/orders/order-lifecycle.service';
+import { OrderWriterService } from '../../src/modules/commerce/orders/order-writer.service';
 import { ProductsService } from '../../src/modules/commerce/products/products.service';
 import { ContactsService } from '../../src/modules/omnichannel/contacts/contacts.service';
 import { DiscountGuardService } from '../../src/modules/intelligence/ai-agent/services/discount-guard.service';
@@ -12,8 +14,10 @@ import { CommerceToolRegistry } from '../../src/modules/intelligence/ai-agent/to
 describe('Commerce Tools PostgreSQL Integration Tests (Real Database)', () => {
   let prismaService: PrismaService;
   let eventEmitter: EventEmitter2;
-  let inventoryLedgerService: InventoryLedgerService;
-  let ordersService: OrdersService;
+  let stockMovementService: StockMovementService;
+  let inventoryQueryService: InventoryQueryService;
+  let orderWriterService: OrderWriterService;
+  let orderLifecycleService: OrderLifecycleService;
   let productsService: ProductsService;
   let contactsService: ContactsService;
   let discountGuardService: DiscountGuardService;
@@ -48,15 +52,21 @@ describe('Commerce Tools PostgreSQL Integration Tests (Real Database)', () => {
     await prismaService.onModuleInit();
 
     eventEmitter = new EventEmitter2();
-    inventoryLedgerService = new InventoryLedgerService(prismaService, eventEmitter);
-    ordersService = new OrdersService(
+    stockMovementService = new StockMovementService(prismaService, eventEmitter);
+    inventoryQueryService = new InventoryQueryService(prismaService);
+    orderWriterService = new OrderWriterService(prismaService, eventEmitter, stockMovementService);
+    orderLifecycleService = new OrderLifecycleService(
       prismaService,
       eventEmitter,
-      inventoryLedgerService,
-      {} as any,
+      stockMovementService,
       undefined,
     );
-    productsService = new ProductsService(prismaService, eventEmitter, inventoryLedgerService);
+    productsService = new ProductsService(
+      prismaService,
+      eventEmitter,
+      stockMovementService,
+      inventoryQueryService,
+    );
     contactsService = new ContactsService(prismaService, eventEmitter);
     discountGuardService = new DiscountGuardService();
 
@@ -102,8 +112,9 @@ describe('Commerce Tools PostgreSQL Integration Tests (Real Database)', () => {
       prismaService,
       mockRedis,
       productsService,
-      ordersService,
-      inventoryLedgerService,
+      orderWriterService,
+      orderLifecycleService,
+      inventoryQueryService,
       mockVietQrService,
       contactsService,
       mockMessagesService,

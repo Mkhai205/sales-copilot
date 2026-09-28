@@ -3,12 +3,13 @@ import { DatabaseModule } from '../../../infrastructure/database/database.module
 import { AuthModule } from '../../identity/auth/auth.module';
 import { WorkspacesModule } from '../../identity/workspaces/workspaces.module';
 import { InventoryController } from './inventory.controller';
-import { InventoryLedgerService } from './inventory-ledger.service';
+import { InventoryQueryService } from './inventory-query.service';
+import { StockMovementService } from './stock-movement.service';
 
 @Module({
   imports: [DatabaseModule, AuthModule, WorkspacesModule],
   controllers: [InventoryController],
-  providers: [InventoryLedgerService],
-  exports: [InventoryLedgerService],
+  providers: [StockMovementService, InventoryQueryService],
+  exports: [StockMovementService, InventoryQueryService],
 })
 export class InventoryModule {}
