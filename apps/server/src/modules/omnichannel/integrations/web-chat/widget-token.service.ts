@@ -1,8 +1,7 @@
-import { Injectable, Logger, Optional, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as crypto from 'crypto';
-import * as jwt from 'jsonwebtoken';
 
 /**
  * Payload encoded in widget contact authentication JWT.
@@ -29,8 +28,8 @@ export class WidgetTokenService {
   private readonly defaultExpiresInSeconds: number;
 
   constructor(
-    @Optional() private readonly configService?: ConfigService,
-    @Optional() private readonly jwtService?: JwtService,
+    private readonly configService: ConfigService,
+    private readonly jwtService: JwtService,
   ) {
     // No hardcoded fallback: WIDGET_TOKEN_SECRET or the required JWT_ACCESS_TOKEN_SECRET
     // must be configured, otherwise the service refuses to start.
@@ -59,14 +58,8 @@ export class WidgetTokenService {
   generateToken(payload: WidgetTokenPayload, expiresInSeconds?: number): string {
     const expiry = expiresInSeconds ?? this.defaultExpiresInSeconds;
 
-    if (this.jwtService) {
-      return this.jwtService.sign(payload, {
-        secret: this.jwtSecret,
-        expiresIn: expiry,
-      });
-    }
-
-    return jwt.sign(payload, this.jwtSecret, {
+    return this.jwtService.sign(payload, {
+      secret: this.jwtSecret,
       expiresIn: expiry,
     });
   }
@@ -86,13 +79,9 @@ export class WidgetTokenService {
     const cleanToken = token.startsWith('Bearer ') ? token.slice(7).trim() : token.trim();
 
     try {
-      if (this.jwtService) {
-        return this.jwtService.verify<WidgetTokenPayload>(cleanToken, {
-          secret: this.jwtSecret,
-        });
-      }
-
-      return jwt.verify(cleanToken, this.jwtSecret) as WidgetTokenPayload;
+      return this.jwtService.verify<WidgetTokenPayload>(cleanToken, {
+        secret: this.jwtSecret,
+      });
     } catch (err) {
       const errorMessage = (err as Error).message || 'Invalid widget token';
       this.logger.warn(`Failed to verify widget contact token: ${errorMessage}`);

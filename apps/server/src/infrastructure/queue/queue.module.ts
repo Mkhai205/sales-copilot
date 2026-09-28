@@ -36,6 +36,12 @@ export { COMMENT_GUARD_QUEUE };
               password: parsed.password || undefined,
               maxRetriesPerRequest: null,
             },
+            defaultJobOptions: {
+              // Bounded retention: completed jobs kept 1h / max 500, failed jobs
+              // kept 7 days / max 1000 (enough for debugging, no unbounded growth).
+              removeOnComplete: { age: 3600, count: 500 },
+              removeOnFail: { age: 7 * 24 * 3600, count: 1000 },
+            },
           };
         } catch {
           return {
@@ -43,6 +49,10 @@ export { COMMENT_GUARD_QUEUE };
               host: '127.0.0.1',
               port: 6379,
               maxRetriesPerRequest: null,
+            },
+            defaultJobOptions: {
+              removeOnComplete: { age: 3600, count: 500 },
+              removeOnFail: { age: 7 * 24 * 3600, count: 1000 },
             },
           };
         }

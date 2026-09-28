@@ -879,6 +879,18 @@ export class RealtimeGateway
       }
 
       const { workspaceId, conversationId } = parseResult.data;
+
+      if (!(await this.verifyCommerceEditingAccess(socketData, workspaceId, conversationId))) {
+        this.logger.warn(
+          `Commerce editing access denied (user: ${socketData.userId}, workspace: ${workspaceId}, conversation: ${conversationId})`,
+        );
+        return {
+          success: false,
+          isLocked: false,
+          error: { code: 'FORBIDDEN', message: 'You do not have access to this conversation' },
+        };
+      }
+
       if (!this.commercePresenceService) {
         return { success: true, isLocked: false, remainingTtlSeconds: 30 };
       }
@@ -940,6 +952,14 @@ export class RealtimeGateway
     }
 
     const { workspaceId, conversationId } = parseResult.data;
+
+    if (!(await this.verifyCommerceEditingAccess(socketData, workspaceId, conversationId))) {
+      this.logger.warn(
+        `Commerce editing access denied (user: ${socketData.userId}, workspace: ${workspaceId}, conversation: ${conversationId})`,
+      );
+      return { success: false, remainingTtlSeconds: 0 };
+    }
+
     return this.commercePresenceService.refreshHeartbeat(
       workspaceId,
       conversationId,
@@ -960,6 +980,14 @@ export class RealtimeGateway
     }
 
     const { workspaceId, conversationId } = parseResult.data;
+
+    if (!(await this.verifyCommerceEditingAccess(socketData, workspaceId, conversationId))) {
+      this.logger.warn(
+        `Commerce editing access denied (user: ${socketData.userId}, workspace: ${workspaceId}, conversation: ${conversationId})`,
+      );
+      return { success: false };
+    }
+
     const released = await this.commercePresenceService.stopEditing(
       workspaceId,
       conversationId,
@@ -1000,6 +1028,14 @@ export class RealtimeGateway
     }
 
     const { workspaceId, conversationId } = parseResult.data;
+
+    if (!(await this.verifyCommerceEditingAccess(socketData, workspaceId, conversationId))) {
+      this.logger.warn(
+        `Commerce editing access denied (user: ${socketData.userId}, workspace: ${workspaceId}, conversation: ${conversationId})`,
+      );
+      return { success: false, remainingTtlSeconds: 0 };
+    }
+
     const user = {
       userId: socketData.userId,
       userName: socketData.email ? socketData.email.split('@')[0] : 'Agent',
@@ -1027,6 +1063,47 @@ export class RealtimeGateway
     this.server.to(room).emit('event', envelope);
 
     return res;
+  }
+
+  /**
+   * Verifies that a commerce editing action may be performed on the given conversation:
+   * the socket's user must be a member of the target workspace AND the conversation
+   * must actually exist in that workspace. Client-supplied {workspaceId, conversationId}
+   * pairs are never trusted on their own (S4: cross-tenant editing-lock takeover).
+   */
+  private async verifyCommerceEditingAccess(
+    socketData: RealtimeSocketData,
+    workspaceId: string,
+    conversationId: string,
+  ): Promise<boolean> {
+    // Fast path: join_conversation already verified workspace membership and
+    // conversation ownership for this exact (conversationId → workspaceId) pair.
+    if (socketData.joinedConversations?.[conversationId] === workspaceId) {
+      return true;
+    }
+
+    // 1. The socket's user must be a member of the target workspace.
+    const isMember =
+      socketData.availableWorkspaceIds.includes(workspaceId) ||
+      (this.workspacesService
+        ? await this.workspacesService.isMember(workspaceId, socketData.userId)
+        : Boolean(
+            await this.prisma.getClient().workspaceMember.findFirst({
+              where: { userId: socketData.userId, workspaceId },
+            }),
+          ));
+
+    if (!isMember) {
+      return false;
+    }
+
+    // 2. The conversation must exist inside that workspace.
+    const conversation = await this.prisma.getClient().conversation.findFirst({
+      where: { id: conversationId, workspaceId },
+      select: { id: true },
+    });
+
+    return Boolean(conversation);
   }
 
   // --- Helper Methods ---

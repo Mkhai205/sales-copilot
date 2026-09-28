@@ -188,6 +188,10 @@ describe('RealtimeGateway (Agent Realtime WebSocket Namespace /realtime — Task
           findFirst: async (args: any) => {
             const match = mockConversations[args.where?.id];
             if (!match) return null;
+            // Emulate Prisma compound where: cross-workspace lookups find nothing
+            if (args.where?.workspaceId && args.where.workspaceId !== match.workspaceId) {
+              return null;
+            }
             return {
               ...match,
               workspace: {
@@ -1281,6 +1285,113 @@ describe('RealtimeGateway (Agent Realtime WebSocket Namespace /realtime — Task
 
       const takeoverRes = await gateway.handleCommerceEditingTakeover(socket, invalidPayload);
       expect(takeoverRes.success).toBe(false);
+    });
+
+    describe('commerce editing tenant isolation (S4 — cross-workspace lock takeover)', () => {
+      // validConversationId1 belongs to validWorkspaceId1, not validWorkspaceId2
+      const crossWorkspacePayload = {
+        workspaceId: validWorkspaceId2,
+        conversationId: validConversationId1,
+      };
+
+      it('should deny editing start when the conversation is not in the workspace', async () => {
+        const socket = createAuthenticatedSocket();
+
+        const result = await gateway.handleCommerceEditingStart(socket, crossWorkspacePayload);
+
+        expect(result.success).toBe(false);
+        expect(result.error?.code).toBe('FORBIDDEN');
+        expect(mockCommercePresenceService.startEditing).not.toHaveBeenCalled();
+        expect(mockCommercePresenceService.getEditingStatus).not.toHaveBeenCalled();
+        expect(Object.keys(socket._getBroadcastToRooms())).toHaveLength(0);
+      });
+
+      it('should deny editing heartbeat when the conversation is not in the workspace', async () => {
+        const socket = createAuthenticatedSocket();
+
+        const result = await gateway.handleCommerceEditingHeartbeat(socket, crossWorkspacePayload);
+
+        expect(result.success).toBe(false);
+        expect(result.remainingTtlSeconds).toBe(0);
+        expect(mockCommercePresenceService.refreshHeartbeat).not.toHaveBeenCalled();
+      });
+
+      it('should deny editing stop when the conversation is not in the workspace', async () => {
+        const socket = createAuthenticatedSocket();
+
+        const result = await gateway.handleCommerceEditingStop(socket, crossWorkspacePayload);
+
+        expect(result.success).toBe(false);
+        expect(mockCommercePresenceService.stopEditing).not.toHaveBeenCalled();
+        expect(Object.keys(socket._getBroadcastToRooms())).toHaveLength(0);
+      });
+
+      it('should deny editing takeover when the conversation is not in the workspace', async () => {
+        const socket = createAuthenticatedSocket();
+
+        const result = await gateway.handleCommerceEditingTakeover(socket, crossWorkspacePayload);
+
+        expect(result.success).toBe(false);
+        expect(mockCommercePresenceService.takeoverEditing).not.toHaveBeenCalled();
+        expect(mockServerBroadcasts).toHaveLength(0);
+      });
+
+      it('should deny commerce editing for a workspace the user is not a member of, even when the conversation exists there', async () => {
+        const socket = createAuthenticatedSocket(); // member of ws1/ws2 only
+        const payload = {
+          workspaceId: unauthorizedWorkspaceId,
+          conversationId: unauthorizedConversationId, // exists in DB, owned by unauthorizedWorkspaceId
+        };
+
+        await gateway.handleCommerceEditingStart(socket, payload);
+        await gateway.handleCommerceEditingHeartbeat(socket, payload);
+        await gateway.handleCommerceEditingStop(socket, payload);
+        await gateway.handleCommerceEditingTakeover(socket, payload);
+
+        expect(mockCommercePresenceService.startEditing).not.toHaveBeenCalled();
+        expect(mockCommercePresenceService.refreshHeartbeat).not.toHaveBeenCalled();
+        expect(mockCommercePresenceService.stopEditing).not.toHaveBeenCalled();
+        expect(mockCommercePresenceService.takeoverEditing).not.toHaveBeenCalled();
+      });
+
+      it('should deny editing start when the conversation does not exist', async () => {
+        const socket = createAuthenticatedSocket();
+        const payload = {
+          workspaceId: validWorkspaceId1,
+          conversationId: 'cccccccc-cccc-cccc-cccc-cccccccccccc',
+        };
+
+        const result = await gateway.handleCommerceEditingStart(socket, payload);
+
+        expect(result.success).toBe(false);
+        expect(result.error?.code).toBe('FORBIDDEN');
+        expect(mockCommercePresenceService.startEditing).not.toHaveBeenCalled();
+      });
+
+      it('should still allow editing start for an already joined conversation', async () => {
+        const socket = createAuthenticatedSocket({
+          joinedConversations: { [validConversationId1]: validWorkspaceId1 },
+        });
+        const payload = {
+          workspaceId: validWorkspaceId1,
+          conversationId: validConversationId1,
+        };
+
+        const result = await gateway.handleCommerceEditingStart(socket, payload);
+
+        expect(result.success).toBe(true);
+        expect(mockCommercePresenceService.startEditing).toHaveBeenCalledWith(
+          validWorkspaceId1,
+          validConversationId1,
+          expect.objectContaining({ userId: validUserId }),
+        );
+        const roomBroadcasts =
+          socket._getBroadcastToRooms()[`conversation_${validConversationId1}`] || [];
+        const collisionEvents = roomBroadcasts.filter(
+          (b: any) => b.event === WsServerEvent.COMMERCE_COLLISION_STATUS,
+        );
+        expect(collisionEvents.length).toBe(1);
+      });
     });
   });
 });

@@ -56,7 +56,7 @@ export function useRealtimeSync(): void {
       // 1. Reconcile / append into message infinite query cache
       queryClient.setQueriesData<InfiniteData<ApiResponse<MessageResponseDto[]>>>(
         {
-          queryKey: ['conversations', 'messages'],
+          queryKey: conversationKeys.messages(),
           predicate: query => query.queryKey.includes(message.conversationId),
         },
         old => reconcileOrAppendMessage(old, message),
@@ -111,7 +111,7 @@ export function useRealtimeSync(): void {
       // 3. Update single conversation detail query if viewed
       queryClient.setQueriesData<ConversationResponseDto>(
         {
-          queryKey: ['conversations', 'detail'],
+          queryKey: conversationKeys.detail(),
           predicate: query => query.queryKey.includes(message.conversationId),
         },
         old => {
@@ -173,7 +173,7 @@ export function useRealtimeSync(): void {
 
       queryClient.setQueriesData<InfiniteData<ApiResponse<MessageResponseDto[]>>>(
         {
-          queryKey: ['conversations', 'messages'],
+          queryKey: conversationKeys.messages(),
           predicate: query => query.queryKey.includes(message.conversationId),
         },
         old => updateMessageInInfiniteData(old, message),
@@ -204,7 +204,7 @@ export function useRealtimeSync(): void {
 
       queryClient.setQueriesData<InfiniteData<ApiResponse<MessageResponseDto[]>>>(
         {
-          queryKey: ['conversations', 'messages'],
+          queryKey: conversationKeys.messages(),
           predicate: query => query.queryKey.includes(payload.conversationId),
         },
         old => removeMessageFromInfiniteData(old, payload.messageId),
@@ -225,7 +225,7 @@ export function useRealtimeSync(): void {
 
       queryClient.setQueriesData<InfiniteData<ApiResponse<MessageResponseDto[]>>>(
         {
-          queryKey: ['conversations', 'messages'],
+          queryKey: conversationKeys.messages(),
           predicate: query => query.queryKey.includes(message.conversationId),
         },
         old => updateMessageInInfiniteData(old, message),
@@ -259,7 +259,7 @@ export function useRealtimeSync(): void {
 
       queryClient.setQueriesData<ConversationResponseDto>(
         {
-          queryKey: ['conversations', 'detail'],
+          queryKey: conversationKeys.detail(),
           predicate: query => query.queryKey.includes(conversationId),
         },
         old => (old ? { ...old, ...conv } : old),
@@ -287,7 +287,7 @@ export function useRealtimeSync(): void {
     // Update single conversation query
     queryClient.setQueriesData<ConversationResponseDto>(
       {
-        queryKey: ['conversations', 'detail'],
+        queryKey: conversationKeys.detail(),
         predicate: query => query.queryKey.includes(conversationId),
       },
       old => (old ? { ...old, status: newStatus || old.status } : old),
@@ -322,7 +322,7 @@ export function useRealtimeSync(): void {
 
     queryClient.setQueriesData<ConversationResponseDto>(
       {
-        queryKey: ['conversations', 'detail'],
+        queryKey: conversationKeys.detail(),
         predicate: query => query.queryKey.includes(conversationId),
       },
       old =>
@@ -361,7 +361,7 @@ export function useRealtimeSync(): void {
 
     queryClient.setQueriesData<ConversationResponseDto>(
       {
-        queryKey: ['conversations', 'detail'],
+        queryKey: conversationKeys.detail(),
         predicate: query => query.queryKey.includes(conversationId),
       },
       old => (old ? { ...old, priority: priority || old.priority } : old),
@@ -386,7 +386,7 @@ export function useRealtimeSync(): void {
 
     queryClient.setQueriesData<ConversationResponseDto>(
       {
-        queryKey: ['conversations', 'detail'],
+        queryKey: conversationKeys.detail(),
         predicate: query => query.queryKey.includes(conversationId),
       },
       old => (old ? { ...old, labels: labels || old.labels } : old),

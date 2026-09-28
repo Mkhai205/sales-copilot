@@ -9,7 +9,13 @@ import {
 } from '../ai-agent.constants';
 
 type GuardrailBlockReason =
-  'EMPTY_CONTENT' | 'EMOJI_ONLY' | 'BLACKLISTED' | 'DUPLICATE_SPAM' | 'SHORT_SPAM' | 'RATE_LIMITED';
+  | 'EMPTY_CONTENT'
+  | 'EMOJI_ONLY'
+  | 'BLACKLISTED'
+  | 'DUPLICATE_SPAM'
+  | 'SHORT_SPAM'
+  | 'RATE_LIMITED'
+  | 'INFRA_UNAVAILABLE';
 
 export interface GuardrailCheckResult {
   allowed: boolean;
@@ -119,19 +125,21 @@ export class AiGuardrailService {
         return { allowed: false, reason: 'SHORT_SPAM' };
       }
     } catch (err) {
-      this.logger.warn(
-        `Failed to evaluate abuse detection for conv '${conversationId}': ${(err as Error).message}`,
+      // Fail CLOSED: without Redis the abuse tiers cannot be evaluated, and letting
+      // messages through would grant unlimited AI usage during an outage.
+      this.logger.error(
+        `Redis unavailable — abuse detection failed closed for conv '${conversationId}': ${(err as Error).message}`,
       );
+      return { allowed: false, reason: 'INFRA_UNAVAILABLE' };
     }
 
-    // --- TIER C: Rate Limiting ---
+    // --- TIER C: Rate Limiting (atomic sliding window; fails CLOSED on Redis errors —
+    // an outage must never grant unlimited AI usage) ---
     try {
       const rateLimitKey = getAiRateLimitKey(workspaceId, conversationId);
-      const count = await this.redisService.incr(rateLimitKey);
-
-      if (count === 1) {
-        await this.redisService.expire(rateLimitKey, 60);
-      }
+      const windowMs = AI_AGENT_CONSTANTS.RATE_LIMIT_WINDOW_SECONDS * 1000;
+      const member = `${Date.now()}:${Math.random().toString(36).slice(2)}`;
+      const count = await this.redisService.incrementSlidingWindow(rateLimitKey, windowMs, member);
 
       if (count > AI_AGENT_CONSTANTS.RATE_LIMIT_PER_MINUTE) {
         const warnedKey = getAiRateLimitWarnedKey(workspaceId, conversationId);
@@ -157,9 +165,10 @@ export class AiGuardrailService {
         };
       }
     } catch (err) {
-      this.logger.warn(
-        `Failed to evaluate rate limit for conv '${conversationId}': ${(err as Error).message}`,
+      this.logger.error(
+        `Redis unavailable — rate limit failed closed for conv '${conversationId}': ${(err as Error).message}`,
       );
+      return { allowed: false, reason: 'INFRA_UNAVAILABLE' };
     }
 
     return { allowed: true };

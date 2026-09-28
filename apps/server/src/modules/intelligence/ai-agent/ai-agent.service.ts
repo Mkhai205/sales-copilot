@@ -2,21 +2,17 @@ import { Injectable, Logger, Optional } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { generateText, stepCountIs, type LanguageModel } from 'ai';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
-import { createVertex } from '@ai-sdk/google-vertex';
 import type {
   AiAgentResult,
   AiDebugMetadata,
   AiToolCallDebug,
 } from '@sales-copilot/shared-contracts';
 import { PrismaService } from '../../../infrastructure/database/prisma.service';
-import {
-  AI_AGENT_CONSTANTS,
-  calculateEstimatedCostUsd,
-  HumanTakeoverAbortError,
-} from './ai-agent.constants';
+import { AI_AGENT_CONSTANTS, calculateEstimatedCostUsd } from './ai-agent.constants';
 import { AiContextBuilder } from './ai-context.builder';
 import { CommerceToolRegistry } from './tools/commerce-tool.registry';
 import { summarizeToolOutput } from './utils/ai-tool-summarizer';
+import { resolvePlatformGoogleAiProvider } from '../ai-provider.resolver';
 
 @Injectable()
 export class AiAgentService {
@@ -53,39 +49,13 @@ export class AiAgentService {
       return google(AI_AGENT_CONSTANTS.DEFAULT_MODEL);
     }
 
-    // 2. Google Cloud Vertex AI (uses organization GCP credits)
-    const vertexCredentials =
-      this.configService.get<string>('GOOGLE_APPLICATION_CREDENTIALS') ||
-      process.env.GOOGLE_APPLICATION_CREDENTIALS;
-    const vertexProject =
-      this.configService.get<string>('GOOGLE_VERTEX_PROJECT') || process.env.GOOGLE_VERTEX_PROJECT;
-    const vertexLocation =
-      this.configService.get<string>('GOOGLE_VERTEX_LOCATION') ||
-      process.env.GOOGLE_VERTEX_LOCATION ||
-      'us-central1';
-
-    if (vertexCredentials && vertexProject) {
-      this.logger.debug(
-        `Using Google Cloud Vertex AI provider for workspace '${workspaceId}' (project: ${vertexProject}, region: ${vertexLocation})`,
-      );
-      const vertex = createVertex({
-        project: vertexProject,
-        location: vertexLocation,
-      });
-      return vertex(AI_AGENT_CONSTANTS.DEFAULT_MODEL);
-    }
-
-    // 3. Platform default Google AI Studio API key
-    const envKey = this.configService.get<string>('GEMINI_API_KEY');
-    if (envKey && envKey.trim()) {
-      this.logger.debug(`Using Google AI Studio default provider for workspace '${workspaceId}'`);
-      const google = createGoogleGenerativeAI({ apiKey: envKey.trim() });
-      return google(AI_AGENT_CONSTANTS.DEFAULT_MODEL);
-    }
-
-    throw new Error(
-      `No AI provider available for workspace '${workspaceId}'. Please configure Google Cloud Vertex AI or GEMINI_API_KEY.`,
+    // 2. Platform default provider (Vertex AI credits or GEMINI_API_KEY)
+    const provider = resolvePlatformGoogleAiProvider(
+      this.configService,
+      this.logger,
+      `for workspace '${workspaceId}'`,
     );
+    return provider(AI_AGENT_CONSTANTS.DEFAULT_MODEL);
   }
 
   /**
@@ -156,31 +126,43 @@ export class AiAgentService {
 
     const recordedToolCalls: AiToolCallDebug[] = [];
     let stepCounter = 0;
+    let stoppedByTakeover = false;
 
     // 5. Execute agent loop via Vercel AI SDK generateText
+    //
+    // Human Takeover mid-loop: the SDK awaits custom `stopWhen` conditions after every
+    // completed step (isStopConditionMet -> Promise.all(...).some()), so returning true
+    // here reliably halts the tool loop. This must NOT be done by throwing from
+    // onStepFinish: the SDK wraps callback invocations in notify() which has a bare
+    // `catch (e) {}` — the error would be swallowed and the loop would keep running.
     const result = await generateText({
       model,
       system: systemPrompt,
       messages,
       tools,
-      stopWhen: stepCountIs(AI_AGENT_CONSTANTS.DEFAULT_MAX_STEPS),
+      stopWhen: [
+        stepCountIs(AI_AGENT_CONSTANTS.DEFAULT_MAX_STEPS),
+        async () => {
+          const conv = await this.prisma.getClient().conversation.findFirst({
+            where: { id: conversationId, workspaceId },
+            select: { isAiPaused: true },
+          });
+
+          if (!conv?.isAiPaused) {
+            return false;
+          }
+
+          stoppedByTakeover = true;
+          this.logger.warn(
+            `Human takeover detected during agent loop in conversation '${conversationId}'. Stopping loop.`,
+          );
+          return true;
+        },
+      ],
       temperature: AI_AGENT_CONSTANTS.DEFAULT_TEMPERATURE,
 
       onStepFinish: async step => {
         stepCounter += 1;
-
-        // Human Takeover check mid-loop: if paused, immediately abort
-        const conv = await this.prisma.getClient().conversation.findFirst({
-          where: { id: conversationId, workspaceId },
-          select: { isAiPaused: true },
-        });
-
-        if (conv?.isAiPaused) {
-          this.logger.warn(
-            `Human takeover detected during agent step in conversation '${conversationId}'. Aborting loop.`,
-          );
-          throw new HumanTakeoverAbortError();
-        }
 
         const toolCalls = step.toolCalls || [];
         const toolResults = step.toolResults || [];
@@ -227,6 +209,15 @@ export class AiAgentService {
         }
       },
     });
+
+    // Takeover stopped the loop mid-run: the human agent has already replied to the
+    // customer, so the partial AI output must never be saved or sent downstream.
+    if (stoppedByTakeover) {
+      this.logger.log(
+        `AI agent run for conversation '${conversationId}' stopped by Human Takeover. Discarding AI reply.`,
+      );
+      return { skipped: true, reason: 'HUMAN_TAKEOVER' };
+    }
 
     const totalDurationMs = Date.now() - startTime;
     const rawUsage = result.usage as any;

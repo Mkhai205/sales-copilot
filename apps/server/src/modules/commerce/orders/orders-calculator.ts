@@ -14,12 +14,14 @@ export interface LineItemCalculationResult {
 
 /**
  * Calculates item subtotal, discount, and final line item totalPrice.
+ * Line discount is clamped to [0, subtotal] so a line can never be discounted below zero;
+ * this keeps the invariant sum(line.totalPrice) === subtotal - sum(line.discountAmount).
  */
 export function calculateLineItemTotals(
   input: LineItemCalculationInput,
 ): LineItemCalculationResult {
   const subtotal = input.unitPrice * input.quantity;
-  const discountAmount = input.discountAmount || 0;
+  const discountAmount = Math.min(subtotal, Math.max(0, input.discountAmount || 0));
   const totalPrice = Math.max(0, subtotal - discountAmount);
 
   return {
@@ -36,6 +38,8 @@ export interface OrderFinancialsInput {
   shippingFee?: number | null;
   existingDiscountAmount?: number | null;
   existingSubtotal?: number | null;
+  /** Sum of per-line discounts — folded into the effective order discount. */
+  lineDiscountsTotal?: number | null;
 }
 
 export interface OrderFinancialsResult {
@@ -47,8 +51,8 @@ export interface OrderFinancialsResult {
 }
 
 /**
- * Calculates order level financials: subtotal, discountAmount (fixed or percentage),
- * shippingFee, and totalAmount.
+ * Calculates order level financials: subtotal, discountAmount (fixed or percentage,
+ * plus folded-in line-item discounts), shippingFee, and totalAmount.
  */
 export function calculateOrderFinancialTotals(input: OrderFinancialsInput): OrderFinancialsResult {
   const subtotal = input.subtotal;
@@ -57,26 +61,34 @@ export function calculateOrderFinancialTotals(input: OrderFinancialsInput): Orde
       ? DiscountType.PERCENTAGE
       : DiscountType.FIXED_AMOUNT;
 
-  let discountAmount = 0;
+  let orderLevelDiscount = 0;
 
   if (input.discountAmount !== undefined && input.discountAmount !== null) {
     if (resolvedDiscountType === DiscountType.PERCENTAGE) {
-      discountAmount = Math.min(
+      orderLevelDiscount = Math.min(
         subtotal,
         Math.round((subtotal * Math.min(100, input.discountAmount)) / 100),
       );
     } else {
-      discountAmount = Math.min(subtotal, Math.max(0, input.discountAmount));
+      orderLevelDiscount = Math.min(subtotal, Math.max(0, input.discountAmount));
     }
   } else if (input.existingDiscountAmount !== undefined && input.existingDiscountAmount !== null) {
     if (resolvedDiscountType === DiscountType.PERCENTAGE) {
       const origSub = Number(input.existingSubtotal || 0);
       const origPct = origSub > 0 ? (Number(input.existingDiscountAmount) * 100) / origSub : 0;
-      discountAmount = Math.min(subtotal, Math.round((subtotal * Math.min(100, origPct)) / 100));
+      orderLevelDiscount = Math.min(
+        subtotal,
+        Math.round((subtotal * Math.min(100, origPct)) / 100),
+      );
     } else {
-      discountAmount = Math.min(subtotal, Math.max(0, Number(input.existingDiscountAmount)));
+      orderLevelDiscount = Math.min(subtotal, Math.max(0, Number(input.existingDiscountAmount)));
     }
   }
+
+  // Effective discount = order-level discount + folded-in line-item discounts,
+  // clamped to [0, subtotal] (same clamp semantics as the order-level discount).
+  const lineDiscountsTotal = Math.max(0, input.lineDiscountsTotal || 0);
+  const discountAmount = Math.min(subtotal, Math.max(0, orderLevelDiscount + lineDiscountsTotal));
 
   const shippingFee = Math.max(0, input.shippingFee || 0);
   const totalAmount = Math.max(0, subtotal - discountAmount + shippingFee);

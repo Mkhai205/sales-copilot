@@ -32,7 +32,7 @@ describe('ProductsService (Catalog & Inventory Management)', () => {
 
     clientMock = {
       product: {
-        findFirst: async ({ where, include }: any) => {
+        findFirst: async ({ where, include, select }: any) => {
           for (const p of productsDb.values()) {
             if (where.id && p.id !== where.id) continue;
             if (where.workspaceId && p.workspaceId !== where.workspaceId) continue;
@@ -41,15 +41,15 @@ describe('ProductsService (Catalog & Inventory Management)', () => {
             if (where.id?.not && p.id === where.id.not) continue;
 
             const res = { ...p };
-            if (include?.variants) {
+            if (include?.variants || select?.variants) {
               res.variants = Array.from(variantsDb.values()).filter(v => v.productId === p.id);
             }
             return res;
           }
           return null;
         },
-        findFirstOrThrow: async ({ where, include }: any) => {
-          const res = await clientMock.product.findFirst({ where, include });
+        findFirstOrThrow: async ({ where, include, select }: any) => {
+          const res = await clientMock.product.findFirst({ where, include, select });
           if (!res) throw new Error('Product not found');
           return res;
         },
@@ -96,7 +96,7 @@ describe('ProductsService (Catalog & Inventory Management)', () => {
           const items = await clientMock.product.findMany({ where });
           return items.length;
         },
-        create: async ({ data, include }: any) => {
+        create: async ({ data, include, select }: any) => {
           const id = `prod_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
           const record = {
             id,
@@ -146,7 +146,7 @@ describe('ProductsService (Catalog & Inventory Management)', () => {
           }
 
           const res: any = { ...record };
-          if (include?.variants) res.variants = createdVariants;
+          if (include?.variants || select?.variants) res.variants = createdVariants;
           return res;
         },
         updateMany: async ({ where, data }: any) => {

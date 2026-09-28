@@ -120,12 +120,15 @@ export class AiDispatcherListener {
         return;
       }
 
-      // 6. Set Redis debounce timestamp
+      // 6. Atomically reserve a strictly increasing debounce slot. Two messages arriving
+      // in the same millisecond get different slots, so the worker's
+      // `latestTimestamp > scheduledAt` drop check can never let equal-stamped jobs
+      // double-run (the lost-update race found in audit M4.2/A-bonus).
       const now = Date.now();
       const debounceKey = getAiDebounceKey(workspaceId, conversationId);
-      await this.redisService.set(
+      const scheduledAt = await this.redisService.reserveIncreasingValue(
         debounceKey,
-        now.toString(),
+        now,
         AI_AGENT_CONSTANTS.DEBOUNCE_KEY_TTL_SECONDS,
       );
 
@@ -137,7 +140,7 @@ export class AiDispatcherListener {
           conversationId,
           messageId: message.id,
           inboxId: conversation.inboxId,
-          scheduledAt: now,
+          scheduledAt,
         },
         {
           delay: AI_AGENT_CONSTANTS.DEFAULT_DEBOUNCE_DELAY_MS,

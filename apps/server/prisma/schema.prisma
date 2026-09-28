@@ -333,6 +333,7 @@ model Inbox {
   conversations Conversation[]
 
   @@unique([workspaceId, id])
+  @@unique([workspaceId, name])
   @@index([workspaceId])
   @@map("inboxes")
 }
@@ -541,6 +542,7 @@ model AuditLog {
   user      User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([workspaceId, createdAt])
+  @@index([workspaceId, action])
   @@index([resourceType, resourceId])
   @@map("audit_logs")
 }
@@ -672,7 +674,7 @@ model Order {
   @@unique([workspaceId, orderNumber])
   @@index([workspaceId, status])
   @@index([workspaceId, paymentStatus])
-  @@index([workspaceId, paymentMethod])
+  @@index([workspaceId, fulfillmentStatus])
   @@index([workspaceId, contactId])
   @@index([workspaceId, conversationId])
   @@index([workspaceId, createdAt])

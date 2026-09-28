@@ -24,6 +24,50 @@ import { PrismaService } from '../../../infrastructure/database/prisma.service';
 import { generateSlug } from '../../identity/workspaces/utils/slug.util';
 import { InventoryLedgerService } from '../inventory/inventory-ledger.service';
 
+/**
+ * Product projection covering exactly what `formatProduct` serializes,
+ * including the variant projection below (variant `attributes` included,
+ * relations like orderItems/inventoryTransactions excluded).
+ */
+const PRODUCT_WITH_VARIANTS_SELECT = {
+  id: true,
+  workspaceId: true,
+  name: true,
+  slug: true,
+  description: true,
+  category: true,
+  basePrice: true,
+  costPrice: true,
+  sku: true,
+  barcode: true,
+  imageUrl: true,
+  images: true,
+  isActive: true,
+  trackInventory: true,
+  metadata: true,
+  createdAt: true,
+  updatedAt: true,
+  variants: {
+    select: {
+      id: true,
+      workspaceId: true,
+      productId: true,
+      name: true,
+      sku: true,
+      barcode: true,
+      price: true,
+      costPrice: true,
+      stockQuantity: true,
+      reservedQuantity: true,
+      imageUrl: true,
+      attributes: true,
+      isActive: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  },
+};
+
 @Injectable()
 export class ProductsService {
   private readonly logger = new Logger(ProductsService.name);
@@ -109,9 +153,7 @@ export class ProductsService {
         skip,
         take: limit,
         orderBy,
-        include: {
-          variants: true,
-        },
+        select: PRODUCT_WITH_VARIANTS_SELECT,
       }),
     ]);
 
@@ -136,7 +178,7 @@ export class ProductsService {
     const client = this.prisma.getClient();
     const product = await client.product.findFirst({
       where: { id, workspaceId },
-      include: { variants: true },
+      select: PRODUCT_WITH_VARIANTS_SELECT,
     });
 
     if (!product) {
@@ -259,9 +301,7 @@ export class ProductsService {
             })),
           },
         },
-        include: {
-          variants: true,
-        },
+        select: PRODUCT_WITH_VARIANTS_SELECT,
       });
 
       // 4. Record initial stock transactions for variants with stockQuantity > 0
@@ -322,7 +362,7 @@ export class ProductsService {
 
       const existing = await tx.product.findFirst({
         where: { id, workspaceId },
-        include: { variants: true },
+        select: PRODUCT_WITH_VARIANTS_SELECT,
       });
 
       if (!existing) {
@@ -451,7 +491,7 @@ export class ProductsService {
 
       const updated = await tx.product.findFirstOrThrow({
         where: { id, workspaceId },
-        include: { variants: true },
+        select: PRODUCT_WITH_VARIANTS_SELECT,
       });
 
       if (stockInVariants.length > 0) {

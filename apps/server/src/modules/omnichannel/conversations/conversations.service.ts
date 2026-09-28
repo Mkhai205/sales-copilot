@@ -18,29 +18,97 @@ import { PrismaService } from '../../../infrastructure/database/prisma.service';
 import { mapConversationToDto } from './conversations.mapper';
 
 /**
- * Standard Conversation includes for full DTO reconstruction.
+ * Standard Conversation select projection covering exactly the fields
+ * `mapConversationToDto` (and the status/assign/priority guards) read.
+ * Deliberately excludes heavy/secret columns — e.g. `channel.credentials` —
+ * that the DTO never serializes.
  */
-const CONVERSATION_STANDARD_INCLUDE = {
+const CONVERSATION_STANDARD_SELECT = {
+  id: true,
+  displayId: true,
+  workspaceId: true,
+  inboxId: true,
+  contactId: true,
+  channelIdentityId: true,
+  assigneeId: true,
+  teamId: true,
+  status: true,
+  priority: true,
+  snoozedUntil: true,
+  waitingSince: true,
+  firstReplyCreatedAt: true,
+  lastActivityAt: true,
+  unreadMessagesCount: true,
+  customAttributes: true,
+  isAiPaused: true,
+  lastAiMessageAt: true,
+  lastContactMessageAt: true,
+  createdAt: true,
+  updatedAt: true,
   contact: {
-    include: {
-      identities: true,
+    select: {
+      id: true,
+      workspaceId: true,
+      name: true,
+      email: true,
+      phoneNumber: true,
+      avatarUrl: true,
+      identifier: true,
+      customAttributes: true,
+      additionalAttributes: true,
+      createdAt: true,
+      updatedAt: true,
+      identities: {
+        select: {
+          id: true,
+          contactId: true,
+          workspaceId: true,
+          channelId: true,
+          externalContactId: true,
+          username: true,
+          metadata: true,
+          createdAt: true,
+          updatedAt: true,
+          channel: { select: { channelType: true } },
+        },
+      },
     },
   },
   inbox: {
-    include: {
-      channel: true,
+    select: {
+      id: true,
+      name: true,
+      avatarUrl: true,
+      settings: true,
+      channel: { select: { channelType: true } },
     },
   },
-  assignee: true,
-  team: true,
+  assignee: { select: { id: true, name: true, email: true, avatarUrl: true } },
+  team: { select: { id: true, name: true } },
   labels: {
-    include: {
-      label: true,
+    select: {
+      label: { select: { id: true, title: true, color: true } },
     },
   },
   messages: {
     orderBy: { createdAt: 'desc' as const },
     take: 1,
+    select: {
+      id: true,
+      conversationId: true,
+      workspaceId: true,
+      senderType: true,
+      senderId: true,
+      messageType: true,
+      contentType: true,
+      content: true,
+      isPrivate: true,
+      deliveryStatus: true,
+      externalId: true,
+      metadata: true,
+      createdAt: true,
+      updatedAt: true,
+    },
   },
 };
 
@@ -169,7 +237,7 @@ export class ConversationsService {
         unreadMessagesCount: 0,
         customAttributes: (dto.customAttributes as any) ?? {},
       },
-      include: CONVERSATION_STANDARD_INCLUDE,
+      select: CONVERSATION_STANDARD_SELECT,
     });
 
     const conversationDto = mapConversationToDto(created);
@@ -200,7 +268,7 @@ export class ConversationsService {
 
     const existing = await client.conversation.findFirst({
       where: { id, workspaceId },
-      include: CONVERSATION_STANDARD_INCLUDE,
+      select: CONVERSATION_STANDARD_SELECT,
     });
 
     if (!existing) {
@@ -255,7 +323,7 @@ export class ConversationsService {
           ? { unreadMessagesCount: 0, isAiPaused: false }
           : {}),
       },
-      include: CONVERSATION_STANDARD_INCLUDE,
+      select: CONVERSATION_STANDARD_SELECT,
     });
 
     const conversationDto = mapConversationToDto(updated);
@@ -306,7 +374,7 @@ export class ConversationsService {
 
     const existing = await client.conversation.findFirst({
       where: { id, workspaceId },
-      include: CONVERSATION_STANDARD_INCLUDE,
+      select: CONVERSATION_STANDARD_SELECT,
     });
 
     if (!existing) {
@@ -358,7 +426,7 @@ export class ConversationsService {
     const updated = await client.conversation.update({
       where: { workspaceId_id: { workspaceId, id } },
       data: updateData,
-      include: CONVERSATION_STANDARD_INCLUDE,
+      select: CONVERSATION_STANDARD_SELECT,
     });
 
     const conversationDto = mapConversationToDto(updated);
@@ -395,7 +463,7 @@ export class ConversationsService {
 
     const existing = await client.conversation.findFirst({
       where: { id, workspaceId },
-      include: CONVERSATION_STANDARD_INCLUDE,
+      select: CONVERSATION_STANDARD_SELECT,
     });
 
     if (!existing) {
@@ -415,7 +483,7 @@ export class ConversationsService {
     const updated = await client.conversation.update({
       where: { workspaceId_id: { workspaceId, id } },
       data: { priority: currentPriority },
-      include: CONVERSATION_STANDARD_INCLUDE,
+      select: CONVERSATION_STANDARD_SELECT,
     });
 
     const conversationDto = mapConversationToDto(updated);
@@ -462,7 +530,7 @@ export class ConversationsService {
     if (existing.unreadMessagesCount === 0) {
       const full = await client.conversation.findFirst({
         where: { id, workspaceId },
-        include: CONVERSATION_STANDARD_INCLUDE,
+        select: CONVERSATION_STANDARD_SELECT,
       });
       return mapConversationToDto(full);
     }
@@ -470,7 +538,7 @@ export class ConversationsService {
     const updated = await client.conversation.update({
       where: { workspaceId_id: { workspaceId, id } },
       data: { unreadMessagesCount: 0 },
-      include: CONVERSATION_STANDARD_INCLUDE,
+      select: CONVERSATION_STANDARD_SELECT,
     });
 
     const dto = mapConversationToDto(updated);
@@ -505,7 +573,7 @@ export class ConversationsService {
         },
       },
       orderBy: { lastActivityAt: 'desc' },
-      include: CONVERSATION_STANDARD_INCLUDE,
+      select: CONVERSATION_STANDARD_SELECT,
     });
 
     return active ? mapConversationToDto(active) : null;
@@ -564,7 +632,7 @@ export class ConversationsService {
 
     const conversation = await client.conversation.findFirst({
       where: { id, workspaceId },
-      include: CONVERSATION_STANDARD_INCLUDE,
+      select: CONVERSATION_STANDARD_SELECT,
     });
 
     if (!conversation) {
@@ -649,7 +717,7 @@ export class ConversationsService {
         orderBy: {
           [sortBy]: sortOrder,
         },
-        include: CONVERSATION_STANDARD_INCLUDE,
+        select: CONVERSATION_STANDARD_SELECT,
       }),
     ]);
 
@@ -874,7 +942,7 @@ export class ConversationsService {
 
     const existing = await client.conversation.findFirst({
       where: { id, workspaceId },
-      include: CONVERSATION_STANDARD_INCLUDE,
+      select: CONVERSATION_STANDARD_SELECT,
     });
 
     if (!existing) {
@@ -891,7 +959,7 @@ export class ConversationsService {
     const updated = await client.conversation.update({
       where: { workspaceId_id: { workspaceId, id } },
       data: { isAiPaused: isPaused },
-      include: CONVERSATION_STANDARD_INCLUDE,
+      select: CONVERSATION_STANDARD_SELECT,
     });
 
     const dto = mapConversationToDto(updated);

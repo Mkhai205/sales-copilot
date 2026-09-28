@@ -141,12 +141,14 @@ export class ChannelIngestionProcessor extends WorkerHost {
 
     // 2. Parse inbound message payloads using adapter or fallback normalization
     let inboundMessages: InboundMessagePayload[] = [];
+    let parseFailed = false;
 
     if (this.adapterRegistry && this.adapterRegistry.has(channel.channelType as ChannelType)) {
       try {
         const adapter = this.adapterRegistry.get(channel.channelType as ChannelType);
         inboundMessages = await adapter.parseInboundPayload(payload);
       } catch (parseErr) {
+        parseFailed = true;
         this.logger.warn(
           `${tracePrefix}Adapter parsing failed for channel '${channelId}': ${(parseErr as Error).message}`,
         );
@@ -208,7 +210,20 @@ export class ChannelIngestionProcessor extends WorkerHost {
       }
     }
 
-    // 3. Process each normalized message
+    if (parseFailed && (!inboundMessages || inboundMessages.length === 0)) {
+      // Adapter failed AND the fallback normalizer produced nothing: retrying is the only
+      // chance to ingest this event — fail the job so BullMQ retries it.
+      throw new Error(
+        `${tracePrefix}Adapter parsing failed and no message could be normalized for channel '${channelId}' (event '${eventType}'). Job will be retried.`,
+      );
+    }
+
+    // 3. Process each normalized message, collecting per-message failures. A failed
+    // message must NOT be silently dropped: the ChannelEvent is left unprocessed and the
+    // job throws so BullMQ retries. Retrying is idempotent — Message dedup
+    // (@@unique([conversationId, externalId])) skips already-created messages.
+    const failedMessages: Array<{ externalId: string; error: string }> = [];
+
     for (const msg of inboundMessages) {
       try {
         // 3a. Handle delivery status updates (e.g. delivered / read receipts)
@@ -241,7 +256,19 @@ export class ChannelIngestionProcessor extends WorkerHost {
               this.logger.log(
                 `${tracePrefix}Updated deliveryStatus to '${newStatus}' for message '${existingMessage.id}' (externalId: '${externalMsgId}', workspace: '${workspaceId}')`,
               );
+            } else if (/^(watermark_|read_)/.test(externalMsgId)) {
+              // Synthetic receipt ids from Facebook (see facebook.adapter.ts) can never
+              // match a Message row — warn and move on instead of failing the job.
+              this.logger.debug(
+                `${tracePrefix}Skipping synthetic delivery receipt '${externalMsgId}' in workspace '${workspaceId}'`,
+              );
             } else {
+              // Real message id not in DB yet — the message row may still be in-flight in
+              // a concurrent job, so treat this as a retryable failure.
+              failedMessages.push({
+                externalId: externalMsgId,
+                error: `message with externalId not found for delivery status update`,
+              });
               this.logger.warn(
                 `${tracePrefix}Message with externalId '${externalMsgId}' not found for delivery status update in workspace '${workspaceId}'`,
               );
@@ -386,7 +413,18 @@ export class ChannelIngestionProcessor extends WorkerHost {
           `${tracePrefix}Failed to process inbound message '${msg.externalMessageId}' on channel '${channelId}': ${(msgErr as Error).message}`,
           (msgErr as Error).stack,
         );
+        failedMessages.push({
+          externalId: msg.externalMessageId,
+          error: (msgErr as Error).message,
+        });
       }
+    }
+
+    if (failedMessages.length > 0) {
+      // Do NOT mark the ChannelEvent processed — fail the job so BullMQ retries it.
+      throw new Error(
+        `${tracePrefix}Failed to process ${failedMessages.length}/${inboundMessages.length} inbound messages for channel '${channelId}' (first failure: '${failedMessages[0].externalId}': ${failedMessages[0].error}). Job will be retried.`,
+      );
     }
 
     // 4. Mark ChannelEvent as processed in database

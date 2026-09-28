@@ -271,7 +271,9 @@ export class WebhooksService {
           delay: 30_000,
         },
         removeOnComplete: true,
-        removeOnFail: false,
+        // Bounded failed-job retention (7 days / max 1000): keeps failures
+        // debuggable without unbounded Redis growth.
+        removeOnFail: { age: 7 * 24 * 3600, count: 1000 },
       },
     );
 

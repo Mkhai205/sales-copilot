@@ -45,6 +45,13 @@ describe('AiDispatcherListener', () => {
       set: async (key: string, val: string, ttl?: number) => {
         redisStore.set(key, { val, ttl });
       },
+      // Simulates the atomic max(now, prev + 1) slot reservation in RedisService.
+      reserveIncreasingValue: async (key: string, minValue: number, ttl?: number) => {
+        const prev = Number(redisStore.get(key)?.val || 0);
+        const next = Math.max(minValue, prev + 1);
+        redisStore.set(key, { val: String(next), ttl });
+        return next;
+      },
     };
 
     mockQueue = {

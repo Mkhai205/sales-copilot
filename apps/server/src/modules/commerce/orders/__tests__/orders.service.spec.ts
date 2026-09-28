@@ -294,6 +294,12 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
           for (const [id, o] of ordersDb.entries()) {
             if (where.id && o.id !== where.id) continue;
             if (where.workspaceId && o.workspaceId !== where.workspaceId) continue;
+            if (where.status) {
+              const allowedStatuses = Array.isArray(where.status.in)
+                ? where.status.in
+                : [where.status];
+              if (!allowedStatuses.includes(o.status)) continue;
+            }
             ordersDb.set(id, { ...o, ...data, updatedAt: new Date() });
             count++;
           }
@@ -497,13 +503,16 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
       expect(order.status).toBe(OrderStatus.DRAFT);
       expect(order.paymentStatus).toBe(PaymentStatus.UNPAID);
       expect(order.subtotal).toBe(700000); // 2 * 350000
-      expect(order.discountAmount).toBe(50000);
+      // Line discount (20000) is folded into the order discount: 50000 + 20000 = 70000
+      expect(order.discountAmount).toBe(70000);
       expect(order.shippingFee).toBe(30000);
-      expect(order.totalAmount).toBe(680000); // 700000 - 50000 + 30000
+      expect(order.totalAmount).toBe(660000); // 700000 - 70000 + 30000
       expect(order.orderNumber.startsWith('ORD-')).toBeTruthy();
       expect(order.items?.length).toBe(1);
       expect(order.items?.[0].productName).toBe('Áo Sơ Mi Oxford');
       expect(order.items?.[0].variantName).toBe('Size M / Trắng');
+      // Line discount is still tracked per line: 700000 - 20000
+      expect(order.items?.[0].totalPrice).toBe(680000);
 
       // Verify physical and reserved stock remain untouched in DRAFT
       const v = variantsDb.get(varA);
@@ -560,6 +569,85 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
           return true;
         },
       );
+    });
+
+    it('should fold line-item discount into totalAmount together with order discount (C3)', async () => {
+      // 100k subtotal, line discount 20k + order discount 10k => effective discount 30k
+      const order = await service.createOrder(ws1, {
+        contactId: contact1,
+        items: [
+          {
+            productId: prod1,
+            variantId: varA,
+            quantity: 1,
+            unitPrice: 100000,
+            discountAmount: 20000,
+          },
+        ],
+        discountAmount: 10000,
+        shippingFee: 0,
+      });
+
+      expect(order.subtotal).toBe(100000);
+      expect(order.discountAmount).toBe(30000); // 20000 (line) + 10000 (order)
+      expect(order.totalAmount).toBe(70000); // 100000 - 30000
+      expect(order.items?.[0].totalPrice).toBe(80000); // 100000 - 20000
+    });
+
+    it('should keep sum(line.totalPrice) === totalAmount - shippingFee when only line discounts apply (C3)', async () => {
+      const order = await service.createOrder(ws1, {
+        contactId: contact1,
+        items: [
+          {
+            productId: prod1,
+            variantId: varA,
+            quantity: 1,
+            unitPrice: 60000,
+            discountAmount: 10000,
+          },
+          {
+            productId: prod1,
+            variantId: varA,
+            quantity: 1,
+            unitPrice: 40000,
+            discountAmount: 10000,
+          },
+        ],
+        shippingFee: 30000,
+      });
+
+      const lineTotalSum = (order.items || []).reduce(
+        (sum, item) => sum + Number(item.totalPrice),
+        0,
+      );
+
+      expect(order.subtotal).toBe(100000);
+      expect(order.discountAmount).toBe(20000);
+      expect(order.totalAmount).toBe(110000); // 100000 - 20000 + 30000
+      // Invariant: line-level net prices plus shipping equal the charged total
+      expect(lineTotalSum).toBe(80000);
+      expect(lineTotalSum).toBe(order.totalAmount - order.shippingFee);
+    });
+
+    it('should clamp a line-item discount to its own line subtotal', async () => {
+      const order = await service.createOrder(ws1, {
+        contactId: contact1,
+        items: [
+          {
+            productId: prod1,
+            variantId: varA,
+            quantity: 1,
+            unitPrice: 100000,
+            discountAmount: 150000, // over-discount attempt
+          },
+        ],
+        shippingFee: 0,
+      });
+
+      expect(order.subtotal).toBe(100000);
+      expect(order.discountAmount).toBe(100000); // clamped to line subtotal
+      expect(order.totalAmount).toBe(0);
+      expect(order.items?.[0].totalPrice).toBe(0);
     });
   });
 
@@ -795,6 +883,45 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
           return true;
         },
       );
+    });
+
+    it('should throw PAYMENT_STATE_CONFLICT and keep reservation when order became non-cancellable at write time (C6)', async () => {
+      const order = await service.createOrder(ws1, {
+        contactId: contact1,
+        items: [{ productId: prod1, variantId: varA, quantity: 2, unitPrice: 350000 }],
+      });
+      await service.confirmOrder(ws1, order.id, userId);
+
+      // Simulate a concurrent flow (e.g. completeOrder) committing between the
+      // service's read and the cancel write: the conditional write must miss.
+      const originalUpdateMany = clientMock.order.updateMany.bind(clientMock.order);
+      jest.spyOn(clientMock.order, 'updateMany').mockImplementationOnce(async (args: any) => {
+        const concurrentOrder = ordersDb.get(order.id);
+        if (concurrentOrder) concurrentOrder.status = OrderStatus.COMPLETED;
+        return originalUpdateMany(args);
+      });
+
+      await expectReject(
+        async () => {
+          await service.cancelOrder(
+            ws1,
+            order.id,
+            { cancelReason: 'Đua với hoàn tất đơn' },
+            userId,
+          );
+        },
+        (err: any) => {
+          expect(err.name).toBe('ConflictException');
+          expect(err.response?.code).toBe('PAYMENT_STATE_CONFLICT');
+          return true;
+        },
+      );
+
+      // Order must NOT be cancelled and the reservation must NOT be released
+      const inDb = ordersDb.get(order.id);
+      expect(inDb.status).toBe(OrderStatus.COMPLETED);
+      expect(inDb.cancelledAt).toBeUndefined();
+      expect(variantsDb.get(varA).reservedQuantity).toBe(2);
     });
   });
 
@@ -1279,9 +1406,10 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
         userId,
       );
 
-      // Verify Redlock was acquired and released
-      expect(acquiredLocks.includes(`order:payment:${order.id}`)).toBeTruthy();
-      expect(releasedLocks.includes(`order:payment:${order.id}`)).toBeTruthy();
+      // Verify Redlock was acquired and released (unified payment lock domain)
+      const expectedLockKey = `ws:${ws1}:order:${order.id}:payment`;
+      expect(acquiredLocks.includes(expectedLockKey)).toBeTruthy();
+      expect(releasedLocks.includes(expectedLockKey)).toBeTruthy();
 
       // Verify order status
       expect(paid.status).toBe(OrderStatus.PAID);
@@ -1368,6 +1496,46 @@ describe('OrdersService (Order Lifecycle & Anti-Overselling Engine)', () => {
           return true;
         },
       );
+    });
+
+    it('should throw PAYMENT_STATE_CONFLICT instead of overwriting when order state changed concurrently (C1)', async () => {
+      const order = await service.createOrder(ws1, {
+        contactId: contact1,
+        items: [{ productId: prod1, variantId: varA, quantity: 1, unitPrice: 350000 }],
+      });
+      await service.confirmOrder(ws1, order.id, userId);
+
+      // Simulate a concurrent flow (e.g. completeOrder) committing between the
+      // service's read and its status update: the conditional write must miss.
+      const originalUpdateMany = clientMock.order.updateMany.bind(clientMock.order);
+      jest.spyOn(clientMock.order, 'updateMany').mockImplementationOnce(async (args: any) => {
+        const concurrentOrder = ordersDb.get(order.id);
+        if (concurrentOrder) concurrentOrder.status = OrderStatus.COMPLETED;
+        return originalUpdateMany(args);
+      });
+
+      await expectReject(
+        async () => {
+          await service.payOrder(
+            ws1,
+            order.id,
+            { amount: 350000, paymentMethod: PaymentMethod.CASH },
+            userId,
+          );
+        },
+        (err: any) => {
+          expect(err.name).toBe('ConflictException');
+          expect(err.response?.code).toBe('PAYMENT_STATE_CONFLICT');
+          return true;
+        },
+      );
+
+      // The unconditional-style write must NOT have been applied (no lost update):
+      // status stays COMPLETED, paidAmount/paymentStatus untouched.
+      const inDb = ordersDb.get(order.id);
+      expect(inDb.status).toBe(OrderStatus.COMPLETED);
+      expect(Number(inDb.paidAmount)).toBe(0);
+      expect(inDb.paymentStatus).toBe(PaymentStatus.UNPAID);
     });
   });
 

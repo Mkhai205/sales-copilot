@@ -2,8 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { embed, type EmbeddingModel } from 'ai';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
-import { createVertex } from '@ai-sdk/google-vertex';
 import { PrismaService } from '../../../infrastructure/database/prisma.service';
+import { resolvePlatformGoogleAiProvider } from '../ai-provider.resolver';
 import { EMBEDDING_MODEL } from './knowledge.constants';
 
 export function formatKnowledgeForEmbedding(
@@ -53,41 +53,13 @@ export class KnowledgeEmbeddingService {
       return google.textEmbeddingModel(EMBEDDING_MODEL);
     }
 
-    // 2. Google Cloud Vertex AI (uses organization GCP credits)
-    const vertexCredentials =
-      this.configService.get<string>('GOOGLE_APPLICATION_CREDENTIALS') ||
-      process.env.GOOGLE_APPLICATION_CREDENTIALS;
-    const vertexProject =
-      this.configService.get<string>('GOOGLE_VERTEX_PROJECT') || process.env.GOOGLE_VERTEX_PROJECT;
-    const vertexLocation =
-      this.configService.get<string>('GOOGLE_VERTEX_LOCATION') ||
-      process.env.GOOGLE_VERTEX_LOCATION ||
-      'us-central1';
-
-    if (vertexCredentials && vertexProject) {
-      this.logger.debug(
-        `Using Google Cloud Vertex AI for embedding in workspace '${workspaceId}' (project: ${vertexProject}, region: ${vertexLocation})`,
-      );
-      const vertex = createVertex({
-        project: vertexProject,
-        location: vertexLocation,
-      });
-      return vertex.textEmbeddingModel(EMBEDDING_MODEL);
-    }
-
-    // 3. Platform default Google AI Studio API key
-    const envKey = this.configService.get<string>('GEMINI_API_KEY');
-    if (envKey && envKey.trim()) {
-      this.logger.debug(
-        `Using Google AI Studio default for embedding in workspace '${workspaceId}'`,
-      );
-      const google = createGoogleGenerativeAI({ apiKey: envKey.trim() });
-      return google.textEmbeddingModel(EMBEDDING_MODEL);
-    }
-
-    throw new Error(
-      `No AI provider available for embedding in workspace '${workspaceId}'. Please configure Google Cloud Vertex AI or GEMINI_API_KEY.`,
+    // 2. Platform default provider (Vertex AI credits or GEMINI_API_KEY)
+    const provider = resolvePlatformGoogleAiProvider(
+      this.configService,
+      this.logger,
+      `for embedding in workspace '${workspaceId}'`,
     );
+    return provider.textEmbeddingModel(EMBEDDING_MODEL);
   }
 
   /**

@@ -15,11 +15,7 @@ import {
 import { PrismaService } from '../../../infrastructure/database/prisma.service';
 import { RedisService } from '../../../infrastructure/redis/redis.service';
 import { MessagesService } from '../../omnichannel/messages/messages.service';
-import {
-  AI_AGENT_CONSTANTS,
-  getAiDebounceKey,
-  HumanTakeoverAbortError,
-} from './ai-agent.constants';
+import { AI_AGENT_CONSTANTS, getAiDebounceKey } from './ai-agent.constants';
 import { AiAgentService } from './ai-agent.service';
 
 @Processor(AI_AUTOPILOT_QUEUE, { concurrency: 5 })
@@ -54,7 +50,12 @@ export class AiAgentWorker extends WorkerHost {
       `Processing AI job ${job.id} for conversation '${conversationId}' (scheduledAt: ${scheduledAt})`,
     );
 
-    // 1. Debounce check: If newer inbound messages arrived, drop this job
+    // 1. Debounce check: drop this job when a newer dispatch reserved a later slot.
+    // The dispatcher reserves slots with an atomic max(now, prev + 1) script, so each
+    // job's scheduledAt equals exactly the value its own dispatch wrote and any newer
+    // dispatch strictly increases the key. `>` (not `>=`) is therefore sufficient: a job
+    // is only dropped when a genuinely newer message superseded it — equal timestamps
+    // can never double-run because the key can never repeat.
     const debounceKey = getAiDebounceKey(workspaceId, conversationId);
     const latestTimestampStr = await this.redisService.get(debounceKey);
 
@@ -188,13 +189,8 @@ export class AiAgentWorker extends WorkerHost {
 
       return result;
     } catch (err) {
-      if (err instanceof HumanTakeoverAbortError) {
-        this.logger.log(
-          `AI execution aborted due to Human Takeover for conversation '${conversationId}'`,
-        );
-        return { skipped: true, reason: 'HUMAN_TAKEOVER' };
-      }
-
+      // Human takeover is handled inside AiAgentService (stopWhen condition returns
+      // { skipped: true, reason: 'HUMAN_TAKEOVER' }) — no abort error escapes here.
       this.logger.error(
         `Error executing AI agent for conversation '${conversationId}': ${(err as Error).message}`,
         (err as Error).stack,

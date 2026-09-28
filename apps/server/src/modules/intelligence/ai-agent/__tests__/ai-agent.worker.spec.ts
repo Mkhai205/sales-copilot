@@ -1,6 +1,6 @@
 import { MessageType, SenderType } from '@sales-copilot/shared-contracts';
 import { AiAgentWorker } from '../ai-agent.worker';
-import { getAiDebounceKey, HumanTakeoverAbortError } from '../ai-agent.constants';
+import { getAiDebounceKey } from '../ai-agent.constants';
 
 describe('AiAgentWorker', () => {
   let worker: AiAgentWorker;
@@ -138,16 +138,19 @@ describe('AiAgentWorker', () => {
     expect(conv.lastAiMessageAt instanceof Date).toBeTruthy();
   });
 
-  it('should handle HumanTakeoverAbortError gracefully when takeover happens mid-execution', async () => {
+  it('should propagate the takeover-skip result when the AI loop stops mid-execution (human takeover)', async () => {
     conversationsDb.set(conversationId, {
       id: conversationId,
       workspaceId,
       isAiPaused: false,
     });
 
-    mockAiAgentService.processConversation = async () => {
-      throw new HumanTakeoverAbortError();
-    };
+    // Human takeover mid-loop: AiAgentService's stopWhen condition halts the loop and
+    // returns a skip result — no reply is saved and no fallback message is dispatched.
+    mockAiAgentService.processConversation = async () => ({
+      skipped: true,
+      reason: 'HUMAN_TAKEOVER',
+    });
 
     const result = await worker.process({
       id: 'job-1',

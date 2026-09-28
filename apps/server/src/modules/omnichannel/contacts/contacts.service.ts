@@ -28,6 +28,43 @@ export interface MergeContactOptions {
   tx?: Prisma.TransactionClient;
 }
 
+/**
+ * ChannelIdentity projection covering exactly what `mapIdentityToDto` serializes.
+ * Excludes the full `channel` row — most importantly `channel.credentials`
+ * (encrypted secrets) — only `channelType` is needed for the DTO.
+ */
+const IDENTITY_WITH_CHANNEL_SELECT = {
+  id: true,
+  contactId: true,
+  workspaceId: true,
+  channelId: true,
+  externalContactId: true,
+  username: true,
+  metadata: true,
+  createdAt: true,
+  updatedAt: true,
+  channel: { select: { channelType: true } },
+};
+
+/**
+ * Contact projection covering exactly what `mapContactToDto` serializes,
+ * including the identity projection above.
+ */
+const CONTACT_WITH_IDENTITIES_SELECT = {
+  id: true,
+  workspaceId: true,
+  name: true,
+  email: true,
+  phoneNumber: true,
+  avatarUrl: true,
+  identifier: true,
+  customAttributes: true,
+  additionalAttributes: true,
+  createdAt: true,
+  updatedAt: true,
+  identities: { select: IDENTITY_WITH_CHANNEL_SELECT },
+};
+
 @Injectable()
 export class ContactsService {
   private readonly logger = new Logger(ContactsService.name);
@@ -91,9 +128,7 @@ export class ContactsService {
           customAttributes: (dto.customAttributes as any) ?? {},
           additionalAttributes: (dto.additionalAttributes as any) ?? {},
         },
-        include: {
-          identities: true,
-        },
+        select: CONTACT_WITH_IDENTITIES_SELECT,
       });
 
       const contactDto = this.mapToDto(created);
@@ -171,13 +206,7 @@ export class ContactsService {
       client.contact.count({ where }),
       client.contact.findMany({
         where,
-        include: {
-          identities: {
-            include: {
-              channel: true,
-            },
-          },
-        },
+        select: CONTACT_WITH_IDENTITIES_SELECT,
         orderBy: { [sortBy]: sortOrder },
         skip,
         take: limit,
@@ -222,13 +251,7 @@ export class ContactsService {
 
     const contact = await client.contact.findFirst({
       where: { id: contactId, workspaceId },
-      include: {
-        identities: {
-          include: {
-            channel: true,
-          },
-        },
-      },
+      select: CONTACT_WITH_IDENTITIES_SELECT,
     });
 
     if (!contact) {
@@ -249,7 +272,7 @@ export class ContactsService {
 
     const existing = await client.contact.findFirst({
       where: { id: contactId, workspaceId },
-      include: { identities: true },
+      select: CONTACT_WITH_IDENTITIES_SELECT,
     });
 
     if (!existing) {
@@ -344,9 +367,7 @@ export class ContactsService {
           ...(customAttributes !== undefined && { customAttributes }),
           ...(additionalAttributes !== undefined && { additionalAttributes }),
         },
-        include: {
-          identities: true,
-        },
+        select: CONTACT_WITH_IDENTITIES_SELECT,
       });
 
       const contactDto = this.mapToDto(updated);
@@ -395,7 +416,7 @@ export class ContactsService {
 
     const existing = await client.contact.findFirst({
       where: { id: contactId, workspaceId },
-      include: { identities: true },
+      select: CONTACT_WITH_IDENTITIES_SELECT,
     });
 
     if (!existing) {
@@ -467,7 +488,7 @@ export class ContactsService {
       const client = options?.tx ?? this.prisma.getClient();
       const base = await client.contact.findFirst({
         where: { id: baseContactId, workspaceId },
-        include: { identities: true },
+        select: CONTACT_WITH_IDENTITIES_SELECT,
       });
       if (!base) {
         throw new NotFoundException({
@@ -483,11 +504,11 @@ export class ContactsService {
       const [baseContact, mergeeContact] = await Promise.all([
         tx.contact.findFirst({
           where: { id: baseContactId, workspaceId },
-          include: { identities: true },
+          select: CONTACT_WITH_IDENTITIES_SELECT,
         }),
         tx.contact.findFirst({
           where: { id: mergeeContactId, workspaceId },
-          include: { identities: true },
+          select: CONTACT_WITH_IDENTITIES_SELECT,
         }),
       ]);
 
@@ -632,9 +653,7 @@ export class ContactsService {
           customAttributes: mergedCustomAttributes as Prisma.InputJsonValue,
           additionalAttributes: mergedAdditionalAttributes as Prisma.InputJsonValue,
         },
-        include: {
-          identities: true,
-        },
+        select: CONTACT_WITH_IDENTITIES_SELECT,
       });
 
       // 8. Create AuditLog entry
@@ -717,9 +736,7 @@ export class ContactsService {
 
     const identities = await client.channelIdentity.findMany({
       where: { contactId, workspaceId },
-      include: {
-        channel: true,
-      },
+      select: IDENTITY_WITH_CHANNEL_SELECT,
       orderBy: { createdAt: 'asc' },
     });
 
@@ -770,9 +787,7 @@ export class ContactsService {
           externalContactId,
         },
       },
-      include: {
-        channel: true,
-      },
+      select: IDENTITY_WITH_CHANNEL_SELECT,
     });
 
     if (existing) {
@@ -794,9 +809,7 @@ export class ContactsService {
         username: dto.username?.trim() || null,
         metadata: (dto.metadata as any) ?? {},
       },
-      include: {
-        channel: true,
-      },
+      select: IDENTITY_WITH_CHANNEL_SELECT,
     });
 
     const identityDto = mapIdentityToDto(created);
@@ -829,9 +842,7 @@ export class ContactsService {
         contactId,
         workspaceId,
       },
-      include: {
-        channel: true,
-      },
+      select: IDENTITY_WITH_CHANNEL_SELECT,
     });
 
     if (!existing) {

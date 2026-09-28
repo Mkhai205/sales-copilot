@@ -593,7 +593,7 @@ describe('ChannelIngestionProcessor (Task T-1.5.7: Inbound Ingestion Pipeline In
       expect(updatedEvt.processedAt instanceof Date).toBeTruthy();
     });
 
-    it('should gracefully handle delivery status update when message externalId is not found', async () => {
+    it('should fail the job (retryable) when a real delivery-status externalId is not found', async () => {
       const eventId = 'evt_delivery_unknown';
       channelEventsDb.set(eventId, {
         id: eventId,
@@ -620,11 +620,12 @@ describe('ChannelIngestionProcessor (Task T-1.5.7: Inbound Ingestion Pipeline In
         },
       };
 
-      await processor.process(mockJob);
+      // A real (non-synthetic) message id that never matches a Message row is a
+      // retryable failure: the job throws and the ChannelEvent stays unprocessed.
+      await expect(processor.process(mockJob)).rejects.toThrow(/Job will be retried/);
 
-      // No crash, and channelEvent marked processed
       const updatedEvt = channelEventsDb.get(eventId);
-      expect(updatedEvt.processedAt instanceof Date).toBeTruthy();
+      expect(updatedEvt.processedAt).toBeNull();
     });
   });
 

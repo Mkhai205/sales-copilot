@@ -5,14 +5,16 @@ describe('AiGuardrailService', () => {
   let service: AiGuardrailService;
   let mockRedis: any;
   let redisStore: Map<string, { val: string; ttl?: number }>;
-  let counters: Map<string, number>;
+  let slidingStore: Map<string, number[]>;
+  let slidingThrows: boolean;
 
   const workspaceId = 'ws-test-123';
   const conversationId = 'conv-test-456';
 
   beforeEach(() => {
     redisStore = new Map();
-    counters = new Map();
+    slidingStore = new Map();
+    slidingThrows = false;
 
     mockRedis = {
       get: async (key: string) => {
@@ -22,13 +24,16 @@ describe('AiGuardrailService', () => {
       set: async (key: string, val: string, ttl?: number) => {
         redisStore.set(key, { val, ttl });
       },
-      incr: async (key: string) => {
-        const current = (counters.get(key) || 0) + 1;
-        counters.set(key, current);
-        return current;
-      },
-      expire: async (_key: string, _ttl: number) => {
-        return true;
+      // Simulates the atomic ZADD sliding window implemented by RedisService.
+      incrementSlidingWindow: async (key: string, windowMs: number, _member: string) => {
+        if (slidingThrows) {
+          throw new Error('Redis unavailable');
+        }
+        const now = Date.now();
+        const hits = (slidingStore.get(key) || []).filter(ts => now - ts < windowMs);
+        hits.push(now);
+        slidingStore.set(key, hits);
+        return hits.length;
       },
     };
 
@@ -208,6 +213,36 @@ describe('AiGuardrailService', () => {
       expect(res7.allowed).toBe(false);
       expect(res7.reason).toBe('RATE_LIMITED');
       expect(res7.shouldReply).toBeFalsy();
+    });
+
+    it('should fail CLOSED with INFRA_UNAVAILABLE (no reply) when Redis errors during rate limiting', async () => {
+      slidingThrows = true;
+
+      const res = await service.check({
+        workspaceId,
+        conversationId,
+        messageContent: 'Tin nhắn bình thường',
+      });
+
+      expect(res.allowed).toBe(false);
+      expect(res.reason).toBe('INFRA_UNAVAILABLE');
+      expect(res.shouldReply).toBeFalsy();
+    });
+
+    it('should fail CLOSED with INFRA_UNAVAILABLE when Redis errors during abuse detection', async () => {
+      mockRedis.get = async () => {
+        throw new Error('Redis unavailable');
+      };
+
+      const res = await service.check({
+        workspaceId,
+        conversationId,
+        messageContent: 'Tin nhắn bình thường',
+      });
+
+      expect(res.allowed).toBe(false);
+      expect(res.reason).toBe('INFRA_UNAVAILABLE');
+      expect(res.shouldReply).toBeFalsy();
     });
   });
 });

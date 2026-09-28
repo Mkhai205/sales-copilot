@@ -99,11 +99,6 @@
               websiteToken: 'webchat_default',
               preChatForm: true,
             });
-          } else if (window.chatwootSDK && typeof window.chatwootSDK.run === 'function') {
-            window.chatwootSDK.run({
-              baseUrl: BASE_URL,
-              websiteToken: 'webchat_default',
-            });
           }
         };
       })(document, 'script');

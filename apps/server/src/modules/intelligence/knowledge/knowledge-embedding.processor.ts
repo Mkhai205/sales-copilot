@@ -2,6 +2,7 @@ import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Injectable, Logger } from '@nestjs/common';
 import { Job } from 'bullmq';
 import { PrismaService } from '../../../infrastructure/database/prisma.service';
+import { KnowledgeEmbeddingStatus } from '../../../infrastructure/database/generated/enums';
 import { KNOWLEDGE_QUEUE_NAME, type KnowledgeEmbeddingJobData } from './knowledge.constants';
 import {
   KnowledgeEmbeddingService,
@@ -45,7 +46,7 @@ export class KnowledgeEmbeddingProcessor extends WorkerHost {
       await client.knowledgeArticle.updateMany({
         where: { id: articleId, workspaceId },
         data: {
-          embeddingStatus: 'PROCESSING',
+          embeddingStatus: KnowledgeEmbeddingStatus.PROCESSING,
           embeddingError: null,
         },
       });
@@ -65,7 +66,7 @@ export class KnowledgeEmbeddingProcessor extends WorkerHost {
       await client.$executeRawUnsafe(
         `UPDATE "KnowledgeArticle"
          SET "embedding" = $1::vector,
-             "embeddingStatus" = 'READY',
+             "embeddingStatus" = '${KnowledgeEmbeddingStatus.READY}',
              "embeddingError" = NULL,
              "updatedAt" = NOW()
          WHERE "id" = $2 AND "workspaceId" = $3`,
@@ -88,7 +89,7 @@ export class KnowledgeEmbeddingProcessor extends WorkerHost {
       await client.knowledgeArticle.updateMany({
         where: { id: articleId, workspaceId },
         data: {
-          embeddingStatus: 'FAILED',
+          embeddingStatus: KnowledgeEmbeddingStatus.FAILED,
           embeddingError: error?.message || 'Unknown error occurred while generating embedding',
         },
       });

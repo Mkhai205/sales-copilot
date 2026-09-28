@@ -3,6 +3,7 @@ import type { ToolSet, LanguageModel } from 'ai';
 import type { InboxAiCommercePolicyConfig } from '@sales-copilot/shared-contracts';
 import { PrismaService } from '../../../../infrastructure/database/prisma.service';
 import { RedisService } from '../../../../infrastructure/redis/redis.service';
+import { HumanTakeoverAbortError } from '../ai-agent.constants';
 import { ProductsService } from '../../../commerce/products/products.service';
 import { OrdersService } from '../../../commerce/orders/orders.service';
 import { InventoryLedgerService } from '../../../commerce/inventory/inventory-ledger.service';
@@ -51,6 +52,10 @@ export class CommerceToolRegistry {
    * Multi-tenancy rule: workspaceId is strictly injected via closure and never exposed in tool parameters.
    */
   buildTools(context: CommerceToolBuildContext, model?: LanguageModel): ToolSet {
+    return this.withHumanTakeoverGuard(this.createToolSet(context, model), context);
+  }
+
+  private createToolSet(context: CommerceToolBuildContext, model?: LanguageModel): ToolSet {
     const { workspaceId, conversationId, policy } = context;
 
     return {
@@ -121,5 +126,54 @@ export class CommerceToolRegistry {
         redisService: this.redisService,
       }),
     };
+  }
+
+  /**
+   * Belt-and-suspenders Human Takeover guard: re-checks `isAiPaused` from the DB right
+   * before every tool execution. The stopWhen condition in AiAgentService only runs
+   * between steps, so without this guard tools already queued in the current step would
+   * still execute (and mutate orders/contacts) after a human agent took over.
+   * Throwing inside `execute` makes the AI SDK record a tool-error result for the step;
+   * the takeover stop condition then halts the loop and the reply is discarded.
+   */
+  private withHumanTakeoverGuard(toolSet: ToolSet, context: CommerceToolBuildContext): ToolSet {
+    const { workspaceId, conversationId } = context;
+    if (!conversationId) {
+      return toolSet;
+    }
+
+    return Object.fromEntries(
+      Object.entries(toolSet).map(([name, toolDef]) => {
+        const originalExecute = toolDef.execute?.bind(toolDef);
+        if (!originalExecute) {
+          return [name, toolDef];
+        }
+
+        return [
+          name,
+          {
+            ...toolDef,
+            execute: async (
+              input: unknown,
+              options: Parameters<NonNullable<typeof originalExecute>>[1],
+            ) => {
+              const conv = await this.prisma.getClient().conversation.findFirst({
+                where: { id: conversationId, workspaceId },
+                select: { isAiPaused: true },
+              });
+
+              if (conv?.isAiPaused) {
+                this.logger.warn(
+                  `Blocking tool '${name}' in conversation '${conversationId}': Human Takeover is active.`,
+                );
+                throw new HumanTakeoverAbortError();
+              }
+
+              return originalExecute(input, options);
+            },
+          } as typeof toolDef,
+        ];
+      }),
+    ) as ToolSet;
   }
 }

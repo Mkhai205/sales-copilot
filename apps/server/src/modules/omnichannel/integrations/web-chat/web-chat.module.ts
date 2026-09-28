@@ -1,4 +1,5 @@
 import { forwardRef, Module, OnModuleInit } from '@nestjs/common';
+import { JwtModule } from '@nestjs/jwt';
 import { DatabaseModule } from '../../../../infrastructure/database/database.module';
 import { InboxesModule } from '../../inboxes/inboxes.module';
 import { ContactsModule } from '../../contacts/contacts.module';
@@ -18,6 +19,7 @@ import { WebChatService } from './web-chat.service';
 @Module({
   imports: [
     DatabaseModule,
+    JwtModule.register({}),
     InboxesModule,
     forwardRef(() => ContactsModule),
     forwardRef(() => MessagesModule),

@@ -46,7 +46,7 @@ export function useTakeoverConversation(
       // 1. Optimistically update single conversation detail cache
       queryClient.setQueriesData<ConversationResponseDto>(
         {
-          queryKey: ['conversations', 'detail'],
+          queryKey: conversationKeys.detail(),
           predicate: query => query.queryKey.includes(updatedConversation.id),
         },
         old => (old ? { ...old, ...updatedConversation, isAiPaused: true } : updatedConversation),

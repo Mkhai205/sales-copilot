@@ -9,6 +9,7 @@ export const AI_AGENT_CONSTANTS = {
 
   // Guardrails & Rate limiting
   RATE_LIMIT_PER_MINUTE: 5,
+  RATE_LIMIT_WINDOW_SECONDS: 60,
   RATE_LIMIT_WARN_MESSAGE: 'Anh/chị vui lòng chờ em xử lý tin nhắn trước ạ 😊',
   RATE_LIMIT_WARN_TTL_SECONDS: 60,
   BLACKLIST_REPLY_MESSAGE: 'Em không hỗ trợ nội dung này ạ',

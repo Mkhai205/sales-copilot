@@ -126,6 +126,54 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
+  /**
+   * Atomic sliding-window hit counter: prunes entries older than `windowMs`, records a
+   * hit, and returns the number of hits inside the window — all in one Lua script, so
+   * concurrent callers can never race the prune/expire sequence the way separate
+   * INCR + EXPIRE calls can.
+   *
+   * Unlike the other helpers this THROWS on Redis errors or when no client is available:
+   * callers rely on it for fail-closed rate limiting.
+   */
+  async incrementSlidingWindow(key: string, windowMs: number, member: string): Promise<number> {
+    if (!this.client) {
+      throw new Error('Redis client is not available');
+    }
+    const script = `local key = KEYS[1]
+local now = tonumber(ARGV[1])
+local window = tonumber(ARGV[2])
+redis.call('ZREMRANGEBYSCORE', key, 0, now - window)
+redis.call('ZADD', key, now, member)
+redis.call('PEXPIRE', key, window)
+return redis.call('ZCARD', key)`;
+    return (await this.client.eval(
+      script,
+      1,
+      key,
+      String(Date.now()),
+      String(windowMs),
+      member,
+    )) as number;
+  }
+
+  /**
+   * Atomically reserves a strictly increasing value for `key`: the stored value becomes
+   * max(currentValue + 1, minValue). Used for debounce slots so two events in the same
+   * millisecond can never be stamped with the same timestamp.
+   *
+   * THROWS on Redis errors or when no client is available.
+   */
+  async reserveIncreasingValue(key: string, minValue: number, ttlSeconds: number): Promise<number> {
+    if (!this.client) {
+      throw new Error('Redis client is not available');
+    }
+    const script = `local prev = tonumber(redis.call('GET', KEYS[1]) or '0')
+local next = math.max(tonumber(ARGV[1]), prev + 1)
+redis.call('SET', KEYS[1], next, 'EX', ARGV[2])
+return next`;
+    return (await this.client.eval(script, 1, key, String(minValue), String(ttlSeconds))) as number;
+  }
+
   async hget(key: string, field: string): Promise<string | null> {
     if (!this.client) return null;
     try {

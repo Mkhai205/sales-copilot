@@ -235,8 +235,10 @@ export class CommerceReconciliationProcessor extends WorkerHost {
       });
     }
 
-    // 4. Distributed Redlock Concurrency Guard (TTL 10s)
-    const lockKey = `ws:${workspaceId}:order:${order.id}:reconcile`;
+    // 4. Distributed Redlock Concurrency Guard (TTL 10s).
+    // Shared payment lock domain — same key as payOrder and manual match so the two
+    // payment flows can never process the same order concurrently.
+    const lockKey = `ws:${workspaceId}:order:${order.id}:payment`;
     const lockToken = await this.redisService.acquireLock(lockKey, 10000);
 
     if (!lockToken) {

@@ -51,6 +51,6 @@ Mỗi Feature trong Backlog được chuẩn hóa thành 5 đề mục sắc bé
 | Phase 2 | Commerce & Orders | ✅ Done | [archive/phase-2/](archive/phase-2/) |
 | Phase 3 | AI Agent & Cleanup | ✅ Done | [archive/phase-3/](archive/phase-3/) |
 | Phase 3C | Expansion (Shipping v2, Zalo) | 📋 Planned | [phase-3c-expansion.md](phase-3c-expansion.md) |
-| **Phase 4** | **Comprehensive Codebase Audit** | **📋 Planned** | **[phase-4-codebase-audit.md](phase-4-codebase-audit.md)** |
-| AI Backlog | AI Chatbot Hardening | 📋 Ongoing | [ai-chatbot-backlog.md](ai-chatbot-backlog.md) |
+| **Phase 4** | **Comprehensive Codebase Audit** | **✅ Done (2026-09-28)** | **[phase-4-codebase-audit.md](phase-4-codebase-audit.md)** |
+| AI Backlog | AI Chatbot Hardening | ✅ Done | [ai-chatbot-backlog.md](ai-chatbot-backlog.md) |
 

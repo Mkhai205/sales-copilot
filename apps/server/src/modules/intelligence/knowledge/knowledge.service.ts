@@ -10,6 +10,7 @@ import type {
   UpdateKnowledgeArticleDto,
 } from '@sales-copilot/shared-contracts';
 import { PrismaService } from '../../../infrastructure/database/prisma.service';
+import { KnowledgeEmbeddingStatus } from '../../../infrastructure/database/generated/enums';
 import {
   DEFAULT_SIMILARITY_THRESHOLD,
   DEFAULT_TOP_K,
@@ -192,7 +193,7 @@ export class KnowledgeService {
         content: dto.content.trim(),
         category: dto.category?.trim() || null,
         isActive: dto.isActive ?? true,
-        embeddingStatus: 'PENDING',
+        embeddingStatus: KnowledgeEmbeddingStatus.PENDING,
       },
       select: {
         id: true,
@@ -249,7 +250,9 @@ export class KnowledgeService {
         ...(dto.content !== undefined ? { content: dto.content.trim() } : {}),
         ...(dto.category !== undefined ? { category: dto.category?.trim() || null } : {}),
         ...(dto.isActive !== undefined ? { isActive: dto.isActive } : {}),
-        ...(shouldReEmbed ? { embeddingStatus: 'PENDING', embeddingError: null } : {}),
+        ...(shouldReEmbed
+          ? { embeddingStatus: KnowledgeEmbeddingStatus.PENDING, embeddingError: null }
+          : {}),
       },
       select: {
         id: true,
@@ -320,7 +323,7 @@ export class KnowledgeService {
         },
       },
       data: {
-        embeddingStatus: 'PENDING',
+        embeddingStatus: KnowledgeEmbeddingStatus.PENDING,
         embeddingError: null,
       },
       select: {
@@ -378,7 +381,7 @@ export class KnowledgeService {
       FROM "KnowledgeArticle"
       WHERE "workspaceId" = $2
         AND "isActive" = true
-        AND "embeddingStatus" = 'READY'
+        AND "embeddingStatus" = '${KnowledgeEmbeddingStatus.READY}'
         AND "embedding" IS NOT NULL
         AND (1 - ("embedding" <=> $1::vector)) >= $3
       ORDER BY "embedding" <=> $1::vector ASC

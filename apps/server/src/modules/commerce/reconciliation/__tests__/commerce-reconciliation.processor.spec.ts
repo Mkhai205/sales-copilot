@@ -121,6 +121,14 @@ describe('CommerceReconciliation (Bank Reconciliation Engine & Safe Inventory Ma
           updateMany: async (args: any) => {
             const ord = ordersDb.get(args.where.id);
             if (ord && ord.workspaceId === args.where.workspaceId) {
+              if (args.where.status) {
+                const allowedStatuses = Array.isArray(args.where.status.in)
+                  ? args.where.status.in
+                  : [args.where.status];
+                if (!allowedStatuses.includes(ord.status)) {
+                  return { count: 0 };
+                }
+              }
               Object.assign(ord, args.data);
               return { count: 1 };
             }
@@ -146,9 +154,10 @@ describe('CommerceReconciliation (Bank Reconciliation Engine & Safe Inventory Ma
         paymentTransaction: {
           findFirst: async (args: any) => {
             for (const tx of paymentTxsDb.values()) {
+              if (args.where.id && tx.id !== args.where.id) continue;
               if (
                 tx.workspaceId === args.where.workspaceId &&
-                tx.idempotencyKey === args.where.idempotencyKey
+                (!args.where.idempotencyKey || tx.idempotencyKey === args.where.idempotencyKey)
               ) {
                 return JSON.parse(JSON.stringify(tx));
               }
@@ -160,6 +169,19 @@ describe('CommerceReconciliation (Bank Reconciliation Engine & Safe Inventory Ma
             paymentTxsDb.set(record.idempotencyKey, record);
             return record;
           },
+          update: async (args: any) => {
+            for (const [key, tx] of paymentTxsDb.entries()) {
+              if (tx.id === args.where.id) {
+                const updated = { ...tx, ...args.data };
+                paymentTxsDb.set(key, updated);
+                return JSON.parse(JSON.stringify(updated));
+              }
+            }
+            throw new Error('Payment transaction not found');
+          },
+        },
+        auditLog: {
+          create: async (args: any) => args.data,
         },
         inventoryTransaction: {
           create: async (args: any) => {
@@ -633,7 +655,7 @@ describe('CommerceReconciliation (Bank Reconciliation Engine & Safe Inventory Ma
       expect(result.status).toBe('PAID');
 
       // Verify Redlock was acquired and released with correct lock key
-      const expectedLockKey = `ws:${wsId}:order:${orderId}:reconcile`;
+      const expectedLockKey = `ws:${wsId}:order:${orderId}:payment`;
       expect(acquiredLocks.length).toBe(1);
       expect(acquiredLocks[0]).toBe(expectedLockKey);
       expect(releasedLocks.length).toBe(1);

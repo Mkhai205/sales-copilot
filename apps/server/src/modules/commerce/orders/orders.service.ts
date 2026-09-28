@@ -38,6 +38,86 @@ import {
   assertCanUpdate,
 } from './order-status-guard';
 
+/**
+ * Select projection for the hot orders list path: covers every field
+ * `formatOrder` maps plus the payment-transaction fields the DTO/FE consume
+ * (id, paymentMethod, gateway, status, amount, transactionCode, paidAt, createdAt).
+ * Excludes `paymentTransactions.rawWebhookPayload` and other unmapped columns,
+ * and omits `inventoryTransactions` (never included on the list path).
+ */
+const ORDER_LIST_SELECT = {
+  id: true,
+  displayId: true,
+  orderNumber: true,
+  workspaceId: true,
+  conversationId: true,
+  contactId: true,
+  createdById: true,
+  status: true,
+  paymentStatus: true,
+  paymentMethod: true,
+  fulfillmentStatus: true,
+  subtotal: true,
+  discountAmount: true,
+  discountType: true,
+  discountReason: true,
+  shippingFee: true,
+  taxAmount: true,
+  totalAmount: true,
+  paidAmount: true,
+  currency: true,
+  customerNotes: true,
+  internalNotes: true,
+  cancelReason: true,
+  confirmedAt: true,
+  paidAt: true,
+  shippedAt: true,
+  completedAt: true,
+  cancelledAt: true,
+  metadata: true,
+  recipientName: true,
+  recipientPhone: true,
+  recipientAddress: true,
+  recipientWard: true,
+  recipientDistrict: true,
+  recipientProvince: true,
+  shippingNotes: true,
+  createdAt: true,
+  updatedAt: true,
+  items: {
+    select: {
+      id: true,
+      workspaceId: true,
+      orderId: true,
+      productId: true,
+      variantId: true,
+      productName: true,
+      variantName: true,
+      sku: true,
+      unitPrice: true,
+      costPrice: true,
+      quantity: true,
+      discountAmount: true,
+      totalPrice: true,
+      metadata: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  },
+  paymentTransactions: {
+    select: {
+      id: true,
+      paymentMethod: true,
+      gateway: true,
+      amount: true,
+      status: true,
+      transactionCode: true,
+      paidAt: true,
+      createdAt: true,
+    },
+  },
+};
+
 @Injectable()
 export class OrdersService {
   private readonly logger = new Logger(OrdersService.name);
@@ -105,6 +185,7 @@ export class OrdersService {
       }> = [];
 
       let subtotal = 0;
+      let lineDiscountsTotal = 0;
 
       for (const item of dto.items) {
         const variant = await tx.productVariant.findFirst({
@@ -127,6 +208,7 @@ export class OrdersService {
         });
 
         subtotal += itemCalc.subtotal;
+        lineDiscountsTotal += itemCalc.discountAmount;
 
         lineItemSnapshots.push({
           productId: variant.productId,
@@ -143,12 +225,14 @@ export class OrdersService {
         });
       }
 
-      // 4. Calculate Financials
+      // 4. Calculate Financials — line-item discounts are folded into the effective
+      // order discount so totalAmount always reflects them.
       const financialTotals = calculateOrderFinancialTotals({
         subtotal,
         discountType: dto.discountType,
         discountAmount: dto.discountAmount,
         shippingFee: dto.shippingFee,
+        lineDiscountsTotal,
       });
       const discountAmount = financialTotals.discountAmount;
       const shippingFee = financialTotals.shippingFee;
@@ -324,6 +408,15 @@ export class OrdersService {
 
       let subtotal = Number(order.subtotal);
 
+      // order.discountAmount stores the EFFECTIVE discount (order-level + line-level, clamped).
+      // Recover the order-level portion by subtracting the existing line-item discounts so the
+      // calculator can re-fold with the (possibly new) line discounts without double counting.
+      const existingLineDiscounts = (order.items || []).reduce(
+        (sum, item) => sum + Number(item.discountAmount || 0),
+        0,
+      );
+      let lineDiscountsTotal = existingLineDiscounts;
+
       // 2. Update line items if provided
       if (dto.items && dto.items.length > 0) {
         // Delete existing items
@@ -347,6 +440,7 @@ export class OrdersService {
         }> = [];
 
         subtotal = 0;
+        lineDiscountsTotal = 0;
 
         for (const item of dto.items) {
           const variant = await tx.productVariant.findFirst({
@@ -369,6 +463,7 @@ export class OrdersService {
           });
 
           subtotal += itemCalc.subtotal;
+          lineDiscountsTotal += itemCalc.discountAmount;
 
           lineItemSnapshots.push({
             productId: variant.productId,
@@ -404,14 +499,16 @@ export class OrdersService {
         });
       }
 
-      // 3. Recalculate Financials
+      // 3. Recalculate Financials — line-item discounts are folded into the effective
+      // order discount so totalAmount always reflects them.
       const financialTotals = calculateOrderFinancialTotals({
         subtotal,
         discountType: dto.discountType !== undefined ? dto.discountType : order.discountType,
         discountAmount: dto.discountAmount,
         shippingFee: dto.shippingFee !== undefined ? dto.shippingFee : Number(order.shippingFee),
-        existingDiscountAmount: Number(order.discountAmount),
+        existingDiscountAmount: Number(order.discountAmount) - existingLineDiscounts,
         existingSubtotal: Number(order.subtotal),
+        lineDiscountsTotal,
       });
       const discountType = financialTotals.discountType;
       const discountAmount = financialTotals.discountAmount;
@@ -614,7 +711,9 @@ export class OrdersService {
     dto: ManualPayOrderDto,
     userId?: string,
   ): Promise<OrderResponseDto> {
-    const lockKey = `order:payment:${orderId}`;
+    // Shared payment lock domain — must match the reconciliation flows so manual pay
+    // and bank reconciliation can never run concurrently on the same order.
+    const lockKey = `ws:${workspaceId}:order:${orderId}:payment`;
     const lockToken = this.redisService
       ? await this.redisService.acquireLock(lockKey, 10000)
       : null;
@@ -709,9 +808,16 @@ export class OrdersService {
             tx,
           });
 
-          // Update order status to PAID
-          await tx.order.updateMany({
-            where: { id: order.id, workspaceId },
+          // Update order status to PAID.
+          // Conditional predicate: both payment flows only transition DRAFT/CONFIRMED → PAID.
+          // count === 0 means a concurrent flow changed the state — abort so the caller can retry
+          // instead of silently overwriting it (lost update).
+          const paidUpdate = await tx.order.updateMany({
+            where: {
+              id: order.id,
+              workspaceId,
+              status: { in: [OrderStatus.DRAFT, OrderStatus.CONFIRMED] },
+            },
             data: {
               paidAmount: totalPaid,
               paymentStatus: PaymentStatus.PAID,
@@ -719,6 +825,13 @@ export class OrdersService {
               paidAt: new Date(),
             },
           });
+
+          if (paidUpdate.count === 0) {
+            throw new ConflictException({
+              code: 'PAYMENT_STATE_CONFLICT',
+              message: `Order #${order.displayId} state changed concurrently, payment not recorded. Please retry.`,
+            });
+          }
         } else {
           // Partial payment (Deposit / Installment):
           // If order was DRAFT, atomically reserve stock and transition to CONFIRMED
@@ -743,9 +856,14 @@ export class OrdersService {
             });
           }
 
-          // Update order status to PARTIALLY_PAID (keep CONFIRMED status, do NOT mark PAID)
-          await tx.order.updateMany({
-            where: { id: order.id, workspaceId },
+          // Update order status to PARTIALLY_PAID (keep CONFIRMED status, do NOT mark PAID).
+          // Same conditional predicate as the full-payment path to prevent lost updates.
+          const partialUpdate = await tx.order.updateMany({
+            where: {
+              id: order.id,
+              workspaceId,
+              status: { in: [OrderStatus.DRAFT, OrderStatus.CONFIRMED] },
+            },
             data: {
               paidAmount: totalPaid,
               paymentStatus: PaymentStatus.PARTIALLY_PAID,
@@ -753,6 +871,13 @@ export class OrdersService {
               confirmedAt: order.confirmedAt || new Date(),
             },
           });
+
+          if (partialUpdate.count === 0) {
+            throw new ConflictException({
+              code: 'PAYMENT_STATE_CONFLICT',
+              message: `Order #${order.displayId} state changed concurrently, payment not recorded. Please retry.`,
+            });
+          }
         }
 
         const updated = await tx.order.findFirstOrThrow({
@@ -860,9 +985,18 @@ export class OrdersService {
         });
       }
 
-      // 2. Transition order status to CANCELLED
-      await tx.order.updateMany({
-        where: { id: orderId, workspaceId },
+      // 2. Transition order status to CANCELLED.
+      // Conditional predicate mirrors assertCanCancel: only DRAFT, CONFIRMED, PAID and SHIPPING
+      // orders can be cancelled. count === 0 means a concurrent flow (payment/complete/cancel)
+      // changed the state between the read and this write — abort so the caller can retry.
+      const cancelUpdate = await tx.order.updateMany({
+        where: {
+          id: orderId,
+          workspaceId,
+          status: {
+            in: [OrderStatus.DRAFT, OrderStatus.CONFIRMED, OrderStatus.PAID, OrderStatus.SHIPPING],
+          },
+        },
         data: {
           status: OrderStatus.CANCELLED,
           cancelledAt: new Date(),
@@ -870,6 +1004,13 @@ export class OrdersService {
           ...(paidAmount > 0 ? { paymentStatus: PaymentStatus.REFUNDED } : {}),
         },
       });
+
+      if (cancelUpdate.count === 0) {
+        throw new ConflictException({
+          code: 'PAYMENT_STATE_CONFLICT',
+          message: `Order #${order.displayId} state changed concurrently and can no longer be cancelled. Please refresh and retry.`,
+        });
+      }
 
       // 3. Release or restock inventory
       if (wasConfirmed && order.items && order.items.length > 0) {
@@ -1148,10 +1289,7 @@ export class OrdersService {
         skip,
         take: limit,
         orderBy,
-        include: {
-          items: true,
-          paymentTransactions: true,
-        },
+        select: ORDER_LIST_SELECT,
       }),
     ]);
 

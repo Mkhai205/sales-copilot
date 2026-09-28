@@ -1,4 +1,10 @@
-import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import {
   DomainEvent,
@@ -353,9 +359,21 @@ export class PaymentReconciliationService {
             );
           }
 
-          // Update Order to PAID status
-          await tx.order.updateMany({
-            where: { id: order.id, workspaceId },
+          // Update Order to PAID status.
+          // Conditional predicate: both payment flows only transition DRAFT/CONFIRMED → PAID.
+          // An already-PAID order legitimately receives second/over-payments (record-only,
+          // status stays PAID). count === 0 means a concurrent flow changed the state — abort
+          // so the job can be retried instead of silently overwriting it (lost update).
+          const paidUpdate = await tx.order.updateMany({
+            where: {
+              id: order.id,
+              workspaceId,
+              status: {
+                in: wasAlreadyPaid
+                  ? [OrderStatus.PAID]
+                  : [OrderStatus.DRAFT, OrderStatus.CONFIRMED],
+              },
+            },
             data: {
               paidAmount: totalPaid,
               paymentStatus: PaymentStatus.PAID,
@@ -363,6 +381,13 @@ export class PaymentReconciliationService {
               paidAt: order.paidAt || new Date(),
             },
           });
+
+          if (paidUpdate.count === 0) {
+            throw new ConflictException({
+              code: 'PAYMENT_STATE_CONFLICT',
+              message: `Order #${order.displayId} state changed concurrently, payment not recorded. Please retry.`,
+            });
+          }
 
           // Post-commit hooks
           const overpaidAmount = Math.max(0, totalPaid - orderTotal);
@@ -427,9 +452,14 @@ export class PaymentReconciliationService {
             });
           }
 
-          // Update Order to PARTIALLY_PAID
-          await tx.order.updateMany({
-            where: { id: order.id, workspaceId },
+          // Update Order to PARTIALLY_PAID.
+          // Same conditional predicate as the full-payment path to prevent lost updates.
+          const partialUpdate = await tx.order.updateMany({
+            where: {
+              id: order.id,
+              workspaceId,
+              status: { in: [OrderStatus.DRAFT, OrderStatus.CONFIRMED] },
+            },
             data: {
               paidAmount: totalPaid,
               paymentStatus: PaymentStatus.PARTIALLY_PAID,
@@ -437,6 +467,13 @@ export class PaymentReconciliationService {
               confirmedAt: order.confirmedAt || new Date(),
             },
           });
+
+          if (partialUpdate.count === 0) {
+            throw new ConflictException({
+              code: 'PAYMENT_STATE_CONFLICT',
+              message: `Order #${order.displayId} state changed concurrently, payment not recorded. Please retry.`,
+            });
+          }
 
           // Post-commit hook for partial payment
           const remainingAmount = Math.max(0, orderTotal - totalPaid);
@@ -742,7 +779,9 @@ export class PaymentReconciliationService {
       });
     }
 
-    const lockKey = `ws:${workspaceId}:order:${targetOrder.id}:reconcile`;
+    // Shared payment lock domain — same key as payOrder and the reconciliation processor
+    // so payment mutations on one order are always serialized.
+    const lockKey = `ws:${workspaceId}:order:${targetOrder.id}:payment`;
     const lockToken = await this.redisService.acquireLock(lockKey, 10000);
 
     if (!lockToken) {
@@ -773,8 +812,20 @@ export class PaymentReconciliationService {
         const wasAlreadyPaid = order.status === OrderStatus.PAID;
         const isPreviouslyConfirmed = order.status === OrderStatus.CONFIRMED;
 
+        // Status guard for SHIPPING or COMPLETED (mirrors reconcileTransaction):
+        // If order is already in fulfillment or completed, do NOT deduct inventory again or
+        // regress order status — record the payment only.
+        const isInFulfillmentOrCompleted =
+          order.status === OrderStatus.SHIPPING || order.status === OrderStatus.COMPLETED;
+
+        if (isInFulfillmentOrCompleted) {
+          this.logger.log(
+            `Order #${order.displayId} has status '${order.status}'. Manual-matched payment of ${amount} recorded without stock deduction or status regression.`,
+          );
+        }
+
         // Stock commit if fully paid & Model A (sale commit)
-        if (isFullyPaid && !wasAlreadyPaid) {
+        if (isFullyPaid && !wasAlreadyPaid && !isInFulfillmentOrCompleted) {
           const commitItems = (order.items || []).map(item => ({
             variantId: item.variantId,
             quantity: item.quantity,
@@ -807,7 +858,8 @@ export class PaymentReconciliationService {
 
         // Update Order status and financial totals
         const targetPaymentStatus = isFullyPaid ? PaymentStatus.PAID : PaymentStatus.PARTIALLY_PAID;
-        const targetOrderStatus = isFullyPaid ? OrderStatus.PAID : order.status;
+        const targetOrderStatus =
+          isFullyPaid && !isInFulfillmentOrCompleted ? OrderStatus.PAID : order.status;
 
         await tx.order.updateMany({
           where: { id: order.id, workspaceId },

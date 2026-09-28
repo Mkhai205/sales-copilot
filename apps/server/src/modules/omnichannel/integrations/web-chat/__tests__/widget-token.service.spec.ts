@@ -27,7 +27,8 @@ describe('WidgetTokenService (Visitor JWT Token Issuance & Verification)', () =>
       },
     };
 
-    service = new WidgetTokenService(mockConfigService as ConfigService);
+    // JwtService is now a required dependency (jsonwebtoken fallback was removed)
+    service = new WidgetTokenService(mockConfigService as ConfigService, new JwtService());
   });
 
   describe('generateToken() & verifyToken()', () => {
@@ -55,7 +56,7 @@ describe('WidgetTokenService (Visitor JWT Token Issuance & Verification)', () =>
       expect(decoded.contactId).toBe(mockPayload.contactId);
     });
 
-    it('should work with JwtService if injected', () => {
+    it('should sign and verify through the required JwtService', () => {
       mockJwtService = new JwtService();
       const serviceWithJwt = new WidgetTokenService(
         mockConfigService as ConfigService,
@@ -77,7 +78,7 @@ describe('WidgetTokenService (Visitor JWT Token Issuance & Verification)', () =>
         },
       };
 
-      const customService = new WidgetTokenService(customConfig as ConfigService);
+      const customService = new WidgetTokenService(customConfig as ConfigService, new JwtService());
       const token = customService.generateToken(mockPayload);
       const decoded = customService.verifyToken(token);
       expect(decoded.contactId).toBe(mockPayload.contactId);
