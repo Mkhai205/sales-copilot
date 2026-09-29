@@ -80,7 +80,6 @@ export default tseslint.config(
       "apps/web/src/features/conversations/list/conversation-list.tsx",
       "apps/web/src/features/conversations/thread/message-actions-toolbar.tsx",
       "apps/web/src/features/conversations/thread/image-lightbox-dialog.tsx",
-      "apps/web/src/features/conversations/thread/message-thread.tsx",
       "apps/web/src/features/platform-admin/audit-logs/components/audit-logs-table.tsx",
       "apps/web/src/features/platform-admin/workspaces/components/workspaces-table.tsx",
       "apps/web/src/features/settings/bank/components/bank-settings-form.tsx",

@@ -1,61 +1,21 @@
 'use client';
 
 import * as React from 'react';
-import { format, parseISO, isValid } from 'date-fns';
-import {
-  Check,
-  CheckCheck,
-  Clock,
-  AlertCircle,
-  Lock,
-  Download,
-  FileText,
-  MessageSquare,
-  ArrowDown,
-  Bot,
-  Sparkles,
-} from 'lucide-react';
-import type { AiDebugMetadata } from '@sales-copilot/shared-contracts';
-import { AiMessageDebugSheet } from './ai-message-debug-sheet';
+import { ArrowDown, ChevronUp, MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
+import { Spinner } from '@/components/ui/spinner';
 import {
   MessageScroller,
   MessageScrollerViewport,
   MessageScrollerContent,
   MessageScrollerItem,
   MessageScrollerButton,
-  useMessageScroller,
 } from '@/components/ui/message-scroller';
-import {
-  Message,
-  MessageAvatar,
-  MessageContent,
-  MessageHeader,
-  MessageFooter,
-} from '@/components/ui/message';
-import { Bubble, BubbleContent } from '@/components/ui/bubble';
 import { Marker, MarkerContent } from '@/components/ui/marker';
-import {
-  Attachment,
-  AttachmentMedia,
-  AttachmentContent,
-  AttachmentTitle,
-  AttachmentDescription,
-  AttachmentActions,
-  AttachmentAction,
-} from '@/components/ui/attachment';
-import {
-  DeliveryStatus,
-  MessageType,
-  SenderType,
-  type AttachmentDto,
-  type LinkPreviewData,
-  type MessageResponseDto,
-} from '@sales-copilot/shared-contracts';
-import { fetchApi, workspaceHeaders } from '@/lib/api/client';
+import type { AiDebugMetadata } from '@sales-copilot/shared-contracts';
+import { AiMessageDebugSheet } from './ai-message-debug-sheet';
 import { useConversation } from '../list/hooks/use-conversation';
 import { useMessages } from './hooks/use-messages';
 import { useResetUnreadMutation } from '../detail/hooks/use-conversation-mutations';
@@ -64,14 +24,11 @@ import { MessageThreadHeader } from './message-thread-header';
 import { TypingIndicator } from './typing-indicator';
 import { ChatComposer } from '../composer/chat-composer';
 import { useConversationRoom } from '@/lib/socket/use-conversation-room';
-import { RichLinkCard } from './rich-link-card';
 import { ImageLightboxDialog } from './image-lightbox-dialog';
-import { MessageImageGrid, isImageAttachment } from './message-image-grid';
-import { MessageActionsToolbar } from './message-actions-toolbar';
-import { VietQrChatCard } from '@/features/commerce/shared/components/vietqr-chat-card';
-
-import type { VietQrResponseDto } from '@sales-copilot/shared-contracts';
-import Link from 'next/link';
+import { MessageItem } from './message-item';
+import { MessageThreadLoading } from './message-thread-loading';
+import { MessageThreadScrollerController } from './thread-scroll-controller';
+import { useLightbox } from './hooks/use-lightbox';
 
 interface MessageThreadProps {
   conversationId: string;
@@ -80,679 +37,6 @@ interface MessageThreadProps {
   isDetailOpen?: boolean;
   onToggleDetail?: () => void;
   onOpenPosDrawer?: () => void;
-}
-
-function formatMessageTime(dateInput?: string): string {
-  if (!dateInput) return '';
-  const date = parseISO(dateInput);
-  if (!isValid(date)) return '';
-  return format(date, 'h:mm a');
-}
-
-function formatFileSize(bytes?: number): string {
-  if (!bytes) return '';
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
-
-function renderDeliveryStatusIcon(status: DeliveryStatus) {
-  switch (status) {
-    case DeliveryStatus.PENDING:
-      return <Clock className="size-3 text-muted-foreground/70" />;
-    case DeliveryStatus.SENT:
-      return <Check className="size-3 text-muted-foreground" />;
-    case DeliveryStatus.DELIVERED:
-      return <CheckCheck className="size-3 text-muted-foreground" />;
-    case DeliveryStatus.READ:
-      return <CheckCheck className="size-3 text-primary" />;
-    case DeliveryStatus.FAILED:
-      return <AlertCircle className="size-3 text-destructive" />;
-    default:
-      return null;
-  }
-}
-
-function renderMessageText(content: string) {
-  const urlRegex = /(https?:\/\/[^\s]+)/g;
-  const parts = content.split(urlRegex);
-
-  return parts.map((part, index) => {
-    if (part.match(urlRegex)) {
-      return (
-        <Link
-          key={index}
-          href={part}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="underline underline-offset-2 hover:opacity-80 break-all text-primary font-medium"
-        >
-          {part}
-        </Link>
-      );
-    }
-    return part;
-  });
-}
-
-function renderFileAttachments(attachments?: AttachmentDto[]) {
-  if (!attachments || attachments.length === 0) return null;
-
-  return (
-    <div className="flex flex-col gap-2 mt-1.5 max-w-full">
-      {attachments.map(att => (
-        <Attachment key={att.id || att.storagePath} size="sm" className="max-w-xs">
-          <AttachmentMedia variant="icon">
-            <FileText className="size-4 text-muted-foreground" />
-          </AttachmentMedia>
-          <AttachmentContent>
-            <AttachmentTitle className="text-xs">{att.fileName}</AttachmentTitle>
-            <AttachmentDescription className="text-[10px]">
-              {formatFileSize(att.fileSize)}
-            </AttachmentDescription>
-          </AttachmentContent>
-          {att.fileUrl && (
-            <AttachmentActions>
-              <AttachmentAction asChild size="icon-xs" variant="ghost">
-                <Link
-                  href={att.fileUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  download={att.fileName}
-                >
-                  <Download className="size-3" />
-                  <span className="sr-only">Download {att.fileName}</span>
-                </Link>
-              </AttachmentAction>
-            </AttachmentActions>
-          )}
-        </Attachment>
-      ))}
-    </div>
-  );
-}
-
-function MessageLinkPreview({
-  content,
-  previewData,
-  workspaceId,
-  align = 'start',
-}: {
-  content?: string | null;
-  previewData?: LinkPreviewData;
-  workspaceId?: string;
-  align?: 'start' | 'end';
-}) {
-  const [data, setData] = React.useState<LinkPreviewData | undefined>(previewData);
-
-  React.useEffect(() => {
-    if (previewData && (previewData.title || previewData.image || previewData.description)) {
-      setData(previewData);
-      return;
-    }
-
-    if (!content) return;
-    const urlRegex = /(https?:\/\/[^\s<]+[^<.,:;"')\]\s])/i;
-    const match = content.match(urlRegex);
-    if (!match || !match[0]) return;
-
-    const url = match[0];
-    let isCancelled = false;
-
-    fetchApi<LinkPreviewData>(`/conversations/link-preview?url=${encodeURIComponent(url)}`, {
-      headers: workspaceHeaders(workspaceId),
-    })
-      .then(res => {
-        if (
-          !isCancelled &&
-          res.data &&
-          (res.data.title || res.data.image || res.data.description)
-        ) {
-          setData(res.data);
-        }
-      })
-      .catch(() => {});
-
-    return () => {
-      isCancelled = true;
-    };
-  }, [content, previewData, workspaceId]);
-
-  if (!data || (!data.title && !data.image && !data.description)) {
-    return null;
-  }
-
-  return (
-    <div className={cn('max-w-full', align === 'end' ? 'ml-auto' : 'mr-auto')}>
-      <RichLinkCard preview={data} />
-    </div>
-  );
-}
-
-function MessageItem({
-  message,
-  contactName,
-  contactAvatar,
-  inboxAvatar,
-  inboxName,
-  workspaceId,
-  onOpenLightbox,
-  onInspectAi,
-}: {
-  message: MessageResponseDto;
-  contactName?: string;
-  contactAvatar?: string | null;
-  inboxAvatar?: string | null;
-  inboxName?: string;
-  workspaceId?: string;
-  onOpenLightbox: (images: AttachmentDto[], index?: number) => void;
-  onInspectAi?: (aiDebug: AiDebugMetadata) => void;
-}) {
-  const isAiGenerated = React.useMemo(() => {
-    if (!message.metadata) return false;
-    if (typeof message.metadata === 'object') {
-      return (message.metadata as any).isAiGenerated === true;
-    }
-    if (typeof message.metadata === 'string') {
-      try {
-        return JSON.parse(message.metadata)?.isAiGenerated === true;
-      } catch {
-        return false;
-      }
-    }
-    return false;
-  }, [message.metadata]);
-
-  const aiDebug = React.useMemo<AiDebugMetadata | null>(() => {
-    if (!message.metadata) return null;
-    let meta = message.metadata as any;
-    if (typeof meta === 'string') {
-      try {
-        meta = JSON.parse(meta);
-      } catch {
-        return null;
-      }
-    }
-    return meta?.aiDebug || null;
-  }, [message.metadata]);
-
-  const isPrivate = message.isPrivate;
-  const isSystem =
-    !isAiGenerated &&
-    (message.senderType === SenderType.SYSTEM || message.messageType === MessageType.ACTIVITY);
-  const isAgent =
-    !isPrivate &&
-    !isSystem &&
-    (isAiGenerated ||
-      message.senderType === SenderType.USER ||
-      message.messageType === MessageType.OUTGOING);
-
-  const imageAttachments = React.useMemo(
-    () => (message.attachments || []).filter(att => isImageAttachment(att) && att.fileUrl),
-    [message.attachments],
-  );
-  const fileAttachments = React.useMemo(
-    () => (message.attachments || []).filter(att => !isImageAttachment(att)),
-    [message.attachments],
-  );
-
-  const previewData = (message.metadata as any)?.linkPreview as LinkPreviewData | undefined;
-  const vietQrData =
-    (message.metadata as any)?.type === 'VIETQR_PAYMENT'
-      ? ((message.metadata as any)?.qrData as VietQrResponseDto | undefined)
-      : undefined;
-
-  // 1. System / Activity Notice
-  if (isSystem) {
-    if (vietQrData) {
-      return (
-        <MessageScrollerItem messageId={message.id} className="py-2 flex justify-center">
-          <VietQrChatCard qrData={vietQrData} />
-        </MessageScrollerItem>
-      );
-    }
-
-    return (
-      <MessageScrollerItem messageId={message.id} className="py-1">
-        <Marker variant="default" className="justify-center text-center">
-          <MarkerContent className="text-[11px] text-muted-foreground italic">
-            {message.content}
-          </MarkerContent>
-        </Marker>
-      </MessageScrollerItem>
-    );
-  }
-
-  // 2. Private Note (Internal only)
-  if (isPrivate) {
-    const authorName = message.sender?.name || 'Agent';
-    const authorInitials = authorName
-      .split(' ')
-      .map(n => n[0])
-      .slice(0, 2)
-      .join('')
-      .toUpperCase();
-
-    return (
-      <MessageScrollerItem messageId={message.id} className="w-full my-1">
-        <div className="mx-auto flex w-full max-w-2xl flex-col gap-1.5 rounded-xl border border-amber-500/30 bg-amber-500/[0.08] p-3.5 shadow-xs transition-all dark:border-amber-500/25 dark:bg-amber-500/[0.12]">
-          {/* Note Header */}
-          <div className="flex items-center justify-between gap-2 border-b border-amber-500/20 pb-2">
-            <div className="flex items-center gap-2">
-              <Avatar className="size-6 border border-amber-500/30">
-                {message.sender?.avatarUrl && (
-                  <AvatarImage src={message.sender.avatarUrl} alt={authorName} />
-                )}
-                <AvatarFallback className="text-[10px] bg-amber-500/20 text-amber-700 dark:text-amber-300 font-semibold">
-                  {authorInitials}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs font-semibold text-foreground">{authorName}</span>
-                <span className="inline-flex items-center gap-1 rounded-sm bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 dark:text-amber-300">
-                  <Lock className="size-2.5" />
-                  Private Note
-                </span>
-              </div>
-            </div>
-            <span className="text-[10px] text-muted-foreground">
-              {formatMessageTime(message.createdAt)}
-            </span>
-          </div>
-
-          {/* Note Content */}
-          {message.content && (
-            <p className="text-xs text-foreground/90 whitespace-pre-wrap leading-relaxed pt-0.5">
-              {renderMessageText(message.content)}
-            </p>
-          )}
-
-          {/* Images in Note */}
-          {imageAttachments.length > 0 && (
-            <MessageImageGrid
-              attachments={imageAttachments}
-              onImageClick={idx => onOpenLightbox(imageAttachments, idx)}
-            />
-          )}
-
-          {/* Files in Note */}
-          {renderFileAttachments(fileAttachments)}
-        </div>
-      </MessageScrollerItem>
-    );
-  }
-
-  // 3. Outbound Message (Agent or AI)
-  if (isAgent) {
-    return (
-      <MessageScrollerItem messageId={message.id}>
-        <Message align="end">
-          {isAiGenerated && (
-            <div className="relative self-end shrink-0 group-has-data-[slot=message-footer]/message:-translate-y-8 transition-transform">
-              <MessageAvatar className="translate-y-0 group-has-data-[slot=message-footer]/message:translate-y-0">
-                <Avatar className="size-8 ring-1 ring-primary/30">
-                  <AvatarImage
-                    src={inboxAvatar || '/avatar-bot-copilot.png'}
-                    alt={inboxName || 'AI Autopilot'}
-                  />
-                  <AvatarFallback className="text-[10px] bg-primary/10 text-primary font-semibold">
-                    AI
-                  </AvatarFallback>
-                </Avatar>
-              </MessageAvatar>
-            </div>
-          )}
-          <MessageContent className="items-end">
-            <MessageHeader className="justify-end gap-1">
-              {isAiGenerated ? (
-                <span className="inline-flex items-center gap-1.5 font-semibold text-foreground">
-                  <Bot className="size-3 text-primary" />
-                  <span>{'AI Autopilot'}</span>
-                  {aiDebug && (
-                    <button
-                      type="button"
-                      onClick={() => onInspectAi?.(aiDebug)}
-                      className="inline-flex items-center gap-1 text-[10px] text-muted-foreground hover:text-primary transition-colors cursor-pointer px-1.5 py-0.5 rounded bg-muted/80 hover:bg-muted font-normal ml-0.5"
-                      title="Xem chi tiết các bước xử lý và Tool Calls"
-                    >
-                      <Sparkles className="size-2.5 text-primary" />
-                      <span>
-                        {aiDebug.toolCalls?.length ? `${aiDebug.toolCalls.length} tools` : 'Debug'}
-                      </span>
-                    </button>
-                  )}
-                </span>
-              ) : (
-                <span>You</span>
-              )}
-              {' • '}
-              {formatMessageTime(message.createdAt)}
-            </MessageHeader>
-
-            {/* Bubble Row with Left-floating Action Toolbar */}
-            {message.content && (
-              <div className="group/msg relative flex items-center justify-end gap-2 max-w-full">
-                <MessageActionsToolbar
-                  message={message}
-                  align="end"
-                  onOpenLightbox={idx => onOpenLightbox(imageAttachments, idx ?? 0)}
-                />
-                <Bubble variant="default" align="end">
-                  <BubbleContent className="whitespace-pre-wrap">
-                    {renderMessageText(message.content)}
-                  </BubbleContent>
-                </Bubble>
-              </div>
-            )}
-
-            {/* Link Preview Card */}
-            <MessageLinkPreview
-              content={message.content}
-              previewData={previewData}
-              workspaceId={workspaceId}
-              align="end"
-            />
-
-            {/* VietQR Payment Card */}
-            {vietQrData && (
-              <div className="pt-1 flex justify-end w-full">
-                <VietQrChatCard qrData={vietQrData} />
-              </div>
-            )}
-
-            {/* Image Grid */}
-            {imageAttachments.length > 0 && (
-              <div className="group/msg relative flex items-center justify-end gap-2 max-w-full">
-                {!message.content && (
-                  <MessageActionsToolbar
-                    message={message}
-                    align="end"
-                    onOpenLightbox={idx => onOpenLightbox(imageAttachments, idx ?? 0)}
-                  />
-                )}
-                <MessageImageGrid
-                  attachments={imageAttachments}
-                  onImageClick={idx => onOpenLightbox(imageAttachments, idx)}
-                  align="end"
-                />
-              </div>
-            )}
-
-            {/* Non-image File Attachments */}
-            {renderFileAttachments(fileAttachments)}
-
-            <MessageFooter className="gap-1.5 text-[10px] text-muted-foreground items-center justify-end">
-              {renderDeliveryStatusIcon(message.deliveryStatus)}
-              {message.deliveryStatus === DeliveryStatus.FAILED && (
-                <span className="text-destructive font-medium">Failed to send</span>
-              )}
-            </MessageFooter>
-          </MessageContent>
-        </Message>
-      </MessageScrollerItem>
-    );
-  }
-
-  // 4. Inbound Message (Contact / Customer)
-  const isBotSender =
-    message.sender?.name?.toLowerCase().includes('bot') ||
-    message.sender?.name?.toLowerCase().includes('copilot');
-  const defaultAvatar = isBotSender ? '/avatar-bot-copilot.png' : '/avatar-contact-default.svg';
-  const senderInitials = (message.sender?.name || contactName || 'C')
-    .split(' ')
-    .map(n => n[0])
-    .slice(0, 2)
-    .join('')
-    .toUpperCase();
-
-  return (
-    <MessageScrollerItem messageId={message.id}>
-      <Message align="start">
-        <MessageAvatar>
-          <Avatar className="size-8">
-            <AvatarImage
-              src={message.sender?.avatarUrl || contactAvatar || defaultAvatar}
-              alt={message.sender?.name || contactName || ''}
-            />
-            <AvatarFallback className="text-[11px] bg-muted-foreground/20 font-medium">
-              {isBotSender ? 'AI' : senderInitials}
-            </AvatarFallback>
-          </Avatar>
-        </MessageAvatar>
-
-        <MessageContent className="items-start">
-          <MessageHeader>
-            {message.sender?.name || contactName || 'Contact'} •{' '}
-            {formatMessageTime(message.createdAt)}
-          </MessageHeader>
-
-          {/* Bubble Row with Right-floating Action Toolbar */}
-          {message.content && (
-            <div className="group/msg relative flex items-center justify-start gap-2 max-w-full">
-              <Bubble variant="muted" align="start">
-                <BubbleContent className="whitespace-pre-wrap">
-                  {renderMessageText(message.content)}
-                </BubbleContent>
-              </Bubble>
-              <MessageActionsToolbar
-                message={message}
-                align="start"
-                onOpenLightbox={idx => onOpenLightbox(imageAttachments, idx ?? 0)}
-              />
-            </div>
-          )}
-
-          {/* Link Preview Card */}
-          <MessageLinkPreview
-            content={message.content}
-            previewData={previewData}
-            workspaceId={workspaceId}
-            align="start"
-          />
-
-          {/* VietQR Payment Card */}
-          {vietQrData && (
-            <div className="pt-1 flex justify-start w-full">
-              <VietQrChatCard qrData={vietQrData} />
-            </div>
-          )}
-
-          {/* Image Grid */}
-          {imageAttachments.length > 0 && (
-            <div className="group/msg relative flex items-center justify-start gap-2 max-w-full">
-              <MessageImageGrid
-                attachments={imageAttachments}
-                onImageClick={idx => onOpenLightbox(imageAttachments, idx)}
-                align="start"
-              />
-              {!message.content && (
-                <MessageActionsToolbar
-                  message={message}
-                  align="start"
-                  onOpenLightbox={idx => onOpenLightbox(imageAttachments, idx ?? 0)}
-                />
-              )}
-            </div>
-          )}
-
-          {/* Non-image File Attachments */}
-          {renderFileAttachments(fileAttachments)}
-
-          <MessageFooter className="text-[10px] text-muted-foreground/70">
-            {formatMessageTime(message.createdAt)}
-          </MessageFooter>
-        </MessageContent>
-      </Message>
-    </MessageScrollerItem>
-  );
-}
-
-interface MessageThreadScrollerControllerProps {
-  messages: MessageResponseDto[];
-  conversationId: string;
-  viewportRef: React.RefObject<HTMLDivElement | null>;
-  onAtBottom: () => void;
-  onNewInboundMessage: () => void;
-}
-
-function MessageThreadScrollerController({
-  messages,
-  conversationId,
-  viewportRef,
-  onAtBottom,
-  onNewInboundMessage,
-}: MessageThreadScrollerControllerProps) {
-  const { scrollToEnd } = useMessageScroller();
-  const prevConversationIdRef = React.useRef(conversationId);
-  const prevCountRef = React.useRef(messages.length);
-  const prevLastIdRef = React.useRef(messages[messages.length - 1]?.id);
-
-  // Helper to check if viewport is currently near the bottom (within 150px)
-  const isNearBottom = React.useCallback(() => {
-    const el = viewportRef.current;
-    if (!el) return true;
-    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
-    return distanceFromBottom <= 150;
-  }, [viewportRef]);
-
-  // Monitor scroll position to auto-reset unread pill when user scrolls back to bottom
-  React.useEffect(() => {
-    const el = viewportRef.current;
-    if (!el) return;
-
-    const handleScroll = () => {
-      const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
-      if (distanceFromBottom <= 80) {
-        onAtBottom();
-      }
-    };
-
-    el.addEventListener('scroll', handleScroll, { passive: true });
-    return () => el.removeEventListener('scroll', handleScroll);
-  }, [viewportRef, onAtBottom]);
-
-  // When switching conversations: instant jump to bottom
-  React.useLayoutEffect(() => {
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    if (prevConversationIdRef.current !== conversationId) {
-      prevConversationIdRef.current = conversationId;
-      prevCountRef.current = messages.length;
-      prevLastIdRef.current = messages[messages.length - 1]?.id;
-      onAtBottom();
-      scrollToEnd({ behavior: 'auto' });
-      timer = setTimeout(() => {
-        scrollToEnd({ behavior: 'auto' });
-      }, 50);
-    }
-    return () => {
-      if (timer) clearTimeout(timer);
-    };
-  }, [conversationId, messages, scrollToEnd, onAtBottom]);
-
-  // On first mount when messages load: jump to bottom
-  const isFirstMountRef = React.useRef(true);
-  React.useEffect(() => {
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    if (isFirstMountRef.current && messages.length > 0) {
-      isFirstMountRef.current = false;
-      scrollToEnd({ behavior: 'auto' });
-      timer = setTimeout(() => {
-        scrollToEnd({ behavior: 'auto' });
-      }, 80);
-    }
-    return () => {
-      if (timer) clearTimeout(timer);
-    };
-  }, [messages.length, scrollToEnd]);
-
-  // React to new messages
-  React.useEffect(() => {
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    const currentCount = messages.length;
-    const prevCount = prevCountRef.current;
-    const lastMessage = messages[messages.length - 1];
-    const prevLastId = prevLastIdRef.current;
-
-    prevCountRef.current = currentCount;
-    prevLastIdRef.current = lastMessage?.id;
-
-    if (!lastMessage || currentCount === 0) {
-      return () => {
-        if (timer) clearTimeout(timer);
-      };
-    }
-
-    // Trigger only when a new message is appended (count grew or last ID changed)
-    const isNewMessage =
-      currentCount > prevCount || (lastMessage.id && lastMessage.id !== prevLastId);
-    if (!isNewMessage) {
-      return () => {
-        if (timer) clearTimeout(timer);
-      };
-    }
-
-    const isAgent =
-      lastMessage.senderType === SenderType.USER ||
-      lastMessage.messageType === MessageType.OUTGOING ||
-      lastMessage.deliveryStatus === DeliveryStatus.PENDING ||
-      Boolean(lastMessage.isPrivate);
-
-    if (isAgent) {
-      // 1. Agent sent message -> ALWAYS smooth scroll to bottom
-      requestAnimationFrame(() => {
-        scrollToEnd({ behavior: 'smooth' });
-      });
-      timer = setTimeout(() => {
-        scrollToEnd({ behavior: 'smooth' });
-      }, 100);
-    } else {
-      // 2. Inbound message from contact
-      if (isNearBottom()) {
-        requestAnimationFrame(() => {
-          scrollToEnd({ behavior: 'smooth' });
-        });
-      } else {
-        // Scrolled up -> notify via button
-        onNewInboundMessage();
-      }
-    }
-
-    return () => {
-      if (timer) clearTimeout(timer);
-    };
-  }, [messages, isNearBottom, onNewInboundMessage, scrollToEnd]);
-
-  return null;
-}
-
-function MessageThreadLoading() {
-  return (
-    <div className="flex flex-col gap-4 p-4">
-      {/* Inbound Skeleton */}
-      <div className="flex items-start gap-2.5 max-w-[70%]">
-        <Skeleton className="size-7 rounded-full shrink-0" />
-        <div className="flex flex-col gap-1.5 w-full">
-          <Skeleton className="h-3 w-24" />
-          <Skeleton className="h-14 w-64 rounded-lg" />
-        </div>
-      </div>
-
-      {/* Outbound Skeleton */}
-      <div className="flex items-end flex-col gap-1.5 self-end max-w-[70%]">
-        <Skeleton className="h-3 w-16" />
-        <Skeleton className="h-10 w-56 rounded-lg" />
-      </div>
-
-      {/* Inbound Skeleton */}
-      <div className="flex items-start gap-2.5 max-w-[70%]">
-        <Skeleton className="size-7 rounded-full shrink-0" />
-        <div className="flex flex-col gap-1.5 w-full">
-          <Skeleton className="h-3 w-20" />
-          <Skeleton className="h-20 w-72 rounded-lg" />
-        </div>
-      </div>
-    </div>
-  );
 }
 
 export function MessageThread({
@@ -774,38 +58,18 @@ export function MessageThread({
     groupedMessages,
     isLoading: isMessagesLoading,
     isEmpty,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
   } = useMessages(conversationId, {
     workspaceId,
     limit: 50,
   });
 
-  const [lightboxState, setLightboxState] = React.useState<{
-    isOpen: boolean;
-    images: AttachmentDto[];
-    initialIndex: number;
-  }>({
-    isOpen: false,
-    images: [],
-    initialIndex: 0,
-  });
-
+  const { lightboxState, openLightbox, closeLightbox } = useLightbox();
   const [selectedAiDebug, setSelectedAiDebug] = React.useState<AiDebugMetadata | null>(null);
-
   const viewportRef = React.useRef<HTMLDivElement>(null);
-
   const [newUnreadCount, setNewUnreadCount] = React.useState(0);
-
-  const openLightbox = React.useCallback((images: AttachmentDto[], index = 0) => {
-    setLightboxState({
-      isOpen: true,
-      images,
-      initialIndex: index,
-    });
-  }, []);
-
-  const closeLightbox = React.useCallback(() => {
-    setLightboxState(prev => ({ ...prev, isOpen: false }));
-  }, []);
 
   const { workspaceId: contextWorkspaceId } = useWorkspaceContext();
   const activeWorkspaceId =
@@ -864,6 +128,25 @@ export function MessageThread({
             />
             <MessageScrollerViewport ref={viewportRef} className="p-4">
               <MessageScrollerContent className="gap-4">
+                {hasNextPage && (
+                  <MessageScrollerItem messageId="load-older" className="flex justify-center py-1">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 gap-1.5 text-xs text-muted-foreground cursor-pointer"
+                      disabled={isFetchingNextPage}
+                      onClick={() => fetchNextPage()}
+                    >
+                      {isFetchingNextPage ? (
+                        <Spinner className="size-3" />
+                      ) : (
+                        <ChevronUp className="size-3.5" />
+                      )}
+                      Tin nhắn cũ hơn
+                    </Button>
+                  </MessageScrollerItem>
+                )}
                 {groupedMessages.map(group => (
                   <React.Fragment key={group.dateKey}>
                     {/* Date Separator */}

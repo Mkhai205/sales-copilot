@@ -6,8 +6,6 @@ import { useConversationCounts } from './hooks/use-conversation-counts';
 import { cn } from '@/lib/utils';
 import { ConversationStatus } from '@sales-copilot/shared-contracts';
 
-interface ConversationListFiltersProps {}
-
 export function ConversationListFilters() {
   const { filters, setAssignment } = useConversationFilters();
 
