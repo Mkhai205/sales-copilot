@@ -222,6 +222,7 @@ describe('Realtime Integration (Full End-to-End Event Pipeline — Task 14)', ()
       );
       assertDefined(convBroadcast);
       expect((convBroadcast.payload as any).data).toEqual({
+        workspaceId,
         conversationId,
         messageId,
       });

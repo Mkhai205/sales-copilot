@@ -1,7 +1,11 @@
 'use client';
 
 import * as React from 'react';
-import { WsClientEvent, type WsServerEvent } from '@sales-copilot/shared-contracts';
+import {
+  WsClientEvent,
+  type SocketEventPayloadMap,
+  type WsServerEvent,
+} from '@sales-copilot/shared-contracts';
 import { SocketContext } from './socket-provider';
 import type { SocketContextValue } from './socket-types';
 
@@ -18,11 +22,25 @@ export function useSocket(): SocketContextValue {
 
 /**
  * Type-safe hook to listen to specific realtime server events on the active socket.
- * Automatically unpacks envelope `{ event, data }` and cleans up listeners on unmount.
+ * Payloads are typed via `SocketEventPayloadMap` (the wire shape after the
+ * `{ event, data }` envelope emitted by RealtimeEventDispatcher is unwrapped —
+ * the unwrap is kept at runtime as a safety net). Listeners clean up on unmount.
+ *
+ * Events missing from the map fall back to the `unknown` overload.
  */
+export function useSocketEvent<E extends keyof SocketEventPayloadMap & string>(
+  event: E,
+  handler: (data: SocketEventPayloadMap[E]) => void,
+  deps?: React.DependencyList,
+): void;
 export function useSocketEvent<T = unknown>(
   event: WsServerEvent | string,
   handler: (data: T) => void,
+  deps?: React.DependencyList,
+): void;
+export function useSocketEvent(
+  event: WsServerEvent | string,
+  handler: (data: any) => void,
   deps: React.DependencyList = [],
 ): void {
   const { socket } = useSocket();
@@ -36,11 +54,11 @@ export function useSocketEvent<T = unknown>(
     if (!socket) return;
 
     const listener = (payload: any) => {
-      // Backend may send { event, data } envelope or raw payload
+      // Backend sends { event, data } envelope or (legacy) raw payload
       const eventData =
         payload && typeof payload === 'object' && 'data' in payload
-          ? (payload as { data: T }).data
-          : (payload as T);
+          ? (payload as { data: unknown }).data
+          : payload;
 
       handlerRef.current(eventData);
     };

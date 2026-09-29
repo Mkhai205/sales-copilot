@@ -132,6 +132,7 @@ describe('RealtimeEventDispatcher — Event Routing & Error Isolation (Task 12)'
       );
       assertDefined(convBroadcast);
       expect((convBroadcast.payload as any).data).toEqual({
+        workspaceId,
         conversationId,
         messageId,
       });
@@ -566,6 +567,7 @@ describe('RealtimeEventDispatcher — Event Routing & Error Isolation (Task 12)'
       );
       assertDefined(wsBroadcast);
       expect((wsBroadcast.payload as any).data).toEqual({
+        workspaceId,
         userId: 'usr_001',
         status: PresenceStatus.ONLINE,
         lastSeenAt: payload.lastSeenAt,

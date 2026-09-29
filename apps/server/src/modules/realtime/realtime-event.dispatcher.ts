@@ -90,7 +90,7 @@ export class RealtimeEventDispatcher {
     if (!payload?.workspaceId) return;
 
     const { workspaceId, conversationId, messageId } = payload;
-    const data = { conversationId, messageId };
+    const data = { workspaceId, conversationId, messageId };
 
     const rooms: string[] = [`workspace_${workspaceId}`];
     if (conversationId) {
@@ -367,6 +367,7 @@ export class RealtimeEventDispatcher {
   handlePresenceUpdated(payload: PresenceUpdatedEvent): void {
     if (!payload?.workspaceId) return;
     const data = {
+      workspaceId: payload.workspaceId,
       userId: payload.userId,
       status: payload.status,
       lastSeenAt: payload.lastSeenAt,
