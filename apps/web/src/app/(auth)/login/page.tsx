@@ -6,10 +6,15 @@ export const metadata: Metadata = {
   description: 'Đăng nhập để truy cập hộp thư đa kênh và trợ lý hội thoại AI Sales Copilot',
 };
 
-export default function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ redirect?: string }>;
+}) {
+  const { redirect } = await searchParams;
   return (
     <div className="w-full max-w-sm md:max-w-4xl">
-      <LoginForm />
+      <LoginForm redirectTo={redirect} />
     </div>
   );
 }

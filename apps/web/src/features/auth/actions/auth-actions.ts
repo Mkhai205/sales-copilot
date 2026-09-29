@@ -48,8 +48,13 @@ export interface ActionResult<T = unknown> {
   };
 }
 
+function isSafeRelativePath(value: string | undefined | null): value is string {
+  return !!value && value.startsWith('/') && !value.startsWith('//') && !value.includes('://');
+}
+
 export async function loginAction(
   formData: LoginDto,
+  redirectTo?: string,
 ): Promise<ActionResult<LoginResponseDto> | void> {
   let targetSlug = 'default';
   let isAgent = false;
@@ -126,11 +131,12 @@ export async function loginAction(
   }
 
   // Redirect based on role (TASK-3B-01: OWNER/ADMIN -> dashboard, AGENT -> conversations)
+  let fallback = `/${targetSlug}/dashboard`;
   if (isAgent) {
-    redirect(`/${targetSlug}/conversations`);
-  } else {
-    redirect(`/${targetSlug}/dashboard`);
+    fallback = `/${targetSlug}/conversations`;
   }
+  // Honor ?redirect= from the auth proxy when it is a safe same-origin path
+  redirect(isSafeRelativePath(redirectTo) ? redirectTo : fallback);
 }
 
 export async function registerAction(

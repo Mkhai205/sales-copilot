@@ -96,7 +96,11 @@ function QuickTestAccounts({ control, onSelectAccount, disabled }: QuickTestAcco
   );
 }
 
-export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) {
+export function LoginForm({
+  className,
+  redirectTo,
+  ...props
+}: React.ComponentProps<'div'> & { redirectTo?: string }) {
   const queryClient = useQueryClient();
   const [apiError, setApiError] = React.useState<string | null>(null);
 
@@ -117,7 +121,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
   const { mutate: login, isPending } = useMutation({
     mutationFn: async (formData: LoginDto) => {
       setApiError(null);
-      return await loginAction(formData);
+      return await loginAction(formData, redirectTo);
     },
     onSuccess: result => {
       if (result && !result.success && result.error) {
@@ -241,12 +245,14 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
                 </Button>
               </div>
 
-              {/* Quick Test Accounts Section */}
-              <QuickTestAccounts
-                control={control}
-                onSelectAccount={handleSelectTestAccount}
-                disabled={isPending}
-              />
+              {/* Quick Test Accounts — dev convenience only, never in production builds */}
+              {process.env.NODE_ENV !== 'production' && (
+                <QuickTestAccounts
+                  control={control}
+                  onSelectAccount={handleSelectTestAccount}
+                  disabled={isPending}
+                />
+              )}
 
               <FieldDescription className="text-center mt-1 text-xs">
                 Chưa có tài khoản?{' '}

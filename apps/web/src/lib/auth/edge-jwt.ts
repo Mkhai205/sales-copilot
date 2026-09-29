@@ -74,6 +74,12 @@ export function isTokenExpired(
 
 /**
  * Validates whether the decoded payload belongs to a Super Admin.
+ *
+ * SECURITY CONSTRAINT: the payload comes from base64-decoding the JWT in the
+ * Edge runtime — the signature is NOT verified here (Web Crypto limitations
+ * in middleware). This is a UX/redirect gate only; the NestJS backend
+ * re-checks the role on every request with the verified token and must
+ * remain the single source of authorization truth.
  */
 export function isSuperAdmin(payload: { role?: string } | null | undefined): boolean {
   return payload?.role === 'SUPER_ADMIN';
