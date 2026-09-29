@@ -73,7 +73,7 @@ describe('extractShippingInfo Tool (T4)', () => {
 
     // An ambiguous text that won't match Tier 1 high confidence
     const input = 'ship về 123 Lê Duẩn giúp em';
-    const result = await toolWithModel.execute({ text: input }, {} as any);
+    const result = await toolWithModel.execute?.({ text: input }, {} as any);
 
     expect(mockGenerateObject).toHaveBeenCalledTimes(1);
     const callArgs = mockGenerateObject.mock.calls[0][0];
@@ -98,7 +98,7 @@ describe('extractShippingInfo Tool (T4)', () => {
     });
 
     const input = 'chuyển qua 45 Lê Duẩn';
-    const result = await toolWithModel.execute({ text: input }, {} as any);
+    const result = await toolWithModel.execute?.({ text: input }, {} as any);
 
     // Should not throw, should return whatever Tier 1 found
     expect(mockGenerateObject).toHaveBeenCalledTimes(1);
@@ -119,7 +119,7 @@ describe('extractShippingInfo Tool (T4)', () => {
     });
 
     const input = 'chuyển qua 45 Lê Duẩn';
-    const result = await toolWithModel.execute({ text: input }, {} as any);
+    const result = await toolWithModel.execute?.({ text: input }, {} as any);
 
     expect(mockGenerateObject).toHaveBeenCalledTimes(1);
     expect(result._meta.tierUsed).toBe(2);
@@ -136,7 +136,7 @@ describe('extractShippingInfo Tool (T4)', () => {
     });
 
     const input = 'giao đến 10 ngõ 5';
-    const result = await toolWithModel.execute({ text: input }, {} as any);
+    const result = await toolWithModel.execute?.({ text: input }, {} as any);
 
     expect(mockGenerateObject).toHaveBeenCalledTimes(1);
     expect(result._meta.tierUsed).toBe(2);

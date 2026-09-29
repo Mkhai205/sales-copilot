@@ -17,7 +17,7 @@ import {
   COMMERCE_RECONCILIATION_QUEUE,
   generateVietQrSchema,
   vietQrResponseSchema,
-} from '../index';
+} from '../../index';
 
 describe('Shared Contracts — Commerce Context Schemas', () => {
   describe('Queue & Job Contract Invariants', () => {

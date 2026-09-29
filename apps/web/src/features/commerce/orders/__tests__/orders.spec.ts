@@ -60,7 +60,7 @@ describe('Commerce Orders OMS Test Suite (Phase 5)', () => {
     it('createOrder: should send POST with create order payload and X-Workspace-Id header', async () => {
       const payload = {
         contactId: '11111111-1111-4111-8111-111111111111',
-        status: OrderStatus.DRAFT as const,
+        status: OrderStatus.DRAFT,
         confirmImmediately: true,
         items: [
           {

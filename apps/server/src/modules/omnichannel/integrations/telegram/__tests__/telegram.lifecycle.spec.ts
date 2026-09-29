@@ -2,7 +2,7 @@ import { ConfigService } from '@nestjs/config';
 import { ChannelType } from '@sales-copilot/shared-contracts';
 import { TelegramLifecycleService } from '../telegram.lifecycle';
 import { TelegramAdapter } from '../telegram.adapter';
-import { ChannelCredentialService } from '../../../../omnichannel/inboxes/channel-credential.service';
+import { ChannelCredentialService } from '../../../../../infrastructure/crypto/channel-credential.service';
 import { PrismaService } from '../../../../../infrastructure/database/prisma.service';
 
 describe('TelegramLifecycleService (Automated Webhook Setup & Token Validation)', () => {

@@ -2,7 +2,7 @@ import { assertDefined, expectReject } from '../../../../../test/test-assertions
 import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
 import { ChannelType } from '@sales-copilot/shared-contracts';
 import { InboxesService } from '../inboxes.service';
-import { ChannelCredentialService } from '../channel-credential.service';
+import { ChannelCredentialService } from '../../../../infrastructure/crypto/channel-credential.service';
 import { ConfigService } from '@nestjs/config';
 
 describe('InboxesService (Inbox & Channel 1:1 CRUD & Security)', () => {

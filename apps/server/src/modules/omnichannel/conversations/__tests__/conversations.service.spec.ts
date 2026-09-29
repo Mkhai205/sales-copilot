@@ -1,10 +1,6 @@
 import { assertDefined, expectReject } from '../../../../../test/test-assertions';
 import { ConversationsService } from '../conversations.service';
-import {
-  ConversationPriority,
-  ConversationStatus,
-  Priority,
-} from '@sales-copilot/shared-contracts';
+import { ConversationPriority, ConversationStatus } from '@sales-copilot/shared-contracts';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 
 describe('ConversationsService (Core & State Machine)', () => {
@@ -454,7 +450,7 @@ describe('ConversationsService (Core & State Machine)', () => {
         channelIdentityId: 'ci_1',
         assigneeId: 'usr_agent_1',
         teamId: 'tm_1',
-        priority: Priority.HIGH,
+        priority: ConversationPriority.HIGH,
       });
 
       expect(conv.assigneeId).toBe('usr_agent_1');
@@ -762,14 +758,14 @@ describe('ConversationsService (Core & State Machine)', () => {
       emittedEvents = [];
 
       const updated = await service.updatePriority('ws_1', conv.id, {
-        priority: Priority.URGENT,
+        priority: ConversationPriority.URGENT,
       });
 
       expect(updated.priority).toBe(ConversationPriority.URGENT);
 
       const priorityEvent = emittedEvents.find(e => e.event === 'conversation.priority_updated');
       assertDefined(priorityEvent);
-      expect(priorityEvent.payload.currentPriority).toBe(Priority.URGENT);
+      expect(priorityEvent.payload.currentPriority).toBe(ConversationPriority.URGENT);
     });
   });
 

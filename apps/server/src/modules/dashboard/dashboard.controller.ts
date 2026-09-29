@@ -1,11 +1,11 @@
 import { Controller, Get, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiHeader, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { WorkspaceRole, type DashboardSummaryDto } from '@sales-copilot/shared-contracts';
-import { CurrentWorkspace } from '../identity/workspaces/decorators/current-workspace.decorator';
-import { Roles } from '../identity/workspaces/decorators/roles.decorator';
-import { RolesGuard } from '../identity/workspaces/guards/roles.guard';
+import { CurrentWorkspace } from '../../common/authz/current-workspace.decorator';
+import { Roles } from '../../common/authz/roles.decorator';
+import { RolesGuard } from '../../common/authz/roles.guard';
 import { WorkspaceGuard } from '../identity/workspaces/guards/workspace.guard';
-import type { WorkspaceContext } from '../identity/workspaces/types/workspace-context.type';
+import type { WorkspaceContext } from '../../common/authz/workspace-context.type';
 import { DashboardService } from './dashboard.service';
 
 @ApiTags('Dashboard')

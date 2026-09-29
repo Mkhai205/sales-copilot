@@ -13,7 +13,7 @@ import {
 import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 import { Throttle } from '@nestjs/throttler';
-import { Public } from '../../../identity/auth/decorators/public.decorator';
+import { Public } from '../../../../common/authz/public.decorator';
 import { WebhooksService } from './webhooks.service';
 
 @ApiTags('Webhooks')

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ConversationStatus, ConversationPriority, Priority } from './enums';
+import { ConversationStatus, ConversationPriority } from './enums';
 import type { LabelDto } from '../labels';
 import type { ContactDto } from '../contacts';
 import type { MessageResponseDto } from '../messages';
@@ -15,7 +15,7 @@ export const createConversationSchema = z.object({
   channelIdentityId: z.string().uuid('Invalid channel identity ID').optional().nullable(),
   assigneeId: z.string().uuid('Invalid assignee ID').optional().nullable(),
   teamId: z.string().uuid('Invalid team ID').optional().nullable(),
-  priority: z.nativeEnum(Priority).optional().default(Priority.MEDIUM),
+  priority: z.nativeEnum(ConversationPriority).optional().default(ConversationPriority.MEDIUM),
   customAttributes: z.record(z.unknown()).optional(),
 });
 export type CreateConversationDto = z.input<typeof createConversationSchema>;
@@ -37,7 +37,7 @@ export const assignConversationSchema = z.object({
 export type AssignConversationDto = z.input<typeof assignConversationSchema>;
 
 export const updateConversationPrioritySchema = z.object({
-  priority: z.nativeEnum(Priority),
+  priority: z.nativeEnum(ConversationPriority),
 });
 export type UpdateConversationPriorityDto = z.input<typeof updateConversationPrioritySchema>;
 
@@ -65,7 +65,7 @@ export const conversationListQuerySchema = z.object({
   teamId: z.string().uuid().optional(),
   contactId: z.string().uuid().optional(),
   labelId: z.string().uuid().optional(),
-  priority: z.nativeEnum(Priority).optional(),
+  priority: z.nativeEnum(ConversationPriority).optional(),
   q: z.string().optional(),
   sortBy: conversationSortBySchema.default('lastActivityAt'),
   sortOrder: z.enum(['asc', 'desc']).default('desc'),

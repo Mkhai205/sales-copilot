@@ -1,1 +1,1 @@
-export * from './inventory.schemas';
+export * from './schemas';

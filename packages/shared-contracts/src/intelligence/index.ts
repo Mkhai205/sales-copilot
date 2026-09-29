@@ -1,7 +1,5 @@
-export * from './intelligence.schemas';
-export * from './knowledge.schemas';
-
-export const AI_AUTOPILOT_QUEUE = 'ai-autopilot';
+export * from './schemas';
+export * from './knowledge';
 
 export interface AiAgentJobData {
   workspaceId: string;
@@ -26,7 +24,7 @@ export interface AiAgentTokenUsage {
   totalTokens: number;
 }
 
-import type { AiDebugMetadata } from './intelligence.schemas';
+import type { AiDebugMetadata } from './schemas';
 
 export interface AiAgentResult {
   skipped?: boolean;

@@ -15,7 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   ConversationStatus,
-  Priority,
+  ConversationPriority,
   type ConversationResponseDto,
 } from '@sales-copilot/shared-contracts';
 import { getChannelMeta } from '@/lib/channels';
@@ -95,10 +95,10 @@ export function MessageThreadHeader({
     }
   };
 
-  const getPriorityBadge = (priority?: Priority) => {
+  const getPriorityBadge = (priority?: ConversationPriority) => {
     if (!priority) return null;
     switch (priority) {
-      case Priority.URGENT:
+      case ConversationPriority.URGENT:
         return (
           <Badge
             variant="outline"
@@ -108,7 +108,7 @@ export function MessageThreadHeader({
             {'Khẩn cấp'}
           </Badge>
         );
-      case Priority.HIGH:
+      case ConversationPriority.HIGH:
         return (
           <Badge
             variant="outline"
@@ -117,9 +117,9 @@ export function MessageThreadHeader({
             {'Cao'}
           </Badge>
         );
-      case Priority.MEDIUM:
+      case ConversationPriority.MEDIUM:
         return null;
-      case Priority.LOW:
+      case ConversationPriority.LOW:
         return (
           <Badge
             variant="outline"

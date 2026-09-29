@@ -3,9 +3,9 @@ import { BadRequestException, ConflictException, NotFoundException } from '@nest
 import { ChannelType, WorkspaceRole } from '@sales-copilot/shared-contracts';
 import { InboxesService } from '../inboxes.service';
 import { InboxMembersController } from '../inbox-members.controller';
-import { ChannelCredentialService } from '../channel-credential.service';
+import { ChannelCredentialService } from '../../../../infrastructure/crypto/channel-credential.service';
 import { ConfigService } from '@nestjs/config';
-import type { WorkspaceContext } from '../../../identity/workspaces/types/workspace-context.type';
+import type { WorkspaceContext } from '../../../../common/authz/workspace-context.type';
 
 describe('InboxMember Management (Feature F-1.3.2 pt.2 & BR-1.3)', () => {
   let service: InboxesService;

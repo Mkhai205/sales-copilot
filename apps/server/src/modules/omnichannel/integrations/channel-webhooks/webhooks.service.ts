@@ -5,8 +5,8 @@ import * as crypto from 'crypto';
 import { ChannelType } from '@sales-copilot/shared-contracts';
 import { PrismaService } from '../../../../infrastructure/database/prisma.service';
 import { ChannelAdapterRegistry } from '../channel-adapter.registry';
-import { ChannelCredentialService } from '../../inboxes/channel-credential.service';
-import { CHANNEL_INGESTION_QUEUE } from '../../../../infrastructure/queue/queue.module';
+import { ChannelCredentialService } from '../../../../infrastructure/crypto/channel-credential.service';
+import { CHANNEL_INGESTION_QUEUE } from '@sales-copilot/shared-contracts';
 
 export interface InboundWebhookResult {
   success: boolean;

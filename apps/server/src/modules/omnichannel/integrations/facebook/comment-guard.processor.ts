@@ -1,5 +1,5 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
-import { Injectable, Logger, Optional } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Job } from 'bullmq';
 import {
   COMMENT_GUARD_QUEUE,
@@ -16,7 +16,7 @@ import { PrismaService } from '../../../../infrastructure/database/prisma.servic
 import { ContactResolutionService } from '../../../omnichannel/contacts/contact-resolution.service';
 import { ConversationsService } from '../../../omnichannel/conversations/conversations.service';
 import { MessagesService } from '../../../omnichannel/messages/messages.service';
-import { ChannelCredentialService } from '../../../omnichannel/inboxes/channel-credential.service';
+import { ChannelCredentialService } from '../../../../infrastructure/crypto/channel-credential.service';
 import { FacebookAdapter, FacebookRateLimitError } from './facebook.adapter';
 
 export interface CommentGuardJobData {
@@ -63,7 +63,7 @@ export class CommentGuardProcessor extends WorkerHost {
     private readonly conversationsService: ConversationsService,
     private readonly messagesService: MessagesService,
     private readonly adapter: FacebookAdapter,
-    @Optional() private readonly credentialService?: ChannelCredentialService,
+    private readonly credentialService: ChannelCredentialService,
   ) {
     super();
   }

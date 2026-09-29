@@ -12,7 +12,7 @@ import {
 import { PresenceIndicator } from '@/components/ui/presence-indicator';
 import {
   ConversationStatus,
-  Priority,
+  ConversationPriority,
   type ConversationResponseDto,
 } from '@sales-copilot/shared-contracts';
 import {
@@ -40,7 +40,7 @@ export function ConversationActions({ conversation, workspaceSlug }: Conversatio
   };
 
   const handlePriorityChange = (priority: string) => {
-    updatePriority.mutate({ priority: priority as Priority });
+    updatePriority.mutate({ priority: priority as ConversationPriority });
   };
 
   const handleAssigneeChange = (val: string) => {
@@ -104,11 +104,11 @@ export function ConversationActions({ conversation, workspaceSlug }: Conversatio
           </Select>
         </div>
 
-        {/* Priority Dropdown */}
+        {/* ConversationPriority Dropdown */}
         <div className="flex items-center justify-between gap-2">
           <span className="text-muted-foreground font-medium shrink-0">{'Độ ưu tiên'}</span>
           <Select
-            value={conversation.priority || Priority.MEDIUM}
+            value={conversation.priority || ConversationPriority.MEDIUM}
             onValueChange={handlePriorityChange}
             disabled={updatePriority.isPending}
           >
@@ -117,25 +117,25 @@ export function ConversationActions({ conversation, workspaceSlug }: Conversatio
             </SelectTrigger>
             <SelectContent position="popper">
               <SelectGroup>
-                <SelectItem value={Priority.URGENT}>
+                <SelectItem value={ConversationPriority.URGENT}>
                   <span className="flex items-center gap-2 text-rose-500 font-medium">
                     <span className="size-2 rounded-full bg-rose-500" />
                     {'Khẩn cấp'}
                   </span>
                 </SelectItem>
-                <SelectItem value={Priority.HIGH}>
+                <SelectItem value={ConversationPriority.HIGH}>
                   <span className="flex items-center gap-2 text-orange-500 font-medium">
                     <span className="size-2 rounded-full bg-orange-500" />
                     {'Cao'}
                   </span>
                 </SelectItem>
-                <SelectItem value={Priority.MEDIUM}>
+                <SelectItem value={ConversationPriority.MEDIUM}>
                   <span className="flex items-center gap-2">
                     <span className="size-2 rounded-full bg-yellow-500" />
                     {'Trung bình'}
                   </span>
                 </SelectItem>
-                <SelectItem value={Priority.LOW}>
+                <SelectItem value={ConversationPriority.LOW}>
                   <span className="flex items-center gap-2">
                     <span className="size-2 rounded-full bg-muted-foreground/50" />
                     {'Thấp'}

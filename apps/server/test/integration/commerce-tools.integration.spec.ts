@@ -195,7 +195,6 @@ describe('Commerce Tools PostgreSQL Integration Tests (Real Database)', () => {
         isActive: true,
       },
     });
-    testProductId = product.id;
 
     // Variant 1: In stock (stock: 10, reserved: 2 -> availableStock = 8)
     const varInStock = await client.productVariant.create({

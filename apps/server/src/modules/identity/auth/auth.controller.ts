@@ -30,9 +30,9 @@ import {
 } from '@sales-copilot/shared-contracts';
 import { ZodBody } from '../../../common/pipes/zod-schema-validation.pipe';
 import { AuthService } from './auth.service';
-import { CurrentUser } from './decorators/current-user.decorator';
-import { Public } from './decorators/public.decorator';
-import { JwtUserPayload } from './types/jwt-payload.type';
+import { CurrentUser } from '../../../common/authz/current-user.decorator';
+import { Public } from '../../../common/authz/public.decorator';
+import { JwtUserPayload } from '../../../common/authz/jwt-payload.type';
 
 @ApiTags('Authentication')
 @Controller('auth')

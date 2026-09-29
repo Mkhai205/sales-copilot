@@ -23,8 +23,8 @@ import {
   type WorkspacePaymentSettings,
 } from '@sales-copilot/shared-contracts';
 import { PrismaService } from '../../../infrastructure/database/prisma.service';
-import { generateSlug } from './utils/slug.util';
-import { ChannelCredentialService } from '../../omnichannel/inboxes/channel-credential.service';
+import { generateSlug } from '../../../common/utils/slug.util';
+import { ChannelCredentialService } from '../../../infrastructure/crypto/channel-credential.service';
 import { PasswordService } from '../auth/password.service';
 import { ResendService } from '../../../infrastructure/email/resend.service';
 
@@ -34,8 +34,8 @@ export class WorkspacesService {
 
   constructor(
     private readonly prisma: PrismaService,
+    private readonly channelCredentialService: ChannelCredentialService,
     @Optional() private readonly eventEmitter?: EventEmitter2,
-    @Optional() private readonly channelCredentialService?: ChannelCredentialService,
     @Optional() private readonly passwordService?: PasswordService,
     @Optional() private readonly resendService?: ResendService,
   ) {}
@@ -220,7 +220,7 @@ export class WorkspacesService {
     }
 
     let webhookSecret = paymentSettings.webhookSecret;
-    if (webhookSecret && this.channelCredentialService && webhookSecret.split(':').length === 3) {
+    if (webhookSecret && webhookSecret.split(':').length === 3) {
       try {
         const decrypted = this.channelCredentialService.decrypt<{
           secret?: string;
@@ -266,7 +266,7 @@ export class WorkspacesService {
     }
 
     let encryptedSecret = dto.webhookSecret;
-    if (dto.webhookSecret && this.channelCredentialService) {
+    if (dto.webhookSecret) {
       encryptedSecret = this.channelCredentialService.encrypt({
         secret: dto.webhookSecret,
         webhookSecret: dto.webhookSecret,

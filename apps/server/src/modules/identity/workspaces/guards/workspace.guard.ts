@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { Request } from 'express';
 import { WorkspacesService } from '../workspaces.service';
-import { WorkspaceContext } from '../types/workspace-context.type';
+import { WorkspaceContext } from '../../../../common/authz/workspace-context.type';
 
 declare module 'express' {
   interface Request {

@@ -9,7 +9,7 @@ import {
 } from '@sales-copilot/shared-contracts';
 import { PrismaService } from '../../../infrastructure/database/prisma.service';
 import { ChannelAdapterRegistry } from './channel-adapter.registry';
-import { ChannelCredentialService } from '../inboxes/channel-credential.service';
+import { ChannelCredentialService } from '../../../infrastructure/crypto/channel-credential.service';
 import {
   ChannelContext,
   OutboundAttachment,

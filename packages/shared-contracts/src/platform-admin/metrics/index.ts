@@ -1,1 +1,1 @@
-export * from './metrics.schemas';
+export * from './schemas';

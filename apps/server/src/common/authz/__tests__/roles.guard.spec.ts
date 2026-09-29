@@ -1,8 +1,8 @@
-import { expectThrow } from '../../../../../test/test-assertions';
+import { expectThrow } from '../../../../test/test-assertions';
 import { ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { WorkspaceRole } from '@sales-copilot/shared-contracts';
-import { RolesGuard } from '../guards/roles.guard';
+import { RolesGuard } from '../roles.guard';
 
 describe('RolesGuard (RBAC Permission Control)', () => {
   let guard: RolesGuard;

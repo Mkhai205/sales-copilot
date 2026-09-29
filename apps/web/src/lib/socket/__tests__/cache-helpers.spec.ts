@@ -6,7 +6,7 @@ import {
   DeliveryStatus,
   MessageContentType,
   MessageType,
-  Priority,
+  ConversationPriority,
   SenderType,
   ConversationStatus,
   type ConversationResponseDto,
@@ -71,7 +71,7 @@ describe('Realtime Cache Helpers (Task 22)', () => {
     inboxId: 'inbox-1',
     contactId: 'contact-1',
     status: ConversationStatus.OPEN,
-    priority: Priority.MEDIUM,
+    priority: ConversationPriority.MEDIUM,
     unreadMessagesCount: 0,
     lastActivityAt: '2026-08-31T10:00:00.000Z',
     createdAt: '2026-08-31T09:00:00.000Z',
@@ -85,7 +85,7 @@ describe('Realtime Cache Helpers (Task 22)', () => {
     inboxId: 'inbox-1',
     contactId: 'contact-2',
     status: ConversationStatus.OPEN,
-    priority: Priority.LOW,
+    priority: ConversationPriority.LOW,
     unreadMessagesCount: 1,
     lastActivityAt: '2026-08-31T10:10:00.000Z',
     createdAt: '2026-08-31T09:30:00.000Z',
@@ -237,12 +237,12 @@ describe('Realtime Cache Helpers (Task 22)', () => {
     it('should update conversation fields in list', () => {
       const result = updateConversationInList(initialConvData, 'conv-1', {
         status: ConversationStatus.RESOLVED,
-        priority: Priority.URGENT,
+        priority: ConversationPriority.URGENT,
       });
       assert.ok(result);
       const conv = result.pages[0].data?.find(c => c.id === 'conv-1');
       assert.strictEqual(conv?.status, ConversationStatus.RESOLVED);
-      assert.strictEqual(conv?.priority, Priority.URGENT);
+      assert.strictEqual(conv?.priority, ConversationPriority.URGENT);
     });
 
     it('should support functional updater', () => {

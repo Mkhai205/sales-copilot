@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import * as crypto from 'crypto';
 import { PrismaService } from '../../../infrastructure/database/prisma.service';
-import { ChannelCredentialService } from '../../omnichannel/inboxes/channel-credential.service';
+import { ChannelCredentialService } from '../../../infrastructure/crypto/channel-credential.service';
 import { WorkspacePaymentSettings } from '@sales-copilot/shared-contracts';
 
 function safeTimingCompare(a: string, b: string): boolean {

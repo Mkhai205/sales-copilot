@@ -1,6 +1,7 @@
 import { assertDefined, expectReject } from '../../../../../test/test-assertions';
 import { BillingPlanType, WorkspaceRole } from '@sales-copilot/shared-contracts';
 import { WorkspacesService } from '../workspaces.service';
+import { ChannelCredentialService } from '../../../../infrastructure/crypto/channel-credential.service';
 import { PrismaService } from '../../../../infrastructure/database/prisma.service';
 
 describe('WorkspacesService (Provisioning, Tenant Queries & Member RBAC)', () => {
@@ -11,6 +12,7 @@ describe('WorkspacesService (Provisioning, Tenant Queries & Member RBAC)', () =>
   let usersDb: Map<string, any>;
   let emittedEvents: Array<{ event: string; payload: any }>;
   let mockEventEmitter: any;
+  let mockChannelCredentialService: any;
 
   beforeEach(() => {
     workspacesDb = new Map();
@@ -258,7 +260,22 @@ describe('WorkspacesService (Provisioning, Tenant Queries & Member RBAC)', () =>
       },
     };
 
-    service = new WorkspacesService(mockPrismaService as PrismaService, mockEventEmitter);
+    mockChannelCredentialService = {
+      encrypt: (data: any) => Buffer.from(JSON.stringify(data)).toString('base64'),
+      decrypt: (ciphertext: string) => {
+        try {
+          return JSON.parse(Buffer.from(ciphertext, 'base64').toString('utf8'));
+        } catch {
+          return ciphertext;
+        }
+      },
+    };
+
+    service = new WorkspacesService(
+      mockPrismaService as PrismaService,
+      mockChannelCredentialService as ChannelCredentialService,
+      mockEventEmitter,
+    );
   });
 
   describe('Workspace Provisioning & Basic Operations', () => {
@@ -466,8 +483,8 @@ describe('WorkspacesService (Provisioning, Tenant Queries & Member RBAC)', () =>
 
       const customService = new WorkspacesService(
         mockPrismaService as PrismaService,
+        mockChannelCredentialService as ChannelCredentialService,
         mockEventEmitter,
-        undefined,
         undefined,
         mockResendService,
       );

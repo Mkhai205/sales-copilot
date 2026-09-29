@@ -12,10 +12,17 @@ export const KNOWLEDGE_CATEGORIES = [
 export const knowledgeCategorySchema = z.enum(KNOWLEDGE_CATEGORIES);
 export type KnowledgeCategory = z.infer<typeof knowledgeCategorySchema>;
 
-export const KNOWLEDGE_EMBEDDING_STATUSES = ['PENDING', 'PROCESSING', 'READY', 'FAILED'] as const;
+export const KnowledgeEmbeddingStatus = {
+  PENDING: 'PENDING',
+  PROCESSING: 'PROCESSING',
+  READY: 'READY',
+  FAILED: 'FAILED',
+} as const;
 
-export const knowledgeEmbeddingStatusSchema = z.enum(KNOWLEDGE_EMBEDDING_STATUSES);
-export type KnowledgeEmbeddingStatus = z.infer<typeof knowledgeEmbeddingStatusSchema>;
+export type KnowledgeEmbeddingStatus =
+  (typeof KnowledgeEmbeddingStatus)[keyof typeof KnowledgeEmbeddingStatus];
+
+export const knowledgeEmbeddingStatusSchema = z.nativeEnum(KnowledgeEmbeddingStatus);
 
 export const createKnowledgeArticleSchema = z.object({
   title: z

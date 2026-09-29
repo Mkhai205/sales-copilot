@@ -19,13 +19,13 @@ import {
   WorkspaceRole,
 } from '@sales-copilot/shared-contracts';
 import { ZodBody } from '../../../common/pipes/zod-schema-validation.pipe';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import type { JwtUserPayload } from '../auth/types/jwt-payload.type';
-import { CurrentWorkspace } from './decorators/current-workspace.decorator';
-import { Roles } from './decorators/roles.decorator';
-import { RolesGuard } from './guards/roles.guard';
+import { CurrentUser } from '../../../common/authz/current-user.decorator';
+import type { JwtUserPayload } from '../../../common/authz/jwt-payload.type';
+import { CurrentWorkspace } from '../../../common/authz/current-workspace.decorator';
+import { Roles } from '../../../common/authz/roles.decorator';
+import { RolesGuard } from '../../../common/authz/roles.guard';
 import { WorkspaceGuard } from './guards/workspace.guard';
-import type { WorkspaceContext } from './types/workspace-context.type';
+import type { WorkspaceContext } from '../../../common/authz/workspace-context.type';
 import { WorkspacesService } from './workspaces.service';
 
 @ApiTags('Workspace Members')

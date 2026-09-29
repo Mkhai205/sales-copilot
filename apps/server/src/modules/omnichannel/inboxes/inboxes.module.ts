@@ -1,16 +1,15 @@
-import { Module, forwardRef } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { DatabaseModule } from '../../../infrastructure/database/database.module';
 import { AuthModule } from '../../identity/auth/auth.module';
 import { WorkspacesModule } from '../../identity/workspaces/workspaces.module';
-import { ChannelCredentialService } from './channel-credential.service';
 import { InboxMembersController } from './inbox-members.controller';
 import { InboxesController } from './inboxes.controller';
 import { InboxesService } from './inboxes.service';
 
 @Module({
-  imports: [DatabaseModule, AuthModule, forwardRef(() => WorkspacesModule)],
+  imports: [DatabaseModule, AuthModule, WorkspacesModule],
   controllers: [InboxesController, InboxMembersController],
-  providers: [ChannelCredentialService, InboxesService],
-  exports: [ChannelCredentialService, InboxesService],
+  providers: [InboxesService],
+  exports: [InboxesService],
 })
 export class InboxesModule {}

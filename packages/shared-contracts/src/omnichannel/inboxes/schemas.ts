@@ -59,8 +59,6 @@ export const DEFAULT_COMMENT_GUARD_PRIVATE_REPLY =
 export const DEFAULT_COMMENT_GUARD_PUBLIC_REPLY =
   'Shop đã nhận thông tin và nhắn tin riêng cho bạn rồi nhé 😊';
 
-export const COMMENT_GUARD_QUEUE = 'comment-guard';
-
 export const commentGuardConfigSchema = z.object({
   enabled: z.boolean().default(false),
   privateReplyTemplate: z.string().optional(),

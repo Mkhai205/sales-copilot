@@ -1,4 +1,4 @@
-import { expectReject } from '../../../../../test/test-assertions';
+import { expectReject } from '../../../../test/test-assertions';
 import {
   PlatformAuditAction,
   PlatformAuditTargetType,

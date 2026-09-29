@@ -15,7 +15,7 @@ import {
   Search,
   X,
 } from 'lucide-react';
-import { ConversationStatus, Priority } from '@sales-copilot/shared-contracts';
+import { ConversationStatus, ConversationPriority } from '@sales-copilot/shared-contracts';
 import type { ConversationFilters, StatusFilter } from './hooks/use-conversation-filters';
 import { useInboxes } from '@/features/settings/inboxes/hooks/use-inboxes';
 import { useLabels } from '@/features/settings/labels/hooks/use-labels';
@@ -38,7 +38,7 @@ interface ConversationFilterPopoverProps {
   activeFilterCount: number;
   setStatus: (status: StatusFilter) => void;
   setInbox: (inboxId?: string) => void;
-  setPriority: (priority?: Priority) => void;
+  setPriority: (priority?: ConversationPriority) => void;
   setLabel: (labelId?: string) => void;
   setAssignee: (assigneeId?: string) => void;
   resetAdvancedFilters: () => void;
@@ -56,32 +56,32 @@ const STATUS_ITEMS: Array<{ value: StatusFilter; label: string }> = [
 ];
 
 const PRIORITY_ITEMS: Array<{
-  value?: Priority;
+  value?: ConversationPriority;
   label: string;
   dotColor: string;
   textColor?: string;
 }> = [
   { value: undefined, label: 'Tất cả', dotColor: 'bg-muted-foreground/40' },
   {
-    value: Priority.URGENT,
+    value: ConversationPriority.URGENT,
     label: 'Khẩn cấp',
     dotColor: 'bg-rose-500',
     textColor: 'text-rose-600 dark:text-rose-400',
   },
   {
-    value: Priority.HIGH,
+    value: ConversationPriority.HIGH,
     label: 'Cao',
     dotColor: 'bg-amber-500',
     textColor: 'text-amber-600 dark:text-amber-400',
   },
   {
-    value: Priority.MEDIUM,
+    value: ConversationPriority.MEDIUM,
     label: 'Trung bình',
     dotColor: 'bg-blue-500',
     textColor: 'text-blue-600 dark:text-blue-400',
   },
   {
-    value: Priority.LOW,
+    value: ConversationPriority.LOW,
     label: 'Thấp',
     dotColor: 'bg-muted-foreground/50',
     textColor: 'text-muted-foreground',
@@ -144,16 +144,16 @@ export function ConversationFilterPopover({
     }
   };
 
-  const getPriorityLabel = (priority?: Priority) => {
+  const getPriorityLabel = (priority?: ConversationPriority) => {
     if (!priority) return 'Tất cả';
     switch (priority) {
-      case Priority.URGENT:
+      case ConversationPriority.URGENT:
         return 'Khẩn cấp';
-      case Priority.HIGH:
+      case ConversationPriority.HIGH:
         return 'Cao';
-      case Priority.MEDIUM:
+      case ConversationPriority.MEDIUM:
         return 'Trung bình';
-      case Priority.LOW:
+      case ConversationPriority.LOW:
         return 'Thấp';
       default:
         return priority;

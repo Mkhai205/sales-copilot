@@ -1,4 +1,4 @@
-import { forwardRef, Module, OnModuleInit } from '@nestjs/common';
+import { Module, OnModuleInit } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { DatabaseModule } from '../../../../infrastructure/database/database.module';
 import { InboxesModule } from '../../inboxes/inboxes.module';
@@ -21,9 +21,9 @@ import { WebChatService } from './web-chat.service';
     DatabaseModule,
     JwtModule.register({}),
     InboxesModule,
-    forwardRef(() => ContactsModule),
-    forwardRef(() => MessagesModule),
-    forwardRef(() => ConversationsModule),
+    ContactsModule,
+    MessagesModule,
+    ConversationsModule,
   ],
   controllers: [WebChatController],
   providers: [WebChatAdapter, WebChatGateway, WidgetTokenService, WebChatService],

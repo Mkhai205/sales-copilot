@@ -1,6 +1,6 @@
 import { KnowledgeController } from '../knowledge.controller';
 import { WorkspaceRole } from '@sales-copilot/shared-contracts';
-import type { WorkspaceContext } from '../../../identity/workspaces/types/workspace-context.type';
+import type { WorkspaceContext } from '../../../../common/authz/workspace-context.type';
 
 describe('KnowledgeController', () => {
   let controller: KnowledgeController;
@@ -8,7 +8,6 @@ describe('KnowledgeController', () => {
 
   const mockContext: WorkspaceContext = {
     workspaceId: 'ws-test-controller',
-    userId: 'user-owner-1',
     role: WorkspaceRole.OWNER,
     workspace: {
       id: 'ws-test-controller',

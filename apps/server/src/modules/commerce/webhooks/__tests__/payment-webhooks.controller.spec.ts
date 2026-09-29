@@ -246,7 +246,9 @@ describe('PaymentWebhooks (SePay & Casso Webhook Controller & Guard)', () => {
         referenceCode: 'FT262529182312',
       };
 
-      const res = await controller.handleWebhook(wsId, 'sepay', sePayPayload);
+      const res = await controller.handleWebhook(wsId, 'sepay', sePayPayload, {
+        workspaceId: wsId,
+      });
 
       expect(res.success).toBe(true);
       expect(res.queued).toBe(true);
@@ -289,7 +291,9 @@ describe('PaymentWebhooks (SePay & Casso Webhook Controller & Guard)', () => {
         ],
       };
 
-      const res = await controller.handleWebhook(wsId, 'casso', cassoPayload);
+      const res = await controller.handleWebhook(wsId, 'casso', cassoPayload, {
+        workspaceId: wsId,
+      });
 
       expect(res.success).toBe(true);
       expect(res.queued).toBe(true);
@@ -310,7 +314,9 @@ describe('PaymentWebhooks (SePay & Casso Webhook Controller & Guard)', () => {
         content: 'ORD 1004 Rut tien ngan hang',
       };
 
-      const res = await controller.handleWebhook(wsId, 'sepay', outgoingPayload);
+      const res = await controller.handleWebhook(wsId, 'sepay', outgoingPayload, {
+        workspaceId: wsId,
+      });
       expect(res.success).toBe(true);
       expect(res.count).toBe(0);
       expect(enqueuedJobs.length).toBe(0);
@@ -324,7 +330,9 @@ describe('PaymentWebhooks (SePay & Casso Webhook Controller & Guard)', () => {
         content: 'ORD 1004',
       };
 
-      const res = await controller.handleWebhook(wsId, 'sepay', zeroAmountPayload);
+      const res = await controller.handleWebhook(wsId, 'sepay', zeroAmountPayload, {
+        workspaceId: wsId,
+      });
       expect(res.success).toBe(true);
       expect(res.count).toBe(0);
       expect(enqueuedJobs.length).toBe(0);

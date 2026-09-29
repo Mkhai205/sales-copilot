@@ -2,7 +2,7 @@ import { assertDefined, expectReject } from '../../../../../../test/test-asserti
 import { ConfigService } from '@nestjs/config';
 import { FacebookService } from '../facebook.service';
 import { FacebookAdapter } from '../facebook.adapter';
-import { ChannelCredentialService } from '../../../../omnichannel/inboxes/channel-credential.service';
+import { ChannelCredentialService } from '../../../../../infrastructure/crypto/channel-credential.service';
 import { PrismaService } from '../../../../../infrastructure/database/prisma.service';
 import { RedisService } from '../../../../../infrastructure/redis/redis.service';
 

@@ -2,7 +2,7 @@ import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@
 import { Reflector } from '@nestjs/core';
 import { WorkspaceRole } from '@sales-copilot/shared-contracts';
 import { Request } from 'express';
-import { ROLES_KEY } from '../decorators/roles.decorator';
+import { ROLES_KEY } from './roles.decorator';
 
 @Injectable()
 export class RolesGuard implements CanActivate {

@@ -3,9 +3,9 @@ import { NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { ChannelType, DeliveryStatus } from '@sales-copilot/shared-contracts';
 import { WebhooksService } from '../webhooks.service';
 import { WebhooksController } from '../webhooks.controller';
-import { ChannelIngestionProcessor } from '../../../../../infrastructure/queue/channel-ingestion.processor';
+import { ChannelIngestionProcessor } from '../../channel-ingestion.processor';
 import { ChannelAdapterRegistry } from '../../channel-adapter.registry';
-import { ChannelCredentialService } from '../../../inboxes/channel-credential.service';
+import { ChannelCredentialService } from '../../../../../infrastructure/crypto/channel-credential.service';
 import { ConfigService } from '@nestjs/config';
 import type { ChannelAdapter } from '../../channel-adapter.interface';
 import type {
@@ -192,6 +192,10 @@ describe('Inbound Webhook Ingestion Pipeline (Feature F-1.3.4 & BullMQ Stub)', (
       mockConversationsService,
       mockMessagesService,
       adapterRegistry,
+      {
+        encrypt: (d: any) => JSON.stringify(d),
+        decrypt: (s: any) => s,
+      } as unknown as ChannelCredentialService,
     );
   });
 

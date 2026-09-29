@@ -1,1 +1,1 @@
-export * from './widget.schemas';
+export * from './schemas';

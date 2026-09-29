@@ -1,15 +1,17 @@
-export enum ConversationStatus {
-  OPEN = 'OPEN',
-  RESOLVED = 'RESOLVED',
-  PENDING = 'PENDING',
-  SNOOZED = 'SNOOZED',
-}
+export const ConversationStatus = {
+  OPEN: 'OPEN',
+  RESOLVED: 'RESOLVED',
+  PENDING: 'PENDING',
+  SNOOZED: 'SNOOZED',
+} as const;
 
-export enum Priority {
-  URGENT = 'URGENT',
-  HIGH = 'HIGH',
-  MEDIUM = 'MEDIUM',
-  LOW = 'LOW',
-}
+export type ConversationStatus = (typeof ConversationStatus)[keyof typeof ConversationStatus];
 
-export { Priority as ConversationPriority };
+export const ConversationPriority = {
+  URGENT: 'URGENT',
+  HIGH: 'HIGH',
+  MEDIUM: 'MEDIUM',
+  LOW: 'LOW',
+} as const;
+
+export type ConversationPriority = (typeof ConversationPriority)[keyof typeof ConversationPriority];

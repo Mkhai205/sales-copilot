@@ -1,1 +1,1 @@
-export * from './audit-logs.schemas';
+export * from './schemas';

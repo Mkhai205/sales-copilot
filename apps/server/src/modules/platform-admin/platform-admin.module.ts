@@ -9,7 +9,6 @@ import { PlatformRolesGuard } from './guards/platform-roles.guard';
 import { PlatformAuditLogsService } from './audit-logs/platform-audit-logs.service';
 import { PlatformMetricsService } from './metrics/platform-metrics.service';
 import { PlatformWorkspacesService } from './workspaces/platform-workspaces.service';
-import { SystemSettingsService } from './settings/system-settings.service';
 
 @Module({
   imports: [DatabaseModule, RedisModule],
@@ -21,14 +20,12 @@ import { SystemSettingsService } from './settings/system-settings.service';
   ],
   providers: [
     PlatformRolesGuard,
-    SystemSettingsService,
     PlatformWorkspacesService,
     PlatformAuditLogsService,
     PlatformMetricsService,
   ],
   exports: [
     PlatformRolesGuard,
-    SystemSettingsService,
     PlatformWorkspacesService,
     PlatformAuditLogsService,
     PlatformMetricsService,

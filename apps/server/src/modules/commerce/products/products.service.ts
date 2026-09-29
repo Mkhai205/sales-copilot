@@ -21,7 +21,7 @@ import {
   type UpdateProductDto,
 } from '@sales-copilot/shared-contracts';
 import { PrismaService } from '../../../infrastructure/database/prisma.service';
-import { generateSlug } from '../../identity/workspaces/utils/slug.util';
+import { generateSlug } from '../../../common/utils/slug.util';
 import { InventoryQueryService } from '../inventory/inventory-query.service';
 import { StockMovementService } from '../inventory/stock-movement.service';
 

@@ -23,7 +23,7 @@ import {
 } from '@sales-copilot/shared-contracts';
 import { PrismaService } from '../../../infrastructure/database/prisma.service';
 import { StorageService } from '../../../infrastructure/storage/storage.service';
-import { ChannelCredentialService } from './channel-credential.service';
+import { ChannelCredentialService } from '../../../infrastructure/crypto/channel-credential.service';
 
 @Injectable()
 export class InboxesService {

@@ -309,7 +309,7 @@ export class TelegramAdapter implements ChannelAdapter {
       from.username ||
       `User ${from.id}`;
 
-    let contentType = MessageContentType.TEXT;
+    let contentType: MessageContentType = MessageContentType.TEXT;
     let content: string | undefined = message.text || undefined;
     const attachments: InboundAttachment[] = [];
 

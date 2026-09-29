@@ -3,7 +3,6 @@ import { BullModule } from '@nestjs/bullmq';
 import { AI_AUTOPILOT_QUEUE } from '@sales-copilot/shared-contracts';
 import { DatabaseModule } from '../../../infrastructure/database/database.module';
 import { RedisModule } from '../../../infrastructure/redis/redis.module';
-import { PlatformAdminModule } from '../../platform-admin/platform-admin.module';
 import { MessagesModule } from '../../omnichannel/messages/messages.module';
 import { ContactsModule } from '../../omnichannel/contacts/contacts.module';
 import { ConversationsModule } from '../../omnichannel/conversations/conversations.module';
@@ -27,7 +26,6 @@ import { ensureDivisionsLoaded } from './utils/address-parser.util';
   imports: [
     DatabaseModule,
     RedisModule,
-    PlatformAdminModule,
     MessagesModule,
     ContactsModule,
     ConversationsModule,

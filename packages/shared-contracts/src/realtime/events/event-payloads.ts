@@ -9,64 +9,66 @@ import type { MessageResponseDto } from '../../omnichannel/messages/schemas';
  * Domain events emitted throughout the application lifecycle.
  * Consumed by RealtimeEventDispatcher.
  */
-export enum DomainEvent {
+export const DomainEvent = {
   // Message events
-  MESSAGE_CREATED = 'message.created',
-  MESSAGE_UPDATED = 'message.updated',
-  MESSAGE_DELETED = 'message.deleted',
-  MESSAGE_DELIVERY_STATUS_UPDATED = 'message.delivery_status_updated',
+  MESSAGE_CREATED: 'message.created',
+  MESSAGE_UPDATED: 'message.updated',
+  MESSAGE_DELETED: 'message.deleted',
+  MESSAGE_DELIVERY_STATUS_UPDATED: 'message.delivery_status_updated',
 
   // Conversation events
-  CONVERSATION_CREATED = 'conversation.created',
-  CONVERSATION_UPDATED = 'conversation.updated',
-  CONVERSATION_STATUS_UPDATED = 'conversation.status_updated',
-  CONVERSATION_REOPENED = 'conversation.reopened',
-  CONVERSATION_ASSIGNED = 'conversation.assigned',
-  CONVERSATION_PRIORITY_UPDATED = 'conversation.priority_updated',
-  CONVERSATION_LABELS_UPDATED = 'conversation.labels_updated',
+  CONVERSATION_CREATED: 'conversation.created',
+  CONVERSATION_UPDATED: 'conversation.updated',
+  CONVERSATION_STATUS_UPDATED: 'conversation.status_updated',
+  CONVERSATION_REOPENED: 'conversation.reopened',
+  CONVERSATION_ASSIGNED: 'conversation.assigned',
+  CONVERSATION_PRIORITY_UPDATED: 'conversation.priority_updated',
+  CONVERSATION_LABELS_UPDATED: 'conversation.labels_updated',
 
   // Contact events
-  CONTACT_CREATED = 'contact.created',
-  CONTACT_UPDATED = 'contact.updated',
-  CONTACT_DELETED = 'contact.deleted',
-  CONTACT_MERGED = 'contact.merged',
+  CONTACT_CREATED: 'contact.created',
+  CONTACT_UPDATED: 'contact.updated',
+  CONTACT_DELETED: 'contact.deleted',
+  CONTACT_MERGED: 'contact.merged',
 
   // Channel Identity events
-  CHANNEL_IDENTITY_CREATED = 'channel_identity.created',
-  CHANNEL_IDENTITY_DELETED = 'channel_identity.deleted',
+  CHANNEL_IDENTITY_CREATED: 'channel_identity.created',
+  CHANNEL_IDENTITY_DELETED: 'channel_identity.deleted',
 
   // Label events
-  LABEL_CREATED = 'label.created',
-  LABEL_UPDATED = 'label.updated',
-  LABEL_DELETED = 'label.deleted',
+  LABEL_CREATED: 'label.created',
+  LABEL_UPDATED: 'label.updated',
+  LABEL_DELETED: 'label.deleted',
 
   // Channel events
-  CHANNEL_CREATED = 'channel.created',
-  CHANNEL_UPDATED = 'channel.updated',
-  CHANNEL_DELETED = 'channel.deleted',
+  CHANNEL_CREATED: 'channel.created',
+  CHANNEL_UPDATED: 'channel.updated',
+  CHANNEL_DELETED: 'channel.deleted',
 
   // Presence events
-  PRESENCE_UPDATED = 'presence.updated',
+  PRESENCE_UPDATED: 'presence.updated',
 
   // Typing events
-  TYPING_START = 'typing.start',
-  TYPING_STOP = 'typing.stop',
+  TYPING_START: 'typing.start',
+  TYPING_STOP: 'typing.stop',
 
   // Commerce & Order Automation events (Milestone M1 & M2)
-  ORDER_CREATED = 'order.created',
-  ORDER_UPDATED = 'order.updated',
-  ORDER_CONFIRMED = 'order.confirmed',
-  ORDER_PAID = 'order.paid',
-  ORDER_PARTIALLY_PAID = 'order.partially_paid',
-  ORDER_CANCELLED = 'order.cancelled',
-  ORDER_COMPLETED = 'order.completed',
-  INVENTORY_UPDATED = 'inventory.updated',
-  COMMERCE_COLLISION_STATUS = 'commerce.collision_status',
+  ORDER_CREATED: 'order.created',
+  ORDER_UPDATED: 'order.updated',
+  ORDER_CONFIRMED: 'order.confirmed',
+  ORDER_PAID: 'order.paid',
+  ORDER_PARTIALLY_PAID: 'order.partially_paid',
+  ORDER_CANCELLED: 'order.cancelled',
+  ORDER_COMPLETED: 'order.completed',
+  INVENTORY_UPDATED: 'inventory.updated',
+  COMMERCE_COLLISION_STATUS: 'commerce.collision_status',
 
   // Payment & Reconciliation events
-  PAYMENT_TRANSACTION_CREATED = 'payment_transaction.created',
-  PAYMENT_TRANSACTION_UPDATED = 'payment_transaction.updated',
-}
+  PAYMENT_TRANSACTION_CREATED: 'payment_transaction.created',
+  PAYMENT_TRANSACTION_UPDATED: 'payment_transaction.updated',
+} as const;
+
+export type DomainEvent = (typeof DomainEvent)[keyof typeof DomainEvent];
 
 // ============================================================================
 // 2. Base Event Payload
@@ -83,11 +85,13 @@ export interface BaseDomainEventPayload {
 // 3. Presence Event & Types
 // ============================================================================
 
-export enum PresenceStatus {
-  ONLINE = 'ONLINE',
-  OFFLINE = 'OFFLINE',
-  AWAY = 'AWAY',
-}
+export const PresenceStatus = {
+  ONLINE: 'ONLINE',
+  OFFLINE: 'OFFLINE',
+  AWAY: 'AWAY',
+} as const;
+
+export type PresenceStatus = (typeof PresenceStatus)[keyof typeof PresenceStatus];
 
 export interface PresenceEntry {
   userId: string;

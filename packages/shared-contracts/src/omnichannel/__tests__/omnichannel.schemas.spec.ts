@@ -11,7 +11,7 @@ import {
   assignLabelsSchema,
   conversationListQuerySchema,
   ConversationStatus,
-  Priority,
+  ConversationPriority,
   createMessageSchema,
   sendMessageSchema,
   updateDeliveryStatusSchema,
@@ -95,7 +95,7 @@ describe('Shared Contracts — Omnichannel Context Schemas', () => {
       });
       assert.strictEqual(parsed.contactId, validContactId);
       assert.strictEqual(parsed.inboxId, validInboxId);
-      assert.strictEqual(parsed.priority, Priority.MEDIUM);
+      assert.strictEqual(parsed.priority, ConversationPriority.MEDIUM);
     });
 
     it('should reject invalid UUIDs for contactId or inboxId', () => {
@@ -137,9 +137,9 @@ describe('Shared Contracts — Omnichannel Context Schemas', () => {
 
     it('should validate updateConversationPrioritySchema', () => {
       const parsed = updateConversationPrioritySchema.parse({
-        priority: Priority.URGENT,
+        priority: ConversationPriority.URGENT,
       });
-      assert.strictEqual(parsed.priority, Priority.URGENT);
+      assert.strictEqual(parsed.priority, ConversationPriority.URGENT);
     });
 
     it('should validate assignLabelsSchema and reject empty array', () => {

@@ -19,7 +19,7 @@ import {
   SenderType,
 } from '@sales-copilot/shared-contracts';
 import { PrismaService } from '../../../../infrastructure/database/prisma.service';
-import { ChannelCredentialService } from '../../../omnichannel/inboxes/channel-credential.service';
+import { ChannelCredentialService } from '../../../../infrastructure/crypto/channel-credential.service';
 import { ContactResolutionService } from '../../contacts/contact-resolution.service';
 import { ConversationsService } from '../../../omnichannel/conversations/conversations.service';
 import { MessagesService } from '../../../omnichannel/messages/messages.service';

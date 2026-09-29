@@ -9,7 +9,7 @@ import {
 } from '../../../src/infrastructure/database/client';
 import { PrismaService } from '../../../src/infrastructure/database/prisma.service';
 
-import { ChannelCredentialService } from '../../../src/modules/omnichannel/inboxes/channel-credential.service';
+import { ChannelCredentialService } from '../../../src/infrastructure/crypto/channel-credential.service';
 
 export interface SeedTestContext {
   testRunId: string;

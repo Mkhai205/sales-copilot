@@ -229,9 +229,10 @@ describe('Commerce & Inventory PostgreSQL Integration Tests (Real Database & Con
       },
     });
     expect(invTx).toBeTruthy();
-    expect(invTx.quantity).toBe(3);
-    expect(invTx.previousReserved).toBe(0);
-    expect(invTx.newReserved).toBe(3);
+    const tx = invTx!;
+    expect(tx.quantity).toBe(3);
+    expect(tx.previousReserved).toBe(0);
+    expect(tx.newReserved).toBe(3);
   });
 
   it('3. should enforce real PostgreSQL concurrency guard: 20 parallel threads competing for 2 items', async () => {
@@ -329,9 +330,10 @@ describe('Commerce & Inventory PostgreSQL Integration Tests (Real Database & Con
       },
     });
     expect(commitTx).toBeTruthy();
-    expect(commitTx.quantity).toBe(3);
-    expect(commitTx.previousStock).toBe(10);
-    expect(commitTx.newStock).toBe(7);
+    const commit = commitTx!;
+    expect(commit.quantity).toBe(3);
+    expect(commit.previousStock).toBe(10);
+    expect(commit.newStock).toBe(7);
   });
 
   it('5. should complete order without double-committing stock (Anti-Double-Commit Invariant)', async () => {
@@ -415,9 +417,10 @@ describe('Commerce & Inventory PostgreSQL Integration Tests (Real Database & Con
       },
     });
     expect(returnTx).toBeTruthy();
-    expect(returnTx.quantity).toBe(2);
-    expect(returnTx.previousStock).toBe(5);
-    expect(returnTx.newStock).toBe(7);
+    const return_ = returnTx!;
+    expect(return_.quantity).toBe(2);
+    expect(return_.previousStock).toBe(5);
+    expect(return_.newStock).toBe(7);
   });
 
   it('7. should enforce strict multi-tenancy: reject confirm or pay with wrong workspaceId', async () => {

@@ -1,4 +1,4 @@
-import { expectThrow } from '../../../../../test/test-assertions';
+import { expectThrow } from '../../../../test/test-assertions';
 import { ChannelCredentialService } from '../channel-credential.service';
 import { ConfigService } from '@nestjs/config';
 import { InternalServerErrorException } from '@nestjs/common';

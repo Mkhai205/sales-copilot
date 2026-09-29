@@ -12,13 +12,16 @@ import {
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import * as crypto from 'crypto';
-import { COMMERCE_RECONCILIATION_QUEUE, PaymentGatewayType } from '@sales-copilot/shared-contracts';
-import { Public } from '../../identity/auth/decorators/public.decorator';
+import {
+  COMMERCE_RECONCILIATION_QUEUE,
+  ImplementedPaymentGateway,
+} from '@sales-copilot/shared-contracts';
+import { Public } from '../../../common/authz/public.decorator';
 import { PaymentWebhooksGuard } from './payment-webhooks.guard';
 
 export interface PaymentReconciliationJobData {
   workspaceId: string;
-  gateway: PaymentGatewayType;
+  gateway: ImplementedPaymentGateway;
   transactionId: string;
   amount: number;
   accountNumber: string;
@@ -48,7 +51,7 @@ export class PaymentWebhooksController {
     @Req() req: any,
   ): Promise<{ success: boolean; queued: boolean; count: number }> {
     const workspaceId = req?.workspaceId || req?.params?.workspaceId || workspaceIdParam;
-    const gateway = (gatewayParam || '').toLowerCase() as PaymentGatewayType;
+    const gateway = (gatewayParam || '').toLowerCase() as ImplementedPaymentGateway;
 
     // 1. Normalize items array (support Casso { error: 0, data: [...] } and SePay direct payload)
     let items: any[] = [];

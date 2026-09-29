@@ -5,7 +5,6 @@ import {
   DeliveryStatus,
   MessageContentType,
   MessageType,
-  Priority,
   SenderType,
   WsServerEvent,
   PresenceStatus,
@@ -285,8 +284,8 @@ describe('RealtimeEventDispatcher — Event Routing & Error Isolation (Task 12)'
       dispatcher.handleConversationPriorityUpdated({
         workspaceId,
         conversationId,
-        previousPriority: Priority.LOW,
-        currentPriority: Priority.URGENT,
+        previousPriority: ConversationPriority.LOW,
+        currentPriority: ConversationPriority.URGENT,
         conversation: mockConversation,
       });
 

@@ -4,7 +4,7 @@ import * as React from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import {
   ConversationStatus,
-  Priority,
+  ConversationPriority,
   type ConversationListQueryDto,
   type ConversationSortBy,
 } from '@sales-copilot/shared-contracts';
@@ -18,7 +18,7 @@ export interface ConversationFilters {
   assignment: AssignmentFilter;
   q: string;
   inboxId?: string;
-  priority?: Priority;
+  priority?: ConversationPriority;
   labelId?: string;
   assigneeId?: string;
   sortBy: ConversationSortBy;
@@ -46,9 +46,11 @@ export function useConversationFilters() {
 
   const q = searchParams.get('q') || '';
   const inboxId = searchParams.get('inboxId') || undefined;
-  const priorityParam = searchParams.get('priority') as Priority | null;
+  const priorityParam = searchParams.get('priority') as ConversationPriority | null;
   const priority =
-    priorityParam && Object.values(Priority).includes(priorityParam) ? priorityParam : undefined;
+    priorityParam && Object.values(ConversationPriority).includes(priorityParam)
+      ? priorityParam
+      : undefined;
   const labelId = searchParams.get('labelId') || undefined;
   const assigneeId = searchParams.get('assigneeId') || undefined;
 
@@ -140,7 +142,7 @@ export function useConversationFilters() {
   );
 
   const setPriority = React.useCallback(
-    (newPriority?: Priority) => {
+    (newPriority?: ConversationPriority) => {
       updateFilters({ priority: newPriority });
     },
     [updateFilters],

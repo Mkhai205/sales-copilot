@@ -6,7 +6,6 @@ import {
   Headers,
   HttpCode,
   HttpStatus,
-  Inject,
   Logger,
   Param,
   Post,
@@ -14,7 +13,6 @@ import {
   Req,
   Res,
   UseGuards,
-  forwardRef,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Throttle } from '@nestjs/throttler';
@@ -24,14 +22,14 @@ import type { Request, Response } from 'express';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { COMMENT_GUARD_QUEUE, WorkspaceRole } from '@sales-copilot/shared-contracts';
-import { Public } from '../../../identity/auth/decorators/public.decorator';
-import { CurrentWorkspace } from '../../../identity/workspaces/decorators/current-workspace.decorator';
-import { Roles } from '../../../identity/workspaces/decorators/roles.decorator';
-import { RolesGuard } from '../../../identity/workspaces/guards/roles.guard';
+import { Public } from '../../../../common/authz/public.decorator';
+import { CurrentWorkspace } from '../../../../common/authz/current-workspace.decorator';
+import { Roles } from '../../../../common/authz/roles.decorator';
+import { RolesGuard } from '../../../../common/authz/roles.guard';
 import { WorkspaceGuard } from '../../../identity/workspaces/guards/workspace.guard';
-import type { WorkspaceContext } from '../../../identity/workspaces/types/workspace-context.type';
-import { ChannelCredentialService } from '../../../omnichannel/inboxes/channel-credential.service';
-import { SystemSettingsService } from '../../../platform-admin/settings/system-settings.service';
+import type { WorkspaceContext } from '../../../../common/authz/workspace-context.type';
+import { ChannelCredentialService } from '../../../../infrastructure/crypto/channel-credential.service';
+import { SystemSettingsService } from '../../../../common/settings/system-settings.service';
 import { WebhooksService } from '../channel-webhooks/webhooks.service';
 import { FacebookService } from './facebook.service';
 import { FacebookAdapter } from './facebook.adapter';
@@ -56,7 +54,6 @@ export class FacebookController {
     private readonly configService: ConfigService,
     private readonly credentialService: ChannelCredentialService,
     private readonly systemSettingsService: SystemSettingsService,
-    @Inject(forwardRef(() => WebhooksService))
     private readonly webhooksService: WebhooksService,
     private readonly adapter: FacebookAdapter,
     @InjectQueue(COMMENT_GUARD_QUEUE)

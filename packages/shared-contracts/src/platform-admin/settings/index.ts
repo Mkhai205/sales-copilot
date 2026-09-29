@@ -1,1 +1,1 @@
-export * from './settings.schemas';
+export * from './schemas';

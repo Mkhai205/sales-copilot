@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test';
 import * as assert from 'node:assert';
+import { COMMENT_GUARD_QUEUE } from '../../../index';
 import {
-  COMMENT_GUARD_QUEUE,
   DEFAULT_COMMENT_GUARD_PRIVATE_REPLY,
   DEFAULT_COMMENT_GUARD_PUBLIC_REPLY,
   commentGuardConfigSchema,

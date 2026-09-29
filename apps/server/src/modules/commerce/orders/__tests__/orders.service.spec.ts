@@ -635,7 +635,7 @@ describe('Order services (Order Lifecycle & Anti-Overselling Engine)', () => {
       expect(order.totalAmount).toBe(110000); // 100000 - 20000 + 30000
       // Invariant: line-level net prices plus shipping equal the charged total
       expect(lineTotalSum).toBe(80000);
-      expect(lineTotalSum).toBe(order.totalAmount - order.shippingFee);
+      expect(lineTotalSum).toBe(Number(order.totalAmount) - Number(order.shippingFee));
     });
 
     it('should clamp a line-item discount to its own line subtotal', async () => {

@@ -24,11 +24,11 @@ import {
   WorkspaceRole,
 } from '@sales-copilot/shared-contracts';
 import { ZodBody } from '../../../common/pipes/zod-schema-validation.pipe';
-import { CurrentWorkspace } from '../workspaces/decorators/current-workspace.decorator';
-import { Roles } from '../workspaces/decorators/roles.decorator';
-import { RolesGuard } from '../workspaces/guards/roles.guard';
+import { CurrentWorkspace } from '../../../common/authz/current-workspace.decorator';
+import { Roles } from '../../../common/authz/roles.decorator';
+import { RolesGuard } from '../../../common/authz/roles.guard';
 import { WorkspaceGuard } from '../workspaces/guards/workspace.guard';
-import type { WorkspaceContext } from '../workspaces/types/workspace-context.type';
+import type { WorkspaceContext } from '../../../common/authz/workspace-context.type';
 import { TeamsService } from './teams.service';
 
 @ApiTags('Teams')

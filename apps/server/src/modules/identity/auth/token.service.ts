@@ -4,7 +4,8 @@ import { JwtService } from '@nestjs/jwt';
 import { PlatformRole, AuthTokensDto } from '@sales-copilot/shared-contracts';
 import * as crypto from 'node:crypto';
 import { RedisService } from '../../../infrastructure/redis/redis.service';
-import { JwtPayload, StoredRefreshToken } from './types/jwt-payload.type';
+import { JwtPayload } from '../../../common/authz/jwt-payload.type';
+import { StoredRefreshToken } from './types/stored-refresh-token.type';
 
 @Injectable()
 export class TokenService {

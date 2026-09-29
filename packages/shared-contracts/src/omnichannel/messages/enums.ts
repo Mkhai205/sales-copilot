@@ -1,35 +1,45 @@
-export enum MessageType {
-  INCOMING = 'INCOMING',
-  OUTGOING = 'OUTGOING',
-  ACTIVITY = 'ACTIVITY',
-  TEMPLATE = 'TEMPLATE',
-}
+export const MessageType = {
+  INCOMING: 'INCOMING',
+  OUTGOING: 'OUTGOING',
+  ACTIVITY: 'ACTIVITY',
+  TEMPLATE: 'TEMPLATE',
+} as const;
 
-export enum MessageContentType {
-  TEXT = 'TEXT',
-  IMAGE = 'IMAGE',
-  VIDEO = 'VIDEO',
-  AUDIO = 'AUDIO',
-  FILE = 'FILE',
-}
+export type MessageType = (typeof MessageType)[keyof typeof MessageType];
 
-export enum DeliveryStatus {
-  PENDING = 'PENDING',
-  SENT = 'SENT',
-  DELIVERED = 'DELIVERED',
-  READ = 'READ',
-  FAILED = 'FAILED',
-}
+export const MessageContentType = {
+  TEXT: 'TEXT',
+  IMAGE: 'IMAGE',
+  VIDEO: 'VIDEO',
+  AUDIO: 'AUDIO',
+  FILE: 'FILE',
+} as const;
 
-export enum SenderType {
-  CONTACT = 'CONTACT',
-  USER = 'USER',
-  SYSTEM = 'SYSTEM',
-}
+export type MessageContentType = (typeof MessageContentType)[keyof typeof MessageContentType];
 
-export enum FileType {
-  IMAGE = 'IMAGE',
-  AUDIO = 'AUDIO',
-  VIDEO = 'VIDEO',
-  FILE = 'FILE',
-}
+export const DeliveryStatus = {
+  PENDING: 'PENDING',
+  SENT: 'SENT',
+  DELIVERED: 'DELIVERED',
+  READ: 'READ',
+  FAILED: 'FAILED',
+} as const;
+
+export type DeliveryStatus = (typeof DeliveryStatus)[keyof typeof DeliveryStatus];
+
+export const SenderType = {
+  CONTACT: 'CONTACT',
+  USER: 'USER',
+  SYSTEM: 'SYSTEM',
+} as const;
+
+export type SenderType = (typeof SenderType)[keyof typeof SenderType];
+
+export const FileType = {
+  IMAGE: 'IMAGE',
+  AUDIO: 'AUDIO',
+  VIDEO: 'VIDEO',
+  FILE: 'FILE',
+} as const;
+
+export type FileType = (typeof FileType)[keyof typeof FileType];

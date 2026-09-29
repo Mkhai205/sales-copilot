@@ -1,27 +1,19 @@
 import { Global, Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { BullModule } from '@nestjs/bullmq';
-import { ChannelIngestionProcessor } from './channel-ingestion.processor';
 import { DatabaseModule } from '../database/database.module';
-import { ContactsModule } from '../../modules/omnichannel/contacts/contacts.module';
-import { ConversationsModule } from '../../modules/omnichannel/conversations/conversations.module';
-import { MessagesModule } from '../../modules/omnichannel/messages/messages.module';
-import { InboxesModule } from '../../modules/omnichannel/inboxes/inboxes.module';
+import { CHANNEL_INGESTION_QUEUE, COMMENT_GUARD_QUEUE } from '@sales-copilot/shared-contracts';
 
-import { CommentGuardProcessor } from '../../modules/omnichannel/integrations/facebook/comment-guard.processor';
-import { COMMENT_GUARD_QUEUE } from '@sales-copilot/shared-contracts';
-
-export const CHANNEL_INGESTION_QUEUE = 'channel-ingestion';
-export { COMMENT_GUARD_QUEUE };
-
+/**
+ * Global BullMQ wiring: Redis connection + queue registrations. Queue
+ * name constants live in @sales-copilot/shared-contracts (src/common/queues);
+ * the processors themselves live next to the domain modules that own them
+ * (omnichannel/integrations, facebook).
+ */
 @Global()
 @Module({
   imports: [
     DatabaseModule,
-    ContactsModule,
-    ConversationsModule,
-    MessagesModule,
-    InboxesModule,
     BullModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
@@ -67,7 +59,7 @@ export { COMMENT_GUARD_QUEUE };
       },
     ),
   ],
-  providers: [ChannelIngestionProcessor, CommentGuardProcessor],
-  exports: [BullModule, ChannelIngestionProcessor, CommentGuardProcessor],
+  providers: [],
+  exports: [BullModule],
 })
 export class QueueModule {}

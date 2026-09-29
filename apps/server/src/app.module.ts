@@ -12,6 +12,7 @@ import { QueueModule } from './infrastructure/queue/queue.module';
 import { RedisModule } from './infrastructure/redis/redis.module';
 import { StorageModule } from './infrastructure/storage/storage.module';
 import { ResendModule } from './infrastructure/email/resend.module';
+import { CryptoModule } from './infrastructure/crypto/crypto.module';
 import { IdentityModule } from './modules/identity/identity.module';
 import { JwtAuthGuard } from './modules/identity/auth/guards/jwt-auth.guard';
 import { OmnichannelModule } from './modules/omnichannel/omnichannel.module';
@@ -25,6 +26,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { validateEnv } from './config/env.validation';
 import { RequestIdMiddleware } from './common/middlewares/request-id.middleware';
 import { pinoRedactConfig } from './common/logging/redaction.config';
+import { SystemSettingsModule } from './common/settings/system-settings.module';
 
 @Module({
   imports: [
@@ -120,6 +122,8 @@ import { pinoRedactConfig } from './common/logging/redaction.config';
     RedisModule,
     StorageModule,
     ResendModule,
+    CryptoModule,
+    SystemSettingsModule,
     IdentityModule,
     OmnichannelModule,
     CommerceModule,

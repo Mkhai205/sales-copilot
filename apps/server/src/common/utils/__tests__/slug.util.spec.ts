@@ -1,4 +1,4 @@
-import { generateSlug } from '../utils/slug.util';
+import { generateSlug } from '../slug.util';
 
 describe('generateSlug (Vietnamese & Unicode Slug Normalization)', () => {
   it('should convert standard English string to lowercase hyphenated slug', () => {

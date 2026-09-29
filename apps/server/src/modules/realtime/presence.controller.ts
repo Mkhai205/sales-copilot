@@ -18,8 +18,8 @@ import {
 } from '@nestjs/swagger';
 import { PresenceEntry } from '@sales-copilot/shared-contracts';
 import { WorkspacesService } from '../identity/workspaces/workspaces.service';
-import { CurrentUser } from '../identity/auth/decorators/current-user.decorator';
-import type { JwtUserPayload } from '../identity/auth/types/jwt-payload.type';
+import { CurrentUser } from '../../common/authz/current-user.decorator';
+import type { JwtUserPayload } from '../../common/authz/jwt-payload.type';
 import { PresenceService } from './presence.service';
 
 /**

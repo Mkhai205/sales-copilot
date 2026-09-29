@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { OnEvent } from '@nestjs/event-emitter';
 import { ChannelType } from '@sales-copilot/shared-contracts';
 import { PrismaService } from '../../../../infrastructure/database/prisma.service';
-import { ChannelCredentialService } from '../../../omnichannel/inboxes/channel-credential.service';
+import { ChannelCredentialService } from '../../../../infrastructure/crypto/channel-credential.service';
 import { TelegramAdapter } from './telegram.adapter';
 import { ChannelLifecycleEventPayload } from '../channel-adapter.types';
 

@@ -6,7 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import { CornerUpLeft, Lock, Flame, Flag, UserX, ImageIcon } from 'lucide-react';
 import {
   type ConversationResponseDto,
-  Priority,
+  ConversationPriority,
   SenderType,
 } from '@sales-copilot/shared-contracts';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -43,10 +43,10 @@ function getLabelBadgeStyle(color?: string) {
   };
 }
 
-function renderPriorityIndicator(priority?: Priority | null) {
+function renderPriorityIndicator(priority?: ConversationPriority | null) {
   if (!priority) return null;
 
-  if (priority === Priority.URGENT) {
+  if (priority === ConversationPriority.URGENT) {
     return (
       <span
         className="inline-flex items-center gap-0.5 text-rose-600 dark:text-rose-400 shrink-0"
@@ -57,7 +57,7 @@ function renderPriorityIndicator(priority?: Priority | null) {
     );
   }
 
-  if (priority === Priority.HIGH) {
+  if (priority === ConversationPriority.HIGH) {
     return (
       <span
         className="inline-flex items-center gap-0.5 text-amber-600 dark:text-amber-400 shrink-0"
@@ -130,7 +130,7 @@ export function ConversationCard({
 
       {/* Right: Structured Information Architecture */}
       <div className="flex flex-1 flex-col gap-1 min-w-0">
-        {/* Row 1: Contact Name (left) & Priority + Time (right) */}
+        {/* Row 1: Contact Name (left) & ConversationPriority + Time (right) */}
         <div className="flex items-center justify-between gap-2 min-w-0">
           <div className="flex items-center gap-1.5 min-w-0">
             {isUnread && (

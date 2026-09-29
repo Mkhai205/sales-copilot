@@ -27,14 +27,14 @@ import {
   type WidgetContactResponseDto,
 } from '@sales-copilot/shared-contracts';
 import { ZodBody } from '../../../../common/pipes/zod-schema-validation.pipe';
-import { ChannelCredentialService } from '../../../omnichannel/inboxes/channel-credential.service';
+import { ChannelCredentialService } from '../../../../infrastructure/crypto/channel-credential.service';
 import { ContactResolutionService } from '../../contacts/contact-resolution.service';
 import { MessagesService } from '../../../omnichannel/messages/messages.service';
 import { WebChatAdapter } from './web-chat.adapter';
 import { ChannelContext } from '../channel-adapter.types';
 import { WidgetTokenPayload, WidgetTokenService } from './widget-token.service';
 import { WebChatService } from './web-chat.service';
-import { Public } from '../../../identity/auth/decorators/public.decorator';
+import { Public } from '../../../../common/authz/public.decorator';
 
 /**
  * Controller exposing public REST API endpoints for embeddable Web Chat widgets.

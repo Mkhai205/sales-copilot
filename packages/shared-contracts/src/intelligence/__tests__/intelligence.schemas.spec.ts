@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import * as assert from 'node:assert';
-import { AI_AUTOPILOT_QUEUE, personaToneSchema, type PersonaTone } from '../index';
+import { AI_AUTOPILOT_QUEUE, personaToneSchema, type PersonaTone } from '../../index';
 
 describe('Shared Contracts — Intelligence Context Schemas', () => {
   describe('Constants and Enums', () => {

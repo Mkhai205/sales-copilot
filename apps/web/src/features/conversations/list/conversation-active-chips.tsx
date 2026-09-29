@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { X, RotateCcw } from 'lucide-react';
-import { ConversationStatus, Priority } from '@sales-copilot/shared-contracts';
+import { ConversationStatus, ConversationPriority } from '@sales-copilot/shared-contracts';
 import type { ConversationFilters, StatusFilter } from './hooks/use-conversation-filters';
 import { useInboxes } from '@/features/settings/inboxes/hooks/use-inboxes';
 import { useLabels } from '@/features/settings/labels/hooks/use-labels';
@@ -17,7 +17,7 @@ interface ConversationActiveChipsProps {
   activeFilterCount: number;
   setStatus: (status: StatusFilter) => void;
   setInbox: (inboxId?: string) => void;
-  setPriority: (priority?: Priority) => void;
+  setPriority: (priority?: ConversationPriority) => void;
   setLabel: (labelId?: string) => void;
   setAssignee: (assigneeId?: string) => void;
   resetAdvancedFilters: () => void;
@@ -72,15 +72,15 @@ export function ConversationActiveChips({
     }
   };
 
-  const getPriorityLabel = (priority: Priority) => {
+  const getPriorityLabel = (priority: ConversationPriority) => {
     switch (priority) {
-      case Priority.URGENT:
+      case ConversationPriority.URGENT:
         return 'Khẩn cấp';
-      case Priority.HIGH:
+      case ConversationPriority.HIGH:
         return 'Cao';
-      case Priority.MEDIUM:
+      case ConversationPriority.MEDIUM:
         return 'Trung bình';
-      case Priority.LOW:
+      case ConversationPriority.LOW:
         return 'Thấp';
       default:
         return priority;
@@ -154,10 +154,13 @@ export function ConversationActiveChips({
             <span
               className={cn(
                 'font-semibold',
-                filters.priority === Priority.URGENT && 'text-rose-600 dark:text-rose-400',
-                filters.priority === Priority.HIGH && 'text-amber-600 dark:text-amber-400',
-                filters.priority === Priority.MEDIUM && 'text-blue-600 dark:text-blue-400',
-                filters.priority === Priority.LOW && 'text-muted-foreground',
+                filters.priority === ConversationPriority.URGENT &&
+                  'text-rose-600 dark:text-rose-400',
+                filters.priority === ConversationPriority.HIGH &&
+                  'text-amber-600 dark:text-amber-400',
+                filters.priority === ConversationPriority.MEDIUM &&
+                  'text-blue-600 dark:text-blue-400',
+                filters.priority === ConversationPriority.LOW && 'text-muted-foreground',
               )}
             >
               {getPriorityLabel(filters.priority)}

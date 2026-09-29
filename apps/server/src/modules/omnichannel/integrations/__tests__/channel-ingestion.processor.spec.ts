@@ -8,7 +8,8 @@ import {
   SenderType,
 } from '@sales-copilot/shared-contracts';
 import { ChannelIngestionProcessor } from '../channel-ingestion.processor';
-import { ChannelAdapterRegistry } from '../../../modules/omnichannel/integrations/channel-adapter.registry';
+import { ChannelCredentialService } from '../../../../infrastructure/crypto/channel-credential.service';
+import { ChannelAdapterRegistry } from '../channel-adapter.registry';
 
 describe('ChannelIngestionProcessor (Task T-1.5.7: Inbound Ingestion Pipeline Integration & E2E Validation)', () => {
   let processor: ChannelIngestionProcessor;
@@ -305,6 +306,10 @@ describe('ChannelIngestionProcessor (Task T-1.5.7: Inbound Ingestion Pipeline In
       mockConversationsService,
       mockMessagesService,
       adapterRegistry,
+      {
+        encrypt: (d: any) => JSON.stringify(d),
+        decrypt: (s: any) => s,
+      } as unknown as ChannelCredentialService,
     );
 
     // Seed test channel
@@ -681,6 +686,10 @@ describe('ChannelIngestionProcessor (Task T-1.5.7: Inbound Ingestion Pipeline In
         mockConversationsService,
         mockMessagesService,
         adapterRegistry,
+        {
+          encrypt: (d: any) => JSON.stringify(d),
+          decrypt: (s: any) => s,
+        } as unknown as ChannelCredentialService,
         mockStorageService,
       );
 
@@ -756,6 +765,10 @@ describe('ChannelIngestionProcessor (Task T-1.5.7: Inbound Ingestion Pipeline In
         mockConversationsService,
         mockMessagesService,
         adapterRegistry,
+        {
+          encrypt: (d: any) => JSON.stringify(d),
+          decrypt: (s: any) => s,
+        } as unknown as ChannelCredentialService,
         mockStorageService,
       );
 

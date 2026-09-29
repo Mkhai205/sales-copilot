@@ -10,14 +10,14 @@ import {
   MessageType,
   SenderType,
 } from '@sales-copilot/shared-contracts';
-import { PrismaService } from '../database/prisma.service';
-import { StorageService } from '../storage/storage.service';
-import { ContactResolutionService } from '../../modules/omnichannel/contacts/contact-resolution.service';
-import { ConversationsService } from '../../modules/omnichannel/conversations/conversations.service';
-import { MessagesService } from '../../modules/omnichannel/messages/messages.service';
-import { ChannelCredentialService } from '../../modules/omnichannel/inboxes/channel-credential.service';
-import { ChannelAdapterRegistry } from '../../modules/omnichannel/integrations/channel-adapter.registry';
-import type { InboundMessagePayload } from '../../modules/omnichannel/integrations/channel-adapter.types';
+import { PrismaService } from '../../../infrastructure/database/prisma.service';
+import { StorageService } from '../../../infrastructure/storage/storage.service';
+import { ContactResolutionService } from '../contacts/contact-resolution.service';
+import { ConversationsService } from '../conversations/conversations.service';
+import { MessagesService } from '../messages/messages.service';
+import { ChannelCredentialService } from '../../../infrastructure/crypto/channel-credential.service';
+import { ChannelAdapterRegistry } from './channel-adapter.registry';
+import type { InboundMessagePayload } from './channel-adapter.types';
 
 export interface ChannelIngestionJobData {
   channelId: string;
@@ -37,9 +37,9 @@ export class ChannelIngestionProcessor extends WorkerHost {
     private readonly contactResolutionService: ContactResolutionService,
     private readonly conversationsService: ConversationsService,
     private readonly messagesService: MessagesService,
-    @Optional() private readonly adapterRegistry?: ChannelAdapterRegistry,
+    private readonly adapterRegistry: ChannelAdapterRegistry,
+    private readonly credentialService: ChannelCredentialService,
     @Optional() private readonly storageService?: StorageService,
-    @Optional() private readonly credentialService?: ChannelCredentialService,
   ) {
     super();
   }

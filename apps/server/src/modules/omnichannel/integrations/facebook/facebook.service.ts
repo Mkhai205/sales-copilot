@@ -11,7 +11,7 @@ import * as crypto from 'crypto';
 import { ChannelType } from '@sales-copilot/shared-contracts';
 import { PrismaService } from '../../../../infrastructure/database/prisma.service';
 import { RedisService } from '../../../../infrastructure/redis/redis.service';
-import { ChannelCredentialService } from '../../../omnichannel/inboxes/channel-credential.service';
+import { ChannelCredentialService } from '../../../../infrastructure/crypto/channel-credential.service';
 import { FacebookAdapter } from './facebook.adapter';
 import type { ConnectFacebookPagesBatchDto, FacebookPageInfo } from './facebook.dto';
 

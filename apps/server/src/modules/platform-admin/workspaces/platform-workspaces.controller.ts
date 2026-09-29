@@ -23,8 +23,8 @@ import {
 } from '@sales-copilot/shared-contracts';
 import type { Request } from 'express';
 import { ZodBody, ZodQuery } from '../../../common/pipes/zod-schema-validation.pipe';
-import { CurrentUser } from '../../identity/auth/decorators/current-user.decorator';
-import type { JwtUserPayload } from '../../identity/auth/types/jwt-payload.type';
+import { CurrentUser } from '../../../common/authz/current-user.decorator';
+import type { JwtUserPayload } from '../../../common/authz/jwt-payload.type';
 import { PlatformRoles } from '../decorators/platform-roles.decorator';
 import { PlatformRolesGuard } from '../guards/platform-roles.guard';
 import { PlatformWorkspacesService } from './platform-workspaces.service';
