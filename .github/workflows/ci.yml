@@ -143,8 +143,16 @@ jobs:
 
       # Builds (no push). Guards the server production image: workspace libs
       # must be buildable and resolvable at runtime (package main -> dist).
+      # Retried once: registry 429s (docker.io anonymous pulls from shared
+      # runner IPs) are transient.
       - name: Build server image
-        run: docker build -f apps/server/Dockerfile -t sales-copilot-server:ci .
+        run: |
+          for attempt in 1 2 3; do
+            docker build --progress=plain -f apps/server/Dockerfile -t sales-copilot-server:ci . && break
+            echo "attempt $attempt failed, retrying in 90s..."
+            sleep 90
+          done
+          docker image inspect sales-copilot-server:ci > /dev/null
 
       # Proves the compiled server layout resolves every runtime dependency —
       # framework packages (pnpm project node_modules) and workspace libs

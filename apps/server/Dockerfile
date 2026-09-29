@@ -1,4 +1,4 @@
-FROM public.ecr.aws/docker/library/node:22-alpine AS deps
+FROM node:22-alpine AS deps
 WORKDIR /app
 RUN corepack enable pnpm
 
@@ -13,7 +13,7 @@ COPY packages/widget-sdk/package.json ./packages/widget-sdk/
 
 RUN pnpm install --frozen-lockfile
 
-FROM public.ecr.aws/docker/library/node:22-alpine AS build
+FROM node:22-alpine AS build
 WORKDIR /app
 RUN corepack enable pnpm
 
@@ -35,7 +35,7 @@ RUN cd apps/server && npx prisma generate --schema=prisma/schema.prisma
 # nx builds the workspace libs (shared-contracts, email-templates) first via ^build
 RUN pnpm nx build server
 
-FROM public.ecr.aws/docker/library/node:22-alpine AS production
+FROM node:22-alpine AS production
 WORKDIR /app
 
 COPY --from=build /app/dist/apps/server ./dist/apps/server
