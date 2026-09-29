@@ -7,5 +7,5 @@ interface InventoryPageProps {
 export default async function InventoryPage({ params }: InventoryPageProps) {
   const { workspaceSlug } = await params;
 
-  return <InventoryView workspaceSlug={workspaceSlug} />;
+  return <InventoryView />;
 }

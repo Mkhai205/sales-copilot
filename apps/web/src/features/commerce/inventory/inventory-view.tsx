@@ -1,11 +1,12 @@
 'use client';
 
+import { useWorkspaceContext } from '@/providers/workspace-provider';
+
 import * as React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Spinner } from '@/components/ui/spinner';
-import { useWorkspaces } from '@/features/settings/general/hooks/use-workspaces';
 import { useInventoryVariants, useInventorySummary } from './hooks/use-inventory';
 import { InventorySummaryCards } from './components/inventory-summary-cards';
 import { InventoryVariantsTable } from './components/inventory-variants-table';
@@ -18,14 +19,8 @@ import { Boxes, ChevronLeft, ChevronRight, RefreshCw, Search, X } from 'lucide-r
 import { cn } from '@/lib/utils';
 import { PageHeader } from '@/components/layout/page-header';
 
-interface InventoryViewProps {
-  workspaceSlug: string;
-}
-
-export function InventoryView({ workspaceSlug }: InventoryViewProps) {
-  const { data: workspaces, isLoading: isWsLoading } = useWorkspaces();
-  const currentWorkspace = workspaces?.find(w => w.slug === workspaceSlug);
-  const workspaceId = currentWorkspace?.id;
+export function InventoryView() {
+  const { workspaceId, isLoading: isWsLoading } = useWorkspaceContext();
 
   // Filters & State
   const [page, setPage] = React.useState<number>(1);
@@ -111,7 +106,7 @@ export function InventoryView({ workspaceSlug }: InventoryViewProps) {
     );
   }
 
-  if (!currentWorkspace || !workspaceId) {
+  if (!workspaceId) {
     return (
       <div className="flex h-full flex-1 items-center justify-center text-sm text-muted-foreground">
         Không tìm thấy workspace.

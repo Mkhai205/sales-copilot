@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { useCommerceRealtimeSync } from '@/features/commerce/shared/hooks/use-commerce-realtime-sync';
-import { useWorkspaces } from '@/features/settings/general/hooks/use-workspaces';
+import { useWorkspaceContext } from '@/providers/workspace-provider';
 
 import { ConversationEmptyState } from './conversation-empty-state';
 import { ConversationList } from '../list/conversation-list';
@@ -21,12 +21,9 @@ export function ConversationLayout({ workspaceSlug, conversationId }: Conversati
   const [detailTab, setDetailTab] = React.useState<'contact' | 'commerce'>('contact');
   const [newOrderTrigger, setNewOrderTrigger] = React.useState<number>(0);
 
-  const { data: workspaces } = useWorkspaces();
-  const currentWorkspace = workspaces?.find(w => w.slug === workspaceSlug);
-  const workspaceId = currentWorkspace?.id || workspaces?.[0]?.id;
+  const { workspaceId } = useWorkspaceContext();
 
   const { data: conversation } = useConversation(conversationId, {
-    workspaceSlug,
     workspaceId,
   });
 

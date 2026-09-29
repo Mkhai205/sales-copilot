@@ -1,5 +1,7 @@
 'use client';
 
+import { useWorkspaceContext } from '@/providers/workspace-provider';
+
 import * as React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -12,7 +14,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useWorkspaces } from '@/features/settings/general/hooks/use-workspaces';
 import { ordersApi } from './api/orders';
 import { useCommerceOrders } from './hooks/use-commerce-orders';
 import { useCommerceRealtimeSync } from '@/features/commerce/shared/hooks/use-commerce-realtime-sync';
@@ -29,9 +30,7 @@ export interface OrdersViewProps {
 }
 
 export function OrdersView({ workspaceSlug }: OrdersViewProps) {
-  const { data: workspaces } = useWorkspaces();
-  const currentWorkspace = workspaces?.find(w => w.slug === workspaceSlug);
-  const workspaceId = currentWorkspace?.id;
+  const { workspaceId } = useWorkspaceContext();
 
   // Realtime multi-agent sync
   useCommerceRealtimeSync({ workspaceId });

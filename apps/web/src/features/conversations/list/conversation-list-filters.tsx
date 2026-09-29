@@ -6,18 +6,15 @@ import { useConversationCounts } from './hooks/use-conversation-counts';
 import { cn } from '@/lib/utils';
 import { ConversationStatus } from '@sales-copilot/shared-contracts';
 
-interface ConversationListFiltersProps {
-  workspaceSlug: string;
-}
+interface ConversationListFiltersProps {}
 
-export function ConversationListFilters({ workspaceSlug }: ConversationListFiltersProps) {
+export function ConversationListFilters() {
   const { filters, setAssignment } = useConversationFilters();
 
   // Fetch live counts for Mine, Unassigned, All based on current status
   const effectiveStatus =
     filters.status !== 'ALL' ? (filters.status as ConversationStatus) : undefined;
   const { counts, isLoading: isCountsLoading } = useConversationCounts({
-    workspaceSlug,
     status: effectiveStatus,
   });
 

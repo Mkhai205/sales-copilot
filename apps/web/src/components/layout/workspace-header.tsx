@@ -30,7 +30,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useWorkspaces } from '@/features/settings/general/hooks/use-workspaces';
+import { useWorkspaceContext } from '@/providers/workspace-provider';
 import { getDefaultSettingsRoute } from '@/features/settings/rbac/settings-nav-items';
 import { useCurrentUser } from '@/features/auth/hooks/use-current-user';
 import { logoutAction } from '@/features/auth/actions/auth-actions';
@@ -48,10 +48,10 @@ export function WorkspaceHeader({ workspaceSlug }: WorkspaceHeaderProps) {
   const [isLoggingOut, startLogoutTransition] = React.useTransition();
   const [isChangePasswordOpen, setIsChangePasswordOpen] = React.useState(false);
 
-  const { data: workspaces } = useWorkspaces();
+  const { workspace: resolvedWorkspace } = useWorkspaceContext();
   const { data: user, isLoading: isUserLoading } = useCurrentUser();
 
-  const activeWorkspace = workspaces?.find(w => w.slug === workspaceSlug) ?? {
+  const activeWorkspace = resolvedWorkspace ?? {
     id: 'current',
     name: workspaceSlug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
     slug: workspaceSlug,

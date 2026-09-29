@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { useWorkspaces } from '@/features/settings/general/hooks/use-workspaces';
+import { useWorkspaceContext } from '@/providers/workspace-provider';
 import { useCreateContact } from '../hooks/use-contacts';
 import type { ContactDto } from '@sales-copilot/shared-contracts';
 import { Loader2, UserPlus } from 'lucide-react';
@@ -32,9 +32,7 @@ export function CreateContactDialog({
   workspaceSlug,
   onContactCreated,
 }: CreateContactDialogProps) {
-  const { data: workspaces } = useWorkspaces();
-  const currentWorkspace = workspaces?.find(w => w.slug === workspaceSlug) || workspaces?.[0];
-  const workspaceId = currentWorkspace?.id;
+  const { workspaceId } = useWorkspaceContext();
 
   const createContactMutation = useCreateContact({ workspaceSlug, workspaceId });
 

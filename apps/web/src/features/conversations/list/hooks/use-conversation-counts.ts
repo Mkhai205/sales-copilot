@@ -6,28 +6,23 @@ import type {
   ConversationStatus,
   ConversationCountsResponseDto,
 } from '@sales-copilot/shared-contracts';
-import { useWorkspaces } from '@/features/settings/general/hooks/use-workspaces';
+import { useWorkspaceContext } from '@/providers/workspace-provider';
 import { conversationKeys } from '@/lib/query-keys';
 
 interface UseConversationCountsOptions {
-  workspaceSlug?: string;
   workspaceId?: string;
   status?: ConversationStatus;
   enabled?: boolean;
 }
 
 export function useConversationCounts({
-  workspaceSlug,
   workspaceId: explicitWorkspaceId,
   status,
   enabled = true,
 }: UseConversationCountsOptions = {}) {
-  const { data: workspaces } = useWorkspaces();
+  const { workspaceId: contextWorkspaceId } = useWorkspaceContext();
 
-  const resolvedWorkspaceId =
-    explicitWorkspaceId ||
-    (workspaceSlug ? workspaces?.find(w => w.slug === workspaceSlug)?.id : undefined) ||
-    workspaces?.[0]?.id;
+  const resolvedWorkspaceId = explicitWorkspaceId || contextWorkspaceId || undefined;
 
   const isQueryEnabled = Boolean(enabled && resolvedWorkspaceId);
 

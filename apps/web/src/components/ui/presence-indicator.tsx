@@ -39,14 +39,12 @@ export function PresenceIndicator({
   showTooltip = false,
   showLabel = false,
   pulse = false,
-  workspaceSlug,
   workspaceId,
   className,
   ...props
 }: PresenceIndicatorProps) {
   // If userId is passed and explicitStatus is omitted, query real-time presence
   const userPresence = useUserPresence(explicitStatus ? undefined : userId, {
-    workspaceSlug,
     workspaceId,
   });
 

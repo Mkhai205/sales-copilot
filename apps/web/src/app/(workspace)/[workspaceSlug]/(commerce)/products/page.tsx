@@ -7,5 +7,5 @@ interface ProductsPageProps {
 export default async function ProductsPage({ params }: ProductsPageProps) {
   const { workspaceSlug } = await params;
 
-  return <ProductsView workspaceSlug={workspaceSlug} />;
+  return <ProductsView />;
 }

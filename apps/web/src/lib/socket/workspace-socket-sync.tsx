@@ -9,30 +9,19 @@ import {
   type PresenceEntry,
   type PresenceUpdatedEvent,
 } from '@sales-copilot/shared-contracts';
-import { useWorkspaces } from '@/features/settings/general/hooks/use-workspaces';
+import { useWorkspaceContext } from '@/providers/workspace-provider';
 import { useSocket, useSocketEvent, useWorkspaceRoom } from './use-socket';
 import { presenceKeys } from '@/lib/query-keys';
-
-export interface WorkspaceSocketSyncProps {
-  workspaceSlug: string;
-}
 
 /**
  * Headless synchronization component that resolves workspace ID from slug,
  * binds the socket to the workspace room, maintains the singleton 30s heartbeat,
  * and handles workspace-level presence updates.
  */
-export function WorkspaceSocketSync({ workspaceSlug }: WorkspaceSocketSyncProps) {
-  const { data: workspaces } = useWorkspaces();
+export function WorkspaceSocketSync() {
+  const { workspaceId } = useWorkspaceContext();
   const queryClient = useQueryClient();
   const { socket, isConnected } = useSocket();
-
-  const currentWorkspace = React.useMemo(() => {
-    if (!workspaces || !workspaceSlug) return undefined;
-    return workspaces.find(ws => ws.slug === workspaceSlug);
-  }, [workspaces, workspaceSlug]);
-
-  const workspaceId = currentWorkspace?.id;
 
   useWorkspaceRoom(workspaceId);
 

@@ -1,9 +1,10 @@
 'use client';
 
+import { useWorkspaceContext } from '@/providers/workspace-provider';
+
 import * as React from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { PageHeader } from '@/components/layout/page-header';
-import { useWorkspaces } from '@/features/settings/general/hooks/use-workspaces';
 import { WsServerEvent, WorkspaceRole } from '@sales-copilot/shared-contracts';
 import { useSocketEvent } from '@/lib/socket/use-socket';
 import { formatVND } from '@/features/commerce/shared/lib/currency';
@@ -28,13 +29,9 @@ interface ReconciliationViewProps {
 
 export function ReconciliationView({ workspaceSlug }: ReconciliationViewProps) {
   const queryClient = useQueryClient();
-  const { data: workspaces } = useWorkspaces();
-  const currentWorkspace = workspaces?.find(w => w.slug === workspaceSlug);
-  const workspaceId = currentWorkspace?.id;
+  const { workspaceId, role } = useWorkspaceContext();
 
-  const isOwnerOrAdmin =
-    currentWorkspace?.role === WorkspaceRole.OWNER ||
-    currentWorkspace?.role === WorkspaceRole.ADMIN;
+  const isOwnerOrAdmin = role === WorkspaceRole.OWNER || role === WorkspaceRole.ADMIN;
 
   // Filter & Pagination State
   const [filters, setFilters] = React.useState<ReconciliationFilterValues>({

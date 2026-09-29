@@ -90,7 +90,6 @@ export function ChatComposer({
 
   const { mutate: sendMessage, isPending } = useSendMessage({
     conversationId,
-    workspaceSlug,
     workspaceId,
   });
 

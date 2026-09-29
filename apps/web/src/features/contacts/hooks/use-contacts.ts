@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { useWorkspaces } from '@/features/settings/general/hooks/use-workspaces';
+import { useWorkspaceContext } from '@/providers/workspace-provider';
 import { contactsApi } from '../api/contacts';
 import { contactKeys, conversationKeys } from '@/lib/query-keys';
 import type {
@@ -26,13 +26,8 @@ interface PaginatedContactsResult {
 }
 
 function usePaginatedContacts(options: ContactHookOptions & { query?: ContactListQueryDto } = {}) {
-  const { data: workspaces } = useWorkspaces();
-  const resolvedWorkspaceId =
-    options.workspaceId ||
-    (options.workspaceSlug
-      ? workspaces?.find(w => w.slug === options.workspaceSlug)?.id
-      : undefined) ||
-    workspaces?.[0]?.id;
+  const { workspaceId: contextWorkspaceId } = useWorkspaceContext();
+  const resolvedWorkspaceId = options.workspaceId || contextWorkspaceId || undefined;
 
   const isEnabled = Boolean((options.enabled ?? true) && resolvedWorkspaceId);
 
@@ -62,13 +57,8 @@ export function useContacts(options: ContactHookOptions & { query?: ContactListQ
 }
 
 export function useContact(contactId?: string | null, options: ContactHookOptions = {}) {
-  const { data: workspaces } = useWorkspaces();
-  const resolvedWorkspaceId =
-    options.workspaceId ||
-    (options.workspaceSlug
-      ? workspaces?.find(w => w.slug === options.workspaceSlug)?.id
-      : undefined) ||
-    workspaces?.[0]?.id;
+  const { workspaceId: contextWorkspaceId } = useWorkspaceContext();
+  const resolvedWorkspaceId = options.workspaceId || contextWorkspaceId || undefined;
 
   const isEnabled = Boolean((options.enabled ?? true) && resolvedWorkspaceId && contactId);
 
@@ -90,13 +80,8 @@ export function useUpdateContact(
   options: ContactHookOptions & { conversationId?: string } = {},
 ) {
   const queryClient = useQueryClient();
-  const { data: workspaces } = useWorkspaces();
-  const resolvedWorkspaceId =
-    options.workspaceId ||
-    (options.workspaceSlug
-      ? workspaces?.find(w => w.slug === options.workspaceSlug)?.id
-      : undefined) ||
-    workspaces?.[0]?.id;
+  const { workspaceId: contextWorkspaceId } = useWorkspaceContext();
+  const resolvedWorkspaceId = options.workspaceId || contextWorkspaceId || undefined;
 
   return useMutation({
     mutationFn: async (dto: UpdateContactDto) => {
@@ -131,13 +116,8 @@ export function useUpdateContact(
 
 export function useCreateContact(options: ContactHookOptions = {}) {
   const queryClient = useQueryClient();
-  const { data: workspaces } = useWorkspaces();
-  const resolvedWorkspaceId =
-    options.workspaceId ||
-    (options.workspaceSlug
-      ? workspaces?.find(w => w.slug === options.workspaceSlug)?.id
-      : undefined) ||
-    workspaces?.[0]?.id;
+  const { workspaceId: contextWorkspaceId } = useWorkspaceContext();
+  const resolvedWorkspaceId = options.workspaceId || contextWorkspaceId || undefined;
 
   return useMutation({
     mutationFn: async (dto: CreateContactDto) => {
@@ -159,13 +139,8 @@ export function useCreateContact(options: ContactHookOptions = {}) {
 
 export function useMergeContacts(options: ContactHookOptions = {}) {
   const queryClient = useQueryClient();
-  const { data: workspaces } = useWorkspaces();
-  const resolvedWorkspaceId =
-    options.workspaceId ||
-    (options.workspaceSlug
-      ? workspaces?.find(w => w.slug === options.workspaceSlug)?.id
-      : undefined) ||
-    workspaces?.[0]?.id;
+  const { workspaceId: contextWorkspaceId } = useWorkspaceContext();
+  const resolvedWorkspaceId = options.workspaceId || contextWorkspaceId || undefined;
 
   return useMutation({
     mutationFn: async (dto: MergeContactsDto) => {
@@ -190,13 +165,8 @@ export function useMergeContacts(options: ContactHookOptions = {}) {
 
 export function useDeleteContact(options: ContactHookOptions = {}) {
   const queryClient = useQueryClient();
-  const { data: workspaces } = useWorkspaces();
-  const resolvedWorkspaceId =
-    options.workspaceId ||
-    (options.workspaceSlug
-      ? workspaces?.find(w => w.slug === options.workspaceSlug)?.id
-      : undefined) ||
-    workspaces?.[0]?.id;
+  const { workspaceId: contextWorkspaceId } = useWorkspaceContext();
+  const resolvedWorkspaceId = options.workspaceId || contextWorkspaceId || undefined;
 
   return useMutation({
     mutationFn: async (contactId: string) => {

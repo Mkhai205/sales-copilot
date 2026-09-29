@@ -47,7 +47,7 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { useInboxes } from '@/features/settings/inboxes/hooks/use-inboxes';
-import { useWorkspaces } from '@/features/settings/general/hooks/use-workspaces';
+import { useWorkspaceContext } from '@/providers/workspace-provider';
 import { useConversationCounts } from '../list/hooks/use-conversation-counts';
 import { useConversationFilters } from '../list/hooks/use-conversation-filters';
 import { ConversationStatus } from '@sales-copilot/shared-contracts';
@@ -61,16 +61,13 @@ export function ConversationsSidebar({ workspaceSlug, ...props }: ConversationsS
   const searchParams = useSearchParams();
   const { filters } = useConversationFilters();
 
-  const { data: workspaces } = useWorkspaces();
-  const currentWorkspace = workspaces?.find(w => w.slug === workspaceSlug);
-  const workspaceId = currentWorkspace?.id;
+  const { workspaceId } = useWorkspaceContext();
 
   const { data: inboxes } = useInboxes(workspaceId);
 
   const effectiveStatus =
     filters.status !== 'ALL' ? (filters.status as ConversationStatus) : undefined;
   const { counts } = useConversationCounts({
-    workspaceSlug,
     status: effectiveStatus,
   });
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { useWorkspaces } from '@/features/settings/general/hooks/use-workspaces';
+import { useWorkspaceContext } from '@/providers/workspace-provider';
 import { membersApi } from '@/features/settings/members/api/members';
 import { teamsApi } from '@/features/settings/teams/api/teams';
 import { labelsApi } from '@/features/settings/labels/api/labels';
@@ -15,13 +15,8 @@ interface MetadataOptions {
 }
 
 export function useWorkspaceMembers(options: MetadataOptions = {}) {
-  const { data: workspaces } = useWorkspaces();
-  const resolvedWorkspaceId =
-    options.workspaceId ||
-    (options.workspaceSlug
-      ? workspaces?.find(w => w.slug === options.workspaceSlug)?.id
-      : undefined) ||
-    workspaces?.[0]?.id;
+  const { workspaceId: contextWorkspaceId } = useWorkspaceContext();
+  const resolvedWorkspaceId = options.workspaceId || contextWorkspaceId || undefined;
 
   const isEnabled = Boolean((options.enabled ?? true) && resolvedWorkspaceId);
 
@@ -43,13 +38,8 @@ export function useWorkspaceMembers(options: MetadataOptions = {}) {
 }
 
 export function useWorkspaceTeams(options: MetadataOptions = {}) {
-  const { data: workspaces } = useWorkspaces();
-  const resolvedWorkspaceId =
-    options.workspaceId ||
-    (options.workspaceSlug
-      ? workspaces?.find(w => w.slug === options.workspaceSlug)?.id
-      : undefined) ||
-    workspaces?.[0]?.id;
+  const { workspaceId: contextWorkspaceId } = useWorkspaceContext();
+  const resolvedWorkspaceId = options.workspaceId || contextWorkspaceId || undefined;
 
   const isEnabled = Boolean((options.enabled ?? true) && resolvedWorkspaceId);
 
@@ -71,13 +61,8 @@ export function useWorkspaceTeams(options: MetadataOptions = {}) {
 }
 
 export function useWorkspaceLabels(options: MetadataOptions = {}) {
-  const { data: workspaces } = useWorkspaces();
-  const resolvedWorkspaceId =
-    options.workspaceId ||
-    (options.workspaceSlug
-      ? workspaces?.find(w => w.slug === options.workspaceSlug)?.id
-      : undefined) ||
-    workspaces?.[0]?.id;
+  const { workspaceId: contextWorkspaceId } = useWorkspaceContext();
+  const resolvedWorkspaceId = options.workspaceId || contextWorkspaceId || undefined;
 
   const isEnabled = Boolean((options.enabled ?? true) && resolvedWorkspaceId);
 

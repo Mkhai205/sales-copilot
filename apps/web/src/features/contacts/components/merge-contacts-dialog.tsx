@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useWorkspaces } from '@/features/settings/general/hooks/use-workspaces';
+import { useWorkspaceContext } from '@/providers/workspace-provider';
 import { useContacts, useMergeContacts } from '../hooks/use-contacts';
 import type { ContactDto } from '@sales-copilot/shared-contracts';
 import { AlertTriangle, ArrowUpDown, GitMerge, Loader2, Search } from 'lucide-react';
@@ -34,9 +34,7 @@ export function MergeContactsDialog({
   initialBaseContact,
   onMergeSuccess,
 }: MergeContactsDialogProps) {
-  const { data: workspaces } = useWorkspaces();
-  const currentWorkspace = workspaces?.find(w => w.slug === workspaceSlug) || workspaces?.[0];
-  const workspaceId = currentWorkspace?.id;
+  const { workspaceId } = useWorkspaceContext();
 
   const [baseContact, setBaseContact] = React.useState<ContactDto | null>(initialBaseContact);
   const [mergeeContact, setMergeeContact] = React.useState<ContactDto | null>(null);

@@ -3,12 +3,11 @@
 import { useQuery } from '@tanstack/react-query';
 import { conversationsApi } from '../../api/conversations';
 import type { ConversationResponseDto } from '@sales-copilot/shared-contracts';
-import { useWorkspaces } from '@/features/settings/general/hooks/use-workspaces';
+import { useWorkspaceContext } from '@/providers/workspace-provider';
 import { conversationKeys } from '@/lib/query-keys';
 
 export interface UseConversationOptions {
   conversationId?: string | null;
-  workspaceSlug?: string;
   workspaceId?: string;
   enabled?: boolean;
 }
@@ -28,20 +27,10 @@ export function useConversation(
           ...extraOptions,
         };
 
-  const {
-    conversationId,
-    workspaceSlug,
-    workspaceId: explicitWorkspaceId,
-    enabled = true,
-  } = normalizedOptions;
+  const { conversationId, workspaceId: explicitWorkspaceId, enabled = true } = normalizedOptions;
 
-  const { data: workspaces } = useWorkspaces();
-
-  // Resolve target workspace ID
-  const resolvedWorkspaceId =
-    explicitWorkspaceId ||
-    (workspaceSlug ? workspaces?.find(w => w.slug === workspaceSlug)?.id : undefined) ||
-    workspaces?.[0]?.id;
+  const { workspaceId: contextWorkspaceId } = useWorkspaceContext();
+  const resolvedWorkspaceId = explicitWorkspaceId || contextWorkspaceId || undefined;
 
   const isQueryEnabled = Boolean(enabled && resolvedWorkspaceId && conversationId);
 

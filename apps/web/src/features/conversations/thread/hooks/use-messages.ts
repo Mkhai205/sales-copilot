@@ -5,12 +5,11 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 import { format, isToday, isYesterday, isThisYear, parseISO, isValid } from 'date-fns';
 import { messagesApi } from '../../api/messages';
 import type { MessageResponseDto } from '@sales-copilot/shared-contracts';
-import { useWorkspaces } from '@/features/settings/general/hooks/use-workspaces';
+import { useWorkspaceContext } from '@/providers/workspace-provider';
 import { conversationKeys } from '@/lib/query-keys';
 
 export interface UseMessagesOptions {
   conversationId?: string | null;
-  workspaceSlug?: string;
   workspaceId?: string;
   limit?: number;
   enabled?: boolean;
@@ -78,19 +77,15 @@ export function useMessages(
 
   const {
     conversationId,
-    workspaceSlug,
     workspaceId: explicitWorkspaceId,
     limit = 50,
     enabled = true,
   } = normalizedOptions;
 
-  const { data: workspaces } = useWorkspaces();
+  const { workspaceId: contextWorkspaceId } = useWorkspaceContext();
 
-  // Resolve target workspace ID
-  const resolvedWorkspaceId =
-    explicitWorkspaceId ||
-    (workspaceSlug ? workspaces?.find(w => w.slug === workspaceSlug)?.id : undefined) ||
-    workspaces?.[0]?.id;
+  // Resolve target workspace ID (explicit id wins, else active workspace)
+  const resolvedWorkspaceId = explicitWorkspaceId || contextWorkspaceId || undefined;
 
   const isQueryEnabled = Boolean(enabled && resolvedWorkspaceId && conversationId);
 

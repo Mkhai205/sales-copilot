@@ -1,12 +1,13 @@
 'use client';
 
+import { useWorkspaceContext } from '@/providers/workspace-provider';
+
 import * as React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Spinner } from '@/components/ui/spinner';
-import { useWorkspaces } from '@/features/settings/general/hooks/use-workspaces';
 import { productsApi } from './api/products';
 import { useProductMutations } from './hooks/use-product-mutations';
 import { ProductsTable } from './components/products-table';
@@ -22,14 +23,8 @@ import { cn } from '@/lib/utils';
 import { PageHeader } from '@/components/layout/page-header';
 import { commerceKeys } from '@/lib/query-keys';
 
-interface ProductsViewProps {
-  workspaceSlug: string;
-}
-
-export function ProductsView({ workspaceSlug }: ProductsViewProps) {
-  const { data: workspaces, isLoading: isWsLoading } = useWorkspaces();
-  const currentWorkspace = workspaces?.find(w => w.slug === workspaceSlug);
-  const workspaceId = currentWorkspace?.id;
+export function ProductsView() {
+  const { workspaceId, isLoading: isWsLoading } = useWorkspaceContext();
 
   const { deleteProduct } = useProductMutations(workspaceId);
 
@@ -145,7 +140,7 @@ export function ProductsView({ workspaceSlug }: ProductsViewProps) {
     );
   }
 
-  if (!currentWorkspace || !workspaceId) {
+  if (!workspaceId) {
     return (
       <div className="flex h-full flex-1 items-center justify-center text-sm text-muted-foreground">
         Không tìm thấy workspace.

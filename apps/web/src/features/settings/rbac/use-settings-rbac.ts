@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { WorkspaceRole } from '@sales-copilot/shared-contracts';
-import { useWorkspaces } from '../general/hooks/use-workspaces';
+import { useWorkspaceContext } from '@/providers/workspace-provider';
 
 import { useCurrentUser } from '@/features/auth/hooks/use-current-user';
 import {
@@ -21,14 +21,10 @@ export interface GroupedSettingsNav {
 }
 
 export function useSettingsRbac(workspaceSlug: string) {
-  const { data: workspaces, isLoading: isLoadingWorkspaces } = useWorkspaces();
+  const { workspace, role: currentRole, isLoading: isLoadingWorkspaces } = useWorkspaceContext();
   const { data: currentUser, isLoading: isLoadingUser } = useCurrentUser();
 
-  const currentWorkspace = React.useMemo(() => {
-    return workspaces?.find(w => w.slug === workspaceSlug) || null;
-  }, [workspaces, workspaceSlug]);
-
-  const currentRole: WorkspaceRole | null = currentWorkspace?.role ?? null;
+  const currentWorkspace = workspace;
 
   const isAdmin = currentRole === WorkspaceRole.OWNER || currentRole === WorkspaceRole.ADMIN;
   const isOwner = currentRole === WorkspaceRole.OWNER;

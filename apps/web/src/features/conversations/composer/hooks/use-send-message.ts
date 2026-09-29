@@ -15,7 +15,7 @@ import {
   type MessageResponseDto,
 } from '@sales-copilot/shared-contracts';
 import { useCurrentUser } from '@/features/auth/hooks/use-current-user';
-import { useWorkspaces } from '@/features/settings/general/hooks/use-workspaces';
+import { useWorkspaceContext } from '@/providers/workspace-provider';
 import {
   bubbleConversationToTop,
   markMessageFailedInInfiniteData,
@@ -25,7 +25,6 @@ import { conversationKeys } from '@/lib/query-keys';
 
 export interface UseSendMessageOptions {
   conversationId: string;
-  workspaceSlug?: string;
   workspaceId?: string;
 }
 
@@ -40,16 +39,13 @@ export interface SendMessageInput {
 }
 
 export function useSendMessage(options: UseSendMessageOptions) {
-  const { conversationId, workspaceSlug, workspaceId: explicitWorkspaceId } = options;
+  const { conversationId, workspaceId: explicitWorkspaceId } = options;
   const queryClient = useQueryClient();
-  const { data: workspaces } = useWorkspaces();
+  const { workspaceId: contextWorkspaceId } = useWorkspaceContext();
   const { data: currentUser } = useCurrentUser();
 
   // Resolve target workspace ID
-  const resolvedWorkspaceId =
-    explicitWorkspaceId ||
-    (workspaceSlug ? workspaces?.find(w => w.slug === workspaceSlug)?.id : undefined) ||
-    workspaces?.[0]?.id;
+  const resolvedWorkspaceId = explicitWorkspaceId || contextWorkspaceId || undefined;
 
   return useMutation({
     mutationFn: async (input: SendMessageInput) => {

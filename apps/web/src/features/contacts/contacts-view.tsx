@@ -20,7 +20,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { useWorkspaces } from '@/features/settings/general/hooks/use-workspaces';
+import { useWorkspaceContext } from '@/providers/workspace-provider';
 import { useContacts, useDeleteContact } from './hooks/use-contacts';
 import { ContactsTable } from './components/contacts-table';
 import { ContactDetailDialog } from './components/contact-detail-dialog';
@@ -35,9 +35,7 @@ interface ContactsViewProps {
 }
 
 export function ContactsView({ workspaceSlug }: ContactsViewProps) {
-  const { data: workspaces } = useWorkspaces();
-  const currentWorkspace = workspaces?.find(w => w.slug === workspaceSlug) || workspaces?.[0];
-  const workspaceId = currentWorkspace?.id;
+  const { workspaceId } = useWorkspaceContext();
 
   // Filter & Pagination State
   const [searchTerm, setSearchTerm] = React.useState<string>('');

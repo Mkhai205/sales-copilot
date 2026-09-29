@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { useWorkspaces } from '@/features/settings/general/hooks/use-workspaces';
+import { useWorkspaceContext } from '@/providers/workspace-provider';
 import { contactsApi } from '../api/contacts';
 import type { ChannelIdentityDto, CreateChannelIdentityDto } from '@sales-copilot/shared-contracts';
 import { contactKeys } from '@/lib/query-keys';
@@ -17,13 +17,8 @@ export function useContactIdentities(
   contactId?: string | null,
   options: UseContactIdentitiesOptions = {},
 ) {
-  const { data: workspaces } = useWorkspaces();
-  const resolvedWorkspaceId =
-    options.workspaceId ||
-    (options.workspaceSlug
-      ? workspaces?.find(w => w.slug === options.workspaceSlug)?.id
-      : undefined) ||
-    workspaces?.[0]?.id;
+  const { workspaceId: contextWorkspaceId } = useWorkspaceContext();
+  const resolvedWorkspaceId = options.workspaceId || contextWorkspaceId || undefined;
 
   const isEnabled = Boolean((options.enabled ?? true) && resolvedWorkspaceId && contactId);
 
@@ -51,13 +46,8 @@ export function useLinkContactIdentity(
   options: UseContactIdentitiesOptions = {},
 ) {
   const queryClient = useQueryClient();
-  const { data: workspaces } = useWorkspaces();
-  const resolvedWorkspaceId =
-    options.workspaceId ||
-    (options.workspaceSlug
-      ? workspaces?.find(w => w.slug === options.workspaceSlug)?.id
-      : undefined) ||
-    workspaces?.[0]?.id;
+  const { workspaceId: contextWorkspaceId } = useWorkspaceContext();
+  const resolvedWorkspaceId = options.workspaceId || contextWorkspaceId || undefined;
 
   return useMutation({
     mutationFn: async (dto: CreateChannelIdentityDto) => {
@@ -88,13 +78,8 @@ export function useUnlinkContactIdentity(
   options: UseContactIdentitiesOptions = {},
 ) {
   const queryClient = useQueryClient();
-  const { data: workspaces } = useWorkspaces();
-  const resolvedWorkspaceId =
-    options.workspaceId ||
-    (options.workspaceSlug
-      ? workspaces?.find(w => w.slug === options.workspaceSlug)?.id
-      : undefined) ||
-    workspaces?.[0]?.id;
+  const { workspaceId: contextWorkspaceId } = useWorkspaceContext();
+  const resolvedWorkspaceId = options.workspaceId || contextWorkspaceId || undefined;
 
   return useMutation({
     mutationFn: async (identityId: string) => {

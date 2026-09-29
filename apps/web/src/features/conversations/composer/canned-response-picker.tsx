@@ -37,15 +37,7 @@ export const CannedResponsePicker = React.forwardRef<
   CannedResponsePickerHandle,
   CannedResponsePickerProps
 >(function CannedResponsePicker(
-  {
-    isOpen,
-    searchQuery,
-    onSelect,
-    onClose,
-    workspaceId,
-    workspaceSlug,
-    className,
-  }: CannedResponsePickerProps,
+  { isOpen, searchQuery, onSelect, onClose, workspaceId, className }: CannedResponsePickerProps,
   ref,
 ) {
   const containerRef = React.useRef<HTMLDivElement>(null);
@@ -53,7 +45,6 @@ export const CannedResponsePicker = React.forwardRef<
 
   const { data: cannedResponses, isLoading } = useCannedResponses({
     workspaceId,
-    workspaceSlug,
     enabled: isOpen,
   });
 

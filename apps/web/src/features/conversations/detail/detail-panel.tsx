@@ -6,7 +6,7 @@ import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { useWorkspaces } from '@/features/settings/general/hooks/use-workspaces';
+import { useWorkspaceContext } from '@/providers/workspace-provider';
 import { useInbox } from '@/features/settings/inboxes/hooks/use-inboxes';
 import { CommerceDetailTab } from '@/features/commerce/orders/components/commerce-detail-tab';
 
@@ -93,16 +93,12 @@ export function DetailPanel({
   };
 
   const { conversation, isLoading } = useConversation(conversationId, {
-    workspaceSlug,
     workspaceId,
   });
 
-  const { data: workspaces } = useWorkspaces();
+  const { workspaceId: contextWorkspaceId } = useWorkspaceContext();
   const resolvedWorkspaceId =
-    workspaceId ||
-    conversation?.workspaceId ||
-    (workspaceSlug ? workspaces?.find(w => w.slug === workspaceSlug)?.id : undefined) ||
-    workspaces?.[0]?.id;
+    workspaceId || conversation?.workspaceId || contextWorkspaceId || undefined;
 
   const { data: inbox } = useInbox(
     resolvedWorkspaceId,
@@ -113,7 +109,6 @@ export function DetailPanel({
     Boolean(inboxSettings?.aiCommercePolicy?.enabled) || Boolean(conversation?.isAiPaused);
 
   const { messages } = useMessages(conversationId || '', {
-    workspaceSlug,
     workspaceId: resolvedWorkspaceId,
     limit: 50,
     enabled: Boolean(conversationId && isAiConfigured),

@@ -59,7 +59,7 @@ import { fetchApi, workspaceHeaders } from '@/lib/api/client';
 import { useConversation } from '../list/hooks/use-conversation';
 import { useMessages } from './hooks/use-messages';
 import { useResetUnreadMutation } from '../detail/hooks/use-conversation-mutations';
-import { useWorkspaces } from '@/features/settings/general/hooks/use-workspaces';
+import { useWorkspaceContext } from '@/providers/workspace-provider';
 import { MessageThreadHeader } from './message-thread-header';
 import { TypingIndicator } from './typing-indicator';
 import { ChatComposer } from '../composer/chat-composer';
@@ -766,7 +766,6 @@ export function MessageThread({
   useConversationRoom(conversationId);
 
   const { data: conversation, isLoading: isConversationLoading } = useConversation(conversationId, {
-    workspaceSlug,
     workspaceId,
   });
 
@@ -776,7 +775,6 @@ export function MessageThread({
     isLoading: isMessagesLoading,
     isEmpty,
   } = useMessages(conversationId, {
-    workspaceSlug,
     workspaceId,
     limit: 50,
   });
@@ -809,12 +807,9 @@ export function MessageThread({
     setLightboxState(prev => ({ ...prev, isOpen: false }));
   }, []);
 
-  const { data: workspaces } = useWorkspaces();
+  const { workspaceId: contextWorkspaceId } = useWorkspaceContext();
   const activeWorkspaceId =
-    workspaceId ||
-    conversation?.workspaceId ||
-    (workspaceSlug ? workspaces?.find(w => w.slug === workspaceSlug)?.id : undefined) ||
-    workspaces?.[0]?.id;
+    workspaceId || conversation?.workspaceId || contextWorkspaceId || undefined;
 
   const resetUnreadMutation = useResetUnreadMutation();
   const unreadCount = conversation?.unreadMessagesCount ?? 0;

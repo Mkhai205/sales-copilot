@@ -3,7 +3,7 @@
 import { useMutation, useQueryClient, type InfiniteData } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { conversationsApi } from '../../api/conversations';
-import { useWorkspaces } from '@/features/settings/general/hooks/use-workspaces';
+import { useWorkspaceContext } from '@/providers/workspace-provider';
 import { updateConversationInList } from '@/lib/socket/cache-helpers';
 import type { ApiResponse } from '@/lib/api/client';
 import { conversationKeys } from '@/lib/query-keys';
@@ -18,7 +18,7 @@ export function useTakeoverConversation(
   optionsOrWorkspaceId?: string | UseTakeoverConversationOptions,
 ) {
   const queryClient = useQueryClient();
-  const { data: workspaces } = useWorkspaces();
+  const { workspaceId: contextWorkspaceId } = useWorkspaceContext();
 
   const options: UseTakeoverConversationOptions =
     typeof optionsOrWorkspaceId === 'string'
@@ -31,10 +31,8 @@ export function useTakeoverConversation(
       const resolvedWorkspaceId =
         (typeof arg === 'object' && arg.workspaceId) ||
         options.workspaceId ||
-        (options.workspaceSlug
-          ? workspaces?.find(w => w.slug === options.workspaceSlug)?.id
-          : undefined) ||
-        workspaces?.[0]?.id;
+        contextWorkspaceId ||
+        undefined;
 
       if (!resolvedWorkspaceId) {
         throw new Error('Workspace ID is required');

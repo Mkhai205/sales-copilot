@@ -77,7 +77,6 @@ export function ConversationList({ workspaceSlug, activeConversationId }: Conver
     refetch,
     workspaceId,
   } = useConversations({
-    workspaceSlug,
     filters: apiQuery,
   });
 
@@ -225,7 +224,7 @@ export function ConversationList({ workspaceSlug, activeConversationId }: Conver
       </div>
 
       {/* 2. Underline Navigation Tabs (Mine / Unassigned / All) */}
-      <ConversationListFilters workspaceSlug={workspaceSlug} />
+      <ConversationListFilters />
 
       {/* 3. Active Filter Chips (Auto-rendered when activeFilterCount > 0) */}
       <ConversationActiveChips

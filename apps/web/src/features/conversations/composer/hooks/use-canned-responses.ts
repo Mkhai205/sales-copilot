@@ -2,26 +2,20 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { cannedResponsesApi } from '@/features/settings/canned-responses/api/canned-responses';
-import { useWorkspaces } from '@/features/settings/general/hooks/use-workspaces';
+import { useWorkspaceContext } from '@/providers/workspace-provider';
 import type { CannedResponseDto } from '@sales-copilot/shared-contracts';
 import { cannedResponseKeys } from '@/lib/query-keys';
 
 export interface UseCannedResponsesOptions {
   workspaceId?: string;
-  workspaceSlug?: string;
   search?: string;
   enabled?: boolean;
 }
 
 export function useCannedResponses(options?: UseCannedResponsesOptions) {
-  const { workspaceId: explicitWorkspaceId, workspaceSlug, search, enabled = true } = options || {};
-  const { data: workspaces } = useWorkspaces();
-
-  // Resolve target workspace ID
-  const resolvedWorkspaceId =
-    explicitWorkspaceId ||
-    (workspaceSlug ? workspaces?.find(w => w.slug === workspaceSlug)?.id : undefined) ||
-    workspaces?.[0]?.id;
+  const { workspaceId: explicitWorkspaceId, search, enabled = true } = options || {};
+  const { workspaceId: contextWorkspaceId } = useWorkspaceContext();
+  const resolvedWorkspaceId = explicitWorkspaceId || contextWorkspaceId || undefined;
 
   const isQueryEnabled = Boolean(enabled && resolvedWorkspaceId);
 

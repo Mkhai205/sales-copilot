@@ -1,5 +1,7 @@
 'use client';
 
+import { useWorkspaceContext } from '@/providers/workspace-provider';
+
 import * as React from 'react';
 import Link from 'next/link';
 import { Bot, AlertCircle, Sparkles, Building2, Store, Check } from 'lucide-react';
@@ -21,7 +23,6 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useUpdateInbox } from '../hooks/use-inboxes';
-import { useWorkspaces } from '../../general/hooks/use-workspaces';
 import { bankApi } from '../../bank/api/bank';
 import { workspaceKeys } from '@/lib/query-keys';
 
@@ -35,8 +36,8 @@ export function TabAiSettings({ inbox, workspaceId, workspaceSlug }: TabAiSettin
   const { mutate: updateInbox, isPending: isUpdating } = useUpdateInbox(workspaceId);
 
   // 1. Resolve workspace payment/bank settings
-  const { data: workspaces, isLoading: isWorkspacesLoading } = useWorkspaces();
-  const currentWorkspace = workspaces?.find(w => w.id === workspaceId || w.slug === workspaceSlug);
+  const { workspace, isLoading: isWorkspacesLoading } = useWorkspaceContext();
+  const currentWorkspace = workspace;
 
   const wsPaymentSettings = (currentWorkspace?.settings as Record<string, any> | undefined)
     ?.paymentSettings;

@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { useWorkspaces } from '@/features/settings/general/hooks/use-workspaces';
+import { useWorkspaceContext } from '@/providers/workspace-provider';
 import { conversationsApi } from '@/features/conversations/api/conversations';
 import { ordersApi } from '@/features/commerce/orders/api/orders';
 import { formatVND } from '@/features/commerce/shared/lib/currency';
@@ -49,9 +49,7 @@ export function ContactDetailDialog({
   workspaceSlug,
   onMergeContact,
 }: ContactDetailDialogProps) {
-  const { data: workspaces } = useWorkspaces();
-  const currentWorkspace = workspaces?.find(w => w.slug === workspaceSlug) || workspaces?.[0];
-  const workspaceId = currentWorkspace?.id;
+  const { workspaceId } = useWorkspaceContext();
 
   // Fresh contact detail from server
   const { data: freshContact } = useContact(initialContact?.id, {

@@ -32,7 +32,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { useWorkspaces } from '@/features/settings/general/hooks/use-workspaces';
+import { useWorkspaceContext } from '@/providers/workspace-provider';
 import { useInboxes } from '@/features/settings/inboxes/hooks/use-inboxes';
 import {
   useContactIdentities,
@@ -51,9 +51,7 @@ export function ContactIdentities({
   workspaceSlug,
   initialIdentities,
 }: ContactIdentitiesProps) {
-  const { data: workspaces } = useWorkspaces();
-  const currentWorkspace = workspaces?.find(w => w.slug === workspaceSlug) || workspaces?.[0];
-  const workspaceId = currentWorkspace?.id;
+  const { workspaceId } = useWorkspaceContext();
 
   const { identities: fetchedIdentities, isLoading: isIdentitiesLoading } = useContactIdentities(
     contactId,

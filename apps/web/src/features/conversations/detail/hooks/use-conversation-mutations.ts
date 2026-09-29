@@ -3,7 +3,7 @@
 import { useMutation, useQueryClient, type InfiniteData } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { conversationsApi } from '../../api/conversations';
-import { useWorkspaces } from '@/features/settings/general/hooks/use-workspaces';
+import { useWorkspaceContext } from '@/providers/workspace-provider';
 import type { ApiResponse } from '@/lib/api/client';
 import { updateConversationInList } from '@/lib/socket/cache-helpers';
 import { conversationKeys } from '@/lib/query-keys';
@@ -25,13 +25,8 @@ export function useUpdateConversationStatus(
   options: MutationHookOptions = {},
 ) {
   const queryClient = useQueryClient();
-  const { data: workspaces } = useWorkspaces();
-  const resolvedWorkspaceId =
-    options.workspaceId ||
-    (options.workspaceSlug
-      ? workspaces?.find(w => w.slug === options.workspaceSlug)?.id
-      : undefined) ||
-    workspaces?.[0]?.id;
+  const { workspaceId: contextWorkspaceId } = useWorkspaceContext();
+  const resolvedWorkspaceId = options.workspaceId || contextWorkspaceId || undefined;
 
   return useMutation({
     mutationFn: async (dto: UpdateConversationStatusDto) => {
@@ -62,13 +57,8 @@ export function useUpdateConversationPriority(
   options: MutationHookOptions = {},
 ) {
   const queryClient = useQueryClient();
-  const { data: workspaces } = useWorkspaces();
-  const resolvedWorkspaceId =
-    options.workspaceId ||
-    (options.workspaceSlug
-      ? workspaces?.find(w => w.slug === options.workspaceSlug)?.id
-      : undefined) ||
-    workspaces?.[0]?.id;
+  const { workspaceId: contextWorkspaceId } = useWorkspaceContext();
+  const resolvedWorkspaceId = options.workspaceId || contextWorkspaceId || undefined;
 
   return useMutation({
     mutationFn: async (dto: UpdateConversationPriorityDto) => {
@@ -96,13 +86,8 @@ export function useUpdateConversationPriority(
 
 export function useAssignConversation(conversationId: string, options: MutationHookOptions = {}) {
   const queryClient = useQueryClient();
-  const { data: workspaces } = useWorkspaces();
-  const resolvedWorkspaceId =
-    options.workspaceId ||
-    (options.workspaceSlug
-      ? workspaces?.find(w => w.slug === options.workspaceSlug)?.id
-      : undefined) ||
-    workspaces?.[0]?.id;
+  const { workspaceId: contextWorkspaceId } = useWorkspaceContext();
+  const resolvedWorkspaceId = options.workspaceId || contextWorkspaceId || undefined;
 
   return useMutation({
     mutationFn: async (dto: AssignConversationDto) => {
@@ -133,13 +118,8 @@ export function useAssignConversationLabels(
   options: MutationHookOptions = {},
 ) {
   const queryClient = useQueryClient();
-  const { data: workspaces } = useWorkspaces();
-  const resolvedWorkspaceId =
-    options.workspaceId ||
-    (options.workspaceSlug
-      ? workspaces?.find(w => w.slug === options.workspaceSlug)?.id
-      : undefined) ||
-    workspaces?.[0]?.id;
+  const { workspaceId: contextWorkspaceId } = useWorkspaceContext();
+  const resolvedWorkspaceId = options.workspaceId || contextWorkspaceId || undefined;
 
   return useMutation({
     mutationFn: async (dto: AssignLabelsDto) => {
@@ -169,13 +149,8 @@ export function useRemoveConversationLabel(
   options: MutationHookOptions = {},
 ) {
   const queryClient = useQueryClient();
-  const { data: workspaces } = useWorkspaces();
-  const resolvedWorkspaceId =
-    options.workspaceId ||
-    (options.workspaceSlug
-      ? workspaces?.find(w => w.slug === options.workspaceSlug)?.id
-      : undefined) ||
-    workspaces?.[0]?.id;
+  const { workspaceId: contextWorkspaceId } = useWorkspaceContext();
+  const resolvedWorkspaceId = options.workspaceId || contextWorkspaceId || undefined;
 
   return useMutation({
     mutationFn: async (labelId: string) => {
