@@ -8,40 +8,9 @@ import type {
   ManualPayOrderDto,
   OrderResponseDto,
   UpdateOrderDto,
-  PaginationMeta,
   VietQrResponseDto,
 } from '@sales-copilot/shared-contracts';
-
-export interface PaginatedResult<T> {
-  items: T[];
-  meta?: PaginationMeta;
-}
-
-function normalizePaginatedResponse<T>(res: any): {
-  success: boolean;
-  data: PaginatedResult<T>;
-  meta?: PaginationMeta;
-} {
-  const rawData = res.data;
-  let items: T[] = [];
-  let meta: PaginationMeta | undefined = res.meta;
-
-  if (Array.isArray(rawData)) {
-    items = rawData;
-  } else if (rawData && typeof rawData === 'object' && Array.isArray(rawData.items)) {
-    items = rawData.items;
-    meta = rawData.meta || meta;
-  }
-
-  return {
-    ...res,
-    data: {
-      items,
-      meta,
-    },
-    meta,
-  };
-}
+import { normalizePaginatedResponse } from '@/lib/api/pagination';
 
 export const ordersApi = {
   listOrders: (workspaceId: string, query?: ListOrdersQueryDto) =>

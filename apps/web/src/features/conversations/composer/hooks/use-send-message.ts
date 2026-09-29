@@ -113,18 +113,18 @@ export function useSendMessage(options: UseSendMessageOptions) {
       // 1. Cancel any outgoing refetches
       await queryClient.cancelQueries(messageQueryFilter);
 
-      // 2. Snapshot previous data
-      const previousData =
-        queryClient.getQueriesData<InfiniteData<ApiResponse<MessageResponseDto[]>>>(
-          messageQueryFilter,
-        );
-
       // 3. Construct optimistic message
       const tempId =
         input.clientTempId || `temp-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 
+      // Blob URLs keep the optimistic preview alive; revoked after the
+      // server response reconciles the cache (60s grace so late renderers
+      // referencing detail.lastMessage never hit a dead URL).
+      const blobUrls: string[] = [];
       const optimisticAttachments: AttachmentDto[] = (input.attachments || []).map((file, idx) => {
         const isImage = file.type.startsWith('image/');
+        const fileUrl = isImage ? URL.createObjectURL(file) : undefined;
+        if (fileUrl) blobUrls.push(fileUrl);
         return {
           id: `temp-att-${Date.now()}-${idx}`,
           messageId: tempId,
@@ -133,7 +133,7 @@ export function useSendMessage(options: UseSendMessageOptions) {
           fileSize: file.size,
           storagePath: '',
           contentType: file.type,
-          fileUrl: isImage ? URL.createObjectURL(file) : undefined,
+          fileUrl,
           createdAt: new Date().toISOString(),
         };
       });
@@ -222,7 +222,7 @@ export function useSendMessage(options: UseSendMessageOptions) {
         },
       );
 
-      return { previousData, tempId };
+      return { blobUrls, tempId };
     },
 
     onError: (error, _variables, context) => {
@@ -242,7 +242,7 @@ export function useSendMessage(options: UseSendMessageOptions) {
       });
     },
 
-    onSuccess: result => {
+    onSuccess: (result, _variables, context) => {
       if (!resolvedWorkspaceId || !conversationId || !result) return;
 
       const { createdMessage, clientTempId } = result;
@@ -278,6 +278,12 @@ export function useSendMessage(options: UseSendMessageOptions) {
           return updatedData;
         },
       );
+
+      // Revoke the optimistic blob previews - the server attachments have
+      // replaced them in every cache that renders images.
+      if (context?.blobUrls?.length) {
+        setTimeout(() => context.blobUrls.forEach(url => URL.revokeObjectURL(url)), 60_000);
+      }
     },
   });
 }

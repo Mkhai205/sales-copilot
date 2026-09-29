@@ -1,3 +1,39 @@
+import type {
+  CannedResponseListQueryDto,
+  ContactListQueryDto,
+  ConversationListQueryDto,
+  ConversationStatus,
+  KnowledgeArticleQueryDto,
+  LabelListQueryDto,
+  ListInventoryTransactionsQueryDto,
+  ListInventoryVariantsQueryDto,
+  ListReconciliationTransactionsQueryDto,
+  QueryPlatformAuditLogsDto,
+  QueryPlatformWorkspacesDto,
+  ReconciliationStatsQueryDto,
+} from '@sales-copilot/shared-contracts';
+
+/**
+ * UI filter state that mints cache entries — supersets of the API query DTOs
+ * (tabs and debounced search live only in keys, not in the API payload).
+ */
+export interface OrderListKeyQuery {
+  page?: number;
+  limit?: number;
+  activeTab?: string;
+  paymentFilter?: string;
+  debouncedSearch?: string;
+  search?: string;
+}
+
+export interface ProductListKeyQuery {
+  page?: number;
+  limit?: number;
+  debouncedSearch?: string;
+  selectedCategory?: string;
+  lowStockFilter?: boolean;
+}
+
 /**
  * Centralized Query Keys Factory for TanStack Query
  * Ensures unified cache keys, correct prefix invalidations, and zero cache fragmentation.
@@ -5,7 +41,7 @@
 
 export const commerceKeys = {
   all: ['commerce'] as const,
-  orders: (workspaceId?: string, query?: any) =>
+  orders: (workspaceId?: string, query?: OrderListKeyQuery) =>
     query !== undefined
       ? (['commerce', 'orders', workspaceId, query] as const)
       : workspaceId !== undefined
@@ -23,7 +59,7 @@ export const commerceKeys = {
       : workspaceId !== undefined
         ? (['commerce', 'active-order', workspaceId] as const)
         : (['commerce', 'active-order'] as const),
-  products: (workspaceId?: string, query?: any) =>
+  products: (workspaceId?: string, query?: ProductListKeyQuery) =>
     query !== undefined
       ? (['commerce', 'products', workspaceId, query] as const)
       : workspaceId !== undefined
@@ -35,7 +71,7 @@ export const commerceKeys = {
       : workspaceId !== undefined
         ? (['commerce', 'product', workspaceId] as const)
         : (['commerce', 'product'] as const),
-  inventoryVariants: (workspaceId?: string, query?: any) =>
+  inventoryVariants: (workspaceId?: string, query?: ListInventoryVariantsQueryDto) =>
     query !== undefined
       ? (['commerce', 'inventory', 'variants', workspaceId, query] as const)
       : workspaceId !== undefined
@@ -45,7 +81,7 @@ export const commerceKeys = {
     workspaceId !== undefined
       ? (['commerce', 'inventory', 'summary', workspaceId] as const)
       : (['commerce', 'inventory', 'summary'] as const),
-  inventoryTransactions: (workspaceId?: string, query?: any) =>
+  inventoryTransactions: (workspaceId?: string, query?: ListInventoryTransactionsQueryDto) =>
     query !== undefined
       ? (['commerce', 'inventory', 'transactions', workspaceId, query] as const)
       : workspaceId !== undefined
@@ -55,7 +91,7 @@ export const commerceKeys = {
 
 export const conversationKeys = {
   all: ['conversations'] as const,
-  list: (workspaceId?: string, query?: any, limit?: number) =>
+  list: (workspaceId?: string, query?: ConversationListQueryDto, limit?: number) =>
     limit !== undefined
       ? (['conversations', 'list', workspaceId, query, limit] as const)
       : query !== undefined
@@ -77,7 +113,7 @@ export const conversationKeys = {
         : workspaceId !== undefined
           ? (['conversations', 'messages', workspaceId] as const)
           : (['conversations', 'messages'] as const),
-  counts: (workspaceId?: string, status?: any) =>
+  counts: (workspaceId?: string, status?: ConversationStatus) =>
     status !== undefined
       ? (['conversations', 'counts', workspaceId, status] as const)
       : workspaceId !== undefined
@@ -87,7 +123,7 @@ export const conversationKeys = {
 
 export const contactKeys = {
   all: ['contacts'] as const,
-  list: (workspaceId?: string, query?: any) =>
+  list: (workspaceId?: string, query?: ContactListQueryDto) =>
     query !== undefined
       ? (['contacts', 'list', workspaceId, query] as const)
       : workspaceId !== undefined
@@ -134,7 +170,7 @@ export const teamKeys = {
 
 export const cannedResponseKeys = {
   all: ['canned-responses'] as const,
-  list: (workspaceId?: string, queryOrSearch?: any) =>
+  list: (workspaceId?: string, queryOrSearch?: CannedResponseListQueryDto | string) =>
     queryOrSearch !== undefined
       ? (['canned-responses', workspaceId, queryOrSearch] as const)
       : (['canned-responses', workspaceId] as const),
@@ -143,7 +179,7 @@ export const cannedResponseKeys = {
 
 export const labelKeys = {
   all: ['labels'] as const,
-  list: (workspaceId?: string, query?: any) =>
+  list: (workspaceId?: string, query?: LabelListQueryDto) =>
     query !== undefined
       ? (['labels', workspaceId, query] as const)
       : (['labels', workspaceId] as const),
@@ -192,13 +228,13 @@ export const presenceKeys = {
 
 export const reconciliationKeys = {
   all: ['reconciliation'] as const,
-  transactions: (workspaceId?: string, query?: any) =>
+  transactions: (workspaceId?: string, query?: ListReconciliationTransactionsQueryDto) =>
     query !== undefined
       ? (['reconciliation', 'transactions', workspaceId, query] as const)
       : workspaceId !== undefined
         ? (['reconciliation', 'transactions', workspaceId] as const)
         : (['reconciliation', 'transactions'] as const),
-  stats: (workspaceId?: string, query?: any) =>
+  stats: (workspaceId?: string, query?: ReconciliationStatsQueryDto) =>
     query !== undefined
       ? (['reconciliation', 'stats', workspaceId, query] as const)
       : workspaceId !== undefined
@@ -208,7 +244,7 @@ export const reconciliationKeys = {
 
 export const knowledgeKeys = {
   all: ['knowledge'] as const,
-  list: (workspaceId?: string, query?: any) =>
+  list: (workspaceId?: string, query?: KnowledgeArticleQueryDto) =>
     query !== undefined
       ? (['knowledge', 'articles', workspaceId, query] as const)
       : workspaceId !== undefined
@@ -241,7 +277,7 @@ export const geoKeys = {
 export const platformAdminKeys = {
   all: ['platform-admin'] as const,
   metrics: ['platform-admin', 'metrics', 'overview'] as const,
-  auditLogs: (params?: any) =>
+  auditLogs: (params?: Partial<QueryPlatformAuditLogsDto>) =>
     params !== undefined
       ? (['platform-admin', 'audit-logs', params] as const)
       : (['platform-admin', 'audit-logs'] as const),
@@ -254,7 +290,7 @@ export const platformAdminKeys = {
   },
   workspaces: {
     all: ['platform-admin', 'workspaces'] as const,
-    list: (params?: any) =>
+    list: (params?: Partial<QueryPlatformWorkspacesDto>) =>
       params !== undefined
         ? (['platform-admin', 'workspaces', params] as const)
         : (['platform-admin', 'workspaces'] as const),

@@ -189,27 +189,40 @@ export function useResetUnreadMutation() {
       const res = await conversationsApi.resetUnread(workspaceId, conversationId);
       return res.data;
     },
-    onMutate: async ({ conversationId }) => {
+    onMutate: async ({ workspaceId, conversationId }) => {
       // Optimistically zero unread count in both detail and list caches
+      const previousDetail = queryClient.getQueriesData<ConversationResponseDto>({
+        queryKey: conversationKeys.detail(workspaceId),
+        predicate: query => query.queryKey.includes(conversationId),
+      });
+      const previousLists = queryClient.getQueriesData<
+        InfiniteData<ApiResponse<ConversationResponseDto[]>>
+      >({ queryKey: conversationKeys.list(workspaceId) });
+
       queryClient.setQueriesData<ConversationResponseDto>(
         {
-          queryKey: conversationKeys.detail(),
+          queryKey: conversationKeys.detail(workspaceId),
           predicate: query => query.queryKey.includes(conversationId),
         },
         old => (old ? { ...old, unreadMessagesCount: 0 } : old),
       );
 
       queryClient.setQueriesData<InfiniteData<ApiResponse<ConversationResponseDto[]>>>(
-        { queryKey: conversationKeys.list() },
+        { queryKey: conversationKeys.list(workspaceId) },
         old =>
           updateConversationInList(old, conversationId, prev => ({
             ...prev,
             unreadMessagesCount: 0,
           })),
       );
+
+      return { previousDetail, previousLists };
     },
-    onError: (err: any) => {
+    onError: (err: any, _variables, context) => {
       console.error('Failed to reset unread count on view:', err);
+      // Roll back the optimistic zeroing so the unread badge stays truthful
+      context?.previousDetail.forEach(([key, data]) => queryClient.setQueryData(key, data));
+      context?.previousLists.forEach(([key, data]) => queryClient.setQueryData(key, data));
     },
   });
 }
