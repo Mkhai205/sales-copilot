@@ -16,6 +16,6 @@ docs
 tmp
 logs
 *.log
-.env
-.env.*
+**/.env
+**/.env.*
 !.env.example

@@ -24,6 +24,10 @@ COPY --from=deps /app/packages/email-templates/node_modules ./packages/email-tem
 COPY --from=deps /app/packages/widget-sdk/node_modules ./packages/widget-sdk/node_modules
 COPY . .
 
+# prisma.config.ts requires DATABASE_URL to be resolvable even for the
+# offline `prisma generate` (no DB connection is made). The real value is
+# injected at runtime by docker-compose.
+ENV DATABASE_URL=postgresql://placeholder:placeholder@localhost:5432/placeholder?schema=public
 # The Prisma client is gitignored, so it does not exist in a fresh
 # checkout — generate it BEFORE compiling the server. Run inside
 # apps/server so npx resolves the workspace's own prisma CLI.
