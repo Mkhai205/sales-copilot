@@ -1,4 +1,4 @@
-FROM node:22-alpine AS deps
+FROM public.ecr.aws/docker/library/node:22-alpine AS deps
 WORKDIR /app
 RUN corepack enable pnpm
 
@@ -10,7 +10,7 @@ COPY packages/widget-sdk/package.json ./packages/widget-sdk/
 
 RUN pnpm install --frozen-lockfile
 
-FROM node:22-alpine AS build
+FROM public.ecr.aws/docker/library/node:22-alpine AS build
 WORKDIR /app
 RUN corepack enable pnpm
 
@@ -29,7 +29,7 @@ ENV NEXT_PUBLIC_WS_URL=$NEXT_PUBLIC_WS_URL
 
 RUN pnpm nx build web
 
-FROM node:22-alpine AS production
+FROM public.ecr.aws/docker/library/node:22-alpine AS production
 WORKDIR /app
 
 COPY --from=build /app/apps/web/.next/standalone ./
