@@ -14,7 +14,6 @@ export interface PresenceIndicatorProps extends React.ComponentProps<'span'> {
   showTooltip?: boolean;
   showLabel?: boolean;
   pulse?: boolean;
-  workspaceSlug?: string;
   workspaceId?: string;
 }
 

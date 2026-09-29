@@ -165,12 +165,7 @@ export function ConversationActions({ conversation, workspaceSlug }: Conversatio
                 {members.map(member => (
                   <SelectItem key={member.id} value={member.userId}>
                     <span className="flex items-center gap-2">
-                      <PresenceIndicator
-                        userId={member.userId}
-                        workspaceSlug={workspaceSlug}
-                        size="xs"
-                        placement="inline"
-                      />
+                      <PresenceIndicator userId={member.userId} size="xs" placement="inline" />
                       <span className="truncate">
                         {member.user?.name || member.user?.email || member.userId.slice(0, 8)}
                       </span>
