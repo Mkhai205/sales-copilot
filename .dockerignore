@@ -1,0 +1,21 @@
+# Keep the build context lean and prevent host artifacts (e.g. Windows
+# node_modules junctions) from overwriting image-stage files during `COPY . .`
+node_modules
+**/node_modules
+**/dist
+**/.next
+**/coverage
+**/*.tsbuildinfo
+.git
+.github
+.agents
+.agentsignore
+.vscode
+.idea
+docs
+tmp
+logs
+*.log
+.env
+.env.*
+!.env.example

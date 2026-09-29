@@ -135,3 +135,29 @@ jobs:
 
       - name: Unit + Integration + E2E
         run: pnpm test:all
+
+  docker:
+    name: Docker Build
+    needs: [quality, test]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Builds (no push). Guards the server production image: workspace libs
+      # must be buildable and resolvable at runtime (package main -> dist).
+      - name: Build server image
+        run: docker build -f apps/server/Dockerfile -t sales-copilot-server:ci .
+
+      # Proves the compiled server layout resolves every runtime dependency —
+      # framework packages (pnpm project node_modules) and workspace libs
+      # (package main -> dist) — exactly as the server entry will.
+      - name: Smoke test dependency resolution in image
+        run: |
+          docker run --rm --entrypoint node sales-copilot-server:ci -e "
+            const entryDir = '/app/dist/apps/server/apps/server/src';
+            const contracts = require(require.resolve('@sales-copilot/shared-contracts', { paths: [entryDir] }));
+            if (!contracts.OrderStatus) throw new Error('shared-contracts dist not loadable');
+            require(require.resolve('@sales-copilot/email-templates', { paths: [entryDir] }));
+            require.resolve('@nestjs/common', { paths: [entryDir] });
+            console.log('server image dependency resolution OK');
+          "

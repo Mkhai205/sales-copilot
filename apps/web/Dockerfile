@@ -5,6 +5,7 @@ RUN corepack enable pnpm
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml nx.json tsconfig.base.json ./
 COPY apps/web/package.json ./apps/web/
 COPY packages/shared-contracts/package.json ./packages/shared-contracts/
+COPY packages/email-templates/package.json ./packages/email-templates/
 COPY packages/widget-sdk/package.json ./packages/widget-sdk/
 
 RUN pnpm install --frozen-lockfile
