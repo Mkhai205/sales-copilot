@@ -93,9 +93,17 @@ export function buildQueryString(params?: Record<string, any>): string {
   return qs ? `?${qs}` : '';
 }
 
+/** Default request timeout — hung backends must fail fast, not pend forever. */
+export const DEFAULT_REQUEST_TIMEOUT_MS = 15_000;
+
+export interface FetchApiOptions extends RequestInit {
+  /** Per-request timeout override; `0` disables the timeout entirely. */
+  timeoutMs?: number;
+}
+
 export async function fetchApi<T>(
   endpoint: string,
-  options?: RequestInit,
+  options?: FetchApiOptions,
 ): Promise<ApiResponse<T>> {
   const base = getApiBase();
   const url = endpoint.startsWith('http')
@@ -123,11 +131,33 @@ export async function fetchApi<T>(
     }
   }
 
-  const res = await fetch(url, {
-    ...options,
-    credentials: 'include', // Automatically send cookies for session/auth
-    headers,
-  });
+  const { timeoutMs, ...requestInit } = options ?? {};
+  const effectiveTimeout = timeoutMs ?? DEFAULT_REQUEST_TIMEOUT_MS;
+  const timeoutSignal = effectiveTimeout > 0 ? AbortSignal.timeout(effectiveTimeout) : undefined;
+  // Combine the timeout with any caller-provided signal (AbortSignal.any is
+  // available in all runtimes Next 16 targets).
+  const signal =
+    requestInit.signal && timeoutSignal
+      ? AbortSignal.any([requestInit.signal, timeoutSignal])
+      : (requestInit.signal ?? timeoutSignal);
+
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      ...requestInit,
+      signal,
+      credentials: 'include', // Automatically send cookies for session/auth
+      headers,
+    });
+  } catch (err) {
+    if (err instanceof Error && err.name === 'TimeoutError') {
+      throw new ApiClientError(408, {
+        code: 'REQUEST_TIMEOUT',
+        message: `Request to ${endpoint} timed out after ${effectiveTimeout}ms`,
+      });
+    }
+    throw err;
+  }
 
   if (!res.ok) {
     let errorPayload: ApiErrorPayload;

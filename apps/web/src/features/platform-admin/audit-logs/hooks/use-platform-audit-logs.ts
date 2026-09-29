@@ -7,6 +7,7 @@ import type {
   QueryPlatformAuditLogsDto,
 } from '@sales-copilot/shared-contracts';
 import { auditLogsApi } from '../api/audit-logs';
+import { platformAdminKeys } from '@/lib/query-keys';
 
 export interface UsePlatformAuditLogsResult {
   items: PlatformAuditLogDto[];
@@ -18,7 +19,7 @@ export interface UsePlatformAuditLogsResult {
  */
 export function usePlatformAuditLogs(params?: Partial<QueryPlatformAuditLogsDto>) {
   return useQuery<UsePlatformAuditLogsResult>({
-    queryKey: ['platform-admin', 'audit-logs', params],
+    queryKey: platformAdminKeys.auditLogs(params),
     queryFn: async () => {
       const res = await auditLogsApi.getAuditLogs(params);
       return {

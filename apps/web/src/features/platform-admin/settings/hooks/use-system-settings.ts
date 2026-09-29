@@ -8,10 +8,11 @@ import type {
   UpdateSystemSettingDto,
 } from '@sales-copilot/shared-contracts';
 import { systemSettingsApi } from '../api/settings';
+import { platformAdminKeys } from '@/lib/query-keys';
 
 export function useSystemSettings(category?: SystemSettingCategory | string) {
   return useQuery<SystemSettingItemDto[]>({
-    queryKey: ['platform-admin', 'settings', category],
+    queryKey: platformAdminKeys.settings.list(category),
     queryFn: async () => {
       const res = await systemSettingsApi.getSettings(category);
       return res.data;
@@ -35,16 +36,16 @@ export function useUpdateSystemSetting() {
       return res.data;
     },
     onMutate: async ({ key, payload }) => {
-      await queryClient.cancelQueries({ queryKey: ['platform-admin', 'settings'] });
+      await queryClient.cancelQueries({ queryKey: platformAdminKeys.settings.all });
 
       // Snapshot previous caches
       const previousData = queryClient.getQueriesData<SystemSettingItemDto[]>({
-        queryKey: ['platform-admin', 'settings'],
+        queryKey: platformAdminKeys.settings.all,
       });
 
       // Optimistically update all matching cached queries
       queryClient.setQueriesData<SystemSettingItemDto[]>(
-        { queryKey: ['platform-admin', 'settings'] },
+        { queryKey: platformAdminKeys.settings.all },
         old => {
           if (!old) return old;
           return old.map(setting =>
@@ -77,7 +78,7 @@ export function useUpdateSystemSetting() {
       }
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['platform-admin', 'settings'] });
+      queryClient.invalidateQueries({ queryKey: platformAdminKeys.settings.all });
     },
   });
 }

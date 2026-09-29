@@ -3,10 +3,11 @@
 import { useQuery } from '@tanstack/react-query';
 import type { PlatformMetricsOverviewDto } from '@sales-copilot/shared-contracts';
 import { metricsApi } from '../api/metrics';
+import { platformAdminKeys } from '@/lib/query-keys';
 
 export function usePlatformMetricsOverview() {
   return useQuery<PlatformMetricsOverviewDto>({
-    queryKey: ['platform-admin', 'metrics', 'overview'],
+    queryKey: platformAdminKeys.metrics,
     queryFn: async () => {
       const res = await metricsApi.getMetricsOverview();
       return res.data;

@@ -11,6 +11,7 @@ import type {
   UpdateWorkspacePlanDto,
 } from '@sales-copilot/shared-contracts';
 import { workspacesApi } from '../api/workspaces';
+import { platformAdminKeys } from '@/lib/query-keys';
 
 export interface UsePlatformWorkspacesResult {
   items: PlatformWorkspaceListItemDto[];
@@ -22,7 +23,7 @@ export interface UsePlatformWorkspacesResult {
  */
 export function usePlatformWorkspaces(params?: Partial<QueryPlatformWorkspacesDto>) {
   return useQuery<UsePlatformWorkspacesResult>({
-    queryKey: ['platform-admin', 'workspaces', params],
+    queryKey: platformAdminKeys.workspaces.list(params),
     queryFn: async () => {
       const res = await workspacesApi.getWorkspaces(params);
       return {
@@ -39,7 +40,7 @@ export function usePlatformWorkspaces(params?: Partial<QueryPlatformWorkspacesDt
  */
 export function usePlatformWorkspaceDetail(id?: string) {
   return useQuery<PlatformWorkspaceDetailDto>({
-    queryKey: ['platform-admin', 'workspaces', 'detail', id],
+    queryKey: platformAdminKeys.workspaces.detail(id),
     queryFn: async () => {
       if (!id) throw new Error('Workspace ID is required');
       const res = await workspacesApi.getWorkspaceDetail(id);
@@ -68,8 +69,8 @@ export function useUpdateWorkspacePlan() {
     },
     onSuccess: (data, variables) => {
       toast.success(`Cập nhật gói cước cho "${data.name}" thành công`);
-      queryClient.invalidateQueries({ queryKey: ['platform-admin', 'workspaces'] });
-      queryClient.setQueryData(['platform-admin', 'workspaces', 'detail', variables.id], data);
+      queryClient.invalidateQueries({ queryKey: platformAdminKeys.workspaces.all });
+      queryClient.setQueryData(platformAdminKeys.workspaces.detail(variables.id), data);
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Cập nhật gói cước thất bại');
@@ -96,8 +97,8 @@ export function useToggleWorkspaceStatus() {
     onSuccess: (data, variables) => {
       const actionText = variables.payload.isSuspended ? 'Tạm khóa' : 'Kích hoạt lại';
       toast.success(`${actionText} workspace "${data.name}" thành công`);
-      queryClient.invalidateQueries({ queryKey: ['platform-admin', 'workspaces'] });
-      queryClient.setQueryData(['platform-admin', 'workspaces', 'detail', variables.id], data);
+      queryClient.invalidateQueries({ queryKey: platformAdminKeys.workspaces.all });
+      queryClient.setQueryData(platformAdminKeys.workspaces.detail(variables.id), data);
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Thao tác trạng thái workspace thất bại');

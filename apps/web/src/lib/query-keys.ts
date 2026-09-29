@@ -221,3 +221,46 @@ export const knowledgeKeys = {
         ? (['knowledge', 'article', workspaceId] as const)
         : (['knowledge', 'article'] as const),
 };
+
+export const currentUserKeys = {
+  all: ['auth'] as const,
+  me: ['auth', 'me'] as const,
+};
+
+export const geoKeys = {
+  all: ['geo'] as const,
+  provinces: ['geo-provinces'] as const,
+  districts: (provinceName?: string) =>
+    provinceName !== undefined
+      ? (['geo-districts', provinceName] as const)
+      : (['geo-districts'] as const),
+  wards: (districtName?: string) =>
+    districtName !== undefined ? (['geo-wards', districtName] as const) : (['geo-wards'] as const),
+};
+
+export const platformAdminKeys = {
+  all: ['platform-admin'] as const,
+  metrics: ['platform-admin', 'metrics', 'overview'] as const,
+  auditLogs: (params?: any) =>
+    params !== undefined
+      ? (['platform-admin', 'audit-logs', params] as const)
+      : (['platform-admin', 'audit-logs'] as const),
+  settings: {
+    all: ['platform-admin', 'settings'] as const,
+    list: (category?: string) =>
+      category !== undefined
+        ? (['platform-admin', 'settings', category] as const)
+        : (['platform-admin', 'settings'] as const),
+  },
+  workspaces: {
+    all: ['platform-admin', 'workspaces'] as const,
+    list: (params?: any) =>
+      params !== undefined
+        ? (['platform-admin', 'workspaces', params] as const)
+        : (['platform-admin', 'workspaces'] as const),
+    detail: (id?: string) =>
+      id !== undefined
+        ? (['platform-admin', 'workspaces', 'detail', id] as const)
+        : (['platform-admin', 'workspaces', 'detail'] as const),
+  },
+};

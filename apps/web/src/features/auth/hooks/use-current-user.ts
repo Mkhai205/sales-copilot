@@ -2,12 +2,13 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { authApi } from '../api/auth';
+import { currentUserKeys } from '@/lib/query-keys';
 
 import type { UserDto } from '@sales-copilot/shared-contracts';
 
 export function useCurrentUser() {
   return useQuery<UserDto>({
-    queryKey: ['auth', 'me'],
+    queryKey: currentUserKeys.me,
     queryFn: async () => {
       const res = await authApi.me();
       return res.data;

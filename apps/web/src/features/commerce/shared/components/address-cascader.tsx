@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Field, FieldLabel } from '@/components/ui/field';
+import { geoKeys } from '@/lib/query-keys';
 
 interface AddressCascaderProps {
   province?: string;
@@ -45,7 +46,7 @@ export function AddressCascader({
   disabled = false,
 }: AddressCascaderProps) {
   const { data: provinces = [] } = useQuery({
-    queryKey: ['geo-provinces'],
+    queryKey: geoKeys.provinces,
     queryFn: fetchProvinces,
     staleTime: Infinity,
   });
@@ -59,7 +60,7 @@ export function AddressCascader({
   }, [province, provinces]);
 
   const { data: districts = [] } = useQuery({
-    queryKey: ['geo-districts', currentProvince?.name],
+    queryKey: geoKeys.districts(currentProvince?.name),
     queryFn: () =>
       currentProvince?.name ? fetchDistricts(currentProvince.name) : Promise.resolve([]),
     enabled: !!currentProvince?.name,
@@ -73,7 +74,7 @@ export function AddressCascader({
   }, [district, districts, currentProvince]);
 
   const { data: wards = [] } = useQuery({
-    queryKey: ['geo-wards', currentDistrict?.name],
+    queryKey: geoKeys.wards(currentDistrict?.name),
     queryFn: () => (currentDistrict?.name ? fetchWards(currentDistrict.name) : Promise.resolve([])),
     enabled: !!currentDistrict?.name,
     staleTime: Infinity,

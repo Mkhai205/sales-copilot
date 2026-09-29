@@ -9,6 +9,7 @@ import { QuotasTab } from '@/features/platform-admin/settings/components/quotas-
 import { Flag, Scale, RefreshCw, Zap } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { platformAdminKeys } from '@/lib/query-keys';
 
 export default function AdminSettingsPage() {
   const queryClient = useQueryClient();
@@ -17,7 +18,7 @@ export default function AdminSettingsPage() {
   const handleRefreshCache = async () => {
     setIsRefreshing(true);
     await queryClient.invalidateQueries({
-      queryKey: ['platform-admin', 'settings'],
+      queryKey: platformAdminKeys.settings.all,
     });
     setTimeout(() => {
       setIsRefreshing(false);
