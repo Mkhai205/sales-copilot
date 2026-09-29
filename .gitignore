@@ -89,3 +89,5 @@ apps/web/public/widget/
 # Secrets & Service Accounts
 **/secrets/
 *-service-account*.json
+# ZCode agent workspace (plans, session artifacts)
+.zcode/
