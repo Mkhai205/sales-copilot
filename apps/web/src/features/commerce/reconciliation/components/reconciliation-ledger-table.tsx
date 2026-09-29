@@ -1,14 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import type { ColumnDef } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -25,10 +18,8 @@ import {
   Eye,
   Link as LinkIcon,
   MoreHorizontal,
-  XCircle,
-  ChevronLeft,
-  ChevronRight,
   HelpCircle,
+  XCircle,
 } from 'lucide-react';
 import {
   PaymentTransactionStatus,
@@ -36,6 +27,7 @@ import {
   type PaginationMeta,
 } from '@sales-copilot/shared-contracts';
 import { formatDateTime } from '@/lib/format-date';
+import { DataTable } from '@/components/data-table/data-table';
 
 interface ReconciliationLedgerTableProps {
   transactions: PaymentTransactionResponseDto[];
@@ -58,237 +50,198 @@ export function ReconciliationLedgerTable({
   onSelectOrder,
   isOwnerOrAdmin = true,
 }: ReconciliationLedgerTableProps) {
-  if (isLoading) {
-    return (
-      <div className="rounded-md border bg-card overflow-hidden shadow-2xs">
-        <Table>
-          <TableHeader className="bg-muted/40 text-[11px]">
-            <TableRow>
-              <TableHead className="w-32">Mã GD / Cổng</TableHead>
-              <TableHead className="w-36">Thời gian</TableHead>
-              <TableHead className="w-36 text-right">Số tiền</TableHead>
-              <TableHead className="min-w-[200px]">Nội dung (Memo)</TableHead>
-              <TableHead className="w-48">Đơn hàng khớp</TableHead>
-              <TableHead className="w-32 text-center">Trạng thái</TableHead>
-              <TableHead className="w-16 text-right">Thao tác</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {Array.from({ length: 5 }).map((_, idx) => (
-              <TableRow key={idx}>
-                {Array.from({ length: 7 }).map((_, cIdx) => (
-                  <TableCell key={cIdx} className="py-3">
-                    <div className="h-4 w-full bg-muted/60 animate-pulse rounded" />
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-    );
-  }
-
-  if (transactions.length === 0) {
-    return (
-      <div className="rounded-md border bg-card p-12 text-center shadow-2xs space-y-3">
-        <div className="inline-flex p-3 rounded-full bg-muted text-muted-foreground">
-          <HelpCircle className="w-6 h-6" />
-        </div>
-        <div className="space-y-1">
-          <p className="text-sm font-semibold text-foreground">Không có giao dịch đối soát nào</p>
-          <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-            Chưa có biến động số dư ngân hàng nào phù hợp với bộ lọc hiện tại.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   const currentPage = meta?.page || 1;
   const totalPages = meta?.totalPages || 1;
 
-  return (
-    <div className="space-y-3">
-      <div className="rounded-md border bg-card overflow-hidden shadow-2xs">
-        <Table>
-          <TableHeader className="bg-muted/40 text-[11px]">
-            <TableRow>
-              <TableHead className="w-36">Mã GD / Cổng</TableHead>
-              <TableHead className="w-36">Thời gian</TableHead>
-              <TableHead className="w-36 text-right">Số tiền</TableHead>
-              <TableHead className="min-w-[200px]">Nội dung (Memo)</TableHead>
-              <TableHead className="w-52">Đơn hàng khớp</TableHead>
-              <TableHead className="w-32 text-center">Trạng thái</TableHead>
-              <TableHead className="w-16 text-right">Thao tác</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {transactions.map(tx => {
-              const isSuccess = tx.status === PaymentTransactionStatus.SUCCESS;
-              const isPending = tx.status === PaymentTransactionStatus.PENDING;
-
-              return (
-                <TableRow
-                  key={tx.id}
-                  className="hover:bg-muted/30 transition-colors text-xs cursor-pointer"
-                  onClick={() => onSelectTransaction(tx)}
-                >
-                  {/* Transaction Code & Gateway */}
-                  <TableCell className="font-mono">
-                    <div className="space-y-0.5">
-                      <span className="font-semibold text-foreground block truncate max-w-[120px]">
-                        {tx.transactionCode || tx.id.slice(0, 8).toUpperCase()}
-                      </span>
-                      <Badge variant="outline" className="text-[10px] px-1 py-0 h-4">
-                        {tx.gateway}
-                      </Badge>
-                    </div>
-                  </TableCell>
-
-                  {/* Timestamp */}
-                  <TableCell className="text-muted-foreground">
-                    {formatDateTime(tx.paidAt || tx.createdAt)}
-                  </TableCell>
-
-                  {/* Amount */}
-                  <TableCell className="text-right font-bold text-emerald-600 dark:text-emerald-400">
-                    +{formatVND(Number(tx.amount))}
-                  </TableCell>
-
-                  {/* Memo */}
-                  <TableCell>
-                    <p
-                      className="font-medium text-foreground truncate max-w-[240px]"
-                      title={tx.transferContent || ''}
-                    >
-                      {tx.transferContent || (
-                        <span className="text-muted-foreground italic">Trống</span>
-                      )}
-                    </p>
-                  </TableCell>
-
-                  {/* Matched Order */}
-                  <TableCell onClick={e => e.stopPropagation()}>
-                    {tx.order ? (
-                      <button
-                        onClick={() => onSelectOrder(tx.order!.id)}
-                        className="flex items-center gap-1.5 text-primary hover:underline font-semibold"
-                      >
-                        <span>#{tx.order.displayId || tx.order.orderNumber}</span>
-                        <ExternalLink className="w-3 h-3 text-muted-foreground" />
-                      </button>
-                    ) : isPending ? (
-                      <div className="flex items-center gap-2">
-                        <Badge
-                          variant="outline"
-                          className="text-[10px] text-muted-foreground border-dashed"
-                        >
-                          Chưa gán
-                        </Badge>
-                        {isOwnerOrAdmin && (
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            onClick={() => onManualMatch(tx)}
-                            className="h-6 text-[11px] px-2 text-primary font-medium"
-                          >
-                            <LinkIcon className="w-3 h-3 mr-1" />
-                            Gán đơn
-                          </Button>
-                        )}
-                      </div>
-                    ) : (
-                      <span className="text-muted-foreground text-[11px]">-</span>
-                    )}
-                  </TableCell>
-
-                  {/* Status Badge */}
-                  <TableCell className="text-center">
-                    {isSuccess ? (
-                      <Badge className="bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 text-[11px] px-2 py-0.5 border-0 inline-flex items-center gap-1">
-                        <CheckCircle2 className="w-3 h-3" /> Đã đối soát
-                      </Badge>
-                    ) : isPending ? (
-                      <Badge
-                        variant="outline"
-                        className="border-amber-400 text-amber-600 bg-amber-50 dark:bg-amber-950/20 text-[11px] px-2 py-0.5 inline-flex items-center gap-1"
-                      >
-                        <Clock className="w-3 h-3" /> Chờ đối soát
-                      </Badge>
-                    ) : (
-                      <Badge
-                        variant="destructive"
-                        className="text-[11px] px-2 py-0.5 inline-flex items-center gap-1"
-                      >
-                        <XCircle className="w-3 h-3" /> Thất bại
-                      </Badge>
-                    )}
-                  </TableCell>
-
-                  {/* Actions Dropdown */}
-                  <TableCell className="text-right" onClick={e => e.stopPropagation()}>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 text-muted-foreground"
-                        >
-                          <MoreHorizontal className="w-4 h-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="text-xs">
-                        <DropdownMenuItem onClick={() => onSelectTransaction(tx)}>
-                          <Eye className="w-3.5 h-3.5 mr-2" /> Xem chi tiết
-                        </DropdownMenuItem>
-                        {isPending && isOwnerOrAdmin && (
-                          <DropdownMenuItem onClick={() => onManualMatch(tx)}>
-                            <LinkIcon className="w-3.5 h-3.5 mr-2 text-primary" /> Gán đơn thủ công
-                          </DropdownMenuItem>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      </div>
-
-      {/* Pagination Controls */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between px-1 text-xs text-muted-foreground">
-          <span>
-            Hiển thị trang {currentPage} trên {totalPages} (tổng số{' '}
-            {meta?.total || transactions.length} giao dịch)
+  const columns = React.useMemo<ColumnDef<PaymentTransactionResponseDto, any>[]>(
+    () => [
+      {
+        header: 'Mã GD / Cổng',
+        meta: { headerClassName: 'w-36' },
+        cell: ({ row }) => {
+          const tx = row.original;
+          return (
+            <div className="space-y-0.5 font-mono">
+              <span className="font-semibold text-foreground block truncate max-w-[120px]">
+                {tx.transactionCode || tx.id.slice(0, 8).toUpperCase()}
+              </span>
+              <Badge variant="outline" className="text-[10px] px-1 py-0 h-4">
+                {tx.gateway}
+              </Badge>
+            </div>
+          );
+        },
+      },
+      {
+        header: 'Thời gian',
+        meta: { headerClassName: 'w-36' },
+        cell: ({ row }) => (
+          <span className="text-muted-foreground">
+            {formatDateTime(row.original.paidAt || row.original.createdAt)}
           </span>
-          <div className="flex items-center gap-1.5">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onPageChange(currentPage - 1)}
-              disabled={currentPage <= 1}
-              className="h-8 px-2"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
-            <span className="font-medium text-foreground px-2">
-              {currentPage} / {totalPages}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onPageChange(currentPage + 1)}
-              disabled={currentPage >= totalPages}
-              className="h-8 px-2"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </Button>
+        ),
+      },
+      {
+        header: 'Số tiền',
+        meta: { headerClassName: 'w-36 text-right' },
+        cell: ({ row }) => (
+          <div className="text-right font-bold text-emerald-600 dark:text-emerald-400">
+            +{formatVND(Number(row.original.amount))}
           </div>
-        </div>
-      )}
-    </div>
+        ),
+      },
+      {
+        header: 'Nội dung (Memo)',
+        meta: { headerClassName: 'min-w-[200px]' },
+        cell: ({ row }) => (
+          <p
+            className="font-medium text-foreground truncate max-w-[240px]"
+            title={row.original.transferContent || ''}
+          >
+            {row.original.transferContent || (
+              <span className="text-muted-foreground italic">Trống</span>
+            )}
+          </p>
+        ),
+      },
+      {
+        header: 'Đơn hàng khớp',
+        meta: { headerClassName: 'w-52' },
+        cell: ({ row }) => {
+          const tx = row.original;
+          const isPending = tx.status === PaymentTransactionStatus.PENDING;
+          const order = tx.order;
+          return (
+            <div onClick={e => e.stopPropagation()}>
+              {order ? (
+                <button
+                  onClick={() => onSelectOrder(order.id)}
+                  className="flex items-center gap-1.5 text-primary hover:underline font-semibold"
+                >
+                  <span>#{order.displayId || order.orderNumber}</span>
+                  <ExternalLink className="w-3 h-3 text-muted-foreground" />
+                </button>
+              ) : isPending ? (
+                <div className="flex items-center gap-2">
+                  <Badge
+                    variant="outline"
+                    className="text-[10px] text-muted-foreground border-dashed"
+                  >
+                    Chưa gán
+                  </Badge>
+                  {isOwnerOrAdmin && (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => onManualMatch(tx)}
+                      className="h-6 text-[11px] px-2 text-primary font-medium"
+                    >
+                      <LinkIcon className="w-3 h-3 mr-1" />
+                      Gán đơn
+                    </Button>
+                  )}
+                </div>
+              ) : (
+                <span className="text-muted-foreground text-[11px]">-</span>
+              )}
+            </div>
+          );
+        },
+      },
+      {
+        header: 'Trạng thái',
+        meta: { headerClassName: 'w-32 text-center' },
+        cell: ({ row }) => {
+          const tx = row.original;
+          const isSuccess = tx.status === PaymentTransactionStatus.SUCCESS;
+          const isPending = tx.status === PaymentTransactionStatus.PENDING;
+          return (
+            <div className="text-center">
+              {isSuccess ? (
+                <Badge className="bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 text-[11px] px-2 py-0.5 border-0 inline-flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3" /> Đã đối soát
+                </Badge>
+              ) : isPending ? (
+                <Badge
+                  variant="outline"
+                  className="border-amber-400 text-amber-600 bg-amber-50 dark:bg-amber-950/20 text-[11px] px-2 py-0.5 inline-flex items-center gap-1"
+                >
+                  <Clock className="w-3 h-3" /> Chờ đối soát
+                </Badge>
+              ) : (
+                <Badge
+                  variant="destructive"
+                  className="text-[11px] px-2 py-0.5 inline-flex items-center gap-1"
+                >
+                  <XCircle className="w-3 h-3" /> Thất bại
+                </Badge>
+              )}
+            </div>
+          );
+        },
+      },
+      {
+        header: 'Thao tác',
+        meta: { headerClassName: 'w-16 text-right' },
+        cell: ({ row }) => {
+          const tx = row.original;
+          const isPending = tx.status === PaymentTransactionStatus.PENDING;
+          return (
+            <div className="flex justify-end" onClick={e => e.stopPropagation()}>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground">
+                    <MoreHorizontal className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="text-xs">
+                  <DropdownMenuItem onClick={() => onSelectTransaction(tx)}>
+                    <Eye className="w-3.5 h-3.5 mr-2" /> Xem chi tiết
+                  </DropdownMenuItem>
+                  {isPending && isOwnerOrAdmin && (
+                    <DropdownMenuItem onClick={() => onManualMatch(tx)}>
+                      <LinkIcon className="w-3.5 h-3.5 mr-2 text-primary" /> Gán đơn thủ công
+                    </DropdownMenuItem>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          );
+        },
+      },
+    ],
+    [onSelectTransaction, onManualMatch, onSelectOrder, isOwnerOrAdmin],
+  );
+
+  return (
+    <DataTable
+      data={transactions}
+      columns={columns}
+      isLoading={isLoading}
+      skeletonRows={5}
+      getRowKey={tx => tx.id}
+      onRowClick={onSelectTransaction}
+      className="rounded-md border bg-card overflow-hidden shadow-2xs [&_thead]:bg-muted/40 [&_thead]:text-[11px]"
+      emptyState={{
+        icon: (
+          <div className="inline-flex p-3 rounded-full bg-muted text-muted-foreground">
+            <HelpCircle className="w-6 h-6" />
+          </div>
+        ),
+        title: 'Không có giao dịch đối soát nào',
+        description: 'Chưa có biến động số dư ngân hàng nào phù hợp với bộ lọc hiện tại.',
+      }}
+      pagination={
+        totalPages > 1
+          ? {
+              page: currentPage,
+              totalPages,
+              total: meta?.total || transactions.length,
+              onPageChange,
+              isLoading,
+            }
+          : undefined
+      }
+    />
   );
 }
