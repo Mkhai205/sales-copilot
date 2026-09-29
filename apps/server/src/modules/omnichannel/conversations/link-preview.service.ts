@@ -1,5 +1,6 @@
 import { Injectable, Logger, Optional } from '@nestjs/common';
 import { RedisService } from '../../../infrastructure/redis/redis.service';
+import { assertSafePublicUrl } from '../../../common/utils/ssrf-guard';
 
 export interface LinkPreviewData {
   url: string;
@@ -92,19 +93,16 @@ export class LinkPreviewService {
     }
 
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3500);
-
-      const response = await fetch(trimmed, {
-        signal: controller.signal,
-        headers: {
-          'User-Agent':
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 SalesCopilot/1.0',
-          Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        },
-      });
-
-      clearTimeout(timeoutId);
+      // SSRF guard (A8): the URL is user-supplied — validate the target and every
+      // redirect hop; private/loopback/link-local/metadata addresses are rejected.
+      let target = await assertSafePublicUrl(trimmed);
+      let response = await this.fetchWithTimeout(target.href);
+      for (let hop = 0; hop < 2 && response.status >= 300 && response.status < 400; hop++) {
+        const location = response.headers.get('location');
+        if (!location) break;
+        target = await assertSafePublicUrl(new URL(location, target).href);
+        response = await this.fetchWithTimeout(target.href);
+      }
 
       if (!response.ok) {
         const fallback = { url: trimmed, siteName: hostname };
@@ -157,6 +155,28 @@ export class LinkPreviewService {
     }
 
     return accumulated;
+  }
+
+  /**
+   * Single fetch with a hard timeout and manual redirect handling (redirects are
+   * re-validated by the SSRF guard in getPreview).
+   */
+  private async fetchWithTimeout(url: string): Promise<Response> {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3500);
+    try {
+      return await fetch(url, {
+        signal: controller.signal,
+        redirect: 'manual',
+        headers: {
+          'User-Agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 SalesCopilot/1.0',
+          Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        },
+      });
+    } finally {
+      clearTimeout(timeoutId);
+    }
   }
 
   private parseOpenGraph(html: string, originalUrl: string, defaultHost: string): LinkPreviewData {

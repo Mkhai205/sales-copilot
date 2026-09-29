@@ -176,7 +176,7 @@ export class AttachmentsService {
       },
     });
 
-    const fileUrl = this.storageService.getPublicUrl(storageKey);
+    const fileUrl = await this.storageService.getSignedUrl(storageKey);
 
     this.logger.debug(
       `Created attachment ${attachment.id} for message ${messageId} at path ${storageKey}`,
@@ -236,7 +236,7 @@ export class AttachmentsService {
       data.fileUrl ??
       (data.storagePath.startsWith('http')
         ? data.storagePath
-        : this.storageService.getPublicUrl(data.storagePath));
+        : await this.storageService.getSignedUrl(data.storagePath));
 
     return { ...attachment, fileUrl } as AttachmentDto;
   }
@@ -372,7 +372,7 @@ export class AttachmentsService {
 
     const fileUrl = attachment.storagePath.startsWith('http')
       ? attachment.storagePath
-      : this.storageService.getPublicUrl(attachment.storagePath);
+      : await this.storageService.getSignedUrl(attachment.storagePath);
 
     return { ...attachment, fileUrl } as AttachmentDto;
   }
@@ -395,12 +395,14 @@ export class AttachmentsService {
       });
     }
 
-    return message.attachments.map(att => {
-      const fileUrl = att.storagePath.startsWith('http')
-        ? att.storagePath
-        : this.storageService.getPublicUrl(att.storagePath);
-      return { ...att, fileUrl } as AttachmentDto;
-    });
+    return Promise.all(
+      message.attachments.map(async att => {
+        const fileUrl = att.storagePath.startsWith('http')
+          ? att.storagePath
+          : await this.storageService.getSignedUrl(att.storagePath);
+        return { ...att, fileUrl } as AttachmentDto;
+      }),
+    );
   }
 
   /**

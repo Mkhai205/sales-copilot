@@ -14,7 +14,7 @@ import { ConfigService } from '@nestjs/config';
 import type { Readable } from 'stream';
 
 /** Prefixes allowed for public read access (without presigned URL) */
-const PUBLIC_BUCKET_PREFIXES = ['avatars', 'attachments', 'public'] as const;
+const PUBLIC_BUCKET_PREFIXES = ['avatars', 'public'] as const;
 
 export type StorageUploadBody = Buffer | Uint8Array | Readable | Blob | string;
 

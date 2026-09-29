@@ -291,8 +291,9 @@ describe('AttachmentsService (Task T-1.5.5: Attachment & Media Storage Integrati
       expect(result.fileSize).toBe(mockBuffer.length);
       expect(result.contentType).toBe('image/jpeg');
       expect(result.storagePath).toBe(uploadedFiles[0].key);
+      // S5: fileUrl is now a presigned (bounded-time) URL instead of a public one
       expect(result.fileUrl).toBe(
-        `http://localhost:9000/sales-copilot-dev/${uploadedFiles[0].key}`,
+        `http://localhost:9000/sales-copilot-dev/${uploadedFiles[0].key}?signed=true`,
       );
     });
   });

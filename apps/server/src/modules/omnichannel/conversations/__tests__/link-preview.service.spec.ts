@@ -1,4 +1,10 @@
 import { LinkPreviewService } from '../link-preview.service';
+import { assertSafePublicUrl } from '../../../../common/utils/ssrf-guard';
+
+// The SSRF guard resolves real DNS — mock it as a passthrough for unit tests.
+jest.mock('../../../../common/utils/ssrf-guard', () => ({
+  assertSafePublicUrl: jest.fn(async (raw: string) => new URL(raw)),
+}));
 
 describe('LinkPreviewService', () => {
   let service: LinkPreviewService;
@@ -17,6 +23,42 @@ describe('LinkPreviewService', () => {
     const res = await service.getPreview('not-a-url');
     expect(res.url).toBe('not-a-url');
     expect(res.title).toBe(undefined);
+  });
+
+  describe('SSRF guard (A8)', () => {
+    it('does not fetch private/metadata URLs and returns a fallback preview', async () => {
+      const fetchSpy = jest.fn();
+      globalThis.fetch = fetchSpy as any;
+
+      jest
+        .mocked(assertSafePublicUrl)
+        .mockRejectedValueOnce(new Error('URL blocked by SSRF guard: private_address'));
+
+      const res = await service.getPreview('http://169.254.169.254/latest/meta-data/');
+
+      // Guard rejected the URL before any request left the server
+      expect(fetchSpy).not.toHaveBeenCalled();
+      expect(res.url).toBe('http://169.254.169.254/latest/meta-data/');
+      expect(res.title).toBe(undefined);
+    });
+
+    it('follows public redirects that re-validate safely', async () => {
+      const responses = [
+        new Response('', { status: 301, headers: { location: 'https://example.com/final' } }),
+        new Response(
+          '<html><head><meta property="og:title" content="Redirected" /></head></html>',
+          { status: 200, headers: { 'content-type': 'text/html' } },
+        ),
+      ];
+      let calls = 0;
+      globalThis.fetch = (async () => responses[calls++]) as any;
+      jest.mocked(assertSafePublicUrl).mockResolvedValue(new URL('https://example.com/final'));
+
+      const res = await service.getPreview('https://example.com/redirecting');
+
+      expect(calls).toBe(2);
+      expect(res.title).toBe('Redirected');
+    });
   });
 
   it('should extract og:title, og:description, og:image, and og:site_name', async () => {

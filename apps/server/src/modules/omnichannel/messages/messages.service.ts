@@ -619,7 +619,7 @@ export class MessagesService {
     for (const att of message.attachments || []) {
       const url = att.storagePath?.startsWith('http')
         ? att.storagePath
-        : this.storageService?.getPublicUrl(att.storagePath);
+        : await this.storageService?.getSignedUrl(att.storagePath);
       if (url) {
         attachmentUrls.set(att.id, url);
       }
@@ -700,24 +700,26 @@ export class MessagesService {
     const userMap = new Map(users.map(u => [u.id, u]));
     const contactMap = new Map(contacts.map(c => [c.id, c]));
 
-    return messages.map(msg => {
-      if (msg.senderType === SenderType.USER && msg.senderId) {
-        msg.senderUser = userMap.get(msg.senderId) ?? null;
-      } else if (msg.senderType === SenderType.CONTACT && msg.senderId) {
-        msg.senderContact = contactMap.get(msg.senderId) ?? null;
-      }
-
-      const attachmentUrls = new Map<string, string>();
-      for (const att of msg.attachments || []) {
-        const url = att.storagePath?.startsWith('http')
-          ? att.storagePath
-          : this.storageService?.getPublicUrl(att.storagePath);
-        if (url) {
-          attachmentUrls.set(att.id, url);
+    return Promise.all(
+      messages.map(async msg => {
+        if (msg.senderType === SenderType.USER && msg.senderId) {
+          msg.senderUser = userMap.get(msg.senderId) ?? null;
+        } else if (msg.senderType === SenderType.CONTACT && msg.senderId) {
+          msg.senderContact = contactMap.get(msg.senderId) ?? null;
         }
-      }
 
-      return mapMessageToDto(msg, { attachmentUrls });
-    });
+        const attachmentUrls = new Map<string, string>();
+        for (const att of msg.attachments || []) {
+          const url = att.storagePath?.startsWith('http')
+            ? att.storagePath
+            : await this.storageService?.getSignedUrl(att.storagePath);
+          if (url) {
+            attachmentUrls.set(att.id, url);
+          }
+        }
+
+        return mapMessageToDto(msg, { attachmentUrls });
+      }),
+    );
   }
 }
