@@ -133,7 +133,7 @@ export function MessageItem({
 
   // 2. Private Note (Internal only)
   if (isPrivate) {
-    const authorName = message.sender?.name || 'Agent';
+    const authorName = message.sender?.name || 'Nhân viên';
     const authorInitials = authorName
       .split(' ')
       .map(n => n[0])
@@ -159,7 +159,7 @@ export function MessageItem({
                 <span className="text-xs font-semibold text-foreground">{authorName}</span>
                 <span className="inline-flex items-center gap-1 rounded-sm bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 dark:text-amber-300">
                   <Lock className="size-2.5" />
-                  Private Note
+                  Ghi chú nội bộ
                 </span>
               </div>
             </div>
@@ -227,13 +227,15 @@ export function MessageItem({
                     >
                       <Sparkles className="size-2.5 text-primary" />
                       <span>
-                        {aiDebug.toolCalls?.length ? `${aiDebug.toolCalls.length} tools` : 'Debug'}
+                        {aiDebug.toolCalls?.length
+                          ? `${aiDebug.toolCalls.length} công cụ`
+                          : 'Chi tiết'}
                       </span>
                     </Button>
                   )}
                 </span>
               ) : (
-                <span>You</span>
+                <span>Bạn</span>
               )}
               {' • '}
               {formatMessageTime(message.createdAt)}
@@ -294,7 +296,7 @@ export function MessageItem({
             <MessageFooter className="gap-1.5 text-[10px] text-muted-foreground items-center justify-end">
               <DeliveryStatusIcon status={message.deliveryStatus} />
               {message.deliveryStatus === DeliveryStatus.FAILED && (
-                <span className="text-destructive font-medium">Failed to send</span>
+                <span className="text-destructive font-medium">Gửi thất bại</span>
               )}
             </MessageFooter>
           </MessageContent>
@@ -332,7 +334,7 @@ export function MessageItem({
 
         <MessageContent className="items-start">
           <MessageHeader>
-            {message.sender?.name || contactName || 'Contact'} •{' '}
+            {message.sender?.name || contactName || 'Khách hàng'} •{' '}
             {formatMessageTime(message.createdAt)}
           </MessageHeader>
 

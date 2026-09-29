@@ -111,10 +111,10 @@ export function MessageThread({
             <div className="rounded-full bg-muted p-3">
               <MessageSquare className="size-6 text-muted-foreground/60 stroke-[1.5]" />
             </div>
-            <p className="text-xs font-medium text-foreground">No messages yet</p>
+            <p className="text-xs font-medium text-foreground">Chưa có tin nhắn</p>
             <p className="text-[11px] text-muted-foreground max-w-xs leading-relaxed">
-              This conversation doesn&apos;t have any messages. Start the conversation using the
-              composer below.
+              Hội thoại này chưa có tin nhắn nào. Bắt đầu cuộc trò chuyện ở khung soạn thảo bên
+              dưới.
             </p>
           </div>
         ) : (
@@ -206,7 +206,7 @@ export function MessageThread({
               ) : (
                 <>
                   <ArrowDown className="size-3.5" />
-                  <span className="sr-only">Scroll to end</span>
+                  <span className="sr-only">Cuộn xuống cuối</span>
                 </>
               )}
             </MessageScrollerButton>

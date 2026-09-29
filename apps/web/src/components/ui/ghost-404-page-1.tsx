@@ -14,9 +14,9 @@ interface GhostNotFoundProps {
 
 export function GhostNotFound({
   homeHref = '/',
-  homeText = 'Find shelter',
-  title = 'Boo! Page missing!',
-  subtitle = "Whoops! This page must be a ghost - it's not here!",
+  homeText = 'Về trang chủ',
+  title = 'Hư ảo! Trang này biến mất rồi!',
+  subtitle = 'Rất tiếc! Trang này chỉ là bóng ma — nó không tồn tại ở đâu cả!',
 }: GhostNotFoundProps) {
   const [showExplanation, setShowExplanation] = React.useState(false);
 
