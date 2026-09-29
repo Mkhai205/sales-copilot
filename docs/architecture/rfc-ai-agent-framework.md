@@ -4,8 +4,7 @@
 > **Dự án**: Sales Copilot Platform\
 > **Vị trí file**: `docs/architecture/rfc-ai-agent-framework.md`\
 > **Trạng thái**: ✅ Confirmed\
-> **PRD đối ứng**: [`docs/product/prd-ai-agent-framework.md`](../product/prd-ai-agent-framework.md)\
-> **Backlog**: [`Epic 3.0`](../backlog/epic-3.0-ai-legacy-cleanup.md) · [`3.1`](../backlog/epic-3.1-ai-agent-core.md) · [`3.2`](../backlog/epic-3.2-commerce-tool-registry.md) · [`3.3`](../backlog/epic-3.3-comment-guard.md) · [`3.4`](../backlog/epic-3.4-ai-settings-ui.md)
+> **PRD đối ứng**: [`docs/product/prd-ai-agent-framework.md`](../product/prd-ai-agent-framework.md)
 
 ---
 

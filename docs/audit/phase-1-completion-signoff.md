@@ -11,6 +11,8 @@
 > - `docs/backlog/backlog.md` (Phase 1 Epics 1.0 to 1.11)
 > - Subagent Audit Handoffs: `explorer_m1_server`, `explorer_m1_web`, `worker_m1_test`
 
+> ⚠️ **Ghi chú 2026-09-29**: Các tài liệu baseline được nhắc trong biên bản này (`10-master-remediation-plan.md`, `backlog/backlog.md`) đã được dọn khỏi repo trong đợt chuẩn hóa tài liệu — nội dung gốc nằm trong git history (`git log --oneline -- docs/audit docs/backlog`).
+
 ---
 
 ## 1. Executive Summary & Official Sign-off Declaration

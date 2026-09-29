@@ -4,7 +4,7 @@
 > **Dự án**: Sales Copilot Platform — AI Agent Framework\
 > **Vị trí file**: `docs/product/prd-ai-agent-framework.md`\
 > **Trạng thái**: ✅ Confirmed\
-> **Tham chiếu**: [`01-vision.md`](../product/01-vision.md) · Epics: [`3.0`](../backlog/epic-3.0-ai-legacy-cleanup.md) · [`3.1`](../backlog/epic-3.1-ai-agent-core.md) · [`3.2`](../backlog/epic-3.2-commerce-tool-registry.md) · [`3.3`](../backlog/epic-3.3-comment-guard.md) · [`3.4`](../backlog/epic-3.4-ai-settings-ui.md)
+> **Tham chiếu**: [`01-vision.md`](../product/01-vision.md)
 
 ---
 
@@ -186,19 +186,7 @@ Hệ thống đã có `LlmGatewayService` tự viết với `GeminiAdapter` (`@g
 
 ---
 
-## 7. Lộ Trình Triển Khai
-
-| Epic | Nội dung | Thời gian | Tiên quyết |
-|---|---|---|---|
-| **[3.0](../backlog/epic-3.0-ai-legacy-cleanup.md)** | Xóa toàn bộ code AI cũ (`llm-gateway/`, `commerce/automation/`, shared contracts, frontend UI cũ). Cài `ai` + `@ai-sdk/google` | 2-3 ngày | — |
-| **[3.1](../backlog/epic-3.1-ai-agent-core.md)** | AI Agent Core: Vercel AI SDK integration, BullMQ Worker, Dispatcher, Context Builder, Human Takeover, Prisma migration | 2-3 tuần | 3.0 |
-| **[3.2](../backlog/epic-3.2-commerce-tool-registry.md)** | 9 Commerce Tools: searchProducts, extractShippingInfo, evaluateDiscount, createDraftOrder, confirmAndGenerateQR, escalateToHuman... | 2-3 tuần | 3.1 |
-| **[3.3](../backlog/epic-3.3-comment-guard.md)** | Comment Guard: FB feed webhook, Regex quét SĐT, Graph API hide, Private Reply, lead conversion | 1-1.5 tuần | 3.1 |
-| **[3.4](../backlog/epic-3.4-ai-settings-ui.md)** | AI Settings UI: Toggle AUTOPILOT, discount config, persona, custom instructions, Comment Guard settings, Conversation AI badge + Takeover button | 1-2 tuần | 3.1 + 3.2 |
-
----
-
-## 8. Rủi Ro & Biện Pháp Giảm Thiểu
+## 7. Rủi Ro & Biện Pháp Giảm Thiểu
 
 | Rủi ro | Mức độ | Biện pháp |
 |---|---|---|

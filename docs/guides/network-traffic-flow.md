@@ -65,7 +65,7 @@
   2. Khi Meta hoặc SePay gửi webhook tới `https://sales-copilot.kakadev.xyz/api/...`:
      - Cloudflare đẩy qua tunnel vào container `cloudflared`.
      - `cloudflared` gửi sang container `nginx`.
-     - Nhờ cấu hình [`config/nginx/dev.conf`](file:///d:/workspace/Sales%20Copilot/config/nginx/dev.conf), Nginx sử dụng gateway đặc biệt **`host.docker.internal`** để chuyển tiếp traffic ngược trở lại ứng dụng đang chạy ở máy thật của bạn (`:8000` cho API, `:3000` cho Web).
+     - Nhờ cấu hình [`config/nginx/dev.conf`](../../config/nginx/dev.conf), Nginx sử dụng gateway đặc biệt **`host.docker.internal`** để chuyển tiếp traffic ngược trở lại ứng dụng đang chạy ở máy thật của bạn (`:8000` cho API, `:3000` cho Web).
   3. Khi trình duyệt gọi link ảnh `https://storage-sales-copilot.kakadev.xyz/...`:
      - `cloudflared` chuyển tiếp thẳng vào container `minio:9000`.
 

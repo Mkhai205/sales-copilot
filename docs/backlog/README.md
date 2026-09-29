@@ -21,7 +21,7 @@ sequenceDiagram
     participant Code as Codebase & Tests
     participant Git as Git Version Control
 
-    User->>Backlog: 1. Chọn Feature cần làm (VD: Feature 3A.1)
+    User->>Backlog: 1. Chọn Feature cần làm (VD: TASK-3C-01)
     User->>Agent: 2. Giao việc bằng Mẫu Prompt chuẩn (hoặc dùng /boost)
     Agent->>Code: Tự động khảo sát codebase hiện hữu
     Agent->>Plan: Tạo implementation_plan.md (Target Files, DTO, API, UI)
@@ -45,12 +45,12 @@ Mỗi Feature trong Backlog được chuẩn hóa thành 5 đề mục sắc bé
 
 ## Phân Kỳ Hiện Tại
 
-| Phase | Tên | Trạng Thái | Tài Liệu |
+| Phase | Tên | Trạng Thái | Tài liệu hiện hành |
 |:------|:----|:----------:|:---------|
-| Phase 1 | Foundation & Omnichannel | ✅ Done | [archive/phase-1/](archive/phase-1/) |
-| Phase 2 | Commerce & Orders | ✅ Done | [archive/phase-2/](archive/phase-2/) |
-| Phase 3 | AI Agent & Cleanup | ✅ Done | [archive/phase-3/](archive/phase-3/) |
-| Phase 3C | Expansion (Shipping v2, Zalo) | 📋 Planned | [phase-3c-expansion.md](phase-3c-expansion.md) |
-| **Phase 4** | **Comprehensive Codebase Audit** | **✅ Done (2026-09-28)** | **[phase-4-codebase-audit.md](phase-4-codebase-audit.md)** |
-| AI Backlog | AI Chatbot Hardening | ✅ Done | [ai-chatbot-backlog.md](ai-chatbot-backlog.md) |
+| Phase 1 | Foundation & Omnichannel | ✅ Done | [Biên bản nghiệm thu](../audit/phase-1-completion-signoff.md) |
+| Phase 2 | Commerce & Orders | ✅ Done | [PRD Commerce](../product/prd-commerce-and-orders.md) · [RFC](../architecture/rfc-commerce-and-orders.md) |
+| Phase 3 | AI Agent & Cleanup | ✅ Done | [PRD AI Agent](../product/prd-ai-agent-framework.md) · [RFC](../architecture/rfc-ai-agent-framework.md) |
+| Phase 4 | Comprehensive Codebase Audit | ✅ Done (2026-09-28) | [Audit-of-Record Phase 4](../audit/) |
+| **Phase 3C** | **Expansion (Shipping v2, Zalo)** | **📋 Up next** | **[phase-3c-expansion.md](phase-3c-expansion.md)** |
 
+> 🗄️ Backlog chi tiết (epic/feature) của các phase đã nghiệm thu **không còn trong repo** — lịch sử nằm trong git: `git log --oneline -- "docs/backlog/archive"`.

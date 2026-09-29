@@ -5,7 +5,7 @@
 > **Dự án**: Sales Copilot Platform  
 > **Vị trí file**: `docs/product/prd-super-admin.md`  
 > **Trạng thái**: Đã phê duyệt (Approved Baseline)  
-> **Tài liệu kỹ thuật đối ứng**: [`docs/architecture/rfc-super-admin.md`](../architecture/rfc-super-admin.md) | [`docs/backlog/epic-2.4-super-admin-portal.md`](../backlog/epic-2.4-super-admin-portal.md)  
+> **Tài liệu kỹ thuật đối ứng**: [`docs/architecture/rfc-super-admin.md`](../architecture/rfc-super-admin.md)  
 
 ---
 
