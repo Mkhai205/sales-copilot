@@ -17,6 +17,7 @@ import { ConversationCard } from './conversation-card';
 import { ConversationListFilters } from './conversation-list-filters';
 import { ConversationFilterPopover } from './conversation-filter-popover';
 import { ConversationActiveChips } from './conversation-active-chips';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import { useConversations } from './hooks/use-conversations';
 import { useConversationFilters } from './hooks/use-conversation-filters';
 import { cn } from '@/lib/utils';
@@ -78,6 +79,17 @@ export function ConversationList({ workspaceSlug, activeConversationId }: Conver
     workspaceId,
   } = useConversations({
     filters: apiQuery,
+  });
+
+  // Virtualization: infinite scroll can grow the list to hundreds of cards.
+  // Dynamic measurement — ConversationCard heights vary with preview/labels.
+  const scrollAreaRef = React.useRef<HTMLDivElement>(null);
+  const virtualizer = useVirtualizer({
+    count: conversations.length,
+    getScrollElement: () => scrollAreaRef.current,
+    estimateSize: () => 82,
+    overscan: 8,
+    getItemKey: index => conversations[index]?.id ?? `idx-${index}`,
   });
 
   // Search input state & ref
@@ -239,15 +251,15 @@ export function ConversationList({ workspaceSlug, activeConversationId }: Conver
         resetAdvancedFilters={resetAdvancedFilters}
       />
 
-      {/* 4. Conversations Scroll Area */}
-      <div className="min-w-0 min-h-0 flex-1 overflow-y-auto">
+      {/* 4. Conversations Scroll Area (virtualized) */}
+      <div ref={scrollAreaRef} className="min-w-0 min-h-0 flex-1 overflow-y-auto">
         {isLoading ? (
           <ConversationListSkeleton />
         ) : isError ? (
           <div className="flex flex-col items-center justify-center p-8 text-center gap-2">
-            <p className="text-xs text-destructive font-medium">Failed to load conversations</p>
+            <p className="text-xs text-destructive font-medium">Không tải được hội thoại</p>
             <Button variant="outline" size="sm" onClick={() => refetch()} className="text-xs">
-              Retry
+              Thử lại
             </Button>
           </div>
         ) : isEmpty ? (
@@ -265,30 +277,46 @@ export function ConversationList({ workspaceSlug, activeConversationId }: Conver
             </div>
             <div>
               <p className="text-xs font-semibold text-foreground">
-                {hasActiveFilters ? 'No matching conversations' : 'No conversations in this view'}
+                {hasActiveFilters ? 'Không có hội thoại khớp' : 'Không có hội thoại trong mục này'}
               </p>
               <p className="text-[11px] text-muted-foreground mt-0.5 max-w-[200px] leading-tight">
                 {hasActiveFilters
-                  ? 'Try changing or clearing your search and filters.'
-                  : 'New incoming customer messages will appear here.'}
+                  ? 'Thử thay đổi hoặc xóa từ khóa tìm kiếm và bộ lọc.'
+                  : 'Tin nhắn mới từ khách hàng sẽ hiển thị ở đây.'}
               </p>
             </div>
             {hasActiveFilters && (
               <Button variant="outline" size="xs" onClick={resetFilters} className="text-[11px]">
-                Reset filters
+                Xóa bộ lọc
               </Button>
             )}
           </div>
         ) : (
           <div className="flex min-w-0 flex-col">
-            {conversations.map(conversation => (
-              <ConversationCard
-                key={conversation.id}
-                conversation={conversation}
-                workspaceSlug={workspaceSlug}
-                isSelected={activeConversationId === conversation.id}
-              />
-            ))}
+            <div
+              style={{ height: virtualizer.getTotalSize(), position: 'relative', width: '100%' }}
+            >
+              {virtualizer.getVirtualItems().map(virtualRow => (
+                <div
+                  key={virtualRow.key}
+                  data-index={virtualRow.index}
+                  ref={virtualizer.measureElement}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    transform: `translateY(${virtualRow.start}px)`,
+                  }}
+                >
+                  <ConversationCard
+                    conversation={conversations[virtualRow.index]}
+                    workspaceSlug={workspaceSlug}
+                    isSelected={activeConversationId === conversations[virtualRow.index]?.id}
+                  />
+                </div>
+              ))}
+            </div>
 
             {/* Infinite Scroll Trigger & Load More */}
             <div
@@ -298,7 +326,7 @@ export function ConversationList({ workspaceSlug, activeConversationId }: Conver
               {isFetchingNextPage ? (
                 <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground py-1">
                   <span className="size-2 animate-ping rounded-full bg-primary" />
-                  Loading more...
+                  Đang tải thêm...
                 </div>
               ) : hasNextPage ? (
                 <button
@@ -306,7 +334,7 @@ export function ConversationList({ workspaceSlug, activeConversationId }: Conver
                   onClick={() => fetchNextPage()}
                   className="text-xs font-medium text-primary hover:underline cursor-pointer py-1"
                 >
-                  Load more conversations
+                  Tải thêm hội thoại
                 </button>
               ) : conversations.length > 0 ? (
                 <p className="text-[11px] text-muted-foreground/70 py-1">
