@@ -168,12 +168,12 @@ export function ManualMatchDialog({
               </p>
             </div>
             <div className="text-right">
-              <span className="text-emerald-600 dark:text-emerald-400 font-bold text-sm block">
+              <span className="text-success dark:text-success font-bold text-sm block">
                 +{formatVND(Number(transaction.amount))}
               </span>
               <Badge
                 variant="outline"
-                className="text-[10px] px-1.5 py-0 h-4 border-amber-400 text-amber-600 bg-amber-50 dark:bg-amber-950/20"
+                className="text-[10px] px-1.5 py-0 h-4 border-warning text-warning bg-warning/10 dark:bg-warning/20"
               >
                 Chờ đối soát
               </Badge>
@@ -229,7 +229,7 @@ export function ManualMatchDialog({
                           #{order.displayId || order.orderNumber}
                         </span>
                         {isExactAmount && (
-                          <Badge className="bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 text-[10px] px-1.5 py-0 border-0 flex items-center gap-0.5">
+                          <Badge className="bg-success/15 text-success dark:text-success text-[10px] px-1.5 py-0 border-0 flex items-center gap-0.5">
                             <Sparkles className="w-3 h-3 inline" /> Khớp đúng số tiền
                           </Badge>
                         )}
@@ -251,8 +251,7 @@ export function ManualMatchDialog({
                         {formatVND(Number(order.totalAmount))}
                       </span>
                       <span className="text-[11px] text-muted-foreground block">
-                        Còn thiếu:{' '}
-                        <strong className="text-amber-600">{formatVND(remaining)}</strong>
+                        Còn thiếu: <strong className="text-warning">{formatVND(remaining)}</strong>
                       </span>
                       {isSelected && (
                         <span className="inline-flex items-center text-primary text-[11px] font-semibold mt-0.5">

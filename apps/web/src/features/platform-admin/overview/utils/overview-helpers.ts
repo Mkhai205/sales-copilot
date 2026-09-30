@@ -33,25 +33,25 @@ export function getHealthBadgeConfig(
       return {
         variant: 'secondary',
         label: 'Hoạt động bình thường',
-        dotClass: 'bg-emerald-500',
+        dotClass: 'bg-success',
         pulse: true,
         className:
-          'bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25 border-emerald-500/20 dark:bg-emerald-950/50 dark:text-emerald-300',
+          'bg-success/15 text-success hover:bg-success/25 border-success/20 dark:bg-success/50 dark:text-success',
       };
     case 'DEGRADED':
       return {
         variant: 'secondary',
         label: 'Hiệu năng suy giảm',
-        dotClass: 'bg-amber-500',
+        dotClass: 'bg-warning',
         pulse: true,
         className:
-          'bg-amber-500/15 text-amber-700 hover:bg-amber-500/25 border-amber-500/20 dark:bg-amber-950/50 dark:text-amber-300',
+          'bg-warning/15 text-warning hover:bg-warning/25 border-warning/20 dark:bg-warning/50 dark:text-warning',
       };
     case 'DOWN':
       return {
         variant: 'destructive',
         label: 'Mất kết nối',
-        dotClass: 'bg-rose-500',
+        dotClass: 'bg-destructive',
         pulse: false,
         className:
           'bg-destructive/15 text-destructive hover:bg-destructive/25 border-destructive/20',

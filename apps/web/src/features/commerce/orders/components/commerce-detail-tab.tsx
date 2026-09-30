@@ -310,7 +310,7 @@ export function CommerceDetailTab({
               {(activeOrder.status === OrderStatus.PAID ||
                 activeOrder.status === OrderStatus.SHIPPING) && (
                 <div className="flex items-center gap-1.5">
-                  <div className="flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
+                  <div className="flex items-center gap-1 text-[11px] text-success dark:text-success font-medium">
                     <CheckCircle className="size-3.5" />
                     {activeOrder.status === OrderStatus.SHIPPING ? 'Đang giao' : 'Đã thanh toán'}
                   </div>

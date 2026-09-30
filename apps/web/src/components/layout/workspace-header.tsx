@@ -151,7 +151,7 @@ export function WorkspaceHeader({ workspaceSlug }: WorkspaceHeaderProps) {
                 {activeWorkspace.name}
               </span>
               <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-                <span className="size-1.5 rounded-full bg-emerald-500 inline-block animate-pulse" />
+                <span className="size-1.5 rounded-full bg-success inline-block animate-pulse" />
                 <span className="truncate font-normal">Trực tuyến</span>
               </div>
             </div>

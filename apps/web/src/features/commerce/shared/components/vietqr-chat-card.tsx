@@ -67,15 +67,15 @@ export function VietQrChatCard({ qrData, isPaid = false }: VietQrChatCardProps) 
 
           {/* Status Badge */}
           {isActuallyPaid ? (
-            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
+            <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-semibold text-success dark:text-success">
               <CheckCircle2 className="size-3" />
               {'Đã thanh toán'}
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-medium text-amber-600 dark:text-amber-400">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-warning/10 px-2 py-0.5 text-[10px] font-medium text-warning dark:text-warning">
               <span className="relative flex size-1.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full size-1.5 bg-amber-500"></span>
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-warning opacity-75"></span>
+                <span className="relative inline-flex rounded-full size-1.5 bg-warning"></span>
               </span>
               {'Chưa thanh toán'}
             </span>
@@ -127,7 +127,7 @@ export function VietQrChatCard({ qrData, isPaid = false }: VietQrChatCardProps) 
                 title={'Sao chép STK'}
               >
                 {copiedField === 'Số tài khoản:'.replace(':', '') ? (
-                  <Check className="size-3 text-emerald-600" />
+                  <Check className="size-3 text-success" />
                 ) : (
                   <Copy className="size-3" />
                 )}
@@ -151,7 +151,7 @@ export function VietQrChatCard({ qrData, isPaid = false }: VietQrChatCardProps) 
                 title={'Sao chép số tiền'}
               >
                 {copiedField === 'Số tiền:'.replace(':', '') ? (
-                  <Check className="size-3 text-emerald-600" />
+                  <Check className="size-3 text-success" />
                 ) : (
                   <Copy className="size-3" />
                 )}
@@ -164,7 +164,7 @@ export function VietQrChatCard({ qrData, isPaid = false }: VietQrChatCardProps) 
         <div className="flex items-center justify-between rounded bg-muted/50 px-2.5 py-1.5 text-[11px] border border-border/60">
           <div className="flex items-center gap-1.5 truncate">
             <span className="text-muted-foreground shrink-0">{'Nội dung:'}</span>
-            <span className="font-mono font-bold text-amber-600 dark:text-amber-400 truncate">
+            <span className="font-mono font-bold text-warning dark:text-warning truncate">
               {qrData.memo}
             </span>
           </div>
@@ -178,7 +178,7 @@ export function VietQrChatCard({ qrData, isPaid = false }: VietQrChatCardProps) 
             title={'Sao chép nội dung'}
           >
             {copiedField === 'Nội dung chuyển khoản' ? (
-              <Check className="size-3 text-emerald-600" />
+              <Check className="size-3 text-success" />
             ) : (
               <Copy className="size-3" />
             )}

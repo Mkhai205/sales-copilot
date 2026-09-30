@@ -24,7 +24,7 @@ export function OrderStatusBadge({
         <Badge
           variant="outline"
           className={cn(
-            'text-[11px] font-medium px-2 py-0 border-sky-500/30 bg-sky-500/10 text-sky-600 dark:text-sky-400',
+            'text-[11px] font-medium px-2 py-0 border-info/30 bg-info/10 text-info dark:text-info',
             className,
           )}
         >
@@ -36,7 +36,7 @@ export function OrderStatusBadge({
         <Badge
           variant="outline"
           className={cn(
-            'text-[11px] font-medium px-2 py-0 border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+            'text-[11px] font-medium px-2 py-0 border-success/30 bg-success/10 text-success dark:text-success',
             className,
           )}
         >
@@ -95,7 +95,7 @@ export function PaymentStatusBadge({
         <Badge
           variant="outline"
           className={cn(
-            'text-[10px] font-normal px-1.5 py-0 border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400',
+            'text-[10px] font-normal px-1.5 py-0 border-warning/30 bg-warning/10 text-warning dark:text-warning',
             className,
           )}
         >
@@ -119,7 +119,7 @@ export function PaymentStatusBadge({
         <Badge
           variant="outline"
           className={cn(
-            'text-[10px] font-normal px-1.5 py-0 border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+            'text-[10px] font-normal px-1.5 py-0 border-success/30 bg-success/10 text-success dark:text-success',
             className,
           )}
         >
@@ -131,7 +131,7 @@ export function PaymentStatusBadge({
         <Badge
           variant="outline"
           className={cn(
-            'text-[10px] font-normal px-1.5 py-0 border-rose-500/30 bg-rose-500/10 text-rose-600 dark:text-rose-400',
+            'text-[10px] font-normal px-1.5 py-0 border-destructive/30 bg-destructive/10 text-destructive dark:text-destructive',
             className,
           )}
         >

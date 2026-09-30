@@ -279,22 +279,22 @@ export function MergeContactsDialog({
                       (mergeeContact.identities?.length || 0)}{' '}
                     kênh)
                   </span>
-                  <span className="text-emerald-600 font-medium">Chuyển sang chính</span>
+                  <span className="text-success font-medium">Chuyển sang chính</span>
                 </div>
                 <div className="grid grid-cols-3 p-2.5">
                   <span className="text-muted-foreground font-medium">Lịch sử chat & Đơn hàng</span>
                   <span className="text-foreground font-semibold">
                     Toàn bộ phiên hội thoại & đơn hàng
                   </span>
-                  <span className="text-emerald-600 font-medium">Chuyển sang chính</span>
+                  <span className="text-success font-medium">Chuyển sang chính</span>
                 </div>
               </div>
             </div>
           )}
 
           {/* Warning Callout */}
-          <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 flex items-start gap-2.5 text-amber-900 dark:text-amber-200">
-            <AlertTriangle className="size-4 text-amber-600 shrink-0 mt-0.5" />
+          <div className="rounded-lg border border-warning/30 bg-warning/10 p-3 flex items-start gap-2.5 text-warning dark:text-warning">
+            <AlertTriangle className="size-4 text-warning shrink-0 mt-0.5" />
             <div className="text-[11px] leading-relaxed">
               <strong className="font-semibold block mb-0.5">Lưu ý trước khi thực hiện:</strong>
               Hành động này <strong>không thể hoàn tác</strong>. Hồ sơ liên hệ phụ sẽ bị xoá khỏi hệ

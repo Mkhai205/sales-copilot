@@ -115,7 +115,7 @@ export function AuditLogsTable({
                     title={'Sao chép ID'}
                   >
                     {copiedValue === log.targetId ? (
-                      <Check className="size-3 text-emerald-600" />
+                      <Check className="size-3 text-success" />
                     ) : (
                       <Copy className="size-3" />
                     )}

@@ -37,7 +37,7 @@ export default function AdminSettingsPage() {
             </h1>
             <Badge
               variant="outline"
-              className="gap-1 border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs"
+              className="gap-1 border-success/30 bg-success/10 text-success dark:text-success text-xs"
             >
               <Zap className="size-3" />
               <span>{'2-Tier Active'}</span>

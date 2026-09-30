@@ -54,8 +54,8 @@ export function SettingsActionBar({
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3 rounded-xl border border-primary/20 bg-background/95 p-3.5 shadow-lg backdrop-blur-md dark:bg-card/95 dark:border-border">
         {/* Left: Unsaved changes indicator */}
         <div className="flex items-center gap-2.5 text-xs text-foreground">
-          <span className="flex size-2 rounded-full bg-amber-500 animate-pulse" />
-          <AlertCircle className="size-4 text-amber-500 shrink-0" />
+          <span className="flex size-2 rounded-full bg-warning animate-pulse" />
+          <AlertCircle className="size-4 text-warning shrink-0" />
           <span className="font-medium">{message}</span>
         </div>
 

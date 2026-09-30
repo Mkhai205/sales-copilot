@@ -240,7 +240,7 @@ export function WorkspaceSettingsForm({ workspace }: WorkspaceSettingsFormProps)
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Sparkles className="size-4 text-amber-500" />
+              <Sparkles className="size-4 text-warning" />
               <CardTitle className="text-sm font-semibold">
                 {'Gói cước & Chi tiết Không gian làm việc'}
               </CardTitle>
@@ -272,7 +272,7 @@ export function WorkspaceSettingsForm({ workspace }: WorkspaceSettingsFormProps)
                   title={'Sao chép mã'}
                 >
                   {copiedId ? (
-                    <Check className="size-3 text-green-500" />
+                    <Check className="size-3 text-success" />
                   ) : (
                     <Copy className="size-3 text-muted-foreground" />
                   )}

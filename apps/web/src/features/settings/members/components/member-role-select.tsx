@@ -35,7 +35,7 @@ export function MemberRoleSelect({
     return (
       <Badge
         variant="outline"
-        className="gap-1 border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400 px-2 py-0.5 text-xs font-semibold"
+        className="gap-1 border-warning/30 bg-warning/10 text-warning dark:text-warning px-2 py-0.5 text-xs font-semibold"
       >
         <Crown className="size-3" />
         Chủ sở hữu
@@ -62,7 +62,7 @@ export function MemberRoleSelect({
           </SelectItem>
           <SelectItem value={WorkspaceRole.AGENT} className="text-xs">
             <span className="flex items-center gap-1.5">
-              <UserCheck className="size-3 text-emerald-500" />
+              <UserCheck className="size-3 text-success" />
               Nhân viên
             </span>
           </SelectItem>
@@ -76,7 +76,7 @@ export function MemberRoleSelect({
       case WorkspaceRole.ADMIN:
         return <ShieldCheck className="size-3 text-primary" />;
       case WorkspaceRole.AGENT:
-        return <UserCheck className="size-3 text-emerald-500" />;
+        return <UserCheck className="size-3 text-success" />;
       default:
         return <Shield className="size-3 text-muted-foreground" />;
     }

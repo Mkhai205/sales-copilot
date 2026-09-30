@@ -55,7 +55,7 @@ export function getStatusBadgeConfig(isSuspended?: boolean): {
     variant: 'secondary',
     label: 'Đang hoạt động',
     className:
-      'bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25 dark:bg-emerald-950/50 dark:text-emerald-300',
+      'bg-success/15 text-success hover:bg-success/25 dark:bg-success/50 dark:text-success',
   };
 }
 

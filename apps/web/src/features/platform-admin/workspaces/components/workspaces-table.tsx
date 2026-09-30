@@ -87,7 +87,7 @@ export function WorkspacesTable({
                     title={'Sao chép slug'}
                   >
                     {copiedValue === ws.slug ? (
-                      <Check className="size-2.5 text-emerald-600" />
+                      <Check className="size-2.5 text-success" />
                     ) : (
                       <Copy className="size-2.5" />
                     )}
@@ -204,7 +204,7 @@ export function WorkspacesTable({
                   >
                     {ws.isSuspended ? (
                       <>
-                        <ShieldCheck className="size-3.5 text-emerald-600" />
+                        <ShieldCheck className="size-3.5 text-success" />
                         <span>{'Kích hoạt lại'}</span>
                       </>
                     ) : (

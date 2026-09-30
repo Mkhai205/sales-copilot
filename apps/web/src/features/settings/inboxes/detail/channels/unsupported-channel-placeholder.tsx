@@ -61,7 +61,7 @@ export function UnsupportedChannelPlaceholder({ channelType }: UnsupportedChanne
           </h4>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
             <div className="flex items-center gap-2 rounded-md border border-border/60 bg-background/60 p-2.5 text-xs">
-              <Globe className="size-4 text-emerald-500 shrink-0" />
+              <Globe className="size-4 text-success shrink-0" />
               <div className="truncate">
                 <p className="font-medium text-foreground">Website Live Chat</p>
                 <p className="text-[11px] text-muted-foreground">Widget nhúng trực tiếp</p>

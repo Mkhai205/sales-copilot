@@ -143,21 +143,21 @@ export function MessageItem({
 
     return (
       <MessageScrollerItem messageId={message.id} className="w-full my-1">
-        <div className="mx-auto flex w-full max-w-2xl flex-col gap-1.5 rounded-xl border border-amber-500/30 bg-amber-500/[0.08] p-3.5 shadow-xs transition-all dark:border-amber-500/25 dark:bg-amber-500/[0.12]">
+        <div className="mx-auto flex w-full max-w-2xl flex-col gap-1.5 rounded-xl border border-warning/30 bg-warning/[0.08] p-3.5 shadow-xs transition-all dark:border-warning/25 dark:bg-warning/[0.12]">
           {/* Note Header */}
-          <div className="flex items-center justify-between gap-2 border-b border-amber-500/20 pb-2">
+          <div className="flex items-center justify-between gap-2 border-b border-warning/20 pb-2">
             <div className="flex items-center gap-2">
-              <Avatar className="size-6 border border-amber-500/30">
+              <Avatar className="size-6 border border-warning/30">
                 {message.sender?.avatarUrl && (
                   <AvatarImage src={message.sender.avatarUrl} alt={authorName} />
                 )}
-                <AvatarFallback className="text-[10px] bg-amber-500/20 text-amber-700 dark:text-amber-300 font-semibold">
+                <AvatarFallback className="text-[10px] bg-warning/20 text-warning dark:text-warning font-semibold">
                   {authorInitials}
                 </AvatarFallback>
               </Avatar>
               <div className="flex items-center gap-1.5">
                 <span className="text-xs font-semibold text-foreground">{authorName}</span>
-                <span className="inline-flex items-center gap-1 rounded-sm bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 dark:text-amber-300">
+                <span className="inline-flex items-center gap-1 rounded-sm bg-warning/20 px-1.5 py-0.5 text-[10px] font-medium text-warning dark:text-warning">
                   <Lock className="size-2.5" />
                   Ghi chú nội bộ
                 </span>

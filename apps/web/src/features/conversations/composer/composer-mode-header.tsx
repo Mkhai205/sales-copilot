@@ -24,7 +24,7 @@ export function ComposerModeHeader({
     <div
       className={cn(
         'flex items-center justify-between border-b px-2.5 py-1.5 transition-colors',
-        isNote ? 'border-amber-500/20 bg-amber-500/10' : 'border-border/40 bg-muted/20',
+        isNote ? 'border-warning/20 bg-warning/10' : 'border-border/40 bg-muted/20',
       )}
     >
       <div className="flex items-center gap-1">
@@ -52,7 +52,7 @@ export function ComposerModeHeader({
           className={cn(
             'h-auto w-auto flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium transition-all cursor-pointer',
             isNote
-              ? 'bg-amber-500/25 text-amber-700 dark:text-amber-300 font-semibold shadow-xs'
+              ? 'bg-warning/25 text-warning dark:text-warning font-semibold shadow-xs'
               : 'text-muted-foreground hover:text-foreground hover:bg-background/40',
           )}
         >

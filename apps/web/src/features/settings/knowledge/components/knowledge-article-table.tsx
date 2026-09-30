@@ -122,7 +122,7 @@ export function KnowledgeArticleTable({
               variant="ghost"
               className={`h-auto w-auto text-xs font-medium px-2 py-0.5 rounded-full transition-colors ${
                 article.isActive
-                  ? 'bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20'
+                  ? 'bg-success/10 text-success hover:bg-success/20'
                   : 'bg-muted text-muted-foreground hover:bg-muted/80'
               }`}
               onClick={() => handleToggleActive(article)}

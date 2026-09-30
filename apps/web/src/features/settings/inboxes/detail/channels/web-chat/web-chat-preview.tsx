@@ -293,7 +293,7 @@ export function WebChatPreview({
               <div className="flex items-start justify-between gap-3">
                 <div className="flex flex-col gap-1">
                   <div className="flex items-center gap-2">
-                    <FileCode className="size-4 text-emerald-500" />
+                    <FileCode className="size-4 text-success" />
                     <span className="text-xs font-semibold text-foreground">
                       Mã nhúng Website Live Chat
                     </span>
@@ -305,9 +305,9 @@ export function WebChatPreview({
               <div className="rounded-lg border border-border/80 bg-slate-950 dark:bg-zinc-950 overflow-hidden shadow-xs flex flex-col">
                 <div className="flex items-center justify-between border-b border-white/10 bg-slate-900/90 px-3 py-1.5 text-[10px] text-slate-400 font-mono">
                   <div className="flex items-center gap-1.5">
-                    <div className="size-2 rounded-full bg-red-400/80" />
-                    <div className="size-2 rounded-full bg-amber-400/80" />
-                    <div className="size-2 rounded-full bg-emerald-400/80" />
+                    <div className="size-2 rounded-full bg-destructive/80" />
+                    <div className="size-2 rounded-full bg-warning/80" />
+                    <div className="size-2 rounded-full bg-success/80" />
                     <span className="ml-1 text-slate-300">index.html</span>
                   </div>
                   <span>HTML &bull; UTF-8</span>

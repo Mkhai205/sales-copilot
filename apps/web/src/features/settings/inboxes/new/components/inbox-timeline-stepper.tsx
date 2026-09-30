@@ -86,12 +86,12 @@ export function InboxTimelineStepper({
                   isCurrent
                     ? 'bg-primary text-primary-foreground ring-4 ring-primary/20 shadow-sm shadow-primary/30'
                     : isCompleted
-                      ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 group-hover:bg-emerald-500/25 group-hover:border-emerald-500/50'
+                      ? 'bg-success/15 text-success dark:text-success border border-success/30 group-hover:bg-success/25 group-hover:border-success/50'
                       : 'bg-muted/40 text-muted-foreground/70 border border-border/60'
                 }`}
               >
                 {isCompleted ? (
-                  <Check className="size-4 stroke-[2.5] text-emerald-600 dark:text-emerald-400" />
+                  <Check className="size-4 stroke-[2.5] text-success dark:text-success" />
                 ) : (
                   <span>{stepMeta.stepNumber}</span>
                 )}
@@ -101,7 +101,7 @@ export function InboxTimelineStepper({
               {!isLast && (
                 <div
                   className={`w-0.5 flex-1 min-h-[36px] transition-colors duration-200 ${
-                    isCompleted ? 'bg-emerald-500/80' : 'bg-border/70'
+                    isCompleted ? 'bg-success/80' : 'bg-border/70'
                   }`}
                 />
               )}
@@ -114,7 +114,7 @@ export function InboxTimelineStepper({
                   isCurrent
                     ? 'text-primary font-bold'
                     : isCompleted
-                      ? 'text-foreground group-hover:text-emerald-600 dark:group-hover:text-emerald-400'
+                      ? 'text-foreground group-hover:text-success dark:group-hover:text-success'
                       : 'text-foreground/80'
                 }`}
               >

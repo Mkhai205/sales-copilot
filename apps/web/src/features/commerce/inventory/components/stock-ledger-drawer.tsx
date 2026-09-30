@@ -47,29 +47,29 @@ function getTransactionTypeConfig(type: InventoryTransactionType) {
       return {
         label: 'Nhập kho',
         icon: ArrowDown,
-        badgeClass:
-          'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30',
+        badgeClass: 'bg-success/10 text-success dark:text-success border-success/30',
         sign: '+',
       };
     case InventoryTransactionType.STOCK_OUT:
       return {
         label: 'Xuất kho',
         icon: ArrowUp,
-        badgeClass: 'bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-500/30',
+        badgeClass:
+          'bg-destructive/10 text-destructive dark:text-destructive border-destructive/30',
         sign: '-',
       };
     case InventoryTransactionType.INVENTORY_AUDIT:
       return {
         label: 'Kiểm kê đếm',
         icon: RotateCcw,
-        badgeClass: 'bg-sky-500/10 text-sky-700 dark:text-sky-300 border-sky-500/30',
+        badgeClass: 'bg-info/10 text-info dark:text-info border-info/30',
         sign: '',
       };
     case InventoryTransactionType.RESERVATION:
       return {
         label: 'Tạm giữ đơn chat',
         icon: Lock,
-        badgeClass: 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30',
+        badgeClass: 'bg-warning/10 text-warning dark:text-warning border-warning/30',
         sign: '',
       };
     case InventoryTransactionType.RELEASE_RESERVATION:
@@ -183,7 +183,7 @@ export function StockLedgerDrawer({
                             <span
                               className={cn(
                                 'ml-1 font-semibold text-[11px]',
-                                netChange > 0 ? 'text-emerald-600' : 'text-rose-600',
+                                netChange > 0 ? 'text-success' : 'text-destructive',
                               )}
                             >
                               ({netChange > 0 ? `+${netChange}` : netChange})
@@ -192,7 +192,7 @@ export function StockLedgerDrawer({
                         </div>
                         <div>
                           <span className="text-muted-foreground text-[11px]">Tạm giữ: </span>
-                          <span className="font-medium text-amber-600 dark:text-amber-400">
+                          <span className="font-medium text-warning dark:text-warning">
                             {tx.previousReserved} ➔ {tx.newReserved}
                           </span>
                         </div>

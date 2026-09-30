@@ -44,19 +44,19 @@ function getToolIcon(toolName: string) {
     case 'getProductDetails':
       return <Search className="size-3.5 text-blue-500" />;
     case 'checkInventory':
-      return <PackageCheck className="size-3.5 text-emerald-500" />;
+      return <PackageCheck className="size-3.5 text-success" />;
     case 'createDraftOrder':
       return <FileText className="size-3.5 text-indigo-500" />;
     case 'confirmAndGenerateQR':
-      return <QrCode className="size-3.5 text-amber-500" />;
+      return <QrCode className="size-3.5 text-warning" />;
     case 'extractShippingInfo':
-      return <MapPin className="size-3.5 text-rose-500" />;
+      return <MapPin className="size-3.5 text-destructive" />;
     case 'updateContactInfo':
       return <UserCheck className="size-3.5 text-teal-500" />;
     case 'evaluateDiscount':
       return <Coins className="size-3.5 text-purple-500" />;
     case 'escalateToHuman':
-      return <AlertCircle className="size-3.5 text-amber-600" />;
+      return <AlertCircle className="size-3.5 text-warning" />;
     default:
       return <Cpu className="size-3.5 text-primary" />;
   }
@@ -116,7 +116,7 @@ export function AiMessageDebugSheet({ open, onOpenChange, aiDebug }: AiMessageDe
               className="size-7"
               title="Copy raw JSON"
             >
-              {copied ? <Check className="size-3 text-emerald-600" /> : <Copy className="size-3" />}
+              {copied ? <Check className="size-3 text-success" /> : <Copy className="size-3" />}
             </Button>
           </div>
         </SheetHeader>
@@ -141,7 +141,7 @@ export function AiMessageDebugSheet({ open, onOpenChange, aiDebug }: AiMessageDe
 
               <div className="rounded-lg border border-border/70 bg-muted/20 p-2.5 flex flex-col gap-1">
                 <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground uppercase font-medium">
-                  <Coins className="size-3 text-amber-500" />
+                  <Coins className="size-3 text-warning" />
                   <span>Chi phí ước tính</span>
                 </div>
                 <div className="text-xs font-semibold text-foreground">{costFormatted}</div>
@@ -189,7 +189,7 @@ export function AiMessageDebugSheet({ open, onOpenChange, aiDebug }: AiMessageDe
 
               {toolCalls.length === 0 ? (
                 <div className="rounded-lg border border-dashed border-border/80 p-4 text-center text-xs text-muted-foreground bg-muted/10">
-                  <CheckCircle2 className="size-5 text-emerald-500 mx-auto mb-1.5" />
+                  <CheckCircle2 className="size-5 text-success mx-auto mb-1.5" />
                   <span>Sinh văn bản trực tiếp mà không cần gọi công cụ ngoài.</span>
                 </div>
               ) : (

@@ -43,12 +43,12 @@ export function WebChatPreviewDesktop({
       {/* Browser top chrome */}
       <div className="flex items-center justify-between border-b border-border bg-muted/50 px-3 py-2">
         <div className="flex items-center gap-1.5">
-          <div className="size-2.5 rounded-full bg-red-400" />
-          <div className="size-2.5 rounded-full bg-amber-400" />
-          <div className="size-2.5 rounded-full bg-emerald-400" />
+          <div className="size-2.5 rounded-full bg-destructive" />
+          <div className="size-2.5 rounded-full bg-warning" />
+          <div className="size-2.5 rounded-full bg-success" />
         </div>
         <div className="flex items-center gap-1.5 rounded-md border border-border/80 bg-background/80 px-2 py-0.5 text-[10px] text-muted-foreground font-mono w-48 justify-center truncate">
-          <ShieldCheck className="size-3 text-emerald-500 shrink-0" />
+          <ShieldCheck className="size-3 text-success shrink-0" />
           <span>https://your-shop.com</span>
         </div>
         <div className="w-8" />
@@ -262,7 +262,7 @@ export function WebChatPreviewDesktop({
           ) : (
             <>
               <MessageSquare className="size-5" />
-              <span className="absolute -top-0.5 -right-0.5 size-4 rounded-full bg-rose-500 border-2 border-background text-[9px] font-bold flex items-center justify-center text-white">
+              <span className="absolute -top-0.5 -right-0.5 size-4 rounded-full bg-destructive border-2 border-background text-[9px] font-bold flex items-center justify-center text-white">
                 1
               </span>
             </>

@@ -103,7 +103,7 @@ export function InventoryVariantsTable({
         header: 'Tạm giữ',
         meta: { headerClassName: 'w-24 text-center' },
         cell: ({ row }) => (
-          <div className="text-center font-mono text-amber-600 dark:text-amber-400 font-medium">
+          <div className="text-center font-mono text-warning dark:text-warning font-medium">
             {row.original.reservedQuantity}
           </div>
         ),

@@ -203,7 +203,7 @@ export function ProductsView() {
             }}
             className={cn(
               'h-8 text-xs gap-1.5',
-              lowStockFilter && 'bg-amber-600 hover:bg-amber-700 text-white',
+              lowStockFilter && 'bg-warning hover:bg-warning text-white',
             )}
           >
             <AlertTriangle className="size-3.5" />

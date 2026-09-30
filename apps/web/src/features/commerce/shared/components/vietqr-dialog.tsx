@@ -121,7 +121,7 @@ export function VietQrDialog({ open, onOpenChange, qrData }: VietQrDialogProps) 
                 }
               >
                 {copiedField === 'Số tài khoản:'.replace(':', '') ? (
-                  <Check className="size-3.5 text-emerald-600" />
+                  <Check className="size-3.5 text-success" />
                 ) : (
                   <Copy className="size-3.5" />
                 )}
@@ -153,7 +153,7 @@ export function VietQrDialog({ open, onOpenChange, qrData }: VietQrDialogProps) 
                 }
               >
                 {copiedField === 'Số tiền:'.replace(':', '') ? (
-                  <Check className="size-3.5 text-emerald-600" />
+                  <Check className="size-3.5 text-success" />
                 ) : (
                   <Copy className="size-3.5" />
                 )}
@@ -168,7 +168,7 @@ export function VietQrDialog({ open, onOpenChange, qrData }: VietQrDialogProps) 
               {'Nội dung CK:'}
             </span>
             <div className="flex items-center gap-1.5">
-              <span className="font-mono font-bold text-amber-600 dark:text-amber-400">
+              <span className="font-mono font-bold text-warning dark:text-warning">
                 {qrData.memo}
               </span>
               <Button
@@ -179,7 +179,7 @@ export function VietQrDialog({ open, onOpenChange, qrData }: VietQrDialogProps) 
                 onClick={() => copyToClipboard(qrData.memo, 'Nội dung chuyển khoản')}
               >
                 {copiedField === 'Nội dung chuyển khoản' ? (
-                  <Check className="size-3.5 text-emerald-600" />
+                  <Check className="size-3.5 text-success" />
                 ) : (
                   <Copy className="size-3.5" />
                 )}

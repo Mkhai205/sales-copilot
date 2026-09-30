@@ -44,14 +44,14 @@ describe('Overview Helpers', () => {
       const config = getHealthBadgeConfig('HEALTHY');
       assert.strictEqual(config.label, 'Hoạt động bình thường');
       assert.strictEqual(config.pulse, true);
-      assert.strictEqual(config.dotClass, 'bg-emerald-500');
+      assert.strictEqual(config.dotClass, 'bg-success');
     });
 
     it('should return degraded badge config for DEGRADED', () => {
       const config = getHealthBadgeConfig('DEGRADED');
       assert.strictEqual(config.label, 'Hiệu năng suy giảm');
       assert.strictEqual(config.pulse, true);
-      assert.strictEqual(config.dotClass, 'bg-amber-500');
+      assert.strictEqual(config.dotClass, 'bg-warning');
     });
 
     it('should return down badge config for DOWN', () => {
@@ -59,7 +59,7 @@ describe('Overview Helpers', () => {
       assert.strictEqual(config.label, 'Mất kết nối');
       assert.strictEqual(config.pulse, false);
       assert.strictEqual(config.variant, 'destructive');
-      assert.strictEqual(config.dotClass, 'bg-rose-500');
+      assert.strictEqual(config.dotClass, 'bg-destructive');
     });
 
     it('should return fallback badge config for unknown or missing status', () => {

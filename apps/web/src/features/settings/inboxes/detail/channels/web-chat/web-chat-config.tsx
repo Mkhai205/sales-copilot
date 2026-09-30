@@ -183,7 +183,7 @@ export function WebChatConfig({ inbox, workspaceId }: WebChatConfigProps) {
                   className="h-8 shrink-0 gap-1 text-xs"
                 >
                   {copiedKey === 'token' ? (
-                    <Check className="size-3 text-emerald-500" />
+                    <Check className="size-3 text-success" />
                   ) : (
                     <Copy className="size-3" />
                   )}
@@ -219,7 +219,7 @@ export function WebChatConfig({ inbox, workspaceId }: WebChatConfigProps) {
                   className="h-8 shrink-0 gap-1 text-xs"
                 >
                   {copiedKey === 'hmac' ? (
-                    <Check className="size-3 text-emerald-500" />
+                    <Check className="size-3 text-success" />
                   ) : (
                     <Copy className="size-3" />
                   )}

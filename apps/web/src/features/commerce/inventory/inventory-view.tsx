@@ -193,7 +193,7 @@ export function InventoryView() {
               'h-auto w-auto',
               'px-2.5 py-1 text-xs font-medium rounded-md transition-colors flex items-center gap-1',
               filterMode === 'LOW'
-                ? 'bg-amber-500 text-white font-semibold'
+                ? 'bg-warning text-white font-semibold'
                 : 'text-muted-foreground hover:text-foreground',
             )}
           >
@@ -218,7 +218,7 @@ export function InventoryView() {
               'h-auto w-auto',
               'px-2.5 py-1 text-xs font-medium rounded-md transition-colors flex items-center gap-1',
               filterMode === 'OUT'
-                ? 'bg-rose-600 text-white font-semibold'
+                ? 'bg-destructive text-white font-semibold'
                 : 'text-muted-foreground hover:text-foreground',
             )}
           >

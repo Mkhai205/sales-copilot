@@ -154,8 +154,8 @@ export function TelegramConfig({ inbox, workspaceId }: TelegramConfigProps) {
               variant="outline"
               className={
                 isConnected
-                  ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-500 text-xs py-1 px-2.5'
-                  : 'border-amber-500/30 bg-amber-500/10 text-amber-500 text-xs py-1 px-2.5'
+                  ? 'border-success/30 bg-success/10 text-success text-xs py-1 px-2.5'
+                  : 'border-warning/30 bg-warning/10 text-warning text-xs py-1 px-2.5'
               }
             >
               {isConnected ? (
@@ -398,7 +398,7 @@ export function TelegramConfig({ inbox, workspaceId }: TelegramConfigProps) {
 
           <form onSubmit={handleReauth} className="flex flex-col gap-4 py-2">
             {/* Warning Alert Box */}
-            <div className="flex items-start gap-2.5 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-amber-600 dark:text-amber-400 text-xs">
+            <div className="flex items-start gap-2.5 rounded-xl border border-warning/30 bg-warning/10 p-3 text-warning dark:text-warning text-xs">
               <AlertTriangle className="size-4 shrink-0 mt-0.5" />
               <p className="leading-relaxed">
                 <strong>Lưu ý bảo mật:</strong> Token mới bắt buộc phải thuộc về cùng con bot hiện

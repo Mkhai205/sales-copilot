@@ -129,7 +129,7 @@ export default function WorkspaceDetailPage() {
             >
               {workspace.isSuspended ? (
                 <>
-                  <ShieldCheck className="size-3.5 text-emerald-600" />
+                  <ShieldCheck className="size-3.5 text-success" />
                   <span>{'Kích hoạt lại'}</span>
                 </>
               ) : (

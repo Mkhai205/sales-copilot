@@ -82,7 +82,7 @@ export function FacebookCommentGuardCard({
             variant="outline"
             className={
               commentGuardEnabled
-                ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-500 text-xs'
+                ? 'border-success/30 bg-success/10 text-success text-xs'
                 : 'border-muted bg-muted/40 text-muted-foreground text-xs'
             }
           >
@@ -95,7 +95,7 @@ export function FacebookCommentGuardCard({
         {/* Visual 3-step flow diagram */}
         <div className="rounded-xl border border-border/80 bg-muted/20 p-4">
           <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground mb-3">
-            <Sparkles className="size-3.5 text-amber-500" />
+            <Sparkles className="size-3.5 text-warning" />
             Quy trình hoạt động tự động của Comment Guard:
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -114,7 +114,7 @@ export function FacebookCommentGuardCard({
 
             <div className="flex flex-col gap-1 rounded-lg border border-border/60 bg-background/60 p-3">
               <div className="flex items-center gap-2 text-xs font-semibold text-foreground">
-                <span className="flex size-5 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500 text-[10px] font-bold">
+                <span className="flex size-5 items-center justify-center rounded-full bg-success/10 text-success text-[10px] font-bold">
                   2
                 </span>
                 Ẩn bình luận &lt; 1s

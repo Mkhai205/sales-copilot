@@ -129,7 +129,7 @@ export function ChatComposer({
         className={cn(
           'rounded-lg border transition-all shadow-xs overflow-hidden',
           isNote
-            ? 'border-amber-500/50 bg-amber-500/[0.04] dark:bg-amber-500/[0.08] focus-within:border-amber-500 focus-within:ring-1 focus-within:ring-amber-500/30'
+            ? 'border-warning/50 bg-warning/[0.04] dark:bg-warning/[0.08] focus-within:border-warning focus-within:ring-1 focus-within:ring-warning/30'
             : 'border-border bg-background focus-within:border-ring focus-within:ring-1 focus-within:ring-ring',
         )}
       >
@@ -160,7 +160,7 @@ export function ChatComposer({
           rows={1}
           className={cn(
             'w-full resize-none bg-transparent p-3 text-xs text-foreground placeholder:text-muted-foreground/70 focus:outline-none max-h-40 overflow-y-auto leading-relaxed',
-            isNote && 'placeholder:text-amber-700/60 dark:placeholder:text-amber-300/50',
+            isNote && 'placeholder:text-warning/60 dark:placeholder:text-warning/50',
           )}
           aria-label={isNote ? 'Ghi chú nội bộ' : 'Soạn tin nhắn'}
         />

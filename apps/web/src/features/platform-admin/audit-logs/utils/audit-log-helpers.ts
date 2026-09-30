@@ -22,7 +22,7 @@ export function getActionBadgeConfig(action?: string | null): ActionBadgeConfig 
         variant: 'secondary',
         label: 'Kích hoạt Shop',
         className:
-          'bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25 dark:bg-emerald-950/50 dark:text-emerald-300',
+          'bg-success/15 text-success hover:bg-success/25 dark:bg-success/50 dark:text-success',
       };
     case PlatformAuditAction.PLAN_CHANGED:
       return {
@@ -43,7 +43,7 @@ export function getActionBadgeConfig(action?: string | null): ActionBadgeConfig 
         variant: 'outline',
         label: 'Sửa cấu hình',
         className:
-          'bg-amber-500/15 text-amber-700 border-amber-300 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800',
+          'bg-warning/15 text-warning border-warning/50 dark:bg-warning/50 dark:text-warning dark:border-warning',
       };
     default:
       return {
@@ -69,8 +69,7 @@ export function getTargetTypeBadgeConfig(targetType?: string | null): TargetType
       return {
         variant: 'secondary',
         label: 'Workspace',
-        className:
-          'bg-sky-500/15 text-sky-700 hover:bg-sky-500/25 dark:bg-sky-950/50 dark:text-sky-300',
+        className: 'bg-info/15 text-info hover:bg-info/25 dark:bg-info/50 dark:text-info',
       };
     case PlatformAuditTargetType.SYSTEM_SETTING:
       return {

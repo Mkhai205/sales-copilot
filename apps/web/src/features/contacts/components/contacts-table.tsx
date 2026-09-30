@@ -149,7 +149,7 @@ export function ContactsTable({
                 title="Sao chép số điện thoại"
               >
                 {copiedValue === `phone-${contact.id}` ? (
-                  <Check className="size-3 text-emerald-500" />
+                  <Check className="size-3 text-success" />
                 ) : (
                   <Copy className="size-3" />
                 )}
@@ -182,7 +182,7 @@ export function ContactsTable({
                 title="Sao chép email"
               >
                 {copiedValue === `email-${contact.id}` ? (
-                  <Check className="size-3 text-emerald-500" />
+                  <Check className="size-3 text-success" />
                 ) : (
                   <Copy className="size-3" />
                 )}

@@ -68,13 +68,13 @@ export function TransactionDetailSheet({
               {transaction.transactionCode || transaction.id.slice(0, 10).toUpperCase()}
             </span>
             {isSuccess ? (
-              <Badge className="bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-0 flex items-center gap-1 text-xs">
+              <Badge className="bg-success/15 text-success dark:text-success border-0 flex items-center gap-1 text-xs">
                 <CheckCircle2 className="w-3.5 h-3.5 inline" /> Đã đối soát
               </Badge>
             ) : isPending ? (
               <Badge
                 variant="outline"
-                className="border-amber-400 text-amber-600 bg-amber-50 dark:bg-amber-950/20 flex items-center gap-1 text-xs"
+                className="border-warning text-warning bg-warning/10 dark:bg-warning/20 flex items-center gap-1 text-xs"
               >
                 <Clock className="w-3.5 h-3.5 inline" /> Chờ đối soát
               </Badge>
@@ -84,7 +84,7 @@ export function TransactionDetailSheet({
               </Badge>
             )}
           </div>
-          <SheetTitle className="text-2xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400 pt-1">
+          <SheetTitle className="text-2xl font-bold tracking-tight text-success dark:text-success pt-1">
             +{formatVND(Number(transaction.amount))}
           </SheetTitle>
           <SheetDescription className="text-xs text-muted-foreground">

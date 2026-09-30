@@ -159,7 +159,7 @@ export function FacebookFlow({ channel }: FacebookFlowProps) {
         ) : (
           <div className="flex flex-col gap-4">
             {eligiblePages.length === 0 ? (
-              <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-600 dark:text-amber-400">
+              <div className="rounded-lg border border-warning/30 bg-warning/10 p-3 text-xs text-warning dark:text-warning">
                 Tất cả các Fanpage thuộc tài khoản Facebook này đã được kết nối vào hệ thống. Để kết
                 nối thêm Fanpage khác, vui lòng bấm &quot;Đổi tài khoản / Làm mới&quot;.
               </div>

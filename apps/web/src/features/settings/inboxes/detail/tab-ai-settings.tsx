@@ -285,11 +285,11 @@ export function TabAiSettings({ inbox, workspaceId, workspaceSlug }: TabAiSettin
               variant="outline"
               className={
                 isAiEnabled
-                  ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-600 gap-1.5 px-2.5 py-1'
+                  ? 'border-success/30 bg-success/10 text-success gap-1.5 px-2.5 py-1'
                   : 'border-muted bg-muted/40 text-muted-foreground px-2.5 py-1'
               }
             >
-              {isAiEnabled && <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />}
+              {isAiEnabled && <span className="size-2 rounded-full bg-success animate-pulse" />}
               {isAiEnabled ? 'AI đang hoạt động' : 'AI đang tắt'}
             </Badge>
           </div>
@@ -393,7 +393,7 @@ export function TabAiSettings({ inbox, workspaceId, workspaceSlug }: TabAiSettin
                 <span
                   className={`text-[11px] ${
                     customInstructions.length > 1900
-                      ? 'text-amber-500 font-medium'
+                      ? 'text-warning font-medium'
                       : 'text-muted-foreground'
                   }`}
                 >
@@ -500,7 +500,7 @@ export function TabAiSettings({ inbox, workspaceId, workspaceSlug }: TabAiSettin
             </div>
             <Badge
               variant="outline"
-              className="text-[10px] text-emerald-600 border-emerald-500/30 bg-emerald-500/10 font-medium gap-1"
+              className="text-[10px] text-success border-success/30 bg-success/10 font-medium gap-1"
             >
               <Check className="size-2.5" />
               Sẵn sàng
@@ -527,7 +527,7 @@ export function TabAiSettings({ inbox, workspaceId, workspaceSlug }: TabAiSettin
             {isBankConfigured ? (
               <Badge
                 variant="outline"
-                className="text-[10px] text-emerald-600 border-emerald-500/30 bg-emerald-500/10 font-medium gap-1 shrink-0"
+                className="text-[10px] text-success border-success/30 bg-success/10 font-medium gap-1 shrink-0"
               >
                 <Check className="size-2.5" />
                 Đã kết nối

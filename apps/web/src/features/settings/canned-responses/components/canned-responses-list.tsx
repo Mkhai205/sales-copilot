@@ -68,7 +68,7 @@ export function CannedResponsesList({ workspaceId, currentUserRole }: CannedResp
               title="Sao chép tin nhắn"
             >
               {copiedValue === item.content ? (
-                <Check className="size-3 text-emerald-500" />
+                <Check className="size-3 text-success" />
               ) : (
                 <Copy className="size-3" />
               )}

@@ -35,7 +35,7 @@ export function ComposerActionToolbar({
     <div
       className={cn(
         'flex items-center justify-between border-t px-3 py-1.5 transition-colors',
-        isNote ? 'border-amber-500/20 bg-amber-500/5' : 'border-border/40 bg-muted/20',
+        isNote ? 'border-warning/20 bg-warning/5' : 'border-border/40 bg-muted/20',
       )}
     >
       <div className="flex items-center gap-1">
@@ -96,7 +96,7 @@ export function ComposerActionToolbar({
               className={cn(
                 'h-7 text-xs font-medium gap-1.5 px-3 shadow-xs transition-colors',
                 isNote &&
-                  'bg-amber-600 hover:bg-amber-500 text-white dark:bg-amber-600 dark:hover:bg-amber-500 focus-visible:ring-amber-500',
+                  'bg-warning hover:bg-warning text-white dark:bg-warning dark:hover:bg-warning focus-visible:ring-warning',
               )}
             >
               {isPending ? (

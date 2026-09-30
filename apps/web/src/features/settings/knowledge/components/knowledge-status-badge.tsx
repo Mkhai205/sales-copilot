@@ -21,7 +21,7 @@ export function KnowledgeStatusBadge({
   switch (status) {
     case 'READY':
       return (
-        <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30 gap-1 font-normal text-xs">
+        <Badge className="bg-success/15 text-success dark:text-success border-success/30 gap-1 font-normal text-xs">
           <CheckCircle2 className="h-3 w-3" />
           Sẵn sàng
         </Badge>
@@ -37,7 +37,7 @@ export function KnowledgeStatusBadge({
       return (
         <Badge
           variant="outline"
-          className="text-amber-600 border-amber-300 gap-1 font-normal text-xs"
+          className="text-warning border-warning/50 gap-1 font-normal text-xs"
         >
           <Clock className="h-3 w-3" />
           Chờ vector

@@ -155,9 +155,8 @@ export function ConversationActiveChips({
               className={cn(
                 'font-semibold',
                 filters.priority === ConversationPriority.URGENT &&
-                  'text-rose-600 dark:text-rose-400',
-                filters.priority === ConversationPriority.HIGH &&
-                  'text-amber-600 dark:text-amber-400',
+                  'text-destructive dark:text-destructive',
+                filters.priority === ConversationPriority.HIGH && 'text-warning dark:text-warning',
                 filters.priority === ConversationPriority.MEDIUM &&
                   'text-blue-600 dark:text-blue-400',
                 filters.priority === ConversationPriority.LOW && 'text-muted-foreground',

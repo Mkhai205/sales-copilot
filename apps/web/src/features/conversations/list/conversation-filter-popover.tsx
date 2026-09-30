@@ -47,14 +47,14 @@ const PRIORITY_ITEMS: Array<{
   {
     value: ConversationPriority.URGENT,
     label: 'Khẩn cấp',
-    dotColor: 'bg-rose-500',
-    textColor: 'text-rose-600 dark:text-rose-400',
+    dotColor: 'bg-destructive',
+    textColor: 'text-destructive dark:text-destructive',
   },
   {
     value: ConversationPriority.HIGH,
     label: 'Cao',
-    dotColor: 'bg-amber-500',
-    textColor: 'text-amber-600 dark:text-amber-400',
+    dotColor: 'bg-warning',
+    textColor: 'text-warning dark:text-warning',
   },
   {
     value: ConversationPriority.MEDIUM,

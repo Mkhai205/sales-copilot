@@ -129,8 +129,8 @@ export function InboxDetailLayout({
                 </span>
                 <span className="text-border">•</span>
                 {isConnected ? (
-                  <span className="inline-flex items-center gap-1.5 font-medium text-emerald-600 dark:text-emerald-400">
-                    <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="inline-flex items-center gap-1.5 font-medium text-success dark:text-success">
+                    <span className="size-1.5 rounded-full bg-success animate-pulse" />
                     Đang kết nối
                   </span>
                 ) : (

@@ -49,10 +49,10 @@ function renderPriorityIndicator(priority?: ConversationPriority | null) {
   if (priority === ConversationPriority.URGENT) {
     return (
       <span
-        className="inline-flex items-center gap-0.5 text-rose-600 dark:text-rose-400 shrink-0"
+        className="inline-flex items-center gap-0.5 text-destructive dark:text-destructive shrink-0"
         title="Độ ưu tiên: Khẩn cấp"
       >
-        <Flame className="size-3 text-rose-500 fill-rose-500 animate-pulse" />
+        <Flame className="size-3 text-destructive fill-destructive animate-pulse" />
       </span>
     );
   }
@@ -60,10 +60,10 @@ function renderPriorityIndicator(priority?: ConversationPriority | null) {
   if (priority === ConversationPriority.HIGH) {
     return (
       <span
-        className="inline-flex items-center gap-0.5 text-amber-600 dark:text-amber-400 shrink-0"
+        className="inline-flex items-center gap-0.5 text-warning dark:text-warning shrink-0"
         title="Độ ưu tiên: Cao"
       >
-        <Flag className="size-3 text-amber-500 fill-amber-500" />
+        <Flag className="size-3 text-warning fill-warning" />
       </span>
     );
   }
@@ -210,7 +210,7 @@ export function ConversationCard({
               isUnread ? 'text-foreground font-medium' : 'text-muted-foreground',
             )}
           >
-            {isPrivateNote && <Lock className="size-3 text-amber-500 shrink-0" />}
+            {isPrivateNote && <Lock className="size-3 text-warning shrink-0" />}
             {!isPrivateNote && isAgentReply && (
               <CornerUpLeft className="size-3 text-muted-foreground shrink-0" />
             )}
@@ -221,7 +221,7 @@ export function ConversationCard({
           </p>
 
           {unreadCount > 0 && (
-            <span className="size-4.5 min-w-4.5 px-1 bg-emerald-500 text-white rounded-full text-[10px] font-bold flex items-center justify-center shrink-0 shadow-xs">
+            <span className="size-4.5 min-w-4.5 px-1 bg-success text-white rounded-full text-[10px] font-bold flex items-center justify-center shrink-0 shadow-xs">
               {unreadCount > 99 ? '99+' : unreadCount}
             </span>
           )}

@@ -59,7 +59,7 @@ export function QuickShortcuts() {
       {/* Shortcut 3: Audit Logs */}
       <Card className="flex flex-col justify-between border-border bg-card transition-shadow hover:shadow-sm">
         <CardHeader className="gap-2">
-          <div className="flex size-10 items-center justify-center rounded-lg bg-amber-500/10 text-amber-500">
+          <div className="flex size-10 items-center justify-center rounded-lg bg-warning/10 text-warning">
             <ScrollText className="size-5" />
           </div>
           <CardTitle className="text-base">{'Nhật ký Kiểm toán Hệ thống'}</CardTitle>

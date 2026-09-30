@@ -112,7 +112,7 @@ export function WorkspaceDetailView({ workspace }: WorkspaceDetailViewProps) {
                       title={'Sao chép slug'}
                     >
                       {copiedSlug ? (
-                        <Check className="size-3 text-emerald-600" />
+                        <Check className="size-3 text-success" />
                       ) : (
                         <Copy className="size-3" />
                       )}
@@ -130,7 +130,7 @@ export function WorkspaceDetailView({ workspace }: WorkspaceDetailViewProps) {
                       title={'Sao chép ID'}
                     >
                       {copiedId ? (
-                        <Check className="size-3 text-emerald-600" />
+                        <Check className="size-3 text-success" />
                       ) : (
                         <Copy className="size-3" />
                       )}
@@ -201,7 +201,7 @@ export function WorkspaceDetailView({ workspace }: WorkspaceDetailViewProps) {
         <Card className="p-3.5 flex flex-col gap-2.5">
           <div className="flex items-center justify-between text-xs">
             <span className="text-muted-foreground font-medium flex items-center gap-1.5">
-              <Radio className="size-3.5 text-emerald-500" /> {'Kênh kết nối'}
+              <Radio className="size-3.5 text-success" /> {'Kênh kết nối'}
             </span>
             <span className="font-semibold text-foreground">
               {workspace.usage.currentChannels} / {workspace.quotas.maxChannels}
@@ -220,7 +220,7 @@ export function WorkspaceDetailView({ workspace }: WorkspaceDetailViewProps) {
         <Card className="p-3.5 flex flex-col gap-2.5">
           <div className="flex items-center justify-between text-xs">
             <span className="text-muted-foreground font-medium flex items-center gap-1.5">
-              <HardDrive className="size-3.5 text-amber-500" /> {'Lưu trữ MinIO'}
+              <HardDrive className="size-3.5 text-warning" /> {'Lưu trữ MinIO'}
             </span>
             <span className="font-semibold text-foreground">
               {formatStorage(workspace.usage.storageUsedMb)} /{' '}
@@ -292,7 +292,7 @@ export function WorkspaceDetailView({ workspace }: WorkspaceDetailViewProps) {
                         variant="outline"
                         className={
                           member.role === 'OWNER'
-                            ? 'border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                            ? 'border-warning/30 bg-warning/10 text-warning dark:text-warning'
                             : member.role === 'ADMIN'
                               ? 'border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-400'
                               : 'border-border text-muted-foreground'

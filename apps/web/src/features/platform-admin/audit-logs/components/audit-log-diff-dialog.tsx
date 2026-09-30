@@ -167,7 +167,7 @@ export function AuditLogDiffDialog({ log, open, onOpenChange }: AuditLogDiffDial
             >
               {copiedJson ? (
                 <>
-                  <Check className="size-3 text-emerald-600" />
+                  <Check className="size-3 text-success" />
                   <span>{'Đã sao chép'}</span>
                 </>
               ) : (
@@ -228,12 +228,12 @@ function renderVisualDiff(action: string, metadata: Record<string, any>) {
 
     case PlatformAuditAction.WORKSPACE_ACTIVATED:
       return (
-        <div className="flex flex-col gap-3 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-4 text-emerald-800 dark:text-emerald-300">
+        <div className="flex flex-col gap-3 rounded-lg border border-success/30 bg-success/10 p-4 text-success dark:text-success">
           <div className="flex items-start gap-2.5">
-            <ShieldCheck className="size-5 shrink-0 mt-0.5 text-emerald-600 dark:text-emerald-400" />
+            <ShieldCheck className="size-5 shrink-0 mt-0.5 text-success dark:text-success" />
             <div className="flex flex-col gap-1">
               <h4 className="font-semibold text-sm">{'Gian hàng đã được kích hoạt lại'}</h4>
-              <p className="text-xs text-emerald-700 dark:text-emerald-400">
+              <p className="text-xs text-success dark:text-success">
                 {
                   'Lệnh tạm khóa đã được gỡ bỏ. Chủ shop và nhân viên có thể đăng nhập và tiếp tục vận hành bình thường.'
                 }
@@ -241,7 +241,7 @@ function renderVisualDiff(action: string, metadata: Record<string, any>) {
             </div>
           </div>
           {metadata.reason && (
-            <div className="rounded-md border border-emerald-500/20 bg-background/80 p-3 text-foreground">
+            <div className="rounded-md border border-success/20 bg-background/80 p-3 text-foreground">
               <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">
                 {'Ghi chú kích hoạt:'}
               </span>
@@ -342,7 +342,7 @@ function renderVisualDiff(action: string, metadata: Record<string, any>) {
                         <td className="py-2 px-3 text-center font-mono">
                           {diff !== null ? (
                             diff > 0 ? (
-                              <span className="text-emerald-600 font-semibold">+{diff}</span>
+                              <span className="text-success font-semibold">+{diff}</span>
                             ) : diff < 0 ? (
                               <span className="text-destructive font-semibold">{diff}</span>
                             ) : (

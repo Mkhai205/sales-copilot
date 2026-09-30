@@ -77,13 +77,13 @@ export function ConversationActions({ conversation, workspaceSlug }: Conversatio
               <SelectGroup>
                 <SelectItem value={ConversationStatus.OPEN}>
                   <span className="flex items-center gap-2">
-                    <span className="size-2 rounded-full bg-emerald-500" />
+                    <span className="size-2 rounded-full bg-success" />
                     {'Đang mở'}
                   </span>
                 </SelectItem>
                 <SelectItem value={ConversationStatus.PENDING}>
                   <span className="flex items-center gap-2">
-                    <span className="size-2 rounded-full bg-amber-500" />
+                    <span className="size-2 rounded-full bg-warning" />
                     {'Đang chờ'}
                   </span>
                 </SelectItem>
@@ -118,8 +118,8 @@ export function ConversationActions({ conversation, workspaceSlug }: Conversatio
             <SelectContent position="popper">
               <SelectGroup>
                 <SelectItem value={ConversationPriority.URGENT}>
-                  <span className="flex items-center gap-2 text-rose-500 font-medium">
-                    <span className="size-2 rounded-full bg-rose-500" />
+                  <span className="flex items-center gap-2 text-destructive font-medium">
+                    <span className="size-2 rounded-full bg-destructive" />
                     {'Khẩn cấp'}
                   </span>
                 </SelectItem>
@@ -131,7 +131,7 @@ export function ConversationActions({ conversation, workspaceSlug }: Conversatio
                 </SelectItem>
                 <SelectItem value={ConversationPriority.MEDIUM}>
                   <span className="flex items-center gap-2">
-                    <span className="size-2 rounded-full bg-yellow-500" />
+                    <span className="size-2 rounded-full bg-warning" />
                     {'Trung bình'}
                   </span>
                 </SelectItem>

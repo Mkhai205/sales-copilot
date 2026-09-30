@@ -54,8 +54,8 @@ export function KpiMetricCards({ metrics }: KpiMetricCardsProps) {
         <CardContent className="flex flex-col gap-3 pt-0">
           <Progress value={activeRatio} className="h-2 w-full" />
           <div className="flex items-center justify-between text-xs">
-            <span className="inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-medium">
-              <span className="size-2 rounded-full bg-emerald-500" />
+            <span className="inline-flex items-center gap-1.5 text-success dark:text-success font-medium">
+              <span className="size-2 rounded-full bg-success" />
               {'Đang hoạt động'}: {formatMetricNumber(metrics.activeWorkspaces)}
             </span>
             <span className="inline-flex items-center gap-1.5 text-destructive font-medium">
@@ -98,7 +98,7 @@ export function KpiMetricCards({ metrics }: KpiMetricCardsProps) {
       <Card className="flex flex-col justify-between border-border bg-card">
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
-            <div className="flex size-10 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-500">
+            <div className="flex size-10 items-center justify-center rounded-lg bg-success/10 text-success">
               <Activity className="size-5" />
             </div>
             <Badge

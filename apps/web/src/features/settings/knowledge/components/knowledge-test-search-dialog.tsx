@@ -58,7 +58,7 @@ export function KnowledgeTestSearchDialog({
     const percent = Math.round(similarity * 100);
     if (percent >= 80) {
       return (
-        <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30 gap-1 font-semibold">
+        <Badge className="bg-success/15 text-success dark:text-success border-success/30 gap-1 font-semibold">
           <CheckCircle2 className="h-3.5 w-3.5" />
           {percent}% Tương đồng cao
         </Badge>
@@ -148,7 +148,7 @@ export function KnowledgeTestSearchDialog({
 
           {!isPending && hasSearched && results && results.length === 0 && (
             <div className="flex flex-col items-center justify-center py-10 rounded-lg border border-dashed border-border text-center p-6 gap-2">
-              <AlertCircle className="h-8 w-8 text-amber-500" />
+              <AlertCircle className="h-8 w-8 text-warning" />
               <p className="text-sm font-medium text-foreground">
                 Không tìm thấy bài viết nào đạt ngưỡng {Math.round(minSimilarity * 100)}%
               </p>

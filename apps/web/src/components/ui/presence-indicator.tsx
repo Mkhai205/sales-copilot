@@ -53,11 +53,7 @@ export function PresenceIndicator({
   const isOnline = effectiveStatus === PresenceStatus.ONLINE;
   const isAway = effectiveStatus === PresenceStatus.AWAY;
 
-  const colorClass = isOnline
-    ? 'bg-emerald-500'
-    : isAway
-      ? 'bg-amber-500'
-      : 'bg-muted-foreground/30';
+  const colorClass = isOnline ? 'bg-success' : isAway ? 'bg-warning' : 'bg-muted-foreground/30';
 
   const labelText = isOnline ? 'Online' : isAway ? 'Away' : 'Offline';
 
@@ -76,7 +72,7 @@ export function PresenceIndicator({
       {pulse && isOnline && (
         <span
           className={cn(
-            'absolute inset-0 rounded-full animate-ping bg-emerald-400 opacity-75',
+            'absolute inset-0 rounded-full animate-ping bg-success opacity-75',
             sizeClasses[size],
           )}
         />

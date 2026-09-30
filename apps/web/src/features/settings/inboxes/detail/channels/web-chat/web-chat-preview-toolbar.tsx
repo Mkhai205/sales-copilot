@@ -114,7 +114,7 @@ export function WebChatPreviewToolbar({
           >
             {isCopied ? (
               <>
-                <Check className="size-3 text-emerald-500" />
+                <Check className="size-3 text-success" />
                 <span>Đã chép</span>
               </>
             ) : (

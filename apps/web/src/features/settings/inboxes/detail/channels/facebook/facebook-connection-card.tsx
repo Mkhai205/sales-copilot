@@ -58,8 +58,8 @@ export function FacebookConnectionCard({
             variant="outline"
             className={
               isConnected
-                ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-500 text-xs py-1 px-2.5'
-                : 'border-amber-500/30 bg-amber-500/10 text-amber-500 text-xs py-1 px-2.5'
+                ? 'border-success/30 bg-success/10 text-success text-xs py-1 px-2.5'
+                : 'border-warning/30 bg-warning/10 text-warning text-xs py-1 px-2.5'
             }
           >
             {isConnected ? (
@@ -88,7 +88,7 @@ export function FacebookConnectionCard({
         )}
 
         {lastSyncError && !isSyncingSession && (
-          <div className="flex items-center gap-2 rounded-lg border border-amber-500/20 bg-amber-500/5 p-3 text-xs text-amber-500">
+          <div className="flex items-center gap-2 rounded-lg border border-warning/20 bg-warning/5 p-3 text-xs text-warning">
             <ShieldAlert className="size-4 shrink-0" />
             <span>
               Lỗi đồng bộ gần nhất: <span className="text-muted-foreground">{lastSyncError}</span>

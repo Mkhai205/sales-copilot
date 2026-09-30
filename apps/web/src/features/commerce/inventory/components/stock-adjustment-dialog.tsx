@@ -183,7 +183,7 @@ export function StockAdjustmentDialog({
           </div>
           <div className="flex flex-col items-center border-x">
             <span className="text-[11px] text-muted-foreground">Tạm giữ (Đơn chat)</span>
-            <span className="text-lg font-bold tracking-tight text-amber-600 dark:text-amber-400">
+            <span className="text-lg font-bold tracking-tight text-warning dark:text-warning">
               {currentReserved}
             </span>
           </div>
@@ -192,9 +192,7 @@ export function StockAdjustmentDialog({
             <span
               className={cn(
                 'text-lg font-bold tracking-tight',
-                currentAvailable > 0
-                  ? 'text-emerald-600 dark:text-emerald-400'
-                  : 'text-destructive',
+                currentAvailable > 0 ? 'text-success dark:text-success' : 'text-destructive',
               )}
             >
               {currentAvailable}
@@ -220,7 +218,7 @@ export function StockAdjustmentDialog({
                   'h-auto w-auto',
                   'flex items-center justify-center gap-1.5 p-2 rounded-md border text-xs font-medium transition-colors',
                   type === InventoryTransactionType.STOCK_IN
-                    ? 'border-emerald-500 bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 shadow-xs'
+                    ? 'border-success bg-success/10 text-success dark:bg-success/40 dark:text-success shadow-xs'
                     : 'border-border bg-background hover:bg-muted text-muted-foreground',
                 )}
               >
@@ -241,7 +239,7 @@ export function StockAdjustmentDialog({
                   'h-auto w-auto',
                   'flex items-center justify-center gap-1.5 p-2 rounded-md border text-xs font-medium transition-colors',
                   type === InventoryTransactionType.STOCK_OUT
-                    ? 'border-rose-500 bg-rose-50 text-rose-800 dark:bg-rose-950/40 dark:text-rose-300 shadow-xs'
+                    ? 'border-destructive bg-destructive/10 text-destructive dark:bg-destructive/40 dark:text-destructive shadow-xs'
                     : 'border-border bg-background hover:bg-muted text-muted-foreground',
                 )}
               >

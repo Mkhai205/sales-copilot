@@ -210,13 +210,13 @@ export function InboxesList({
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-muted-foreground text-[11px]">{'Trạng thái kênh:'}</span>
                     {isConnected ? (
-                      <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
-                        <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-success dark:text-success">
+                        <span className="size-1.5 rounded-full bg-success animate-pulse" />
                         {'Đang hoạt động'}
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-amber-500">
-                        <span className="size-1.5 rounded-full bg-amber-500" />
+                      <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-warning">
+                        <span className="size-1.5 rounded-full bg-warning" />
                         {'Mất kết nối'}
                       </span>
                     )}

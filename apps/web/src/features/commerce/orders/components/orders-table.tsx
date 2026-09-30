@@ -190,7 +190,7 @@ export function OrdersTable({
                   {canComplete && (
                     <DropdownMenuItem
                       onClick={() => onCompleteOrder(order)}
-                      className="gap-2 text-emerald-600 focus:text-emerald-600 cursor-pointer"
+                      className="gap-2 text-success focus:text-success cursor-pointer"
                     >
                       <CheckCircle2 className="size-3.5" />
                       <span>{'Hoàn tất đơn'}</span>

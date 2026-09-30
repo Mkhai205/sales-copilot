@@ -142,7 +142,7 @@ export function OrderDetailSheet({
                   type="button"
                   variant="default"
                   size="sm"
-                  className="h-7 text-xs gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer"
+                  className="h-7 text-xs gap-1.5 bg-success hover:bg-success text-white cursor-pointer"
                   onClick={() => setCompleteDialogOpen(true)}
                   disabled={isCompleting}
                 >
@@ -264,7 +264,7 @@ export function OrderDetailSheet({
                   </span>
                 </div>
                 {Number(order.discountAmount || 0) > 0 && (
-                  <div className="flex justify-between text-emerald-600">
+                  <div className="flex justify-between text-success">
                     <span>
                       {'Chiết khấu:'} {order.discountReason ? `(${order.discountReason})` : ''}
                     </span>
@@ -285,7 +285,7 @@ export function OrderDetailSheet({
                 </div>
                 <div className="flex justify-between text-muted-foreground text-[11px] pt-1 border-t border-dashed border-border/60">
                   <span>{'Đã cọc/thanh toán'}:</span>
-                  <span className="font-mono font-medium text-emerald-600">
+                  <span className="font-mono font-medium text-success">
                     {formatVND(paidAmount)}
                   </span>
                 </div>
@@ -312,7 +312,7 @@ export function OrderDetailSheet({
                           {formatDateTime(tx.createdAt)}
                         </div>
                       </div>
-                      <div className="font-mono font-semibold text-emerald-600">
+                      <div className="font-mono font-semibold text-success">
                         +{formatVND(Number(tx.amount))}
                       </div>
                     </div>
@@ -373,7 +373,7 @@ export function OrderDetailSheet({
             <Button
               type="button"
               variant="default"
-              className="bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer"
+              className="bg-success hover:bg-success text-white cursor-pointer"
               onClick={handleConfirmComplete}
               disabled={isCompleting}
             >

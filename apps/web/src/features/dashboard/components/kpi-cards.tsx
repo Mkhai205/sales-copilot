@@ -54,7 +54,7 @@ export function KpiCards({ summary, isLoading, workspaceSlug }: KpiCardsProps) {
           <CardTitle className="text-xs font-medium text-muted-foreground">
             Doanh thu hôm nay
           </CardTitle>
-          <div className="flex size-8 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+          <div className="flex size-8 items-center justify-center rounded-lg bg-success/10 text-success dark:text-success">
             <TrendingUp className="size-4" />
           </div>
         </CardHeader>
@@ -142,9 +142,9 @@ export function KpiCards({ summary, isLoading, workspaceSlug }: KpiCardsProps) {
             {aiCopilot.isActive ? (
               <Badge
                 variant="outline"
-                className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 gap-1 text-[11px] font-medium"
+                className="bg-success/10 text-success dark:text-success border-success/30 gap-1 text-[11px] font-medium"
               >
-                <span className="size-1.5 rounded-full bg-emerald-500 inline-block animate-pulse" />
+                <span className="size-1.5 rounded-full bg-success inline-block animate-pulse" />
                 Hoạt động
               </Badge>
             ) : (

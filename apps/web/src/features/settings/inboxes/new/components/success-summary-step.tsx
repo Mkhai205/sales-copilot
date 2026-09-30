@@ -79,9 +79,9 @@ export function SuccessSummaryStep() {
   return (
     <div className="flex flex-col gap-4">
       {/* Success Banner */}
-      <Card className="border-emerald-500/30 bg-emerald-500/5">
+      <Card className="border-success/30 bg-success/5">
         <CardContent className="pt-3 pb-3 flex flex-col items-center text-center gap-3">
-          <div className="flex items-center justify-center text-emerald-500">
+          <div className="flex items-center justify-center text-success">
             <CheckCircle2 className="size-8" />
           </div>
           <div>
@@ -102,7 +102,7 @@ export function SuccessSummaryStep() {
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <FileCode className="size-4 text-emerald-500" />
+                <FileCode className="size-4 text-success" />
                 <CardTitle className="text-sm font-semibold">Mã nhúng Website Live Chat</CardTitle>
               </div>
               <Button
@@ -112,7 +112,7 @@ export function SuccessSummaryStep() {
                 className="h-8 gap-1.5 text-xs font-medium"
               >
                 {copiedCode ? (
-                  <Check className="size-3.5 text-emerald-500" />
+                  <Check className="size-3.5 text-success" />
                 ) : (
                   <Copy className="size-3.5" />
                 )}
@@ -129,9 +129,9 @@ export function SuccessSummaryStep() {
             <div className="rounded-lg border border-border/80 bg-slate-950 dark:bg-zinc-950 overflow-hidden shadow-xs flex flex-col">
               <div className="flex items-center justify-between border-b border-white/10 bg-slate-900/90 px-3 py-1.5 text-[10px] text-slate-400 font-mono">
                 <div className="flex items-center gap-1.5">
-                  <div className="size-2 rounded-full bg-red-400/80" />
-                  <div className="size-2 rounded-full bg-amber-400/80" />
-                  <div className="size-2 rounded-full bg-emerald-400/80" />
+                  <div className="size-2 rounded-full bg-destructive/80" />
+                  <div className="size-2 rounded-full bg-warning/80" />
+                  <div className="size-2 rounded-full bg-success/80" />
                   <span className="ml-1 text-slate-300">index.html</span>
                 </div>
                 <span>HTML &bull; UTF-8</span>
@@ -167,7 +167,7 @@ export function SuccessSummaryStep() {
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Send className="size-4 text-sky-500" />
+                <Send className="size-4 text-info" />
                 <CardTitle className="text-sm font-semibold">Thử nghiệm Telegram Bot</CardTitle>
               </div>
               <Button
@@ -198,7 +198,7 @@ export function SuccessSummaryStep() {
             ) : null}
 
             <div className="rounded-lg border border-border bg-muted/30 p-3 text-xs text-muted-foreground flex items-center gap-2.5">
-              <ShieldCheck className="size-4 text-emerald-500 shrink-0" />
+              <ShieldCheck className="size-4 text-success shrink-0" />
               <span>
                 Webhook tiếp nhận sự kiện đã được kích hoạt tự động với Telegram Bot API. Bạn có thể
                 bắt đầu nhắn tin với bot ngay bây giờ.
@@ -212,7 +212,7 @@ export function SuccessSummaryStep() {
         <Card className="border-border bg-card/40">
           <CardHeader className="pb-3">
             <div className="flex items-center gap-2">
-              <div className="size-2 rounded-full bg-emerald-500" />
+              <div className="size-2 rounded-full bg-success" />
               <CardTitle className="text-sm font-semibold">
                 Fanpage Facebook đã được kết nối
               </CardTitle>
@@ -233,9 +233,9 @@ export function SuccessSummaryStep() {
                     <Badge
                       key={item.id}
                       variant="secondary"
-                      className="gap-1.5 py-1 px-2.5 text-xs font-medium border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                      className="gap-1.5 py-1 px-2.5 text-xs font-medium border-success/20 bg-success/10 text-success dark:text-success"
                     >
-                      <CheckCircle2 className="size-3.5 text-emerald-500 shrink-0" />
+                      <CheckCircle2 className="size-3.5 text-success shrink-0" />
                       {item.name}
                     </Badge>
                   ))}
@@ -244,7 +244,7 @@ export function SuccessSummaryStep() {
             )}
 
             <div className="rounded-lg border border-border bg-muted/30 p-3 text-xs text-muted-foreground flex items-center gap-2.5">
-              <ShieldCheck className="size-4 text-emerald-500 shrink-0" />
+              <ShieldCheck className="size-4 text-success shrink-0" />
               <span>
                 Tin nhắn mới từ khách hàng trên các Fanpage này sẽ xuất hiện tức thì tại trang Hội
                 thoại.

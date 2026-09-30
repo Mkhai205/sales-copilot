@@ -256,7 +256,7 @@ export function TabCollaborators({ inbox, workspaceId }: TabCollaboratorsProps) 
       <Card className="border-border bg-card/40">
         <CardHeader>
           <div className="flex items-center gap-2">
-            <Zap className="size-4 text-amber-500" />
+            <Zap className="size-4 text-warning" />
             <CardTitle className="text-base font-semibold">
               Tự động phân bổ hội thoại (Auto-Assignment)
             </CardTitle>

@@ -217,8 +217,8 @@ export function BankSettingsForm({
 
               {/* Ghi chú VietinBank */}
               {isVietin && (
-                <div className="flex items-center gap-2 rounded-lg bg-sky-50 dark:bg-sky-950/30 px-3 py-2 text-xs text-sky-800 dark:text-sky-300 border border-sky-200 dark:border-sky-800/60">
-                  <Info className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400 shrink-0" />
+                <div className="flex items-center gap-2 rounded-lg bg-info/10 dark:bg-info/30 px-3 py-2 text-xs text-info dark:text-info border border-info/40 dark:border-info/60">
+                  <Info className="h-3.5 w-3.5 text-info dark:text-info shrink-0" />
                   <span>
                     Tài khoản VietinBank tự động được gắn tiền tố{' '}
                     <strong className="font-mono font-bold">SEVQR</strong> vào nội dung thanh toán
@@ -262,9 +262,9 @@ export function BankSettingsForm({
             {isWebhookConfigured ? (
               <Badge
                 variant="outline"
-                className="text-xs h-6 px-2.5 gap-1.5 font-normal border-emerald-500/40 text-emerald-600 dark:text-emerald-400 bg-emerald-50/50 dark:bg-emerald-950/20"
+                className="text-xs h-6 px-2.5 gap-1.5 font-normal border-success/40 text-success dark:text-success bg-success/50 dark:bg-success/20"
               >
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
                 Đã cấu hình Webhook
               </Badge>
             ) : (
@@ -351,7 +351,7 @@ export function BankSettingsForm({
                   >
                     {copiedUrl ? (
                       <>
-                        <Check className="size-3.5 text-emerald-600" />
+                        <Check className="size-3.5 text-success" />
                         Đã chép
                       </>
                     ) : (
@@ -363,11 +363,11 @@ export function BankSettingsForm({
                   </Button>
                 </div>
                 {isLocalhost && (
-                  <div className="flex items-start gap-2.5 p-3 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-800 dark:text-amber-300 text-xs">
-                    <AlertTriangle className="size-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
+                  <div className="flex items-start gap-2.5 p-3 rounded-lg border border-warning/30 bg-warning/10 text-warning dark:text-warning text-xs">
+                    <AlertTriangle className="size-4 shrink-0 text-warning dark:text-warning mt-0.5" />
                     <div className="space-y-1">
                       <p className="font-medium">Cảnh báo môi trường Localhost</p>
-                      <p className="text-[11px] text-amber-700 dark:text-amber-300/90 leading-relaxed">
+                      <p className="text-[11px] text-warning dark:text-warning/90 leading-relaxed">
                         Địa chỉ Webhook hiện tại đang trỏ về <strong>localhost</strong>. Các dịch vụ
                         đối soát bên ngoài (như SePay) không thể gửi tín hiệu thanh toán đến máy cục
                         bộ nếu không sử dụng đường hầm công khai (như Cloudflare Tunnel hoặc ngrok).
@@ -420,7 +420,7 @@ export function BankSettingsForm({
                     <FieldError errors={[{ message: errors.webhookSecret.message }]} />
                   )}
                   <FieldDescription className="flex items-center gap-1.5 pt-1">
-                    <Sparkles className="size-3.5 text-amber-500 shrink-0" />
+                    <Sparkles className="size-3.5 text-warning shrink-0" />
                     <span>
                       Sau khi lưu cấu hình, bạn có thể bấm nút <strong>&quot;Gửi thử&quot;</strong>{' '}
                       trên SePay để kiểm tra nhận biến động số dư tức thì.

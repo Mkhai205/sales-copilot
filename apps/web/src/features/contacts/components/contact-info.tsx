@@ -88,7 +88,7 @@ export function ContactInfo({ contact }: ContactInfoProps) {
                     className="size-6 text-muted-foreground hover:text-foreground"
                   >
                     {copiedField === 'Email' ? (
-                      <Check className="size-3 text-emerald-500" />
+                      <Check className="size-3 text-success" />
                     ) : (
                       <Copy className="size-3" />
                     )}
@@ -128,7 +128,7 @@ export function ContactInfo({ contact }: ContactInfoProps) {
                     className="size-6 text-muted-foreground hover:text-foreground"
                   >
                     {copiedField === 'Số điện thoại' ? (
-                      <Check className="size-3 text-emerald-500" />
+                      <Check className="size-3 text-success" />
                     ) : (
                       <Copy className="size-3" />
                     )}

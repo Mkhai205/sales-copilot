@@ -85,7 +85,7 @@ export function ReconciliationLedgerTable({
         header: 'Số tiền',
         meta: { headerClassName: 'w-36 text-right' },
         cell: ({ row }) => (
-          <div className="text-right font-bold text-emerald-600 dark:text-emerald-400">
+          <div className="text-right font-bold text-success dark:text-success">
             +{formatVND(Number(row.original.amount))}
           </div>
         ),
@@ -159,13 +159,13 @@ export function ReconciliationLedgerTable({
           return (
             <div className="text-center">
               {isSuccess ? (
-                <Badge className="bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 text-[11px] px-2 py-0.5 border-0 inline-flex items-center gap-1">
+                <Badge className="bg-success/15 text-success dark:text-success text-[11px] px-2 py-0.5 border-0 inline-flex items-center gap-1">
                   <CheckCircle2 className="w-3 h-3" /> Đã đối soát
                 </Badge>
               ) : isPending ? (
                 <Badge
                   variant="outline"
-                  className="border-amber-400 text-amber-600 bg-amber-50 dark:bg-amber-950/20 text-[11px] px-2 py-0.5 inline-flex items-center gap-1"
+                  className="border-warning text-warning bg-warning/10 dark:bg-warning/20 text-[11px] px-2 py-0.5 inline-flex items-center gap-1"
                 >
                   <Clock className="w-3 h-3" /> Chờ đối soát
                 </Badge>

@@ -58,7 +58,7 @@ export function MessageThreadHeader({
         return (
           <Badge
             variant="outline"
-            className="text-[10px] text-emerald-500 border-emerald-500/30 bg-emerald-500/10 py-0 px-1.5 font-medium"
+            className="text-[10px] text-success border-success/30 bg-success/10 py-0 px-1.5 font-medium"
           >
             {'Đang mở'}
           </Badge>
@@ -67,7 +67,7 @@ export function MessageThreadHeader({
         return (
           <Badge
             variant="outline"
-            className="text-[10px] text-amber-500 border-amber-500/30 bg-amber-500/10 py-0 px-1.5 font-medium"
+            className="text-[10px] text-warning border-warning/30 bg-warning/10 py-0 px-1.5 font-medium"
           >
             {'Đang chờ'}
           </Badge>
@@ -102,7 +102,7 @@ export function MessageThreadHeader({
         return (
           <Badge
             variant="outline"
-            className="text-[10px] text-rose-500 border-rose-500/30 bg-rose-500/10 py-0 px-1.5 font-medium gap-1"
+            className="text-[10px] text-destructive border-destructive/30 bg-destructive/10 py-0 px-1.5 font-medium gap-1"
           >
             <AlertTriangle className="size-2.5" />
             {'Khẩn cấp'}
@@ -185,7 +185,7 @@ export function MessageThreadHeader({
             {isAiActive && (
               <Badge
                 variant="outline"
-                className="text-[10px] text-emerald-600 border-emerald-500/30 bg-emerald-500/10 py-0 px-1.5 font-medium flex items-center gap-1"
+                className="text-[10px] text-success border-success/30 bg-success/10 py-0 px-1.5 font-medium flex items-center gap-1"
               >
                 <Bot className="size-2.5" />
                 <span>{'AI Autopilot'}</span>
@@ -194,7 +194,7 @@ export function MessageThreadHeader({
             {isStaffTakeover && (
               <Badge
                 variant="outline"
-                className="text-[10px] text-amber-500 border-amber-500/30 bg-amber-500/10 py-0 px-1.5 font-medium flex items-center gap-1"
+                className="text-[10px] text-warning border-warning/30 bg-warning/10 py-0 px-1.5 font-medium flex items-center gap-1"
               >
                 <UserRoundCheck className="size-2.5" />
                 <span>{'Nhân viên'}</span>
@@ -217,7 +217,7 @@ export function MessageThreadHeader({
             size="sm"
             onClick={() => takeoverMutation.mutate(conversation.id)}
             disabled={takeoverMutation.isPending}
-            className="h-7 text-xs gap-1.5 border-amber-500/40 text-amber-600 hover:bg-amber-500/10 hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300 font-medium cursor-pointer"
+            className="h-7 text-xs gap-1.5 border-warning/40 text-warning hover:bg-warning/10 hover:text-warning dark:text-warning dark:hover:text-success font-medium cursor-pointer"
           >
             {takeoverMutation.isPending ? (
               <Loader2 className="size-3 animate-spin" />

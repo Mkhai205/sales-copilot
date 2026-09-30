@@ -252,14 +252,14 @@ export function DetailPanel({
                     {conversation.isAiPaused ? (
                       <Badge
                         variant="outline"
-                        className="text-[10px] text-amber-500 border-amber-500/30 bg-amber-500/10 py-0 px-1.5 font-normal"
+                        className="text-[10px] text-warning border-warning/30 bg-warning/10 py-0 px-1.5 font-normal"
                       >
                         {'Đã tiếp quản bởi nhân viên'}
                       </Badge>
                     ) : (
                       <Badge
                         variant="outline"
-                        className="text-[10px] text-emerald-600 border-emerald-500/30 bg-emerald-500/10 py-0 px-1.5 font-normal"
+                        className="text-[10px] text-success border-success/30 bg-success/10 py-0 px-1.5 font-normal"
                       >
                         {'Đang hoạt động'}
                       </Badge>

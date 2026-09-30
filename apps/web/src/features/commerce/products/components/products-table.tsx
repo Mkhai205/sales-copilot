@@ -271,7 +271,7 @@ export function ProductsTable({
                         <td className="p-2 font-mono text-muted-foreground">{v.sku}</td>
                         <td className="p-2 text-right font-medium">{formatVND(Number(v.price))}</td>
                         <td className="p-2 text-center font-mono font-medium">{v.stockQuantity}</td>
-                        <td className="p-2 text-center font-mono text-amber-600 dark:text-amber-400 font-medium">
+                        <td className="p-2 text-center font-mono text-warning dark:text-warning font-medium">
                           {v.reservedQuantity}
                         </td>
                         <td className="p-2 text-center">
