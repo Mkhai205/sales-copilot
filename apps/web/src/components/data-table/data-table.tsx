@@ -62,9 +62,26 @@ export function DataTable<TData>({
   onRowClick,
   className,
 }: DataTableProps<TData>) {
+  // TanStack derives column ids from accessor keys or a non-empty string
+  // header; display columns like header: '' (action columns) would throw at
+  // runtime. Guarantee an id for every column here.
+  const columnsWithIds = React.useMemo(
+    () =>
+      columns.map((column, index) =>
+        column.id
+          ? column
+          : ({
+              ...column,
+              id:
+                typeof column.header === 'string' && column.header ? column.header : `col-${index}`,
+            } as typeof column),
+      ),
+    [columns],
+  );
+
   const table = useReactTable({
     data,
-    columns,
+    columns: columnsWithIds,
     getCoreRowModel: getCoreRowModel(),
     manualPagination: true,
     getRowId: getRowKey ? (row, index) => getRowKey(row, index) : undefined,
