@@ -107,10 +107,11 @@ export function AuditLogsTable({
                   >
                     {log.targetId}
                   </span>
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
                     onClick={e => handleCopyId(e, log.targetId!)}
-                    className="text-muted-foreground hover:text-foreground transition-colors p-0.5"
+                    className="h-auto w-auto text-muted-foreground hover:text-foreground transition-colors p-0.5"
                     title={'Sao chép ID'}
                   >
                     {copiedValue === log.targetId ? (
@@ -118,7 +119,7 @@ export function AuditLogsTable({
                     ) : (
                       <Copy className="size-3" />
                     )}
-                  </button>
+                  </Button>
 
                   {/* Quick Navigation link if applicable */}
                   {log.targetType === 'WORKSPACE' && (

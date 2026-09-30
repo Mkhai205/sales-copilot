@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { Dialog as DialogPrimitive } from 'radix-ui';
+import { DialogPrimitive } from '@/components/ui/dialog';
 import { X, ChevronLeft, ChevronRight, Download, Copy, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -244,12 +244,13 @@ export function ImageLightboxDialog({
               {images.map((img, idx) => {
                 const isActive = idx === currentIndex;
                 return (
-                  <button
+                  <Button
                     key={img.id || img.storagePath || idx}
                     type="button"
+                    variant="ghost"
                     onClick={() => setCurrentIndex(idx)}
                     className={cn(
-                      'relative size-12 rounded-md overflow-hidden shrink-0 transition-all cursor-pointer',
+                      'h-auto w-auto relative size-12 rounded-md overflow-hidden shrink-0 transition-all cursor-pointer',
                       isActive
                         ? 'ring-2 ring-white scale-105 opacity-100 shadow-md'
                         : 'opacity-40 hover:opacity-80 ring-1 ring-white/20',
@@ -265,7 +266,7 @@ export function ImageLightboxDialog({
                         className="h-full w-full object-cover"
                       />
                     )}
-                  </button>
+                  </Button>
                 );
               })}
             </div>

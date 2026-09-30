@@ -190,13 +190,14 @@ export function OrdersView({ workspaceSlug }: OrdersViewProps) {
             className="pl-8 text-xs h-9"
           />
           {searchTerm && (
-            <button
+            <Button
               type="button"
+              variant="ghost"
               onClick={() => setSearchTerm('')}
-              className="absolute right-2.5 top-2.5 text-muted-foreground hover:text-foreground cursor-pointer"
+              className="h-auto w-auto absolute right-2.5 top-2.5 text-muted-foreground hover:text-foreground cursor-pointer"
             >
               <X className="size-4" />
-            </button>
+            </Button>
           )}
         </div>
 

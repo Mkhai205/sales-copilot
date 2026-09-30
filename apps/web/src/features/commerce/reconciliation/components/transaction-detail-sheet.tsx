@@ -98,13 +98,14 @@ export function TransactionDetailSheet({
         <div className="space-y-2 bg-muted/30 p-3 rounded-lg border">
           <div className="flex items-center justify-between text-xs text-muted-foreground font-medium">
             <span>Nội dung chuyển khoản (Memo)</span>
-            <button
+            <Button
+              variant="ghost"
               onClick={() => copyToClipboard(transaction.transferContent || '', 'Nội dung')}
-              className="text-primary hover:underline flex items-center gap-1"
+              className="h-auto w-auto text-primary hover:underline flex items-center gap-1"
             >
               <Copy className="w-3 h-3" />
               {copiedField === 'Nội dung' ? 'Đã chép' : 'Sao chép'}
-            </button>
+            </Button>
           </div>
           <p className="text-sm font-semibold text-foreground break-words">
             {transaction.transferContent || 'Không có nội dung'}

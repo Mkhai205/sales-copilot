@@ -207,8 +207,9 @@ export function StockAdjustmentDialog({
           <div className="flex flex-col gap-1.5">
             <Label className="text-xs font-medium">Nghiệp vụ điều chỉnh</Label>
             <div className="grid grid-cols-3 gap-2">
-              <button
+              <Button
                 type="button"
+                variant="ghost"
                 onClick={() => {
                   setValue('type', InventoryTransactionType.STOCK_IN, { shouldValidate: true });
                   setValue('quantity', 1, { shouldValidate: true });
@@ -216,6 +217,7 @@ export function StockAdjustmentDialog({
                   setErrorMsg(null);
                 }}
                 className={cn(
+                  'h-auto w-auto',
                   'flex items-center justify-center gap-1.5 p-2 rounded-md border text-xs font-medium transition-colors',
                   type === InventoryTransactionType.STOCK_IN
                     ? 'border-emerald-500 bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 shadow-xs'
@@ -224,10 +226,11 @@ export function StockAdjustmentDialog({
               >
                 <ArrowDown className="size-3.5" />
                 Nhập hàng
-              </button>
+              </Button>
 
-              <button
+              <Button
                 type="button"
+                variant="ghost"
                 onClick={() => {
                   setValue('type', InventoryTransactionType.STOCK_OUT, { shouldValidate: true });
                   setValue('quantity', 1, { shouldValidate: true });
@@ -235,6 +238,7 @@ export function StockAdjustmentDialog({
                   setErrorMsg(null);
                 }}
                 className={cn(
+                  'h-auto w-auto',
                   'flex items-center justify-center gap-1.5 p-2 rounded-md border text-xs font-medium transition-colors',
                   type === InventoryTransactionType.STOCK_OUT
                     ? 'border-rose-500 bg-rose-50 text-rose-800 dark:bg-rose-950/40 dark:text-rose-300 shadow-xs'
@@ -243,10 +247,11 @@ export function StockAdjustmentDialog({
               >
                 <ArrowUp className="size-3.5" />
                 Xuất kho
-              </button>
+              </Button>
 
-              <button
+              <Button
                 type="button"
+                variant="ghost"
                 onClick={() => {
                   setValue('type', InventoryTransactionType.INVENTORY_AUDIT, {
                     shouldValidate: true,
@@ -256,6 +261,7 @@ export function StockAdjustmentDialog({
                   setErrorMsg(null);
                 }}
                 className={cn(
+                  'h-auto w-auto',
                   'flex items-center justify-center gap-1.5 p-2 rounded-md border text-xs font-medium transition-colors',
                   type === InventoryTransactionType.INVENTORY_AUDIT
                     ? 'border-primary bg-primary/10 text-primary shadow-xs'
@@ -264,7 +270,7 @@ export function StockAdjustmentDialog({
               >
                 <RotateCcw className="size-3.5" />
                 Kiểm kê đếm
-              </button>
+              </Button>
             </div>
           </div>
 

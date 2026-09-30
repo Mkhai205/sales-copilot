@@ -203,13 +203,14 @@ export function WebChatConfig({ inbox, workspaceId }: WebChatConfigProps) {
                     value={hmacSecret}
                     className="text-xs font-mono pr-10 h-8"
                   />
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
+                    className="h-auto w-auto absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-0.5 cursor-pointer"
                     onClick={() => setShowHmacSecret(!showHmacSecret)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-0.5 cursor-pointer"
                   >
                     {showHmacSecret ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-                  </button>
+                  </Button>
                 </div>
                 <Button
                   variant="outline"

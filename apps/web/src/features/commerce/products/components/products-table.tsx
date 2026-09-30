@@ -68,8 +68,9 @@ export function ProductsTable({
           if (variants.length === 0) return null;
           return (
             <div className="text-center">
-              <button
+              <Button
                 type="button"
+                variant="ghost"
                 onClick={e => {
                   e.stopPropagation();
                   setExpandedRowIds(prev => {
@@ -82,14 +83,14 @@ export function ProductsTable({
                     return next;
                   });
                 }}
-                className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                className="h-auto w-auto p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
               >
                 {expandedRowIds.has(product.id) ? (
                   <ChevronDown className="size-3.5" />
                 ) : (
                   <ChevronRight className="size-3.5" />
                 )}
-              </button>
+              </Button>
             </div>
           );
         },

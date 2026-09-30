@@ -163,14 +163,15 @@ export function ContactsView({ workspaceSlug }: ContactsViewProps) {
               className="h-8 pl-8 pr-7 text-xs bg-background"
             />
             {searchTerm && (
-              <button
+              <Button
                 type="button"
+                variant="ghost"
                 onClick={() => setSearchTerm('')}
-                className="absolute right-2 top-2 text-muted-foreground hover:text-foreground p-0.5"
+                className="h-auto w-auto absolute right-2 top-2 text-muted-foreground hover:text-foreground p-0.5"
               >
                 <X className="size-3.5" />
                 <span className="sr-only">Xóa từ khóa</span>
-              </button>
+              </Button>
             )}
           </div>
 

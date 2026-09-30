@@ -3,7 +3,6 @@
 import * as React from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import {
   Dialog,
   DialogContent,
@@ -13,16 +12,22 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
 import { Spinner } from '@/components/ui/spinner';
 import { Switch } from '@/components/ui/switch';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { normalizeSku, type ProductResponseDto } from '@sales-copilot/shared-contracts';
 import { useProductMutations } from '../hooks/use-product-mutations';
-import { AlertCircle, CheckCircle, Layers, Plus, Sparkles, Trash2, X } from 'lucide-react';
+import { AlertCircle, CheckCircle } from 'lucide-react';
+import {
+  buildProductDefaultValues,
+  productFormSchema,
+  type AttributeGroup,
+  type ProductFormValues,
+  type VariantFormRow,
+} from './product-dialog-schema';
+import { ProductGeneralTab } from './product-general-tab';
+import { ProductVariantsTab } from './product-variants-tab';
 
 interface ProductDialogProps {
   open: boolean;
@@ -31,41 +36,6 @@ interface ProductDialogProps {
   product?: ProductResponseDto | null;
   onSuccess?: () => void;
 }
-
-interface AttributeGroup {
-  id: string;
-  name: string; // e.g. "Kích cỡ"
-  values: string[]; // e.g. ["S", "M", "L"]
-}
-
-const variantRowSchema = z.object({
-  id: z.string().optional(),
-  name: z.string().trim().min(1, 'Tên biến thể bắt buộc'),
-  sku: z.string().trim().min(1, 'SKU biến thể bắt buộc'),
-  barcode: z.string().trim().optional(),
-  price: z.coerce.number().min(0, 'Giá biến thể không được âm'),
-  costPrice: z.coerce.number().min(0, 'Giá vốn không được âm'),
-  stockQuantity: z.coerce.number().int().min(0, 'Tồn kho không được âm'),
-  attributes: z.record(z.any()),
-});
-
-type VariantFormRow = z.infer<typeof variantRowSchema>;
-
-const productFormSchema = z.object({
-  name: z.string().trim().min(1, 'Tên sản phẩm là bắt buộc'),
-  sku: z.string().trim().min(1, 'Mã SKU là bắt buộc'),
-  category: z.string().trim().optional(),
-  basePrice: z.coerce.number().min(0, 'Giá bán không được âm'),
-  costPrice: z.coerce.number().min(0, 'Giá vốn không được âm'),
-  barcode: z.string().trim().optional(),
-  imageUrl: z.string().trim().optional(),
-  description: z.string().trim().optional(),
-  simpleStock: z.coerce.number().int().min(0, 'Tồn kho không được âm'),
-  hasVariants: z.boolean(),
-  variants: z.array(variantRowSchema),
-});
-
-type ProductFormValues = z.infer<typeof productFormSchema>;
 
 export function ProductDialog({
   open,
@@ -87,53 +57,10 @@ export function ProductDialog({
   ]);
   const [newTagInput, setNewTagInput] = React.useState<Record<string, string>>({});
 
-  const defaultValues = React.useMemo<ProductFormValues>(() => {
-    if (product) {
-      const existingVars = product.variants || [];
-      const hasMultiVariants =
-        existingVars.length > 1 ||
-        (existingVars.length === 1 && existingVars[0].name !== 'Tiêu chuẩn');
-
-      return {
-        name: product.name || '',
-        sku: product.sku || '',
-        category: product.category || '',
-        basePrice: Number(product.basePrice) || 0,
-        costPrice: Number(product.costPrice) || 0,
-        barcode: product.barcode || '',
-        imageUrl: product.imageUrl || '',
-        description: product.description || '',
-        hasVariants: hasMultiVariants,
-        simpleStock: hasMultiVariants ? 0 : existingVars[0]?.stockQuantity || 0,
-        variants: hasMultiVariants
-          ? existingVars.map(v => ({
-              id: v.id,
-              name: v.name,
-              sku: v.sku,
-              barcode: v.barcode || '',
-              price: Number(v.price) || 0,
-              costPrice: Number(v.costPrice) || 0,
-              stockQuantity: v.stockQuantity || 0,
-              attributes: (v.attributes as Record<string, string>) || {},
-            }))
-          : [],
-      };
-    }
-
-    return {
-      name: '',
-      sku: '',
-      category: '',
-      basePrice: 100000,
-      costPrice: 50000,
-      barcode: '',
-      imageUrl: '',
-      description: '',
-      hasVariants: false,
-      simpleStock: 0,
-      variants: [],
-    };
-  }, [product]);
+  const defaultValues = React.useMemo<ProductFormValues>(
+    () => buildProductDefaultValues(product),
+    [product],
+  );
 
   const {
     register,
@@ -433,358 +360,33 @@ export function ProductDialog({
 
             <div className="flex-1 overflow-y-auto p-5">
               {/* TAB 1: GENERAL INFO */}
-              <TabsContent value="general" className="m-0 flex flex-col gap-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-1.5 sm:col-span-2">
-                    <Label htmlFor="prod-name" className="text-xs font-medium">
-                      Tên sản phẩm <span className="text-destructive">*</span>
-                    </Label>
-                    <Input
-                      id="prod-name"
-                      value={currentName}
-                      onChange={e => handleNameChange(e.target.value)}
-                      placeholder="VD: Áo Polo Pique Cotton Slimfit"
-                      className="h-9 text-xs"
-                      required
-                    />
-                    {errors.name && (
-                      <span className="text-[11px] text-destructive">{errors.name.message}</span>
-                    )}
-                  </div>
-
-                  <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="prod-sku" className="text-xs font-medium">
-                      Mã SKU chính <span className="text-destructive">*</span>
-                    </Label>
-                    <Input
-                      id="prod-sku"
-                      {...register('sku', {
-                        onChange: e =>
-                          setValue('sku', e.target.value.toUpperCase(), { shouldValidate: true }),
-                      })}
-                      placeholder="VD: POLO-PIQUE-01"
-                      className="h-9 text-xs font-mono"
-                      required
-                    />
-                    {errors.sku && (
-                      <span className="text-[11px] text-destructive">{errors.sku.message}</span>
-                    )}
-                  </div>
-
-                  <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="prod-category" className="text-xs font-medium">
-                      Danh mục (Category tag)
-                    </Label>
-                    <Input
-                      id="prod-category"
-                      {...register('category')}
-                      placeholder="VD: Thời trang nam"
-                      className="h-9 text-xs"
-                    />
-                  </div>
-
-                  <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="prod-base-price" className="text-xs font-medium">
-                      Giá bán lẻ (VNĐ) <span className="text-destructive">*</span>
-                    </Label>
-                    <Input
-                      id="prod-base-price"
-                      type="number"
-                      min={0}
-                      {...register('basePrice')}
-                      className="h-9 text-xs"
-                      required
-                    />
-                    {errors.basePrice && (
-                      <span className="text-[11px] text-destructive">
-                        {errors.basePrice.message}
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="prod-cost-price" className="text-xs font-medium">
-                      Giá vốn ước tính (VNĐ)
-                    </Label>
-                    <Input
-                      id="prod-cost-price"
-                      type="number"
-                      min={0}
-                      {...register('costPrice')}
-                      className="h-9 text-xs"
-                    />
-                    {errors.costPrice && (
-                      <span className="text-[11px] text-destructive">
-                        {errors.costPrice.message}
-                      </span>
-                    )}
-                  </div>
-
-                  {!hasVariants && !isEdit && (
-                    <div className="flex flex-col gap-1.5">
-                      <Label htmlFor="prod-simple-stock" className="text-xs font-medium">
-                        Tồn kho ban đầu
-                      </Label>
-                      <Input
-                        id="prod-simple-stock"
-                        type="number"
-                        min={0}
-                        {...register('simpleStock')}
-                        className="h-9 text-xs"
-                      />
-                    </div>
-                  )}
-
-                  <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="prod-barcode" className="text-xs font-medium">
-                      Mã vạch (Barcode EAN-13)
-                    </Label>
-                    <Input
-                      id="prod-barcode"
-                      {...register('barcode')}
-                      placeholder="VD: 8935001827361"
-                      className="h-9 text-xs font-mono"
-                    />
-                  </div>
-
-                  <div className="flex flex-col gap-1.5 sm:col-span-2">
-                    <Label htmlFor="prod-image-url" className="text-xs font-medium">
-                      URL Ảnh đại diện
-                    </Label>
-                    <Input
-                      id="prod-image-url"
-                      type="url"
-                      {...register('imageUrl')}
-                      placeholder="https://... ảnh sản phẩm"
-                      className="h-9 text-xs"
-                    />
-                  </div>
-
-                  <div className="flex flex-col gap-1.5 sm:col-span-2">
-                    <Label htmlFor="prod-desc" className="text-xs font-medium">
-                      Mô tả sản phẩm
-                    </Label>
-                    <Textarea
-                      id="prod-desc"
-                      {...register('description')}
-                      placeholder="Thông tin chất liệu, form dáng, bảng size..."
-                      className="text-xs min-h-[70px]"
-                    />
-                  </div>
-                </div>
-              </TabsContent>
+              <ProductGeneralTab
+                register={register}
+                setValue={setValue}
+                errors={errors}
+                currentName={currentName}
+                onNameChange={handleNameChange}
+                hasVariants={hasVariants}
+                isEdit={isEdit}
+              />
 
               {/* TAB 2: VARIANT MATRIX GENERATOR */}
-              <TabsContent value="variants" className="m-0 flex flex-col gap-4">
-                {/* Attribute Matrix Config */}
-                <div className="p-3.5 rounded-lg border bg-muted/30 flex flex-col gap-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold flex items-center gap-1.5">
-                      <Layers className="size-3.5 text-primary" />
-                      Khai báo nhóm thuộc tính (Tối đa 3 nhóm)
-                    </span>
-                    {attributes.length < 3 && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={addAttributeGroup}
-                        className="h-7 text-xs px-2"
-                      >
-                        <Plus className="size-3 mr-1" /> Thêm nhóm
-                      </Button>
-                    )}
-                  </div>
-
-                  <div className="flex flex-col gap-3">
-                    {attributes.map(group => (
-                      <div
-                        key={group.id}
-                        className="grid grid-cols-1 sm:grid-cols-4 gap-2 items-start p-2.5 rounded-md border bg-background"
-                      >
-                        <div className="sm:col-span-1">
-                          <Input
-                            placeholder="VD: Kích cỡ"
-                            value={group.name}
-                            onChange={e =>
-                              setAttributes(prev =>
-                                prev.map(g =>
-                                  g.id === group.id ? { ...g, name: e.target.value } : g,
-                                ),
-                              )
-                            }
-                            className="h-8 text-xs font-medium"
-                          />
-                        </div>
-
-                        <div className="sm:col-span-3 flex flex-wrap items-center gap-1.5">
-                          {group.values.map(tag => (
-                            <Badge
-                              key={tag}
-                              variant="secondary"
-                              className="text-xs gap-1 py-0.5 px-2"
-                            >
-                              {tag}
-                              <button
-                                type="button"
-                                onClick={() => removeTagFromAttribute(group.id, tag)}
-                                className="hover:text-destructive"
-                              >
-                                <X className="size-3" />
-                              </button>
-                            </Badge>
-                          ))}
-
-                          <div className="flex items-center gap-1">
-                            <Input
-                              placeholder="Thêm giá trị (S, M...)"
-                              value={newTagInput[group.id] || ''}
-                              onChange={e =>
-                                setNewTagInput(prev => ({
-                                  ...prev,
-                                  [group.id]: e.target.value,
-                                }))
-                              }
-                              onKeyDown={e => {
-                                if (e.key === 'Enter') {
-                                  e.preventDefault();
-                                  addTagToAttribute(group.id);
-                                }
-                              }}
-                              className="h-7 w-32 text-xs"
-                            />
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => addTagToAttribute(group.id)}
-                              className="h-7 px-2 text-xs"
-                            >
-                              Thêm
-                            </Button>
-                          </div>
-
-                          {attributes.length > 1 && (
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => removeAttributeGroup(group.id)}
-                              className="h-7 w-7 p-0 ml-auto text-muted-foreground hover:text-destructive"
-                            >
-                              <Trash2 className="size-3.5" />
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="flex justify-end gap-2 pt-1">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={generateVariantMatrix}
-                      className="h-8 text-xs gap-1.5"
-                    >
-                      <Sparkles className="size-3 text-primary" />
-                      Tạo ma trận biến thể tự động
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Generated Variants Table */}
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold">
-                      Danh sách biến thể SKU ({variantFields.length})
-                    </span>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={addManualVariant}
-                      className="h-7 text-xs"
-                    >
-                      <Plus className="size-3 mr-1" /> Thêm biến thể lẻ
-                    </Button>
-                  </div>
-
-                  <div className="rounded-md border overflow-x-auto">
-                    <table className="w-full text-left text-xs border-collapse">
-                      <thead className="bg-muted/50 text-muted-foreground border-b text-[11px]">
-                        <tr>
-                          <th className="p-2">Tên biến thể</th>
-                          <th className="p-2">Mã SKU</th>
-                          <th className="p-2 w-24">Giá bán</th>
-                          <th className="p-2 w-24">Giá vốn</th>
-                          <th className="p-2 w-20">Tồn kho</th>
-                          <th className="p-2 w-8"></th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {variantFields.map((field, idx) => (
-                          <tr key={field.id} className="border-b last:border-b-0 hover:bg-muted/20">
-                            <td className="p-2 font-medium">
-                              <Input
-                                {...register(`variants.${idx}.name` as const)}
-                                className="h-7 text-xs"
-                              />
-                            </td>
-                            <td className="p-2">
-                              <Input
-                                {...register(`variants.${idx}.sku` as const, {
-                                  onChange: e =>
-                                    setValue(
-                                      `variants.${idx}.sku` as const,
-                                      e.target.value.toUpperCase(),
-                                      { shouldValidate: true },
-                                    ),
-                                })}
-                                className="h-7 text-xs font-mono"
-                              />
-                            </td>
-                            <td className="p-2">
-                              <Input
-                                type="number"
-                                min={0}
-                                {...register(`variants.${idx}.price` as const)}
-                                className="h-7 text-xs"
-                              />
-                            </td>
-                            <td className="p-2">
-                              <Input
-                                type="number"
-                                min={0}
-                                {...register(`variants.${idx}.costPrice` as const)}
-                                className="h-7 text-xs"
-                              />
-                            </td>
-                            <td className="p-2">
-                              <Input
-                                type="number"
-                                min={0}
-                                {...register(`variants.${idx}.stockQuantity` as const)}
-                                className="h-7 text-xs"
-                              />
-                            </td>
-                            <td className="p-2 text-center">
-                              <button
-                                type="button"
-                                onClick={() => removeVariant(idx)}
-                                className="text-muted-foreground hover:text-destructive"
-                              >
-                                <Trash2 className="size-3.5" />
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </TabsContent>
+              <ProductVariantsTab
+                attributes={attributes}
+                setAttributes={setAttributes}
+                newTagInput={newTagInput}
+                setNewTagInput={setNewTagInput}
+                onAddAttributeGroup={addAttributeGroup}
+                onRemoveAttributeGroup={removeAttributeGroup}
+                onAddTagToAttribute={addTagToAttribute}
+                onRemoveTagFromAttribute={removeTagFromAttribute}
+                onGenerateVariantMatrix={generateVariantMatrix}
+                variantFields={variantFields}
+                onAddManualVariant={addManualVariant}
+                onRemoveVariant={removeVariant}
+                register={register}
+                setValue={setValue}
+              />
             </div>
 
             {errorMsg && (

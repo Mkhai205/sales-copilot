@@ -152,25 +152,28 @@ export function InventoryView() {
             className="pl-9 pr-8 h-9 text-xs"
           />
           {searchTerm && (
-            <button
+            <Button
               type="button"
+              variant="ghost"
               onClick={() => setSearchTerm('')}
-              className="absolute right-2.5 text-muted-foreground hover:text-foreground"
+              className="h-auto w-auto absolute right-2.5 text-muted-foreground hover:text-foreground"
             >
               <X className="size-3.5" />
-            </button>
+            </Button>
           )}
         </div>
 
         {/* Filter Tabs */}
         <div className="flex items-center gap-1.5 p-0.5 rounded-lg border bg-muted/40">
-          <button
+          <Button
             type="button"
+            variant="ghost"
             onClick={() => {
               setFilterMode('ALL');
               setPage(1);
             }}
             className={cn(
+              'h-auto w-auto',
               'px-2.5 py-1 text-xs font-medium rounded-md transition-colors',
               filterMode === 'ALL'
                 ? 'bg-background shadow-xs text-foreground font-semibold'
@@ -178,14 +181,16 @@ export function InventoryView() {
             )}
           >
             Tất cả SKU
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="ghost"
             onClick={() => {
               setFilterMode('LOW');
               setPage(1);
             }}
             className={cn(
+              'h-auto w-auto',
               'px-2.5 py-1 text-xs font-medium rounded-md transition-colors flex items-center gap-1',
               filterMode === 'LOW'
                 ? 'bg-amber-500 text-white font-semibold'
@@ -201,14 +206,16 @@ export function InventoryView() {
                 {summary.lowStockSkus}
               </Badge>
             )}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="ghost"
             onClick={() => {
               setFilterMode('OUT');
               setPage(1);
             }}
             className={cn(
+              'h-auto w-auto',
               'px-2.5 py-1 text-xs font-medium rounded-md transition-colors flex items-center gap-1',
               filterMode === 'OUT'
                 ? 'bg-rose-600 text-white font-semibold'
@@ -224,7 +231,7 @@ export function InventoryView() {
                 {summary.outOfStockSkus}
               </Badge>
             )}
-          </button>
+          </Button>
         </div>
       </div>
 

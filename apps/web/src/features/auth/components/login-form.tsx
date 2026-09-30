@@ -74,12 +74,14 @@ function QuickTestAccounts({ control, onSelectAccount, disabled }: QuickTestAcco
           const Icon = acc.icon;
           const isSelected = emailValue === acc.email;
           return (
-            <button
+            <Button
               key={acc.email}
               type="button"
+              variant="ghost"
               onClick={() => onSelectAccount(acc)}
               disabled={disabled}
               className={cn(
+                'h-auto w-auto',
                 'flex items-center justify-center gap-1 p-2 text-[11px] rounded-md border transition-all hover:border-primary/50 hover:bg-muted/50',
                 isSelected
                   ? 'border-primary bg-primary/5 shadow-xs'
@@ -88,7 +90,7 @@ function QuickTestAccounts({ control, onSelectAccount, disabled }: QuickTestAcco
             >
               <Icon className="size-4 text-primary" />
               {acc.roleTitle}
-            </button>
+            </Button>
           );
         })}
       </div>

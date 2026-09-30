@@ -4,6 +4,7 @@ import * as React from 'react';
 import { Copy, Download, Maximize2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { MessageResponseDto } from '@sales-copilot/shared-contracts';
 import { isImageAttachment } from './message-image-grid';
@@ -98,14 +99,15 @@ export function MessageActionsToolbar({
       {(hasText || hasImages) && (
         <Tooltip>
           <TooltipTrigger asChild>
-            <button
+            <Button
               type="button"
+              variant="ghost"
               onClick={handleCopy}
-              className="flex size-6 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
+              className="h-auto w-auto flex size-6 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
               title={'Sao chép'}
             >
               <Copy className="size-3.5" />
-            </button>
+            </Button>
           </TooltipTrigger>
           <TooltipContent side="top" className="text-[11px] py-1 px-2">
             {hasText ? 'Sao chép văn bản' : 'Sao chép ảnh'}
@@ -117,14 +119,15 @@ export function MessageActionsToolbar({
       {hasFiles && (
         <Tooltip>
           <TooltipTrigger asChild>
-            <button
+            <Button
               type="button"
+              variant="ghost"
               onClick={handleDownload}
-              className="flex size-6 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
+              className="h-auto w-auto flex size-6 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
               title={'Tải xuống'}
             >
               <Download className="size-3.5" />
-            </button>
+            </Button>
           </TooltipTrigger>
           <TooltipContent side="top" className="text-[11px] py-1 px-2">
             {hasImages ? 'Tải xuống ảnh' : 'Tải xuống tệp'}
@@ -136,14 +139,15 @@ export function MessageActionsToolbar({
       {hasImages && onOpenLightbox && (
         <Tooltip>
           <TooltipTrigger asChild>
-            <button
+            <Button
               type="button"
+              variant="ghost"
               onClick={handleOpenLightbox}
-              className="flex size-6 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
+              className="h-auto w-auto flex size-6 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
               title={'Xem toàn màn hình'}
             >
               <Maximize2 className="size-3.5" />
-            </button>
+            </Button>
           </TooltipTrigger>
           <TooltipContent side="top" className="text-[11px] py-1 px-2">
             {'Xem toàn màn hình'}

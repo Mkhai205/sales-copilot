@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { useConversationFilters, type AssignmentFilter } from './hooks/use-conversation-filters';
 import { useConversationCounts } from './hooks/use-conversation-counts';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { ConversationStatus } from '@sales-copilot/shared-contracts';
 
@@ -57,12 +58,13 @@ export function ConversationListFilters() {
           const countDisplay = tab.count !== undefined && !isCountsLoading ? tab.count : null;
 
           return (
-            <button
+            <Button
               key={tab.key}
               type="button"
+              variant="ghost"
               onClick={() => setAssignment(tab.key)}
               className={cn(
-                'relative flex items-center gap-1.5 h-full text-xs transition-colors cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary/40',
+                'h-auto w-auto relative flex items-center gap-1.5 h-full text-xs transition-colors cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary/40',
                 isActive
                   ? 'text-primary font-semibold after:absolute after:bottom-0 after:inset-x-0 after:h-0.5 after:bg-primary'
                   : 'text-foreground/75 hover:text-foreground font-medium',
@@ -79,7 +81,7 @@ export function ConversationListFilters() {
                   {countDisplay}
                 </span>
               )}
-            </button>
+            </Button>
           );
         })}
       </nav>

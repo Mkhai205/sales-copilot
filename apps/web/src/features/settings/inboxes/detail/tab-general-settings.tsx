@@ -242,16 +242,17 @@ export function TabGeneralSettings({ inbox, workspaceId, workspaceSlug }: TabGen
 
                   {/* Remove Avatar Button (Corner 'x' button) */}
                   {(previewUrl || avatarUrl) && (
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
+                      className="h-auto w-auto absolute -top-1.5 -right-1.5 z-20 size-5 rounded-full bg-background border border-border shadow-xs flex items-center justify-center hover:text-white hover:bg-destructive cursor-pointer"
                       onClick={handleRemoveAvatar}
                       disabled={isUploadingAvatar}
                       title="Gỡ ảnh đại diện"
-                      className="absolute -top-1.5 -right-1.5 z-20 size-5 rounded-full bg-background border border-border shadow-xs flex items-center justify-center hover:text-white hover:bg-destructive cursor-pointer"
                     >
                       <X className="size-3" />
                       <span className="sr-only">Gỡ ảnh</span>
-                    </button>
+                    </Button>
                   )}
                 </div>
 

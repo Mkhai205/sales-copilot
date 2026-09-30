@@ -329,13 +329,14 @@ export function ConversationList({ workspaceSlug, activeConversationId }: Conver
                   Đang tải thêm...
                 </div>
               ) : hasNextPage ? (
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
                   onClick={() => fetchNextPage()}
-                  className="text-xs font-medium text-primary hover:underline cursor-pointer py-1"
+                  className="h-auto w-auto text-xs font-medium text-primary hover:underline cursor-pointer py-1"
                 >
                   Tải thêm hội thoại
-                </button>
+                </Button>
               ) : conversations.length > 0 ? (
                 <p className="text-[11px] text-muted-foreground/70 py-1">
                   Đã tải tất cả cuộc trò chuyện 🎉

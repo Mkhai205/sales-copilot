@@ -180,13 +180,14 @@ export function ProductsView() {
             className="pl-9 pr-8 h-9 text-xs"
           />
           {searchTerm && (
-            <button
+            <Button
               type="button"
+              variant="ghost"
               onClick={() => setSearchTerm('')}
-              className="absolute right-2.5 text-muted-foreground hover:text-foreground"
+              className="h-auto w-auto absolute right-2.5 text-muted-foreground hover:text-foreground"
             >
               <X className="size-3.5" />
-            </button>
+            </Button>
           )}
         </div>
 
@@ -227,13 +228,14 @@ export function ProductsView() {
                 </Badge>
               ))}
               {selectedCategory && (
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
                   onClick={() => setSelectedCategory('')}
-                  className="text-[11px] text-muted-foreground hover:text-foreground underline px-1"
+                  className="h-auto w-auto text-[11px] text-muted-foreground hover:text-foreground underline px-1"
                 >
                   Xóa lọc
-                </button>
+                </Button>
               )}
             </div>
           )}

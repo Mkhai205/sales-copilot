@@ -407,13 +407,14 @@ export function BankSettingsForm({
                       className="text-xs font-mono pr-10 h-10 border-border/80"
                       disabled={isPending}
                     />
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
+                      className="h-auto w-auto absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-0.5 cursor-pointer"
                       onClick={() => setShowSecret(prev => !prev)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-0.5 cursor-pointer"
                     >
                       {showSecret ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-                    </button>
+                    </Button>
                   </div>
                   {errors.webhookSecret?.message && (
                     <FieldError errors={[{ message: errors.webhookSecret.message }]} />

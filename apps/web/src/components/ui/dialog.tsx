@@ -129,6 +129,7 @@ function DialogDescription({
 }
 
 export {
+  DialogPrimitive,
   Dialog,
   DialogClose,
   DialogContent,

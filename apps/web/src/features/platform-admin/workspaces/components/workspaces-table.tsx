@@ -79,10 +79,11 @@ export function WorkspacesTable({
                 <span className="font-semibold text-foreground hover:underline">{ws.name}</span>
                 <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
                   <code>{ws.slug}</code>
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
                     onClick={e => handleCopySlug(e, ws.slug)}
-                    className="text-muted-foreground hover:text-foreground"
+                    className="h-auto w-auto text-muted-foreground hover:text-foreground"
                     title={'Sao chép slug'}
                   >
                     {copiedValue === ws.slug ? (
@@ -90,7 +91,7 @@ export function WorkspacesTable({
                     ) : (
                       <Copy className="size-2.5" />
                     )}
-                  </button>
+                  </Button>
                 </span>
               </div>
             </div>

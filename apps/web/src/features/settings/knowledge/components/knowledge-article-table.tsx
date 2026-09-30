@@ -117,17 +117,18 @@ export function KnowledgeArticleTable({
         cell: ({ row }) => {
           const article = row.original;
           return (
-            <button
+            <Button
               type="button"
-              onClick={() => handleToggleActive(article)}
-              className={`text-xs font-medium px-2 py-0.5 rounded-full transition-colors ${
+              variant="ghost"
+              className={`h-auto w-auto text-xs font-medium px-2 py-0.5 rounded-full transition-colors ${
                 article.isActive
                   ? 'bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20'
                   : 'bg-muted text-muted-foreground hover:bg-muted/80'
               }`}
+              onClick={() => handleToggleActive(article)}
             >
               {article.isActive ? 'Đang bật' : 'Tạm tắt'}
-            </button>
+            </Button>
           );
         },
       },

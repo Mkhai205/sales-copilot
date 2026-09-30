@@ -78,9 +78,11 @@ export function OrderFinancialSummary({
 
         <div className="flex items-center gap-1.5">
           <div className="flex rounded-md border border-input overflow-hidden shrink-0">
-            <button
+            <Button
               type="button"
+              variant="ghost"
               className={cn(
+                'h-auto w-auto',
                 'px-2 py-0.5 text-[11px] font-medium transition-colors cursor-pointer',
                 discountType === DiscountType.FIXED_AMOUNT
                   ? 'bg-primary text-primary-foreground'
@@ -90,10 +92,12 @@ export function OrderFinancialSummary({
               disabled={disabled}
             >
               ₫
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="ghost"
               className={cn(
+                'h-auto w-auto',
                 'px-2 py-0.5 text-[11px] font-medium transition-colors cursor-pointer',
                 discountType === DiscountType.PERCENTAGE
                   ? 'bg-primary text-primary-foreground'
@@ -103,7 +107,7 @@ export function OrderFinancialSummary({
               disabled={disabled}
             >
               %
-            </button>
+            </Button>
           </div>
 
           <Input

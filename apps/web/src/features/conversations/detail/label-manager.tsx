@@ -106,15 +106,16 @@ export function LabelManager({ conversation, workspaceSlug }: LabelManagerProps)
                 style={{ backgroundColor: label.color || '#3b82f6' }}
               />
               <span className="truncate max-w-[120px]">{label.title}</span>
-              <button
+              <Button
                 type="button"
+                variant="ghost"
                 onClick={() => handleRemoveLabel(label.id)}
                 disabled={removeLabel.isPending}
-                className="text-muted-foreground hover:text-foreground ml-0.5 opacity-60 hover:opacity-100 transition-opacity"
+                className="h-auto w-auto text-muted-foreground hover:text-foreground ml-0.5 opacity-60 hover:opacity-100 transition-opacity"
               >
                 <X className="size-3" />
                 <span className="sr-only">Xóa nhãn {label.title}</span>
-              </button>
+              </Button>
             </Badge>
           ))}
         </div>

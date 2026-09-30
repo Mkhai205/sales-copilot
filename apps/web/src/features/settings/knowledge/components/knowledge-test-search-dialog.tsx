@@ -120,18 +120,19 @@ export function KnowledgeTestSearchDialog({
           <div className="flex items-center gap-2">
             <span>Ngưỡng tối thiểu (minSimilarity):</span>
             {[0.5, 0.65, 0.75].map(val => (
-              <button
+              <Button
                 key={val}
                 type="button"
-                onClick={() => setMinSimilarity(val)}
-                className={`rounded px-2 py-0.5 transition-colors ${
+                variant="ghost"
+                className={`h-auto w-auto rounded px-2 py-0.5 transition-colors ${
                   minSimilarity === val
                     ? 'bg-primary text-primary-foreground font-medium'
                     : 'bg-muted hover:bg-muted/80 text-foreground'
                 }`}
+                onClick={() => setMinSimilarity(val)}
               >
                 {Math.round(val * 100)}% {val === 0.65 && '(Mặc định)'}
-              </button>
+              </Button>
             ))}
           </div>
         </div>

@@ -262,15 +262,16 @@ export function TeamFormDialog({
                         {filteredMembers.map(member => {
                           const isSelected = selectedUserIds.includes(member.userId);
                           return (
-                            <button
+                            <Button
                               type="button"
-                              key={member.id}
-                              onClick={() => toggleUserSelection(member.userId)}
-                              className={`flex w-full items-center justify-between gap-3 rounded-md px-2.5 py-1.5 text-left text-xs transition-colors ${
+                              variant="ghost"
+                              className={`h-auto w-auto flex w-full items-center justify-between gap-3 rounded-md px-2.5 py-1.5 text-left text-xs transition-colors ${
                                 isSelected
                                   ? 'bg-primary/10 text-foreground'
                                   : 'hover:bg-muted/60 text-muted-foreground hover:text-foreground'
                               }`}
+                              key={member.id}
+                              onClick={() => toggleUserSelection(member.userId)}
                             >
                               <div className="flex items-center gap-2.5 min-w-0">
                                 <Avatar className="size-6 border border-border/60">
@@ -312,7 +313,7 @@ export function TeamFormDialog({
                                   {isSelected && <Check className="size-3" />}
                                 </div>
                               </div>
-                            </button>
+                            </Button>
                           );
                         })}
                       </div>

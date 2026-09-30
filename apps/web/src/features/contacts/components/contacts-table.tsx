@@ -141,10 +141,11 @@ export function ContactsTable({
           return (
             <div className="flex items-center gap-1 group/phone">
               <span className="truncate text-foreground text-xs">{contact.phoneNumber}</span>
-              <button
+              <Button
                 type="button"
+                variant="ghost"
                 onClick={e => handleCopy(e, contact.phoneNumber!, `phone-${contact.id}`)}
-                className="opacity-0 group-hover/phone:opacity-100 hover:text-foreground text-muted-foreground p-0.5 transition-opacity"
+                className="h-auto w-auto opacity-0 group-hover/phone:opacity-100 hover:text-foreground text-muted-foreground p-0.5 transition-opacity"
                 title="Sao chép số điện thoại"
               >
                 {copiedValue === `phone-${contact.id}` ? (
@@ -152,7 +153,7 @@ export function ContactsTable({
                 ) : (
                   <Copy className="size-3" />
                 )}
-              </button>
+              </Button>
             </div>
           );
         },
@@ -173,10 +174,11 @@ export function ContactsTable({
               >
                 {contact.email}
               </span>
-              <button
+              <Button
                 type="button"
+                variant="ghost"
                 onClick={e => handleCopy(e, contact.email!, `email-${contact.id}`)}
-                className="opacity-0 group-hover/email:opacity-100 hover:text-foreground text-muted-foreground p-0.5 transition-opacity"
+                className="h-auto w-auto opacity-0 group-hover/email:opacity-100 hover:text-foreground text-muted-foreground p-0.5 transition-opacity"
                 title="Sao chép email"
               >
                 {copiedValue === `email-${contact.id}` ? (
@@ -184,7 +186,7 @@ export function ContactsTable({
                 ) : (
                   <Copy className="size-3" />
                 )}
-              </button>
+              </Button>
             </div>
           );
         },

@@ -138,11 +138,12 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
                   className="pr-8 text-xs"
                   {...register('currentPassword')}
                 />
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
                   tabIndex={-1}
                   onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus:outline-none"
+                  className="h-auto w-auto absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus:outline-none"
                   aria-label={showCurrentPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
                 >
                   {showCurrentPassword ? (
@@ -150,7 +151,7 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
                   ) : (
                     <Eye className="size-3.5" />
                   )}
-                </button>
+                </Button>
               </div>
               {errors.currentPassword?.message && (
                 <FieldError>{errors.currentPassword.message}</FieldError>
@@ -170,15 +171,16 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
                   className="pr-8 text-xs"
                   {...register('newPassword')}
                 />
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
                   tabIndex={-1}
                   onClick={() => setShowNewPassword(!showNewPassword)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus:outline-none"
+                  className="h-auto w-auto absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus:outline-none"
                   aria-label={showNewPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
                 >
                   {showNewPassword ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
-                </button>
+                </Button>
               </div>
               {errors.newPassword?.message && <FieldError>{errors.newPassword.message}</FieldError>}
             </Field>
@@ -196,11 +198,12 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
                   className="pr-8 text-xs"
                   {...register('confirmPassword')}
                 />
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
                   tabIndex={-1}
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus:outline-none"
+                  className="h-auto w-auto absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus:outline-none"
                   aria-label={showConfirmPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
                 >
                   {showConfirmPassword ? (
@@ -208,7 +211,7 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
                   ) : (
                     <Eye className="size-3.5" />
                   )}
-                </button>
+                </Button>
               </div>
               {errors.confirmPassword?.message && (
                 <FieldError>{errors.confirmPassword.message}</FieldError>

@@ -191,20 +191,21 @@ export function LabelFormDialog({
                 {LABEL_PRESET_COLORS.map(preset => {
                   const isSelected = color.toLowerCase() === preset.hex.toLowerCase();
                   return (
-                    <button
-                      key={preset.hex}
+                    <Button
                       type="button"
-                      onClick={() => setColor(preset.hex)}
-                      title={preset.name}
-                      style={{ backgroundColor: preset.hex }}
-                      className={`flex size-7 items-center justify-center rounded-lg shadow-2xs transition-transform hover:scale-105 active:scale-95 ${
+                      variant="ghost"
+                      className={`h-auto w-auto flex size-7 items-center justify-center rounded-lg shadow-2xs transition-transform hover:scale-105 active:scale-95 ${
                         isSelected
                           ? 'ring-2 ring-foreground ring-offset-2 ring-offset-background'
                           : 'ring-1 ring-black/10 dark:ring-white/10'
                       }`}
+                      key={preset.hex}
+                      onClick={() => setColor(preset.hex)}
+                      title={preset.name}
+                      style={{ backgroundColor: preset.hex }}
                     >
                       {isSelected && <Check className="size-3.5 text-white drop-shadow-sm" />}
-                    </button>
+                    </Button>
                   );
                 })}
               </div>

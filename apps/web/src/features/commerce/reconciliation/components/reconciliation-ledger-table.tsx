@@ -114,13 +114,14 @@ export function ReconciliationLedgerTable({
           return (
             <div onClick={e => e.stopPropagation()}>
               {order ? (
-                <button
+                <Button
+                  variant="ghost"
                   onClick={() => onSelectOrder(order.id)}
-                  className="flex items-center gap-1.5 text-primary hover:underline font-semibold"
+                  className="h-auto w-auto flex items-center gap-1.5 text-primary hover:underline font-semibold"
                 >
                   <span>#{order.displayId || order.orderNumber}</span>
                   <ExternalLink className="w-3 h-3 text-muted-foreground" />
-                </button>
+                </Button>
               ) : isPending ? (
                 <div className="flex items-center gap-2">
                   <Badge

@@ -105,15 +105,16 @@ export function ReconciliationFilterToolbar({
             className="pl-8 text-sm h-9"
           />
           {searchInput && (
-            <button
+            <Button
+              variant="ghost"
               onClick={() => {
                 setSearchInput('');
                 onFilterChange({ search: '' });
               }}
-              className="absolute right-2.5 top-2.5 text-muted-foreground hover:text-foreground"
+              className="h-auto w-auto absolute right-2.5 top-2.5 text-muted-foreground hover:text-foreground"
             >
               <X className="h-4 w-4" />
-            </button>
+            </Button>
           )}
         </div>
 
