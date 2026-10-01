@@ -6,6 +6,7 @@ import { WebChatConfig } from './channels/web-chat/web-chat-config';
 import { FacebookConfig } from './channels/facebook/facebook-config';
 import { TelegramConfig } from './channels/telegram/telegram-config';
 import { ZaloConfig } from './channels/zalo/zalo-config';
+import { ZaloPersonalConfig } from './channels/zalo-personal/zalo-personal-config';
 import { UnsupportedChannelPlaceholder } from './channels/unsupported-channel-placeholder';
 
 interface TabConfigurationProps {
@@ -31,6 +32,9 @@ export function TabConfiguration({ inbox, workspaceId, workspaceSlug }: TabConfi
 
     case ChannelType.ZALO:
       return <ZaloConfig inbox={inbox} workspaceId={workspaceId} />;
+
+    case ChannelType.ZALO_PERSONAL:
+      return <ZaloPersonalConfig inbox={inbox} workspaceId={workspaceId} />;
 
     default:
       return <UnsupportedChannelPlaceholder channelType={inbox.channelType} />;

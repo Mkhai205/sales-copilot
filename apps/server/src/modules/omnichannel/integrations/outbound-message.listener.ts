@@ -105,6 +105,12 @@ export class OutboundMessageListener {
       return;
     }
 
+    // 3.1 Skip messages that must not be delivered outward (e.g. personal-Zalo
+    // messages sent by the account owner from their phone, mirrored into the inbox).
+    if ((message.metadata as Record<string, unknown> | null | undefined)?.suppressOutbound) {
+      return;
+    }
+
     const client = this.prisma.getClient();
 
     // 4. Fetch conversation with Inbox & Channel

@@ -51,6 +51,14 @@ export const CHANNEL_META_MAP: Record<ChannelType, ChannelMeta> = {
     badgeBg: 'bg-blue-600/10 border-blue-600/20 text-blue-700 dark:text-blue-300',
     description: 'Integrate your Zalo Official Account to chat with customers in Vietnam.',
   },
+  [ChannelType.ZALO_PERSONAL]: {
+    type: ChannelType.ZALO_PERSONAL,
+    label: 'Zalo Personal',
+    iconSrc: '/channels/zalo.png',
+    color: 'text-[#0068FF]',
+    badgeBg: 'bg-[#0068FF]/10 border-[#0068FF]/20 text-[#0068FF] dark:text-[#0068FF]',
+    description: 'Connect a personal Zalo account by QR scan (unofficial channel).',
+  },
 };
 
 export function getChannelMeta(channelType?: ChannelType | string | null): ChannelMeta {

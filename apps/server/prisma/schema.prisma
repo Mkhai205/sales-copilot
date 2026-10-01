@@ -30,6 +30,7 @@ enum BillingPlanType {
 enum ChannelType {
   FACEBOOK_MESSENGER
   ZALO
+  ZALO_PERSONAL
   TELEGRAM
   EMAIL
   WEB_CHAT

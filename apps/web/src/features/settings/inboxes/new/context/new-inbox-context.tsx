@@ -9,6 +9,7 @@ import {
   useCreateInbox,
   useConnectFacebookBatch,
   useConnectZaloOa,
+  useConnectZaloPersonal,
 } from '@/features/settings/inboxes/hooks/use-inboxes';
 import {
   type ChannelDefinition,
@@ -79,6 +80,7 @@ export function NewInboxProvider({ children, initialWorkspaceSlug }: NewInboxPro
   const createInboxMutation = useCreateInbox(workspaceId);
   const connectFacebookBatchMutation = useConnectFacebookBatch(workspaceId);
   const connectZaloOaMutation = useConnectZaloOa(workspaceId);
+  const connectZaloPersonalMutation = useConnectZaloPersonal(workspaceId);
 
   const initialChannelParam = searchParams.get('channel');
   const urlSessionId = searchParams.get('sessionId');
@@ -255,6 +257,45 @@ export function NewInboxProvider({ children, initialWorkspaceSlug }: NewInboxPro
     ],
   );
 
+  const connectZaloPersonal = React.useCallback(
+    async (assignAll?: boolean) => {
+      if (!workspaceId || !draftConfig) return;
+
+      const sessionId = draftConfig.credentials?.sessionId as string | undefined;
+      if (!sessionId) return;
+
+      const isAllSelected =
+        Boolean(workspaceMembers && workspaceMembers.length > 0) &&
+        selectedMemberUserIds.length === workspaceMembers?.length;
+
+      try {
+        const res = await connectZaloPersonalMutation.mutateAsync({
+          sessionId,
+          memberUserIds: selectedMemberUserIds,
+          assignAllMembers: assignAll ?? isAllSelected,
+        });
+
+        setCreatedSummary({
+          id: res.inboxId,
+          name: res.zaloName,
+          channelType: ChannelType.ZALO_PERSONAL,
+          providerAccountId: res.ownId,
+          connectedItems: [{ id: res.inboxId, name: res.zaloName, pageId: res.ownId }],
+        });
+        setCurrentStage('success');
+      } catch {
+        // Toast notification handled by mutation onError
+      }
+    },
+    [
+      workspaceId,
+      draftConfig,
+      selectedMemberUserIds,
+      workspaceMembers,
+      connectZaloPersonalMutation,
+    ],
+  );
+
   const connectZaloOa = React.useCallback(
     async (assignAll?: boolean) => {
       if (!workspaceId || !draftConfig) return;
@@ -306,7 +347,13 @@ export function NewInboxProvider({ children, initialWorkspaceSlug }: NewInboxPro
       return;
     }
 
-    // Flow 3: Web Chat or Telegram
+    // Flow 3: Zalo personal (QR session parked server-side)
+    if (selectedChannelKey === 'zalo_personal') {
+      await connectZaloPersonal();
+      return;
+    }
+
+    // Flow 4: Web Chat or Telegram
     if (!draftConfig) return;
 
     try {
@@ -357,6 +404,7 @@ export function NewInboxProvider({ children, initialWorkspaceSlug }: NewInboxPro
     selectedMemberUserIds,
     connectFacebookBatch,
     connectZaloOa,
+    connectZaloPersonal,
     createInboxMutation,
   ]);
 
@@ -372,7 +420,8 @@ export function NewInboxProvider({ children, initialWorkspaceSlug }: NewInboxPro
   const isSubmitting =
     createInboxMutation.isPending ||
     connectFacebookBatchMutation.isPending ||
-    connectZaloOaMutation.isPending;
+    connectZaloOaMutation.isPending ||
+    connectZaloPersonalMutation.isPending;
 
   const value: NewInboxContextValue = React.useMemo(
     () => ({

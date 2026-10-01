@@ -26,7 +26,7 @@ export interface SeedTestContext {
 }
 
 export interface SeedOptions {
-  channelType?: 'WEB_CHAT' | 'FACEBOOK_MESSENGER' | 'TELEGRAM' | 'ZALO' | 'EMAIL';
+  channelType?: 'WEB_CHAT' | 'FACEBOOK_MESSENGER' | 'TELEGRAM' | 'ZALO' | 'ZALO_PERSONAL' | 'EMAIL';
   channelCredentials?: Record<string, any>;
   autoAssign?: boolean;
 }

@@ -41,6 +41,14 @@ const CHANNEL_DEFINITIONS: Record<SupportedChannelKey, ChannelDefinition> = {
     badge: 'Mới',
     logoSrc: '/channels/zalo.png',
   },
+  zalo_personal: {
+    key: 'zalo_personal',
+    type: ChannelType.ZALO_PERSONAL,
+    title: 'Zalo Cá nhân',
+    description:
+      'Quét QR để dùng tài khoản Zalo cá nhân (kênh không chính thức — nên dùng tài khoản phụ).',
+    logoSrc: '/channels/zalo.png',
+  },
 };
 
 export const SUPPORTED_CHANNELS: ChannelDefinition[] = [
@@ -48,6 +56,7 @@ export const SUPPORTED_CHANNELS: ChannelDefinition[] = [
   CHANNEL_DEFINITIONS.facebook,
   CHANNEL_DEFINITIONS.telegram,
   CHANNEL_DEFINITIONS.zalo,
+  CHANNEL_DEFINITIONS.zalo_personal,
 ];
 
 export function getChannelDefinition(

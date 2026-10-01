@@ -16,6 +16,7 @@ import {
   type FacebookPageInfo,
 } from '../api/facebook';
 import { zaloApi, type ConnectZaloOaDto } from '../api/zalo';
+import { zaloPersonalApi, type ConnectZaloPersonalDto } from '../api/zalo-personal';
 import { inboxKeys } from '@/lib/query-keys';
 
 export function useInboxes(workspaceId?: string) {
@@ -329,6 +330,29 @@ export function useZaloSessionInfo(workspaceId?: string, sessionId?: string | nu
     },
     enabled: Boolean(workspaceId && sessionId),
     staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useConnectZaloPersonal(workspaceId?: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (dto: ConnectZaloPersonalDto) => {
+      if (!workspaceId) {
+        throw new Error('Workspace ID is required');
+      }
+      const res = await zaloPersonalApi.connect(workspaceId, dto);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: inboxKeys.list(workspaceId),
+      });
+      toast.success('Đã kết nối Zalo cá nhân thành công!');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Không thể kết nối Zalo cá nhân');
+    },
   });
 }
 
