@@ -1,4 +1,4 @@
-import { buildQueryString, fetchApi, workspaceHeaders } from '@/lib/api/client';
+import { fetchApi, workspaceHeaders } from '@/lib/api/client';
 
 export interface ConnectZaloPersonalResponse {
   inboxId: string;
@@ -34,7 +34,7 @@ export const zaloPersonalApi = {
 
   getConnectSessionStatus: (workspaceId: string, sessionId: string) =>
     fetchApi<ZaloPersonalSessionStatus>(
-      `/integrations/zalo-personal/connect-session${buildQueryString({ sessionId })}/status`,
+      `/integrations/zalo-personal/connect-session/${sessionId}/status`,
       {
         headers: workspaceHeaders(workspaceId),
       },
