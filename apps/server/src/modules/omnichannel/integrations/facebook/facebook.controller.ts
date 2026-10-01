@@ -30,6 +30,7 @@ import { WorkspaceGuard } from '../../../identity/workspaces/guards/workspace.gu
 import type { WorkspaceContext } from '../../../../common/authz/workspace-context.type';
 import { ChannelCredentialService } from '../../../../infrastructure/crypto/channel-credential.service';
 import { SystemSettingsService } from '../../../../common/settings/system-settings.service';
+import { resolveFrontendUrl } from '../../../../common/http/frontend-url';
 import { WebhooksService } from '../channel-webhooks/webhooks.service';
 import { FacebookService } from './facebook.service';
 import { FacebookAdapter } from './facebook.adapter';
@@ -62,105 +63,6 @@ export class FacebookController {
 
   // ─── OAuth Endpoints ────────────────────────────────────────────────────────
 
-  /**
-   * Safely determines the frontend application URL for OAuth redirects.
-   * Prevents redirects to Facebook/Meta domains or unverified origins.
-   */
-  private resolveFrontendUrl(candidateOrigin?: string, req?: Request): string {
-    const corsOrigins = this.configService.get<string[]>('CORS_ORIGIN') || [];
-    const validOrigins = corsOrigins.filter(
-      o =>
-        o &&
-        o !== 'null' &&
-        !o.includes('web:') &&
-        !o.toLowerCase().includes('facebook.com') &&
-        !o.toLowerCase().includes('meta.com'),
-    );
-
-    // 1. Explicit candidate origin (from query param or Redis session)
-    if (candidateOrigin && this.isValidFrontendOrigin(candidateOrigin, validOrigins)) {
-      return new URL(candidateOrigin).origin;
-    }
-
-    // 2. Request Origin header (valid frontend app)
-    const originHeader = req?.headers?.origin as string | undefined;
-    if (originHeader && this.isValidFrontendOrigin(originHeader, validOrigins)) {
-      return new URL(originHeader).origin;
-    }
-
-    // 3. Request Referer header ONLY IF NOT Facebook/Meta
-    const refererHeader = req?.headers?.referer as string | undefined;
-    if (refererHeader && this.isValidFrontendOrigin(refererHeader, validOrigins)) {
-      return new URL(refererHeader).origin;
-    }
-
-    // 4. Domain matching with WEBHOOK_BASE_URL (single-domain setup or tunnel)
-    const webhookBaseUrl = this.configService.get<string>('WEBHOOK_BASE_URL') || '';
-    if (webhookBaseUrl) {
-      try {
-        const webhookOrigin = new URL(webhookBaseUrl).origin;
-        const matchingOrigin = validOrigins.find(o => {
-          try {
-            return new URL(o).origin === webhookOrigin;
-          } catch {
-            return o === webhookOrigin;
-          }
-        });
-        if (matchingOrigin) {
-          return new URL(matchingOrigin).origin;
-        }
-        return webhookOrigin;
-      } catch {
-        // Invalid webhookBaseUrl URL, continue to fallbacks
-      }
-    }
-
-    // 5. Prefer HTTPS origins from CORS_ORIGIN
-    const httpsOrigin = validOrigins.find(o => o.startsWith('https://'));
-    if (httpsOrigin) {
-      return new URL(httpsOrigin).origin;
-    }
-
-    // 6. Safe fallback (first valid origin or localhost:3000)
-    return (validOrigins[0] || 'http://localhost:3000').replace(/\/+$/, '');
-  }
-
-  private isValidFrontendOrigin(candidate: string, allowedOrigins: string[]): boolean {
-    if (!candidate || candidate === 'null') return false;
-    const lower = candidate.toLowerCase();
-    if (lower.includes('facebook.com') || lower.includes('meta.com')) return false;
-
-    try {
-      const u = new URL(candidate);
-      if (u.protocol !== 'http:' && u.protocol !== 'https:') return false;
-      const normalized = u.origin;
-      const webhookBaseUrl = this.configService.get<string>('WEBHOOK_BASE_URL') || '';
-      let webhookOrigin = '';
-      let webhookHostname = '';
-      if (webhookBaseUrl) {
-        const whUrl = new URL(webhookBaseUrl);
-        webhookOrigin = whUrl.origin;
-        webhookHostname = whUrl.hostname;
-      }
-
-      return (
-        allowedOrigins.some(ao => {
-          try {
-            return new URL(ao).origin === normalized;
-          } catch {
-            return ao === normalized;
-          }
-        }) ||
-        (Boolean(webhookOrigin) && normalized === webhookOrigin) ||
-        (Boolean(webhookHostname) && u.hostname === webhookHostname) ||
-        u.hostname === 'localhost' ||
-        u.hostname === '127.0.0.1'
-      );
-    } catch {
-      return false;
-    }
-  }
-
   @Get('auth-url')
   @UseGuards(WorkspaceGuard, RolesGuard)
   @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN)
@@ -172,7 +74,7 @@ export class FacebookController {
     @Query('returnUrl') returnUrlQuery?: string,
     @Req() req?: Request,
   ): Promise<{ authUrl: string }> {
-    const origin = this.resolveFrontendUrl(originQuery, req);
+    const origin = resolveFrontendUrl(this.configService, originQuery, req);
     return this.facebookService.getAuthUrl(context.workspaceId, origin, returnUrlQuery);
   }
 
@@ -191,7 +93,7 @@ export class FacebookController {
   ): Promise<void> {
     try {
       const result = await this.facebookService.handleCallback(code, state);
-      const frontendUrl = this.resolveFrontendUrl(result.clientOrigin, req);
+      const frontendUrl = resolveFrontendUrl(this.configService, result.clientOrigin, req);
 
       let redirectUrl: string;
       if (result.returnUrl) {
@@ -210,7 +112,7 @@ export class FacebookController {
       return res.redirect(redirectUrl);
     } catch (error) {
       const errorMsg = (error as Error).message || 'Facebook authorization failed';
-      const frontendUrl = this.resolveFrontendUrl(undefined, req);
+      const frontendUrl = resolveFrontendUrl(this.configService, undefined, req);
       const redirectUrl = `${frontendUrl}/auth/facebook/callback?error=${encodeURIComponent(errorMsg)}`;
 
       return res.redirect(redirectUrl);

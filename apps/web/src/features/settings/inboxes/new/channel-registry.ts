@@ -33,12 +33,21 @@ const CHANNEL_DEFINITIONS: Record<SupportedChannelKey, ChannelDefinition> = {
     description: 'Kết nối Telegram Bot Token để xử lý tin nhắn khách hàng trực tiếp từ Telegram.',
     logoSrc: '/channels/telegram.png',
   },
+  zalo: {
+    key: 'zalo',
+    type: ChannelType.ZALO,
+    title: 'Zalo Official Account',
+    description: 'Kết nối Zalo OA qua OAuth để tiếp nhận và trả lời tin nhắn khách hàng trên Zalo.',
+    badge: 'Mới',
+    logoSrc: '/channels/zalo.png',
+  },
 };
 
 export const SUPPORTED_CHANNELS: ChannelDefinition[] = [
   CHANNEL_DEFINITIONS.web_chat,
   CHANNEL_DEFINITIONS.facebook,
   CHANNEL_DEFINITIONS.telegram,
+  CHANNEL_DEFINITIONS.zalo,
 ];
 
 export function getChannelDefinition(

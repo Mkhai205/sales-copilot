@@ -47,6 +47,27 @@ export default tseslint.config(
   },
 
   // ============================================================================
+  // Node runtime scripts (mock servers, one-off tooling) run outside the TS build.
+  // ============================================================================
+  {
+    files: ['apps/server/scripts/**/*.mjs', 'scripts/**/*.mjs'],
+    languageOptions: {
+      globals: {
+        process: 'readonly',
+        console: 'readonly',
+        Buffer: 'readonly',
+        URL: 'readonly',
+        fetch: 'readonly',
+        http: 'readonly',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
+        setInterval: 'readonly',
+        clearInterval: 'readonly',
+      },
+    },
+  },
+
+  // ============================================================================
   // Phase 4 decision D8 — UI guardrails (2026-09-28, docs/audit/phase-4-decisions-2026-09-28.md)
   // Raw <button> and direct radix-ui/@shadcn imports are restricted outside components/ui.
   // Files listed in `ignores` are GRANDFATHERED pre-existing debt: remove an entry only

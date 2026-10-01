@@ -8,6 +8,7 @@ import { useWorkspaceMembers } from '@/features/settings/members/hooks/use-works
 import {
   useCreateInbox,
   useConnectFacebookBatch,
+  useConnectZaloOa,
 } from '@/features/settings/inboxes/hooks/use-inboxes';
 import {
   type ChannelDefinition,
@@ -77,6 +78,7 @@ export function NewInboxProvider({ children, initialWorkspaceSlug }: NewInboxPro
 
   const createInboxMutation = useCreateInbox(workspaceId);
   const connectFacebookBatchMutation = useConnectFacebookBatch(workspaceId);
+  const connectZaloOaMutation = useConnectZaloOa(workspaceId);
 
   const initialChannelParam = searchParams.get('channel');
   const urlSessionId = searchParams.get('sessionId');
@@ -105,11 +107,8 @@ export function NewInboxProvider({ children, initialWorkspaceSlug }: NewInboxPro
   );
 
   const setSessionId = React.useCallback((id: string | null) => {
+    // Caller's channel is already selected; the session id alone identifies the OAuth grant.
     setSessionIdState(id);
-    if (id) {
-      setSelectedChannelKey('facebook');
-      setCurrentStage('channel_flow');
-    }
   }, []);
 
   const [selectedMemberUserIds, setSelectedMemberUserIds] = React.useState<string[]>([]);
@@ -256,6 +255,42 @@ export function NewInboxProvider({ children, initialWorkspaceSlug }: NewInboxPro
     ],
   );
 
+  const connectZaloOa = React.useCallback(
+    async (assignAll?: boolean) => {
+      if (!workspaceId || !draftConfig) return;
+
+      const sessionId = draftConfig.credentials?.sessionId as string | undefined;
+      if (!sessionId) return;
+      const oaSecretKey = draftConfig.credentials?.oaSecretKey as string | undefined;
+
+      const isAllSelected =
+        Boolean(workspaceMembers && workspaceMembers.length > 0) &&
+        selectedMemberUserIds.length === workspaceMembers?.length;
+
+      try {
+        const res = await connectZaloOaMutation.mutateAsync({
+          sessionId,
+          oaSecretKey,
+          memberUserIds: selectedMemberUserIds,
+          assignAllMembers: assignAll ?? isAllSelected,
+        });
+
+        setCreatedSummary({
+          id: res.inboxId,
+          name: res.oaName,
+          channelType: ChannelType.ZALO,
+          providerAccountId: res.oaId,
+          avatarUrl: draftConfig.avatarUrl,
+          connectedItems: [{ id: res.inboxId, name: res.oaName, pageId: res.oaId }],
+        });
+        setCurrentStage('success');
+      } catch {
+        // Toast notification handled by mutation onError
+      }
+    },
+    [workspaceId, draftConfig, selectedMemberUserIds, workspaceMembers, connectZaloOaMutation],
+  );
+
   const completeCreation = React.useCallback(async () => {
     if (!workspaceId) return;
 
@@ -265,7 +300,13 @@ export function NewInboxProvider({ children, initialWorkspaceSlug }: NewInboxPro
       return;
     }
 
-    // Flow 2: Web Chat or Telegram
+    // Flow 2: Zalo OA (OAuth session parked server-side + OA Secret Key)
+    if (selectedChannelKey === 'zalo') {
+      await connectZaloOa();
+      return;
+    }
+
+    // Flow 3: Web Chat or Telegram
     if (!draftConfig) return;
 
     try {
@@ -315,6 +356,7 @@ export function NewInboxProvider({ children, initialWorkspaceSlug }: NewInboxPro
     draftConfig,
     selectedMemberUserIds,
     connectFacebookBatch,
+    connectZaloOa,
     createInboxMutation,
   ]);
 
@@ -327,7 +369,10 @@ export function NewInboxProvider({ children, initialWorkspaceSlug }: NewInboxPro
     backToChannelSelect();
   }, [backToChannelSelect, workspaceMembers]);
 
-  const isSubmitting = createInboxMutation.isPending || connectFacebookBatchMutation.isPending;
+  const isSubmitting =
+    createInboxMutation.isPending ||
+    connectFacebookBatchMutation.isPending ||
+    connectZaloOaMutation.isPending;
 
   const value: NewInboxContextValue = React.useMemo(
     () => ({

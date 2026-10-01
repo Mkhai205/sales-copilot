@@ -2,7 +2,7 @@ import type { ChannelType } from '@sales-copilot/shared-contracts';
 
 export type NewInboxStage = 'select_channel' | 'channel_flow' | 'collaborators' | 'success';
 
-export type SupportedChannelKey = 'web_chat' | 'facebook' | 'telegram';
+export type SupportedChannelKey = 'web_chat' | 'facebook' | 'telegram' | 'zalo';
 
 export interface DraftChannelConfig {
   name: string;

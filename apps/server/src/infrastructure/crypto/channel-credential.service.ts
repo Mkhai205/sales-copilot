@@ -63,6 +63,37 @@ export class ChannelCredentialService {
   }
 
   /**
+   * Decrypts a raw stored credentials value, transparently handling the
+   * `{encrypted: "iv:authTag:ct"}` JSON wrapper, legacy encrypted-string, and
+   * plaintext-object shapes. Returns {} on absence or decryption failure
+   * (fail-closed: callers treat empty credentials as unauthenticated).
+   */
+  decryptChannelCredentials(raw: unknown): Record<string, unknown> {
+    if (!raw) return {};
+    if (typeof raw === 'object') {
+      const obj = raw as Record<string, any>;
+      if (obj.encrypted && typeof obj.encrypted === 'string') {
+        try {
+          return this.decrypt(obj.encrypted);
+        } catch {
+          this.logger.warn('Failed to decrypt channel credentials');
+          return {};
+        }
+      }
+      return obj;
+    }
+    if (typeof raw === 'string' && raw.includes(':')) {
+      try {
+        return this.decrypt(raw);
+      } catch {
+        this.logger.warn('Failed to decrypt channel credentials string');
+        return {};
+      }
+    }
+    return {};
+  }
+
+  /**
    * Encrypts a credentials dictionary using AES-256-GCM.
    * Generates a unique 16-byte random IV per call.
    *

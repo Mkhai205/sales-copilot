@@ -10,7 +10,8 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Spinner } from '@/components/ui/spinner';
 import { useFacebookDiscoveredPages } from '@/features/settings/inboxes/hooks/use-inboxes';
-import { useFacebookOAuthPopup } from '@/features/settings/inboxes/hooks/use-facebook-oauth-popup';
+import { useOAuthPopup } from '@/features/settings/inboxes/hooks/use-oauth-popup';
+import { FACEBOOK_OAUTH_POPUP_CONFIG } from '@/features/settings/inboxes/hooks/oauth-popup-configs';
 import { useNewInbox } from '../../context/new-inbox-context';
 import type { ChannelDefinition } from '../../channel-registry';
 
@@ -28,16 +29,19 @@ export function FacebookFlow({ channel }: FacebookFlowProps) {
     pendingFbPageIds,
   } = useNewInbox();
 
-  const { openOAuthPopup, isConnecting: isRedirectingFb } = useFacebookOAuthPopup({
-    workspaceId,
-    onSuccess: sessionId => {
-      setSessionId(sessionId);
-      toast.success('Kết nối tài khoản Facebook thành công!');
+  const { openOAuthPopup, isConnecting: isRedirectingFb } = useOAuthPopup(
+    FACEBOOK_OAUTH_POPUP_CONFIG,
+    {
+      workspaceId,
+      onSuccess: sessionId => {
+        setSessionId(sessionId);
+        toast.success('Kết nối tài khoản Facebook thành công!');
+      },
+      onError: error => {
+        toast.error(error);
+      },
     },
-    onError: error => {
-      toast.error(error);
-    },
-  });
+  );
 
   const handleStartFacebookOAuth = openOAuthPopup;
 

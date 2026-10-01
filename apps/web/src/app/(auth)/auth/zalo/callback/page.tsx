@@ -6,17 +6,17 @@ import {
   ProviderOAuthCallback,
 } from '@/components/oauth/provider-oauth-callback';
 
-const FACEBOOK_CALLBACK_CONFIG = {
-  broadcastChannelName: 'facebook_oauth_channel',
-  localStorageKey: 'facebook_oauth_result',
-  successType: 'FACEBOOK_OAUTH_SUCCESS',
-  errorType: 'FACEBOOK_OAUTH_ERROR',
-  providerName: 'Facebook',
-  successDescription: 'Đang đồng bộ danh sách Fanpage của bạn, cửa sổ sẽ tự động đóng...',
+const ZALO_CALLBACK_CONFIG = {
+  broadcastChannelName: 'zalo_oauth_channel',
+  localStorageKey: 'zalo_oauth_result',
+  successType: 'ZALO_OAUTH_SUCCESS',
+  errorType: 'ZALO_OAUTH_ERROR',
+  providerName: 'Zalo',
+  successDescription: 'Đang đồng bộ thông tin Official Account, cửa sổ sẽ tự động đóng...',
   mapError: (error: string) => {
     const lower = error.toLowerCase();
     if (lower.includes('access_denied') || lower.includes('user_denied')) {
-      return 'Bạn đã từ chối cấp quyền truy cập Facebook.';
+      return 'Bạn đã từ chối cấp quyền truy cập Zalo.';
     }
     if (lower.includes('invalid_oauth_state')) {
       return 'Phiên xác thực đã hết hạn hoặc không hợp lệ. Vui lòng thử lại.';
@@ -25,11 +25,11 @@ const FACEBOOK_CALLBACK_CONFIG = {
   },
 };
 
-export default function FacebookOAuthCallbackPage() {
+export default function ZaloOAuthCallbackPage() {
   return (
     <div className="flex items-center justify-center">
       <React.Suspense fallback={<OAuthCallbackLoadingFallback />}>
-        <ProviderOAuthCallback config={FACEBOOK_CALLBACK_CONFIG} />
+        <ProviderOAuthCallback config={ZALO_CALLBACK_CONFIG} />
       </React.Suspense>
     </div>
   );

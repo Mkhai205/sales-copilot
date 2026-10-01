@@ -12,7 +12,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { inboxKeys } from '@/lib/query-keys';
 import { facebookApi } from '../../../api/facebook';
 import { useUpdateInbox } from '../../../hooks/use-inboxes';
-import { useFacebookOAuthPopup } from '../../../hooks/use-facebook-oauth-popup';
+import { useOAuthPopup } from '../../../hooks/use-oauth-popup';
+import { FACEBOOK_OAUTH_POPUP_CONFIG } from '../../../hooks/oauth-popup-configs';
 import { FacebookConnectionCard } from './facebook-connection-card';
 import { FacebookCommentGuardCard } from './facebook-comment-guard-card';
 import { FacebookDisconnectDialog } from './facebook-disconnect-dialog';
@@ -121,15 +122,18 @@ export function FacebookConfig({ inbox, workspaceId, workspaceSlug }: FacebookCo
     [workspaceId, inbox.channel?.id, inbox.id, queryClient],
   );
 
-  const { openOAuthPopup, isConnecting: isReauthorizing } = useFacebookOAuthPopup({
-    workspaceId,
-    onSuccess: newSessionId => {
-      handleReauthorizeSession(newSessionId);
+  const { openOAuthPopup, isConnecting: isReauthorizing } = useOAuthPopup(
+    FACEBOOK_OAUTH_POPUP_CONFIG,
+    {
+      workspaceId,
+      onSuccess: newSessionId => {
+        handleReauthorizeSession(newSessionId);
+      },
+      onError: err => {
+        toast.error(err || 'Không thể khởi tạo liên kết Facebook OAuth');
+      },
     },
-    onError: err => {
-      toast.error(err || 'Không thể khởi tạo liên kết Facebook OAuth');
-    },
-  });
+  );
 
   const handleStartFacebookOAuth = openOAuthPopup;
 

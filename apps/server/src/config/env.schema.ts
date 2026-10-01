@@ -80,6 +80,12 @@ export const envSchema = z
     FB_APP_SECRET: z.string().optional(),
     FB_VERIFY_TOKEN: z.string().optional(),
 
+    // Zalo Platform App (required for Zalo OA OAuth connect & token refresh)
+    ZALO_APP_ID: z.string().optional(),
+    ZALO_APP_SECRET: z.string().optional(),
+    // Override the Zalo OpenAPI base URL (local mock server for testing without a real OA)
+    ZALO_OPEN_API_BASE: z.string().optional(),
+
     // LLM Gateway Default API Keys & Vertex AI
     GEMINI_API_KEY: z.string().optional(),
     GOOGLE_APPLICATION_CREDENTIALS: z.string().optional(),

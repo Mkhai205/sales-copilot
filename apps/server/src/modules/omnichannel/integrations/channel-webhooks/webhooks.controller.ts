@@ -8,10 +8,11 @@ import {
   Param,
   Post,
   Query,
+  Req,
   Res,
 } from '@nestjs/common';
 import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
-import type { Response } from 'express';
+import type { Request, Response } from 'express';
 import { Throttle } from '@nestjs/throttler';
 import { Public } from '../../../../common/authz/public.decorator';
 import { WebhooksService } from './webhooks.service';
@@ -64,7 +65,31 @@ export class WebhooksController {
     @Body() body: any,
     @Headers() headers: Record<string, any>,
     @Query() query: Record<string, any>,
-  ): Promise<{ success: boolean; eventId?: string; duplicated?: boolean }> {
-    return this.webhooksService.handleInboundWebhook(channelId, body, headers, query);
+    @Res() res: Response,
+    @Req() req?: Request,
+  ): Promise<void> {
+    // express.Request doesn't type rawBody; NestFactory.create({rawBody: true}) populates it.
+    const rawBodyBuffer = (req as { rawBody?: Buffer } | undefined)?.rawBody;
+    const result = await this.webhooksService.handleInboundWebhook(
+      channelId,
+      body,
+      headers,
+      query,
+      undefined,
+      rawBodyBuffer,
+    );
+
+    // POST verification handshake (e.g. Zalo oa_callback_verify): the provider expects the
+    // exact echo body, so it must bypass the global TransformInterceptor envelope.
+    if (result.callbackResponse) {
+      res.status(HttpStatus.OK).json(result.callbackResponse);
+      return;
+    }
+
+    res.json({
+      success: result.success,
+      eventId: result.eventId,
+      duplicated: result.duplicated,
+    });
   }
 }

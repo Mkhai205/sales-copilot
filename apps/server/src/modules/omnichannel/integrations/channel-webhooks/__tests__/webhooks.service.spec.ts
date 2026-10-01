@@ -449,15 +449,24 @@ describe('Inbound Webhook Ingestion Pipeline (Feature F-1.3.4 & BullMQ Stub)', (
   describe('WebhooksController Endpoints', () => {
     it('should delegate handleInboundWebhook request', async () => {
       const payload = { id: 'webhook_ctrl_1', msg: 'test' };
-      const res = await webhooksController.handleInboundWebhook(
+      let sentBody: any;
+      const resMock: any = {
+        status: () => resMock,
+        json: (body: any) => {
+          sentBody = body;
+        },
+      };
+
+      await webhooksController.handleInboundWebhook(
         mockChannelId,
         payload,
         { 'x-hub-signature-256': 'valid-signature' },
         {},
+        resMock,
       );
 
-      expect(res.success).toBe(true);
-      expect(res.duplicated).toBe(false);
+      expect(sentBody.success).toBe(true);
+      expect(sentBody.duplicated).toBe(false);
     });
 
     it('should delegate verifyWebhook request', async () => {
@@ -481,6 +490,122 @@ describe('Inbound Webhook Ingestion Pipeline (Feature F-1.3.4 & BullMQ Stub)', (
       );
 
       expect(sentText).toBe('challenge_received');
+    });
+  });
+
+  describe('POST callback verification hook & rawBuffer passthrough (Zalo-style)', () => {
+    const zaloChannelId = 'chn_zalo_1';
+    const zaloCredentialService = new ChannelCredentialService({
+      get: () => '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
+    } as unknown as ConfigService);
+
+    function registerZaloAdapter(callbackResponse: Record<string, unknown> | null) {
+      let receivedRawBody: unknown;
+      const mockZaloAdapter: ChannelAdapter = {
+        channelType: ChannelType.ZALO,
+        verifyWebhook(request: WebhookVerificationRequest): boolean {
+          // Capture what the service forwarded so tests can assert the buffer passthrough.
+          receivedRawBody = request.rawBody;
+          return true;
+        },
+        handleCallbackVerification(_rawBody: unknown): Record<string, unknown> | null {
+          return callbackResponse;
+        },
+        async parseInboundPayload(): Promise<InboundMessagePayload[]> {
+          return [];
+        },
+        async sendMessage(): Promise<SendMessageResult> {
+          return { externalMessageId: 'msg_1', deliveryStatus: DeliveryStatus.SENT };
+        },
+        async getChannelInfo(): Promise<any> {
+          return { name: 'Zalo OA' };
+        },
+        __receivedRawBody: () => receivedRawBody,
+      } as ChannelAdapter & { __receivedRawBody: () => unknown };
+
+      adapterRegistry.register(mockZaloAdapter);
+
+      channelsDb.set(zaloChannelId, {
+        id: zaloChannelId,
+        workspaceId: 'ws_zalo_1',
+        inboxId: 'ib_zalo_1',
+        channelType: ChannelType.ZALO,
+        credentials: { encrypted: zaloCredentialService.encrypt({ oaSecretKey: 'oa_secret' }) },
+        isConnected: true,
+      });
+      return mockZaloAdapter as ChannelAdapter & { __receivedRawBody: () => unknown };
+    }
+
+    it('should return the callback echo immediately without dedupe/queueing', async () => {
+      registerZaloAdapter({ code: 0, data: { verify_token: 'vt_x' } });
+
+      const res = await webhooksService.handleInboundWebhook(
+        zaloChannelId,
+        { event_name: 'oa_callback_verify', data: JSON.stringify({ verify_token: 'vt_x' }) },
+        {},
+      );
+
+      expect(res.success).toBe(true);
+      expect(res.callbackResponse).toEqual({ code: 0, data: { verify_token: 'vt_x' } });
+      expect(dispatchedJobs).toHaveLength(0);
+      expect(channelEventsDb.size).toBe(0);
+    });
+
+    it('should continue the normal ingestion flow when the hook returns null', async () => {
+      registerZaloAdapter(null);
+
+      const res = await webhooksService.handleInboundWebhook(
+        zaloChannelId,
+        { event_name: 'user_send_text', data: '{}' },
+        {},
+      );
+
+      expect(res.success).toBe(true);
+      expect(res.callbackResponse).toBeUndefined();
+      expect(dispatchedJobs).toHaveLength(1);
+    });
+
+    it('should pass the raw Buffer to verifyWebhook for byte-exact signature checks', async () => {
+      const zaloAdapter = registerZaloAdapter(null);
+      const rawBuffer = Buffer.from('{"event_name":"user_send_text"}', 'utf8');
+
+      await webhooksService.handleInboundWebhook(
+        zaloChannelId,
+        { event_name: 'user_send_text' },
+        {},
+        {},
+        undefined,
+        rawBuffer,
+      );
+
+      expect(zaloAdapter.__receivedRawBody()).toBe(rawBuffer);
+    });
+
+    it('should respond with the exact callback echo body through the controller (no envelope)', async () => {
+      registerZaloAdapter({ code: 0, data: { verify_token: 'vt_ctrl' } });
+
+      let sentBody: any;
+      let sentStatus: number | undefined;
+      const resMock: any = {
+        status: (code: number) => {
+          sentStatus = code;
+          return resMock;
+        },
+        json: (body: any) => {
+          sentBody = body;
+        },
+      };
+
+      await webhooksController.handleInboundWebhook(
+        zaloChannelId,
+        { event_name: 'oa_callback_verify', data: JSON.stringify({ verify_token: 'vt_ctrl' }) },
+        {},
+        {},
+        resMock,
+      );
+
+      expect(sentStatus).toBe(200);
+      expect(sentBody).toEqual({ code: 0, data: { verify_token: 'vt_ctrl' } });
     });
   });
 });

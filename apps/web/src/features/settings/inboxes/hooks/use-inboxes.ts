@@ -15,6 +15,7 @@ import {
   type ConnectFacebookPagesBatchDto,
   type FacebookPageInfo,
 } from '../api/facebook';
+import { zaloApi, type ConnectZaloOaDto } from '../api/zalo';
 import { inboxKeys } from '@/lib/query-keys';
 
 export function useInboxes(workspaceId?: string) {
@@ -312,6 +313,44 @@ export function useConnectFacebookBatch(workspaceId?: string) {
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Không thể kết nối các Fanpage đã chọn');
+    },
+  });
+}
+
+export function useZaloSessionInfo(workspaceId?: string, sessionId?: string | null) {
+  return useQuery({
+    queryKey: ['inboxes', workspaceId, 'zalo', 'session', sessionId || undefined] as const,
+    queryFn: async () => {
+      if (!workspaceId || !sessionId) {
+        throw new Error('Workspace ID and Session ID are required');
+      }
+      const res = await zaloApi.getSessionInfo(workspaceId, sessionId);
+      return res.data;
+    },
+    enabled: Boolean(workspaceId && sessionId),
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useConnectZaloOa(workspaceId?: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (dto: ConnectZaloOaDto) => {
+      if (!workspaceId) {
+        throw new Error('Workspace ID is required');
+      }
+      const res = await zaloApi.connect(workspaceId, dto);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: inboxKeys.list(workspaceId),
+      });
+      toast.success('Đã kết nối Zalo Official Account thành công!');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Không thể kết nối Zalo Official Account');
     },
   });
 }

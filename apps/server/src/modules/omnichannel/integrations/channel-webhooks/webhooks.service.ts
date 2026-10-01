@@ -12,6 +12,11 @@ export interface InboundWebhookResult {
   success: boolean;
   eventId?: string;
   duplicated?: boolean;
+  /**
+   * Exact response body to send back to the provider during a POST callback
+   * verification handshake (e.g. Zalo `oa_callback_verify` echo).
+   */
+  callbackResponse?: Record<string, unknown>;
 }
 
 @Injectable()
@@ -24,32 +29,6 @@ export class WebhooksService {
     private readonly credentialService: ChannelCredentialService,
     @InjectQueue(CHANNEL_INGESTION_QUEUE) private readonly ingestionQueue: Queue,
   ) {}
-
-  /**
-   * Helper to decrypt stored channel credentials.
-   */
-  private decryptCredentials(rawCredentials: unknown): Record<string, unknown> {
-    if (!rawCredentials) return {};
-    if (typeof rawCredentials === 'object' && rawCredentials !== null) {
-      const credsObj = rawCredentials as Record<string, any>;
-      if (credsObj.encrypted && typeof credsObj.encrypted === 'string') {
-        try {
-          return this.credentialService.decrypt(credsObj.encrypted);
-        } catch {
-          this.logger.warn('Failed to decrypt channel credentials');
-          return {};
-        }
-      }
-    } else if (typeof rawCredentials === 'string' && rawCredentials.includes(':')) {
-      try {
-        return this.credentialService.decrypt(rawCredentials);
-      } catch {
-        this.logger.warn('Failed to decrypt channel credentials string');
-        return {};
-      }
-    }
-    return {};
-  }
 
   /**
    * Extracts an external event ID from payload or computes a deterministic SHA-256 hash.
@@ -104,7 +83,7 @@ export class WebhooksService {
       });
     }
 
-    const credentials = this.decryptCredentials(channel.credentials);
+    const credentials = this.credentialService.decryptChannelCredentials(channel.credentials);
     const adapter = this.adapterRegistry.get(channel.channelType as ChannelType);
 
     // 1. Check Facebook-style hub.challenge
@@ -149,6 +128,7 @@ export class WebhooksService {
     headers: Record<string, any>,
     query?: Record<string, any>,
     options?: { skipSignatureVerification?: boolean },
+    rawBodyBuffer?: Buffer,
   ): Promise<InboundWebhookResult> {
     const client = this.prisma.getClient();
 
@@ -166,14 +146,24 @@ export class WebhooksService {
 
     // 2. Resolve adapter & decrypted credentials
     const adapter = this.adapterRegistry.get(channel.channelType as ChannelType);
-    const credentials = this.decryptCredentials(channel.credentials);
+    const credentials = this.credentialService.decryptChannelCredentials(channel.credentials);
 
-    // 3. Authenticate signature (skip if already verified at platform level, e.g. Central Webhook)
+    // 3. POST-based callback verification handshake (e.g. Zalo oa_callback_verify):
+    // echo the provider's verify token back and skip the ingestion flow entirely.
+    if (adapter.handleCallbackVerification) {
+      const callbackResponse = adapter.handleCallbackVerification(rawBody);
+      if (callbackResponse) {
+        this.logger.log(`Callback verification handshake handled for channel '${channelId}'`);
+        return { success: true, callbackResponse };
+      }
+    }
+
+    // 4. Authenticate signature (skip if already verified at platform level, e.g. Central Webhook)
     if (!options?.skipSignatureVerification) {
       const isValidSignature = await adapter.verifyWebhook(
         {
           headers,
-          rawBody,
+          rawBody: rawBodyBuffer ?? rawBody,
           query,
           webhookSecret: (credentials.webhookSecret as string) || (credentials.appSecret as string),
         },
@@ -189,7 +179,7 @@ export class WebhooksService {
       }
     }
 
-    // 4. Extract external event ID & determine event type
+    // 5. Extract external event ID & determine event type
     const externalEventId = this.extractEventId(rawBody);
     const eventType =
       (rawBody as any)?.object ||
@@ -198,7 +188,7 @@ export class WebhooksService {
       headers['x-event-type'] ||
       'inbound_webhook';
 
-    // 5. Deduplication check (Idempotency)
+    // 6. Deduplication check (Idempotency)
     const existingEvent = await client.channelEvent.findUnique({
       where: {
         channelId_externalEventId: {
@@ -219,7 +209,7 @@ export class WebhooksService {
       };
     }
 
-    // 6. Persist ChannelEvent (with concurrent duplicate race protection)
+    // 7. Persist ChannelEvent (with concurrent duplicate race protection)
     let channelEvent;
     try {
       channelEvent = await client.channelEvent.create({
@@ -252,7 +242,7 @@ export class WebhooksService {
       throw err;
     }
 
-    // 7. Enqueue BullMQ background job with deterministic jobId & trace ID forwarding (T10.5.4 & T10.5.6)
+    // 8. Enqueue BullMQ background job with deterministic jobId & trace ID forwarding (T10.5.4 & T10.5.6)
     const requestId = headers['x-request-id'] || headers['x-correlation-id'];
     await this.ingestionQueue.add(
       'process-channel-event',

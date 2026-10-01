@@ -5,6 +5,7 @@ import { useNewInbox } from '../context/new-inbox-context';
 import { WebChatFlow } from './web-chat/web-chat-flow';
 import { FacebookFlow } from './facebook/facebook-flow';
 import { TelegramFlow } from './telegram/telegram-flow';
+import { ZaloFlow } from './zalo/zalo-flow';
 
 export function ChannelRenderer() {
   const { selectedChannelKey, selectedChannel } = useNewInbox();
@@ -20,6 +21,8 @@ export function ChannelRenderer() {
       return <FacebookFlow channel={selectedChannel} />;
     case 'telegram':
       return <TelegramFlow channel={selectedChannel} />;
+    case 'zalo':
+      return <ZaloFlow channel={selectedChannel} />;
     default:
       return null;
   }

@@ -32,6 +32,17 @@ export interface ChannelAdapter {
   ): boolean | Promise<boolean>;
 
   /**
+   * Handles a POST-based callback verification handshake (e.g. Zalo `oa_callback_verify` echo),
+   * which unlike GET-challenge providers (Facebook hub.challenge) verifies the URL via POST.
+   *
+   * Invoked before signature verification: the echo response only reflects the caller's own
+   * verify token back, so it leaks nothing. Return the exact response body the provider
+   * expects, or null when the payload is not a verification handshake and must continue
+   * through the normal signature + ingestion flow.
+   */
+  handleCallbackVerification?(rawBody: unknown): Record<string, unknown> | null;
+
+  /**
    * Normalizes vendor-specific inbound webhook payloads into standard internal InboundMessagePayload array.
    *
    * @param rawBody Raw webhook body received from the channel provider

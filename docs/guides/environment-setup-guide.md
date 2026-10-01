@@ -1,6 +1,7 @@
 # Hướng Dẫn Cấu Hình Môi Trường & Triển Khai (Environment & Deployment Guide)
 
 Tài liệu này hướng dẫn chi tiết cách thiết lập biến môi trường (`.env`), cấu hình hạ tầng mạng và vận hành hệ thống **Sales Copilot Platform** theo 3 kịch bản:
+
 1. **Kịch bản 1: Local Development** (Phát triển thông thường, chạy lệnh native, infra Docker)
 2. **Kịch bản 2: Local Development + Cloudflare Tunnel** (Phát triển local có webhook Facebook / share link demo)
 3. **Kịch bản 3: Production trên VPS** (Đóng gói 100% Docker, Nginx Reverse Proxy & Cloudflare Tunnel)
@@ -42,8 +43,9 @@ Hệ thống hoạt động trên kiến trúc **Single Domain + Nginx Reverse P
 ```
 
 ### Hai luồng giao tiếp cốt lõi:
-1. **Client-side (Trình duyệt):** Gọi URL tương đối `/api/v1` và WebSocket `window.location.origin` $\rightarrow$ Nginx nhận request và điều hướng chuẩn xác.
-2. **Server-side (Next.js SSR / Server Actions / Middleware):** Gọi trực tiếp Backend qua mạng nội bộ Docker (`INTERNAL_API_URL=http://server:8000/api/v1`) $\rightarrow$ **Độ trễ < 1ms, không qua Internet, không tốn băng thông**.
+
+1. **Client-side (Trình duyệt):** Gọi URL tương đối `/api/v1` và WebSocket `window.location.origin` $\\rightarrow$ Nginx nhận request và điều hướng chuẩn xác.
+2. **Server-side (Next.js SSR / Server Actions / Middleware):** Gọi trực tiếp Backend qua mạng nội bộ Docker (`INTERNAL_API_URL=http://server:8000/api/v1`) $\\rightarrow$ **Độ trễ &lt; 1ms, không qua Internet, không tốn băng thông**.
 
 ---
 
@@ -54,7 +56,7 @@ Dùng khi lập trình tính năng mới hàng ngày. Tốc độ hot-reload nha
 ### Bảng biến môi trường cần thiết
 
 | File | Mục đích | Các biến quan trọng |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | `.env` (thư mục gốc) | Docker Compose Dev | `POSTGRES_USER=postgres`, `POSTGRES_PASSWORD=password`, `MINIO_ROOT_USER=minioadmin`, `MINIO_ROOT_PASSWORD=miniopassword123` |
 | `apps/server/.env` | Backend NestJS | `PORT=8000`, `APP_BASE_URL=http://localhost:8000`, `DATABASE_URL=postgresql://postgres:password@localhost:5432/sales_copilot_dev?schema=public`, `REDIS_URL=redis://localhost:6379`, `STORAGE_ENDPOINT=http://localhost:9000`, `STORAGE_PUBLIC_ENDPOINT=http://localhost:9000`, `JWT_ACCESS_TOKEN_SECRET=...`, `CHANNEL_ENCRYPTION_KEY=...` |
 | `apps/web/.env.local` | Frontend Next.js | `NEXT_PUBLIC_APP_URL=http://localhost:3000`, `NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1`, `NEXT_PUBLIC_WS_URL=http://localhost:8000` |
@@ -91,6 +93,7 @@ pnpm serve:web
 Dùng khi cần nhận Webhook từ bên ngoài (Facebook Messenger, Zalo OA) hoặc gửi link demo cho đồng nghiệp xem trực tiếp từ máy của bạn.
 
 ### Yêu cầu bổ sung
+
 - Cài đặt `cloudflared CLI` trên máy:
   - Windows: `winget install Cloudflare.cloudflared` hoặc tải installer.
   - macOS: `brew install cloudflared`
@@ -99,6 +102,7 @@ Dùng khi cần nhận Webhook từ bên ngoài (Facebook Messenger, Zalo OA) ho
 ### Bước 1: Khởi tạo Tunnel (Chỉ làm lần đầu)
 
 Chạy script cấu hình tự động:
+
 ```powershell
 # Trên Windows PowerShell:
 .\scripts\setup-tunnel.ps1
@@ -109,16 +113,18 @@ chmod +x ./scripts/setup-tunnel.sh
 ```
 
 Script sẽ:
+
 1. Đăng nhập Cloudflare (`cloudflared tunnel login`).
 2. Tạo tunnel tên `sales-copilot`.
 3. Định tuyến DNS 2 domain:
-   - `sales-copilot.kakadev.xyz` $\rightarrow$ Web App & API
-   - `storage-sales-copilot.kakadev.xyz` $\rightarrow$ MinIO File Storage
+   - `sales-copilot.kakadev.xyz` $\\rightarrow$ Web App & API
+   - `storage-sales-copilot.kakadev.xyz` $\\rightarrow$ MinIO File Storage
 4. Copy file credentials JSON vào `config/cloudflared/credentials.json` và điền Tunnel ID vào `config/cloudflared/config.yml`.
 
 ### Bước 2: Cập nhật biến môi trường cho Tunnel
 
 Trong `apps/server/.env`, cập nhật hoặc bỏ comment các dòng:
+
 ```bash
 # Public Base URL của Backend (Single Source of Truth cho Web Chat Embed SDK, Swagger, Webhook)
 APP_BASE_URL=https://sales-copilot.kakadev.xyz
@@ -137,6 +143,10 @@ CORS_ORIGIN='https://sales-copilot.kakadev.xyz,http://localhost:3000'
 FB_APP_ID=your_meta_app_id
 FB_APP_SECRET=your_meta_app_secret
 FB_VERIFY_TOKEN=your_custom_verify_token
+
+# Zalo App Credentials (lấy từ https://developers.zalo.me — dùng chung cho mọi workspace)
+ZALO_APP_ID=your_zalo_app_id
+ZALO_APP_SECRET=your_zalo_app_secret
 ```
 
 ### Bước 3: Khởi động hệ thống với profile `tunnel`
@@ -151,6 +161,7 @@ pnpm serve:web
 ```
 
 Ứng dụng của bạn sẽ được truy cập toàn cầu tại:
+
 - **Dashboard & API**: `https://sales-copilot.kakadev.xyz`
 - **Facebook Webhook URL**: `https://sales-copilot.kakadev.xyz/api/v1/integrations/facebook/webhook`
 - **Storage Attachment**: `https://storage-sales-copilot.kakadev.xyz`
@@ -164,12 +175,14 @@ Dùng khi triển khai lên máy chủ thật (VPS Ubuntu/Debian) hoặc test đ
 ### Bước 1: Chuẩn bị máy chủ VPS
 
 Cài đặt Docker Engine & Docker Compose v2 trên VPS:
+
 ```bash
 curl -fsSL https://get.docker.com -o get-docker.sh
 sh get-docker.sh
 ```
 
 Clone mã nguồn về VPS:
+
 ```bash
 git clone https://github.com/Mkhai205/sales-copilot.git /opt/sales-copilot
 cd /opt/sales-copilot
@@ -178,11 +191,13 @@ cd /opt/sales-copilot
 ### Bước 2: Thiết lập file môi trường `.env` duy nhất ở thư mục gốc
 
 Tạo file `.env` từ `.env.example`:
+
 ```bash
 cp .env.example .env
 ```
 
 Chỉnh sửa `.env` với các thông số production thực tế:
+
 ```bash
 # --- Cơ sở dữ liệu PostgreSQL ---
 POSTGRES_USER=prod_copilot_user
@@ -218,11 +233,16 @@ INTERNAL_API_URL=http://server:8000/api/v1
 FB_APP_ID=123456789012345
 FB_APP_SECRET=abcdef0123456789abcdef0123456789
 FB_VERIFY_TOKEN=sales_copilot_fb_verify_token_prod
+
+# --- Zalo (Nếu có) ---
+ZALO_APP_ID=1234567890123456
+ZALO_APP_SECRET=abcdef0123456789abcdef0123456789
 ```
 
 ### Bước 3: Đặt file xác thực Cloudflare Tunnel (Nếu dùng Tunnel)
 
 Nếu bạn định tuyến qua Cloudflare Tunnel:
+
 1. Đặt file credential vào `config/cloudflared/credentials.json`.
 2. Điền Tunnel UUID vào `config/cloudflared/config.yml`.
 
@@ -237,6 +257,7 @@ docker compose -f docker-compose.prod.yml --profile tunnel up -d --build
 ```
 
 ### Quy trình tự động khi chạy Production Compose:
+
 1. `postgres`, `redis`, `minio` khởi động và kiểm tra sức khỏe (`healthy`).
 2. `db-migrate` tự động chạy `npx prisma migrate deploy` đồng bộ schema database.
 3. `server` (NestJS) và `web` (Next.js) khởi động sau khi migration hoàn tất thành công.
@@ -263,45 +284,52 @@ docker compose -f docker-compose.prod.yml down
 ## 5. Danh Mục Biến Môi Trường Chi Tiết (Environment Variables Reference)
 
 ### Nhóm 1: Cơ sở dữ liệu & Cache
+
 | Tên biến | Mặc định | Bắt buộc | Mô tả |
-| :--- | :--- | :---: | :--- |
-| `DATABASE_URL` | - | **Có** | Chuỗi kết nối PostgreSQL (Prisma format) |
+| --- | --- | --- | --- |
+| `DATABASE_URL` | \- | **Có** | Chuỗi kết nối PostgreSQL (Prisma format) |
 | `DATABASE_POOL_MAX` | `10` | Không | Số lượng connection tối đa trong pool |
 | `DATABASE_POOL_MIN` | `2` | Không | Số lượng connection tối thiểu duy trì |
 | `REDIS_URL` | `redis://localhost:6379` | Không | URL kết nối Redis cho Queue và WebSocket Adapter |
 
 ### Nhóm 2: Xác thực & Bảo mật
+
 | Tên biến | Mặc định | Bắt buộc | Mô tả |
-| :--- | :--- | :---: | :--- |
-| `JWT_ACCESS_TOKEN_SECRET` | - | **Có** | Khóa ký JWT Access Token (tối thiểu 32 ký tự) |
+| --- | --- | --- | --- |
+| `JWT_ACCESS_TOKEN_SECRET` | \- | **Có** | Khóa ký JWT Access Token (tối thiểu 32 ký tự) |
 | `JWT_ACCESS_TOKEN_EXPIRES_IN_SECONDS` | `900` (15m) | Không | Thời gian sống của Access Token |
 | `REFRESH_TOKEN_EXPIRES_IN_SECONDS` | `604800` (7d) | Không | Thời gian sống của Refresh Token |
-| `CHANNEL_ENCRYPTION_KEY` | - | **Có** | Khóa hex 64 ký tự mã hóa token các kênh tích hợp |
+| `CHANNEL_ENCRYPTION_KEY` | \- | **Có** | Khóa hex 64 ký tự mã hóa token các kênh tích hợp |
 
 ### Nhóm 3: Lưu trữ tệp tin (S3 / MinIO)
+
 > **Lưu ý kiến trúc**: Cơ sở dữ liệu chỉ lưu trữ *relative key* (ví dụ: `avatars/inboxes/{wsId}/logo.png`), không lưu URL tuyệt đối. Biến `STORAGE_PUBLIC_ENDPOINT` được gắn động lúc API trả dữ liệu cho client, giúp bạn đổi domain/CDN mà không làm hỏng dữ liệu trong DB.
 
 | Tên biến | Mặc định | Bắt buộc | Mô tả |
-| :--- | :--- | :---: | :--- |
+| --- | --- | --- | --- |
 | `STORAGE_ENDPOINT` | `http://localhost:9000` | Không | Endpoint nội bộ để Server tương tác với MinIO (S3 Client) |
 | `STORAGE_PUBLIC_ENDPOINT` | `http://localhost:9000` | Không | Endpoint public để client trình duyệt xem/tải ảnh đính kèm |
-| `STORAGE_ACCESS_KEY` | - | **Có** | Root User / Access Key của MinIO |
-| `STORAGE_SECRET_KEY` | - | **Có** | Root Password / Secret Key của MinIO |
+| `STORAGE_ACCESS_KEY` | \- | **Có** | Root User / Access Key của MinIO |
+| `STORAGE_SECRET_KEY` | \- | **Có** | Root Password / Secret Key của MinIO |
 | `STORAGE_BUCKETS` | `sales-copilot` | Không | Tên bucket chính (tự động tạo nếu chưa có) |
 
 ### Nhóm 4: Điều hướng & Webhooks (Backend)
+
 | Tên biến | Mặc định | Bắt buộc | Mô tả |
-| :--- | :--- | :---: | :--- |
+| --- | --- | --- | --- |
 | `APP_BASE_URL` | `http://localhost:8000` | Không | URL công khai chính của Backend API (dùng cho Web Chat Embed SDK, Swagger). Bắt buộc có protocol `http://` hoặc `https://`. |
 | `WEBHOOK_BASE_URL` | Kế thừa `APP_BASE_URL` | Không | URL public phục vụ nhận webhook callback (Meta, Telegram, SePay) và OAuth redirect. Chỉ cần điền riêng khi dùng tunnel riêng biệt. |
 | `CORS_ORIGIN` | `http://localhost:3000` | Không | Danh sách origin được phép gọi API (chuỗi phân cách bằng dấu phẩy). |
-| `INTERNAL_API_URL` | `http://server:8000/api/v1`| Không | URL mạng nội bộ Docker để Next.js SSR/ServerActions gọi Backend NestJS trực tiếp. |
+| `INTERNAL_API_URL` | `http://server:8000/api/v1` | Không | URL mạng nội bộ Docker để Next.js SSR/ServerActions gọi Backend NestJS trực tiếp. |
 | `FB_APP_ID` | `undefined` | Không | Meta App ID cho kênh Facebook Messenger |
 | `FB_APP_SECRET` | `undefined` | Không | Meta App Secret để xác thực chữ ký Webhook HMAC-SHA256 |
 | `FB_VERIFY_TOKEN` | `undefined` | Không | Token xác thực Webhook Meta handshake |
+| `ZALO_APP_ID` | `undefined` | Không | Zalo App ID cho kênh Zalo Official Account (OAuth connect + refresh token) |
+| `ZALO_APP_SECRET` | `undefined` | Không | Zalo App Secret để đổi/refresh OA access token |
 
 ### Nhóm 5: Frontend Web (Next.js)
+
 | Tên biến | Mặc định | Bắt buộc | Mô tả |
-| :--- | :--- | :---: | :--- |
+| --- | --- | --- | --- |
 | `NEXT_PUBLIC_APP_URL` | `http://localhost:3000` | Không | URL public của Web App (fallback trên SSR nếu không có request origin). |
 | `NEXT_PUBLIC_API_URL` | `http://localhost:8000` | Không | URL public của Backend API mà trình duyệt client gọi tới. |

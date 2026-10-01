@@ -133,13 +133,13 @@ describe('New Inbox Channel Schemas Validation', () => {
       assert.strictEqual(isSupportedChannelKey('web_chat'), true);
       assert.strictEqual(isSupportedChannelKey('facebook'), true);
       assert.strictEqual(isSupportedChannelKey('telegram'), true);
-      assert.strictEqual(isSupportedChannelKey('zalo'), false);
+      assert.strictEqual(isSupportedChannelKey('zalo'), true);
       assert.strictEqual(isSupportedChannelKey('email'), false);
       assert.strictEqual(isSupportedChannelKey(''), false);
       assert.strictEqual(isSupportedChannelKey(null), false);
       assert.strictEqual(isSupportedChannelKey(undefined), false);
 
-      assert.strictEqual(SUPPORTED_CHANNELS.length, 3);
+      assert.strictEqual(SUPPORTED_CHANNELS.length, 4);
       const def = getChannelDefinition('web_chat');
       assert.ok(def);
       assert.strictEqual(def?.title, 'Website Live Chat');

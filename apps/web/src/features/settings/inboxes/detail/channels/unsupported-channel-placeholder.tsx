@@ -11,7 +11,6 @@ interface UnsupportedChannelPlaceholderProps {
 }
 
 const CHANNEL_LABELS: Record<string, string> = {
-  [ChannelType.ZALO]: 'Zalo Official Account',
   [ChannelType.EMAIL]: 'Hòm thư Email',
 };
 

@@ -10,6 +10,7 @@ import { ChannelIngestionProcessor } from './channel-ingestion.processor';
 import { ChannelWebhooksModule } from './channel-webhooks/channel-webhooks.module';
 import { TelegramModule } from './telegram/telegram.module';
 import { FacebookModule } from './facebook/facebook.module';
+import { ZaloModule } from './zalo/zalo.module';
 import { WebChatModule } from './web-chat/web-chat.module';
 
 @Global()
@@ -23,6 +24,7 @@ import { WebChatModule } from './web-chat/web-chat.module';
     ChannelWebhooksModule,
     TelegramModule,
     FacebookModule,
+    ZaloModule,
     WebChatModule,
   ],
   providers: [ChannelAdapterRegistry, OutboundMessageListener, ChannelIngestionProcessor],
@@ -32,6 +34,7 @@ import { WebChatModule } from './web-chat/web-chat.module';
     ChannelWebhooksModule,
     TelegramModule,
     FacebookModule,
+    ZaloModule,
     WebChatModule,
   ],
 })
