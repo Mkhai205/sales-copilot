@@ -23,16 +23,18 @@ export interface TestAppContext {
 
 /**
  * Boots a full NestJS application configured identically to main.ts,
- * overriding the database to sales_copilot_test and binding to an ephemeral port.
+ * against the isolated test environment (see ../env-isolation.ts) and
+ * bound to an ephemeral port.
  */
 export async function createTestApp(): Promise<TestAppContext> {
-  // Ensure test database is targeted
-  const testDbUrl = process.env.DATABASE_URL?.replace('/sales_copilot_dev', '/sales_copilot_test');
-
-  process.env.DATABASE_URL = testDbUrl;
-  process.env.NODE_ENV = 'test';
-  if (!process.env.LOG_LEVEL) {
-    process.env.LOG_LEVEL = 'warn';
+  // Isolation env (test database, Redis DB 1, test bucket) is applied by
+  // test/e2e/env-isolation.ts as a jest setupFile — it MUST run before
+  // app.module.ts is imported, since ConfigModule.forRoot() freezes the
+  // environment at that point. This guard catches broken wiring early.
+  if (!process.env.DATABASE_URL?.includes('/sales_copilot_test')) {
+    throw new Error(
+      'DATABASE_URL does not target sales_copilot_test — the env-isolation.ts setupFile did not run',
+    );
   }
 
   const moduleFixture: TestingModule = await Test.createTestingModule({

@@ -499,7 +499,11 @@ describe('Comprehensive Opaque-Box E2E: Domain, BaseUrl & Storage Normalization'
 
       it('T1.11.4: resolvePublicUrl should resolve relative key against STORAGE_PUBLIC_ENDPOINT', () => {
         const resolved = (storageService as any).resolvePublicUrl?.('avatars/inboxes/ws1/img.png');
-        expect(resolved).toMatch(/^https?:\/\/.*\/sales-copilot\/avatars\/inboxes\/ws1\/img\.png$/);
+        // Bucket comes from STORAGE_BUCKETS (e2e isolation swaps in sales-copilot-test)
+        const bucket = (process.env.STORAGE_BUCKETS || 'sales-copilot').trim();
+        expect(resolved).toMatch(
+          new RegExp(`^https?:\\/\\/.*\\/${bucket}\\/avatars\\/inboxes\\/ws1\\/img\\.png$`),
+        );
       });
 
       it('T1.11.5: resolvePublicUrl should pass through external third-party CDN URLs untouched', () => {

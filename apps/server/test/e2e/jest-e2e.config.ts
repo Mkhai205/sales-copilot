@@ -4,6 +4,9 @@ const config: Config = {
   moduleFileExtensions: ['js', 'json', 'ts', 'tsx', 'jsx'],
   rootDir: '../..',
   testRegex: 'test/e2e/.*\\.e2e-spec\\.ts$',
+  // Isolation env must be applied before spec imports evaluate app.module.ts
+  // (ConfigModule.forRoot freezes the env at that point) — see env-isolation.ts
+  setupFiles: ['<rootDir>/test/e2e/env-isolation.ts'],
   transform: {
     '^.+\\.(t|j)sx?$': [
       'ts-jest',
