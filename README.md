@@ -57,8 +57,8 @@ pnpm serve:web                                            # Web  → http://loca
 ## 🧪 Testing
 
 ```bash
-pnpm test        # Server unit tests
-pnpm test:all    # Unit + integration + e2e
+pnpm test        # Unit tests: server + web + shared-contracts + widget-sdk
+pnpm test:all    # All unit suites + server integration + e2e
 pnpm typecheck && pnpm lint
 ```
 

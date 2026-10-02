@@ -44,7 +44,7 @@ jobs:
         run: pnpm audit --prod --audit-level high
 
   test:
-    name: Unit + Integration + E2E
+    name: Tests
     runs-on: ubuntu-latest
 
     services:
@@ -131,7 +131,9 @@ jobs:
           # WEBHOOK_BASE_URL= (uncomment only for a public webhook tunnel; inherits APP_BASE_URL)
           EOF
 
-      - name: Unit + Integration + E2E
+      # pnpm test:all = unit (server + web + shared-contracts + widget-sdk)
+      # then server integration + e2e against the service containers above
+      - name: All test suites
         run: pnpm test:all
 
   docker:
