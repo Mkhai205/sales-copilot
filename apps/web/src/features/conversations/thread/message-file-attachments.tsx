@@ -38,7 +38,7 @@ export function MessageFileAttachments({ attachments }: { attachments?: Attachme
               src={att.fileUrl}
               controls
               preload="metadata"
-              className="max-w-xs rounded-lg border bg-black"
+              className="max-w-48 rounded-lg border bg-black"
             />
           ),
       )}

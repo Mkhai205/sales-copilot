@@ -27,10 +27,7 @@ export interface TestAppContext {
  */
 export async function createTestApp(): Promise<TestAppContext> {
   // Ensure test database is targeted
-  const testDbUrl =
-    process.env.TEST_DATABASE_URL ||
-    process.env.DATABASE_URL?.replace('/sales_copilot_dev', '/sales_copilot_test') ||
-    'postgresql://postgres:password@101.96.66.225:8005/sales_copilot_test?schema=public';
+  const testDbUrl = process.env.DATABASE_URL?.replace('/sales_copilot_dev', '/sales_copilot_test');
 
   process.env.DATABASE_URL = testDbUrl;
   process.env.NODE_ENV = 'test';
