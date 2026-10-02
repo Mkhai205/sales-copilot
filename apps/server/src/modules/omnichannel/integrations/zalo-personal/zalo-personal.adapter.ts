@@ -24,13 +24,18 @@ export interface ZaloListenerMessage {
   isSelf: boolean;
   data: {
     msgId?: string;
-    msg?: string;
+    /** zca-js TMessage.content — string for text, media object for attachments. */
+    content?: unknown;
     attach?: string;
     uidFrom?: string;
   };
 }
 
-/** Extracts attachments from the `TMessage.attach` JSON string (tolerant — Zalo shapes change). */
+/**
+ * Extracts attachments from the `TMessage.attach` JSON string (tolerant — Zalo shapes change).
+ * The attach payload is an object keyed by media type (e.g. `{"photo":[{href,...}]}`),
+ * so every array/object-valued property is scanned rather than trusting one shape.
+ */
 export function parseListenerAttachments(attach?: string): ZaloPersonalAttachment[] {
   if (!attach) return [];
   let parsed: unknown;
@@ -39,41 +44,72 @@ export function parseListenerAttachments(attach?: string): ZaloPersonalAttachmen
   } catch {
     return [];
   }
-  if (!Array.isArray(parsed)) return [];
-
-  const out: ZaloPersonalAttachment[] = [];
-  for (const item of parsed) {
-    if (!item || typeof item !== 'object') continue;
-    const record = item as Record<string, unknown>;
-    const nestedData = record.data as Record<string, unknown> | string | undefined;
-    const urlCandidates = [
-      record.href,
-      record.url,
-      typeof nestedData === 'object' && nestedData !== null ? nestedData.href : undefined,
-      typeof nestedData === 'object' && nestedData !== null ? nestedData.url : undefined,
-      typeof nestedData === 'string' && nestedData.startsWith('http') ? nestedData : undefined,
-    ];
-    const url = urlCandidates.find(
-      candidate => typeof candidate === 'string' && candidate.startsWith('http'),
-    ) as string | undefined;
-
-    const type = typeof record.type === 'string' ? record.type : 'unknown';
-    out.push({
-      type,
-      url,
-      fileName: typeof record.title === 'string' ? record.title : undefined,
-    });
-  }
-  return out;
+  return collectAttachmentItems(parsed)
+    .map(toAttachment)
+    .filter((item): item is ZaloPersonalAttachment => item !== null);
 }
 
-/** Builds the JSON-serializable ingestion envelope from a live listener message. */
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function collectAttachmentItems(parsed: unknown): Record<string, unknown>[] {
+  if (Array.isArray(parsed)) return parsed.filter(isRecord);
+  if (!isRecord(parsed)) return [];
+  const items: Record<string, unknown>[] = [];
+  for (const value of Object.values(parsed)) {
+    if (Array.isArray(value)) {
+      items.push(...value.filter(isRecord));
+    } else if (isRecord(value)) {
+      items.push(value);
+    }
+  }
+  return items;
+}
+
+function toAttachment(item: Record<string, unknown>): ZaloPersonalAttachment | null {
+  const nestedData = item.data as Record<string, unknown> | string | undefined;
+  const urlCandidates = [
+    item.href,
+    item.url,
+    item.thumb,
+    typeof nestedData === 'object' && nestedData !== null ? nestedData.href : undefined,
+    typeof nestedData === 'object' && nestedData !== null ? nestedData.url : undefined,
+    typeof nestedData === 'string' && nestedData.startsWith('http') ? nestedData : undefined,
+  ];
+  const url = urlCandidates.find(
+    candidate => typeof candidate === 'string' && candidate.startsWith('http'),
+  ) as string | undefined;
+  if (!url) return null;
+
+  return {
+    type: typeof item.type === 'string' ? item.type : 'unknown',
+    url,
+    fileName: typeof item.title === 'string' ? item.title : undefined,
+  };
+}
+
+/**
+ * Builds the JSON-serializable ingestion envelope from a live listener message.
+ * Text lives in `TMessage.content` (string for text messages — there is no `msg`
+ * field on TMessage, only on quotes). Media messages carry an object content with
+ * a thumbnail URL, used as a fallback when the attach JSON yields nothing parseable.
+ */
 export function buildIngestEnvelope(message: ZaloListenerMessage): ZaloPersonalEnvelope | null {
   // MVP scope: 1-1 conversations only (ThreadType.User === 0).
   if (message.type !== ThreadType.User) return null;
   const msgId = message.data?.msgId;
   const threadId = message.threadId;
   if (!msgId || !threadId) return null;
+
+  const { content } = message.data ?? {};
+  const attachments = parseListenerAttachments(message.data?.attach);
+  if (attachments.length === 0 && isRecord(content)) {
+    const thumb = content.thumb;
+    if (typeof thumb === 'string' && thumb.startsWith('http')) {
+      attachments.push({ type: 'photo', url: thumb });
+    }
+  }
 
   return {
     kind: ZALO_PERSONAL_ENVELOPE_KIND,
@@ -82,8 +118,8 @@ export function buildIngestEnvelope(message: ZaloListenerMessage): ZaloPersonalE
       msgId,
       threadId,
       isSelf: Boolean(message.isSelf),
-      text: message.data?.msg || '',
-      attachments: parseListenerAttachments(message.data?.attach),
+      text: typeof content === 'string' ? content.trim() : '',
+      attachments,
     },
   };
 }

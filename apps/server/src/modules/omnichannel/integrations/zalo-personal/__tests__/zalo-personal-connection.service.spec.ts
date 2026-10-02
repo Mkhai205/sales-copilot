@@ -16,7 +16,7 @@ function buildListenerMessage(overrides: Record<string, unknown> = {}) {
     isSelf: false,
     data: {
       msgId: `m_${Math.random().toString(36).slice(2, 8)}`,
-      msg: 'Xin chào shop',
+      content: 'Xin chào shop',
       attach: '[]',
       ...overrides,
     },
@@ -190,7 +190,7 @@ describe('ZaloPersonalConnectionService (listener ingestion & connect)', () => {
     });
 
     it('should mirror a phone-sent message as an OUTGOING message with suppressOutbound', async () => {
-      const msg = buildListenerMessage({ isSelf: true, msg: 'Dạ shop gửi ảnh ngay ạ' });
+      const msg = buildListenerMessage({ isSelf: true, content: 'Dạ shop gửi ảnh ngay ạ' });
       await (service as any).handleListenerMessage(CHAN_ID, msg);
 
       expect(webhooksService.handleInboundWebhook).not.toHaveBeenCalled();

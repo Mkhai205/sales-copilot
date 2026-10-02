@@ -33,32 +33,83 @@ describe('ZaloPersonalAdapter', () => {
   });
 
   describe('envelope building & parsing', () => {
-    it('should build an envelope from a 1-1 listener message with attachments', () => {
+    it('builds an envelope from a plain text listener message (regression: content, not msg)', () => {
+      // zca-js TMessage carries text in `content` — reading `msg` produced empty
+      // envelopes and every inbound text message was rejected as content-less.
       const envelope = buildIngestEnvelope({
         type: 0, // ThreadType.User
         threadId: 'user_1',
         isSelf: false,
-        data: {
-          msgId: 'm1',
-          msg: 'Xin chào',
-          attach: JSON.stringify([{ type: 'chat.photo', href: 'https://zalo/img.png' }]),
-        },
+        data: { msgId: 'm1', content: 'Xin chào shop ơi' },
       });
 
-      expect(envelope).toEqual({
+      expect(envelope).toMatchObject({
         kind: 'zalo_personal',
         v: 1,
         message: {
           msgId: 'm1',
           threadId: 'user_1',
           isSelf: false,
-          text: 'Xin chào',
-          attachments: [{ type: 'chat.photo', url: 'https://zalo/img.png', fileName: undefined }],
+          text: 'Xin chào shop ơi',
+          attachments: [],
         },
+      });
+
+      const [payload] = adapter.parseInboundPayload(envelope);
+      expect(payload).toMatchObject({
+        eventKind: 'message',
+        externalContactId: 'user_1',
+        externalMessageId: 'm1',
+        content: 'Xin chào shop ơi',
+        contentType: MessageContentType.TEXT,
       });
     });
 
-    it('should reject group messages and messages without ids', () => {
+    it('builds an envelope with attachments from an object-shaped attach payload', () => {
+      const envelope = buildIngestEnvelope({
+        type: 0,
+        threadId: 'user_1',
+        isSelf: false,
+        data: {
+          msgId: 'm2',
+          content: {
+            title: 'Photo',
+            description: '',
+            href: '',
+            thumb: 'https://zalo/thumb.png',
+          },
+          attach: JSON.stringify({ photo: [{ type: 'chat.photo', href: 'https://zalo/img.png' }] }),
+        },
+      });
+
+      expect(envelope?.message.attachments).toEqual([
+        { type: 'chat.photo', url: 'https://zalo/img.png', fileName: undefined },
+      ]);
+    });
+
+    it('falls back to the content thumbnail when attach yields no usable attachment', () => {
+      const envelope = buildIngestEnvelope({
+        type: 0,
+        threadId: 'user_1',
+        isSelf: false,
+        data: {
+          msgId: 'm3',
+          content: { title: 'Photo', thumb: 'https://zalo/thumb.png' },
+          attach: JSON.stringify({ photo: { notParseable: true } }),
+        },
+      });
+
+      expect(envelope?.message.text).toBe('');
+      expect(envelope?.message.attachments).toEqual([
+        { type: 'photo', url: 'https://zalo/thumb.png' },
+      ]);
+
+      const [payload] = adapter.parseInboundPayload(envelope);
+      expect(payload.contentType).toBe(MessageContentType.IMAGE);
+      expect(payload.attachments).toHaveLength(1);
+    });
+
+    it('rejects group messages and messages without ids', () => {
       expect(
         buildIngestEnvelope({ type: 1, threadId: 'g1', isSelf: false, data: { msgId: 'm' } }),
       ).toBeNull();
@@ -68,10 +119,11 @@ describe('ZaloPersonalAdapter', () => {
       expect(buildIngestEnvelope({ type: 0, threadId: 'u1', isSelf: false, data: {} })).toBeNull();
     });
 
-    it('should tolerate malformed attach JSON', () => {
+    it('tolerates malformed or unusable attach JSON', () => {
       expect(parseListenerAttachments(undefined)).toEqual([]);
       expect(parseListenerAttachments('not json')).toEqual([]);
       expect(parseListenerAttachments('{"a":1}')).toEqual([]);
+      expect(parseListenerAttachments('["just a string"]')).toEqual([]);
     });
 
     it('should map an envelope into an inbound payload with image attachment typing', () => {
