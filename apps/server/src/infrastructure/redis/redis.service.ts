@@ -143,7 +143,7 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
 local now = tonumber(ARGV[1])
 local window = tonumber(ARGV[2])
 redis.call('ZREMRANGEBYSCORE', key, 0, now - window)
-redis.call('ZADD', key, now, member)
+redis.call('ZADD', key, now, ARGV[3])
 redis.call('PEXPIRE', key, window)
 return redis.call('ZCARD', key)`;
     return (await this.client.eval(
