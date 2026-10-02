@@ -1,0 +1,30 @@
+{
+  "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
+  "packageManager": "pnpm",
+  "testRunner": "jest",
+  "plugins": ["@stryker-mutator/core", "@stryker-mutator/jest-runner"],
+  "jest": {
+    "configFile": "jest.config.ts",
+    "config": {
+      "testRegex": "(src/.*\\.spec\\.ts$)"
+    }
+  },
+  "mutate": [
+    "src/modules/commerce/**/*.ts",
+    "!src/modules/commerce/**/*.module.ts",
+    "!src/modules/commerce/**/__tests__/**"
+  ],
+  "coverageAnalysis": "perTest",
+  "inPlace": true,
+  "concurrency": 2,
+  "timeoutMS": 30000,
+  "reporters": ["html", "clear-text", "progress"],
+  "htmlReporter": {
+    "fileName": "../../reports/mutation/index.html"
+  },
+  "thresholds": {
+    "high": 85,
+    "low": 70,
+    "break": 0
+  }
+}

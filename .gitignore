@@ -96,3 +96,5 @@ apps/web/public/widget/
 apps/web/e2e/.auth/
 test-results/
 playwright-report/
+reports/
+.stryker-tmp/
