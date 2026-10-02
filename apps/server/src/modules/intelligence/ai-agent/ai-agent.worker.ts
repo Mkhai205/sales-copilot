@@ -159,7 +159,8 @@ export class AiAgentWorker extends WorkerHost {
           const followUpMessage =
             aiPolicy?.followUpMessage?.trim() || AI_AGENT_CONSTANTS.FOLLOW_UP_MESSAGE;
 
-          const followUpJobId = `follow-up:${conversationId}`;
+          // BullMQ rejects custom ids containing ':' — use a flat separator
+          const followUpJobId = `follow-up-${conversationId}`;
           try {
             const existingJob = await this.aiQueue.getJob(followUpJobId);
             if (existingJob) {

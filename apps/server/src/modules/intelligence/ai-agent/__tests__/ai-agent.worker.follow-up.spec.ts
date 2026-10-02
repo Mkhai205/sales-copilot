@@ -130,7 +130,7 @@ describe('AiAgentWorker - Proactive Follow-up (Feature 4.4.2)', () => {
       // Verify delay and dedup options
       expect(followUpJob.opts.delay).toBe(AI_AGENT_CONSTANTS.FOLLOW_UP_DELAY_MS);
       expect(followUpJob.opts.delay).toBe(5 * 60 * 1000);
-      expect(followUpJob.opts.jobId).toBe(`follow-up:${conversationId}`);
+      expect(followUpJob.opts.jobId).toBe(`follow-up-${conversationId}`);
       expect(followUpJob.opts.removeOnComplete).toBe(true);
       expect(followUpJob.opts.removeOnFail).toBe(true);
     });
@@ -156,7 +156,7 @@ describe('AiAgentWorker - Proactive Follow-up (Feature 4.4.2)', () => {
       } as any);
 
       expect(scheduledJobs.length).toBe(1);
-      const firstJobInQueue = await mockQueue.getJob(`follow-up:${conversationId}`);
+      const firstJobInQueue = await mockQueue.getJob(`follow-up-${conversationId}`);
       expect(firstJobInQueue).toBeDefined();
 
       // Second AI message in next turn
@@ -175,7 +175,7 @@ describe('AiAgentWorker - Proactive Follow-up (Feature 4.4.2)', () => {
       // Previous job should have been removed
       expect(firstJobInQueue.remove).toHaveBeenCalledTimes(1);
       expect(scheduledJobs.length).toBe(2);
-      expect(mockQueue.getJob).toHaveBeenCalledWith(`follow-up:${conversationId}`);
+      expect(mockQueue.getJob).toHaveBeenCalledWith(`follow-up-${conversationId}`);
     });
 
     it('should respect custom followUpDelayMinutes and followUpMessage from aiCommercePolicy', async () => {
@@ -252,7 +252,7 @@ describe('AiAgentWorker - Proactive Follow-up (Feature 4.4.2)', () => {
       });
 
       const result = await worker.process({
-        id: `follow-up:${conversationId}`,
+        id: `follow-up-${conversationId}`,
         name: AI_AGENT_CONSTANTS.FOLLOW_UP_JOB_NAME,
         data: {
           workspaceId,
@@ -293,7 +293,7 @@ describe('AiAgentWorker - Proactive Follow-up (Feature 4.4.2)', () => {
       });
 
       const result = await worker.process({
-        id: `follow-up:${conversationId}`,
+        id: `follow-up-${conversationId}`,
         name: AI_AGENT_CONSTANTS.FOLLOW_UP_JOB_NAME,
         data: {
           workspaceId,
@@ -320,7 +320,7 @@ describe('AiAgentWorker - Proactive Follow-up (Feature 4.4.2)', () => {
       });
 
       const result = await worker.process({
-        id: `follow-up:${conversationId}`,
+        id: `follow-up-${conversationId}`,
         name: AI_AGENT_CONSTANTS.FOLLOW_UP_JOB_NAME,
         data: {
           workspaceId,
@@ -344,7 +344,7 @@ describe('AiAgentWorker - Proactive Follow-up (Feature 4.4.2)', () => {
       });
 
       const result = await worker.process({
-        id: `follow-up:${conversationId}`,
+        id: `follow-up-${conversationId}`,
         name: AI_AGENT_CONSTANTS.FOLLOW_UP_JOB_NAME,
         data: {
           workspaceId,
@@ -368,7 +368,7 @@ describe('AiAgentWorker - Proactive Follow-up (Feature 4.4.2)', () => {
       });
 
       const result = await worker.process({
-        id: `follow-up:${conversationId}`,
+        id: `follow-up-${conversationId}`,
         name: AI_AGENT_CONSTANTS.FOLLOW_UP_JOB_NAME,
         data: {
           workspaceId,
@@ -391,7 +391,7 @@ describe('AiAgentWorker - Proactive Follow-up (Feature 4.4.2)', () => {
       });
 
       const result = await worker.process({
-        id: `follow-up:${conversationId}`,
+        id: `follow-up-${conversationId}`,
         name: AI_AGENT_CONSTANTS.FOLLOW_UP_JOB_NAME,
         data: {
           workspaceId,
@@ -416,7 +416,7 @@ describe('AiAgentWorker - Proactive Follow-up (Feature 4.4.2)', () => {
       });
 
       const result = await worker.process({
-        id: `follow-up:${conversationId}`,
+        id: `follow-up-${conversationId}`,
         name: AI_AGENT_CONSTANTS.FOLLOW_UP_JOB_NAME,
         data: {
           workspaceId,
@@ -441,7 +441,7 @@ describe('AiAgentWorker - Proactive Follow-up (Feature 4.4.2)', () => {
       });
 
       const result = await worker.process({
-        id: `follow-up:${conversationId}`,
+        id: `follow-up-${conversationId}`,
         name: AI_AGENT_CONSTANTS.FOLLOW_UP_JOB_NAME,
         data: {
           workspaceId,
