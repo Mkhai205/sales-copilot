@@ -99,13 +99,12 @@ jobs:
       - name: Generate Prisma client
         run: pnpm db:generate
 
-      - name: Apply migrations
-        run: cd apps/server && npx prisma migrate deploy
-
-      # E2E setup.ts overrides DATABASE_URL from sales_copilot_dev -> sales_copilot_test
-      - name: Create e2e test database
-        run: |
-          PGPASSWORD=password psql -h localhost -U postgres -c "CREATE DATABASE sales_copilot_test;" || true
+      # Integration + e2e never touch sales_copilot_dev: db-test-setup derives
+      # sales_copilot_test from DATABASE_URL, creates it if missing and applies
+      # migrations there (setup.ts additionally isolates Redis DB 1 and the
+      # sales-copilot-test MinIO bucket for the e2e app)
+      - name: Create and migrate the test database
+        run: node apps/server/scripts/db-test-setup.mjs
 
       - name: Create apps/server/.env for test:all (--env-file)
         run: |

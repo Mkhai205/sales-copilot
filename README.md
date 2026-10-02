@@ -57,10 +57,12 @@ pnpm serve:web                                            # Web  → http://loca
 ## 🧪 Testing
 
 ```bash
-pnpm test        # Unit tests: server + web + shared-contracts + widget-sdk
-pnpm test:all    # All unit suites + server integration + e2e
+pnpm test          # Unit tests: server + web + shared-contracts + widget-sdk
+pnpm test:all      # All unit suites + server integration + e2e (auto-runs db:test:setup)
 pnpm typecheck && pnpm lint
 ```
+
+Integration/e2e never touch development data: they target the dedicated `sales_copilot_test` Postgres database, Redis logical DB 1 and the `sales-copilot-test` MinIO bucket (all derived automatically; `pnpm db:test:setup` creates and migrates the test database). Requires the dev stack running: `docker compose -f docker-compose.dev.yml up -d`.
 
 ## 📚 Documentation
 
