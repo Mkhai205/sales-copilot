@@ -180,6 +180,47 @@ describe('ZaloPersonalAdapter', () => {
       expect(payload.attachments?.[0]?.fileName).toBe('report.pdf');
     });
 
+    it('extracts the sticker id from a chat.sticker content object', () => {
+      const envelope = buildIngestEnvelope({
+        type: 0,
+        threadId: 'user_1',
+        isSelf: false,
+        data: {
+          msgId: 'm7',
+          msgType: 'chat.sticker',
+          content: { stickerId: 687090 },
+        },
+      });
+
+      expect(envelope?.message.stickerId).toBe(687090);
+      expect(envelope?.message.text).toBe('');
+      expect(envelope?.message.attachments).toEqual([]);
+      expect(envelope?.message.rawContent).toEqual({ stickerId: 687090 });
+    });
+
+    it('propagates the msgType content type onto attachments typed uselessly', () => {
+      // Real payload: video attach items carry type "" and no file name
+      const payloads = adapter.parseInboundPayload({
+        kind: 'zalo_personal',
+        v: 1,
+        message: {
+          msgId: 'm8',
+          threadId: 'user_1',
+          isSelf: false,
+          msgType: 'chat.video.msg',
+          text: '',
+          attachments: [{ type: '', url: 'https://video-stal-39.dlmd.me/gr/xyz' }],
+        },
+      });
+
+      expect(payloads[0].contentType).toBe(MessageContentType.VIDEO);
+      expect(payloads[0].attachments?.[0]).toMatchObject({
+        contentType: MessageContentType.VIDEO,
+        fileType: MessageContentType.VIDEO,
+        fileName: undefined,
+      });
+    });
+
     it('rejects group messages and messages without ids', () => {
       expect(
         buildIngestEnvelope({ type: 1, threadId: 'g1', isSelf: false, data: { msgId: 'm' } }),

@@ -177,6 +177,41 @@ describe('ZaloPersonalConnectionService (listener ingestion & connect)', () => {
       expect(webhooksService.handleInboundWebhook).not.toHaveBeenCalled();
       expect(messagesService.create).not.toHaveBeenCalled();
     });
+
+    it('resolves a sticker message to an image attachment via the sticker API', async () => {
+      (service as any).connections.set(CHAN_ID, {
+        api: {
+          getStickersDetail: jest
+            .fn()
+            .mockResolvedValue([{ stickerUrl: 'https://zalo/sticker.webp' }]),
+        },
+        ownId: 'own_id_1',
+        backoffIndex: 0,
+      });
+      const msg = buildListenerMessage({
+        msgType: 'chat.sticker',
+        content: { stickerId: 687090 },
+      });
+      await (service as any).handleListenerMessage(CHAN_ID, msg);
+
+      const [, envelope] = webhooksService.handleInboundWebhook.mock.calls[0];
+      expect(envelope.message.attachments).toEqual([
+        { type: 'sticker', url: 'https://zalo/sticker.webp' },
+      ]);
+      expect(envelope.message.text).toBe('');
+    });
+
+    it('ingests an unresolvable sticker as [Sticker] text instead of dropping it', async () => {
+      const msg = buildListenerMessage({
+        msgType: 'chat.sticker',
+        content: { stickerId: 687090 },
+      });
+      await (service as any).handleListenerMessage(CHAN_ID, msg);
+
+      expect(webhooksService.handleInboundWebhook).toHaveBeenCalledTimes(1);
+      const [, envelope] = webhooksService.handleInboundWebhook.mock.calls[0];
+      expect(envelope.message.text).toBe('[Sticker]');
+    });
   });
 
   describe('self-message ingestion (owner replies from phone)', () => {

@@ -101,9 +101,9 @@ function toAttachment(item: Record<string, unknown>): ZaloPersonalAttachment | n
   const url = firstHttpUrl(item);
   if (!url) return null;
   return {
-    type: typeof item.type === 'string' ? item.type : 'unknown',
+    type: typeof item.type === 'string' && item.type ? item.type : 'unknown',
     url,
-    fileName: typeof item.title === 'string' ? item.title : undefined,
+    fileName: typeof item.title === 'string' && item.title.trim() ? item.title : undefined,
   };
 }
 
@@ -134,8 +134,8 @@ export function parseListenerAttachments(attach?: string): ZaloPersonalAttachmen
 /**
  * Builds the JSON-serializable ingestion envelope from a live listener message.
  * Text lives in `TMessage.content` (string for text messages — there is no `msg`
- * field on TMessage, only on quotes). `rawAttach` is preserved so future Zalo
- * shape drift stays diagnosable from persisted channel events.
+ * field on TMessage, only on quotes). `rawAttach`/`rawContent` are preserved so
+ * future Zalo shape drift stays diagnosable from persisted channel events.
  */
 export function buildIngestEnvelope(message: ZaloListenerMessage): ZaloPersonalEnvelope | null {
   // MVP scope: 1-1 conversations only (ThreadType.User === 0).
@@ -164,8 +164,33 @@ export function buildIngestEnvelope(message: ZaloListenerMessage): ZaloPersonalE
       attachments,
       ...(msgType ? { msgType } : {}),
       ...(attach ? { rawAttach: attach } : {}),
+      ...(isRecord(content) ? { rawContent: content } : {}),
+      ...(msgType === 'chat.sticker' ? { stickerId: extractStickerId(content) } : {}),
     },
   };
+}
+
+/**
+ * Sticker messages carry no media URL — only a sticker id (field name drifts
+ * between `stickerId` and `id`). The connection service resolves it to an
+ * image URL through the sticker API.
+ */
+function extractStickerId(content: unknown): number | undefined {
+  const candidates =
+    typeof content === 'number'
+      ? [content]
+      : isRecord(content)
+        ? [
+            content.stickerId,
+            content.id,
+            isRecord(content.data) ? content.data.stickerId : undefined,
+          ]
+        : [];
+  for (const candidate of candidates) {
+    const id = typeof candidate === 'number' ? candidate : Number(candidate);
+    if (Number.isFinite(id) && id > 0) return id;
+  }
+  return undefined;
 }
 
 /** zca-js msgType → standard content type; authoritative over attachment-type guesses. */
@@ -255,19 +280,25 @@ export class ZaloPersonalAdapter implements ChannelAdapter {
       .map(toInboundAttachment)
       .filter((item): item is InboundAttachment => item !== null);
 
+    const msgContentType = contentTypeFromMsgType(msgType);
     const contentType: MessageContentType = text
       ? MessageContentType.TEXT
-      : (contentTypeFromMsgType(msgType) ?? mapped[0]?.contentType ?? MessageContentType.FILE);
-    const content = text || undefined;
+      : (msgContentType ?? mapped[0]?.contentType ?? MessageContentType.FILE);
+
+    // Real payloads carry useless attachment types (e.g. video items typed "")
+    // while msgType is reliable — propagate the authoritative type onto them.
+    const typedAttachments = msgContentType
+      ? mapped.map(att => ({ ...att, contentType: msgContentType, fileType: msgContentType }))
+      : mapped;
 
     return [
       {
         eventKind: 'message',
         externalContactId: threadId,
         externalMessageId: msgId,
-        content,
+        content: text || undefined,
         contentType,
-        attachments: mapped.length > 0 ? mapped : undefined,
+        attachments: typedAttachments.length > 0 ? typedAttachments : undefined,
         timestamp: new Date(),
         rawPayload: envelope as unknown as Record<string, unknown>,
       },

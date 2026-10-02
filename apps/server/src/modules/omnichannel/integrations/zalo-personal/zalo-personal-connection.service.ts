@@ -44,6 +44,7 @@ type ZaloApi = {
   getUserInfo: (ids: string[]) => Promise<{
     changed_profiles?: Record<string, Record<string, unknown>>;
   }>;
+  getStickersDetail: (stickerIds: number[]) => Promise<Array<{ stickerUrl?: string } | undefined>>;
 };
 
 type PendingConnectSession = {
@@ -451,9 +452,42 @@ export class ZaloPersonalConnectionService implements OnApplicationBootstrap, On
       return;
     }
 
+    await this.resolveStickerAttachment(channelId, envelope);
+
     await this.webhooksService.handleInboundWebhook(channelId, envelope, {}, undefined, {
       skipSignatureVerification: true,
     });
+  }
+
+  /**
+   * Sticker messages carry only a sticker id — resolve it to a displayable image
+   * URL through the Zalo sticker API. When resolution fails the message still
+   * ingests as '[Sticker]' text instead of being dropped entirely.
+   */
+  private async resolveStickerAttachment(
+    channelId: string,
+    envelope: ZaloPersonalEnvelope,
+  ): Promise<void> {
+    if (envelope.message.msgType !== 'chat.sticker') return;
+    if (envelope.message.text || envelope.message.attachments.length > 0) return;
+
+    const { stickerId } = envelope.message;
+    if (stickerId) {
+      try {
+        const api = await this.getApiForChannel(channelId);
+        const [detail] = await api.getStickersDetail([stickerId]);
+        if (detail?.stickerUrl) {
+          envelope.message.attachments.push({ type: 'sticker', url: detail.stickerUrl });
+          return;
+        }
+        this.logger.warn(`Zalo sticker '${stickerId}' resolved without an URL`);
+      } catch (err) {
+        this.logger.warn(
+          `Failed to resolve Zalo sticker '${stickerId}' on channel '${channelId}': ${(err as Error).message}`,
+        );
+      }
+    }
+    envelope.message.text = '[Sticker]';
   }
 
   /**

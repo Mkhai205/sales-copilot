@@ -53,6 +53,10 @@ export interface ZaloPersonalEnvelope {
     msgType?: string;
     /** Original attach JSON string, preserved for diagnosing Zalo shape drift. */
     rawAttach?: string;
+    /** Original content object (media/sticker payloads), same diagnostic purpose. */
+    rawContent?: Record<string, unknown>;
+    /** Sticker id for chat.sticker messages — resolved to a URL by the connection service. */
+    stickerId?: number;
   };
 }
 
