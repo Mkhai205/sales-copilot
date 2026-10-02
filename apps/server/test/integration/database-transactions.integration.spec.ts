@@ -1,3 +1,7 @@
+import { useTestDatabase } from './setup-db';
+
+useTestDatabase();
+
 import { expectReject } from '../test-assertions';
 import { Pool } from 'pg';
 import { PrismaPg } from '@prisma/adapter-pg';

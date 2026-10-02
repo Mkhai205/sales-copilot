@@ -1,3 +1,7 @@
+import { useTestDatabase } from './setup-db';
+
+useTestDatabase();
+
 import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { OrderStatus } from '@sales-copilot/shared-contracts';
