@@ -91,3 +91,8 @@ apps/web/public/widget/
 *-service-account*.json
 # ZCode agent workspace (plans, session artifacts)
 .zcode/
+
+# Playwright UI e2e
+apps/web/e2e/.auth/
+test-results/
+playwright-report/

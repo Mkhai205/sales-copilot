@@ -59,6 +59,7 @@ pnpm serve:web                                            # Web  → http://loca
 ```bash
 pnpm test          # Unit tests: server + web + shared-contracts + widget-sdk
 pnpm test:all      # All unit suites + server integration + e2e (auto-runs db:test:setup)
+pnpm test:ui       # Playwright UI e2e — requires the dev stack running (see apps/web/e2e/README.md)
 pnpm typecheck && pnpm lint
 ```
 
