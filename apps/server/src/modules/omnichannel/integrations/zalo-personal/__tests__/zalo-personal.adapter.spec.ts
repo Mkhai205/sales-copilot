@@ -94,6 +94,7 @@ describe('ZaloPersonalAdapter', () => {
         isSelf: false,
         data: {
           msgId: 'm3',
+          msgType: 'chat.image',
           content: { title: 'Photo', thumb: 'https://zalo/thumb.png' },
           attach: JSON.stringify({ photo: { notParseable: true } }),
         },
@@ -101,12 +102,82 @@ describe('ZaloPersonalAdapter', () => {
 
       expect(envelope?.message.text).toBe('');
       expect(envelope?.message.attachments).toEqual([
-        { type: 'photo', url: 'https://zalo/thumb.png' },
+        { type: 'unknown', url: 'https://zalo/thumb.png', fileName: 'Photo' },
       ]);
 
       const [payload] = adapter.parseInboundPayload(envelope);
       expect(payload.contentType).toBe(MessageContentType.IMAGE);
       expect(payload.attachments).toHaveLength(1);
+    });
+
+    it('maps a video message to VIDEO with the mp4 URL from its attach items', () => {
+      const envelope = buildIngestEnvelope({
+        type: 0,
+        threadId: 'user_1',
+        isSelf: false,
+        data: {
+          msgId: 'm4',
+          msgType: 'chat.video.new',
+          content: { title: 'Video', thumb: 'https://zalo/poster.jpg' },
+          attach: JSON.stringify({
+            video: {
+              items: [{ href: 'https://zalo/video.mp4', thumb: 'https://zalo/poster.jpg' }],
+            },
+          }),
+        },
+      });
+
+      expect(envelope?.message.attachments).toEqual([
+        { type: 'video', url: 'https://zalo/video.mp4', fileName: undefined },
+      ]);
+
+      const [payload] = adapter.parseInboundPayload(envelope);
+      expect(payload.contentType).toBe(MessageContentType.VIDEO);
+      expect(payload.attachments?.[0]?.contentType).toBe(MessageContentType.VIDEO);
+    });
+
+    it('maps a document message to FILE, reading the URL from content params when attach is absent', () => {
+      const envelope = buildIngestEnvelope({
+        type: 0,
+        threadId: 'user_1',
+        isSelf: false,
+        data: {
+          msgId: 'm5',
+          msgType: 'chat.file',
+          content: { title: 'contract.pdf', params: '{"fileUrl":"https://zalo/contract.pdf"}' },
+        },
+      });
+
+      expect(envelope?.message.attachments).toEqual([
+        { type: 'unknown', url: 'https://zalo/contract.pdf', fileName: undefined },
+      ]);
+
+      const [payload] = adapter.parseInboundPayload(envelope);
+      expect(payload.contentType).toBe(MessageContentType.FILE);
+    });
+
+    it('maps a document attached through file-keyed attach items with its file name', () => {
+      const envelope = buildIngestEnvelope({
+        type: 0,
+        threadId: 'user_1',
+        isSelf: false,
+        data: {
+          msgId: 'm6',
+          msgType: 'chat.file',
+          content: { title: 'report.pdf' },
+          attach: JSON.stringify({
+            file: { items: [{ href: 'https://zalo/report.pdf', title: 'report.pdf' }] },
+          }),
+        },
+      });
+
+      expect(envelope?.message.attachments).toEqual([
+        { type: 'file', url: 'https://zalo/report.pdf', fileName: 'report.pdf' },
+      ]);
+
+      const [payload] = adapter.parseInboundPayload(envelope);
+      expect(payload.contentType).toBe(MessageContentType.FILE);
+      expect(payload.attachments?.[0]?.fileName).toBe('report.pdf');
     });
 
     it('rejects group messages and messages without ids', () => {

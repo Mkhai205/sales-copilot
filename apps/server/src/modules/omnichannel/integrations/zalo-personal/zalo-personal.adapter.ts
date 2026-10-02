@@ -24,6 +24,8 @@ export interface ZaloListenerMessage {
   isSelf: boolean;
   data: {
     msgId?: string;
+    /** zca-js TMessage.msgType (e.g. 'chat.text', 'chat.image', 'chat.video.new', 'chat.file'). */
+    msgType?: string;
     /** zca-js TMessage.content — string for text, media object for attachments. */
     content?: unknown;
     attach?: string;
@@ -31,57 +33,73 @@ export interface ZaloListenerMessage {
   };
 }
 
-/**
- * Extracts attachments from the `TMessage.attach` JSON string (tolerant — Zalo shapes change).
- * The attach payload is an object keyed by media type (e.g. `{"photo":[{href,...}]}`),
- * so every array/object-valued property is scanned rather than trusting one shape.
- */
-export function parseListenerAttachments(attach?: string): ZaloPersonalAttachment[] {
-  if (!attach) return [];
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(attach);
-  } catch {
-    return [];
-  }
-  return collectAttachmentItems(parsed)
-    .map(toAttachment)
-    .filter((item): item is ZaloPersonalAttachment => item !== null);
-}
+/** Object fields scanned for attachment URLs, in preference order. */
+const URL_FIELDS = ['href', 'url', 'fileUrl', 'rawUrl', 'normalUrl', 'thumb', 'thumbUrl'] as const;
+
+/** How deep the attach hunt may descend before giving up (Zalo nesting drifts). */
+const MAX_HUNT_DEPTH = 3;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-function collectAttachmentItems(parsed: unknown): Record<string, unknown>[] {
-  if (Array.isArray(parsed)) return parsed.filter(isRecord);
+function tryParseJson(value: unknown): unknown {
+  if (typeof value !== 'string') return value;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return undefined;
+  }
+}
+
+function firstHttpUrl(record: Record<string, unknown>): string | undefined {
+  for (const field of URL_FIELDS) {
+    const candidate = record[field];
+    if (typeof candidate === 'string' && candidate.startsWith('http')) return candidate;
+  }
+  const nested = record.data;
+  if (typeof nested === 'string' && nested.startsWith('http')) return nested;
+  if (isRecord(nested)) return firstHttpUrl(nested);
+  return undefined;
+}
+
+/**
+ * Collects attachment candidate objects from arbitrary Zalo JSON shapes.
+ * The attach payload is keyed by media type (e.g. `{"photo":[...]}`) but the
+ * nesting shifts between Zalo builds, so arrays and objects are hunted
+ * recursively (depth-capped) with the media-type key as a type hint.
+ */
+function collectAttachmentItems(
+  parsed: unknown,
+  depth = 0,
+  typeHint?: string,
+): Record<string, unknown>[] {
+  if (depth > MAX_HUNT_DEPTH) return [];
+  if (Array.isArray(parsed)) {
+    return parsed
+      .filter(isRecord)
+      .map(item =>
+        typeHint !== undefined && item.type === undefined ? { type: typeHint, ...item } : item,
+      );
+  }
   if (!isRecord(parsed)) return [];
+
   const items: Record<string, unknown>[] = [];
-  for (const value of Object.values(parsed)) {
+  for (const [key, value] of Object.entries(parsed)) {
+    const hint = typeHint ?? key;
     if (Array.isArray(value)) {
-      items.push(...value.filter(isRecord));
+      items.push(...collectAttachmentItems(value, depth + 1, hint));
     } else if (isRecord(value)) {
-      items.push(value);
+      const nested = collectAttachmentItems(value, depth + 1, hint);
+      items.push(...(nested.length > 0 ? nested : [{ ...value, type: value.type ?? hint }]));
     }
   }
   return items;
 }
 
 function toAttachment(item: Record<string, unknown>): ZaloPersonalAttachment | null {
-  const nestedData = item.data as Record<string, unknown> | string | undefined;
-  const urlCandidates = [
-    item.href,
-    item.url,
-    item.thumb,
-    typeof nestedData === 'object' && nestedData !== null ? nestedData.href : undefined,
-    typeof nestedData === 'object' && nestedData !== null ? nestedData.url : undefined,
-    typeof nestedData === 'string' && nestedData.startsWith('http') ? nestedData : undefined,
-  ];
-  const url = urlCandidates.find(
-    candidate => typeof candidate === 'string' && candidate.startsWith('http'),
-  ) as string | undefined;
+  const url = firstHttpUrl(item);
   if (!url) return null;
-
   return {
     type: typeof item.type === 'string' ? item.type : 'unknown',
     url,
@@ -89,11 +107,35 @@ function toAttachment(item: Record<string, unknown>): ZaloPersonalAttachment | n
   };
 }
 
+function huntAttachments(parsed: unknown): ZaloPersonalAttachment[] {
+  const items = collectAttachmentItems(parsed);
+  // A single-attachment record (e.g. the content object itself carrying a thumb)
+  // never yields nested items — treat the record itself as the candidate.
+  if (items.length === 0 && isRecord(parsed) && firstHttpUrl(parsed)) {
+    items.push(parsed);
+  }
+  const attachments = items
+    .map(toAttachment)
+    .filter((item): item is ZaloPersonalAttachment => item !== null);
+
+  const seen = new Set<string>();
+  return attachments.filter(att => {
+    if (!att.url || seen.has(att.url)) return false;
+    seen.add(att.url);
+    return true;
+  });
+}
+
+export function parseListenerAttachments(attach?: string): ZaloPersonalAttachment[] {
+  if (!attach) return [];
+  return huntAttachments(tryParseJson(attach));
+}
+
 /**
  * Builds the JSON-serializable ingestion envelope from a live listener message.
  * Text lives in `TMessage.content` (string for text messages — there is no `msg`
- * field on TMessage, only on quotes). Media messages carry an object content with
- * a thumbnail URL, used as a fallback when the attach JSON yields nothing parseable.
+ * field on TMessage, only on quotes). `rawAttach` is preserved so future Zalo
+ * shape drift stays diagnosable from persisted channel events.
  */
 export function buildIngestEnvelope(message: ZaloListenerMessage): ZaloPersonalEnvelope | null {
   // MVP scope: 1-1 conversations only (ThreadType.User === 0).
@@ -102,13 +144,13 @@ export function buildIngestEnvelope(message: ZaloListenerMessage): ZaloPersonalE
   const threadId = message.threadId;
   if (!msgId || !threadId) return null;
 
-  const { content } = message.data ?? {};
-  const attachments = parseListenerAttachments(message.data?.attach);
+  const { content, attach, msgType } = message.data ?? {};
+  let attachments = parseListenerAttachments(attach);
   if (attachments.length === 0 && isRecord(content)) {
-    const thumb = content.thumb;
-    if (typeof thumb === 'string' && thumb.startsWith('http')) {
-      attachments.push({ type: 'photo', url: thumb });
-    }
+    // Media content objects may carry the URL inside their `params` JSON string
+    // or directly on the object (e.g. a video/image poster thumb).
+    attachments = huntAttachments(tryParseJson(content.params));
+    if (attachments.length === 0) attachments = huntAttachments(content);
   }
 
   return {
@@ -120,8 +162,28 @@ export function buildIngestEnvelope(message: ZaloListenerMessage): ZaloPersonalE
       isSelf: Boolean(message.isSelf),
       text: typeof content === 'string' ? content.trim() : '',
       attachments,
+      ...(msgType ? { msgType } : {}),
+      ...(attach ? { rawAttach: attach } : {}),
     },
   };
+}
+
+/** zca-js msgType → standard content type; authoritative over attachment-type guesses. */
+function contentTypeFromMsgType(msgType?: string): MessageContentType | undefined {
+  const lower = (msgType ?? '').toLowerCase();
+  if (!lower) return undefined;
+  if (lower.includes('video')) return MessageContentType.VIDEO;
+  if (lower.includes('voice') || lower.includes('audio')) return MessageContentType.AUDIO;
+  if (lower.includes('file')) return MessageContentType.FILE;
+  if (
+    lower.includes('image') ||
+    lower.includes('photo') ||
+    lower.includes('sticker') ||
+    lower.includes('gif')
+  ) {
+    return MessageContentType.IMAGE;
+  }
+  return undefined;
 }
 
 function toInboundAttachment(attachment: ZaloPersonalAttachment): InboundAttachment | null {
@@ -188,13 +250,14 @@ export class ZaloPersonalAdapter implements ChannelAdapter {
     const envelope = rawBody as ZaloPersonalEnvelope;
     if (envelope.message.isSelf) return [];
 
-    const { msgId, threadId, text, attachments } = envelope.message;
+    const { msgId, threadId, text, attachments, msgType } = envelope.message;
     const mapped = attachments
       .map(toInboundAttachment)
       .filter((item): item is InboundAttachment => item !== null);
 
-    const contentType: MessageContentType =
-      mapped.length > 0 && !text ? mapped[0].contentType : MessageContentType.TEXT;
+    const contentType: MessageContentType = text
+      ? MessageContentType.TEXT
+      : (contentTypeFromMsgType(msgType) ?? mapped[0]?.contentType ?? MessageContentType.FILE);
     const content = text || undefined;
 
     return [

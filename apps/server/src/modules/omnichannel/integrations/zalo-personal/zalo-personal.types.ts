@@ -49,6 +49,10 @@ export interface ZaloPersonalEnvelope {
     isSelf: boolean;
     text: string;
     attachments: ZaloPersonalAttachment[];
+    /** zca-js TMessage.msgType — authoritative source for media content typing. */
+    msgType?: string;
+    /** Original attach JSON string, preserved for diagnosing Zalo shape drift. */
+    rawAttach?: string;
   };
 }
 
