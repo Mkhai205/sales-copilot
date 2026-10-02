@@ -8,6 +8,7 @@
     "db:migrate:deploy": "prisma migrate deploy --schema=./prisma/schema.prisma",
     "db:seed": "ts-node ./prisma/seed.ts",
     "db:reset": "prisma migrate reset --force",
+    "db:test:setup": "node scripts/db-test-setup.mjs",
     "db:studio": "prisma studio --schema=./prisma/schema.prisma",
     "db:push": "prisma db push --schema=./prisma/schema.prisma"
   },
