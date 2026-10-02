@@ -17,6 +17,7 @@
     "test:integration": "nx run server:test:integration",
     "test:e2e": "nx run server:test:e2e",
     "test:all": "pnpm test && pnpm test:integration && pnpm test:e2e",
+    "test:coverage": "nx run server:test:coverage",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",

@@ -23,6 +23,29 @@ const config: Config = {
   },
   testEnvironment: 'node',
   testTimeout: 20000,
+  collectCoverageFrom: [
+    'src/**/*.ts',
+    '!src/main.ts',
+    '!**/*.module.ts',
+    '!**/__tests__/**',
+    '!src/modules/omnichannel/integrations/channel-adapter.interface.ts',
+  ],
+  coverageDirectory: '../../coverage/server',
+  coverageReporters: ['text-summary', 'lcov'],
+  // Baseline 2026-10-03: global 76.1/62.99/73.25/77.09, commerce 75.4 lines /
+  // 62.0 branches — thresholds sit 2 points under baseline and ratchet upward.
+  coverageThreshold: {
+    global: {
+      statements: 74,
+      branches: 60,
+      functions: 71,
+      lines: 75,
+    },
+    './src/modules/commerce/**/*.ts': {
+      lines: 73,
+      branches: 60,
+    },
+  },
   moduleNameMapper: {
     '^@sales-copilot/shared-contracts$': '<rootDir>/../../packages/shared-contracts/src/index.ts',
     '^@sales-copilot/shared-contracts/(.*)$': '<rootDir>/../../packages/shared-contracts/src/$1',

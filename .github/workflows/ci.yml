@@ -135,6 +135,18 @@ jobs:
       - name: All test suites
         run: pnpm test:all
 
+      # Unit-tier coverage with ratcheted thresholds (jest.config.ts) — fails
+      # when coverage drops below baseline−2%
+      - name: Coverage gate
+        run: pnpm test:coverage
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-coverage
+          path: coverage/server/lcov.info
+          if-no-files-found: error
+
   docker:
     name: Docker Build
     needs: [quality, test]
