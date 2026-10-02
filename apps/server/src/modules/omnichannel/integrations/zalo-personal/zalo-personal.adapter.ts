@@ -1,5 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ChannelType, DeliveryStatus, MessageContentType } from '@sales-copilot/shared-contracts';
+import {
+  ChannelType,
+  DeliveryStatus,
+  FileType,
+  MessageContentType,
+} from '@sales-copilot/shared-contracts';
+import { imageSize } from 'image-size';
 import { ThreadType } from 'zca-js';
 import { ChannelAdapter } from '../channel-adapter.interface';
 import {
@@ -8,6 +14,7 @@ import {
   InboundAttachment,
   InboundMessagePayload,
   InboundSenderInfo,
+  OutboundAttachment,
   OutboundMessagePayload,
   SendMessageResult,
   WebhookVerificationRequest,
@@ -16,6 +23,13 @@ import { ZALO_PERSONAL_ENVELOPE_KIND } from './zalo-personal.constants';
 import type { ZaloPersonalAttachment, ZaloPersonalEnvelope } from './zalo-personal.types';
 import { ZaloPersonalRateLimiterService } from './zalo-personal-rate-limiter.service';
 import { ZaloPersonalConnectionService } from './zalo-personal-connection.service';
+
+/** Attachment source shape for zca-js uploadAttachment (Buffer input). */
+interface ZaloAttachmentSource {
+  data: Buffer;
+  filename: string;
+  metadata: { totalSize: number; width?: number; height?: number };
+}
 
 /** Structural slice of a zca-js listener message this integration depends on. */
 export interface ZaloListenerMessage {
@@ -312,14 +326,32 @@ export class ZaloPersonalAdapter implements ChannelAdapter {
     if (!message.recipientExternalId) {
       throw new Error('Recipient user id is required to send Zalo personal message');
     }
-    if (message.attachments && message.attachments.length > 0) {
-      throw new Error(
-        'ZALO_PERSONAL_OUTBOUND_MEDIA_UNSUPPORTED: gửi ảnh/file qua Zalo cá nhân chưa được hỗ trợ trong pha này. Vui lòng gửi dạng tin nhắn văn bản.',
-      );
-    }
 
     await this.rateLimiter.acquire(channel.channelId);
     const api = await this.connectionService.getApiForChannel(channel.channelId);
+
+    const attachments = message.attachments ?? [];
+    if (attachments.length > 0) {
+      const sources: ZaloAttachmentSource[] = [];
+      for (const attachment of attachments) {
+        sources.push(await this.toZaloAttachmentSource(attachment));
+      }
+
+      // zca-js routes this itself: a single image carries `msg` as its caption,
+      // other media and text go out as separate Zalo messages.
+      const response = await api.sendMessage(
+        { msg: message.content || '', attachments: sources },
+        message.recipientExternalId,
+        ThreadType.User,
+      );
+
+      return {
+        externalMessageId: response?.message?.msgId || response?.attachment?.[0]?.msgId || '',
+        deliveryStatus: DeliveryStatus.SENT,
+        rawResponse: response,
+      };
+    }
+
     const response = await api.sendMessage(
       message.content || '',
       message.recipientExternalId,
@@ -331,6 +363,41 @@ export class ZaloPersonalAdapter implements ChannelAdapter {
       deliveryStatus: DeliveryStatus.SENT,
       rawResponse: response,
     };
+  }
+
+  /** Downloads the attachment bytes and shapes them for zca-js uploadAttachment. */
+  private async toZaloAttachmentSource(att: OutboundAttachment): Promise<ZaloAttachmentSource> {
+    if (!att.fileUrl) {
+      throw new Error('ZALO_PERSONAL_ATTACHMENT_URL_REQUIRED: attachment has no fileUrl');
+    }
+
+    const response = await fetch(att.fileUrl);
+    if (!response.ok) {
+      throw new Error(
+        `Failed to download attachment '${att.fileName || att.fileUrl}': HTTP ${response.status}`,
+      );
+    }
+    const data = Buffer.from(await response.arrayBuffer());
+
+    const metadata: ZaloAttachmentSource['metadata'] = { totalSize: data.length };
+    if (this.isImageLike(att)) {
+      // Zalo expects image dimensions; parsed straight from the bytes so no
+      // imageMetadataGetter is needed on the zca-js client.
+      try {
+        const { width, height } = imageSize(data);
+        metadata.width = width;
+        metadata.height = height;
+      } catch {
+        // unparseable header — Zalo receives the upload without dimensions
+      }
+    }
+
+    return { data, filename: att.fileName || `attachment-${Date.now()}`, metadata };
+  }
+
+  private isImageLike(att: OutboundAttachment): boolean {
+    if (att.fileType) return att.fileType === FileType.IMAGE;
+    return /\.(png|jpe?g|webp|gif)$/i.test(att.fileName || '');
   }
 
   async getChannelInfo(channel: ChannelContext): Promise<ChannelInfo> {

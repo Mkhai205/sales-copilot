@@ -26,7 +26,7 @@ import {
 } from './zalo-personal.constants';
 import { ZaloPersonalClientProvider } from './zalo-personal-client.provider';
 import { buildIngestEnvelope, ZaloListenerMessage } from './zalo-personal.adapter';
-import type { ZaloPersonalEnvelope } from './zalo-personal.types';
+import type { ZaloPersonalEnvelope, ZaloPersonalSendMessageResponse } from './zalo-personal.types';
 import { ZaloLoginQREventPayload } from './zalo-personal.types';
 
 type ZaloApi = {
@@ -37,10 +37,10 @@ type ZaloApi = {
   };
   getOwnId: () => Promise<string> | string;
   sendMessage: (
-    message: string,
+    message: string | { msg: string; attachments: unknown[] },
     threadId: string,
     type?: number,
-  ) => Promise<{ message: { msgId?: string } | null; attachment: unknown[] }>;
+  ) => Promise<ZaloPersonalSendMessageResponse>;
   getUserInfo: (ids: string[]) => Promise<{
     changed_profiles?: Record<string, Record<string, unknown>>;
   }>;

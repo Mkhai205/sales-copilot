@@ -283,6 +283,23 @@ describe('ZaloPersonalAdapter', () => {
   });
 
   describe('sendMessage()', () => {
+    const ONE_PX_PNG = Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+      'base64',
+    );
+    const originalFetch = global.fetch;
+
+    afterEach(() => {
+      global.fetch = originalFetch;
+    });
+
+    function mockDownload(body: Buffer) {
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        arrayBuffer: async () => body.buffer.slice(body.byteOffset, body.byteOffset + body.length),
+      }) as unknown as typeof fetch;
+    }
+
     it('should send text via the live api with ThreadType.User and record msgId', async () => {
       const sendMessage = jest.fn().mockResolvedValue({
         message: { msgId: 'out_1' },
@@ -300,15 +317,81 @@ describe('ZaloPersonalAdapter', () => {
       expect(connectionService.getApiForChannel).toHaveBeenCalledWith('chan_zp_1');
     });
 
-    it('should reject outbound media attachments with a clear error', async () => {
+    it('downloads an image attachment and sends it with parsed dimensions and caption', async () => {
+      mockDownload(ONE_PX_PNG);
+      const sendMessage = jest.fn().mockResolvedValue({
+        message: null,
+        attachment: [{ msgId: 'attach_1' }],
+      });
+      connectionService.getApiForChannel.mockResolvedValue({ sendMessage });
+
+      const result = await adapter.sendMessage(channel, {
+        recipientExternalId: 'user_1',
+        content: 'Ảnh nè',
+        attachments: [
+          { fileUrl: 'https://minio/att/photo.png', fileName: 'photo.png', fileType: 'IMAGE' },
+        ],
+      } as unknown as OutboundMessagePayload);
+
+      expect(result.externalMessageId).toBe('attach_1');
+      expect(sendMessage).toHaveBeenCalledWith(
+        {
+          msg: 'Ảnh nè',
+          attachments: [
+            {
+              data: expect.any(Buffer),
+              filename: 'photo.png',
+              metadata: { totalSize: ONE_PX_PNG.length, width: 1, height: 1 },
+            },
+          ],
+        },
+        'user_1',
+        0,
+      );
+    });
+
+    it('sends documents without image dimensions and falls back to a generated name', async () => {
+      mockDownload(Buffer.from('%PDF-1.4 fake'));
+      const sendMessage = jest.fn().mockResolvedValue({
+        message: { msgId: 'text_1' },
+        attachment: [{ msgId: 'file_1' }],
+      });
+      connectionService.getApiForChannel.mockResolvedValue({ sendMessage });
+
+      await adapter.sendMessage(channel, {
+        recipientExternalId: 'user_1',
+        content: 'Gửi bạn tài liệu',
+        attachments: [{ fileUrl: 'https://minio/att/doc.pdf', fileType: 'FILE' }],
+      } as unknown as OutboundMessagePayload);
+
+      expect(sendMessage).toHaveBeenCalledWith(
+        {
+          msg: 'Gửi bạn tài liệu',
+          attachments: [
+            {
+              data: expect.any(Buffer),
+              filename: expect.stringMatching(/^attachment-\d+$/),
+              metadata: { totalSize: 13 },
+            },
+          ],
+        },
+        'user_1',
+        0,
+      );
+    });
+
+    it('surfaces a download failure as a delivery error', async () => {
+      global.fetch = jest
+        .fn()
+        .mockResolvedValue({ ok: false, status: 404 }) as unknown as typeof fetch;
+      connectionService.getApiForChannel.mockResolvedValue({ sendMessage: jest.fn() });
+
       await expect(
         adapter.sendMessage(channel, {
           recipientExternalId: 'user_1',
-          contentType: 'IMAGE',
-          attachments: [{ fileUrl: 'https://x/a.png' }],
-        } as OutboundMessagePayload),
-      ).rejects.toThrow(/ZALO_PERSONAL_OUTBOUND_MEDIA_UNSUPPORTED/);
-      expect(connectionService.getApiForChannel).not.toHaveBeenCalled();
+          attachments: [{ fileUrl: 'https://minio/att/gone.png', fileName: 'gone.png' }],
+        } as unknown as OutboundMessagePayload),
+      ).rejects.toThrow(/HTTP 404/);
     });
 
     it('should require a recipient', async () => {
