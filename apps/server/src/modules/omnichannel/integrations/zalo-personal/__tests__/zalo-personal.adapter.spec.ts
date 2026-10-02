@@ -94,7 +94,7 @@ describe('ZaloPersonalAdapter', () => {
         isSelf: false,
         data: {
           msgId: 'm3',
-          msgType: 'chat.image',
+          msgType: 'chat.photo',
           content: { title: 'Photo', thumb: 'https://zalo/thumb.png' },
           attach: JSON.stringify({ photo: { notParseable: true } }),
         },
@@ -117,7 +117,7 @@ describe('ZaloPersonalAdapter', () => {
         isSelf: false,
         data: {
           msgId: 'm4',
-          msgType: 'chat.video.new',
+          msgType: 'chat.video.msg',
           content: { title: 'Video', thumb: 'https://zalo/poster.jpg' },
           attach: JSON.stringify({
             video: {
@@ -143,7 +143,7 @@ describe('ZaloPersonalAdapter', () => {
         isSelf: false,
         data: {
           msgId: 'm5',
-          msgType: 'chat.file',
+          msgType: 'share.file',
           content: { title: 'contract.pdf', params: '{"fileUrl":"https://zalo/contract.pdf"}' },
         },
       });
@@ -163,7 +163,7 @@ describe('ZaloPersonalAdapter', () => {
         isSelf: false,
         data: {
           msgId: 'm6',
-          msgType: 'chat.file',
+          msgType: 'share.file',
           content: { title: 'report.pdf' },
           attach: JSON.stringify({
             file: { items: [{ href: 'https://zalo/report.pdf', title: 'report.pdf' }] },
