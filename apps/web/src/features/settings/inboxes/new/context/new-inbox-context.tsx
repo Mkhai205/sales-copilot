@@ -271,6 +271,8 @@ export function NewInboxProvider({ children, initialWorkspaceSlug }: NewInboxPro
       try {
         const res = await connectZaloPersonalMutation.mutateAsync({
           sessionId,
+          name: draftConfig.name?.trim() || undefined,
+          avatarUrl: draftConfig.avatarUrl?.trim() || undefined,
           memberUserIds: selectedMemberUserIds,
           assignAllMembers: assignAll ?? isAllSelected,
         });
@@ -280,6 +282,7 @@ export function NewInboxProvider({ children, initialWorkspaceSlug }: NewInboxPro
           name: res.zaloName,
           channelType: ChannelType.ZALO_PERSONAL,
           providerAccountId: res.ownId,
+          avatarUrl: draftConfig.avatarUrl,
           connectedItems: [{ id: res.inboxId, name: res.zaloName, pageId: res.ownId }],
         });
         setCurrentStage('success');

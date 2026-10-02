@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { FieldError } from '@/components/ui/field';
 import { Spinner } from '@/components/ui/spinner';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ChannelFlowLayout } from '../../components/channel-flow-layout';
 import { useNewInbox } from '../../context/new-inbox-context';
 import { zaloPersonalApi } from '../../../api/zalo-personal';
@@ -17,6 +18,11 @@ import { zaloPersonalChannelSchema, type ZaloPersonalFormValues } from './zalo-p
 import type { ChannelDefinition } from '../../channel-registry';
 
 const QR_POLL_INTERVAL_MS = 2000;
+
+function formatQrDataUrl(qrImage?: string): string {
+  if (!qrImage) return '';
+  return qrImage.startsWith('data:') ? qrImage : `data:image/png;base64,${qrImage}`;
+}
 
 export function ZaloPersonalFlow({ channel }: ZaloPersonalFlowProps) {
   const { workspaceId, backToChannelSelect, submitChannelDraft, isSubmitting } = useNewInbox();
@@ -54,7 +60,7 @@ export function ZaloPersonalFlow({ channel }: ZaloPersonalFlowProps) {
 
   const methods = useForm<ZaloPersonalFormValues>({
     resolver: zodResolver(zaloPersonalChannelSchema),
-    defaultValues: { connectSessionId: '' },
+    defaultValues: { name: '', avatarUrl: '', connectSessionId: '' },
   });
 
   const isConnected = sessionStatus?.status === 'connected';
@@ -68,7 +74,8 @@ export function ZaloPersonalFlow({ channel }: ZaloPersonalFlowProps) {
 
   const onSubmit = (data: ZaloPersonalFormValues) => {
     submitChannelDraft({
-      name: sessionStatus?.profileName || 'Zalo Cá nhân',
+      name: data.name?.trim() || sessionStatus?.profileName || 'Zalo Cá nhân',
+      avatarUrl: data.avatarUrl?.trim() || sessionStatus?.profileAvatar,
       credentials: { sessionId: data.connectSessionId },
       providerAccountId: sessionStatus?.ownId,
       channelType: channel.type,
@@ -157,6 +164,7 @@ export function ZaloPersonalFlow({ channel }: ZaloPersonalFlowProps) {
         channel={channel}
         onSubmit={methods.handleSubmit(onSubmit)}
         isSubmitting={isSubmitting}
+        submitDisabled={!isConnected}
       >
         {sessionStatus?.status === 'failed' || sessionStatus?.status === 'expired' ? (
           <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-6 text-center flex flex-col gap-3">
@@ -178,13 +186,15 @@ export function ZaloPersonalFlow({ channel }: ZaloPersonalFlowProps) {
           </div>
         ) : isConnected ? (
           <div className="flex items-center gap-3 rounded-xl border border-success/30 bg-success/5 p-3.5">
-            {sessionStatus?.qrImage ? (
-              <img
-                src={sessionStatus.qrImage}
-                alt="Avatar Zalo"
-                className="size-10 rounded-lg border border-border object-cover"
+            <Avatar className="size-10 rounded-lg border border-border shrink-0">
+              <AvatarImage
+                src={sessionStatus?.profileAvatar}
+                alt={sessionStatus?.profileName || 'Zalo'}
               />
-            ) : null}
+              <AvatarFallback className="text-[10px] uppercase font-semibold">
+                {(sessionStatus?.profileName || 'Zalo').slice(0, 2)}
+              </AvatarFallback>
+            </Avatar>
             <div className="flex flex-col min-w-0">
               <span className="text-xs font-semibold text-foreground truncate">
                 {sessionStatus?.profileName || 'Tài khoản Zalo'}
@@ -200,7 +210,7 @@ export function ZaloPersonalFlow({ channel }: ZaloPersonalFlowProps) {
             {sessionStatus?.qrImage ? (
               <div className="relative">
                 <img
-                  src={sessionStatus.qrImage}
+                  src={formatQrDataUrl(sessionStatus.qrImage)}
                   alt="Mã QR đăng nhập Zalo"
                   className="size-48 rounded-lg border border-border bg-white p-1"
                 />

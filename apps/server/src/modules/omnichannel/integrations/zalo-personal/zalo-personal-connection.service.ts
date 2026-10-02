@@ -210,6 +210,7 @@ export class ZaloPersonalConnectionService implements OnApplicationBootstrap, On
   ): {
     status: PendingConnectSession['status'];
     qrImage?: string;
+    profileAvatar?: string;
     profileName?: string;
     ownId?: string;
     error?: string;
@@ -218,6 +219,7 @@ export class ZaloPersonalConnectionService implements OnApplicationBootstrap, On
     return {
       status: session.status,
       qrImage: session.qrImage,
+      profileAvatar: session.profileAvatar,
       profileName: session.profileName,
       ownId: session.ownId,
       error: session.error,
@@ -230,7 +232,13 @@ export class ZaloPersonalConnectionService implements OnApplicationBootstrap, On
    */
   async connect(
     workspaceId: string,
-    dto: { sessionId: string; memberUserIds?: string[]; assignAllMembers?: boolean },
+    dto: {
+      sessionId: string;
+      name?: string;
+      avatarUrl?: string;
+      memberUserIds?: string[];
+      assignAllMembers?: boolean;
+    },
     connectedByUserId?: string,
   ): Promise<{ inboxId: string; channelId: string; ownId: string; zaloName: string }> {
     const session = this.requireSession(workspaceId, dto.sessionId);
@@ -277,7 +285,8 @@ export class ZaloPersonalConnectionService implements OnApplicationBootstrap, On
       memberUserIds = workspaceMembers.map(member => member.userId);
     }
 
-    const zaloName = session.profileName || 'Zalo Cá nhân';
+    const zaloName = dto.name?.trim() || session.profileName || 'Zalo Cá nhân';
+    const avatarUrl = dto.avatarUrl?.trim() || session.profileAvatar;
     const credentials = session.credentials;
     const encrypted = this.credentialService.encrypt({
       imei: credentials.imei,
@@ -292,7 +301,7 @@ export class ZaloPersonalConnectionService implements OnApplicationBootstrap, On
         data: {
           workspaceId,
           name: zaloName,
-          avatarUrl: session.profileAvatar,
+          avatarUrl,
         },
       });
       const channel = await tx.channel.create({
@@ -718,10 +727,17 @@ export class ZaloPersonalConnectionService implements OnApplicationBootstrap, On
 
   private handleLoginQREvent(session: PendingConnectSession, event: ZaloLoginQREventPayload): void {
     switch (event.type) {
-      case 0: // QRCodeGenerated — data.image is a QR image payload from zca-js
+      case 0: {
+        // QRCodeGenerated — data.image is a base64 string from zca-js (without data URI prefix)
         session.status = 'qr_ready';
-        session.qrImage = (event as unknown as { data: { image: string } }).data?.image;
+        const raw = (event as unknown as { data: { image: string } }).data?.image;
+        session.qrImage = raw
+          ? raw.startsWith('data:')
+            ? raw
+            : `data:image/png;base64,${raw}`
+          : undefined;
         break;
+      }
       case 1: // QRCodeExpired — auto retry keeps the session alive until TTL
         (event as unknown as { actions?: { retry?: () => unknown } }).actions?.retry?.();
         break;

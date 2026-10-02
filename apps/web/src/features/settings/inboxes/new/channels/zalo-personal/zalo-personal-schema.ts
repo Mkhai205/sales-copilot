@@ -5,6 +5,8 @@ import { z } from 'zod';
  * login flow. The form exists to gate the "Tiếp tục" action until the QR is scanned.
  */
 export const zaloPersonalChannelSchema = z.object({
+  name: z.string().trim().optional(),
+  avatarUrl: z.string().trim().optional(),
   connectSessionId: z
     .string()
     .trim()

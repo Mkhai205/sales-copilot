@@ -39,6 +39,11 @@ interface ZaloPersonalConfigProps {
 
 const QR_POLL_INTERVAL_MS = 2000;
 
+function formatQrDataUrl(qrImage?: string): string {
+  if (!qrImage) return '';
+  return qrImage.startsWith('data:') ? qrImage : `data:image/png;base64,${qrImage}`;
+}
+
 /**
  * Configuration tab for a ZALO_PERSONAL channel. There is no webhook URL here:
  * inbound messages arrive through the persistent listener on the server, and
@@ -319,7 +324,7 @@ export function ZaloPersonalConfig({ inbox, workspaceId }: ZaloPersonalConfigPro
               </div>
             ) : sessionStatus?.qrImage ? (
               <img
-                src={sessionStatus.qrImage}
+                src={formatQrDataUrl(sessionStatus.qrImage)}
                 alt="Mã QR đăng nhập Zalo"
                 className="size-48 rounded-lg border border-border bg-white p-1"
               />

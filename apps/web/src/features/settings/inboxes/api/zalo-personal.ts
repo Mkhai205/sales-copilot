@@ -9,6 +9,8 @@ export interface ConnectZaloPersonalResponse {
 
 export interface ConnectZaloPersonalDto {
   sessionId: string;
+  name?: string;
+  avatarUrl?: string;
   memberUserIds?: string[];
   assignAllMembers?: boolean;
 }
@@ -16,6 +18,7 @@ export interface ConnectZaloPersonalDto {
 export interface ZaloPersonalSessionStatus {
   status: 'pending' | 'qr_ready' | 'scanned' | 'connected' | 'failed' | 'expired';
   qrImage?: string;
+  profileAvatar?: string;
   profileName?: string;
   ownId?: string;
   error?: string;

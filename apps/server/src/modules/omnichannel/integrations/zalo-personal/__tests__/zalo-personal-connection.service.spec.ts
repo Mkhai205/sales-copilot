@@ -264,6 +264,59 @@ describe('ZaloPersonalConnectionService (listener ingestion & connect)', () => {
         response: { code: 'ZALO_PERSONAL_SESSION_NOT_FOUND' },
       });
     });
+
+    it('should create an inbox with custom name and avatarUrl when provided', async () => {
+      (service as any).pendingConnects.set('sess_new', {
+        id: 'sess_new',
+        workspaceId: WS_ID,
+        status: 'connected',
+        ownId: 'own_brand_new',
+        profileName: 'Default Zalo Name',
+        profileAvatar: 'https://zalo/avatar-default.png',
+        credentials: { imei: 'i', cookie: [], userAgent: 'UA' },
+        api: { listener: { start: jest.fn(), on: jest.fn() }, getOwnId: jest.fn() },
+        expiresAt: Date.now() + 60_000,
+      });
+
+      const res = await service.connect(WS_ID, {
+        sessionId: 'sess_new',
+        name: 'Tên Custom',
+        avatarUrl: 'https://cdn/custom-avatar.png',
+      });
+
+      expect(res.zaloName).toBe('Tên Custom');
+      expect(res.ownId).toBe('own_brand_new');
+    });
+  });
+
+  describe('QR session & status', () => {
+    it('should format raw base64 qrImage as data:image/png;base64 URI', () => {
+      const session: any = { status: 'pending' };
+      (service as any).handleLoginQREvent(session, {
+        type: 0,
+        data: { image: 'iVBORw0KGgoAAAANSUhEUgAA' },
+      });
+
+      expect(session.status).toBe('qr_ready');
+      expect(session.qrImage).toBe('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA');
+    });
+
+    it('should return profileAvatar in getConnectSessionStatus', () => {
+      (service as any).pendingConnects.set('sess_status', {
+        id: 'sess_status',
+        workspaceId: WS_ID,
+        status: 'connected',
+        qrImage: 'data:image/png;base64,xyz',
+        profileAvatar: 'https://zalo/avatar.png',
+        profileName: 'My Zalo',
+        ownId: '12345',
+        expiresAt: Date.now() + 60_000,
+      });
+
+      const status = service.getConnectSessionStatus(WS_ID, 'sess_status');
+      expect(status.profileAvatar).toBe('https://zalo/avatar.png');
+      expect(status.qrImage).toBe('data:image/png;base64,xyz');
+    });
   });
 
   describe('completeReauthorize() via connect with bound channel', () => {

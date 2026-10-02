@@ -49,6 +49,7 @@ export class ZaloPersonalController {
   ): Promise<{
     status: string;
     qrImage?: string;
+    profileAvatar?: string;
     profileName?: string;
     ownId?: string;
     error?: string;

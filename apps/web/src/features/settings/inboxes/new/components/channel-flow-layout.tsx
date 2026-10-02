@@ -19,6 +19,7 @@ interface ChannelFlowLayoutProps {
   onSubmit: (e?: React.BaseSyntheticEvent) => Promise<void> | void;
   submitLabel?: string;
   isSubmitting?: boolean;
+  submitDisabled?: boolean;
   children: React.ReactNode;
 }
 
@@ -27,6 +28,7 @@ export function ChannelFlowLayout({
   onSubmit,
   submitLabel,
   isSubmitting = false,
+  submitDisabled = false,
   children,
 }: ChannelFlowLayoutProps) {
   const { workspaceId, backToChannelSelect } = useNewInbox();
@@ -195,7 +197,7 @@ export function ChannelFlowLayout({
             <Button
               type="submit"
               size="sm"
-              disabled={isSubmitting}
+              disabled={isSubmitting || submitDisabled}
               className="text-xs h-8 gap-1.5 font-medium"
             >
               {isSubmitting ? (
