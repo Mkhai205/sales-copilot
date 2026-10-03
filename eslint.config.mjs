@@ -50,7 +50,10 @@ export default tseslint.config(
   // Node runtime scripts (mock servers, one-off tooling) run outside the TS build.
   // ============================================================================
   {
-    files: ['apps/server/scripts/**/*.mjs', 'scripts/**/*.mjs'],
+    files: ['apps/server/scripts/**/*.mjs', 'scripts/**/*.mjs', 'tools/**/*.cjs'],
+    rules: {
+      '@typescript-eslint/no-require-imports': 'off',
+    },
     languageOptions: {
       globals: {
         process: 'readonly',
@@ -63,6 +66,10 @@ export default tseslint.config(
         clearTimeout: 'readonly',
         setInterval: 'readonly',
         clearInterval: 'readonly',
+        // CommonJS surface for .cjs tooling
+        require: 'readonly',
+        module: 'readonly',
+        __dirname: 'readonly',
       },
     },
   },
