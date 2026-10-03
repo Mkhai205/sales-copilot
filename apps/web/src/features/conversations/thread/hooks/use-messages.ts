@@ -2,11 +2,12 @@
 
 import * as React from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { format, isToday, isYesterday, isThisYear, parseISO, isValid } from 'date-fns';
+import { format, parseISO, isValid } from 'date-fns';
 import { messagesApi } from '../../api/messages';
 import type { MessageResponseDto } from '@sales-copilot/shared-contracts';
 import { useWorkspaceContext } from '@/providers/workspace-provider';
 import { conversationKeys } from '@/lib/query-keys';
+import { formatDateDivider } from '@/lib/format-date';
 
 export interface UseMessagesOptions {
   conversationId?: string | null;
@@ -22,18 +23,6 @@ interface MessageDateGroup {
 }
 
 /**
- * Formats a date or ISO string into human-friendly relative date labels ('Today', 'Yesterday', 'MMM d', or 'MMM d, yyyy')
- */
-function formatMessageDateLabel(dateInput: string | Date): string {
-  const date = typeof dateInput === 'string' ? parseISO(dateInput) : dateInput;
-  if (!isValid(date)) return '';
-  if (isToday(date)) return 'Today';
-  if (isYesterday(date)) return 'Yesterday';
-  if (isThisYear(date)) return format(date, 'MMM d');
-  return format(date, 'MMM d, yyyy');
-}
-
-/**
  * Groups a list of messages chronologically by calendar date
  */
 function groupMessagesByDate(messages: MessageResponseDto[]): MessageDateGroup[] {
@@ -44,7 +33,7 @@ function groupMessagesByDate(messages: MessageResponseDto[]): MessageDateGroup[]
   for (const message of messages) {
     const date = parseISO(message.createdAt);
     const dateKey = isValid(date) ? format(date, 'yyyy-MM-dd') : 'unknown';
-    const dateLabel = formatMessageDateLabel(message.createdAt);
+    const dateLabel = formatDateDivider(message.createdAt);
 
     if (!groupsMap.has(dateKey)) {
       groupsMap.set(dateKey, {

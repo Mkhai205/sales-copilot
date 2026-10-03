@@ -1,6 +1,7 @@
 import {
   formatDistanceToNowStrict,
   format,
+  isThisYear,
   isToday,
   isYesterday,
   parseISO,
@@ -40,6 +41,20 @@ export function formatConversationTimestamp(dateInput: Date | string | number): 
   } catch {
     return '';
   }
+}
+
+/**
+ * Date divider label inside the chat thread: 'Hôm nay' / 'Hôm qua' /
+ * 'd MMM' (cùng năm) / 'd MMM, yyyy'. Phase 4 decision D7: single source
+ * of truth — do not add local per-component date formatters.
+ */
+export function formatDateDivider(dateInput: Date | string): string {
+  const date = typeof dateInput === 'string' ? parseISO(dateInput) : dateInput;
+  if (!isValid(date)) return '';
+  if (isToday(date)) return 'Hôm nay';
+  if (isYesterday(date)) return 'Hôm qua';
+  if (isThisYear(date)) return format(date, 'd MMM', { locale: vi });
+  return format(date, 'd MMM, yyyy', { locale: vi });
 }
 
 const VN_DATETIME_OPTIONS: Intl.DateTimeFormatOptions = {

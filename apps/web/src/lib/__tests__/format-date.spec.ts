@@ -1,8 +1,23 @@
 import { describe, it } from 'node:test';
 import * as assert from 'node:assert';
-import { formatRelativeTime, formatConversationTimestamp } from '../format-date';
+import { formatDateDivider, formatRelativeTime, formatConversationTimestamp } from '../format-date';
 
 describe('format-date utilities (Vietnamese locale)', () => {
+  describe('formatDateDivider', () => {
+    it('labels today as Hôm nay and yesterday as Hôm qua', () => {
+      assert.strictEqual(formatDateDivider(new Date()), 'Hôm nay');
+      const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      assert.strictEqual(formatDateDivider(yesterday), 'Hôm qua');
+    });
+
+    it('formats same-year and cross-year dates with the vi locale', () => {
+      assert.strictEqual(formatDateDivider('not-a-date'), '');
+      // Known past date, cross-year: the year segment must appear
+      const old = formatDateDivider('2020-03-09T10:00:00.000Z');
+      assert.ok(old.includes('2020'), `Expected cross-year label to include 2020, got: ${old}`);
+    });
+  });
+
   describe('formatRelativeTime', () => {
     it('formats relative time in Vietnamese for minutes ago', () => {
       const pastDate = new Date(Date.now() - 5 * 60 * 1000).toISOString();
