@@ -57,8 +57,10 @@ Sales Copilot là hệ thống Omnichannel Conversational Commerce.
 - Tái sử dụng **Shadcn UI** + **Tailwind CSS**. Luôn kiểm tra `src/components/ui/` trước khi tạo component mới.
 - Server state management BẮT BUỘC dùng **TanStack Query**. Hạn chế `useEffect` fetch API thủ công.
 - Sử dụng semantic Tailwind utility classes cho design tokens.
+- **Form schema:** tái dùng Zod schema từ `packages/shared-contracts` khi form trùng shape với DTO. Chỉ tự định nghĩa schema local khi form thật sự khác semantics (vd: draft cho phép giá 0) — và ghi rõ lý do tại chỗ.
 
 ## 6. Workflow
 
 - **Test:** Đọc skill `tdd` trước khi viết test. Viết test cho behavior, không cho implementation details.
 - **Verification:** Sau khi code xong, chạy `lint`, `typecheck`, `test` để đảm bảo không regression.
+- **Docs sync:** PR thay đổi route API, queue, event, state machine hoặc page **PHẢI** cập nhật tài liệu tương ứng trong `docs/system/` (System Handbook) trong cùng PR. CI chạy `node tools/check-docs.cjs` để chặn liên kết/fence/mermaid gãy — nhưng việc nội dung còn đúng là trách nhiệm của người sửa code.

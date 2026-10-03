@@ -40,6 +40,12 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
+      # Keep the documentation tree from rotting: fence balance, mermaid
+      # sanity, relative links. P1: PRs touching routes/queues/events must
+      # update docs/system/ accordingly (see AGENTS.md).
+      - name: Docs integrity check
+        run: node tools/check-docs.cjs
+
       - name: Dependency audit (high+ blocks, moderate informational)
         run: pnpm audit --prod --audit-level high
 

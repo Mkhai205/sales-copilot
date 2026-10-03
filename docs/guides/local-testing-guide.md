@@ -133,10 +133,6 @@ Web Chat Widget có thể được kiểm thử hoàn chỉnh mà không cần C
 
 Để Meta (Facebook) có thể gửi Webhook về máy local của bạn, cần một HTTPS URL công khai.
 
-### Bước 1: Chạy Script Thiết Lập Tunnel Tự Động
-
-**Trên Windows (PowerShell)**:
-```powershell
 ### Bước 1: Khởi Tạo & Đăng Nhập Tunnel
 
 **Trên Windows (PowerShell)**:
