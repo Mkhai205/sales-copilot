@@ -20,7 +20,7 @@
 | Swagger | `/docs` | chỉ khi `NODE_ENV !== 'production'` |
 | Global guards | `ThrottlerBehindProxyGuard` → `JwtAuthGuard` | đăng ký qua `APP_GUARD`, thứ tự này |
 | Rate limit toàn cục | 100 req/phút/IP | proxy-aware (CF-Connecting-IP → XFF) |
-| Validation | `ValidationPipe` (whitelist) + `ZodBody`/`ZodQuery` per-route | Zod là cơ chế chính |
+| Validation | `ZodBody`/`ZodQuery` per-route — schema từ shared-contracts; `ZodError` → 400 VALIDATION_FAILED qua exception filter | không có pipe global |
 | Response | `TransformInterceptor` bọc `{success, data, meta?}`; `HttpExceptionFilter` bọc `{success:false, error:{code,message}}` | |
 | Bảo mật | helmet (CSP chặt), CORS credentials, pino logger (redact token/cookie), `rawBody: true` (cần cho HMAC webhook), shutdown hooks | |
 | Env | Zod-validated `src/config/env.schema.ts` — sai env là không boot | |
@@ -94,7 +94,7 @@ Toàn bộ dưới `/api/v1`. Ký hiệu: 🔓 `@Public` (JWT bypass), [W] `Work
 | `SystemSettingsController` | `platform-admin/settings` | [SUPER_ADMIN] feature flags + quotas |
 | `DashboardController` | `dashboard` | [W][R OWNER/ADMIN] summary |
 | `HealthController` | `health` | 🔓 3 route |
-| `PresenceController` | `presence` | JWT + tự check membership trong handler (REST presence hiện chết — xem gotchas) |
+| `PresenceController` | `presence` | [W qua `WorkspaceGuard`] `GET presence` — chỉ để seed snapshot ban đầu; cập nhật live qua WS |
 
 ## 6. Auth & bảo mật
 
@@ -115,12 +115,13 @@ flowchart LR
 
 ## 7. Việc nền — BullMQ
 
-Tên queue là hằng số dùng chung tại `packages/shared-contracts/src/common/queues.ts`. Không có job lặp định kỳ trong BullMQ; cron duy nhất là dọn presence mỗi phút.
+Tên queue là hằng số dùng chung tại `packages/shared-contracts/src/common/queues.ts`. **Toàn bộ 6 queue được đăng ký tập trung trong global `QueueModule`** — feature module không tự `registerQueue`. Không có job lặp định kỳ trong BullMQ; cron duy nhất là dọn presence mỗi phút. Health check probe đủ cả 6 queue.
 
 | Queue | Job đẩy từ | Processor | Concurrency | Việc |
 |:--|:--|:--|:--|:--|
 | `channel-ingestion` | `channel-webhooks/webhooks.service.ts` | `ChannelIngestionProcessor` | 5 | Chuẩn hoá webhook → contact → conversation → message (mục 3 trong 02-data-flows) |
 | `comment-guard` | `facebook.controller.ts` (central webhook) | `CommentGuardProcessor` | BullMQ limit **180 job/giờ** (giới hạn API Facebook) | Ẩn comment có SĐT, private reply, tạo conversation |
+| `message-outbound` | `outbound-message.listener.ts` (nghe `message.created`) | `OutboundDeliveryProcessor` | 5 | Gửi tin ra provider qua adapter: per-conversation lock để giữ thứ tự, retry 5 lần backoff 5s, ghi SENT/FAILED + emit `message.delivery_status_updated` |
 | `commerce-reconciliation` | `payment-webhooks.controller.ts` | `CommerceReconciliationProcessor` | 5 | Đối soát giao dịch ngân hàng ↔ đơn (Redlock theo order) |
 | `ai-autopilot` | `ai-dispatcher.listener.ts` | `AiAgentWorker` | 5 | Chạy agent Gemini (debounce 500ms theo conversation) |
 | `knowledge-embedding` | `knowledge.service.ts` | `KnowledgeEmbeddingProcessor` | 3 | Embed article (text-embedding-004, vector 768) |
@@ -133,7 +134,7 @@ Tên event **trùng chính xác** với tên WS event client nhận (cùng hằn
 
 | Nhóm | Events | Ai phát | Ai nghe |
 |:--|:--|:--|:--|
-| Message | `message.created/updated/deleted/delivery_status_updated` | `messages.service.ts` | **dispatcher → socket**, AI dispatcher, AI takeover, auto-assign (gián tiếp), outbound listener, audit |
+| Message | `message.created/updated/deleted/delivery_status_updated` | `messages.service.ts` (listener ghi SENT/FAILED: `OutboundDeliveryProcessor`) | **dispatcher → socket**, `OutboundMessageListener` (producer queue outbound), AI dispatcher, AI takeover, auto-assign (gián tiếp), audit |
 | Conversation | `conversation.created/reopened/assigned/status_updated/priority_updated/labels_updated/updated` | `conversations.service.ts`, `messages.service.ts` | dispatcher, auto-assignment, AI takeover (reset khi RESOLVED) |
 | Contact | `contact.created/updated/deleted/merged`, `channel_identity.created/deleted` | `contacts.service.ts`, `contact-resolution.service.ts` | dispatcher, audit |
 | Channel | `channel.created/updated/deleted`, `channel.reauthorization_required` | `inboxes.service.ts`, `facebook.service.ts` | dispatcher, **lifecycle từng kênh** (đăng ký/hủy webhook bên provider), audit |
@@ -158,8 +159,8 @@ Payload client→server đều validate Zod từ shared-contracts; `{workspaceId
 ## 10. Gotchas đáng nhớ
 
 1. `MessagesController` khai `@Controller()` rỗng — path nằm ở method decorator; lệch với mọi controller khác.
-2. REST `presence` routes đọc `@Param('workspaceId')` nhưng prefix không có param — thực chất presence chạy qua WS, 2 route đó chết.
-3. `@Public()` vẫn soft-parse token — `request.user` có thể có sẵn trên route public.
-4. Events phát **trong post-commit hook** của transaction — listener an toàn vì dữ liệu đã commit.
-5. Zalo Personal không có webhook — chạy listener zca-js dài hạn trong process, tự đẩy tin của chính owner vào pipeline với `skipSignatureVerification`.
-6. Idempotency xếp lớp: `ChannelEvent (channelId, externalEventId)` → BullMQ `jobId` deterministic → `Message (conversationId, externalId)`; payment: jobId `ws:gateway:txId` + `PaymentTransaction.idempotencyKey`.
+2. `@Public()` vẫn soft-parse token — `request.user` có thể có sẵn trên route public.
+3. Events phát **trong post-commit hook** của transaction — listener an toàn vì dữ liệu đã commit.
+4. Zalo Personal không có webhook — chạy listener zca-js dài hạn trong process, tự đẩy tin của chính owner vào pipeline với `skipSignatureVerification`.
+5. Idempotency xếp lớp: `ChannelEvent (channelId, externalEventId)` → BullMQ `jobId` deterministic → `Message (conversationId, externalId)`; payment: jobId `ws:gateway:txId` + `PaymentTransaction.idempotencyKey`; outbound: jobId `out_{messageId}` + guard "đã có externalId thì bỏ qua".
+6. Tin đi ra khởi tạo ở trạng thái **PENDING** (không phải SENT) — processor chuyển sang SENT/FAILED sau khi gọi provider; UI thấy transition qua socket event.

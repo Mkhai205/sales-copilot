@@ -140,14 +140,14 @@ Bảo vệ chuyển trạng thái: `order-status-guard.ts` (assert trước khi 
 | `ConversationStatus` | OPEN, RESOLVED, PENDING, SNOOZED |
 | `ConversationPriority` | URGENT, HIGH, MEDIUM, LOW |
 | `SenderType` | CONTACT, USER, SYSTEM |
-| `MessageType` | INCOMING, OUTGOING, ACTIVITY, TEMPLATE |
+| `MessageType` | INCOMING, OUTGOING, ACTIVITY *(TEMPLATE đã xoá — không có producer)* |
 | `MessageContentType` | TEXT, IMAGE, VIDEO, AUDIO, FILE |
 | `DeliveryStatus` | PENDING, SENT, DELIVERED, READ, FAILED |
 | `OrderStatus` | DRAFT, CONFIRMED, PAID, SHIPPING, COMPLETED, CANCELLED |
 | `PaymentStatus` | UNPAID, PARTIALLY_PAID, PAID, REFUNDED |
 | `FulfillmentStatus` | UNFULFILLED, PROCESSING, SHIPPED, DELIVERED, RETURNED, CANCELLED |
 | `PaymentMethod` | VIETQR, BANK_TRANSFER, COD, CASH, CREDIT_CARD, OTHER |
-| `PaymentGateway` | SEPAY, CASSO, MANUAL, VNPAY, MOMO |
+| `PaymentGateway` | SEPAY, CASSO, MANUAL *(VNPAY/MOMO đã xoá — chưa có tích hợp)* |
 | `PaymentTransactionStatus` | PENDING, SUCCESS, FAILED, EXPIRED, CANCELLED |
 | `InventoryTransactionType` | STOCK_IN, STOCK_OUT, RESERVATION, RELEASE_RESERVATION, COMMIT_SALE, RETURN_RESTOCK, INVENTORY_AUDIT |
 | `DiscountType` | PERCENTAGE, FIXED_AMOUNT |
@@ -179,7 +179,16 @@ Bảo vệ chuyển trạng thái: `order-status-guard.ts` (assert trước khi 
 | `Product.images` / `ProductVariant.attributes` | danh sách ảnh / {"size","color"} |
 | `PaymentTransaction.rawWebhookPayload` | payload gốc từ ngân hàng |
 
-## 9. Gotchas
+## 9. Quyết định mô hình (ADR rút gọn)
+
+**displayId giữ sequence toàn cục** (chốt 2026-10-03). `Conversation.displayId` và `Order.displayId` là autoincrement toàn bảng, chỉ unique per-workspace — tenant A có thể suy ra tổng số dòng hệ thống qua số thứ tự.
+
+- **Chấp nhận**: độ nhạy thông tin thấp (chỉ "quy mô"), đổi sang đánh số per-workspace đòi hỏi bảng counter + cấp số trong transaction, sửa parsing memo VietQR (`ORD {displayId}`, `DH${displayId}` của AI), đối soát ngân hàng và ~8 file test — rủi ro chạm luồng tiền không tương xứng lợi ích.
+- **Xem lại khi**: khách hàng yêu cầu bảo mật số liệu quy mô, hoặc số tenant tăng lớn.
+
+**MessageType × SenderType là 2 trục vuông góc, không merge.** MessageType = hướng tin (INCOMING/OUTGOING/ACTIVITY); SenderType = tác giả (CONTACT/USER/SYSTEM). AI trả lời với tư cách SYSTEM+OUTGOING — merge sẽ misclassify. `TEMPLATE` đã xoá (không có producer/consumer nào).
+
+## 10. Gotchas
 
 1. Tiền là `Decimal(15,2)` chứ không phải integer — VND thực tế không có số lẻ.
 2. `KnowledgeArticle` là model duy nhất không `@@map` — tên bảng PascalCase giữa rừng snake_case.

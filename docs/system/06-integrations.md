@@ -78,6 +78,7 @@
 
 | | Chi tiết |
 |:--|:--|
+| Widget token | `WIDGET_TOKEN_SECRET` **bắt buộc** (fail boot nếu thiếu, không fallback về JWT secret) — tách secret của khách khỏi secret agent |
 | MinIO/S3 (`storage.service.ts`) | 1 bucket `sales-copilot`, public-read prefix `avatars`/`public`; upload multipart trực tiếp lên API (không presigned PUT); tải file theo presigned GET 900s; 2 endpoint internal/public (tunnel MinIO riêng `storage-sales-copilot.kakadev.xyz`) |
 | Email (`resend.service.ts`) | Resend; hiện 1 template duy nhất `EmployeeCredentials` (mời nhân viên) từ `packages/email-templates` (React Email); không có key → mode log giả lập |
 
@@ -110,4 +111,4 @@ flowchart LR
 4. Facebook synthetic id (`watermark_*`, `read_*`) phải skip, không được để fail job.
 5. SDK `onStepFinish` nuốt lỗi — vì vậy takeover AI phải chặn 3 điểm (worker / stopWhen / từng tool).
 6. BullMQ jobId không chứa `:` — follow-up dùng `follow-up-{conversationId}` (queue payment dùng `:` được vì quy ước riêng).
-7. Outbound message là sync in-process: provider chậm làm chậm request; lỗi không retry tự động.
+7. Outbound message chạy qua queue `message-outbound` (attempts 5, backoff, per-conversation lock) — provider chậm không block request path; lỗi tạm thời được retry, lỗi chốt ghi `FAILED` kèm `deliveryError`.

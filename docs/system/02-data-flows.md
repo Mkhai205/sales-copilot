@@ -54,25 +54,30 @@ sequenceDiagram
     participant API as messages.controller
     participant MS as MessagesService
     participant DB as PostgreSQL
-    participant EV as EventEmitter2
     participant OL as OutboundMessageListener
+    participant Q as BullMQ message-outbound
+    participant P as OutboundDeliveryProcessor
     participant AD as ChannelAdapter kênh
     participant RT as Socket /realtime
 
     UI->>API: POST conversations/:id/messages<br/>multipart, 20/phút
-    Note left of UI: UI đã chèn tin "optimistic" với clientTempId ngay khi bấm gửi
+    Note left of UI: UI đã chèn tin "optimistic" với clientTempId, hiển thị PENDING
     API->>MS: create()
-    MS->>DB: transaction — Message + Attachment<br/>+ unread/auto-reopen/firstReply
-    MS->>EV: emit message.created
-    EV->>RT: broadcast về các tab agent khác
-    EV->>OL: handleOutboundMessage (USER + OUTGOING)
-    OL->>OL: resolve externalContactId qua ChannelIdentity
-    OL->>AD: sendMessage(channel, payload)
-    AD-->>OL: kết quả
-    OL->>DB: ghi externalId + deliveryStatus<br/>(lỗi → FAILED + deliveryError, không auto-retry)
+    MS->>DB: transaction — Message (PENDING) + Attachment<br/>+ unread/auto-reopen/firstReply
+    MS->>OL: emit message.created
+    OL->>Q: add jobId out_{messageId}<br/>(attempts 5, backoff 5s)
+    MS-->>UI: response trả về ngay (PENDING)
+    Q->>P: process (concurrency 5)
+    P->>P: lock lock:outbound:conv:{id} — giữ thứ tự<br/>theo conversation (contended → retry sau)
+    P->>AD: sendMessage(channel, payload)<br/>attachments re-sign từ storagePath
+    AD-->>P: kết quả
+    P->>MS: markOutboundDelivery
+    MS->>DB: externalId + SENT (hoặc FAILED + deliveryError)
+    MS->>RT: emit message.delivery_status_updated<br/>→ UI chuyển PENDING → SENT/FAILED
+    Note over P: lỗi provider → throw để BullMQ retry;<br/>lần cuối → FAILED (terminal)
 ```
 
-Lưu ý: outbound chạy **đồng bộ in-process qua event** (không qua queue) — API chậm của provider làm chậm request; lỗi chỉ ghi trạng thái. Tin AI/SYSTEM cũng đi qua `MessagesService.create()` nên phát tự động ra kênh trừ khi `metadata.suppressOutbound`.
+Lưu ý: gửi đi là **async qua queue** — provider chậm không block request path; lỗi tạm thời được retry, lỗi chốt ghi `FAILED`. Tin AI/SYSTEM cũng đi qua `MessagesService.create()` nên vào queue như thường, trừ khi `metadata.suppressOutbound` (producer chặn).
 
 ## 3. AI autopilot
 
@@ -170,7 +175,7 @@ sequenceDiagram
 ## 6. Web Chat (widget) — vào/ra không qua webhook
 
 - **Khách gửi**: `widget-sdk` → Socket.io `/widget` event `widget:send_message` → `web-chat.gateway.ts` → tạo Contact/Conversation/Message như pipeline chuẩn (sender CONTACT) → ack `widget:message_sent` (echo `tempId` cho optimistic UI).
-- **Shop trả lời**: outbound listener → `WebChatAdapter.sendMessage` chỉ *emit nội bộ* `widget:message` → gateway đẩy tới room của khách.
+- **Shop trả lời**: tin ra qua queue `message-outbound` → `OutboundDeliveryProcessor` → `WebChatAdapter.sendMessage` *emit nội bộ* `widget:message` → gateway đẩy tới room của khách (idempotency theo `metadata.messageId` nên retry không phát trùng).
 - **Auth khách**: widget token (JWT 180 ngày, `WIDGET_TOKEN_SECRET`); identify tuỳ chọn có HMAC signature.
 
 ## 7. Fan-out realtime (mọi luồng converge về đây)

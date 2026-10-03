@@ -88,7 +88,7 @@ flowchart TB
 | Query keys | Một file `lib/query-keys.ts`: factory theo domain (`conversationKeys`, `commerceKeys`, `inboxKeys`, `platformAdminKeys`…) — key luôn nhúng `workspaceId` + toàn bộ DTO filter (kể cả tab/search) → cache phân theo filter |
 | Pagination | `useInfiniteQuery` + `meta.hasMore`; chuẩn hoá shape cũ/mới bằng `normalizePaginatedResponse` |
 | Mutation | `onSuccess`: toast + `invalidate` theo prefix key (vd `invalidateOrderQueries()` làm mới orders + products + inventory); `onError`: toast |
-| Optimistic | Tin nhắn: chèn tin tạm `clientTempId` vào cache infinite → socket/ACK `reconcileOrAppendMessage` khớp theo id server / `metadata.clientTempId` / prefix `temp-` (`lib/socket/cache-helpers.ts`); lỗi → đánh dấu FAILED trong cache |
+| Optimistic | Tin nhắn: chèn tin tạm `clientTempId` (PENDING) vào cache infinite → socket/ACK `reconcileOrAppendMessage` khớp theo id server / `metadata.clientTempId` / prefix `temp-` (`lib/socket/cache-helpers.ts`). Server giữ tin ở PENDING đến khi processor gọi provider xong — transition SENT/FAILED đến qua socket `message.delivery_status_updated` |
 | RSC | Chỉ 3 chỗ fetch trực tiếp (workspace resolution); mọi data nghiệp vụ fetch client-side |
 
 ## 6. Realtime
@@ -106,6 +106,7 @@ flowchart TB
 ```
 
 - Reconnect: 10 lần backoff 1→30s; lỗi `UNAUTHORIZED` → `refreshSessionAction()` rồi connect lại (giới hạn 2 lần); hồi sinh khi tab visible/online lại.
+- Typing: server phát `typing.start/stop` trên kênh typed (đã fix — trước đây chỉ phát kênh generic nên indicator không chạy).
 - **Thêm event mới phải sửa 2 file**: `SocketEventPayloadMap` (shared-contracts) + `use-realtime-sync.ts` (web). Envelope `{event, data}` được unwrap trong `useSocketEvent`.
 - Presence: `presence.updated` → cache `presenceKeys`; dọn dẹp khi unmount có delay 200ms chống remount churn.
 
