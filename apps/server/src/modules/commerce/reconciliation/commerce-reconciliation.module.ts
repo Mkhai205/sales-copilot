@@ -1,6 +1,4 @@
 import { Module } from '@nestjs/common';
-import { BullModule } from '@nestjs/bullmq';
-import { COMMERCE_RECONCILIATION_QUEUE } from '@sales-copilot/shared-contracts';
 import { DatabaseModule } from '../../../infrastructure/database/database.module';
 import { WorkspacesModule } from '../../identity/workspaces/workspaces.module';
 import { InventoryModule } from '../inventory/inventory.module';
@@ -11,14 +9,7 @@ import { CommerceReconciliationProcessor } from './commerce-reconciliation.proce
 import { ReconciliationController } from './reconciliation.controller';
 
 @Module({
-  imports: [
-    DatabaseModule,
-    WorkspacesModule,
-    InventoryModule,
-    BullModule.registerQueue({
-      name: COMMERCE_RECONCILIATION_QUEUE,
-    }),
-  ],
+  imports: [DatabaseModule, WorkspacesModule, InventoryModule],
   controllers: [ReconciliationController],
   providers: [
     AutoReconciliationMatcher,
@@ -26,6 +17,6 @@ import { ReconciliationController } from './reconciliation.controller';
     ReconciliationQueryService,
     CommerceReconciliationProcessor,
   ],
-  exports: [AutoReconciliationMatcher, ManualMatchService, ReconciliationQueryService, BullModule],
+  exports: [AutoReconciliationMatcher, ManualMatchService, ReconciliationQueryService],
 })
 export class CommerceReconciliationModule {}

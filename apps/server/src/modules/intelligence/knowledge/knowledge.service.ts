@@ -9,12 +9,12 @@ import type {
   TestSearchResultDto,
   UpdateKnowledgeArticleDto,
 } from '@sales-copilot/shared-contracts';
+import { KNOWLEDGE_EMBEDDING_QUEUE } from '@sales-copilot/shared-contracts';
 import { PrismaService } from '../../../infrastructure/database/prisma.service';
 import { KnowledgeEmbeddingStatus } from '../../../infrastructure/database/generated/enums';
 import {
   DEFAULT_SIMILARITY_THRESHOLD,
   DEFAULT_TOP_K,
-  KNOWLEDGE_QUEUE_NAME,
   MAX_ARTICLES_PER_WORKSPACE,
   type KnowledgeEmbeddingJobData,
 } from './knowledge.constants';
@@ -27,7 +27,7 @@ export class KnowledgeService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly embeddingService: KnowledgeEmbeddingService,
-    @InjectQueue(KNOWLEDGE_QUEUE_NAME)
+    @InjectQueue(KNOWLEDGE_EMBEDDING_QUEUE)
     private readonly knowledgeQueue: Queue<KnowledgeEmbeddingJobData>,
   ) {}
 

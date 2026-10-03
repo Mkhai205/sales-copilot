@@ -3,16 +3,20 @@ import { ConfigService } from '@nestjs/config';
 import { BullModule } from '@nestjs/bullmq';
 import { DatabaseModule } from '../database/database.module';
 import {
+  AI_AUTOPILOT_QUEUE,
   CHANNEL_INGESTION_QUEUE,
   COMMENT_GUARD_QUEUE,
+  COMMERCE_RECONCILIATION_QUEUE,
+  KNOWLEDGE_EMBEDDING_QUEUE,
   MESSAGE_OUTBOUND_QUEUE,
 } from '@sales-copilot/shared-contracts';
 
 /**
- * Global BullMQ wiring: Redis connection + queue registrations. Queue
- * name constants live in @sales-copilot/shared-contracts (src/common/queues);
- * the processors themselves live next to the domain modules that own them
- * (omnichannel/integrations, facebook).
+ * Global BullMQ wiring: Redis connection + queue registrations. Every queue
+ * the API hosts is registered here — single source of truth — so producers
+ * (@InjectQueue) and processors (@Processor) resolve without per-feature
+ * registration. Queue name constants live in @sales-copilot/shared-contracts;
+ * the processors themselves live next to the domain modules that own them.
  */
 @Global()
 @Module({
@@ -55,15 +59,12 @@ import {
       },
     }),
     BullModule.registerQueue(
-      {
-        name: CHANNEL_INGESTION_QUEUE,
-      },
-      {
-        name: COMMENT_GUARD_QUEUE,
-      },
-      {
-        name: MESSAGE_OUTBOUND_QUEUE,
-      },
+      { name: CHANNEL_INGESTION_QUEUE },
+      { name: COMMENT_GUARD_QUEUE },
+      { name: MESSAGE_OUTBOUND_QUEUE },
+      { name: COMMERCE_RECONCILIATION_QUEUE },
+      { name: AI_AUTOPILOT_QUEUE },
+      { name: KNOWLEDGE_EMBEDDING_QUEUE },
     ),
   ],
   providers: [],

@@ -1,7 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
-import { CHANNEL_INGESTION_QUEUE, COMMENT_GUARD_QUEUE } from '@sales-copilot/shared-contracts';
+import {
+  AI_AUTOPILOT_QUEUE,
+  CHANNEL_INGESTION_QUEUE,
+  COMMENT_GUARD_QUEUE,
+  COMMERCE_RECONCILIATION_QUEUE,
+  KNOWLEDGE_EMBEDDING_QUEUE,
+  MESSAGE_OUTBOUND_QUEUE,
+} from '@sales-copilot/shared-contracts';
 import { PrismaService } from '../../infrastructure/database/prisma.service';
 import { RedisService } from '../../infrastructure/redis/redis.service';
 import { StorageService } from '../../infrastructure/storage/storage.service';
@@ -10,21 +17,46 @@ import {
   HealthCheckResponse,
   HealthStatus,
   LivenessResponse,
+  MonitoredQueueChecks,
   QueueCheckResult,
   ReadinessResponse,
 } from './health.types';
 
+const MONITORED_QUEUES = [
+  { key: 'channelIngestion', name: CHANNEL_INGESTION_QUEUE },
+  { key: 'commentGuard', name: COMMENT_GUARD_QUEUE },
+  { key: 'messageOutbound', name: MESSAGE_OUTBOUND_QUEUE },
+  { key: 'commerceReconciliation', name: COMMERCE_RECONCILIATION_QUEUE },
+  { key: 'aiAutopilot', name: AI_AUTOPILOT_QUEUE },
+  { key: 'knowledgeEmbedding', name: KNOWLEDGE_EMBEDDING_QUEUE },
+] as const;
+
+type QueueKey = (typeof MONITORED_QUEUES)[number]['key'];
+
 @Injectable()
 export class HealthService {
+  private readonly queues = new Map<QueueKey, Queue>();
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly redis: RedisService,
     private readonly storage: StorageService,
-    @InjectQueue(CHANNEL_INGESTION_QUEUE)
-    private readonly channelIngestionQueue: Queue,
-    @InjectQueue(COMMENT_GUARD_QUEUE)
-    private readonly commentGuardQueue: Queue,
-  ) {}
+    @InjectQueue(CHANNEL_INGESTION_QUEUE) channelIngestionQueue: Queue,
+    @InjectQueue(COMMENT_GUARD_QUEUE) commentGuardQueue: Queue,
+    @InjectQueue(MESSAGE_OUTBOUND_QUEUE) messageOutboundQueue: Queue,
+    @InjectQueue(COMMERCE_RECONCILIATION_QUEUE) commerceReconciliationQueue: Queue,
+    @InjectQueue(AI_AUTOPILOT_QUEUE) aiAutopilotQueue: Queue,
+    @InjectQueue(KNOWLEDGE_EMBEDDING_QUEUE) knowledgeEmbeddingQueue: Queue,
+  ) {
+    this.queues = new Map<QueueKey, Queue>([
+      ['channelIngestion', channelIngestionQueue],
+      ['commentGuard', commentGuardQueue],
+      ['messageOutbound', messageOutboundQueue],
+      ['commerceReconciliation', commerceReconciliationQueue],
+      ['aiAutopilot', aiAutopilotQueue],
+      ['knowledgeEmbedding', knowledgeEmbeddingQueue],
+    ]);
+  }
 
   private async checkQueueHealth(queue: Queue): Promise<QueueCheckResult> {
     const start = Date.now();
@@ -52,64 +84,35 @@ export class HealthService {
     }
   }
 
+  private async checkAllQueues(): Promise<MonitoredQueueChecks> {
+    const checks = await Promise.all(
+      MONITORED_QUEUES.map(
+        async ({ key }) => [key, await this.checkQueueHealth(this.queues.get(key)!)] as const,
+      ),
+    );
+    return Object.fromEntries(checks) as MonitoredQueueChecks;
+  }
+
+  private async ping(
+    promise: Promise<DependencyCheckResult>,
+    fallbackError: string,
+  ): Promise<DependencyCheckResult> {
+    try {
+      return await promise;
+    } catch (err) {
+      return { status: 'down', latencyMs: 0, error: (err as Error)?.message || fallbackError };
+    }
+  }
+
   async getHealth(): Promise<HealthCheckResponse> {
-    const [dbResult, redisResult, storageResult, channelQueueResult, commentGuardQueueResult] =
-      await Promise.allSettled([
-        this.prisma.ping(),
-        this.redis.ping(),
-        this.storage.ping(),
-        this.checkQueueHealth(this.channelIngestionQueue),
-        this.checkQueueHealth(this.commentGuardQueue),
-      ]);
+    const [database, redis, storage, queues] = await Promise.all([
+      this.ping(this.prisma.ping(), 'Database error'),
+      this.ping(this.redis.ping(), 'Redis error'),
+      this.ping(this.storage.ping(), 'Storage error'),
+      this.checkAllQueues(),
+    ]);
 
-    const database: DependencyCheckResult =
-      dbResult.status === 'fulfilled'
-        ? dbResult.value
-        : {
-            status: 'down',
-            latencyMs: 0,
-            error: (dbResult.reason as Error)?.message || 'Database error',
-          };
-
-    const redis: DependencyCheckResult =
-      redisResult.status === 'fulfilled'
-        ? redisResult.value
-        : {
-            status: 'down',
-            latencyMs: 0,
-            error: (redisResult.reason as Error)?.message || 'Redis error',
-          };
-
-    const storage: DependencyCheckResult =
-      storageResult.status === 'fulfilled'
-        ? storageResult.value
-        : {
-            status: 'down',
-            latencyMs: 0,
-            error: (storageResult.reason as Error)?.message || 'Storage error',
-          };
-
-    const channelIngestion: QueueCheckResult =
-      channelQueueResult.status === 'fulfilled'
-        ? channelQueueResult.value
-        : {
-            status: 'down',
-            latencyMs: 0,
-            error: (channelQueueResult.reason as Error)?.message || 'Channel ingestion queue error',
-          };
-
-    const commentGuard: QueueCheckResult =
-      commentGuardQueueResult.status === 'fulfilled'
-        ? commentGuardQueueResult.value
-        : {
-            status: 'down',
-            latencyMs: 0,
-            error:
-              (commentGuardQueueResult.reason as Error)?.message || 'Comment guard queue error',
-          };
-
-    const areQueuesHealthy = channelIngestion.status === 'ok' && commentGuard.status === 'ok';
-
+    const areQueuesHealthy = Object.values(queues).every(q => q.status === 'ok');
     const isHealthy =
       database.status === 'up' &&
       redis.status === 'up' &&
@@ -133,10 +136,7 @@ export class HealthService {
         database,
         redis,
         storage,
-        queues: {
-          channelIngestion,
-          commentGuard,
-        },
+        queues,
       },
     };
   }
@@ -151,80 +151,23 @@ export class HealthService {
   }
 
   async getReadiness(): Promise<ReadinessResponse> {
-    const [
-      dbResult,
-      migrationsResult,
-      redisResult,
-      storageResult,
-      channelQueueResult,
-      commentGuardQueueResult,
-    ] = await Promise.allSettled([
-      this.prisma.ping(),
-      this.prisma.checkMigrations(),
-      this.redis.ping(),
-      this.storage.ping(),
-      this.checkQueueHealth(this.channelIngestionQueue),
-      this.checkQueueHealth(this.commentGuardQueue),
+    const [database, migrations, redis, storage, queues] = await Promise.all([
+      this.ping(this.prisma.ping(), 'Database error'),
+      this.prisma
+        .checkMigrations()
+        .catch((err): { applied: boolean; count?: number; error?: string } => ({
+          applied: false,
+          error: (err as Error)?.message || 'Migrations error',
+        })),
+      this.ping(this.redis.ping(), 'Redis error'),
+      this.ping(this.storage.ping(), 'Storage error'),
+      this.checkAllQueues(),
     ]);
-
-    const database: DependencyCheckResult =
-      dbResult.status === 'fulfilled'
-        ? dbResult.value
-        : {
-            status: 'down',
-            latencyMs: 0,
-            error: (dbResult.reason as Error)?.message || 'Database error',
-          };
-
-    const migrations =
-      migrationsResult.status === 'fulfilled'
-        ? migrationsResult.value
-        : {
-            applied: false,
-            error: (migrationsResult.reason as Error)?.message || 'Migrations error',
-          };
-
-    const redis: DependencyCheckResult =
-      redisResult.status === 'fulfilled'
-        ? redisResult.value
-        : {
-            status: 'down',
-            latencyMs: 0,
-            error: (redisResult.reason as Error)?.message || 'Redis error',
-          };
-
-    const storage: DependencyCheckResult =
-      storageResult.status === 'fulfilled'
-        ? storageResult.value
-        : {
-            status: 'down',
-            latencyMs: 0,
-            error: (storageResult.reason as Error)?.message || 'Storage error',
-          };
-
-    const channelIngestion: QueueCheckResult =
-      channelQueueResult.status === 'fulfilled'
-        ? channelQueueResult.value
-        : {
-            status: 'down',
-            latencyMs: 0,
-            error: (channelQueueResult.reason as Error)?.message || 'Channel ingestion queue error',
-          };
-
-    const commentGuard: QueueCheckResult =
-      commentGuardQueueResult.status === 'fulfilled'
-        ? commentGuardQueueResult.value
-        : {
-            status: 'down',
-            latencyMs: 0,
-            error:
-              (commentGuardQueueResult.reason as Error)?.message || 'Comment guard queue error',
-          };
 
     const isDatabaseReady = database.status === 'up' && migrations.applied;
     const isRedisReady = redis.status === 'up';
     const isStorageReady = storage.status === 'up';
-    const areQueuesReady = channelIngestion.status === 'ok' && commentGuard.status === 'ok';
+    const areQueuesReady = Object.values(queues).every(q => q.status === 'ok');
 
     const isReady = isDatabaseReady && isRedisReady && isStorageReady && areQueuesReady;
 
@@ -250,10 +193,7 @@ export class HealthService {
         },
         redis,
         storage,
-        queues: {
-          channelIngestion,
-          commentGuard,
-        },
+        queues,
       },
     };
   }

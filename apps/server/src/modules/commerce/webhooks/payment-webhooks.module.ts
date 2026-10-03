@@ -1,21 +1,13 @@
 import { Module } from '@nestjs/common';
-import { BullModule } from '@nestjs/bullmq';
-import { COMMERCE_RECONCILIATION_QUEUE } from '@sales-copilot/shared-contracts';
 import { DatabaseModule } from '../../../infrastructure/database/database.module';
 import { InboxesModule } from '../../omnichannel/inboxes/inboxes.module';
 import { PaymentWebhooksController } from './payment-webhooks.controller';
 import { PaymentWebhooksGuard } from './payment-webhooks.guard';
 
 @Module({
-  imports: [
-    DatabaseModule,
-    InboxesModule,
-    BullModule.registerQueue({
-      name: COMMERCE_RECONCILIATION_QUEUE,
-    }),
-  ],
+  imports: [DatabaseModule, InboxesModule],
   controllers: [PaymentWebhooksController],
   providers: [PaymentWebhooksGuard],
-  exports: [BullModule, PaymentWebhooksGuard],
+  exports: [PaymentWebhooksGuard],
 })
 export class PaymentWebhooksModule {}

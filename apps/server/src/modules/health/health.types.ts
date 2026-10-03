@@ -15,6 +15,16 @@ export interface QueueCheckResult {
   error?: string;
 }
 
+/** Every BullMQ queue the API hosts, keyed for health/readiness reports. */
+export type MonitoredQueueChecks = {
+  channelIngestion: QueueCheckResult;
+  commentGuard: QueueCheckResult;
+  messageOutbound: QueueCheckResult;
+  commerceReconciliation: QueueCheckResult;
+  aiAutopilot: QueueCheckResult;
+  knowledgeEmbedding: QueueCheckResult;
+};
+
 export interface HealthCheckResponse {
   status: HealthStatus;
   service: string;
@@ -25,10 +35,7 @@ export interface HealthCheckResponse {
     database: DependencyCheckResult;
     redis: DependencyCheckResult;
     storage: DependencyCheckResult;
-    queues: {
-      channelIngestion: QueueCheckResult;
-      commentGuard: QueueCheckResult;
-    };
+    queues: MonitoredQueueChecks;
   };
 }
 
@@ -55,9 +62,6 @@ export interface ReadinessResponse {
     database: DatabaseReadinessCheckResult;
     redis: DependencyCheckResult;
     storage: DependencyCheckResult;
-    queues: {
-      channelIngestion: QueueCheckResult;
-      commentGuard: QueueCheckResult;
-    };
+    queues: MonitoredQueueChecks;
   };
 }

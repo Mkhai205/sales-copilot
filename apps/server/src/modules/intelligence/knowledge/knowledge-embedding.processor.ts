@@ -3,13 +3,14 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Job } from 'bullmq';
 import { PrismaService } from '../../../infrastructure/database/prisma.service';
 import { KnowledgeEmbeddingStatus } from '../../../infrastructure/database/generated/enums';
-import { KNOWLEDGE_QUEUE_NAME, type KnowledgeEmbeddingJobData } from './knowledge.constants';
+import { KNOWLEDGE_EMBEDDING_QUEUE } from '@sales-copilot/shared-contracts';
+import { type KnowledgeEmbeddingJobData } from './knowledge.constants';
 import {
   KnowledgeEmbeddingService,
   formatKnowledgeForEmbedding,
 } from './knowledge-embedding.service';
 
-@Processor(KNOWLEDGE_QUEUE_NAME, { concurrency: 3 })
+@Processor(KNOWLEDGE_EMBEDDING_QUEUE, { concurrency: 3 })
 @Injectable()
 export class KnowledgeEmbeddingProcessor extends WorkerHost {
   private readonly logger = new Logger(KnowledgeEmbeddingProcessor.name);

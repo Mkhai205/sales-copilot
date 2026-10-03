@@ -1,5 +1,4 @@
 import { Module, type OnModuleInit, Logger } from '@nestjs/common';
-import { BullModule } from '@nestjs/bullmq';
 import { AI_AUTOPILOT_QUEUE } from '@sales-copilot/shared-contracts';
 import { DatabaseModule } from '../../../infrastructure/database/database.module';
 import { RedisModule } from '../../../infrastructure/redis/redis.module';
@@ -34,9 +33,6 @@ import { ensureDivisionsLoaded } from './utils/address-parser.util';
     InventoryModule,
     VietQrModule,
     KnowledgeModule,
-    BullModule.registerQueue({
-      name: AI_AUTOPILOT_QUEUE,
-    }),
   ],
   providers: [
     AiAgentService,
@@ -48,13 +44,7 @@ import { ensureDivisionsLoaded } from './utils/address-parser.util';
     AiGuardrailService,
     CommerceToolRegistry,
   ],
-  exports: [
-    AiAgentService,
-    CommerceToolRegistry,
-    DiscountGuardService,
-    AiGuardrailService,
-    BullModule,
-  ],
+  exports: [AiAgentService, CommerceToolRegistry, DiscountGuardService, AiGuardrailService],
 })
 export class AiAgentModule implements OnModuleInit {
   private readonly logger = new Logger(AiAgentModule.name);
