@@ -1,47 +1,31 @@
-﻿import {
-  Controller,
-  ForbiddenException,
-  Get,
-  HttpCode,
-  HttpStatus,
-  NotFoundException,
-  Param,
-  Query,
-} from '@nestjs/common';
-import {
-  ApiBearerAuth,
-  ApiOperation,
-  ApiParam,
-  ApiQuery,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger';
+import { Controller, Get, HttpCode, HttpStatus, Query, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { PresenceEntry } from '@sales-copilot/shared-contracts';
-import { WorkspacesService } from '../identity/workspaces/workspaces.service';
-import { CurrentUser } from '../../common/authz/current-user.decorator';
-import type { JwtUserPayload } from '../../common/authz/jwt-payload.type';
+import { CurrentWorkspace } from '../../common/authz/current-workspace.decorator';
+import type { WorkspaceContext } from '../../common/authz/workspace-context.type';
+import { WorkspaceGuard } from '../identity/workspaces/guards/workspace.guard';
 import { PresenceService } from './presence.service';
 
 /**
  * REST API controller for agent online presence queries within a workspace.
- * Route: `/workspaces/:workspaceId/presence`
+ * Route: `/presence` — the workspace is resolved from the X-Workspace-Id
+ * header (or auto-resolved for single-workspace users) by WorkspaceGuard,
+ * matching every other tenant-scoped endpoint. Live updates flow over the
+ * /realtime socket; this endpoint only seeds the initial snapshot.
  */
 @ApiTags('Presence')
 @Controller('presence')
 @ApiBearerAuth()
+@UseGuards(WorkspaceGuard)
 export class PresenceController {
-  constructor(
-    private readonly presenceService: PresenceService,
-    private readonly workspacesService: WorkspacesService,
-  ) {}
+  constructor(private readonly presenceService: PresenceService) {}
 
   /**
-   * Retrieves presence status for all active agents in a workspace (with optional offline inclusion).
+   * Retrieves presence status for all agents in the workspace.
    */
   @Get()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Get online/away agents presence list for a workspace' })
-  @ApiParam({ name: 'workspaceId', description: 'Workspace UUID' })
   @ApiQuery({
     name: 'includeOffline',
     required: false,
@@ -52,54 +36,10 @@ export class PresenceController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden: caller is not a member of this workspace' })
   async getWorkspacePresence(
-    @Param('workspaceId') workspaceId: string,
-    @CurrentUser() user: JwtUserPayload,
+    @CurrentWorkspace() workspace: WorkspaceContext,
     @Query('includeOffline') includeOffline?: string,
   ): Promise<PresenceEntry[]> {
-    await this.verifyWorkspaceMembership(workspaceId, user.userId);
-
     const shouldIncludeOffline = includeOffline === 'true' || includeOffline === '1';
-    return this.presenceService.getWorkspacePresence(workspaceId, shouldIncludeOffline);
-  }
-
-  /**
-   * Retrieves presence status for a specific user in a workspace.
-   */
-  @Get(':userId')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Get presence status for a specific user in a workspace' })
-  @ApiParam({ name: 'workspaceId', description: 'Workspace UUID' })
-  @ApiParam({ name: 'userId', description: 'Target user UUID' })
-  @ApiResponse({ status: 200, description: 'User presence retrieved successfully' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden: caller is not a member of this workspace' })
-  @ApiResponse({ status: 404, description: 'Presence record for user not found' })
-  async getUserPresence(
-    @Param('workspaceId') workspaceId: string,
-    @Param('userId') targetUserId: string,
-    @CurrentUser() user: JwtUserPayload,
-  ): Promise<PresenceEntry> {
-    await this.verifyWorkspaceMembership(workspaceId, user.userId);
-
-    const entry = await this.presenceService.getUserPresence(workspaceId, targetUserId);
-    if (!entry) {
-      throw new NotFoundException({
-        code: 'PRESENCE_NOT_FOUND',
-        message: `Presence record for user '${targetUserId}' not found in workspace '${workspaceId}'`,
-      });
-    }
-
-    return entry;
-  }
-
-  private async verifyWorkspaceMembership(workspaceId: string, userId: string): Promise<void> {
-    const isMember = await this.workspacesService.isMember(workspaceId, userId);
-
-    if (!isMember) {
-      throw new ForbiddenException({
-        code: 'WORKSPACE_ACCESS_DENIED',
-        message: 'You do not have access to this workspace',
-      });
-    }
+    return this.presenceService.getWorkspacePresence(workspace.workspaceId, shouldIncludeOffline);
   }
 }

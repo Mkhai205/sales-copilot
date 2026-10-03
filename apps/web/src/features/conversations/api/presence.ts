@@ -10,9 +10,4 @@ export const presenceApi = {
     fetchApi<PresenceEntry[]>(`/presence${buildQueryString(query)}`, {
       headers: workspaceHeaders(workspaceId),
     }),
-
-  getUserPresence: (workspaceId: string, userId: string) =>
-    fetchApi<PresenceEntry>(`/presence/${userId}`, {
-      headers: workspaceHeaders(workspaceId),
-    }),
 };
