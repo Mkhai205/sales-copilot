@@ -174,8 +174,11 @@ export class MessagesService {
       contentType = MessageContentType.FILE;
     }
 
+    // Outgoing messages start PENDING: the OutboundDeliveryProcessor moves them
+    // to SENT/FAILED after the provider call. Inbound contact messages are
+    // already DELIVERED the moment they are persisted.
     const deliveryStatus =
-      senderType === SenderType.CONTACT ? DeliveryStatus.DELIVERED : DeliveryStatus.SENT;
+      senderType === SenderType.CONTACT ? DeliveryStatus.DELIVERED : DeliveryStatus.PENDING;
 
     const isPrivate = dto.isPrivate ?? false;
 
@@ -510,12 +513,35 @@ export class MessagesService {
   }
 
   /**
-   * Updates delivery status of a message.
+   * Updates delivery status of a message (REST path).
    */
   async updateDeliveryStatus(
     workspaceId: string,
     messageId: string,
     dto: UpdateDeliveryStatusDto,
+  ): Promise<MessageResponseDto> {
+    return this.applyDeliveryTransition(workspaceId, messageId, {
+      deliveryStatus: dto.deliveryStatus,
+    });
+  }
+
+  /**
+   * Terminal delivery write-back used by the OutboundDeliveryProcessor:
+   * persists the provider result (externalId / FAILED + deliveryError) and
+   * emits message.delivery_status_updated so agents see the transition live.
+   */
+  async markOutboundDelivery(
+    workspaceId: string,
+    messageId: string,
+    result: { externalId?: string | null; deliveryStatus: DeliveryStatus; deliveryError?: string },
+  ): Promise<MessageResponseDto> {
+    return this.applyDeliveryTransition(workspaceId, messageId, result);
+  }
+
+  private async applyDeliveryTransition(
+    workspaceId: string,
+    messageId: string,
+    patch: { deliveryStatus: DeliveryStatus; externalId?: string | null; deliveryError?: string },
   ): Promise<MessageResponseDto> {
     const client = this.prisma.getClient();
 
@@ -535,7 +561,20 @@ export class MessagesService {
 
     const updated = await client.message.update({
       where: { workspaceId_id: { workspaceId, id: messageId } },
-      data: { deliveryStatus: dto.deliveryStatus },
+      data: {
+        deliveryStatus: patch.deliveryStatus,
+        ...(patch.externalId !== undefined && patch.externalId !== null
+          ? { externalId: patch.externalId }
+          : {}),
+        ...(patch.deliveryError
+          ? {
+              metadata: {
+                ...((message.metadata as Record<string, unknown>) ?? {}),
+                deliveryError: patch.deliveryError,
+              },
+            }
+          : {}),
+      },
       include: { attachments: true },
     });
 
@@ -546,12 +585,12 @@ export class MessagesService {
       conversationId: message.conversationId,
       messageId,
       previousStatus,
-      currentStatus: dto.deliveryStatus,
+      currentStatus: patch.deliveryStatus,
       message: responseDto,
     });
 
     this.logger.debug(
-      `Updated message ${messageId} delivery status: ${previousStatus} -> ${dto.deliveryStatus}`,
+      `Delivery transition for message ${messageId}: ${previousStatus} -> ${patch.deliveryStatus}`,
     );
 
     return responseDto;

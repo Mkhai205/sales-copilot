@@ -435,7 +435,8 @@ describe('MessagesService (Task T-1.5.6: Message Threading & Polymorphic Senders
       expect(result.senderType).toBe(SenderType.USER);
       expect(result.senderId).toBe('usr_agent_1');
       expect(result.messageType).toBe(MessageType.OUTGOING);
-      expect(result.deliveryStatus).toBe(DeliveryStatus.SENT);
+      // Outgoing starts PENDING; the OutboundDeliveryProcessor moves it to SENT/FAILED.
+      expect(result.deliveryStatus).toBe(DeliveryStatus.PENDING);
       expect(result.sender?.name).toBe('Agent Smith');
     });
 
@@ -897,7 +898,47 @@ describe('MessagesService (Task T-1.5.6: Message Threading & Polymorphic Senders
       const statusEvent = emittedEvents.find(e => e.event === 'message.delivery_status_updated');
       assertDefined(statusEvent);
       expect(statusEvent.payload.currentStatus).toBe(DeliveryStatus.READ);
-      expect(statusEvent.payload.previousStatus).toBe(DeliveryStatus.SENT);
+      expect(statusEvent.payload.previousStatus).toBe(DeliveryStatus.PENDING);
+    });
+  });
+
+  describe('markOutboundDelivery', () => {
+    it('should persist the provider result and emit message.delivery_status_updated', async () => {
+      const created = await service.create('ws_1', 'conv_1', {
+        senderType: SenderType.USER,
+        senderId: 'usr_agent_1',
+        content: 'Outbound message',
+      });
+
+      const updated = await service.markOutboundDelivery('ws_1', created.id, {
+        externalId: 'mid.fb.123',
+        deliveryStatus: DeliveryStatus.SENT,
+      });
+
+      expect(updated.deliveryStatus).toBe(DeliveryStatus.SENT);
+      expect(messagesDb.get(created.id).externalId).toBe('mid.fb.123');
+
+      const statusEvent = emittedEvents.find(e => e.event === 'message.delivery_status_updated');
+      assertDefined(statusEvent);
+      expect(statusEvent.payload.previousStatus).toBe(DeliveryStatus.PENDING);
+      expect(statusEvent.payload.currentStatus).toBe(DeliveryStatus.SENT);
+    });
+
+    it('should merge the provider error into message metadata when FAILED', async () => {
+      const created = await service.create('ws_1', 'conv_1', {
+        senderType: SenderType.USER,
+        senderId: 'usr_agent_1',
+        content: 'Outbound message',
+      });
+
+      await service.markOutboundDelivery('ws_1', created.id, {
+        deliveryStatus: DeliveryStatus.FAILED,
+        deliveryError: 'NO_RECIPIENT_EXTERNAL_ID',
+      });
+
+      const stored = messagesDb.get(created.id);
+      expect(stored.deliveryStatus).toBe(DeliveryStatus.FAILED);
+      expect(stored.metadata.deliveryError).toBe('NO_RECIPIENT_EXTERNAL_ID');
     });
   });
 

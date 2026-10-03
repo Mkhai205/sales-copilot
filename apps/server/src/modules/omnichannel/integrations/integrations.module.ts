@@ -6,6 +6,7 @@ import { InboxesModule } from '../inboxes/inboxes.module';
 import { MessagesModule } from '../messages/messages.module';
 import { ChannelAdapterRegistry } from './channel-adapter.registry';
 import { OutboundMessageListener } from './outbound-message.listener';
+import { OutboundDeliveryProcessor } from './outbound-delivery.processor';
 import { ChannelIngestionProcessor } from './channel-ingestion.processor';
 import { ChannelWebhooksModule } from './channel-webhooks/channel-webhooks.module';
 import { TelegramModule } from './telegram/telegram.module';
@@ -29,7 +30,12 @@ import { WebChatModule } from './web-chat/web-chat.module';
     ZaloPersonalModule,
     WebChatModule,
   ],
-  providers: [ChannelAdapterRegistry, OutboundMessageListener, ChannelIngestionProcessor],
+  providers: [
+    ChannelAdapterRegistry,
+    OutboundMessageListener,
+    OutboundDeliveryProcessor,
+    ChannelIngestionProcessor,
+  ],
   exports: [
     ChannelAdapterRegistry,
     OutboundMessageListener,

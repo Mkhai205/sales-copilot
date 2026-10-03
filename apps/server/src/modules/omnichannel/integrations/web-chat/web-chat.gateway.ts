@@ -434,7 +434,7 @@ export class WebChatGateway
   }
 
   /**
-   * Listens for outbound messages dispatched by OutboundMessageListener / WebChatAdapter
+   * Listens for outbound messages emitted by WebChatAdapter (via the OutboundDeliveryProcessor)
    * and broadcasts them directly to the visitor's socket rooms.
    */
   @OnEvent('widget:message')

@@ -2,7 +2,11 @@ import { Global, Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { BullModule } from '@nestjs/bullmq';
 import { DatabaseModule } from '../database/database.module';
-import { CHANNEL_INGESTION_QUEUE, COMMENT_GUARD_QUEUE } from '@sales-copilot/shared-contracts';
+import {
+  CHANNEL_INGESTION_QUEUE,
+  COMMENT_GUARD_QUEUE,
+  MESSAGE_OUTBOUND_QUEUE,
+} from '@sales-copilot/shared-contracts';
 
 /**
  * Global BullMQ wiring: Redis connection + queue registrations. Queue
@@ -56,6 +60,9 @@ import { CHANNEL_INGESTION_QUEUE, COMMENT_GUARD_QUEUE } from '@sales-copilot/sha
       },
       {
         name: COMMENT_GUARD_QUEUE,
+      },
+      {
+        name: MESSAGE_OUTBOUND_QUEUE,
       },
     ),
   ],

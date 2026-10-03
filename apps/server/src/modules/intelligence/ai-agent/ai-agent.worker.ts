@@ -92,7 +92,7 @@ export class AiAgentWorker extends WorkerHost {
         inboxId,
       );
 
-      // 4. Save response to DB -> emits message.created -> OutboundMessageListener auto-sends to external channel
+      // 4. Save response to DB -> emits message.created -> OutboundMessageListener queues it onto message-outbound for delivery
       if (result.text && result.text.trim()) {
         await this.messagesService.create(workspaceId, conversationId, {
           content: result.text.trim(),

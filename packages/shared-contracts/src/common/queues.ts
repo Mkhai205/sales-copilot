@@ -9,3 +9,5 @@ export const COMMENT_GUARD_QUEUE = 'comment-guard';
 export const COMMERCE_RECONCILIATION_QUEUE = 'commerce-reconciliation';
 
 export const AI_AUTOPILOT_QUEUE = 'ai-autopilot';
+
+export const MESSAGE_OUTBOUND_QUEUE = 'message-outbound';
