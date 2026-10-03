@@ -227,7 +227,6 @@ export class RealtimeGateway
                 },
               };
               this.server.to(room).emit(WsServerEvent.COMMERCE_COLLISION_STATUS, envelope);
-              this.server.to(room).emit('event', envelope);
             }
           })
           .catch(() => {});
@@ -385,7 +384,6 @@ export class RealtimeGateway
 
       if (this.server) {
         this.server.to(roomName).emit('workspace_suspended', envelope);
-        this.server.to(roomName).emit('event', envelope);
 
         if (typeof this.server.in(roomName)?.fetchSockets === 'function') {
           const sockets = await this.server.in(roomName).fetchSockets();
@@ -771,17 +769,19 @@ export class RealtimeGateway
       const targetRoom = `conversation_${conversationId}`;
 
       // Broadcast to other agents viewing the conversation (excluding sender)
-      client.to(targetRoom).emit('event', {
-        event: isTyping ? WsServerEvent.TYPING_START : WsServerEvent.TYPING_STOP,
-        workspaceId,
-        timestamp: new Date().toISOString(),
-        data: {
-          conversationId,
-          userId: socketData.userId,
-          email: socketData.email,
-          isTyping,
-        },
-      });
+      client
+        .to(targetRoom)
+        .emit(isTyping ? WsServerEvent.TYPING_START : WsServerEvent.TYPING_STOP, {
+          event: isTyping ? WsServerEvent.TYPING_START : WsServerEvent.TYPING_STOP,
+          workspaceId,
+          timestamp: new Date().toISOString(),
+          data: {
+            conversationId,
+            userId: socketData.userId,
+            email: socketData.email,
+            isTyping,
+          },
+        });
 
       if (this.eventEmitter) {
         this.eventEmitter.emit(isTyping ? 'agent.typing_start' : 'agent.typing_stop', {
@@ -923,7 +923,6 @@ export class RealtimeGateway
         },
       };
       client.to(room).emit(WsServerEvent.COMMERCE_COLLISION_STATUS, envelope);
-      client.to(room).emit('event', envelope);
 
       return result;
     } catch (err) {
@@ -1007,7 +1006,6 @@ export class RealtimeGateway
       },
     };
     client.to(room).emit(WsServerEvent.COMMERCE_COLLISION_STATUS, envelope);
-    client.to(room).emit('event', envelope);
 
     return { success: released };
   }
@@ -1060,7 +1058,6 @@ export class RealtimeGateway
       },
     };
     this.server.to(room).emit(WsServerEvent.COMMERCE_COLLISION_STATUS, envelope);
-    this.server.to(room).emit('event', envelope);
 
     return res;
   }

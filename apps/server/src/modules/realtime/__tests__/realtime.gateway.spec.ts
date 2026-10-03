@@ -887,7 +887,7 @@ describe('RealtimeGateway (Agent Realtime WebSocket Namespace /realtime — Task
       const convBroadcasts = broadcastMap[`conversation_${validConversationId1}`];
       expect(convBroadcasts).toBeTruthy();
       expect(convBroadcasts.length).toBe(1);
-      expect(convBroadcasts[0].event).toBe('event');
+      expect(convBroadcasts[0].event).toBe(WsServerEvent.TYPING_START);
       const wsPayload = convBroadcasts[0].payload as any;
       expect(wsPayload.event).toBe(WsServerEvent.TYPING_START);
       expect(wsPayload.workspaceId).toBe(validWorkspaceId1);
