@@ -1,4 +1,16 @@
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import type { Config } from 'jest';
+
+// Jest resolves coverageThreshold keys against the invocation cwd, so the
+// commerce key must be absolute: `nx run server:test:coverage` runs from the
+// repo root while direct jest runs happen from apps/server — a relative key
+// like './src/modules/commerce/**' only matched in the latter. The trailing
+// separator keeps PATH-prefix semantics (aggregate over all commerce files)
+// instead of per-file glob matching. (This config file is evaluated as ESM,
+// hence import.meta.url instead of __dirname.)
+const configDir = path.dirname(fileURLToPath(import.meta.url));
+const COMMERCE_DIR = path.resolve(configDir, 'src/modules/commerce') + path.sep;
 
 const config: Config = {
   moduleFileExtensions: ['js', 'json', 'ts', 'tsx', 'jsx'],
@@ -41,7 +53,7 @@ const config: Config = {
       functions: 71,
       lines: 75,
     },
-    './src/modules/commerce/**/*.ts': {
+    [COMMERCE_DIR]: {
       lines: 73,
       branches: 60,
     },
