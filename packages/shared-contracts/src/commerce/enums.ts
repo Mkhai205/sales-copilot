@@ -53,8 +53,6 @@ export const PaymentGateway = {
   SEPAY: 'SEPAY',
   CASSO: 'CASSO',
   MANUAL: 'MANUAL',
-  VNPAY: 'VNPAY',
-  MOMO: 'MOMO',
 } as const;
 
 export type PaymentGateway = (typeof PaymentGateway)[keyof typeof PaymentGateway];
@@ -93,8 +91,7 @@ export const paymentTransactionStatusSchema = z.nativeEnum(PaymentTransactionSta
 export const inventoryTransactionTypeSchema = z.nativeEnum(InventoryTransactionType);
 
 /**
- * Payment gateways currently implemented for webhook ingestion — distinct from
- * the {@link PaymentGateway} enum, which is the full domain vocabulary
- * including gateways planned but not yet wired (VNPAY, MOMO).
+ * Payment gateway route param accepted by the bank webhook endpoint,
+ * mirroring the {@link PaymentGateway} enum values (lowercase wire format).
  */
 export type ImplementedPaymentGateway = 'sepay' | 'casso' | 'manual';
