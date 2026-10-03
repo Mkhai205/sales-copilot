@@ -37,34 +37,6 @@ export class InboxesService {
   ) {}
 
   /**
-   * Helper to safely decrypt channel credentials stored at rest.
-   */
-  private decryptCredentials(rawCredentials: unknown): Record<string, unknown> {
-    if (!rawCredentials) return {};
-
-    if (typeof rawCredentials === 'object' && rawCredentials !== null) {
-      const credsObj = rawCredentials as Record<string, any>;
-      if (credsObj.encrypted && typeof credsObj.encrypted === 'string') {
-        try {
-          return this.credentialService.decrypt(credsObj.encrypted);
-        } catch {
-          this.logger.warn('Failed to decrypt channel credentials');
-          return {};
-        }
-      }
-    } else if (typeof rawCredentials === 'string' && rawCredentials.includes(':')) {
-      try {
-        return this.credentialService.decrypt(rawCredentials);
-      } catch {
-        this.logger.warn('Failed to decrypt channel credentials string');
-        return {};
-      }
-    }
-
-    return {};
-  }
-
-  /**
    * Formats a channel database entity into a summary DTO (omitting credentials).
    */
   private mapChannelSummary(channel: any): ChannelSummaryDto | null {

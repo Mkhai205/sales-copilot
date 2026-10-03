@@ -145,7 +145,7 @@ export class WebChatController {
       inboxId: channel.inboxId,
       workspaceId: channel.workspaceId,
       channelType: ChannelType.WEB_CHAT,
-      credentials: this.decryptCredentials(channel.credentials),
+      credentials: this.credentialService.decryptChannelCredentials(channel.credentials),
       settings: mergedSettings,
       providerAccountId: channel.providerAccountId,
     };
@@ -319,27 +319,5 @@ export class WebChatController {
 
   private async resolveChannelByToken(token: string) {
     return this.webChatService.resolveChannelByToken(token);
-  }
-
-  private decryptCredentials(rawCredentials: unknown): Record<string, unknown> {
-    if (!rawCredentials) return {};
-    if (typeof rawCredentials === 'object' && rawCredentials !== null) {
-      const credsObj = rawCredentials as Record<string, any>;
-      if (credsObj.encrypted && typeof credsObj.encrypted === 'string') {
-        try {
-          return this.credentialService.decrypt(credsObj.encrypted);
-        } catch {
-          return {};
-        }
-      }
-      return credsObj;
-    } else if (typeof rawCredentials === 'string' && rawCredentials.includes(':')) {
-      try {
-        return this.credentialService.decrypt(rawCredentials);
-      } catch {
-        return {};
-      }
-    }
-    return {};
   }
 }

@@ -171,7 +171,7 @@ export class WebChatGateway
       const identity = resolution.channelIdentity;
 
       // Extract credentials details
-      const creds = this.decryptCredentials(channel.credentials);
+      const creds = this.credentialService.decryptChannelCredentials(channel.credentials);
       const hmacSecret = (creds.hmacSecret as string) || (creds.hmac_secret as string) || undefined;
       const hmacMandatory = Boolean(creds.hmacMandatory ?? creds.hmac_mandatory ?? false);
 
@@ -538,31 +538,6 @@ export class WebChatGateway
       },
     });
   }
-
-  private decryptCredentials(rawCredentials: unknown): Record<string, unknown> {
-    if (!rawCredentials) return {};
-    if (typeof rawCredentials === 'object' && rawCredentials !== null) {
-      const credsObj = rawCredentials as Record<string, any>;
-      if (credsObj.encrypted && typeof credsObj.encrypted === 'string') {
-        try {
-          return this.credentialService.decrypt(credsObj.encrypted);
-        } catch {
-          this.logger.warn('Failed to decrypt channel credentials');
-          return {};
-        }
-      }
-      return credsObj;
-    } else if (typeof rawCredentials === 'string' && rawCredentials.includes(':')) {
-      try {
-        return this.credentialService.decrypt(rawCredentials);
-      } catch {
-        this.logger.warn('Failed to decrypt channel credentials string');
-        return {};
-      }
-    }
-    return {};
-  }
-
   private mapToFileType(rawFileType?: string, contentType?: MessageContentType | string): FileType {
     if (rawFileType) {
       const upper = rawFileType.toUpperCase();

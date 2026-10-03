@@ -45,35 +45,6 @@ export class ChannelIngestionProcessor extends WorkerHost {
   }
 
   /**
-   * Helper to safely decrypt channel credentials.
-   */
-  private decryptCredentials(credentials: unknown): Record<string, unknown> {
-    if (!credentials) return {};
-    if (typeof credentials === 'object' && credentials !== null) {
-      if ('encrypted' in credentials && typeof (credentials as any).encrypted === 'string') {
-        if (this.credentialService) {
-          try {
-            return this.credentialService.decrypt((credentials as any).encrypted);
-          } catch (err) {
-            this.logger.warn(`Failed to decrypt channel credentials: ${(err as Error).message}`);
-            return {};
-          }
-        }
-      }
-      return credentials as Record<string, unknown>;
-    }
-    if (typeof credentials === 'string' && this.credentialService) {
-      try {
-        return this.credentialService.decrypt(credentials);
-      } catch (err) {
-        this.logger.warn(`Failed to decrypt channel credentials string: ${(err as Error).message}`);
-        return {};
-      }
-    }
-    return {};
-  }
-
-  /**
    * Downloads media file from external URL and stores it into MinIO via StorageService.
    */
   private async downloadAndStoreMedia(
@@ -285,7 +256,9 @@ export class ChannelIngestionProcessor extends WorkerHost {
           try {
             const adapter = this.adapterRegistry.get(channel.channelType as ChannelType);
             if (adapter.fetchSenderInfo) {
-              const decryptedCreds = this.decryptCredentials(channel.credentials);
+              const decryptedCreds = this.credentialService.decryptChannelCredentials(
+                channel.credentials,
+              );
               const fetchedSender = await adapter.fetchSenderInfo(
                 {
                   channelId: channel.id,

@@ -122,6 +122,17 @@ describe('WebChatGateway (Widget WebSocket Namespace /widget)', () => {
         }
         return {};
       },
+      decryptChannelCredentials: (raw: unknown) => {
+        if (!raw) return {};
+        if (typeof raw === 'object') {
+          const obj = raw as Record<string, unknown>;
+          if (obj.encrypted === 'encrypted_wt_token') {
+            return { widgetToken: 'wt_from_creds_456' };
+          }
+          return obj;
+        }
+        return {};
+      },
     };
 
     mockContactResolutionService = {

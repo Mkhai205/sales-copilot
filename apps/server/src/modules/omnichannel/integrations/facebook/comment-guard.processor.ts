@@ -68,35 +68,6 @@ export class CommentGuardProcessor extends WorkerHost {
     super();
   }
 
-  /**
-   * Helper to safely decrypt channel credentials.
-   */
-  private decryptCredentials(credentials: unknown): Record<string, unknown> {
-    if (!credentials) return {};
-    if (typeof credentials === 'object' && credentials !== null) {
-      if ('encrypted' in credentials && typeof (credentials as any).encrypted === 'string') {
-        if (this.credentialService) {
-          try {
-            return this.credentialService.decrypt((credentials as any).encrypted);
-          } catch (err) {
-            this.logger.warn(`Failed to decrypt channel credentials: ${(err as Error).message}`);
-            return {};
-          }
-        }
-      }
-      return credentials as Record<string, unknown>;
-    }
-    if (typeof credentials === 'string' && this.credentialService) {
-      try {
-        return this.credentialService.decrypt(credentials);
-      } catch (err) {
-        this.logger.warn(`Failed to decrypt channel credentials string: ${(err as Error).message}`);
-        return {};
-      }
-    }
-    return {};
-  }
-
   async process(job: Job<CommentGuardJobData>): Promise<CommentGuardResult> {
     const {
       workspaceId,
@@ -151,7 +122,7 @@ export class CommentGuardProcessor extends WorkerHost {
     const primaryPhone = normalizeVietnamesePhone(extractedPhones[0]);
     this.logger.log(`${tracePrefix}Extracted phone number: '${primaryPhone}'`);
 
-    const credentials = this.decryptCredentials(channel.credentials);
+    const credentials = this.credentialService.decryptChannelCredentials(channel.credentials);
     const graphVersion = (channel.settings as any)?.graphApiVersion || undefined;
 
     // Helper: Interpolate dynamic template placeholders

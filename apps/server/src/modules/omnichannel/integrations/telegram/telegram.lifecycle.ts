@@ -19,33 +19,6 @@ export class TelegramLifecycleService {
   ) {}
 
   /**
-   * Decrypt stored channel credentials.
-   */
-  private decryptCredentials(rawCredentials: unknown): Record<string, unknown> {
-    if (!rawCredentials) return {};
-    if (typeof rawCredentials === 'object' && rawCredentials !== null) {
-      const credsObj = rawCredentials as Record<string, any>;
-      if (credsObj.encrypted && typeof credsObj.encrypted === 'string') {
-        try {
-          return this.credentialService.decrypt(credsObj.encrypted);
-        } catch {
-          this.logger.warn('Failed to decrypt channel credentials');
-          return {};
-        }
-      }
-      return credsObj;
-    } else if (typeof rawCredentials === 'string' && rawCredentials.includes(':')) {
-      try {
-        return this.credentialService.decrypt(rawCredentials);
-      } catch {
-        this.logger.warn('Failed to decrypt channel credentials string');
-        return {};
-      }
-    }
-    return {};
-  }
-
-  /**
    * Constructs the public webhook URL for a channel.
    */
   private getWebhookUrl(channelId: string): string {
@@ -142,7 +115,7 @@ export class TelegramLifecycleService {
       return false;
     }
 
-    const decrypted = this.decryptCredentials(channel.credentials);
+    const decrypted = this.credentialService.decryptChannelCredentials(channel.credentials);
     const botToken = String(
       decrypted.botToken || decrypted.bot_token || decrypted.token || decrypted.accessToken || '',
     );
@@ -296,7 +269,7 @@ export class TelegramLifecycleService {
 
     if (!channel) return false;
 
-    const decrypted = this.decryptCredentials(channel.credentials);
+    const decrypted = this.credentialService.decryptChannelCredentials(channel.credentials);
     const botToken = String(
       decrypted.botToken || decrypted.bot_token || decrypted.token || decrypted.accessToken || '',
     );

@@ -192,6 +192,14 @@ describe('CommentGuardProcessor', () => {
 
     credentialServiceMock = {
       decrypt: (str: string) => JSON.parse(str),
+      decryptChannelCredentials: (raw: unknown) => {
+        if (!raw) return {};
+        if (typeof raw === 'object') {
+          const obj = raw as Record<string, unknown>;
+          return obj.encrypted ? JSON.parse(obj.encrypted as string) : obj;
+        }
+        return {};
+      },
     };
 
     processor = new CommentGuardProcessor(
