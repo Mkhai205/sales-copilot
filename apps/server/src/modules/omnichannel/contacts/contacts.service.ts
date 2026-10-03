@@ -693,7 +693,19 @@ export class ContactsService {
         },
       };
 
-      this.eventEmitter.emit('contact.merged', eventPayload);
+      // 9. Emit event via post-commit hook on the ambient transaction context:
+      // async listeners running inside the ALS tx scope would otherwise grab the
+      // (soon-closed) tx client. Falls back to a direct emit when no ambient
+      // transaction exists (unit-test mocks).
+      const emitMerged = () => {
+        this.eventEmitter.emit('contact.merged', eventPayload);
+      };
+      const txCtx = this.prisma.getCurrentContext?.();
+      if (txCtx) {
+        txCtx.addPostCommitHook(emitMerged);
+      } else {
+        emitMerged();
+      }
 
       this.logger.log(
         `Merged contact '${mergeeContactId}' into base contact '${baseContactId}' in workspace '${workspaceId}'`,

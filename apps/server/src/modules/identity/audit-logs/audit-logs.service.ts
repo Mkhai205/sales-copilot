@@ -138,25 +138,10 @@ export class AuditLogService {
   // Event-driven domain audit log handlers
   // ---------------------------------------------------------------------------
 
-  @OnEvent('contact.merged', { async: true })
-  async handleContactMerged(payload: any): Promise<void> {
-    try {
-      if (!payload?.workspaceId) return;
-      await this.log({
-        workspaceId: payload.workspaceId,
-        userId: payload.performedByUserId ?? null,
-        action: 'CONTACT_MERGED',
-        resourceType: 'CONTACT',
-        resourceId: payload.primaryContactId || payload.contact?.id,
-        payload: {
-          mergedContactId: payload.mergedContactId,
-          primaryContactId: payload.primaryContactId,
-        },
-      });
-    } catch (err) {
-      this.logger.error('Failed to record audit log for contact.merged', err);
-    }
-  }
+  // NOTE: `contact.merged` is intentionally NOT audited here — the merge
+  // transaction in ContactsService.merge writes the canonical CONTACT_MERGED
+  // entry atomically with the change (this listener used to write a duplicate
+  // with a different shape, racing the closing transaction).
 
   @OnEvent('channel.created', { async: true })
   async handleChannelCreated(payload: any): Promise<void> {

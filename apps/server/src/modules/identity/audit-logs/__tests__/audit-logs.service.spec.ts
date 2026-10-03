@@ -233,19 +233,8 @@ describe('AuditLogService (Feature F-1.8.4: Audit Logging)', () => {
   });
 
   describe('Event Listeners (Event-Driven Automated Auditing)', () => {
-    it('should record audit log on contact.merged event', async () => {
-      await service.handleContactMerged({
-        workspaceId: 'ws_1',
-        performedByUserId: 'usr_admin_1',
-        primaryContactId: 'cnt_1',
-        mergedContactId: 'cnt_2',
-      });
-
-      expect(auditLogsDb.length).toBe(1);
-      expect(auditLogsDb[0].action).toBe('CONTACT_MERGED');
-      expect(auditLogsDb[0].resourceType).toBe('CONTACT');
-      expect(auditLogsDb[0].resourceId).toBe('cnt_1');
-    });
+    // NOTE: contact.merged is audited inside the merge transaction itself
+    // (ContactsService.merge) — no event listener needed.
 
     it('should record audit log on channel.created and channel.deleted events', async () => {
       await service.handleChannelCreated({
