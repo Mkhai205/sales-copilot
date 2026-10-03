@@ -44,6 +44,7 @@ export const envSchema = z
 
     // Authentication
     JWT_ACCESS_TOKEN_SECRET: z.string().min(1, 'JWT_ACCESS_TOKEN_SECRET is required'),
+    WIDGET_TOKEN_SECRET: z.string().min(1, 'WIDGET_TOKEN_SECRET is required'),
     JWT_ACCESS_TOKEN_EXPIRES_IN_SECONDS: z.coerce.number().default(900), // 15 minutes
     REFRESH_TOKEN_EXPIRES_IN_SECONDS: z.coerce.number().default(604800), // 7 days
 

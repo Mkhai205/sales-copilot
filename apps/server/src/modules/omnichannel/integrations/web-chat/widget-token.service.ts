@@ -31,14 +31,12 @@ export class WidgetTokenService {
     private readonly configService: ConfigService,
     private readonly jwtService: JwtService,
   ) {
-    // No hardcoded fallback: WIDGET_TOKEN_SECRET or the required JWT_ACCESS_TOKEN_SECRET
-    // must be configured, otherwise the service refuses to start.
-    const configuredSecret =
-      this.configService?.get<string>('WIDGET_TOKEN_SECRET') ||
-      this.configService?.get<string>('JWT_ACCESS_TOKEN_SECRET');
+    // No fallback to JWT_ACCESS_TOKEN_SECRET: visitor tokens must not share a
+    // signing secret with agent session tokens. WIDGET_TOKEN_SECRET is required.
+    const configuredSecret = this.configService?.get<string>('WIDGET_TOKEN_SECRET');
     if (!configuredSecret) {
       throw new Error(
-        'WidgetTokenService requires WIDGET_TOKEN_SECRET or JWT_ACCESS_TOKEN_SECRET to be configured',
+        'WidgetTokenService requires WIDGET_TOKEN_SECRET to be configured (no fallback to JWT_ACCESS_TOKEN_SECRET)',
       );
     }
     this.jwtSecret = configuredSecret;

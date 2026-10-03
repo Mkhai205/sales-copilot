@@ -31,6 +31,32 @@ describe('WidgetTokenService (Visitor JWT Token Issuance & Verification)', () =>
     service = new WidgetTokenService(mockConfigService as ConfigService, new JwtService());
   });
 
+  describe('secret configuration', () => {
+    it('should throw at construction when WIDGET_TOKEN_SECRET is missing', () => {
+      const configWithoutSecret: any = {
+        get: (key: string, defaultValue?: any) =>
+          key === 'WIDGET_TOKEN_SECRET' ? undefined : defaultValue,
+      };
+
+      expectThrow(
+        () => new WidgetTokenService(configWithoutSecret as ConfigService, new JwtService()),
+        { name: 'Error' },
+      );
+    });
+
+    it('should NOT fall back to JWT_ACCESS_TOKEN_SECRET', () => {
+      const configWithJwtOnly: any = {
+        get: (key: string, defaultValue?: any) =>
+          key === 'JWT_ACCESS_TOKEN_SECRET' ? 'test_jwt_secret_for_widget_tokens' : defaultValue,
+      };
+
+      expectThrow(
+        () => new WidgetTokenService(configWithJwtOnly as ConfigService, new JwtService()),
+        { name: 'Error' },
+      );
+    });
+  });
+
   describe('generateToken() & verifyToken()', () => {
     it('should generate a valid JWT token and verify it accurately', () => {
       const token = service.generateToken(mockPayload);
@@ -73,7 +99,7 @@ describe('WidgetTokenService (Visitor JWT Token Issuance & Verification)', () =>
       const customConfig: any = {
         get: (key: string, defaultValue?: any) => {
           if (key === 'WIDGET_TOKEN_EXPIRY_SECONDS') return 3600;
-          if (key === 'JWT_ACCESS_TOKEN_SECRET') return 'test_jwt_secret_for_widget_tokens';
+          if (key === 'WIDGET_TOKEN_SECRET') return 'test_widget_secret_key_12345';
           return defaultValue;
         },
       };

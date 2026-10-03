@@ -114,6 +114,7 @@ jobs:
           APP_BASE_URL=http://localhost:8000
           CORS_ORIGIN=http://localhost:3000
           JWT_ACCESS_TOKEN_SECRET=ci-jwt-access-secret-at-least-32-characters-long
+          WIDGET_TOKEN_SECRET=ci-widget-token-secret-at-least-32-characters-long
           JWT_ACCESS_TOKEN_EXPIRES_IN_SECONDS=900
           REFRESH_TOKEN_EXPIRES_IN_SECONDS=604800
           CHANNEL_ENCRYPTION_KEY=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef

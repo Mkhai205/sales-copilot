@@ -79,6 +79,7 @@ services:
       STORAGE_BUCKETS: sales-copilot
       CHANNEL_ENCRYPTION_KEY: ${CHANNEL_ENCRYPTION_KEY:-0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef}
       JWT_ACCESS_TOKEN_SECRET: ${JWT_ACCESS_TOKEN_SECRET:-sales_copilot_access_token_secret_32_chars_min!}
+      WIDGET_TOKEN_SECRET: ${WIDGET_TOKEN_SECRET:-sales_copilot_widget_token_secret_32_chars_min!}
       JWT_ACCESS_TOKEN_EXPIRES_IN_SECONDS: 900
       REFRESH_TOKEN_EXPIRES_IN_SECONDS: 604800
       APP_BASE_URL: ${APP_BASE_URL:-http://localhost:8000}

@@ -58,7 +58,7 @@ Dùng khi lập trình tính năng mới hàng ngày. Tốc độ hot-reload nha
 | File | Mục đích | Các biến quan trọng |
 | --- | --- | --- |
 | `.env` (thư mục gốc) | Docker Compose Dev | `POSTGRES_USER=postgres`, `POSTGRES_PASSWORD=password`, `MINIO_ROOT_USER=minioadmin`, `MINIO_ROOT_PASSWORD=miniopassword123` |
-| `apps/server/.env` | Backend NestJS | `PORT=8000`, `APP_BASE_URL=http://localhost:8000`, `DATABASE_URL=postgresql://postgres:password@localhost:5432/sales_copilot_dev?schema=public`, `REDIS_URL=redis://localhost:6379`, `STORAGE_ENDPOINT=http://localhost:9000`, `STORAGE_PUBLIC_ENDPOINT=http://localhost:9000`, `JWT_ACCESS_TOKEN_SECRET=...`, `CHANNEL_ENCRYPTION_KEY=...` |
+| `apps/server/.env` | Backend NestJS | `PORT=8000`, `APP_BASE_URL=http://localhost:8000`, `DATABASE_URL=postgresql://postgres:password@localhost:5432/sales_copilot_dev?schema=public`, `REDIS_URL=redis://localhost:6379`, `STORAGE_ENDPOINT=http://localhost:9000`, `STORAGE_PUBLIC_ENDPOINT=http://localhost:9000`, `JWT_ACCESS_TOKEN_SECRET=...`, `WIDGET_TOKEN_SECRET=...`, `CHANNEL_ENCRYPTION_KEY=...` |
 | `apps/web/.env.local` | Frontend Next.js | `NEXT_PUBLIC_APP_URL=http://localhost:3000`, `NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1`, `NEXT_PUBLIC_WS_URL=http://localhost:8000` |
 
 ### Các bước khởi động
@@ -212,6 +212,8 @@ MINIO_CONSOLE_PORT=9001
 # --- Bảo mật & Khóa bí mật (BẮT BUỘC ĐỔI) ---
 # Chuỗi ngẫu nhiên tối thiểu 32 ký tự:
 JWT_ACCESS_TOKEN_SECRET=k9F!xZ8$qW2#mP5@vL7*yR1^tB4&eC6(aU3)
+# Khóa ký riêng cho token khách Web Chat (KHÔNG tái dùng JWT secret):
+WIDGET_TOKEN_SECRET=wT7!pL3#zX9@mK5^vN2&rQ8*tY4&uE6(aS1)
 # Chuỗi hex 64 ký tự (32 byte) cho mã hóa AES-256-GCM credentials:
 CHANNEL_ENCRYPTION_KEY=e4d3c2b1a09876543210fedcba9876543210fedcba9876543210fedcba987654
 
@@ -297,6 +299,7 @@ docker compose -f docker-compose.prod.yml down
 | Tên biến | Mặc định | Bắt buộc | Mô tả |
 | --- | --- | --- | --- |
 | `JWT_ACCESS_TOKEN_SECRET` | \- | **Có** | Khóa ký JWT Access Token (tối thiểu 32 ký tự) |
+| `WIDGET_TOKEN_SECRET` | \- | **Có** | Khóa ký token khách Web Chat — riêng biệt, không fallback về JWT secret |
 | `JWT_ACCESS_TOKEN_EXPIRES_IN_SECONDS` | `900` (15m) | Không | Thời gian sống của Access Token |
 | `REFRESH_TOKEN_EXPIRES_IN_SECONDS` | `604800` (7d) | Không | Thời gian sống của Refresh Token |
 | `CHANNEL_ENCRYPTION_KEY` | \- | **Có** | Khóa hex 64 ký tự mã hóa token các kênh tích hợp |
