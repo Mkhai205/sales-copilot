@@ -1,8 +1,10 @@
+// MessageType = direction of the message (axis 1);
+// SenderType = who authored it (axis 2). They are orthogonal, NOT duplicates:
+// AI replies are SenderType.SYSTEM + MessageType.OUTGOING.
 export const MessageType = {
   INCOMING: 'INCOMING',
   OUTGOING: 'OUTGOING',
   ACTIVITY: 'ACTIVITY',
-  TEMPLATE: 'TEMPLATE',
 } as const;
 
 export type MessageType = (typeof MessageType)[keyof typeof MessageType];

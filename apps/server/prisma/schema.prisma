@@ -50,11 +50,13 @@ enum ConversationPriority {
   LOW
 }
 
+// MessageType = direction of the message (axis 1);
+// SenderType = who authored it (axis 2). They are orthogonal, NOT duplicates:
+// AI replies are SenderType.SYSTEM + MessageType.OUTGOING.
 enum MessageType {
   INCOMING
   OUTGOING
   ACTIVITY
-  TEMPLATE
 }
 
 enum MessageContentType {
@@ -133,8 +135,6 @@ enum PaymentGateway {
   SEPAY
   CASSO
   MANUAL
-  VNPAY
-  MOMO
 }
 
 enum PaymentTransactionStatus {
