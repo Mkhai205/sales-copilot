@@ -1,5 +1,4 @@
 import { Module, type OnModuleInit, Logger } from '@nestjs/common';
-import { AI_AUTOPILOT_QUEUE } from '@sales-copilot/shared-contracts';
 import { DatabaseModule } from '../../../infrastructure/database/database.module';
 import { RedisModule } from '../../../infrastructure/redis/redis.module';
 import { MessagesModule } from '../../omnichannel/messages/messages.module';
