@@ -144,6 +144,30 @@ describe('TokenService (JWT & Refresh Token Rotation)', () => {
     expect(mockRedisStorage.has(`auth:refresh_token:${oldTokenId}:revoked`)).toBeTruthy();
   });
 
+  it('should reject legacy refresh tokens stored without a secret hash', async () => {
+    const user = { id: 'usr_legacy', email: 'legacy@example.com', role: PlatformRole.USER };
+    const tokens = await tokenService.generateTokens(user);
+    const [tokenId] = tokens.refreshToken.split('.');
+
+    // Simulate a pre-hardening record: strip the secret hash but keep the token
+    const key = `auth:refresh_token:${tokenId}`;
+    const stored = JSON.parse(mockRedisStorage.get(key)!);
+    delete stored.tokenSecretHash;
+    mockRedisStorage.set(key, JSON.stringify(stored));
+
+    await expectReject(
+      async () => {
+        await tokenService.rotateRefreshToken(tokens.refreshToken);
+      },
+      (err: any) => {
+        expect(err.response?.code).toBe('INVALID_REFRESH_TOKEN');
+        return true;
+      },
+    );
+    // The invalid token must not have been consumed or rotated
+    expect(mockRedisStorage.has(key)).toBe(true);
+  });
+
   it('should detect token reuse (Replay Attack) and revoke entire token family', async () => {
     const user = {
       id: 'usr_replay',

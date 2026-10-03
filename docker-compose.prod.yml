@@ -88,7 +88,6 @@ services:
       FB_APP_SECRET: ${FB_APP_SECRET:-}
       FB_VERIFY_TOKEN: ${FB_VERIFY_TOKEN:-}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
-      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
       RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL:-Sales Copilot <noreply@example.com>}
     depends_on:

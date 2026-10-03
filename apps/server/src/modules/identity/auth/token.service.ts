@@ -211,19 +211,23 @@ export class TokenService {
       });
     }
 
-    // Timing-safe verification of the secret half. Records without a hash are
-    // legacy (pre-hardening) — they are still accepted, but every newly issued
-    // token carries the hash and is enforced from then on.
-    if (storedToken.tokenSecretHash) {
-      const providedHash = crypto.createHash('sha256').update(tokenSecret).digest('hex');
-      const provided = Buffer.from(providedHash, 'hex');
-      const expected = Buffer.from(storedToken.tokenSecretHash, 'hex');
-      if (provided.length !== expected.length || !crypto.timingSafeEqual(provided, expected)) {
-        throw new UnauthorizedException({
-          code: 'INVALID_REFRESH_TOKEN',
-          message: 'Refresh token is invalid',
-        });
-      }
+    // Timing-safe verification of the secret half: knowing only the non-secret
+    // tokenId must never be enough to consume a session. Records without a
+    // hash are legacy (pre-hardening) and are rejected outright.
+    if (!storedToken.tokenSecretHash) {
+      throw new UnauthorizedException({
+        code: 'INVALID_REFRESH_TOKEN',
+        message: 'Refresh token is invalid',
+      });
+    }
+    const providedHash = crypto.createHash('sha256').update(tokenSecret).digest('hex');
+    const provided = Buffer.from(providedHash, 'hex');
+    const expected = Buffer.from(storedToken.tokenSecretHash, 'hex');
+    if (provided.length !== expected.length || !crypto.timingSafeEqual(provided, expected)) {
+      throw new UnauthorizedException({
+        code: 'INVALID_REFRESH_TOKEN',
+        message: 'Refresh token is invalid',
+      });
     }
 
     // Atomic GETDEL: retrieve and delete in a single Redis operation.
