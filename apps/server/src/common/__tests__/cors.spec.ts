@@ -26,6 +26,7 @@ describe('Strict CORS Configuration & Verification (Task 9 — Feature F-1.11.4)
     const baseEnv = {
       DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
       JWT_ACCESS_TOKEN_SECRET: 'test_jwt_secret_32bytes_minimum_length_ok',
+      WIDGET_TOKEN_SECRET: 'test_widget_token_secret_32bytes_minimum_length_ok',
       STORAGE_ACCESS_KEY: 'minioadmin',
       STORAGE_SECRET_KEY: 'minioadmin',
       CHANNEL_ENCRYPTION_KEY: '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',

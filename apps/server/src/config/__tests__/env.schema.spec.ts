@@ -5,6 +5,7 @@ describe('envSchema — BaseUrl & Webhook URL Architecture (Milestone 1)', () =>
   const minimalValidEnv = {
     DATABASE_URL: 'postgresql://test:test@localhost:5432/test_db',
     JWT_ACCESS_TOKEN_SECRET: 'test_access_token_secret_32_bytes_ok_minimum',
+    WIDGET_TOKEN_SECRET: 'test_widget_token_secret_32_bytes_ok_minimum',
     STORAGE_ACCESS_KEY: 'test_minio_access_key',
     STORAGE_SECRET_KEY: 'test_minio_secret_key',
     CHANNEL_ENCRYPTION_KEY: '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
