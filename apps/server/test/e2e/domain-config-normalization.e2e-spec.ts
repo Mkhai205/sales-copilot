@@ -27,6 +27,7 @@ describe('Comprehensive Opaque-Box E2E: Domain, BaseUrl & Storage Normalization'
     PORT: 8000,
     DATABASE_URL: 'postgresql://postgres:password@localhost:5432/test?schema=public',
     JWT_ACCESS_TOKEN_SECRET: 'test-jwt-access-token-secret-at-least-32-chars-long',
+    WIDGET_TOKEN_SECRET: 'test-widget-token-secret-at-least-32-chars-long',
     REDIS_URL: 'redis://localhost:6379',
     STORAGE_ACCESS_KEY: 'minioadmin',
     STORAGE_SECRET_KEY: 'minioadmin',
